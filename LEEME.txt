@@ -1,0 +1,135 @@
+CRT ELITE v3.3 — PLAN OPERATIVO + BACKTESTING
+==============================================
+
+NOVEDADES v3.3
+==============
+1) PESTAÑA "ALMANAQUE" (📅): revisa tus trades como un calendario.
+   - Entras por AÑO -> MES -> y ves un CALENDARIO del mes.
+   - Cada día con trades sale marcado en verde (día positivo) o rojo
+     (negativo) con su R. Tocas el día y ves esas operaciones.
+   - Cada año y mes muestra su nº de trades, R neto y W-L.
+   - Funciona para Real y Backtest por separado, y para cualquier año.
+
+2) ARCHIVAR Y LIMPIAR (en Diario): botón que primero descarga un respaldo
+   completo y luego borra los trades anteriores a la fecha que elijas
+   (de ese contexto). Para mantener la app ligera sin perder nada.
+   NOTA: tus datos ocupan poquísimo (~0.4 KB por trade); caben años.
+
+3) GUARDAR EN DRIVE (en Diario): botón "☁️ Guardar respaldo en Drive /
+   Archivos" que abre el menú de compartir del teléfono para mandar tu
+   respaldo JSON directo a Google Drive. Así, si cambias de teléfono,
+   lo restauras desde Drive con "Restaurar desde respaldo".
+
+NOVEDADES v3.2
+==============
+1) CALCULADORA DE LOTAJE POR PAR con valor de pip REAL:
+   - Elige el par. EUR/USD y GBP/USD = $10/pip por lote exacto.
+   - Pares con USD de base (USD/JPY, USD/CAD, USD/CHF): mete el precio
+     actual y calcula el valor de pip exacto. Cruces: valor de pip editable
+     a mano. Te da lotes + unidades. El Gatillo (⚡) usa lo mismo.
+
+2) PESTAÑA "MENTOR" (🧠): tu resumen diario / semanal / mensual.
+   - Te escribe en palabras cómo te fue: R netos, $, WR, PF, expectancy.
+   - Compara con el periodo anterior (mejoraste o bajaste, con flechas).
+   - "Lo que hiciste bien" y "Lo que debes corregir" con datos.
+   - Un PLAN DE ACCIÓN numerado para el próximo periodo.
+   - Tu mejor y peor hábito del periodo + curva. Todo sin conexión.
+
+NOVEDADES v3.1 (tu segundo mentor)
+==================================
+1) PESTAÑA "GATILLO" (⚡): asistente de ejecución.
+   - Armado en vivo: killzone automática + barrido + MSS 15M + zona + bias.
+     Si falta algo, te dice "NO DISPARES" y qué falta.
+   - Metes los dos extremos del FVG/OB y te calcula la ENTRADA al 50%.
+   - Con SL y TP te da: pips de SL, LOTAJE exacto (tu riesgo %), y el RR.
+   - Botón "Cargar en el diario": rellena el formulario solo. Tú confirmas.
+
+2) MÁS DATOS POR OPERACIÓN (real y backtest):
+   - Momento de entrada (En confirmación / En el toque / Anticipé) -> mide
+     directamente tu fuga de timing prematuro.
+   - Disparador (FVG 50%, OB, Envolvente/BOS, Pinbar, CHoCH M1...).
+   - TF de gatillo (5M/3M/1M), a favor/contra del bias, noticias, RR planificado.
+
+3) CRITERIO DEL MENTOR AL GUARDAR: cada vez que guardas un trade (real o
+   backtest) aparece un veredicto con TUS fortalezas y debilidades de esa
+   entrada, y lo compara con tu historial ("cuando entras en confirmación
+   rindes +X.XR; en el toque, -Y.YR").
+
+4) TARJETA "FORTALEZAS Y DEBILIDADES" en Análisis: rankea tus categorías por
+   expectancy con barras, para ver de un vistazo en qué eres fuerte y dónde
+   pierdes dinero. Más cortes nuevos: por momento, disparador, TF, bias, noticias.
+
+Tus trades anteriores NO se pierden ni se tocan: los campos nuevos quedan
+vacíos en los viejos y se llenan a partir de ahora. Haz tu respaldo JSON igual.
+
+COMO SUBIRLA A NETLIFY
+----------------------
+1. Descomprime este ZIP -> carpeta "crt-elite".
+2. Entra a  https://app.netlify.com/drop
+3. Arrastra LA CARPETA COMPLETA al recuadro.
+4. Abre la direccion que te da Netlify en Chrome (telefono).
+5. Menu (tres puntos) -> "Instalar aplicacion".
+
+SI YA TENIAS UNA VERSION INSTALADA
+----------------------------------
+Sube esta encima. Si al abrir ves la version vieja, cierra la app del
+todo (deslizala fuera de recientes) y vuelve a abrirla. Tus trades NO
+se borran al actualizar: los de antes quedan como "Real / CRT Elite".
+
+QUE HAY DE NUEVO EN LA v3.0
+===========================
+
+1) REAL vs BACKTEST
+   Arriba del Diario y del Analisis hay un interruptor:
+     - Real: tus operaciones de cuenta (con limite diario R6/R7).
+     - Backtest: operaciones de prueba sobre historico. Aqui puedes
+       poner la FECHA de la vela que operaste, y no hay limite diario.
+   Cada modo tiene su propio historial y sus propias metricas.
+   No se mezclan nunca.
+
+2) VARIAS ESTRATEGIAS
+   Con el boton "..." al lado de la estrategia puedes:
+     N = crear una nueva (para probar otra estrategia cualquiera)
+     R = renombrar la actual
+     X = borrar la actual y sus trades
+   Cada estrategia guarda por separado su Real y su Backtest.
+   Asi puedes comparar CRT Elite contra cualquier otra que pruebes.
+
+3) CADA REGISTRO: VER / EDITAR / EXPORTAR / BORRAR
+   Toca cualquier trade del historial para ver su ficha completa.
+   Desde ahi (o desde los botones bajo cada trade) puedes:
+     - Ver el detalle con todo, incluida la nota de aprendizaje
+     - Editar cualquier campo despues de guardarlo
+     - Exportar ese trade solo a CSV
+     - Borrarlo
+
+4) ANALISIS EXHAUSTIVO (mide todo)
+   La pestana Analisis ahora desglosa:
+   - Nucleo: R neto, win rate, profit factor, expectancy, RR real,
+     drawdown, WR necesario y MARGEN (tu edge real).
+   - Rendimiento: ganancia/perdida media, bruta, mejor y peor trade,
+     recovery factor, y el neto y por-trade estimado en dolares.
+   - Consistencia: mediana, desviacion, ratio de consistencia
+     (si tus resultados son parejos o dan bandazos), rachas y racha
+     actual.
+   - Distribucion de resultados por tamano de R.
+   - Curva de capital.
+   - Cortes por: setup, nº de confluencias, ventana, dia, zona, POI,
+     par, direccion, emocion y si seguiste el plan.
+   - Peso individual de cada confluencia.
+   - MAE / MFE: si tu SL o tu TP estan mal puestos, o si sales pronto.
+   - Comportamiento del operador: compara tu rendimiento cuando
+     cumples el plan vs cuando lo rompes, y cuando estas tranquilo vs
+     ansioso/con prisa. Ahi se ve si el problema es la estrategia o tu.
+   - Desglose por semana y por mes.
+   Todo esto se calcula para el contexto activo (modo + estrategia).
+
+EXPORTAR Y RESPALDAR
+--------------------
+- CSV de este contexto: exporta lo que ves (real o backtest, la
+  estrategia y el filtro activos). Incluye columnas de modo y estrategia.
+- Respaldo JSON completo: guarda TODO (real + backtest + todas las
+  estrategias). Usalo antes de cambiar de telefono o limpiar Chrome.
+- Restaurar: vuelve a cargar ese JSON.
+Los datos viven en el navegador del telefono. Haz respaldo JSON
+cada semana.
