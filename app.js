@@ -10,7 +10,9 @@ const K = {
   reglas : "crtelite_reglas_v2",
   bal    : "crtelite_balance_v2",
   ctx    : "crtelite_ctx_v3",
-  estr   : "crtelite_estrategias_v3"
+  estr   : "crtelite_estrategias_v3",
+  iaurl  : "crtelite_iaurl_v3",
+  iachat : "crtelite_iachat_v3"
 };
 const load = (k,d)=>{ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):d; }catch(e){ return d; } };
 const save = (k,v)=>{ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){ toast("No se pudo guardar"); } };
@@ -2247,6 +2249,126 @@ function fillPlanDinamico(){
 }
 
 /* ============================================================
+   MENTOR IA — botón flotante + chat con Claude (vía tu puente)
+   ============================================================ */
+const IA_URL_DEFAULT = "https://elitepro-worker.reiniercainet9.workers.dev";
+const IA_SYSTEM = "Eres el mentor de trading personal dentro de la app CRT Elite de Rey. Eres un trader profesional con años de experiencia real en SMC, ICT y Candle Range Theory (CRT). Hablas SIEMPRE en español, claro, directo y cercano, como un mentor honesto que quiere que su alumno entienda y mejore. El alumno opera EUR/USD y GBP/USD, entradas en 3m/5m, con cuentas fondeadas. Reglas de su estrategia: SIN SWEEP = SIN SETUP; solo opera setups A+ y B; siempre a favor del bias semanal; solo en killzone (Londres / Pre-NY / NY apertura); el gatillo correcto es el retroceso al FVG u OB del impulso que rompió estructura (MSS 15M) tras un barrido de liquidez, entrando con la vela de confirmación cerrada (NUNCA en el toque). Su mayor debilidad histórica es el timing prematuro (entrar antes de la confirmación). Cuando respondas: sé breve y accionable, usa **negritas** para lo esencial, da pasos concretos, y cuando analices su operativa apóyate en los datos que te paso. No inventes cifras que no tengas; si faltan datos, dilo y pídelos.";
+
+let IA = { url:"", chat:[], busy:false };
+
+function iaInit(){
+  IA.url  = load(K.iaurl, IA_URL_DEFAULT);
+  IA.chat = load(K.iachat, []);
+
+  const fab=el("button","fab",'✨<span class="fab-badge">IA</span>');
+  fab.id="fab"; fab.setAttribute("aria-label","Mentor IA");
+  fab.onclick=abrirIA;
+  document.body.appendChild(fab);
+
+  const ov=el("div","ia-ov"); ov.id="iaOv";
+  ov.innerHTML=`
+    <div class="ia-panel">
+      <div class="ia-head">
+        <div class="ia-title"><span class="ia-dot"></span> Mentor IA</div>
+        <div class="ia-head-btns">
+          <button class="ia-ic" id="iaCfg" aria-label="Ajustes">⚙️</button>
+          <button class="ia-ic" id="iaClose" aria-label="Cerrar">✕</button>
+        </div>
+      </div>
+      <div class="ia-cfg" id="iaCfgBox" style="display:none">
+        <div class="fl">Dirección de tu puente (Worker)</div>
+        <input class="inp" id="iaUrl" placeholder="https://...workers.dev">
+        <button class="btn gold" id="iaSaveUrl" style="margin-top:8px">Guardar dirección</button>
+        <button class="btn" id="iaClear" style="margin-top:8px">🗑️ Borrar conversación</button>
+        <div class="note" style="text-align:left">Tu clave de Claude vive segura en el puente, nunca aquí. Los centavos por pregunta se cargan a tu cuenta de Anthropic.</div>
+      </div>
+      <div class="ia-msgs" id="iaMsgs"></div>
+      <div class="ia-quick" id="iaQuick">
+        <button class="ia-chip" data-q="Analiza mi operativa reciente con mis datos: dime con claridad qué estoy haciendo bien, qué estoy haciendo mal y cómo lo corrijo paso a paso.">📊 Analiza mi operativa</button>
+        <button class="ia-chip" data-q="Según mis datos, ¿cuál es mi mayor fuga ahora mismo y qué ejercicio concreto hago esta semana para corregirla?">🩸 Mi mayor fuga</button>
+        <button class="ia-chip" data-q="Explícame con un ejemplo claro cómo confirmar el gatillo (barrido + MSS 15M + FVG) sin entrar antes de tiempo.">🎯 Cómo gatillar</button>
+      </div>
+      <div class="ia-input">
+        <textarea id="iaText" rows="1" placeholder="Pregúntale lo que sea de trading..."></textarea>
+        <button class="ia-send" id="iaSend" aria-label="Enviar">➤</button>
+      </div>
+    </div>`;
+  document.body.appendChild(ov);
+
+  $("#iaClose").onclick=cerrarIA;
+  ov.onclick=(e)=>{ if(e.target===ov) cerrarIA(); };
+  $("#iaCfg").onclick=()=>{ const b=$("#iaCfgBox"); const show=b.style.display==="none"; b.style.display=show?"block":"none"; if(show) $("#iaUrl").value=IA.url; };
+  $("#iaSaveUrl").onclick=()=>{ IA.url=$("#iaUrl").value.trim()||IA_URL_DEFAULT; save(K.iaurl,IA.url); $("#iaCfgBox").style.display="none"; toast("Puente guardado ✓"); };
+  $("#iaClear").onclick=()=>{ if(confirm("¿Borrar toda la conversación con la IA?")){ IA.chat=[]; save(K.iachat,IA.chat); $("#iaCfgBox").style.display="none"; pintarIAChat(); } };
+  $("#iaSend").onclick=()=>iaEnviar();
+  const ta=$("#iaText");
+  ta.addEventListener("keydown",e=>{ if(e.key==="Enter" && !e.shiftKey){ e.preventDefault(); iaEnviar(); } });
+  ta.addEventListener("input",()=>{ ta.style.height="auto"; ta.style.height=Math.min(ta.scrollHeight,120)+"px"; });
+  document.querySelectorAll("#iaQuick .ia-chip").forEach(b=>{ b.onclick=()=>iaEnviar(b.dataset.q); });
+  pintarIAChat();
+}
+function abrirIA(){ $("#iaOv").classList.add("show"); pintarIAChat(); setTimeout(()=>{ const t=$("#iaText"); if(t)t.focus(); },220); }
+function cerrarIA(){ $("#iaOv").classList.remove("show"); }
+
+/* Formato ligero de la respuesta: **negritas** y saltos de línea */
+function fmtIA(s){ return esc(s).replace(/\*\*(.+?)\*\*/g,"<b>$1</b>").replace(/\n/g,"<br>"); }
+
+function pintarIAChat(){
+  const m=$("#iaMsgs"); if(!m) return;
+  if(!IA.chat.length && !IA.busy){
+    m.innerHTML=`<div class="ia-welcome"><div class="ia-w-emoji">🧠</div>
+      <div class="ia-w-t">Soy tu mentor de trading</div>
+      <div class="ia-w-s">Pregúntame lo que sea: conceptos, dudas de tu estrategia, o pídeme que analice tu operativa con tus datos reales. Estoy para que entiendas y mejores.</div></div>`;
+    return;
+  }
+  m.innerHTML=IA.chat.map(x=>`<div class="ia-msg ${x.role==="user"?"user":"bot"}">${x.role==="user"?esc(x.content):fmtIA(x.content)}</div>`).join("")
+    + (IA.busy?`<div class="ia-msg bot ia-typing"><span></span><span></span><span></span></div>`:"");
+  m.scrollTop=m.scrollHeight;
+}
+
+/* Resumen compacto de datos del contexto activo, para personalizar las respuestas */
+function iaContexto(){
+  const list=tradesCtx(); const m=list.length?metricas(list):null;
+  let c=`[Datos del alumno · ${CTX.modo==="real"?"cuenta real":"backtest"} · estrategia ${CTX.estrategia}] `;
+  if(!m){ return c+"Aún no tiene trades registrados en este contexto."; }
+  c+=`${m.n} trades. R neto ${r1(m.rNeto)}R. Win rate ${pct(m.wr*100)}. Profit factor ${fmtPF(m.pf)}. Expectancy ${r2(m.exp)}R por trade. RR real 1:${r1(m.rrReal)}. Drawdown máx ${r1(m.dd)}R. Plan roto en ${m.roto} trades, ${m.emoMal} con prisa/ansiedad, ${m.fueraVent} fuera de ventana, ${m.setupsC} setups C. `;
+  const rank=[]; DIMS_MENTOR.forEach(([dim,fn])=>{ cortePor(list,fn).forEach(x=>{ if(x.n>=3) rank.push({dim,k:x.k,exp:x.exp,n:x.n}); }); });
+  rank.sort((a,b)=>b.exp-a.exp);
+  if(rank.length){ const b=rank[0], w=rank[rank.length-1];
+    c+=`Mejor categoría: ${b.dim} "${b.k}" (${r2(b.exp)}R exp en ${b.n}). Peor categoría: ${w.dim} "${w.k}" (${r2(w.exp)}R exp en ${w.n}).`; }
+  return c;
+}
+
+async function iaEnviar(textoForzado){
+  const ta=$("#iaText");
+  const texto=(textoForzado!=null?textoForzado:(ta?ta.value:"")).trim();
+  if(!texto || IA.busy) return;
+  if(!IA.url){ toast("Configura el puente (⚙️)"); $("#iaCfg").click(); return; }
+  if(ta){ ta.value=""; ta.style.height="auto"; }
+  IA.chat.push({role:"user",content:texto});
+  IA.busy=true; save(K.iachat,IA.chat); pintarIAChat();
+  try{
+    let msgs=IA.chat.slice(-12).map(x=>({role:x.role,content:x.content}));
+    while(msgs.length && msgs[0].role!=="user") msgs.shift();
+    // Inyecta el contexto de datos en el último mensaje del usuario
+    msgs[msgs.length-1]={role:"user",content:iaContexto()+"\n\nPregunta: "+texto};
+    const r=await fetch(IA.url,{method:"POST",headers:{"content-type":"application/json"},
+      body:JSON.stringify({system:IA_SYSTEM, messages:msgs})});
+    let data={}; try{ data=await r.json(); }catch(_){}
+    IA.busy=false;
+    if(!r.ok || data.error){
+      IA.chat.push({role:"assistant",content:"⚠️ "+((data&&data.error)||("Error "+r.status+". Revisa tu puente en ajustes (⚙️) o que tengas crédito en Anthropic."))});
+    }else{
+      IA.chat.push({role:"assistant",content:(data.text||"").trim()||"(respuesta vacía)"});
+    }
+  }catch(e){
+    IA.busy=false;
+    IA.chat.push({role:"assistant",content:"⚠️ No pude conectar con el puente. Revisa tu internet o la dirección en ajustes (⚙️)."});
+  }
+  save(K.iachat,IA.chat); pintarIAChat();
+}
+
+/* ============================================================
    ARRANQUE
    ============================================================ */
 function init(){
@@ -2264,6 +2386,7 @@ function init(){
   refreshChecklist(); refreshConf(); refreshReglas(); renderDiario();
   irA("checklist");
   tickRelojes(); setInterval(tickRelojes,10000);
+  iaInit();
 
   if("serviceWorker" in navigator){
     navigator.serviceWorker.register("sw.js").catch(()=>{});

@@ -1,5 +1,17 @@
-CRT ELITE v3.3 — PLAN OPERATIVO + BACKTESTING
+CRT ELITE v3.4 — PLAN OPERATIVO + BACKTESTING
 ==============================================
+
+NOVEDADES v3.4
+==============
+1) MENTOR IA (botón flotante ✨ dorado, abajo a la derecha):
+   - Chat con Claude que CONOCE tus datos (tu plan + tus estadísticas).
+   - Pregúntale lo que sea de trading; analiza tu operativa y te dice
+     qué está bien, qué mal y cómo corregirlo, con pasos concretos.
+   - Botones rápidos: "Analiza mi operativa", "Mi mayor fuga", "Cómo gatillar".
+   - La conversación se guarda en la app. La clave vive segura en el puente
+     (Cloudflare), nunca en la app. Se cobra por uso a tu cuenta de Anthropic.
+   - Ajustes (⚙️) dentro del chat: cambiar la dirección del puente o borrar
+     la conversación. Necesita internet solo cuando le preguntas.
 
 NOVEDADES v3.3
 ==============
