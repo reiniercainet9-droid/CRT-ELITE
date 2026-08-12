@@ -12,7 +12,9 @@ const K = {
   ctx    : "crtelite_ctx_v3",
   estr   : "crtelite_estrategias_v3",
   iaurl  : "crtelite_iaurl_v3",
-  iachat : "crtelite_iachat_v3"
+  iachat : "crtelite_iachat_v3",
+  iaconvs: "crtelite_iaconvs_v3",
+  iaact  : "crtelite_iaact_v3"
 };
 const load = (k,d)=>{ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):d; }catch(e){ return d; } };
 const save = (k,v)=>{ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){ toast("No se pudo guardar"); } };
@@ -2250,15 +2252,155 @@ function fillPlanDinamico(){
 
 /* ============================================================
    MENTOR IA — botón flotante + chat con Claude (vía tu puente)
+   Con MEMORIA (conversaciones guardadas) + CONOCIMIENTO PROFUNDO
+   de la estrategia de Rey y de su indicador CRT Elite.
    ============================================================ */
 const IA_URL_DEFAULT = "https://elitepro-worker.reiniercainet9.workers.dev";
-const IA_SYSTEM = "Eres el mentor de trading personal dentro de la app CRT Elite de Rey. Eres un trader profesional con años de experiencia real en SMC, ICT y Candle Range Theory (CRT). Hablas SIEMPRE en español, claro, directo y cercano, como un mentor honesto que quiere que su alumno entienda y mejore. El alumno opera EUR/USD y GBP/USD, entradas en 3m/5m, con cuentas fondeadas. Reglas de su estrategia: SIN SWEEP = SIN SETUP; solo opera setups A+ y B; siempre a favor del bias semanal; solo en killzone (Londres / Pre-NY / NY apertura); el gatillo correcto es el retroceso al FVG u OB del impulso que rompió estructura (MSS 15M) tras un barrido de liquidez, entrando con la vela de confirmación cerrada (NUNCA en el toque). Su mayor debilidad histórica es el timing prematuro (entrar antes de la confirmación). Cuando respondas: sé breve y accionable, usa **negritas** para lo esencial, da pasos concretos, y cuando analices su operativa apóyate en los datos que te paso. No inventes cifras que no tengas; si faltan datos, dilo y pídelos.";
 
-let IA = { url:"", chat:[], busy:false };
+/* --- PERSONALIDAD + REGLAS DE COMPORTAMIENTO DEL MENTOR --- */
+const IA_SYSTEM_BASE =
+"Eres el Mentor Élite de trading de Rey, dentro de su app CRT Elite. Eres un trader profesional de altísima experiencia real en SMC, ICT y Candle Range Theory (CRT), y también su coach de disciplina y psicología de trading. Tu misión: que Rey pase sus retos de fondeo y proteja sus cuentas fondeadas operando con consistencia.\n\n"+
+"CÓMO ERES:\n"+
+"- Hablas SIEMPRE en español, cercano, cálido y con confianza, como un mentor que le tiene cariño a su alumno pero lo respeta demasiado como para mentirle.\n"+
+"- Tienes PERSONALIDAD y criterio propio. No eres un asistente complaciente. Si Rey se equivoca, quiere saltarse una regla, o pide algo que va contra su propio plan o contra la buena práctica de trading, lo CORRIGES con claridad y firmeza — con respeto, pero sin suavizar la verdad. Frases tipo: 'Para ahí, eso está mal y te explico por qué…'. Nunca haces algo solo porque él lo quiere así si es un error.\n"+
+"- Eres proactivo: te anticipas. Si ves un riesgo, un mal hábito o una trampa mental, se lo señalas aunque no te lo pregunte.\n"+
+"- Conoces a Rey y su estrategia a fondo (abajo tienes su dossier completo). No hables en genérico: habla de SU estrategia, SU indicador, SUS reglas, SUS ventanas, SUS números.\n\n"+
+"CÓMO RESPONDES:\n"+
+"- Claro y accionable. Usa **negritas** para lo esencial y pasos concretos numerados cuando ayuden.\n"+
+"- Apóyate en los datos del alumno que te paso en cada mensaje. NUNCA inventes cifras: si no tienes un dato, dilo y pídelo.\n"+
+"- Cuando corrijas, di primero QUÉ está mal, luego POR QUÉ, luego CÓMO se hace bien.\n"+
+"- Refuerza siempre su regla de oro contra su mayor fuga: el timing prematuro (entrar en el toque, antes de la vela de confirmación). Ese es el error que más le cuesta dinero.\n"+
+"- Si te pregunta algo fuera de su estrategia (otro concepto de trading, gestión, psicología, otra estrategia), respóndele igual como el experto que eres, pero relaciónalo con su forma de operar cuando tenga sentido.\n\n"+
+"SALDO / RECARGA: Tú NO puedes ver el saldo ni el consumo de la cuenta de Anthropic de Rey (no tienes acceso a esa información). Si te pregunta cuánto le queda o cómo recargar, díselo con honestidad y pásale el enlace directo: https://console.anthropic.com/settings/billing (ahí ve su saldo, pulsa 'Add credits' para recargar y puede activar recarga automática). Nunca inventes una cifra de saldo.\n\n"+
+"IMÁGENES / GRÁFICOS: Rey puede enviarte CAPTURAS o FOTOS de su gráfico (a veces una foto en directo de la pantalla). Cuando te mande una imagen, léela como un trader profesional: identifica el par y la temporalidad si se ven, el bias/dirección, la estructura (BOS/CHoCH), los BARRIDOS de liquidez (sweep con mecha, no con cierre), las zonas (OB/FVG/premium/discount/tierra de nadie) y, si aparece el panel de su indicador CRT Elite, úsalo (sesgo, Secuencia F3, alineación de TFs, CRT H4). Dile con claridad si hay un setup VÁLIDO según SU método (sweep obligatorio, MSS en 15M/1H, gatillo en M5/M3 con vela de confirmación), qué clasificación tendría (A+/B/C) y qué haría él. NO inventes lo que no se ve: si la imagen está borrosa, cortada o le falta la temporalidad o una zona clave, pídele otra toma o el dato que necesites antes de opinar.";
+
+/* Perfil fijo de Rey (lo que yo ya sé de él de tanto trabajar juntos) */
+const PERFIL_REY =
+"PERFIL DEL ALUMNO (Rey / Reinier):\n"+
+"- Trader de Forex. Opera SOLO EUR/USD y GBP/USD.\n"+
+"- Estructura de temporalidades: Daily = bias/dirección; H4 = zonas (el DÓNDE); 1H y 15M = validación, sweep + MSS (el CUÁNDO); 5M y 3M = gatillo fino de entrada (el punto EXACTO, NO se valida aquí). El bias SEMANAL manda sobre el diario.\n"+
+"- Zona horaria UTC−3 (sin horario de verano); sus killzones están en hora de Nueva York, así que el desfase cambia cuando EE.UU. ajusta su reloj.\n"+
+"- Cuentas: tiene cuentas fondeadas de $6K y está por comprar 5 cuentas de reto/fondeo más para hacer los exámenes. Objetivo inmediato: pasar esos challenges y no romper reglas. Riesgo FIJO 0.5% por trade.\n"+
+"- Su mayor debilidad histórica, reconocida por él mismo: TIMING PREMATURO — su dirección suele ser correcta, pero entra ANTES de que la trampa se liquide y se confirme. Trabájasela siempre.\n"+
+"- No sabe programar. La app CRT Elite (esta) es su diario, backtester, calculadora de lotaje y mentor de bolsillo (tú).";
+
+/* Dossier del indicador CRT Elite que construimos juntos en TradingView */
+const INDICADOR_DOSSIER =
+"SU INDICADOR — 'CRT Elite v3' (Pine v5, en TradingView Desktop; versión de trabajo MEJORADO v11). Lo construimos juntos. Debes conocerlo como la palma de tu mano:\n"+
+"- UN SOLO SESGO EFECTIVO manda todo el indicador (htfBull/htfBear): de él cuelgan TODAS las señales, alarmas, objetivos, colores del rango CRT y filas del panel.\n"+
+"- BIAS DIARIO (CRT): se lee de la vela diaria de AYER ya cerrada y se sostiene todo el día por diseño CRT. Solo la liquidez de nivel DIARIO puede voltearlo (no un barrido de 4H ni de 15m). Si falta liquidez arriba → alcista; abajo → bajista; ambas intactas → rango (esperar).\n"+
+"- MOTOR DE GIRO (giro intradía): para voltear el día necesita 3 patas: (1) barrido+reclaim del extremo diario previo O cierre de cuerpo más allá de él; (2) CHoCH + displacement en 15m (el cambio de estructura con vela impulsiva); (3) que el precio siga más allá (si vuelve al rango, el giro se ANULA). Con 'giroSoloDiario' ON, solo un barrido de nivel diario dispara el giro del día.\n"+
+"- GIRO ESTRUCTURAL (v11): si el día NO toma ningún extremo diario pero H4 y 15M se alinean a una nueva dirección, ESA pasa a ser el sesgo operativo (el panel lo marca '🔄 estructural H4+15M, sin extremo diario') y todas las señales/alarmas pasan a favor de esa dirección. Un giro diario CONFIRMADO siempre manda sobre el estructural.\n"+
+"- CANDADO 15M (anti-señal-vieja): NUNCA compra si la estructura de 15m ya hizo MSS bajista, NUNCA vende si hizo MSS alcista. Bloquea las confirmaciones 'a favor' que quedaron viejas cuando el día ya giró por dentro. Es la respuesta directa a su queja recurrente 'cambió a bajista y me seguía dando alcista'.\n"+
+"- FILA 'Secuencia F3' del panel: muestra 1.Sweep ✅  2.MSS 15m ✅  3.Zona ✅ → 'LISTO'; si el MSS de 15m va en contra, se pone en rojo 'no operar a favor'. Es su Fase 3 hecha semáforo.\n"+
+"- FILA 'CRT H4': distingue entrada de REVERSIÓN (reclaim: barrió y recuperó liquidez mayor, verde lima) de CONTINUACIÓN (cuerpo rompió, ya se tomó la liquidez, aguamarina — no esperar reclaim).\n"+
+"- PANEL: fila de Alineación de TFs (Semanal, D, H4, 1H, 15m, 5m). OJO cosmético: la D se compara contra sí misma, así que '1/6' significa que CERO temporalidades subordinadas acompañan al diario — explícaselo si pregunta.\n"+
+"- DOS MOTORES DE CHoCH CONVIVEN Y A VECES NO COINCIDEN: el CHoCH DIBUJADO en el gráfico usa el método de 'leg' de LuxAlgo (sin filtro de displacement); el CHoCH que usa el GIRO usa pivotes + displacement en la misma vela. Por eso él puede VER en pantalla un CHoCH que el motor del giro no registra. Cuando pregunte '¿por qué no vio ese CHoCH?', esta es casi siempre la razón.\n"+
+"- Dibuja zonas Premium (50−100%, ventas) / Equilibrio / Discount (0−50%, compras); killzone automática en hora NY (maneja solo el cambio EST/EDT); tiene calibración 'Auto por temporalidad' de pivote y tolerancia EQ por cada TF.\n"+
+"- ALARMAS (~35 alertcondition + una super-alarma alert()). Las clave: ⏰ Aviso temprano / pinchazo D-4H-1H ('prepárate', a favor del sesgo); ✅ Confirmación ALCISTA/BAJISTA (al cierre); ⛔ Invalidación rota (bias en riesgo); 🔄 Giro estructural; 2️⃣ MSS 15m a favor; ✅ Secuencia F3 completa; filas CRT H4; ⭐ Confirmación PREMIUM. Todo lo demás es ruido.\n"+
+"- REGLA CRÍTICA que debes recordarle SIEMPRE que hablen del indicador o de sus alarmas: TradingView CONGELA la versión del script en el momento de crear la alarma. Por eso, cada vez que pega/actualiza el indicador, DEBE BORRAR y VOLVER A CREAR todas las alarmas, en cada par (se crean en el gráfico de 5m). Si no lo hace, las alarmas viejas siguen disparando lógica antigua y contradictoria.";
+
+let _iaConoc = null;
+/* Arma el bloque de conocimiento (estrategia + indicador + perfil) desde los
+   mismos datos que ve la app, para que la IA y la app nunca se contradigan. */
+function iaConocimiento(){
+  if(_iaConoc) return _iaConoc;
+  const R   = REGLAS.map((r,i)=>`  ${i+1}. ${r}`).join("\n");
+  const C   = CONFLUENCIAS.map((c,i)=>`  ${i+1}. ${c.t} ${c.extra||""} → ${c.sub}`.replace(/\s+/g," ")).join("\n");
+  const cls = RIESGO_SETUP.map(x=>`  ${x.c} (${x.conf||"—"}): ${x.r||"—"} ${x.rr||""} → ${x.act}`).join("\n");
+  const par = PARCIALES.map(p=>`  ${p.k} → ${p.v}`).join("\n");
+  const ven = VENTANAS.filter(v=>!v.bad).map(v=>`${v.n} (${v.h})${v.sub?" ["+v.sub+"]":""}`).join("; ");
+  const noOp= VENTANAS.filter(v=>v.bad).map(v=>`${v.n} (${v.h})`).join("; ");
+  const tf  = TEMPORALIDADES.map(t=>`  ${t.tf}: ${t.t} — ${t.d.replace(/<[^>]+>/g,"")}`).join("\n");
+  const dias= DIAS.map(d=>`  ${d.d}: ${d.e} → ${d.a}`).join("\n");
+  _iaConoc =
+    "==========  DOSSIER — TODO LO QUE SÉ DE REY Y SU MÉTODO  ==========\n\n"+
+    PERFIL_REY+"\n\n"+
+    "SU ESTRATEGIA CRT ELITE (SMC/ICT/CRT):\n"+
+    "REGLA DE ORO ABSOLUTA: SIN SWEEP = SIN SETUP. Si el precio no barrió liquidez con MECHA (no con cierre), NO hay operación, por muchas otras confluencias que haya.\n\n"+
+    "Las 5 confluencias:\n"+C+"\n\n"+
+    "Mínimos para entrar: ≥3 confluencias macro (Daily+H4) + 4 micro (M15+M5). Precio en 40−60% (tierra de nadie) = esperar SIEMPRE. Premium (50−100%) = ventas; Discount (0−50%) = compras.\n\n"+
+    "Clasificación y riesgo por setup:\n"+cls+"\n"+
+    "  (Condición actual: solo opera A+ y B. Riesgo fijo 0.5%.)\n\n"+
+    "Gestión de parciales:\n"+par+"\n"+
+    "  SL a Break Even en 1:1. Trailing con estructura (detrás de cada nuevo OB/FVG a favor), nunca ATR fijo.\n\n"+
+    "Ventanas válidas (hora NY): "+ven+".\n"+
+    "PROHIBIDO operar: "+noOp+"; y sesión asiática. No opera 30 min antes ni después de una noticia roja.\n\n"+
+    "Mapa de temporalidades (cada una tiene UN objetivo):\n"+tf+"\n"+
+    "  CLAVE: el MSS que VALIDA el setup es el de 1H/15M, NUNCA el de 5M. En M5 hay microrrupturas de ruido. El M5/M3 es solo el gatillo.\n\n"+
+    "Gatillo fino (Fase 4, en M5/M3, dentro de la zona ya validada): 1) el precio toca el FVG u OB de entrada; 2) se forma vela de rechazo (pinbar o engulfing que arma order block); 3) la vela siguiente cierra más allá del 50% de la de rechazo; 4) ENTRA al cierre de esa vela de confirmación. SL detrás de la estructura de M5. NUNCA entrar en el toque sin confirmación (ese es su error).\n\n"+
+    "Reglas inviolables:\n"+R+"\n\n"+
+    "Comportamiento esperado por día:\n"+dias+"\n\n"+
+    INDICADOR_DOSSIER+
+    "\n\n==========  FIN DEL DOSSIER  ==========";
+  return _iaConoc;
+}
+/* System prompt completo = personalidad + dossier */
+function iaSystemFull(){ return IA_SYSTEM_BASE+"\n\n"+iaConocimiento(); }
+
+/* ---- ESTADO: varias conversaciones con memoria ---- */
+let IA = { url:"", convs:[], actId:null, busy:false, pendImg:null };
+
+function iaGuardarConvs(){
+  try{
+    localStorage.setItem(K.iaconvs, JSON.stringify(IA.convs));
+    localStorage.setItem(K.iaact, JSON.stringify(IA.actId));
+    return true;
+  }catch(e){ return false; }
+}
+function iaNuevoId(){ return "c"+Date.now()+Math.floor(Math.random()*1000); }
+function iaConvAct(){
+  let c=IA.convs.find(x=>x.id===IA.actId);
+  if(!c){ c={ id:iaNuevoId(), t:"", ts:Date.now(), msgs:[] }; IA.convs.unshift(c); IA.actId=c.id; iaGuardarConvs(); }
+  return c;
+}
+function iaTit(c){
+  if(c.t) return c.t;
+  const u=c.msgs.find(m=>m.role==="user");
+  if(u){ let s=u.content.replace(/\s+/g," ").trim(); return s.length>40?s.slice(0,40)+"…":s; }
+  return "Nueva conversación";
+}
+function iaNuevaConv(){
+  const vacia=IA.convs.find(x=>!x.msgs.length);
+  const c=vacia||{ id:iaNuevoId(), t:"", ts:Date.now(), msgs:[] };
+  if(!vacia) IA.convs.unshift(c);
+  IA.actId=c.id; iaGuardarConvs();
+  $("#iaConvsBox").style.display="none";
+  pintarIAChat();
+}
+function iaSelConv(id){ IA.actId=id; iaGuardarConvs(); $("#iaConvsBox").style.display="none"; pintarIAChat(); }
+function iaDelConv(id){
+  if(!confirm("¿Borrar esta conversación?")) return;
+  IA.convs=IA.convs.filter(x=>x.id!==id);
+  if(IA.actId===id) IA.actId = IA.convs[0]?IA.convs[0].id:null;
+  iaGuardarConvs(); renderConvList(); pintarIAChat();
+}
+function renderConvList(){
+  const box=$("#iaConvList"); if(!box) return;
+  if(!IA.convs.length){ box.innerHTML=`<div class="note" style="text-align:left">Aún no tienes conversaciones guardadas.</div>`; return; }
+  box.innerHTML=IA.convs.map(c=>{
+    const d=new Date(c.ts), fecha=d.toLocaleDateString("es",{day:"2-digit",month:"short"});
+    const act=c.id===IA.actId?" act":"";
+    return `<div class="ia-conv${act}" data-id="${c.id}">
+      <div class="ia-conv-b" data-sel="${c.id}"><div class="ia-conv-t">${esc(iaTit(c))}</div>
+      <div class="ia-conv-d">${fecha} · ${c.msgs.filter(m=>m.role==="user").length} preg.</div></div>
+      <button class="ia-conv-x" data-del="${c.id}" aria-label="Borrar">🗑️</button></div>`;
+  }).join("");
+  box.querySelectorAll("[data-sel]").forEach(b=>b.onclick=()=>iaSelConv(b.dataset.sel));
+  box.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>iaDelConv(b.dataset.del));
+}
 
 function iaInit(){
-  IA.url  = load(K.iaurl, IA_URL_DEFAULT);
-  IA.chat = load(K.iachat, []);
+  IA.url   = load(K.iaurl, IA_URL_DEFAULT);
+  IA.convs = load(K.iaconvs, null);
+  IA.actId = load(K.iaact, null);
+  /* Migración: si venías de la versión de un solo chat, lo conservo como conversación */
+  if(!IA.convs){
+    IA.convs=[];
+    const viejo=load(K.iachat, []);
+    if(viejo && viejo.length){ const c={ id:iaNuevoId(), t:"", ts:Date.now(), msgs:viejo }; IA.convs.push(c); IA.actId=c.id; }
+    iaGuardarConvs();
+  }
 
   const fab=el("button","fab",'✨<span class="fab-badge">IA</span>');
   fab.id="fab"; fab.setAttribute("aria-label","Mentor IA");
@@ -2271,57 +2413,127 @@ function iaInit(){
       <div class="ia-head">
         <div class="ia-title"><span class="ia-dot"></span> Mentor IA</div>
         <div class="ia-head-btns">
+          <button class="ia-ic" id="iaNew" aria-label="Nueva conversación">✚</button>
+          <button class="ia-ic" id="iaConvs" aria-label="Conversaciones">🗂️</button>
           <button class="ia-ic" id="iaCfg" aria-label="Ajustes">⚙️</button>
           <button class="ia-ic" id="iaClose" aria-label="Cerrar">✕</button>
         </div>
+      </div>
+      <div class="ia-cfg" id="iaConvsBox" style="display:none">
+        <div class="ia-cfg-h"><div class="fl" style="margin:0">Tus conversaciones</div>
+          <button class="btn gold ia-mini" id="iaNew2">✚ Nueva</button></div>
+        <div class="ia-conv-list" id="iaConvList"></div>
       </div>
       <div class="ia-cfg" id="iaCfgBox" style="display:none">
         <div class="fl">Dirección de tu puente (Worker)</div>
         <input class="inp" id="iaUrl" placeholder="https://...workers.dev">
         <button class="btn gold" id="iaSaveUrl" style="margin-top:8px">Guardar dirección</button>
-        <button class="btn" id="iaClear" style="margin-top:8px">🗑️ Borrar conversación</button>
-        <div class="note" style="text-align:left">Tu clave de Claude vive segura en el puente, nunca aquí. Los centavos por pregunta se cargan a tu cuenta de Anthropic.</div>
+        <a class="btn" href="https://console.anthropic.com/settings/billing" target="_blank" rel="noopener" style="margin-top:8px;display:block;text-align:center;text-decoration:none">💳 Saldo / recargar créditos</a>
+        <button class="btn" id="iaClear" style="margin-top:8px">🗑️ Borrar esta conversación</button>
+        <div class="note" style="text-align:left">Tu clave de Claude vive segura en el puente, nunca aquí. Los centavos por pregunta se cargan a tu cuenta de Anthropic. La IA no ve tu saldo; míralo en "Saldo / recargar".</div>
       </div>
       <div class="ia-msgs" id="iaMsgs"></div>
       <div class="ia-quick" id="iaQuick">
         <button class="ia-chip" data-q="Analiza mi operativa reciente con mis datos: dime con claridad qué estoy haciendo bien, qué estoy haciendo mal y cómo lo corrijo paso a paso.">📊 Analiza mi operativa</button>
         <button class="ia-chip" data-q="Según mis datos, ¿cuál es mi mayor fuga ahora mismo y qué ejercicio concreto hago esta semana para corregirla?">🩸 Mi mayor fuga</button>
         <button class="ia-chip" data-q="Explícame con un ejemplo claro cómo confirmar el gatillo (barrido + MSS 15M + FVG) sin entrar antes de tiempo.">🎯 Cómo gatillar</button>
+        <button class="ia-chip" data-q="Recuérdame qué alarmas de mi indicador CRT Elite debo tener activas en cada par y por qué, y qué debo hacer cada vez que actualizo el indicador.">🔔 Mis alarmas</button>
+        <button class="ia-chip" data-q="Voy a comprar 5 cuentas de fondeo para hacer los exámenes. Dame un plan concreto para pasarlos sin romper mis reglas.">🏦 Plan de fondeo</button>
       </div>
+      <div class="ia-att" id="iaAtt" style="display:none"></div>
       <div class="ia-input">
+        <button class="ia-attbtn" id="iaClip" aria-label="Adjuntar imagen">📎</button>
+        <button class="ia-attbtn" id="iaCamBtn" aria-label="Tomar foto">📷</button>
         <textarea id="iaText" rows="1" placeholder="Pregúntale lo que sea de trading..."></textarea>
         <button class="ia-send" id="iaSend" aria-label="Enviar">➤</button>
       </div>
+      <input type="file" id="iaFile" accept="image/*" hidden>
+      <input type="file" id="iaCam" accept="image/*" capture="environment" hidden>
     </div>`;
   document.body.appendChild(ov);
 
   $("#iaClose").onclick=cerrarIA;
   ov.onclick=(e)=>{ if(e.target===ov) cerrarIA(); };
-  $("#iaCfg").onclick=()=>{ const b=$("#iaCfgBox"); const show=b.style.display==="none"; b.style.display=show?"block":"none"; if(show) $("#iaUrl").value=IA.url; };
+  $("#iaNew").onclick=iaNuevaConv;
+  $("#iaNew2").onclick=iaNuevaConv;
+  $("#iaConvs").onclick=()=>{ const b=$("#iaConvsBox"); const show=b.style.display==="none"; $("#iaCfgBox").style.display="none"; b.style.display=show?"block":"none"; if(show) renderConvList(); };
+  $("#iaCfg").onclick=()=>{ const b=$("#iaCfgBox"); const show=b.style.display==="none"; $("#iaConvsBox").style.display="none"; b.style.display=show?"block":"none"; if(show) $("#iaUrl").value=IA.url; };
   $("#iaSaveUrl").onclick=()=>{ IA.url=$("#iaUrl").value.trim()||IA_URL_DEFAULT; save(K.iaurl,IA.url); $("#iaCfgBox").style.display="none"; toast("Puente guardado ✓"); };
-  $("#iaClear").onclick=()=>{ if(confirm("¿Borrar toda la conversación con la IA?")){ IA.chat=[]; save(K.iachat,IA.chat); $("#iaCfgBox").style.display="none"; pintarIAChat(); } };
+  $("#iaClear").onclick=()=>{ if(confirm("¿Borrar la conversación actual?")){ const c=iaConvAct(); c.msgs=[]; c.t=""; iaGuardarConvs(); $("#iaCfgBox").style.display="none"; pintarIAChat(); } };
   $("#iaSend").onclick=()=>iaEnviar();
   const ta=$("#iaText");
   ta.addEventListener("keydown",e=>{ if(e.key==="Enter" && !e.shiftKey){ e.preventDefault(); iaEnviar(); } });
   ta.addEventListener("input",()=>{ ta.style.height="auto"; ta.style.height=Math.min(ta.scrollHeight,120)+"px"; });
   document.querySelectorAll("#iaQuick .ia-chip").forEach(b=>{ b.onclick=()=>iaEnviar(b.dataset.q); });
+  // Adjuntar imagen (galería/archivos) y cámara en directo
+  $("#iaClip").onclick=()=>$("#iaFile").click();
+  $("#iaCamBtn").onclick=()=>$("#iaCam").click();
+  const onPick=(inp)=>{ const f=inp.files&&inp.files[0]; inp.value=""; if(!f) return;
+    if(!/^image\//.test(f.type)){ toast("Por ahora solo imágenes"); return; }
+    toast("Preparando imagen…");
+    iaLeerImagen(f,(dataUrl)=>{ if(!dataUrl){ toast("No pude leer la imagen"); return; } IA.pendImg=dataUrl; iaPintarAtt(); }); };
+  $("#iaFile").onchange=function(){ onPick(this); };
+  $("#iaCam").onchange=function(){ onPick(this); };
   pintarIAChat();
+}
+
+/* Lee una imagen del teléfono y la reduce/comprime (para que viaje ligera
+   y quepa en la memoria del teléfono). Devuelve un data URL JPEG. */
+function iaLeerImagen(file, cb){
+  try{
+    const reader=new FileReader();
+    reader.onload=e=>{
+      const img=new Image();
+      img.onload=()=>{
+        const max=1280; let w=img.width, h=img.height;
+        if(w>max||h>max){ const s=max/Math.max(w,h); w=Math.round(w*s); h=Math.round(h*s); }
+        const cv=document.createElement("canvas"); cv.width=w; cv.height=h;
+        cv.getContext("2d").drawImage(img,0,0,w,h);
+        try{ cb(cv.toDataURL("image/jpeg",0.72)); }catch(_){ cb(null); }
+      };
+      img.onerror=()=>cb(null);
+      img.src=e.target.result;
+    };
+    reader.onerror=()=>cb(null);
+    reader.readAsDataURL(file);
+  }catch(_){ cb(null); }
+}
+/* Vista previa de la imagen pendiente, encima del cuadro de texto */
+function iaPintarAtt(){
+  const a=$("#iaAtt"); if(!a) return;
+  if(!IA.pendImg){ a.style.display="none"; a.innerHTML=""; return; }
+  a.style.display="flex";
+  a.innerHTML=`<div class="ia-att-wrap"><img class="ia-att-img" src="${IA.pendImg}" alt="adjunto">
+    <button class="ia-att-x" id="iaAttX" aria-label="Quitar imagen">✕</button></div>`;
+  $("#iaAttX").onclick=()=>{ IA.pendImg=null; iaPintarAtt(); };
 }
 function abrirIA(){ $("#iaOv").classList.add("show"); pintarIAChat(); setTimeout(()=>{ const t=$("#iaText"); if(t)t.focus(); },220); }
 function cerrarIA(){ $("#iaOv").classList.remove("show"); }
 
-/* Formato ligero de la respuesta: **negritas** y saltos de línea */
-function fmtIA(s){ return esc(s).replace(/\*\*(.+?)\*\*/g,"<b>$1</b>").replace(/\n/g,"<br>"); }
+/* Formato ligero de la respuesta: **negritas**, enlaces tocables y saltos de línea */
+function fmtIA(s){
+  return esc(s)
+    .replace(/\*\*(.+?)\*\*/g,"<b>$1</b>")
+    .replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target="_blank" rel="noopener" class="ia-link">$1</a>')
+    .replace(/\n/g,"<br>");
+}
+/* Enlace directo para recargar créditos de Anthropic (el mentor no ve tu saldo) */
+const IA_RECARGA_URL = "https://console.anthropic.com/settings/billing";
 
 function pintarIAChat(){
   const m=$("#iaMsgs"); if(!m) return;
-  if(!IA.chat.length && !IA.busy){
+  const c=iaConvAct();
+  if(!c.msgs.length && !IA.busy){
     m.innerHTML=`<div class="ia-welcome"><div class="ia-w-emoji">🧠</div>
       <div class="ia-w-t">Soy tu mentor de trading</div>
-      <div class="ia-w-s">Pregúntame lo que sea: conceptos, dudas de tu estrategia, o pídeme que analice tu operativa con tus datos reales. Estoy para que entiendas y mejores.</div></div>`;
+      <div class="ia-w-s">Conozco tu estrategia CRT, tu indicador, tus reglas y tus datos. Pregúntame lo que sea, o pídeme que analice tu operativa. Si te equivocas, te lo digo claro: estoy para que mejores.</div></div>`;
     return;
   }
-  m.innerHTML=IA.chat.map(x=>`<div class="ia-msg ${x.role==="user"?"user":"bot"}">${x.role==="user"?esc(x.content):fmtIA(x.content)}</div>`).join("")
+  m.innerHTML=c.msgs.map(x=>{
+    const cuerpo=x.role==="user"?esc(x.content):fmtIA(x.content);
+    const foto=x.img?`<img class="ia-msg-img" src="${x.img}" alt="gráfico">`:"";
+    return `<div class="ia-msg ${x.role==="user"?"user":"bot"}">${foto}${cuerpo}</div>`;
+  }).join("")
     + (IA.busy?`<div class="ia-msg bot ia-typing"><span></span><span></span><span></span></div>`:"");
   m.scrollTop=m.scrollHeight;
 }
@@ -2330,7 +2542,7 @@ function pintarIAChat(){
 function iaContexto(){
   const list=tradesCtx(); const m=list.length?metricas(list):null;
   let c=`[Datos del alumno · ${CTX.modo==="real"?"cuenta real":"backtest"} · estrategia ${CTX.estrategia}] `;
-  if(!m){ return c+"Aún no tiene trades registrados en este contexto."; }
+  if(!m){ return c+"Aún no tiene trades registrados en este contexto (empezando de cero)."; }
   c+=`${m.n} trades. R neto ${r1(m.rNeto)}R. Win rate ${pct(m.wr*100)}. Profit factor ${fmtPF(m.pf)}. Expectancy ${r2(m.exp)}R por trade. RR real 1:${r1(m.rrReal)}. Drawdown máx ${r1(m.dd)}R. Plan roto en ${m.roto} trades, ${m.emoMal} con prisa/ansiedad, ${m.fueraVent} fuera de ventana, ${m.setupsC} setups C. `;
   const rank=[]; DIMS_MENTOR.forEach(([dim,fn])=>{ cortePor(list,fn).forEach(x=>{ if(x.n>=3) rank.push({dim,k:x.k,exp:x.exp,n:x.n}); }); });
   rank.sort((a,b)=>b.exp-a.exp);
@@ -2339,33 +2551,62 @@ function iaContexto(){
   return c;
 }
 
+/* Convierte un mensaje guardado al formato de la API (con imagen si la tiene) */
+function iaMsgApi(x){
+  if(x.role==="user" && x.img){
+    const b64=x.img.split(",")[1]||"";
+    return { role:"user", content:[
+      { type:"image", source:{ type:"base64", media_type:"image/jpeg", data:b64 } },
+      { type:"text", text:x.content||"" }
+    ]};
+  }
+  return { role:x.role, content:x.content };
+}
+
 async function iaEnviar(textoForzado){
   const ta=$("#iaText");
-  const texto=(textoForzado!=null?textoForzado:(ta?ta.value:"")).trim();
-  if(!texto || IA.busy) return;
+  let texto=(textoForzado!=null?textoForzado:(ta?ta.value:"")).trim();
+  const img=IA.pendImg;
+  if((!texto && !img) || IA.busy) return;
   if(!IA.url){ toast("Configura el puente (⚙️)"); $("#iaCfg").click(); return; }
+  if(!texto && img) texto="Analiza este gráfico según mi estrategia CRT: par/temporalidad, bias, sweep, MSS y zona. Dime si hay un setup válido (A+/B/C) y qué harías.";
   if(ta){ ta.value=""; ta.style.height="auto"; }
-  IA.chat.push({role:"user",content:texto});
-  IA.busy=true; save(K.iachat,IA.chat); pintarIAChat();
+  IA.pendImg=null; iaPintarAtt();
+  const c=iaConvAct();
+  c.msgs.push({role:"user",content:texto, img:img||undefined});
+  if(!c.t) c.t=iaTit(c);
+  IA.busy=true;
+  if(!iaGuardarConvs()) toast("Imagen muy pesada: se envía pero quizá no se guarde en el historial");
+  pintarIAChat();
   try{
-    let msgs=IA.chat.slice(-12).map(x=>({role:x.role,content:x.content}));
-    while(msgs.length && msgs[0].role!=="user") msgs.shift();
-    // Inyecta el contexto de datos en el último mensaje del usuario
-    msgs[msgs.length-1]={role:"user",content:iaContexto()+"\n\nPregunta: "+texto};
+    let hist=c.msgs.slice(-14);
+    while(hist.length && hist[0].role!=="user") hist.shift();
+    let msgs=hist.map(iaMsgApi);
+    // Inyecta el contexto de datos en el bloque de texto del último mensaje del usuario
+    const inj=iaContexto()+"\n\nPregunta de Rey: "+texto;
+    const last=msgs[msgs.length-1];
+    if(Array.isArray(last.content)){ last.content[last.content.length-1]={type:"text",text:inj}; }
+    else{ last.content=inj; }
     const r=await fetch(IA.url,{method:"POST",headers:{"content-type":"application/json"},
-      body:JSON.stringify({system:IA_SYSTEM, messages:msgs})});
+      body:JSON.stringify({system:iaSystemFull(), messages:msgs})});
     let data={}; try{ data=await r.json(); }catch(_){}
     IA.busy=false;
     if(!r.ok || data.error){
-      IA.chat.push({role:"assistant",content:"⚠️ "+((data&&data.error)||("Error "+r.status+". Revisa tu puente en ajustes (⚙️) o que tengas crédito en Anthropic."))});
+      const em=((data&&data.error)||("Error "+r.status)).toString();
+      const sinCredito = /credit|balance|billing|quota|insufficient|saldo|402/i.test(em) || r.status===402;
+      if(sinCredito){
+        c.msgs.push({role:"assistant",content:"💳 **Se agotaron tus créditos de la IA.**\n\nRecarga aquí (toca el enlace) y en 1 minuto vuelvo a funcionar:\n"+IA_RECARGA_URL+"\n\nInicia sesión con tu cuenta de Google, pulsa **Add credits / Buy credits** y listo. (Puedes activar la recarga automática ahí mismo para no quedarte sin saldo nunca.)"});
+      }else{
+        c.msgs.push({role:"assistant",content:"⚠️ "+em+"\n\nRevisa tu puente en ajustes (⚙️) o tu conexión. Si dice algo de crédito/billing, recarga en:\n"+IA_RECARGA_URL});
+      }
     }else{
-      IA.chat.push({role:"assistant",content:(data.text||"").trim()||"(respuesta vacía)"});
+      c.msgs.push({role:"assistant",content:(data.text||"").trim()||"(respuesta vacía)"});
     }
   }catch(e){
     IA.busy=false;
-    IA.chat.push({role:"assistant",content:"⚠️ No pude conectar con el puente. Revisa tu internet o la dirección en ajustes (⚙️)."});
+    c.msgs.push({role:"assistant",content:"⚠️ No pude conectar con el puente. Revisa tu internet o la dirección en ajustes (⚙️)."});
   }
-  save(K.iachat,IA.chat); pintarIAChat();
+  iaGuardarConvs(); pintarIAChat();
 }
 
 /* ============================================================

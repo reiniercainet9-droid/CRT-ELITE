@@ -1,5 +1,81 @@
-CRT ELITE v3.4 — PLAN OPERATIVO + BACKTESTING
+CRT ELITE v3.7 — PLAN OPERATIVO + BACKTESTING
 ==============================================
+
+NOVEDADES v3.7  (RECARGA FÁCIL DE LA IA)
+========================================
+1) Si algún día se agotan los créditos de tu IA, en vez de un error raro
+   te sale un mensaje claro con un ENLACE DIRECTO para recargar. Lo tocas,
+   inicias sesión con tu Google, pulsas "Add credits" y en 1 minuto la IA
+   vuelve a funcionar. (Ahí mismo puedes activar la recarga automática.)
+2) En Ajustes (⚙️) del chat hay un botón fijo "💳 Saldo / recargar" para
+   ver tu saldo cuando quieras. Recuerda: la IA no ve tu saldo, solo tú.
+3) Los enlaces en las respuestas de la IA ahora son tocables.
+
+NOVEDADES v3.6  (MENTOR IA: LE MANDAS FOTOS Y GRÁFICOS)
+=======================================================
+Ahora en el chat del Mentor IA puedes ENVIARLE IMÁGENES y él las VE:
+
+1) Dos botones nuevos a la izquierda del cuadro de texto:
+   - 📎 Adjuntar: elige una foto o captura de tu galería / archivos.
+   - 📷 Cámara: abre la cámara del teléfono para tirar una foto en
+     DIRECTO (por ejemplo, tu pantalla con el gráfico) y mandársela.
+
+2) Antes de enviar ves una vista previa de la foto (con una ✕ para
+   quitarla). Puedes mandar la foto sola o con tu pregunta escrita. Si
+   la mandas sola, él la analiza según tu estrategia CRT.
+
+3) El mentor lee el gráfico como un trader: par y temporalidad, bias,
+   estructura (BOS/CHoCH), barridos (sweep con mecha), zonas (OB/FVG/
+   premium/discount) y, si sale el panel de tu indicador CRT Elite, lo
+   usa. Te dice si hay setup válido (A+/B/C) y qué haría. Si la foto
+   está borrosa o le falta info, te pide otra toma — no inventa.
+
+4) La foto queda guardada en esa conversación (se comprime sola para no
+   llenarte el teléfono). Si alguna vez una imagen es muy pesada, te
+   avisa: se envía igual, pero puede no quedar en el historial.
+
+   La imagen viaja por tu mismo puente seguro; no hay que tocar nada del
+   puente. Solo se usa internet cuando envías.
+
+NOVEDADES v3.5  (MENTOR IA: MEMORIA + TE CONOCE A FONDO)
+=======================================================
+Tu Mentor IA (botón flotante ✨) ahora es un verdadero mentor élite:
+
+1) YA TE CONOCE COMPLETO. Antes respondía en genérico. Ahora, en CADA
+   pregunta, lleva de fondo un "dossier" con TODO lo tuyo:
+   - Tu estrategia CRT/ICT/SMC entera (las 5 confluencias, la regla SIN
+     SWEEP = SIN SETUP, tus 15 reglas inviolables, clasificación A+/B/C,
+     riesgo 0.5%, parciales, ventanas de NY, mapa de temporalidades,
+     comportamiento por día). Se arma solo desde tu plan, así que si el
+     plan cambia, la IA cambia con él: nunca se contradicen.
+   - TU INDICADOR CRT Elite v3: el motor de giro, el candado 15m, la
+     Secuencia F3, el giro estructural H4+15M, la fila CRT H4, las zonas
+     Premium/Discount, la calibración auto por temporalidad, y TODAS tus
+     alarmas — incluida la regla de oro: cada vez que actualizas el
+     indicador, hay que BORRAR y VOLVER A CREAR las alarmas por par.
+   - Tu perfil: Forex EUR/USD y GBP/USD, entradas 3m/5m, cuentas
+     fondeadas de 6K, y que vas a comprar 5 cuentas de fondeo. Sabe que
+     tu mayor fuga es el timing prematuro y te la trabaja siempre.
+   Pregúntale por tu indicador, tus alarmas o tu estrategia: ahora sí sabe.
+
+2) MEMORIA DE CONVERSACIONES (como un chat de verdad). Ya no hay un solo
+   hilo: puedes tener VARIAS conversaciones guardadas y volver a
+   cualquiera cuando quieras.
+   - Botón 🗂️ (arriba en el chat): lista de tus conversaciones, con su
+     título y fecha. Tocas una para retomarla; 🗑️ para borrarla.
+   - Botón ✚ : empezar una conversación nueva.
+   - Cada conversación se guarda sola en el teléfono con un título
+     automático (tu primera pregunta). No se pierde al cerrar la app.
+
+3) PERSONALIDAD DE MENTOR. Te habla claro y cercano, pero si te
+   equivocas o quieres saltarte una regla, te CORRIGE con firmeza y te
+   explica por qué — no te da la razón solo porque tú lo quieras así.
+   Se anticipa a tus errores. Es tu mentor, no un "sí a todo".
+   Botones rápidos nuevos: "🔔 Mis alarmas" y "🏦 Plan de fondeo".
+
+NOTA: tu clave de Claude sigue viviendo SOLO en el puente (Cloudflare),
+nunca en la app. No hay que tocar el puente para esta versión: solo subes
+los archivos nuevos. La IA solo consume internet cuando le preguntas.
 
 NOVEDADES v3.4
 ==============
