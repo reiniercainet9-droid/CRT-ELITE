@@ -1,5 +1,18 @@
-CRT ELITE v4.3 — PLAN OPERATIVO + BACKTESTING
+CRT ELITE v4.4 — PLAN OPERATIVO + BACKTESTING
 ==============================================
+
+NOVEDADES v4.4  (TONO MAS GRAVE + AVISO VOZ DE HOMBRE)
+=====================================================
+- El control de Tono ahora tiene 4 niveles: Grave++ / Grave+ / Grave /
+  Normal. Si tu telefono solo trae voz de mujer, prueba GRAVE++ (0.4):
+  suena bastante mas masculino.
+- OJO: la voz de HOMBRE se instala en Ajustes del telefono -> "Texto a
+  voz" (Sintesis de voz), NO en el Asistente de Google. Cambiar la voz
+  del Asistente NO afecta a la app.
+  Ruta en Moto G54: Ajustes -> Accesibilidad -> Salida de texto a voz ->
+  (motor Google) engranaje -> Instalar datos de voz -> Espanol -> prueba
+  las variantes. Luego, en Roberto (⚙️), abre el selector de voz y elige
+  la que suene masculina.
 
 NOVEDADES v4.3  (TONO DE VOZ + ROBERTO MAS RAPIDO)
 ==================================================

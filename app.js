@@ -2384,7 +2384,7 @@ function iaSystemFull(){ return IA_SYSTEM_BASE+"\n\n"+iaConocimiento(); }
 
 /* ---- ESTADO: varias conversaciones con memoria ---- */
 let IA = { url:"", convs:[], actId:null, busy:false, pendImg:null,
-           voz:{on:false, name:null, pitch:0.7}, hablandoIdx:null };
+           voz:{on:false, name:null, pitch:0.6}, hablandoIdx:null };
 
 function iaGuardarConvs(){
   try{
@@ -2439,9 +2439,9 @@ function iaInit(){
   IA.url   = load(K.iaurl, IA_URL_DEFAULT);
   IA.convs = load(K.iaconvs, null);
   IA.actId = load(K.iaact, null);
-  IA.voz   = load(K.iavoz, {on:false, name:null, pitch:0.7});
-  if(!IA.voz || typeof IA.voz!=="object") IA.voz={on:false, name:null, pitch:0.7};
-  if(typeof IA.voz.pitch!=="number") IA.voz.pitch=0.7;
+  IA.voz   = load(K.iavoz, {on:false, name:null, pitch:0.6});
+  if(!IA.voz || typeof IA.voz!=="object") IA.voz={on:false, name:null, pitch:0.6};
+  if(typeof IA.voz.pitch!=="number") IA.voz.pitch=0.6;
   /* Migración: si venías de la versión de un solo chat, lo conservo como conversación */
   if(!IA.convs){
     IA.convs=[];
@@ -2476,12 +2476,14 @@ function iaInit(){
         <div class="fl">🔊 Voz de Roberto</div>
         <button class="btn" id="iaVozToggle" style="margin-bottom:8px">🔇 Que Roberto me hable: apagado</button>
         <select class="inp" id="iaVozSel" style="margin-bottom:8px"></select>
-        <div class="fl">Tono (grave = más masculino)</div>
-        <div class="seg c3" id="iaVozTono" style="margin-bottom:8px">
-          <button data-pitch="0.7">Grave</button>
+        <div class="fl">Tono (más grave = más masculino)</div>
+        <div class="seg c4" id="iaVozTono" style="margin-bottom:6px">
+          <button data-pitch="0.4">Grave++</button>
+          <button data-pitch="0.6">Grave+</button>
+          <button data-pitch="0.8">Grave</button>
           <button data-pitch="1.0">Normal</button>
-          <button data-pitch="1.3">Agudo</button>
         </div>
+        <div class="note" style="text-align:left;margin:0 0 8px">Si tu teléfono solo trae voz de mujer, baja el tono (Grave++). Para una voz de HOMBRE real hay que instalarla en Ajustes del teléfono → "Texto a voz" (no en el Asistente de Google).</div>
         <button class="btn" id="iaVozTest" style="margin-bottom:14px">▶️ Probar voz</button>
         <div class="fl">Dirección de tu puente (Worker)</div>
         <input class="inp" id="iaUrl" placeholder="https://...workers.dev">
@@ -2645,7 +2647,7 @@ function iaHablar(texto, idx){
   const v=iaVozEspanol();
   if(v){ u.voice=v; u.lang=v.lang; } else { u.lang="es-ES"; }
   u.rate=1.0;
-  u.pitch=(typeof IA.voz.pitch==="number")?IA.voz.pitch:0.7;  /* grave = más masculino */
+  u.pitch=(typeof IA.voz.pitch==="number")?IA.voz.pitch:0.6;  /* grave = más masculino */
   u.onstart=()=>{ IA.hablandoIdx=(idx==null?-1:idx); pintarIAChat(); };
   u.onend  =()=>{ IA.hablandoIdx=null; pintarIAChat(); };
   u.onerror=()=>{ IA.hablandoIdx=null; pintarIAChat(); };
@@ -2673,7 +2675,7 @@ function iaVozRefrescarUI(){
   }
   const tono=$("#iaVozTono");
   if(tono){ tono.querySelectorAll("[data-pitch]").forEach(b=>{
-    b.classList.toggle("on", Math.abs(parseFloat(b.dataset.pitch)-(IA.voz.pitch||0.7))<0.01); }); }
+    b.classList.toggle("on", Math.abs(parseFloat(b.dataset.pitch)-(IA.voz.pitch||0.6))<0.01); }); }
   iaPintarVoces();
 }
 
