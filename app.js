@@ -175,9 +175,11 @@ function abrirMenu(){
     $("#menuX").onclick=cerrarMenu;
   }
   const g=$("#menuGrid");
-  g.innerHTML=TABS.map(t=>`<button class="menu-item${t.id===TAB?" on":""}" data-go="${t.id}">
-    <span class="mi-ic">${t.ic}</span><span class="mi-t">${esc(t.n)}</span></button>`).join("");
-  g.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>{ irA(b.dataset.go); cerrarMenu(); });
+  g.innerHTML=TABS.map(t=>`<div class="menu-item${t.id===TAB?" on":""}" data-go="${t.id}">
+    <span class="mi-ic">${t.ic}</span><span class="mi-t">${esc(t.n)}</span>
+    <button class="mi-help" data-help="${t.id}" aria-label="¿Para qué sirve ${esc(t.n)}?">?</button></div>`).join("");
+  g.querySelectorAll(".menu-item").forEach(it=>{ it.onclick=()=>{ irA(it.dataset.go); cerrarMenu(); }; });
+  g.querySelectorAll(".mi-help").forEach(b=>{ b.onclick=(e)=>{ e.stopPropagation(); cerrarMenu(); abrirAyuda(b.dataset.help); }; });
   requestAnimationFrame(()=>ov.classList.add("show"));
 }
 function cerrarMenu(){ const o=$("#menuOv"); if(o) o.classList.remove("show"); }
@@ -1397,7 +1399,7 @@ async function compartirRespaldo(){
   try{
     const file=new File([contenido],nombre,{type:"application/json"});
     if(navigator.canShare && navigator.canShare({files:[file]})){
-      await navigator.share({files:[file], title:"Respaldo CRT Elite", text:"Respaldo de tu app CRT Elite"});
+      await navigator.share({files:[file], title:"Respaldo Apex", text:"Respaldo de tu app Apex"});
       toast("Elige Drive o Archivos para guardarlo ☁️");
       return;
     }
@@ -2328,9 +2330,9 @@ function viewPlan(){
   const port=el("div","card");
   port.style.cssText="position:relative;overflow:hidden;text-align:center;padding:26px 18px";
   port.innerHTML=`<div style="position:absolute;top:0;left:0;right:0;height:4px;background:var(--gold)"></div>
-    <div style="width:74px;height:74px;margin:0 auto 16px;border-radius:18px;background:linear-gradient(145deg,#1E2E52,#16233E);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:25px;color:var(--gold)">CRT</div>
-    <div style="font-size:29px;font-weight:800;line-height:1.15">PLAN DE TRADING</div>
-    <div style="font-size:26px;font-weight:800;color:var(--gold);margin-bottom:10px">CRT ELITE</div>
+    <div style="width:78px;height:78px;margin:0 auto 16px;border-radius:20px;background:radial-gradient(120% 120% at 30% 20%,#20264C,#0E1226 72%);border:1px solid var(--line);display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 100 100" style="width:66%;height:66%"><use href="#crtLogo"/></svg></div>
+    <div style="font-size:15px;font-weight:600;letter-spacing:3px;color:var(--txt3)">PLAN DE TRADING</div>
+    <div style="font-size:40px;font-weight:800;letter-spacing:6px;color:var(--gold);margin:2px 0 10px">APEX</div>
     <div style="font-style:italic;color:var(--txt2);font-size:15px">SMC · Candle Range Theory · Liquidez</div>
     <div style="color:var(--txt2);font-size:14.5px;margin-top:16px;line-height:1.8">
       Operador: Rey<br>Pares: EUR/USD · GBP/USD<br>
@@ -2738,7 +2740,7 @@ const IA_URL_DEFAULT = "https://elitepro-worker.reiniercainet9.workers.dev";
 
 /* --- PERSONALIDAD + REGLAS DE COMPORTAMIENTO DEL MENTOR --- */
 const IA_SYSTEM_BASE =
-"Te llamas ROBERTO. Eres el mentor personal de trading de Rey, dentro de su app CRT Elite. Preséntate y firma como Roberto cuando sea natural, sin repetir tu nombre en cada mensaje. Eres un trader profesional de altísima experiencia real en SMC, ICT y Candle Range Theory (CRT), y ADEMÁS un experto sólido en finanzas, contabilidad, gestión de capital, interés compuesto, estadística y probabilidad aplicada al trading — porque este negocio es de números y de gestión, no solo de entradas. También eres su coach de disciplina y psicología. Tu misión: que Rey pase sus retos de fondeo, proteja sus cuentas fondeadas y ESCALE su capital con cabeza fría y matemática, operando con consistencia.\n\n"+
+"Te llamas ROBERTO. Eres el mentor personal de trading de Rey, dentro de su app Apex (su centro de mando de trading). Preséntate y firma como Roberto cuando sea natural, sin repetir tu nombre en cada mensaje. Eres un trader profesional de altísima experiencia real en SMC, ICT y Candle Range Theory (CRT), y ADEMÁS un experto sólido en finanzas, contabilidad, gestión de capital, interés compuesto, estadística y probabilidad aplicada al trading — porque este negocio es de números y de gestión, no solo de entradas. También eres su coach de disciplina y psicología. Tu misión: que Rey pase sus retos de fondeo, proteja sus cuentas fondeadas y ESCALE su capital con cabeza fría y matemática, operando con consistencia.\n\n"+
 "CÓMO ERES:\n"+
 "- Hablas SIEMPRE en español, cercano, cálido y con confianza, como un mentor que le tiene cariño a su alumno pero lo respeta demasiado como para mentirle.\n"+
 "- Tienes PERSONALIDAD y criterio propio. No eres un asistente complaciente. Si Rey se equivoca, quiere saltarse una regla, o pide algo que va contra su propio plan o contra la buena práctica de trading, lo CORRIGES con claridad y firmeza — con respeto, pero sin suavizar la verdad. Frases tipo: 'Para ahí, eso está mal y te explico por qué…'. Nunca haces algo solo porque él lo quiere así si es un error.\n"+
@@ -2770,7 +2772,7 @@ const PERFIL_REY =
 "- Vive en Brasil, zona horaria UTC−3 FIJA (Brasil no tiene horario de verano). Sus killzones están en hora de Nueva York. DESFASE EXACTO Brasil↔NY: Nueva York es UTC−5 en invierno (EST, ~nov a mar) y UTC−4 en verano (EDT, ~mar a nov). Por tanto Brasil va 2 horas ADELANTE de NY en invierno y 1 hora ADELANTE en verano. Para pasar una hora de NY a hora de Brasil: en invierno súmale 2h, en verano súmale 1h. Ejemplo: Pre-NY Killzone 7:30–9:30 AM NY = en verano 8:30–10:30 hora Brasil, en invierno 9:30–11:30 hora Brasil. El indicador ya maneja el cambio EST/EDT automáticamente; la fila 'Killzone' del panel (Dentro/Fuera) es la fuente de verdad — si dice Fuera, no se opera aunque el setup se vea bien.\n"+
 "- Cuentas: tiene cuentas fondeadas de $6K y está por comprar 5 cuentas de reto/fondeo más para hacer los exámenes. Objetivo inmediato: pasar esos challenges y no romper reglas. Riesgo FIJO 0.5% por trade.\n"+
 "- Su mayor debilidad histórica, reconocida por él mismo: TIMING PREMATURO — su dirección suele ser correcta, pero entra ANTES de que la trampa se liquide y se confirme. Trabájasela siempre.\n"+
-"- No sabe programar. La app CRT Elite (esta) es su diario, backtester, calculadora de lotaje y mentor de bolsillo (tú).";
+"- No sabe programar. La app Apex (esta, antes llamada CRT Elite) es su diario, backtester, calculadora de lotaje, gestor de cuentas de fondeo y mentor de bolsillo (tú).";
 
 /* Dossier del indicador CRT Elite que construimos juntos en TradingView */
 const INDICADOR_DOSSIER =

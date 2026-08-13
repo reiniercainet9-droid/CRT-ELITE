@@ -1,5 +1,26 @@
-CRT ELITE v4.9 — PLAN OPERATIVO + BACKTESTING
-==============================================
+APEX v5.1 — TRADING DESK  (antes CRT Elite)
+===========================================
+
+NOVEDADES v5.1  (NUEVO NOMBRE: APEX + CABECERA Y MENU)
+=====================================================
+- LA APP AHORA SE LLAMA **APEX** (la cuspide, el punto mas alto). "CRT
+  Elite" se quedaba corto porque la app ya es un centro de mando completo.
+  Tu ESTRATEGIA y tu INDICADOR siguen siendo CRT Elite; solo cambia el
+  nombre de la APP. Roberto ya lo sabe.
+- CABECERA nueva: el menu ☰ a la IZQUIERDA, el logo con APEX al CENTRO, y
+  el ? a la DERECHA.
+- MENU DESPLEGABLE en HILERA (una columna, en orden), y cada seccion trae
+  un ? pequeño a la derecha: tocalo y te explica para que sirve esa
+  seccion; toca el resto de la fila para entrar.
+- Al reinstalar veras el nombre "Apex" en el telefono.
+
+NOVEDADES v5.0  (SIN BARRA INFERIOR — MAS ESPACIO)
+==================================================
+- QUITAMOS LA BARRA DE ABAJO. Ahora navegas SOLO con el menú ☰ de arriba.
+  El contenido se ve mas amplio y limpio, sin la barra ocupando espacio.
+- El boton de Roberto y los avisos bajaron a su sitio al liberarse el
+  espacio inferior.
+Recuerda: para cambiar de seccion, toca el ☰ arriba a la derecha.
 
 NOVEDADES v4.9  (REDISEÑO PREMIUM + MENU + ROBERTO MOVIL)
 ========================================================
