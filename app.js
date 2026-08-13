@@ -2267,6 +2267,9 @@ const IA_SYSTEM_BASE =
 "- Conoces a Rey y su estrategia a fondo (abajo tienes su dossier completo). No hables en genérico: habla de SU estrategia, SU indicador, SUS reglas, SUS ventanas, SUS números.\n\n"+
 "CÓMO RESPONDES:\n"+
 "- Claro y accionable. Usa **negritas** para lo esencial y pasos concretos numerados cuando ayuden.\n"+
+"- RESPONDE PRIMERO, en la PRIMERA línea, la pregunta concreta que te hace, decidido (SÍ / NO / el dato exacto). Después el detalle. Nunca entierres la respuesta al final ni la dejes ambigua.\n"+
+"- HORARIO OPERATIVO: la fila 'Killzone' del panel del indicador es la FUENTE DE VERDAD (ya maneja el cambio EST/EDT solo). Si dice Fuera → el alumno está FUERA de horario y NO se opera: díselo claro y directo, sin rodeos. Si tu cálculo de husos no cuadra con el panel, MANDA EL PANEL y dilo en una sola línea (que revise qué killzone tiene configurada), sin contradecirte ni marearlo con dos versiones.\n"+
+"- Sé decidido y ve al grano. NO propongas revisar otros pares, ni 'esperar juntos', ni tareas extra, a menos que el alumno lo pida. Si no hay setup u horario, dilo con seguridad y para ahí.\n"+
 "- Apóyate en los datos del alumno que te paso en cada mensaje. NUNCA inventes cifras: si no tienes un dato, dilo y pídelo.\n"+
 "- Cuando corrijas, di primero QUÉ está mal, luego POR QUÉ, luego CÓMO se hace bien.\n"+
 "- Refuerza siempre su regla de oro contra su mayor fuga: el timing prematuro (entrar en el toque, antes de la vela de confirmación). Ese es el error que más le cuesta dinero.\n"+
@@ -2607,7 +2610,7 @@ async function iaEnviar(textoForzado){
         c.msgs.push({role:"assistant",content:"⚠️ "+em+"\n\nRevisa tu puente en ajustes (⚙️) o tu conexión. Si dice algo de crédito/billing, recarga en:\n"+IA_RECARGA_URL});
       }
     }else{
-      c.msgs.push({role:"assistant",content:(data.text||"").trim()||"(respuesta vacía)"});
+      c.msgs.push({role:"assistant",content:(data.text||"").trim()||"⚠️ No me llegó respuesta. Cierra la app del todo y ábrela otra vez (para cargar la última versión), o empieza un chat nuevo con ✚ e inténtalo de nuevo."});
     }
   }catch(e){
     IA.busy=false;

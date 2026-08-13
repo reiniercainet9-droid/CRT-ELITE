@@ -1,5 +1,20 @@
-CRT ELITE v3.8 — PLAN OPERATIVO + BACKTESTING
+CRT ELITE v3.9 — PLAN OPERATIVO + BACKTESTING
 ==============================================
+
+NOVEDADES v3.9  (MENTOR MAS DECIDIDO)
+=====================================
+1) El mentor ahora RESPONDE PRIMERO la pregunta directa, en la primera
+   linea, decidido (SI/NO/el dato). Nada de enterrar la respuesta al final.
+2) HORARIO: la fila "Killzone" del panel manda. Si dice Fuera, te dice
+   claro "estas fuera de horario, no se opera" — sin marearte con dos
+   calculos. No propone revisar otros pares ni "esperar juntos" salvo que
+   tu lo pidas.
+3) Si alguna vez no llega respuesta, en vez de "(respuesta vacia)" te dice
+   exactamente que hacer (cerrar y reabrir la app, o chat nuevo).
+
+IMPORTANTE: si tu telefono sigue mostrando la version vieja, cierra la app
+DEL TODO (deslizala fuera de recientes) y abrela con internet DOS veces.
+Asi carga la version nueva de verdad.
 
 NOVEDADES v3.8  (ARREGLO: RESPUESTAS VACIAS CON FOTO)
 ====================================================
