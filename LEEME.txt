@@ -1,5 +1,25 @@
-APEX v5.2 — TRADING DESK  (antes CRT Elite)
+APEX v5.3 — TRADING DESK  (antes CRT Elite)
 ===========================================
+
+NOVEDADES v5.3  (NOTIFICACIONES DE ROBERTO — FASE A)
+===================================================
+Roberto ya te puede AVISAR con notificaciones. En Roberto (✨) → Ajustes
+(⚙️) → seccion "🔔 Notificaciones de Roberto":
+- Activa el boton "Notificaciones" (el telefono te pedira permiso: acepta).
+- Elige que avisos quieres:
+   · Ventana operativa (killzone): te avisa al entrar en Londres / Pre-NY /
+     NY apertura.
+   · Cuenta cerca del limite (DD): te avisa si una cuenta se acerca a
+     romper el drawdown (peligro).
+- MIS PARES: ya NO estan fijos a EUR/USD y GBP/USD. Escribe los que sigas
+  (ej. EUR/USD, GBP/USD, XAU/USD) y guarda. Roberto los usa para todo, y
+  cuando montemos el puente vendran solos de TradingView.
+- Boton "📰 ¿Hay noticias rojas hoy en mis pares?": Roberto busca el
+  calendario del dia para TUS pares y te lo dice en el chat.
+
+IMPORTANTE (honesto): con la app ABIERTA los avisos funcionan siempre.
+Con la app CERRADA, tu telefono puede tardar o no avisar (eso se refuerza
+con Web Push mas adelante, ya con el puente). NO toca el worker.
 
 NOVEDADES v5.2  (ICONO NUEVO DE LA APP)
 =======================================

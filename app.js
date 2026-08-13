@@ -17,7 +17,10 @@ const K = {
   iaact  : "crtelite_iaact_v3",
   iavoz  : "crtelite_iavoz_v3",
   cuentas: "crtelite_cuentas_v3",
-  fabpos : "crtelite_fabpos_v3"
+  fabpos : "crtelite_fabpos_v3",
+  notif  : "crtelite_notif_v3",
+  pares  : "crtelite_pares_v3",
+  notiflog:"crtelite_notiflog_v3"
 };
 const load = (k,d)=>{ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):d; }catch(e){ return d; } };
 const save = (k,v)=>{ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){ toast("No se pudo guardar"); } };
@@ -39,6 +42,15 @@ if(!ESTRATEGIAS.includes(CTX.estrategia)) CTX.estrategia = ESTRATEGIAS[0];
 /* Cuentas de fondeo/reales/propias registradas (v4.6) */
 let CUENTAS = load(K.cuentas, []);
 function guardarCuentas(){ save(K.cuentas, CUENTAS); }
+
+/* Pares que sigue Rey (configurables; con el puente vendrán de TradingView) */
+let PARES = load(K.pares, ["EUR/USD","GBP/USD"]);
+if(!Array.isArray(PARES) || !PARES.length) PARES = ["EUR/USD","GBP/USD"];
+function guardarPares(){ save(K.pares, PARES); }
+/* Ajustes de notificaciones de Roberto */
+let NOTIF = load(K.notif, { on:false, killzone:true, cuentaDD:true });
+if(!NOTIF || typeof NOTIF!=="object") NOTIF = { on:false, killzone:true, cuentaDD:true };
+function guardarNotif(){ save(K.notif, NOTIF); }
 
 /* Migración: trades viejos sin modo/estrategia → real + CRT Elite */
 (function migrar(){
@@ -114,6 +126,7 @@ function tickRelojes(){
   let activa=null;
   for(const v of VENTANAS){ if(v.s!=null && !v.bad && ny.dec>=v.s && ny.dec<v.e){ activa=v; break; } }
   box.className="vent "+(activa ? (activa.cls==="hl"?"best":"on") : "off");
+  notifChequearKillzone(activa);
   if(activa){
     t.textContent=activa.n+" · ACTIVA";
     s.textContent = activa.cls==="hl" ? "Tu mejor ventana. Checklist antes de tocar nada." : "Ventana válida ("+activa.h+" NY)";
@@ -123,6 +136,120 @@ function tickRelojes(){
     for(const v of VENTANAS){ if(v.s!=null && !v.bad && v.s>ny.dec){ prox=v; break; } }
     s.textContent = prox ? "Próxima: "+prox.n+" a las "+prox.h.split("−")[0]+" NY" : "Espera la próxima killzone";
   }
+}
+
+/* ============================================================
+   NOTIFICACIONES DE ROBERTO (Fase A — local, sin puente)
+   Avisos de: ventana operativa (killzone), cuenta cerca del DD.
+   Usa Notification API. Con app abierta funciona siempre; con app
+   cerrada, si el teléfono soporta TimestampTrigger, los avisos de
+   killzone quedan programados por adelantado.
+   ============================================================ */
+function notifSoportado(){ return "Notification" in window; }
+async function notifPermiso(){
+  if(!notifSoportado()) return false;
+  if(Notification.permission==="granted") return true;
+  if(Notification.permission==="denied") return false;
+  try{ return (await Notification.requestPermission())==="granted"; }catch(_){ return false; }
+}
+/* Evita repetir el mismo aviso el mismo día */
+function notifYaHoy(clave){
+  let log={}; try{ log=JSON.parse(localStorage.getItem(K.notiflog)||"{}"); }catch(_){}
+  if(log[clave]) return true;
+  log[clave]=Date.now();
+  Object.keys(log).forEach(x=>{ if(Date.now()-log[x]>3*86400000) delete log[x]; });
+  try{ localStorage.setItem(K.notiflog, JSON.stringify(log)); }catch(_){}
+  return false;
+}
+function notifLanzar(titulo, cuerpo, tag){
+  if(!notifSoportado() || Notification.permission!=="granted") return;
+  const opts={ body:cuerpo, icon:"icon-192.png", badge:"icon-192.png", tag:tag||"apex", lang:"es" };
+  try{
+    if(navigator.serviceWorker && navigator.serviceWorker.ready){
+      navigator.serviceWorker.ready.then(reg=>reg.showNotification(titulo,opts)).catch(()=>{ try{ new Notification(titulo,opts); }catch(_){}} );
+    } else { new Notification(titulo,opts); }
+  }catch(_){}
+}
+/* Detecta la ENTRADA a una ventana operativa (llamado por el reloj) */
+let _kzPrev=null;
+function notifChequearKillzone(activa){
+  const nom=activa?activa.n:null;
+  if(NOTIF.on && NOTIF.killzone && nom && nom!==_kzPrev){
+    if(!notifYaHoy(hoyISO()+"|kz|"+nom)){
+      const best = activa.cls==="hl";
+      notifLanzar("⏰ "+nom, (best?"Tu MEJOR ventana. ":"")+"Estás en ventana operativa. Repasa el checklist antes de operar.", "kz");
+    }
+  }
+  _kzPrev=nom;
+}
+/* Programa por adelantado las killzones de los próximos días (si el móvil lo soporta) */
+function notifProgramarKillzones(){
+  if(!NOTIF.on || !NOTIF.killzone) return;
+  if(!("TimestampTrigger" in window) || !navigator.serviceWorker) return;
+  navigator.serviceWorker.ready.then(async reg=>{
+    try{
+      const prev=await reg.getNotifications({includeTriggered:false});
+      prev.forEach(n=>{ if(n.tag && n.tag.indexOf("kzp")===0) n.close(); });
+    }catch(_){}
+    const nowDec=horaNY().dec, now=Date.now();
+    const kz=[{h:2.0,n:"Londres"},{h:7.5,n:"Pre-NY Kill Zone"},{h:9.5,n:"NY Apertura"}];
+    for(let d=0; d<4; d++){
+      kz.forEach(z=>{
+        const deltaH=(z.h-nowDec)+d*24;
+        if(deltaH<=0.03) return;
+        const when=now+deltaH*3600000, wd=new Date(when).getDay();
+        if(wd===0||wd===6) return;
+        try{ reg.showNotification("⏰ "+z.n, { body:"Entraste en ventana operativa. Repasa el checklist antes de operar.",
+          tag:"kzp"+d+"-"+z.h, icon:"icon-192.png", badge:"icon-192.png",
+          showTrigger:new window.TimestampTrigger(when) }); }catch(_){}
+      });
+    }
+  }).catch(()=>{});
+}
+/* Avisa de cuentas cerca de romper el drawdown (PELIGRO) */
+function notifChequearCuentasDD(){
+  if(!NOTIF.on || !NOTIF.cuentaDD) return;
+  CUENTAS.forEach(c=>{
+    const ddMax=+c.ddMaxPct||0; if(!ddMax) return;
+    const st=statsCuenta(c);
+    if(st.progresoPct<0){
+      const margen=ddMax-Math.abs(st.progresoPct);
+      if(margen<=ddMax*0.3){
+        if(!notifYaHoy(hoyISO()+"|dd|"+c.id)){
+          notifLanzar("🔴 "+(c.alias||c.firma||"Cuenta")+" en peligro",
+            "Vas "+r1(st.progresoPct)+"%. Te queda "+r1(Math.max(0,margen))+"% hasta romper el DD. Protégela: para o reduce riesgo.", "dd"+c.id);
+        }
+      }
+    }
+  });
+}
+/* Enciende/apaga las notificaciones */
+async function notifActivar(on){
+  if(on){
+    const ok=await notifPermiso();
+    if(!ok){ toast("Activa los permisos de notificación del teléfono"); NOTIF.on=false; guardarNotif(); return false; }
+    NOTIF.on=true; guardarNotif();
+    notifLanzar("🔔 Roberto activado", "Te avisaré de tus ventanas operativas y si una cuenta se acerca al límite.", "test");
+    notifProgramarKillzones(); notifChequearCuentasDD();
+    return true;
+  }
+  NOTIF.on=false; guardarNotif();
+  return false;
+}
+/* Refresca el panel de notificaciones en los ajustes de Roberto */
+function notifRefrescarUI(){
+  const nt=$("#iaNotifToggle");
+  if(nt && notifSoportado()){ nt.innerHTML = NOTIF.on ? "🔔 Notificaciones: ACTIVADAS" : "🔕 Notificaciones: apagadas"; nt.classList.toggle("gold", !!NOTIF.on); }
+  const nkz=$("#iaNotifKz"); if(nkz) nkz.checked=!!NOTIF.killzone;
+  const ndd=$("#iaNotifDD"); if(ndd) ndd.checked=!!NOTIF.cuentaDD;
+  const p=$("#iaPares"); if(p) p.value=PARES.join(", ");
+}
+/* Pregunta a Roberto por las noticias rojas de hoy en los pares actuales */
+function iaNoticiasHoy(){
+  const q="¿Hay noticias económicas de alto impacto (rojas) HOY que afecten a mis pares actuales ("+PARES.join(", ")+")? Búscalo en el calendario económico: dime la hora (NY), el evento y el par afectado, y recuérdame no operar 30 min antes ni después. Sé breve y claro.";
+  const cb=$("#iaCfgBox"); if(cb) cb.style.display="none";
+  abrirIA();
+  setTimeout(()=>iaEnviar(q), 250);
 }
 
 /* ---------- NAVEGACIÓN ---------- */
@@ -1141,6 +1268,7 @@ function guardarTrade(){
   }
   refrescarDiarioCtx();
   if(nuevoTrade) mostrarCriterio(nuevoTrade);
+  notifChequearCuentasDD();
 }
 
 function editarTrade(id){
@@ -2767,7 +2895,7 @@ const IA_SYSTEM_BASE =
 /* Perfil fijo de Rey (lo que yo ya sé de él de tanto trabajar juntos) */
 const PERFIL_REY =
 "PERFIL DEL ALUMNO (Rey / Reinier):\n"+
-"- Trader de Forex. Opera SOLO EUR/USD y GBP/USD.\n"+
+"- Trader de Forex/mercados. Los PARES que sigue AHORA te llegan en el contexto de cada mensaje (son configurables y pueden cambiar: hoy pueden ser EUR/USD y GBP/USD, mañana oro (XAU/USD) u otros). Adáptate a los pares que te indique el contexto, no asumas siempre los mismos.\n"+
 "- Estructura de temporalidades: Daily = bias/dirección; H4 = zonas (el DÓNDE); 1H y 15M = validación, sweep + MSS (el CUÁNDO); 5M y 3M = gatillo fino de entrada (el punto EXACTO, NO se valida aquí). El bias SEMANAL manda sobre el diario.\n"+
 "- Vive en Brasil, zona horaria UTC−3 FIJA (Brasil no tiene horario de verano). Sus killzones están en hora de Nueva York. DESFASE EXACTO Brasil↔NY: Nueva York es UTC−5 en invierno (EST, ~nov a mar) y UTC−4 en verano (EDT, ~mar a nov). Por tanto Brasil va 2 horas ADELANTE de NY en invierno y 1 hora ADELANTE en verano. Para pasar una hora de NY a hora de Brasil: en invierno súmale 2h, en verano súmale 1h. Ejemplo: Pre-NY Killzone 7:30–9:30 AM NY = en verano 8:30–10:30 hora Brasil, en invierno 9:30–11:30 hora Brasil. El indicador ya maneja el cambio EST/EDT automáticamente; la fila 'Killzone' del panel (Dentro/Fuera) es la fuente de verdad — si dice Fuera, no se opera aunque el setup se vea bien.\n"+
 "- Cuentas: tiene cuentas fondeadas de $6K y está por comprar 5 cuentas de reto/fondeo más para hacer los exámenes. Objetivo inmediato: pasar esos challenges y no romper reglas. Riesgo FIJO 0.5% por trade.\n"+
@@ -2931,6 +3059,15 @@ function iaInit(){
         </div>
         <div class="note" style="text-align:left;margin:0 0 8px">Si tu teléfono solo trae voz de mujer, baja el tono (Grave++). Para una voz de HOMBRE real hay que instalarla en Ajustes del teléfono → "Texto a voz" (no en el Asistente de Google).</div>
         <button class="btn" id="iaVozTest" style="margin-bottom:14px">▶️ Probar voz</button>
+        <div class="fl">🔔 Notificaciones de Roberto</div>
+        <button class="btn" id="iaNotifToggle" style="margin-bottom:8px">🔕 Notificaciones: apagadas</button>
+        <label class="ia-chk"><input type="checkbox" id="iaNotifKz"> Aviso de ventana operativa (killzone)</label>
+        <label class="ia-chk"><input type="checkbox" id="iaNotifDD"> Aviso de cuenta cerca del límite (DD)</label>
+        <div class="fl" style="margin-top:10px">Mis pares (separados por coma)</div>
+        <input class="inp" id="iaPares" placeholder="EUR/USD, GBP/USD, XAU/USD">
+        <button class="btn" id="iaParesSave" style="margin-top:8px">Guardar pares</button>
+        <button class="btn" id="iaNotifNews" style="margin-top:8px">📰 ¿Hay noticias rojas hoy en mis pares?</button>
+        <div class="note" style="text-align:left;margin-bottom:14px">Con la app abierta te aviso siempre. Con la app cerrada tu teléfono puede tardar o no avisar (lo reforzamos con Web Push más adelante). Cuando montemos el puente, los pares vendrán solos de TradingView.</div>
         <div class="fl">Dirección de tu puente (Worker)</div>
         <input class="inp" id="iaUrl" placeholder="https://...workers.dev">
         <button class="btn gold" id="iaSaveUrl" style="margin-top:8px">Guardar dirección</button>
@@ -2965,7 +3102,18 @@ function iaInit(){
   $("#iaNew").onclick=iaNuevaConv;
   $("#iaNew2").onclick=iaNuevaConv;
   $("#iaConvs").onclick=()=>{ const b=$("#iaConvsBox"); const show=b.style.display==="none"; $("#iaCfgBox").style.display="none"; b.style.display=show?"block":"none"; if(show) renderConvList(); };
-  $("#iaCfg").onclick=()=>{ const b=$("#iaCfgBox"); const show=b.style.display==="none"; $("#iaConvsBox").style.display="none"; b.style.display=show?"block":"none"; if(show){ $("#iaUrl").value=IA.url; iaVozRefrescarUI(); } };
+  $("#iaCfg").onclick=()=>{ const b=$("#iaCfgBox"); const show=b.style.display==="none"; $("#iaConvsBox").style.display="none"; b.style.display=show?"block":"none"; if(show){ $("#iaUrl").value=IA.url; iaVozRefrescarUI(); notifRefrescarUI(); } };
+  /* Controles de notificaciones */
+  const nt=$("#iaNotifToggle");
+  if(!notifSoportado()){ if(nt){ nt.disabled=true; nt.innerHTML="🔕 Tu teléfono no permite notificaciones"; } }
+  else if(nt){
+    nt.onclick=async()=>{ if(NOTIF.on){ await notifActivar(false); toast("Notificaciones apagadas"); }
+      else { const ok=await notifActivar(true); if(ok) toast("Notificaciones activadas 🔔"); } notifRefrescarUI(); };
+  }
+  const nkz=$("#iaNotifKz"); if(nkz) nkz.onchange=()=>{ NOTIF.killzone=nkz.checked; guardarNotif(); if(NOTIF.on) notifProgramarKillzones(); };
+  const ndd=$("#iaNotifDD"); if(ndd) ndd.onchange=()=>{ NOTIF.cuentaDD=ndd.checked; guardarNotif(); if(NOTIF.on) notifChequearCuentasDD(); };
+  const ps=$("#iaParesSave"); if(ps) ps.onclick=()=>{ const v=($("#iaPares").value||"").split(",").map(x=>x.trim()).filter(Boolean); if(!v.length){ toast("Escribe al menos un par"); return; } PARES=v; guardarPares(); toast("Pares guardados ✓"); };
+  const nn=$("#iaNotifNews"); if(nn) nn.onclick=iaNoticiasHoy;
   /* Controles de voz */
   const vt=$("#iaVozToggle");
   if(!TTS){ if(vt){ vt.disabled=true; vt.innerHTML="🔇 Tu teléfono no permite voz"; } const vs=$("#iaVozSel"), vp=$("#iaVozTest"); if(vs)vs.style.display="none"; if(vp)vp.style.display="none"; }
@@ -3177,7 +3325,7 @@ function iaReloj(){
 /* Resumen compacto de datos del contexto activo, para personalizar las respuestas */
 function iaContexto(){
   const list=tradesCtx(); const m=list.length?metricas(list):null;
-  let c=`[Datos del alumno · ${CTX.modo==="real"?"cuenta real":"backtest"} · estrategia ${CTX.estrategia}] `;
+  let c=`[Pares que sigue AHORA: ${PARES.join(", ")}] [Datos del alumno · ${CTX.modo==="real"?"cuenta real":"backtest"} · estrategia ${CTX.estrategia}] `;
   if(!m){ return c+"Aún no tiene trades registrados en este contexto (empezando de cero)."; }
   c+=`${m.n} trades. R neto ${r1(m.rNeto)}R. Win rate ${pct(m.wr*100)}. Profit factor ${fmtPF(m.pf)}. Expectancy ${r2(m.exp)}R por trade. RR real 1:${r1(m.rrReal)}. Drawdown máx ${r1(m.dd)}R. Plan roto en ${m.roto} trades, ${m.emoMal} con prisa/ansiedad, ${m.fueraVent} fuera de ventana, ${m.setupsC} setups C. `;
   const rank=[]; DIMS_MENTOR.forEach(([dim,fn])=>{ cortePor(list,fn).forEach(x=>{ if(x.n>=3) rank.push({dim,k:x.k,exp:x.exp,n:x.n}); }); });
@@ -3284,5 +3432,9 @@ function init(){
   if("serviceWorker" in navigator){
     navigator.serviceWorker.register("sw.js").catch(()=>{});
   }
+  /* Reprograma avisos si Roberto los tenía activados */
+  if(NOTIF.on && notifSoportado() && Notification.permission==="granted"){
+    setTimeout(()=>{ notifProgramarKillzones(); notifChequearCuentasDD(); }, 1500);
+  } else if(NOTIF.on){ NOTIF.on=false; guardarNotif(); }
 }
 document.addEventListener("DOMContentLoaded",init);
