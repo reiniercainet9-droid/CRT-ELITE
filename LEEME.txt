@@ -1,5 +1,28 @@
-CRT ELITE v3.9 — PLAN OPERATIVO + BACKTESTING
+CRT ELITE v4.1 — PLAN OPERATIVO + BACKTESTING
 ==============================================
+
+NOVEDADES v4.1  (MENTOR CON INTERNET)
+=====================================
+El mentor ya puede BUSCAR EN INTERNET cuando lo necesita: calendario
+economico del dia, noticias de alto impacto (NFP, CPI, FOMC), eventos o
+precios recientes. Preguntale "que noticias rojas hay hoy?" y te lo revisa.
+Para conceptos/estrategia NO busca (ya lo sabe), asi no gasta de mas.
+
+IMPORTANTE: esto requiere TAMBIEN actualizar tu puente (worker de
+Cloudflare) con el codigo nuevo que te paso Claude. Si subes solo el app
+sin actualizar el worker, el mentor no podra buscar todavia.
+
+NOVEDADES v4.0  (EL MENTOR YA SABE LA HORA)
+===========================================
+1) Le quitamos el bache de "no tengo reloj". Ahora, en cada pregunta, el
+   mentor recibe la HORA EN VIVO de tu telefono: hora de Brasil, hora de
+   Nueva York (con el cambio EST/EDT ya calculado) y en que ventana caes.
+   Preguntale "que hora es" o "estoy en horario operativo?" y te responde
+   directo y exacto, sin inventar.
+2) Le reforzamos que, siendo Claude, ya domina TODO lo conceptual del
+   trading; solo aclara que no ve datos EN VIVO de internet (noticias del
+   dia, precio actual). Para eso, mas adelante se le puede conectar
+   internet (busqueda web) si lo quieres.
 
 NOVEDADES v3.9  (MENTOR MAS DECIDIDO)
 =====================================

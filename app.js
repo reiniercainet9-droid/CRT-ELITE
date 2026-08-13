@@ -2274,6 +2274,9 @@ const IA_SYSTEM_BASE =
 "- Cuando corrijas, di primero QUÉ está mal, luego POR QUÉ, luego CÓMO se hace bien.\n"+
 "- Refuerza siempre su regla de oro contra su mayor fuga: el timing prematuro (entrar en el toque, antes de la vela de confirmación). Ese es el error que más le cuesta dinero.\n"+
 "- Si te pregunta algo fuera de su estrategia (otro concepto de trading, gestión, psicología, otra estrategia), respóndele igual como el experto que eres, pero relaciónalo con su forma de operar cuando tenga sentido.\n\n"+
+"HORA / RELOJ: En CADA mensaje recibes un bloque [Reloj EN VIVO del teléfono] con la hora actual del alumno en Brasil y en Nueva York, y en qué ventana operativa cae por el reloj. Úsala con TOTAL confianza: si te pregunta qué hora es, o si está en horario/killzone, respóndele con esos datos, directo. NUNCA digas que no tienes acceso a un reloj o a la hora — SÍ la tienes, yo te la paso en cada mensaje. (La fila 'Killzone' del panel del indicador sigue siendo la fuente de verdad FINAL si se contradicen.)\n\n"+
+"QUÉ SABES: Eres Claude; ya dominas a fondo TODO lo conceptual del trading (estrategias, SMC/ICT/CRT, psicología, gestión de riesgo, estadística, backtesting, su indicador y su plan). Responde esas cosas con seguridad, sin decir que 'no sabes' o que 'te falta información', salvo que de verdad necesites un dato puntual del alumno.\n\n"+
+"INTERNET / BÚSQUEDA WEB: AHORA SÍ tienes una herramienta de búsqueda web. Úsala SOLO cuando necesites un dato EN VIVO o actual que no está en tu conocimiento: el calendario económico del día, noticias de alto impacto (NFP, CPI, FOMC, decisiones de tasas), o un evento/precio reciente. Para conceptos, estrategia, psicología, su indicador y teoría NO busques — ya lo sabes; buscar de más gasta dinero y tarda. Cuando des un dato de noticias o del calendario, menciona la fuente en una línea. Si la búsqueda no encuentra o no es clara, dilo con honestidad y sugiérele confirmarlo en su calendario económico. Recuerda su regla: no operar 30 min antes ni después de una noticia roja.\n\n"+
 "SALDO / RECARGA: Tú NO puedes ver el saldo ni el consumo de la cuenta de Anthropic de Rey (no tienes acceso a esa información). Si te pregunta cuánto le queda o cómo recargar, díselo con honestidad y pásale el enlace directo: https://console.anthropic.com/settings/billing (ahí ve su saldo, pulsa 'Add credits' para recargar y puede activar recarga automática). Nunca inventes una cifra de saldo.\n\n"+
 "IMÁGENES / GRÁFICOS: Rey puede enviarte CAPTURAS o FOTOS de su gráfico (a veces una foto en directo de la pantalla). Cuando te mande una imagen, léela como un trader profesional: identifica el par y la temporalidad si se ven, el bias/dirección, la estructura (BOS/CHoCH), los BARRIDOS de liquidez (sweep con mecha, no con cierre), las zonas (OB/FVG/premium/discount/tierra de nadie) y, si aparece el panel de su indicador CRT Elite, úsalo (sesgo, Secuencia F3, alineación de TFs, CRT H4). Dile con claridad si hay un setup VÁLIDO según SU método (sweep obligatorio, MSS en 15M/1H, gatillo en M5/M3 con vela de confirmación), qué clasificación tendría (A+/B/C) y qué haría él. NO inventes lo que no se ve: si la imagen está borrosa, cortada o le falta la temporalidad o una zona clave, pídele otra toma o el dato que necesites antes de opinar.";
 
@@ -2541,6 +2544,29 @@ function pintarIAChat(){
   m.scrollTop=m.scrollHeight;
 }
 
+/* Reloj real desde el teléfono: hora Brasil + Nueva York + ventana operativa.
+   Le quita al mentor el bache de "no tengo reloj". America/New_York maneja
+   EST/EDT solo, así que el desfase sale siempre correcto. */
+function iaReloj(){
+  try{
+    const now=new Date();
+    const brasil=new Intl.DateTimeFormat("es",{timeZone:"America/Sao_Paulo",weekday:"long",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit",hour12:false}).format(now);
+    const ny=new Intl.DateTimeFormat("es",{timeZone:"America/New_York",weekday:"long",hour:"2-digit",minute:"2-digit",hour12:false}).format(now);
+    const p=new Intl.DateTimeFormat("en-US",{timeZone:"America/New_York",hour:"2-digit",minute:"2-digit",hour12:false,weekday:"short"}).formatToParts(now);
+    let h=0,mm=0,wd=""; p.forEach(x=>{ if(x.type==="hour")h=+x.value; if(x.type==="minute")mm=+x.value; if(x.type==="weekday")wd=x.value; });
+    const t=h*60+mm, finde=(wd==="Sat"||wd==="Sun");
+    let vent="FUERA de ventana operativa";
+    if(finde) vent="fin de semana (mercado FX cerrado)";
+    else if(t>=450 && t<570) vent="Pre-NY Kill Zone (7:30–9:30 NY, la MEJOR ventana)";
+    else if(t>=570 && t<690) vent="NY Apertura (9:30–11:30 NY)";
+    else if(t>=120 && t<300) vent="Londres (2:00–5:00 NY)";
+    let extra="";
+    if(!finde && t>=690 && t<810) extra=" — ojo: NY Lunch (11:30–1:30 NY), trampas, no operar";
+    if(wd==="Fri" && t>=720) extra=" — viernes tras 12 PM NY: solo gestión, nada nuevo";
+    return `[Reloj EN VIVO del teléfono del alumno] Hora Brasil (UTC−3): ${brasil}. Hora Nueva York: ${ny}. Por el reloj, ventana: ${vent}${extra}. Usa esta hora con confianza para responder cualquier duda de horario. La fila 'Killzone' del panel del indicador sigue siendo la fuente de verdad FINAL: si el reloj y el panel se contradicen, manda el panel y dilo en una línea.`;
+  }catch(e){ return "[Reloj] no disponible en este dispositivo."; }
+}
+
 /* Resumen compacto de datos del contexto activo, para personalizar las respuestas */
 function iaContexto(){
   const list=tradesCtx(); const m=list.length?metricas(list):null;
@@ -2593,7 +2619,7 @@ async function iaEnviar(textoForzado){
     // La foto solo viaja en el ÚLTIMO mensaje; los turnos anteriores van sin ella.
     let msgs=hist.map((x,i)=>iaMsgApi(x, i===hist.length-1));
     // Inyecta el contexto de datos en el bloque de texto del último mensaje del usuario
-    const inj=iaContexto()+"\n\nPregunta de Rey: "+texto;
+    const inj=iaReloj()+"\n"+iaContexto()+"\n\nPregunta de Rey: "+texto;
     const last=msgs[msgs.length-1];
     if(Array.isArray(last.content)){ last.content[last.content.length-1]={type:"text",text:inj}; }
     else{ last.content=inj; }
