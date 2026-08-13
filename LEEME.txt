@@ -1,5 +1,16 @@
-APEX v5.1 — TRADING DESK  (antes CRT Elite)
+APEX v5.2 — TRADING DESK  (antes CRT Elite)
 ===========================================
+
+NOVEDADES v5.2  (ICONO NUEVO DE LA APP)
+=======================================
+- El icono de la pantalla de inicio ahora es el DIAMANTE DORADO con las
+  velas alcistas sobre fondo indigo (igual que por dentro). Se regeneraron
+  icon-192, icon-512, icon-maskable-512 y apple-touch-icon.
+- Para verlo en el telefono: DESINSTALA la app instalada y vuelve a
+  instalarla desde el navegador (Anadir a pantalla de inicio). Android a
+  veces tarda o cachea el icono viejo; reinstalar lo actualiza seguro.
+
+
 
 NOVEDADES v5.1  (NUEVO NOMBRE: APEX + CABECERA Y MENU)
 =====================================================
