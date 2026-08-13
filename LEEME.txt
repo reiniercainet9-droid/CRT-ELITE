@@ -1,5 +1,18 @@
-CRT ELITE v4.4 — PLAN OPERATIVO + BACKTESTING
+CRT ELITE v4.5 — PLAN OPERATIVO + BACKTESTING
 ==============================================
+
+NOVEDADES v4.5  (COMPARAR FIRMAS RAPIDO, SIN COLGARSE)
+=====================================================
+- Antes, comparar varias firmas con busqueda en vivo tardaba +90s y a
+  veces salia vacio. Ahora Roberto COMPARA DE MEMORIA al instante (conoce
+  bien las firmas grandes) y te avisa de lo que debes confirmar por ser
+  dato que cambia. Rapido y sin colgarse (probado: ~22s con tabla).
+- Solo hace UNA busqueda web puntual si le pides el precio/regla EXACTO
+  de HOY de UNA firma concreta.
+- El puente (worker) tambien tiene ahora una RED DE SEGURIDAD: si una
+  busqueda se corta, responde igual con lo que sabe (nunca vacio). Ese
+  worker v4.5 es OPCIONAL: el que ya tienes funciona; puedes actualizarlo
+  cuando quieras para la red de seguridad extra.
 
 NOVEDADES v4.4  (TONO MAS GRAVE + AVISO VOZ DE HOMBRE)
 =====================================================
