@@ -1,5 +1,26 @@
-CRT ELITE v4.2 — PLAN OPERATIVO + BACKTESTING
+CRT ELITE v4.3 — PLAN OPERATIVO + BACKTESTING
 ==============================================
+
+NOVEDADES v4.3  (TONO DE VOZ + ROBERTO MAS RAPIDO)
+==================================================
+1) TONO DE LA VOZ (grave / normal / agudo).
+   - La voz sale del TELEFONO, no de la app. Si tu telefono solo tiene
+     voces de mujer, ahora puedes BAJAR EL TONO para que suene masculino.
+   - En Roberto -> Ajustes (⚙️) -> "Tono": elige GRAVE (viene asi por
+     defecto, va con Roberto), Normal o Agudo. Toca "Probar voz".
+   - Para tener una voz de HOMBRE de verdad: en tu Android ve a Ajustes ->
+     Administracion general -> Idioma y texto a voz (o Accesibilidad ->
+     Texto a voz) -> motor "Google Text-to-Speech" -> Instalar datos de
+     voz -> Espanol -> descarga varias variantes; algunas son masculinas.
+     Luego eliges esa en el selector de Roberto.
+
+2) ROBERTO RESPONDE MAS RAPIDO (requiere actualizar el PUENTE/worker).
+   - Bajamos las busquedas web de 4 a 2 y recortamos el bucle: las
+     comparaciones de firmas y las consultas con internet tardan bastante
+     menos, sin perder calidad.
+   - IMPORTANTE: esto SI necesita que actualices tu worker de Cloudflare
+     (elitepro-worker) con el codigo nuevo que te paso Claude. La app sola
+     no lo acelera. Los pasos van aparte.
 
 NOVEDADES v4.2  (ROBERTO: VOZ + CEREBRO DE FINANZAS + AYUDA "?")
 ===============================================================
