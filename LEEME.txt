@@ -1,5 +1,18 @@
-APEX v5.4 — TRADING DESK  (antes CRT Elite)
+APEX v5.5 — TRADING DESK  (antes CRT Elite)
 ===========================================
+
+NOVEDADES v5.5  (CALENDARIO REAL DE FOREXFACTORY)
+=================================================
+Ahora Roberto NO "busca" el calendario (eso fallaba): LEE EL FEED REAL de
+ForexFactory (el mismo dato que ves en tu cuenta). Toca "📰 ¿Hay noticias
+rojas hoy?" y te trae la lista EXACTA de HOY y MAÑANA para TUS pares, con:
+hora (NY), impacto (alto/medio), moneda, evento y pronostico. Roberto te
+dice como te afecta y en que ventanas no operar.
+
+IMPORTANTE: esto necesita ACTUALIZAR EL PUENTE (worker) con el codigo
+nuevo que te paso Claude (worker-elitepro-v5.5.js) — trae un lector de
+calendario. Si aun no lo actualizas, Roberto seguira intentando por
+busqueda (menos fiable). Con el worker nuevo, es exacto.
 
 NOVEDADES v5.4  (SONIDO PROPIO + NOTICIAS MAS FIABLES)
 =====================================================

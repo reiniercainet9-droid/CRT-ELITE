@@ -268,12 +268,62 @@ function notifRefrescarUI(){
   const ndd=$("#iaNotifDD"); if(ndd) ndd.checked=!!NOTIF.cuentaDD;
   const p=$("#iaPares"); if(p) p.value=PARES.join(", ");
 }
-/* Pregunta a Roberto por las noticias rojas de hoy en los pares actuales */
-function iaNoticiasHoy(){
-  const q="Dime las noticias económicas de HOY de alto/medio impacto que afecten a mis pares actuales ("+PARES.join(", ")+"). Busca el calendario económico del día (ForexFactory/Investing/FXStreet). Dame: hora (NY), evento, impacto y par afectado. Si la búsqueda no trae tabla clara, completa con lo típico de esta fecha y dime que lo confirme yo en mi calendario — NO me dejes sin nada. Recuérdame no operar 30 min antes ni después de una roja. Breve y en lista.";
+/* Monedas que le importan a Rey, sacadas de sus pares (EUR/USD → EUR, USD) */
+function paresMonedas(){
+  const set=new Set();
+  PARES.forEach(p=>{ (String(p).match(/[A-Za-z]{3}/g)||[]).forEach(m=>set.add(m.toUpperCase())); });
+  if(set.has("XAU")||set.has("XAG")) set.add("USD"); // oro/plata se mueven con el USD
+  return set;
+}
+/* Fecha YYYY-MM-DD en Nueva York (off=0 hoy, 1 mañana) */
+function nyFechaISO(off){
+  const d=new Date(Date.now()+(off||0)*86400000);
+  return new Intl.DateTimeFormat("en-CA",{timeZone:"America/New_York",year:"numeric",month:"2-digit",day:"2-digit"}).format(d);
+}
+/* Lee el calendario REAL de ForexFactory a través del puente */
+async function cargarCalendario(){
+  if(!IA.url) return null;
+  try{
+    const r=await fetch(IA.url.replace(/\/+$/,"")+"/?calendar=1");
+    if(!r.ok) return null;
+    const data=await r.json();
+    return Array.isArray(data)?data:null;
+  }catch(_){ return null; }
+}
+/* Filtra el calendario a los pares de Rey, HOY y MAÑANA, alto/medio impacto */
+function calendarioTexto(eventos){
+  const mon=paresMonedas(), hoy=nyFechaISO(0), man=nyFechaISO(1);
+  const rel=eventos.filter(e=>{
+    const day=String(e.date||"").slice(0,10);
+    return (day===hoy||day===man) && mon.has(String(e.country||"").toUpperCase()) && /High|Medium/i.test(e.impact||"");
+  }).sort((a,b)=>String(a.date||"").localeCompare(String(b.date||"")));
+  if(!rel.length) return {texto:"", n:0};
+  const lineas=rel.map(e=>{
+    const day=String(e.date).slice(0,10)===hoy?"HOY":"MAÑANA";
+    const hora=String(e.date).slice(11,16);
+    const imp=/High/i.test(e.impact)?"ALTO 🔴":"MEDIO 🟠";
+    return `- ${day} ${hora} NY | ${imp} | ${e.country} | ${e.title}`+(e.forecast?` (prev ${e.previous||"?"}, fcst ${e.forecast})`:"");
+  });
+  return {texto:lineas.join("\n"), n:rel.length};
+}
+/* Botón "noticias": lee el calendario REAL y se lo pasa a Roberto (sin buscar) */
+async function iaNoticiasHoy(){
   const cb=$("#iaCfgBox"); if(cb) cb.style.display="none";
   abrirIA();
-  setTimeout(()=>iaEnviar(q), 250);
+  toast("Leyendo el calendario de ForexFactory…");
+  const eventos=await cargarCalendario();
+  let q;
+  if(eventos){
+    const {texto,n}=calendarioTexto(eventos);
+    if(n){
+      q="Este es el CALENDARIO REAL de ForexFactory para mis pares ("+PARES.join(", ")+"), HOY y MAÑANA (hora NY):\n"+texto+"\n\nDime en lista breve cómo me afectan, en qué ventanas NO debo operar (30 min antes y después de cada roja/naranja), y prioriza las de ALTO impacto. Usa SOLO esta lista, no inventes otras.";
+    }else{
+      q="Leí el calendario real de ForexFactory y NO hay noticias de alto/medio impacto para mis pares ("+PARES.join(", ")+") hoy ni mañana. Confírmame que no hay bloqueos por noticias y recuérdame operar solo dentro de mi ventana.";
+    }
+  }else{
+    q="Dime las noticias económicas de HOY y MAÑANA de alto/medio impacto para mis pares ("+PARES.join(", ")+"). Busca el calendario (ForexFactory/Investing/FXStreet). Si no traes tabla clara, completa con lo típico y dime que lo confirme. Hora NY, evento, impacto, par. No me dejes sin nada.";
+  }
+  setTimeout(()=>iaEnviar(q),200);
 }
 
 /* ---------- NAVEGACIÓN ---------- */
