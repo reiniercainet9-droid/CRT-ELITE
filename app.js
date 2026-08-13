@@ -2279,7 +2279,7 @@ const PERFIL_REY =
 "PERFIL DEL ALUMNO (Rey / Reinier):\n"+
 "- Trader de Forex. Opera SOLO EUR/USD y GBP/USD.\n"+
 "- Estructura de temporalidades: Daily = bias/dirección; H4 = zonas (el DÓNDE); 1H y 15M = validación, sweep + MSS (el CUÁNDO); 5M y 3M = gatillo fino de entrada (el punto EXACTO, NO se valida aquí). El bias SEMANAL manda sobre el diario.\n"+
-"- Zona horaria UTC−3 (sin horario de verano); sus killzones están en hora de Nueva York, así que el desfase cambia cuando EE.UU. ajusta su reloj.\n"+
+"- Vive en Brasil, zona horaria UTC−3 FIJA (Brasil no tiene horario de verano). Sus killzones están en hora de Nueva York. DESFASE EXACTO Brasil↔NY: Nueva York es UTC−5 en invierno (EST, ~nov a mar) y UTC−4 en verano (EDT, ~mar a nov). Por tanto Brasil va 2 horas ADELANTE de NY en invierno y 1 hora ADELANTE en verano. Para pasar una hora de NY a hora de Brasil: en invierno súmale 2h, en verano súmale 1h. Ejemplo: Pre-NY Killzone 7:30–9:30 AM NY = en verano 8:30–10:30 hora Brasil, en invierno 9:30–11:30 hora Brasil. El indicador ya maneja el cambio EST/EDT automáticamente; la fila 'Killzone' del panel (Dentro/Fuera) es la fuente de verdad — si dice Fuera, no se opera aunque el setup se vea bien.\n"+
 "- Cuentas: tiene cuentas fondeadas de $6K y está por comprar 5 cuentas de reto/fondeo más para hacer los exámenes. Objetivo inmediato: pasar esos challenges y no romper reglas. Riesgo FIJO 0.5% por trade.\n"+
 "- Su mayor debilidad histórica, reconocida por él mismo: TIMING PREMATURO — su dirección suele ser correcta, pero entra ANTES de que la trampa se liquide y se confirme. Trabájasela siempre.\n"+
 "- No sabe programar. La app CRT Elite (esta) es su diario, backtester, calculadora de lotaje y mentor de bolsillo (tú).";
@@ -2551,14 +2551,20 @@ function iaContexto(){
   return c;
 }
 
-/* Convierte un mensaje guardado al formato de la API (con imagen si la tiene) */
-function iaMsgApi(x){
-  if(x.role==="user" && x.img){
+/* Convierte un mensaje guardado al formato de la API.
+   La imagen SOLO se envía en el mensaje ACTUAL (conFoto=true). En los turnos
+   anteriores se manda solo el texto: reenviar la foto pesada en cada pregunta
+   de seguimiento rompía la respuesta (salía vacía) y gastaba de más. */
+function iaMsgApi(x, conFoto){
+  if(x.role==="user" && x.img && conFoto){
     const b64=x.img.split(",")[1]||"";
     return { role:"user", content:[
       { type:"image", source:{ type:"base64", media_type:"image/jpeg", data:b64 } },
       { type:"text", text:x.content||"" }
     ]};
+  }
+  if(x.role==="user" && x.img){
+    return { role:"user", content:"(Te envié un gráfico antes) "+(x.content||"") };
   }
   return { role:x.role, content:x.content };
 }
@@ -2581,7 +2587,8 @@ async function iaEnviar(textoForzado){
   try{
     let hist=c.msgs.slice(-14);
     while(hist.length && hist[0].role!=="user") hist.shift();
-    let msgs=hist.map(iaMsgApi);
+    // La foto solo viaja en el ÚLTIMO mensaje; los turnos anteriores van sin ella.
+    let msgs=hist.map((x,i)=>iaMsgApi(x, i===hist.length-1));
     // Inyecta el contexto de datos en el bloque de texto del último mensaje del usuario
     const inj=iaContexto()+"\n\nPregunta de Rey: "+texto;
     const last=msgs[msgs.length-1];

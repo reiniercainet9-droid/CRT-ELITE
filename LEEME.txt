@@ -1,5 +1,18 @@
-CRT ELITE v3.7 — PLAN OPERATIVO + BACKTESTING
+CRT ELITE v3.8 — PLAN OPERATIVO + BACKTESTING
 ==============================================
+
+NOVEDADES v3.8  (ARREGLO: RESPUESTAS VACIAS CON FOTO)
+====================================================
+1) ARREGLADO el bug de "(respuesta vacia)": cuando mandabas una foto y
+   luego hacias una pregunta de seguimiento en el mismo chat, salia vacio.
+   Causa: la app reenviaba la foto pesada en CADA pregunta siguiente, y eso
+   rompia la respuesta. Ahora la foto solo viaja en el mensaje donde la
+   adjuntas; el mentor ya la analizo y su analisis queda en el chat, asi
+   que las preguntas de seguimiento funcionan normal (y mas rapido/barato).
+   -> Si tenias un chat viejo trabado, empieza uno nuevo con el boton (+).
+2) El mentor ahora sabe el DESFASE EXACTO Brasil<->NY para leer tu killzone:
+   NY es UTC-5 en invierno y UTC-4 en verano; Brasil (UTC-3 fijo) va 2h
+   adelante en invierno y 1h adelante en verano. Preguntale y te lo calcula.
 
 NOVEDADES v3.7  (RECARGA FÁCIL DE LA IA)
 ========================================
