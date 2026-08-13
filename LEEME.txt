@@ -1,5 +1,17 @@
-CRT ELITE v4.6 — PLAN OPERATIVO + BACKTESTING
+CRT ELITE v4.7 — PLAN OPERATIVO + BACKTESTING
 ==============================================
+
+NOVEDADES v4.7  (AUTORRELLENO DE REGLAS DE LA FIRMA)
+===================================================
+Ya no tienes que escribir las reglas de la firma una por una:
+- Al escribir la FIRMA en el formulario de cuenta (ej. FTMO, FundedNext,
+  The5ers, E8, Funding Pips...), sus reglas TIPICAS se rellenan solas
+  (drawdown, daily, target, dias, split, nota). Offline e instantaneo.
+- Boton "🤖 Traer reglas con Roberto": Roberto trae las reglas EXACTAS de
+  la firma (con su conocimiento e internet) y rellena los campos. Sirve
+  para cualquier firma o para el dato mas fresco.
+- Tu solo pones el CAPITAL y el ALIAS, y revisas/ajustas antes de guardar.
+Todo editable. NO toca el puente (worker).
 
 NOVEDADES v4.6  (NUEVA PESTANA: GESTION DE CUENTAS 🏦)
 =====================================================

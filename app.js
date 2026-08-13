@@ -2324,6 +2324,66 @@ function fillPlanDinamico(){
    ============================================================ */
 const FASES = ["Examen F1","Examen F2","Fondeada","Real","Propia"];
 const FIRMAS_SUG = ["FTMO","FundedNext","The5ers","E8 Markets","FTUK","MyFundedFX","Alpha Capital","Funding Pips","Otra"];
+/* Reglas TÍPICAS de reto (2 fases) por firma — relleno instantáneo offline.
+   Son valores aproximados y editables; Roberto puede traer los exactos. */
+const FIRMAS_DATA = {
+  "ftmo":         { ddMaxPct:"10", ddTipo:"Estático", ddDailyPct:"5", targetF1:"10", targetF2:"5", diasMin:"0", splitPct:"80", nota:"FTMO · 2 fases · split 80% (hasta 90%) · sin días mínimos. Confirma en ftmo.com." },
+  "fundednext":   { ddMaxPct:"10", ddTipo:"Estático", ddDailyPct:"5", targetF1:"8",  targetF2:"5", diasMin:"5", splitPct:"80", nota:"FundedNext (modelo Stellar) · 2 fases · split hasta 90-95%. Confirma el modelo exacto." },
+  "the5ers":      { ddMaxPct:"10", ddTipo:"Estático", ddDailyPct:"5", targetF1:"8",  targetF2:"5", diasMin:"3", splitPct:"80", nota:"The5ers · programas High Stakes/Hyper Growth varían. Confirma el programa." },
+  "e8 markets":   { ddMaxPct:"8",  ddTipo:"Trailing", ddDailyPct:"5", targetF1:"8",  targetF2:"5", diasMin:"0", splitPct:"80", nota:"E8 Markets · drawdown suele ser TRAILING. Confirma en e8markets.com." },
+  "e8":           { ddMaxPct:"8",  ddTipo:"Trailing", ddDailyPct:"5", targetF1:"8",  targetF2:"5", diasMin:"0", splitPct:"80", nota:"E8 Markets · drawdown suele ser TRAILING. Confirma en e8markets.com." },
+  "ftuk":         { ddMaxPct:"6",  ddTipo:"Estático", ddDailyPct:"3", targetF1:"8",  targetF2:"5", diasMin:"0", splitPct:"80", nota:"FTUK · reglas por modelo. Confirma en la web oficial." },
+  "myfundedfx":   { ddMaxPct:"10", ddTipo:"Trailing", ddDailyPct:"5", targetF1:"8",  targetF2:"5", diasMin:"0", splitPct:"80", nota:"MyFundedFX · confirma programa y tipo de DD." },
+  "funding pips": { ddMaxPct:"10", ddTipo:"Estático", ddDailyPct:"5", targetF1:"8",  targetF2:"5", diasMin:"0", splitPct:"80", nota:"Funding Pips · 2 fases · split hasta 100%. Confirma." },
+  "alpha capital":{ ddMaxPct:"10", ddTipo:"Trailing", ddDailyPct:"5", targetF1:"8",  targetF2:"5", diasMin:"0", splitPct:"80", nota:"Alpha Capital Group · confirma modelo y tipo de DD." }
+};
+function firmaKey(s){ return String(s||"").toLowerCase().replace(/\s+/g," ").trim(); }
+/* Rellena las reglas típicas al escribir la firma (solo campos vacíos) */
+function aplicarPresetFirma(){
+  const inp=$("#ac_firma"); if(!inp) return;
+  const p=FIRMAS_DATA[firmaKey(inp.value)]; if(!p) return;
+  const fase=$("#ac_fase")?.value||"";
+  const target = /F2/.test(fase)?p.targetF2 : /F1/.test(fase)?p.targetF1 : "";
+  let hubo=false;
+  const fill=(id,v)=>{ const e=$("#"+id); if(e && v!=null && v!=="" && !e.value.trim()){ e.value=v; hubo=true; } };
+  fill("ac_ddmax",p.ddMaxPct); fill("ac_dddaily",p.ddDailyPct); fill("ac_target",target);
+  fill("ac_diasmin",p.diasMin); fill("ac_split",p.splitPct); fill("ac_nota",p.nota);
+  const dt=$("#ac_ddtipo"); if(dt && p.ddTipo && dt.dataset.tocado!=="1"){ dt.value=p.ddTipo; }
+  if(hubo) toast("Reglas típicas de "+inp.value+" rellenadas ✓");
+}
+/* Roberto trae/actualiza las reglas exactas de la firma (conocimiento + internet) */
+async function rellenarReglasIA(){
+  const firma=($("#ac_firma")?.value||"").trim();
+  if(!firma){ toast("Escribe primero la firma"); return; }
+  if(!IA.url){ toast("Abre Roberto (✨) y configura el puente (⚙️) primero"); return; }
+  const fase=$("#ac_fase")?.value||"Examen F1";
+  const btn=$("#ac_iaFill"), st=$("#ac_iaStatus");
+  if(btn){ btn.disabled=true; btn.textContent="🤖 Roberto buscando…"; }
+  if(st) st.textContent="Roberto está trayendo las reglas de "+firma+"…";
+  const sys="Eres Roberto, experto en empresas de fondeo. Devuelve SOLO un objeto JSON válido, sin texto antes ni después y sin ```. Claves EXACTAS: ddMaxPct, ddTipo, ddDailyPct, targetPct, diasMin, splitPct, precio, nota. Reglas: ddTipo debe ser \"Estático\" o \"Trailing\"; los numéricos van como texto SIN símbolos (ej. \"10\", no \"10%\"); targetPct es el objetivo de la FASE indicada; precio es el coste aprox del reto en USD para un tamaño de 100K (deja \"\" si no lo sabes); nota es UNA frase corta con el modelo/programa y 'confirma en la web oficial'. Si no conoces un dato con seguridad, pon \"\".";
+  const msg="Dame las reglas estándar del reto de la firma \""+firma+"\" para la fase \""+fase+"\" (cuenta de 2 fases si aplica). Solo el JSON.";
+  try{
+    const r=await fetch(IA.url,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({system:sys,messages:[{role:"user",content:msg}]})});
+    const d=await r.json();
+    const txt=(d.text||"").trim();
+    const mm=txt.match(/\{[\s\S]*\}/);
+    if(!mm) throw new Error("sin JSON");
+    const o=JSON.parse(mm[0]);
+    const num=v=>String(v==null?"":v).replace(/[^\d.]/g,"");
+    const setN=(id,v)=>{ const e=$("#"+id); const n=num(v); if(e && n!=="") e.value=n; };
+    setN("ac_ddmax",o.ddMaxPct); setN("ac_dddaily",o.ddDailyPct); setN("ac_target",o.targetPct);
+    setN("ac_diasmin",o.diasMin); setN("ac_split",o.splitPct); setN("ac_precio",o.precio);
+    const dt=$("#ac_ddtipo"); if(dt && /trailing/i.test(o.ddTipo||"")) dt.value="Trailing"; else if(dt && /est/i.test(o.ddTipo||"")) dt.value="Estático";
+    const nt=$("#ac_nota"); if(nt && o.nota && !nt.value.trim()) nt.value=String(o.nota);
+    if(st) st.textContent="✅ Reglas traídas por Roberto. Revisa y ajusta lo que haga falta antes de guardar.";
+    toast("Reglas rellenadas por Roberto ✓");
+  }catch(e){
+    if(st) st.textContent="No pude traer el JSON de reglas. Rellénalas a mano o inténtalo otra vez (o pregúntale a Roberto en el chat).";
+    toast("No se pudo autorrellenar; ponlas a mano");
+  }finally{
+    if(btn){ btn.disabled=false; btn.textContent="🤖 Traer reglas con Roberto"; }
+  }
+}
 function faseColor(f){ return /Fondeada/.test(f)?"var(--green)":/Real/.test(f)?"var(--blue)":/Propia/.test(f)?"var(--purple)":"var(--orange)"; }
 function faseBadge(f){ const col=faseColor(f); return `<span class="cta-badge" style="color:${col};border-color:${col}">${esc(f||"—")}</span>`; }
 
@@ -2477,6 +2537,8 @@ function cuentaModal(id){
         <datalist id="ac_firmas">${FIRMAS_SUG.map(f=>`<option value="${f}">`).join("")}</datalist></div>
       <div><div class="fl">Fase</div><select class="inp" id="ac_fase">${opt(FASES, c.fase||"Examen F1")}</select></div>
     </div>
+    <button class="btn gold" id="ac_iaFill" style="margin:2px 0 6px">🤖 Traer reglas con Roberto</button>
+    <div class="note" id="ac_iaStatus" style="text-align:left;margin:0 0 12px">Escribe la firma (ej. FTMO) y sus reglas se rellenan solas. O pulsa el botón para que Roberto traiga las exactas. Tú solo pon el capital y el alias, y revisa.</div>
     <div class="g2">
       <div><div class="fl">Capital ($)</div><input class="inp" id="ac_capital" inputmode="decimal" placeholder="100000" value="${val("capital")}"></div>
       <div><div class="fl">Riesgo por trade (%)</div><input class="inp" id="ac_riesgo" inputmode="decimal" placeholder="0.5" value="${val("riesgoPct","0.5")}"></div>
@@ -2516,6 +2578,10 @@ function cuentaModal(id){
     { t:"💾 Guardar", cls:"gold", fn:()=>guardarCuentaForm(id) },
     { t:"Cancelar", fn:cerrarModal }
   ]);
+  const fi=$("#ac_firma"); if(fi) fi.addEventListener("change",aplicarPresetFirma);
+  const ff=$("#ac_fase"); if(ff) ff.addEventListener("change",aplicarPresetFirma);
+  const dt=$("#ac_ddtipo"); if(dt) dt.addEventListener("change",()=>{ dt.dataset.tocado="1"; });
+  const bf=$("#ac_iaFill"); if(bf) bf.onclick=rellenarReglasIA;
 }
 function guardarCuentaForm(id){
   const g=(i)=>{ const e=$("#"+i); return e?e.value.trim():""; };
