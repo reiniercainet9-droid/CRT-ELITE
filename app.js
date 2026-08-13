@@ -16,7 +16,8 @@ const K = {
   iaconvs: "crtelite_iaconvs_v3",
   iaact  : "crtelite_iaact_v3",
   iavoz  : "crtelite_iavoz_v3",
-  cuentas: "crtelite_cuentas_v3"
+  cuentas: "crtelite_cuentas_v3",
+  fabpos : "crtelite_fabpos_v3"
 };
 const load = (k,d)=>{ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):d; }catch(e){ return d; } };
 const save = (k,v)=>{ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){ toast("No se pudo guardar"); } };
@@ -159,6 +160,53 @@ function buildNav(){
     const b=el("button",t.id===TAB?"on":"",`<span class="i">${t.ic}</span>${t.n}`);
     b.dataset.t=t.id; b.onclick=()=>irA(t.id); n.appendChild(b);
   });
+}
+
+/* Menú desplegable con todas las secciones (más claridad, menos espacio) */
+function abrirMenu(){
+  let ov=$("#menuOv");
+  if(!ov){
+    ov=el("div","menu-ov"); ov.id="menuOv";
+    ov.innerHTML=`<div class="menu-sheet">
+      <div class="menu-h"><div class="t">Secciones</div><button class="x" id="menuX" aria-label="Cerrar">✕</button></div>
+      <div class="menu-grid" id="menuGrid"></div></div>`;
+    document.body.appendChild(ov);
+    ov.onclick=e=>{ if(e.target===ov) cerrarMenu(); };
+    $("#menuX").onclick=cerrarMenu;
+  }
+  const g=$("#menuGrid");
+  g.innerHTML=TABS.map(t=>`<button class="menu-item${t.id===TAB?" on":""}" data-go="${t.id}">
+    <span class="mi-ic">${t.ic}</span><span class="mi-t">${esc(t.n)}</span></button>`).join("");
+  g.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>{ irA(b.dataset.go); cerrarMenu(); });
+  requestAnimationFrame(()=>ov.classList.add("show"));
+}
+function cerrarMenu(){ const o=$("#menuOv"); if(o) o.classList.remove("show"); }
+
+/* Hace el botón de Roberto arrastrable a cualquier zona de la pantalla */
+function hacerArrastrable(fab){
+  const clamp=(v,mn,mx)=>Math.max(mn,Math.min(mx,v));
+  const colocar=(left,top)=>{ const w=fab.offsetWidth||60,h=fab.offsetHeight||60;
+    fab.style.left=clamp(left,6,window.innerWidth-w-6)+"px";
+    fab.style.top =clamp(top ,6,window.innerHeight-h-6)+"px";
+    fab.style.right="auto"; fab.style.bottom="auto"; };
+  const pos=load(K.fabpos,null);
+  if(pos && typeof pos.left==="number") requestAnimationFrame(()=>colocar(pos.left,pos.top));
+  let sx,sy,ox,oy,moved=false,dragging=false;
+  fab.addEventListener("pointerdown",e=>{
+    dragging=true; moved=false;
+    const r=fab.getBoundingClientRect(); ox=e.clientX-r.left; oy=e.clientY-r.top; sx=e.clientX; sy=e.clientY;
+    try{ fab.setPointerCapture(e.pointerId); }catch(_){}
+  });
+  fab.addEventListener("pointermove",e=>{
+    if(!dragging) return;
+    if(!moved && (Math.abs(e.clientX-sx)>4||Math.abs(e.clientY-sy)>4)){ moved=true; fab.classList.add("dragging"); }
+    if(moved) colocar(e.clientX-ox, e.clientY-oy);
+  });
+  const fin=()=>{ if(!dragging) return; dragging=false; fab.classList.remove("dragging");
+    if(moved){ const r=fab.getBoundingClientRect(); save(K.fabpos,{left:r.left,top:r.top}); } };
+  fab.addEventListener("pointerup",fin);
+  fab.addEventListener("pointercancel",fin);
+  fab.onclick=()=>{ if(moved){ moved=false; return; } abrirIA(); };
 }
 
 /* ============================================================
@@ -2338,18 +2386,49 @@ const FIRMAS_DATA = {
   "alpha capital":{ ddMaxPct:"10", ddTipo:"Trailing", ddDailyPct:"5", targetF1:"8",  targetF2:"5", diasMin:"0", splitPct:"80", nota:"Alpha Capital Group · confirma modelo y tipo de DD." }
 };
 function firmaKey(s){ return String(s||"").toLowerCase().replace(/\s+/g," ").trim(); }
+/* Precio aprox del reto según el TAMAÑO de la cuenta (varía por firma).
+   Valores típicos/editables; el botón de Roberto trae el exacto. */
+const PRECIOS_FIRMA = {
+  "ftmo":        { 10000:89, 25000:250, 50000:345, 100000:540, 200000:1080 },
+  "fundednext":  { 6000:49, 15000:99, 25000:169, 50000:299, 100000:549, 200000:1099 },
+  "the5ers":     { 5000:39, 20000:135, 60000:325, 100000:495 },
+  "funding pips":{ 5000:32, 10000:52, 25000:117, 50000:242, 100000:442, 200000:942 }
+};
+const PRECIOS_GEN = [[5000,45],[6000,55],[10000,89],[15000,110],[25000,200],[50000,300],[100000,500],[200000,1000]];
+function precioReto(key, cap){
+  cap = +cap||0; if(!cap) return "";
+  const map = PRECIOS_FIRMA[key];
+  if(map){
+    if(map[cap]) return String(map[cap]);
+    const sizes=Object.keys(map).map(Number);
+    const near=sizes.reduce((a,b)=>Math.abs(b-cap)<Math.abs(a-cap)?b:a);
+    return String(map[near]);
+  }
+  const near=PRECIOS_GEN.reduce((a,b)=>Math.abs(b[0]-cap)<Math.abs(a[0]-cap)?b:a);
+  return String(near[1]);
+}
 /* Rellena las reglas típicas al escribir la firma (solo campos vacíos) */
 function aplicarPresetFirma(){
   const inp=$("#ac_firma"); if(!inp) return;
-  const p=FIRMAS_DATA[firmaKey(inp.value)]; if(!p) return;
+  const key=firmaKey(inp.value);
+  const p=FIRMAS_DATA[key];
   const fase=$("#ac_fase")?.value||"";
-  const target = /F2/.test(fase)?p.targetF2 : /F1/.test(fase)?p.targetF1 : "";
+  const cap=$("#ac_capital")?.value||"";
   let hubo=false;
   const fill=(id,v)=>{ const e=$("#"+id); if(e && v!=null && v!=="" && !e.value.trim()){ e.value=v; hubo=true; } };
-  fill("ac_ddmax",p.ddMaxPct); fill("ac_dddaily",p.ddDailyPct); fill("ac_target",target);
-  fill("ac_diasmin",p.diasMin); fill("ac_split",p.splitPct); fill("ac_nota",p.nota);
-  const dt=$("#ac_ddtipo"); if(dt && p.ddTipo && dt.dataset.tocado!=="1"){ dt.value=p.ddTipo; }
-  if(hubo) toast("Reglas típicas de "+inp.value+" rellenadas ✓");
+  if(p){
+    const target = /F2/.test(fase)?p.targetF2 : /F1/.test(fase)?p.targetF1 : "";
+    fill("ac_ddmax",p.ddMaxPct); fill("ac_dddaily",p.ddDailyPct); fill("ac_target",target);
+    fill("ac_diasmin",p.diasMin); fill("ac_split",p.splitPct); fill("ac_nota",p.nota);
+    const dt=$("#ac_ddtipo"); if(dt && p.ddTipo && dt.dataset.tocado!=="1"){ dt.value=p.ddTipo; }
+  }
+  /* Precio del reto SEGÚN EL CAPITAL (si el usuario no lo tocó a mano) */
+  const pe=$("#ac_precio");
+  if(pe && cap && pe.dataset.manual!=="1"){
+    const pr=precioReto(key, cap);
+    if(pr){ pe.value=pr; hubo=true; }
+  }
+  if(hubo && p) toast("Reglas de "+inp.value+" rellenadas ✓");
 }
 /* Roberto trae/actualiza las reglas exactas de la firma (conocimiento + internet) */
 async function rellenarReglasIA(){
@@ -2360,8 +2439,9 @@ async function rellenarReglasIA(){
   const btn=$("#ac_iaFill"), st=$("#ac_iaStatus");
   if(btn){ btn.disabled=true; btn.textContent="🤖 Roberto buscando…"; }
   if(st) st.textContent="Roberto está trayendo las reglas de "+firma+"…";
-  const sys="Eres Roberto, experto en empresas de fondeo. Devuelve SOLO un objeto JSON válido, sin texto antes ni después y sin ```. Claves EXACTAS: ddMaxPct, ddTipo, ddDailyPct, targetPct, diasMin, splitPct, precio, nota. Reglas: ddTipo debe ser \"Estático\" o \"Trailing\"; los numéricos van como texto SIN símbolos (ej. \"10\", no \"10%\"); targetPct es el objetivo de la FASE indicada; precio es el coste aprox del reto en USD para un tamaño de 100K (deja \"\" si no lo sabes); nota es UNA frase corta con el modelo/programa y 'confirma en la web oficial'. Si no conoces un dato con seguridad, pon \"\".";
-  const msg="Dame las reglas estándar del reto de la firma \""+firma+"\" para la fase \""+fase+"\" (cuenta de 2 fases si aplica). Solo el JSON.";
+  const cap=($("#ac_capital")?.value||"").trim();
+  const sys="Eres Roberto, experto en empresas de fondeo. Devuelve SOLO un objeto JSON válido, sin texto antes ni después y sin ```. Claves EXACTAS: ddMaxPct, ddTipo, ddDailyPct, targetPct, diasMin, splitPct, precio, nota. Reglas: ddTipo debe ser \"Estático\" o \"Trailing\"; los numéricos van como texto SIN símbolos (ej. \"10\", no \"10%\"); targetPct es el objetivo de la FASE indicada; precio es el coste aprox del reto en USD para EL TAMAÑO DE CUENTA indicado (deja \"\" si no lo sabes); nota es UNA frase corta con el modelo/programa y 'confirma en la web oficial'. Si no conoces un dato con seguridad, pon \"\".";
+  const msg="Dame las reglas estándar del reto de la firma \""+firma+"\" para la fase \""+fase+"\""+(cap?(" y un tamaño de cuenta de "+cap+" USD"):"")+" (cuenta de 2 fases si aplica). Solo el JSON.";
   try{
     const r=await fetch(IA.url,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({system:sys,messages:[{role:"user",content:msg}]})});
     const d=await r.json();
@@ -2464,6 +2544,21 @@ function tarjetaCuenta(c){
     barra=`<div class="fl" style="margin:10px 0 4px">Progreso al objetivo: ${r1(st.progresoPct)}% / ${r1(st.target)}%</div>
       <div class="bar"><i style="width:${fillPct}%;background:${barCol}"></i></div>`;
   }
+  /* Estado claro: vas +X% o -X%, con margen hasta el límite de pérdida (DD) */
+  let estado="";
+  if(st.cap>0){
+    const ddMax=+c.ddMaxPct||0;
+    const pctTxt=(st.progresoPct>=0?"+":"")+r1(st.progresoPct)+"%";
+    if(st.progresoPct>=0){
+      const falta = st.target>0 ? Math.max(0, st.target-st.progresoPct) : 0;
+      estado=`<div class="diag ok" style="padding:11px 13px;margin:8px 0 2px"><div class="dd" style="color:var(--green)">🟢 Vas <b>${pctTxt}</b>${st.target>0?(st.progresoPct>=st.target?` · ¡objetivo del ${r1(st.target)}% cumplido!`:` · faltan <b>${r1(falta)}%</b> para el objetivo (${r1(st.target)}%)`):""}.</div></div>`;
+    }else{
+      const perdida=Math.abs(st.progresoPct);
+      const margen = ddMax>0 ? Math.max(0, ddMax-perdida) : 0;
+      const peligro = ddMax>0 && margen<=ddMax*0.3;
+      estado=`<div class="diag ${peligro?"bad":"warn"}" style="padding:11px 13px;margin:8px 0 2px"><div class="dd" style="color:${peligro?"var(--red)":"var(--orange)"}">${peligro?"🔴":"🟠"} Vas <b>${pctTxt}</b>${ddMax>0?` · te queda <b>${r1(margen)}%</b> hasta el límite de pérdida (DD ${ddMax}%)${peligro?" — ¡cuidado!":""}`:""}.</div></div>`;
+    }
+  }
   /* Reglas resumidas */
   const reglas=[];
   if(c.ddMaxPct) reglas.push(`DD máx ${c.ddMaxPct}%${c.ddTipo?" ("+c.ddTipo+")":""}`);
@@ -2495,6 +2590,7 @@ function tarjetaCuenta(c){
       <div class="st"><div class="v b">$${r0(st.cap)}</div><div class="k">Capital</div></div>
     </div>
     ${barra}
+    ${estado}
     ${reglas.length?`<div class="note" style="text-align:left;margin:10px 0 4px">📋 ${reglas.join(" · ")}</div>`:""}
     ${ligados}
     ${comp.length?`<div class="note" style="text-align:left">💰 ${comp.join(" · ")}</div>`:""}
@@ -2580,6 +2676,8 @@ function cuentaModal(id){
   ]);
   const fi=$("#ac_firma"); if(fi) fi.addEventListener("change",aplicarPresetFirma);
   const ff=$("#ac_fase"); if(ff) ff.addEventListener("change",aplicarPresetFirma);
+  const cp=$("#ac_capital"); if(cp) cp.addEventListener("input",aplicarPresetFirma);
+  const pr=$("#ac_precio"); if(pr) pr.addEventListener("input",()=>{ pr.dataset.manual="1"; });
   const dt=$("#ac_ddtipo"); if(dt) dt.addEventListener("change",()=>{ dt.dataset.tocado="1"; });
   const bf=$("#ac_iaFill"); if(bf) bf.onclick=rellenarReglasIA;
 }
@@ -2614,6 +2712,10 @@ function iaCuentas(){
   CUENTAS.forEach(c=>{
     const st=statsCuenta(c);
     s+=`· ${c.alias||c.firma||"Cuenta"} (${c.firma||"?"}, ${c.fase}): capital $${r0(st.cap)}, balance ~$${r0(st.balance)} (P&L ${st.pl>=0?"+":""}$${r0(st.pl)}, ${r1(st.progresoPct)}% de ${c.targetPct||"?"}% objetivo). DD máx ${c.ddMaxPct||"?"}%${c.ddTipo?" "+c.ddTipo:""}, daily ${c.ddDailyPct||"?"}%, riesgo ${c.riesgoPct||"?"}%/trade.`;
+    const ddMax=+c.ddMaxPct||0;
+    if(st.progresoPct<0 && ddMax>0){ const margen=Math.max(0,ddMax-Math.abs(st.progresoPct)); s+=` [VA EN NEGATIVO ${r1(st.progresoPct)}%, le quedan ${r1(margen)}% hasta romper el DD${margen<=ddMax*0.3?" — PELIGRO, protégela":""}]`; }
+    else if(st.target>0 && st.progresoPct>=st.target){ s+=` [OBJETIVO CUMPLIDO, cuida de no romper reglas]`; }
+    else if(st.target>0){ s+=` [va +${r1(st.progresoPct)}%, falta ${r1(Math.max(0,st.target-st.progresoPct))}% al objetivo]`; }
     if(st.m) s+=` Trades ligados: ${st.m.n}, WR ${pct(st.m.wr*100)}, net ${r1(st.m.rNeto)}R, exp ${r2(st.m.exp)}R.`;
     if(c.retiros) s+=` Retirado $${r0(+c.retiros)}.`;
     if(c.metaEscalado) s+=` Meta: ${c.metaEscalado}.`;
@@ -2656,6 +2758,7 @@ const IA_SYSTEM_BASE =
 "INTERNET / BÚSQUEDA WEB: AHORA SÍ tienes una herramienta de búsqueda web. Úsala SOLO cuando necesites un dato EN VIVO o actual que no está en tu conocimiento: el calendario económico del día, noticias de alto impacto (NFP, CPI, FOMC, decisiones de tasas), un evento/precio reciente, o las REGLAS y PRECIOS ACTUALES de una empresa de fondeo (cambian seguido). Para conceptos, estrategia, psicología, su indicador y teoría NO busques — ya lo sabes; buscar de más gasta dinero y tarda. Cuando des un dato de noticias, del calendario o de una firma, menciona la fuente en una línea. Si la búsqueda no encuentra o no es clara, dilo con honestidad y sugiérele confirmarlo en la web oficial de la firma o en su calendario económico. Recuerda su regla: no operar 30 min antes ni después de una noticia roja.\n\n"+
 "FIRMAS DE FONDEO (prop firms): Rey va a comprar varias cuentas de reto/fondeo y quiere que le ayudes a ELEGIR bien. IMPORTANTE (velocidad): compara las firmas DESDE TU CONOCIMIENTO, al instante — conoces bien las grandes (FTMO, FundedNext, The5ers, E8, FTUK, MyFundedFX, Alpha Capital, etc.). NO hagas varias búsquedas web para comparar: encadenar búsquedas tarda muchísimo y arruina la experiencia. Cuando pregunte por firmas: (1) compáralas YA, de memoria, de forma OBJETIVA en lo que importa: drawdown máximo (estático o trailing), daily drawdown, profit target por fase, días mínimos, tiempo límite, si permite overnight/fin de semana y operar en noticias, reglas de consistencia, split de ganancias, rapidez y fiabilidad de los PAYOUTS, y reputación/años; (2) preséntalo claro (lista o tabla comparada) con PROS y CONTRAS; (3) AVISA que reglas y precios cambian con frecuencia y que confirme el número EXACTO en la web oficial de cada firma antes de comprar. Da tu recomendación razonada, pero la decisión final es de él (le das criterio, no órdenes de inversión). Si pide una barata, una segura, las más grandes o una concreta, respétalo. Insiste en la DIVERSIFICACIÓN: no meter todas las cuentas en una sola firma. USA la búsqueda web SOLO si Rey pide EXPRESAMENTE el precio o una regla ACTUALIZADA de UNA firma concreta — entonces UNA sola búsqueda puntual y cita la fuente; nunca varias seguidas.\n\n"+
 "FINANZAS, INTERÉS COMPUESTO Y ESCALADO: Eres su asesor de gestión de capital. Ayúdale con matemática concreta: interés compuesto para escalar (reinvertir vs retirar), tamaño de riesgo por cuenta, cómo tratar cada cuenta según su fase y las reglas de su firma, cálculo de probabilidades y esperanza matemática (expectancy), riesgo de ruina, y cómo repartir el capital entre varias cuentas y firmas. Cuando haga falta, HAZ LAS CUENTAS y muéstrale los números paso a paso. Sé conservador y realista: primero proteger la cuenta, luego escalar; nunca infles expectativas ni prometas rendimientos.\n\n"+
+"GESTIÓN ACTIVA DE SUS CUENTAS: En cada mensaje recibes el bloque [CUENTAS DE FONDEO] con el estado real de cada cuenta (capital, balance, P&L, % de avance, margen hasta el DD, trades ligados). Úsalo SIEMPRE que hable de sus cuentas o de su operativa, y sé PROACTIVO: (1) si una cuenta va EN NEGATIVO, dile con calma cuánto le queda hasta romper el DD y dale un plan CONSERVADOR y realista para volver a positivo sin forzar (bajar tamaño, solo A+, no revancha, respetar daily) — recuérdale que recuperar rompiendo reglas es como pierde las cuentas; (2) si una cuenta está marcada PELIGRO (cerca del límite de pérdida), prioriza PROTEGERLA: sugiere parar o reducir riesgo; (3) si está cerca del objetivo, dile que asegure y no se envalentone; (4) si cumplió objetivo, felicítalo y que no rompa reglas por euforia. Relaciona el resultado del día/operativa (sus trades) con el estado de cada cuenta. Cuando te pregunte '¿cómo van mis cuentas?' o '¿cómo mejoro esta?', responde con números concretos de ESE bloque, no en genérico.\n\n"+
 "SALDO / RECARGA: Tú NO puedes ver el saldo ni el consumo de la cuenta de Anthropic de Rey (no tienes acceso a esa información). Si te pregunta cuánto le queda o cómo recargar, díselo con honestidad y pásale el enlace directo: https://console.anthropic.com/settings/billing (ahí ve su saldo, pulsa 'Add credits' para recargar y puede activar recarga automática). Nunca inventes una cifra de saldo.\n\n"+
 "IMÁGENES / GRÁFICOS: Rey puede enviarte CAPTURAS o FOTOS de su gráfico (a veces una foto en directo de la pantalla). Cuando te mande una imagen, léela como un trader profesional: identifica el par y la temporalidad si se ven, el bias/dirección, la estructura (BOS/CHoCH), los BARRIDOS de liquidez (sweep con mecha, no con cierre), las zonas (OB/FVG/premium/discount/tierra de nadie) y, si aparece el panel de su indicador CRT Elite, úsalo (sesgo, Secuencia F3, alineación de TFs, CRT H4). Dile con claridad si hay un setup VÁLIDO según SU método (sweep obligatorio, MSS en 15M/1H, gatillo en M5/M3 con vela de confirmación), qué clasificación tendría (A+/B/C) y qué haría él. NO inventes lo que no se ve: si la imagen está borrosa, cortada o le falta la temporalidad o una zona clave, pídele otra toma o el dato que necesites antes de opinar.";
 
@@ -2793,8 +2896,8 @@ function iaInit(){
 
   const fab=el("button","fab",'✨<span class="fab-badge">IA</span>');
   fab.id="fab"; fab.setAttribute("aria-label","Roberto, tu mentor");
-  fab.onclick=abrirIA;
   document.body.appendChild(fab);
+  hacerArrastrable(fab);
 
   const ov=el("div","ia-ov"); ov.id="iaOv";
   ov.innerHTML=`
@@ -3171,6 +3274,7 @@ function init(){
 
   refreshChecklist(); refreshConf(); refreshReglas(); renderDiario();
   const ba=$("#btnAyuda"); if(ba) ba.onclick=()=>abrirAyuda(TAB);
+  const bm=$("#btnMenu"); if(bm) bm.onclick=abrirMenu;
   irA("checklist");
   tickRelojes(); setInterval(tickRelojes,10000);
   iaInit();

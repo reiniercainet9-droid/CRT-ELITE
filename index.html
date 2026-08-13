@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#0B1220">
+<meta name="theme-color" content="#0C1024">
 <title>CRT Elite · Plan Operativo</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -12,30 +12,36 @@
 <meta name="apple-mobile-web-app-title" content="CRT Elite">
 <style>
 :root{
-  --bg:#0B1220;
-  --card:#14203A;
-  --card2:#1B2A48;
-  --card3:#22355A;
-  --line:#2A3E66;
-  --gold:#F5C542;
-  --gold-dim:#C9A233;
-  --txt:#E8EEF8;
-  --txt2:#93A4C4;
-  --txt3:#6B7EA3;
-  --green:#31C46A;
-  --green-dim:#1E7A44;
-  --red:#F26D6D;
-  --red-dim:#8A3A3A;
-  --blue:#5B9BF5;
-  --orange:#F5934A;
-  --purple:#9B7BF5;
+  --bg:#0C1024;
+  --bg2:#080B1A;
+  --card:#1A1F3D;
+  --card2:#232A4E;
+  --card3:#2E3766;
+  --line:#333C6B;
+  --gold:#F0C868;
+  --gold-soft:#F7D98F;
+  --gold-dim:#CDA352;
+  --txt:#EDF0FA;
+  --txt2:#AAB4D4;
+  --txt3:#7A83AB;
+  --green:#37D08D;
+  --green-dim:#1E7A50;
+  --red:#FF6B7A;
+  --red-dim:#8A3A44;
+  --blue:#6B8AFF;
+  --orange:#F5A65B;
+  --purple:#A78BFA;
   --r:16px;
   --safe-b:env(safe-area-inset-bottom,0px);
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;padding:0}
 body{
-  background:var(--bg);
+  background:
+    radial-gradient(1100px 620px at 50% -8%, rgba(107,138,255,.10), transparent 60%),
+    radial-gradient(820px 520px at 100% 2%, rgba(240,200,104,.055), transparent 55%),
+    var(--bg);
+  background-attachment:fixed;
   color:var(--txt);
   font-family:"Roboto","Segoe UI",system-ui,-apple-system,sans-serif;
   font-size:16px;line-height:1.5;
@@ -48,26 +54,31 @@ button{cursor:pointer;border:none;background:none}
 
 /* ===== HEADER ===== */
 .hdr{
-  background:var(--card);
+  background:linear-gradient(150deg,#1C2348,#141834);
   border:1px solid var(--line);border-radius:var(--r);
-  padding:16px;display:flex;align-items:center;gap:14px;
+  padding:15px 16px;display:flex;align-items:center;gap:13px;
   position:relative;overflow:hidden;margin-bottom:12px;
+  box-shadow:0 18px 44px -30px rgba(0,0,0,.85), inset 0 1px 0 rgba(255,255,255,.04);
 }
-.hdr::before{content:"";position:absolute;top:0;left:0;right:0;height:4px;background:var(--gold)}
+.hdr::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,transparent,var(--gold),transparent)}
 .hdr-logo{
-  width:58px;height:58px;border-radius:14px;
-  background:linear-gradient(145deg,#1E2E52,#16233E);
+  width:54px;height:54px;border-radius:15px;
+  background:radial-gradient(120% 120% at 30% 20%,#20264C,#0E1226 72%);
   border:1px solid var(--line);
-  display:flex;align-items:center;justify-content:center;
-  font-weight:800;font-size:19px;color:var(--gold);letter-spacing:.5px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05);
 }
-.hdr-t{font-size:27px;font-weight:700;line-height:1.1}
+.hdr-logo svg{width:70%;height:70%}
+.hdr-t{font-size:25px;font-weight:800;line-height:1.05;letter-spacing:1px}
 .hdr-t span{color:var(--gold)}
-.hdr-s{font-size:13px;color:var(--txt3);letter-spacing:1.6px;margin-top:3px}
-.hdr-help{position:absolute;top:12px;right:12px;width:34px;height:34px;border-radius:50%;
+.hdr-s{font-size:11px;color:var(--txt3);letter-spacing:2px;margin-top:4px;text-transform:uppercase}
+.hdr-btns{margin-left:auto;display:flex;gap:8px;align-items:center}
+.hdr-ic{width:38px;height:38px;border-radius:12px;flex-shrink:0;
   background:var(--card2);border:1.5px solid var(--gold);color:var(--gold);
-  font-size:18px;font-weight:800;display:flex;align-items:center;justify-content:center;line-height:1;z-index:2}
-.hdr-help:active{background:var(--card3);transform:scale(.92)}
+  font-weight:800;font-size:18px;display:flex;align-items:center;justify-content:center;line-height:1;z-index:2}
+.hdr-ic:active{background:var(--card3);transform:scale(.92)}
+.hdr-help{width:38px;height:38px;border-radius:50%}
 
 /* ===== RELOJES ===== */
 .clocks{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
@@ -85,7 +96,9 @@ button{cursor:pointer;border:none;background:none}
 .vent.best{background:rgba(245,197,66,.10);border-color:rgba(245,197,66,.55);color:var(--gold)}
 
 /* ===== CARDS ===== */
-.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:14px}
+.card{background:linear-gradient(165deg,var(--card),#151933);border:1px solid var(--line2,rgba(255,255,255,.06));
+  border-radius:var(--r);padding:16px;margin-bottom:14px;
+  box-shadow:0 16px 38px -30px rgba(0,0,0,.7), inset 0 1px 0 rgba(255,255,255,.03)}
 .card.alert{border-color:rgba(242,109,109,.45);position:relative;overflow:hidden}
 .card.alert::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--red),var(--orange))}
 .card-h{display:flex;align-items:center;gap:10px;margin-bottom:6px;flex-wrap:wrap}
@@ -292,7 +305,7 @@ select.inp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns
 /* ===== NAV ===== */
 .nav{
   position:fixed;bottom:0;left:0;right:0;z-index:50;
-  background:rgba(11,18,32,.97);backdrop-filter:blur(14px);
+  background:linear-gradient(0deg,var(--bg2),rgba(8,11,26,.9));backdrop-filter:blur(14px);
   border-top:1px solid var(--line);
   display:flex;padding:6px 2px calc(6px + var(--safe-b));
   overflow-x:auto;scrollbar-width:none;
@@ -305,7 +318,7 @@ select.inp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns
   white-space:nowrap;
 }
 .nav button .i{font-size:20px;line-height:1}
-.nav button.on{background:var(--card2);color:var(--gold)}
+.nav button.on{background:rgba(240,200,104,.12);color:var(--gold)}
 .view{display:none}
 .view.on{display:block;animation:fi .18s ease}
 @keyframes fi{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
@@ -400,12 +413,36 @@ select.inp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns
 /* ===== MENTOR IA (botón flotante + chat) ===== */
 .fab{position:fixed;right:16px;bottom:calc(94px + var(--safe-b));z-index:60;
   width:60px;height:60px;border-radius:50%;
-  background:linear-gradient(145deg,var(--gold),var(--gold-dim));color:#1A1200;
-  font-size:27px;display:flex;align-items:center;justify-content:center;
-  box-shadow:0 6px 20px rgba(245,197,66,.42),0 2px 7px rgba(0,0,0,.45);border:none}
+  background:radial-gradient(130% 130% at 30% 20%,#252D59,#11162C 72%);
+  border:2px solid var(--gold);color:var(--gold-soft);
+  font-size:26px;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 10px 26px -6px rgba(240,200,104,.42),0 3px 9px rgba(0,0,0,.5);
+  touch-action:none;user-select:none;-webkit-user-select:none}
 .fab:active{transform:scale(.93)}
-.fab .fab-badge{position:absolute;top:-2px;right:-2px;background:var(--green);color:#04220F;
-  font-size:9px;font-weight:800;padding:2px 5px;border-radius:9px;border:2px solid var(--bg)}
+.fab.dragging{transform:scale(1.06);box-shadow:0 16px 36px -6px rgba(240,200,104,.6)}
+.fab .fab-badge{position:absolute;top:-3px;right:-3px;background:var(--blue);color:#061034;
+  font-size:9px;font-weight:800;padding:2px 5px;border-radius:9px;border:2px solid var(--bg);letter-spacing:.4px}
+
+/* ===== MENÚ DESPLEGABLE DE SECCIONES ===== */
+.menu-ov{position:fixed;inset:0;z-index:180;background:rgba(6,9,20,.72);backdrop-filter:blur(4px);
+  opacity:0;visibility:hidden;transition:opacity .2s;display:flex;align-items:flex-start;justify-content:center;padding:12px}
+.menu-ov.show{opacity:1;visibility:visible}
+.menu-sheet{width:100%;max-width:640px;background:linear-gradient(165deg,#1B2145,#12162B);
+  border:1px solid var(--line);border-top:3px solid var(--gold);border-radius:20px;
+  padding:16px 16px calc(16px + var(--safe-b));transform:translateY(-16px);transition:transform .24s cubic-bezier(.2,1,.4,1);
+  box-shadow:0 40px 90px -30px rgba(0,0,0,.9);max-height:92vh;overflow-y:auto}
+.menu-ov.show .menu-sheet{transform:none}
+.menu-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.menu-h .t{font-size:13px;font-weight:700;color:var(--gold);letter-spacing:1.8px;text-transform:uppercase}
+.menu-h .x{width:34px;height:34px;border-radius:10px;background:var(--card2);color:var(--txt2);font-size:15px;display:flex;align-items:center;justify-content:center;border:1px solid var(--line)}
+.menu-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.menu-item{display:flex;align-items:center;gap:12px;padding:14px;border-radius:14px;
+  background:rgba(10,13,30,.5);border:1px solid rgba(255,255,255,.06);text-align:left;width:100%}
+.menu-item:active{background:var(--card3)}
+.menu-item.on{border-color:var(--gold);background:rgba(240,200,104,.1)}
+.menu-item .mi-ic{font-size:22px;line-height:1;flex-shrink:0}
+.menu-item .mi-t{font-size:14.5px;font-weight:600;color:var(--txt)}
+.menu-item.on .mi-t{color:var(--gold)}
 .ia-ov{position:fixed;inset:0;z-index:210;background:rgba(6,10,20,.6);backdrop-filter:blur(3px);
   opacity:0;visibility:hidden;transition:opacity .2s;display:flex;align-items:flex-end;justify-content:center}
 .ia-ov.show{opacity:1;visibility:visible}
@@ -466,15 +503,39 @@ select.inp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns
 </style>
 </head>
 <body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <linearGradient id="crtGold" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#F7D98F"/><stop offset=".5" stop-color="#F0C868"/><stop offset="1" stop-color="#C79A4E"/>
+  </linearGradient>
+  <symbol id="crtLogo" viewBox="0 0 100 100">
+    <rect x="20" y="20" width="60" height="60" rx="15" transform="rotate(45 50 50)"
+          fill="rgba(240,200,104,.06)" stroke="url(#crtGold)" stroke-width="3.4"/>
+    <g fill="url(#crtGold)">
+      <rect x="35.4" y="52" width="7.2" height="15" rx="2.4"/>
+      <rect x="46.4" y="44" width="7.2" height="16" rx="2.4"/>
+      <rect x="57.4" y="36" width="7.2" height="17" rx="2.4"/>
+    </g>
+    <g stroke="url(#crtGold)" stroke-width="2.4" stroke-linecap="round">
+      <line x1="39" y1="44" x2="39" y2="70"/>
+      <line x1="50" y1="36" x2="50" y2="64"/>
+      <line x1="61" y1="30" x2="61" y2="58"/>
+    </g>
+  </symbol>
+</defs></svg>
+
 <div class="wrap">
 
   <div class="hdr">
-    <div class="hdr-logo">CRT</div>
+    <div class="hdr-logo"><svg viewBox="0 0 100 100"><use href="#crtLogo"/></svg></div>
     <div>
-      <div class="hdr-t">CRT <span>Elite</span></div>
-      <div class="hdr-s">PLAN OPERATIVO · REY</div>
+      <div class="hdr-t">CRT <span>ELITE</span></div>
+      <div class="hdr-s">Plan operativo · Rey</div>
     </div>
-    <button class="hdr-help" id="btnAyuda" aria-label="¿Para qué sirve esta pantalla?">?</button>
+    <div class="hdr-btns">
+      <button class="hdr-ic" id="btnMenu" aria-label="Menú de secciones">☰</button>
+      <button class="hdr-ic hdr-help" id="btnAyuda" aria-label="¿Para qué sirve esta pantalla?">?</button>
+    </div>
   </div>
 
   <div class="clocks">

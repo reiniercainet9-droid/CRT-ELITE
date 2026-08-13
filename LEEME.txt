@@ -1,5 +1,36 @@
-CRT ELITE v4.7 — PLAN OPERATIVO + BACKTESTING
+CRT ELITE v4.9 — PLAN OPERATIVO + BACKTESTING
 ==============================================
+
+NOVEDADES v4.9  (REDISEÑO PREMIUM + MENU + ROBERTO MOVIL)
+========================================================
+- NUEVO LOOK PREMIUM: azul indigo profundo, tarjetas cristal y dorado
+  champagne. Colores mas vivos y nitidos, mas profesional.
+- LOGO NUEVO: un diamante con velas alcistas en dorado (en la cabecera y
+  de icono).
+- BOTON DE ROBERTO (✨) rediseñado: ahora es oscuro con borde dorado, se
+  ve nitido (antes se perdia dorado sobre dorado). Y AHORA SE PUEDE
+  ARRASTRAR: mantenlo pulsado y muevelo a cualquier zona de la pantalla
+  (arriba, abajo, izquierda, derecha). Se guarda donde lo dejes.
+- MENU DESPLEGABLE (boton ☰ arriba): abre un menu limpio con todas las
+  secciones (Checklist, Confluencias, Cuentas, Analisis, Mentor...) para
+  navegar rapido y con mas claridad. La barra de abajo sigue igual.
+- Todo verificado: no se rompio nada de lo anterior. NO toca el puente.
+
+NOVEDADES v4.8  (PRECIO SEGUN CAPITAL + ESTADO +/- Y DD)
+=======================================================
+- PRECIO DEL RETO segun el CAPITAL: al poner el tamaño de la cuenta (ej.
+  10.000), el precio del reto se calcula solo para ESE tamaño (FTMO 10K
+  = ~$89, 100K = ~$540, etc.). Si cambias el capital, se recalcula. Es
+  aproximado y editable; el boton 🤖 de Roberto trae el exacto para tu
+  tamaño.
+- ESTADO CLARO en cada tarjeta: te dice si vas 🟢 +X% (y cuanto falta al
+  objetivo) o 🟠/🔴 -X% (y cuanto margen te queda hasta romper el
+  drawdown). Rojo = peligro, protege la cuenta.
+- ROBERTO MAS PENDIENTE: ahora ve el estado de cada cuenta (positivo/
+  negativo, margen al DD) y es PROACTIVO: si vas en negativo te da un plan
+  conservador para volver a positivo sin romper reglas; si estas cerca del
+  limite te dice que protejas; si estas cerca del objetivo que asegures.
+  Preguntale "¿como van mis cuentas?" o "¿como recupero esta?".
 
 NOVEDADES v4.7  (AUTORRELLENO DE REGLAS DE LA FIRMA)
 ===================================================
