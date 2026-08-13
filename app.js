@@ -15,7 +15,8 @@ const K = {
   iachat : "crtelite_iachat_v3",
   iaconvs: "crtelite_iaconvs_v3",
   iaact  : "crtelite_iaact_v3",
-  iavoz  : "crtelite_iavoz_v3"
+  iavoz  : "crtelite_iavoz_v3",
+  cuentas: "crtelite_cuentas_v3"
 };
 const load = (k,d)=>{ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):d; }catch(e){ return d; } };
 const save = (k,v)=>{ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){ toast("No se pudo guardar"); } };
@@ -33,6 +34,10 @@ if(!ESTRATEGIAS.length) ESTRATEGIAS = ["CRT Elite"];
 /* Contexto activo: modo (real/backtest) + estrategia seleccionada */
 let CTX = load(K.ctx, { modo:"real", estrategia:"CRT Elite" });
 if(!ESTRATEGIAS.includes(CTX.estrategia)) CTX.estrategia = ESTRATEGIAS[0];
+
+/* Cuentas de fondeo/reales/propias registradas (v4.6) */
+let CUENTAS = load(K.cuentas, []);
+function guardarCuentas(){ save(K.cuentas, CUENTAS); }
 
 /* Migración: trades viejos sin modo/estrategia → real + CRT Elite */
 (function migrar(){
@@ -58,6 +63,7 @@ const el = (t,c,h)=>{ const e=document.createElement(t); if(c)e.className=c; if(
 const esc= s => String(s==null?"":s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
 const r1 = n => (Math.round(n*10)/10).toFixed(1);
 const r2 = n => (Math.round(n*100)/100).toFixed(2);
+const r0 = n => Math.round(n||0).toLocaleString("en-US");
 const pct= n => Math.round(n)+"%";
 
 function toast(msg){
@@ -127,6 +133,7 @@ const TABS=[
   {id:"riesgo",    ic:"💰", n:"Riesgo"},
   {id:"gatillo",   ic:"⚡", n:"Gatillo"},
   {id:"diario",    ic:"📒", n:"Diario"},
+  {id:"cuentas",   ic:"🏦", n:"Cuentas"},
   {id:"almanaque", ic:"📅", n:"Almanaque"},
   {id:"analisis",  ic:"📈", n:"Análisis"},
   {id:"mentor",    ic:"🧠", n:"Mentor"},
@@ -144,6 +151,7 @@ function irA(id){
   if(id==="gatillo")  renderGatillo();
   if(id==="mentor")   renderMentor();
   if(id==="almanaque")renderAlmanaque();
+  if(id==="cuentas")  renderCuentas();
 }
 function buildNav(){
   const n=$("#nav"); n.innerHTML="";
@@ -171,7 +179,10 @@ const AYUDA = {
   gatillo:{ t:"⚡ Gatillo", h:`<p><b>Para qué sirve:</b> el detalle fino de tu <b>Fase 4</b> — el momento EXACTO de entrar (toque del POI → vela de rechazo → cierre de confirmación).</p>
     <p><b>Cómo usarlo:</b> úsalo para no entrar antes de tiempo. Solo disparas con la <b>vela de confirmación cerrada</b>.</p>` },
   diario:{ t:"📒 Diario", h:`<p><b>Para qué sirve:</b> aquí registras cada operación con todos sus detalles (par, resultado en R, momento de entrada, emoción, si rompiste el plan…).</p>
-    <p><b>Cómo usarlo:</b> registra TODO, real y backtest. Usa la barra de arriba para elegir el contexto (Real / Backtest + estrategia). De estos datos se alimentan el Análisis y Roberto.</p>` },
+    <p><b>Cómo usarlo:</b> registra TODO, real y backtest. Usa la barra de arriba para elegir el contexto (Real / Backtest + estrategia). Elige la <b>cuenta de fondeo</b> a la que pertenece el trade para que sume en la pestaña 🏦 Cuentas. De estos datos se alimentan el Análisis y Roberto.</p>` },
+  cuentas:{ t:"🏦 Cuentas", h:`<p><b>Para qué sirve:</b> gestionar tus cuentas de fondeo, reales y propias en un solo lugar: capital, reglas de la firma (drawdown, target, días), avance hacia el objetivo, retiros e interés compuesto.</p>
+    <p><b>Cómo usarlo:</b> pulsa <b>➕ Nueva cuenta</b> y rellena sus datos. Cambia su fase con <b>⏭️ Avanzar fase</b> (Examen → Fondeada → Real). En el Diario, al registrar un trade, elige esta cuenta y aquí verás su rendimiento en vivo.</p>
+    <p><b>Roberto</b> ve todas tus cuentas y te ayuda a gestionarlas, protegerlas y escalar con interés compuesto y diversificación.</p>` },
   almanaque:{ t:"📅 Almanaque", h:`<p><b>Para qué sirve:</b> tu calendario de resultados. Ves cada día pintado en verde/rojo según tu R, para detectar patrones (qué días operas mejor).</p>
     <p><b>Cómo usarlo:</b> toca un día para ver sus trades. Cambia de mes con las flechas.</p>` },
   analisis:{ t:"📈 Análisis", h:`<p><b>Para qué sirve:</b> tus estadísticas frías — win rate, profit factor, expectancy, drawdown, y cortes por categoría (por par, por momento, por sesión…).</p>
@@ -760,6 +771,7 @@ function refrescarDiarioCtx(){
   const cb=$("#ctxWrapDiario");
   if(cb){ cb.innerHTML=""; cb.appendChild(barraContexto(()=>{ EDIT_ID=null; refrescarDiarioCtx(); })); }
   actualizarFormLabel();
+  pintarSelCuentaTrade();
   renderDiario();
   if(TAB==="analisis") renderAnalisis();
 }
@@ -801,6 +813,12 @@ function viewDiario(){
   <div class="fld" id="wrapFecha" style="display:none">
     <div class="fl">Fecha del trade (vela histórica)</div>
     <input class="inp" id="fFecha" type="date"></div>
+
+  <div class="fld" id="wrapCuenta">
+    <div class="fl">Cuenta de fondeo (opcional)</div>
+    <select class="inp" id="fCuenta"></select>
+    <div class="note" style="text-align:left;margin-top:4px">Elige de qué cuenta es este trade y sumará en la pestaña 🏦 Cuentas.</div>
+  </div>
 
   <div class="fl">Par</div>
   <div class="seg c3" id="sgPar"></div>
@@ -955,6 +973,7 @@ function initDiarioControles(){
   const bs=$("#btnSave"); if(bs) bs.onclick=guardarTrade;
   const bc=$("#btnCancelEdit"); if(bc) bc.onclick=cancelarEdicion;
   actualizarFormLabel();
+  pintarSelCuentaTrade();
 }
 
 function setConfBtns(ids){
@@ -998,6 +1017,16 @@ function limpiarForm(){
   $("#fParOtro").style.display="none";
   FORM.momento="En confirmación"; FORM.disp="FVG 50%"; FORM.bias="A favor"; FORM.gtf="5M"; FORM.news="Limpio";
   setNuevosSegs();
+  const fc=$("#fCuenta"); if(fc) fc.value="";
+}
+/* Rellena el <select> de cuenta del formulario de trade (se refresca al entrar) */
+function pintarSelCuentaTrade(){
+  const s=$("#fCuenta"); if(!s) return;
+  const prev=s.value;
+  const act=CUENTAS.filter(c=>c.fase!=="Cerrada");
+  s.innerHTML=`<option value="">— Sin cuenta —</option>`+
+    act.map(c=>`<option value="${c.id}">${esc(c.alias||c.firma||"Cuenta")} · ${esc(c.firma||"")} (${esc(c.fase||"")})</option>`).join("");
+  if(prev) s.value=prev;
 }
 
 function guardarTrade(){
@@ -1038,7 +1067,8 @@ function guardarTrade(){
     mfe: $("#fMfe").value.trim()===""?null:parseFloat($("#fMfe").value),
     momento:FORM.momento, disp:($("#fDisp")?.value||FORM.disp), bias:FORM.bias, gtf:FORM.gtf, news:FORM.news,
     rrPlan: ($("#fRRplan")?.value||"").trim()===""?null:parseFloat($("#fRRplan").value),
-    plan:FORM.plan, emo:FORM.emo, nota:$("#fNota").value.trim()
+    plan:FORM.plan, emo:FORM.emo, nota:$("#fNota").value.trim(),
+    cuenta: ($("#fCuenta")?.value||"")
   };
 
   let nuevoTrade=null;
@@ -1089,6 +1119,7 @@ function editarTrade(id){
   FORM.bias=t.bias||"A favor"; FORM.gtf=t.gtf||"5M"; FORM.news=t.news||"Limpio";
   setNuevosSegs();
   $("#fRRplan").value = t.rrPlan!=null ? t.rrPlan : "";
+  pintarSelCuentaTrade(); const fc=$("#fCuenta"); if(fc) fc.value=t.cuenta||"";
   if(CTX.modo==="backtest" && t.fecha){ $("#fFecha").value=t.fecha; }
 
   $("#btnSave").textContent="💾 Guardar cambios";
@@ -2287,6 +2318,250 @@ function fillPlanDinamico(){
 }
 
 /* ============================================================
+   VISTA — CUENTAS DE FONDEO (v4.6)
+   Registro de exámenes/fondeadas/reales/propias con sus reglas,
+   rendimiento (conectado al Diario), interés compuesto y notas.
+   ============================================================ */
+const FASES = ["Examen F1","Examen F2","Fondeada","Real","Propia"];
+const FIRMAS_SUG = ["FTMO","FundedNext","The5ers","E8 Markets","FTUK","MyFundedFX","Alpha Capital","Funding Pips","Otra"];
+function faseColor(f){ return /Fondeada/.test(f)?"var(--green)":/Real/.test(f)?"var(--blue)":/Propia/.test(f)?"var(--purple)":"var(--orange)"; }
+function faseBadge(f){ const col=faseColor(f); return `<span class="cta-badge" style="color:${col};border-color:${col}">${esc(f||"—")}</span>`; }
+
+/* Rendimiento de una cuenta a partir de sus trades ligados + sus datos */
+function statsCuenta(c){
+  const list=TRADES.filter(t=>t.cuenta===c.id);
+  const m=list.length?metricas(list):null;
+  const cap=+c.capital||0;
+  const riesgo=(+c.riesgoPct||0.5)/100;
+  const plTrades = m ? m.rNeto*riesgo*cap : 0;         // P&L estimado en $ desde la R
+  const manual = (c.balance!==undefined && c.balance!==null && c.balance!=="");
+  const balance = manual ? (+c.balance||0) : cap+plTrades;
+  const pl = balance-cap;
+  const progresoPct = cap>0 ? pl/cap*100 : 0;
+  const target = +c.targetPct||0;
+  return { list, m, cap, riesgo, plTrades, manual, balance, pl, progresoPct, target };
+}
+
+function viewCuentas(){
+  const v=el("div","view"); v.id="v-cuentas";
+  const head=el("div","card");
+  head.innerHTML=`<div class="card-h"><span class="ic">🏦</span><h2>Mis cuentas</h2></div>
+    <p class="desc">Registra tus exámenes, cuentas fondeadas y reales con sus reglas y su avance. Liga cada trade a su cuenta en el Diario y aquí verás su rendimiento. Roberto ve todo esto para ayudarte a gestionarlas y escalar.</p>
+    <div id="cuentasResumen"></div>
+    <button class="btn green" id="btnNuevaCuenta" style="margin-top:6px">➕ Nueva cuenta</button>`;
+  v.appendChild(head);
+  const body=el("div"); body.id="cuentasBody"; v.appendChild(body);
+  return v;
+}
+
+function refrescarCuentas(){ renderCuentas(); pintarSelCuentaTrade(); }
+
+function renderCuentas(){
+  const bn=$("#btnNuevaCuenta"); if(bn) bn.onclick=()=>cuentaModal(null);
+  const res=$("#cuentasResumen");
+  const body=$("#cuentasBody"); if(!body) return; body.innerHTML="";
+
+  if(!CUENTAS.length){
+    if(res) res.innerHTML="";
+    body.appendChild(el("div","card",
+      `<div class="empty"><div class="t">Aún no tienes cuentas</div>
+       <div class="s">Crea tu primera cuenta de fondeo con el botón de arriba. Podrás registrar su capital, reglas, avance y ligarle tus operaciones.</div></div>`));
+    return;
+  }
+
+  /* Resumen general */
+  const activas=CUENTAS.filter(c=>c.fase!=="Cerrada");
+  const capTotal=activas.reduce((a,c)=>a+(+c.capital||0),0);
+  const nFond=activas.filter(c=>/Fondeada|Real/.test(c.fase)).length;
+  const nExam=activas.filter(c=>/Examen/.test(c.fase)).length;
+  const firmas=[...new Set(activas.map(c=>c.firma).filter(Boolean))];
+  if(res) res.innerHTML=`<div class="stats" style="margin-bottom:12px">
+    <div class="st"><div class="v">${activas.length}</div><div class="k">Cuentas</div></div>
+    <div class="st"><div class="v b">$${r0(capTotal)}</div><div class="k">Capital gestionado</div></div>
+    <div class="st"><div class="v g">${nFond}</div><div class="k">Fondeadas/reales</div></div>
+   </div>
+   <div class="note" style="text-align:left;margin:0 0 6px">${nExam} en examen · Diversificación: <b>${firmas.length}</b> firma${firmas.length!==1?"s":""}${firmas.length?" ("+esc(firmas.join(", "))+")":""}. ${firmas.length<2&&activas.length>1?"⚠️ Estás concentrado en una sola firma — considera diversificar.":""}</div>`;
+
+  /* Agrupadas por fase */
+  FASES.forEach(fase=>{
+    const grupo=CUENTAS.filter(c=>c.fase===fase);
+    if(!grupo.length) return;
+    body.appendChild(el("div","fl",fase.toUpperCase()+" · "+grupo.length));
+    grupo.forEach(c=>body.appendChild(tarjetaCuenta(c)));
+  });
+}
+
+function tarjetaCuenta(c){
+  const st=statsCuenta(c);
+  const card=el("div","card");
+  const col=faseColor(c.fase);
+  const plCls=st.pl>0?"g":st.pl<0?"r":"n";
+  /* Barra de progreso hacia el target */
+  let barra="";
+  if(st.target>0){
+    const fillPct=Math.max(0,Math.min(100, st.progresoPct/st.target*100));
+    const barCol=st.progresoPct>=st.target?"var(--green)":st.progresoPct<0?"var(--red)":"var(--gold)";
+    barra=`<div class="fl" style="margin:10px 0 4px">Progreso al objetivo: ${r1(st.progresoPct)}% / ${r1(st.target)}%</div>
+      <div class="bar"><i style="width:${fillPct}%;background:${barCol}"></i></div>`;
+  }
+  /* Reglas resumidas */
+  const reglas=[];
+  if(c.ddMaxPct) reglas.push(`DD máx ${c.ddMaxPct}%${c.ddTipo?" ("+c.ddTipo+")":""}`);
+  if(c.ddDailyPct) reglas.push(`Daily ${c.ddDailyPct}%`);
+  if(c.diasMin) reglas.push(`${c.diasMin} días mín`);
+  if(c.splitPct) reglas.push(`Split ${c.splitPct}%`);
+  if(c.precio) reglas.push(`Reto $${r0(+c.precio)}`);
+  /* Trades ligados */
+  let ligados="";
+  if(st.m) ligados=`<div class="row"><div class="l">Operaciones ligadas<small>${st.m.n} trade${st.m.n!==1?"s":""} · WR ${pct(st.m.wr*100)} · PF ${fmtPF(st.m.pf)}</small></div>
+    <div class="r ${st.m.rNeto>=0?"":"red"}">${st.m.rNeto>=0?"+":""}${r1(st.m.rNeto)}R</div></div>`;
+  else ligados=`<div class="note" style="text-align:left">Sin trades ligados aún. Al registrar en el Diario, elige esta cuenta.</div>`;
+  /* Payouts / interés compuesto */
+  const comp=[];
+  if(c.retiros) comp.push(`Retirado: $${r0(+c.retiros)}`);
+  if(c.reinvertido) comp.push(`Reinvertido: $${r0(+c.reinvertido)}`);
+  if(c.proxPayout) comp.push(`Próx. payout: ${esc(c.proxPayout)}`);
+  if(c.metaEscalado) comp.push(`Meta: ${esc(c.metaEscalado)}`);
+
+  card.style.borderColor=col;
+  card.innerHTML=`<div class="card-h" style="justify-content:space-between">
+      <div><span style="font-size:18px;font-weight:700">${esc(c.alias||c.firma||"Cuenta")}</span>
+        <div style="font-size:13px;color:var(--txt3);margin-top:2px">${esc(c.firma||"")}${c.perfil?" · "+esc(c.perfil):""}</div></div>
+      ${faseBadge(c.fase)}
+    </div>
+    <div class="stats" style="margin-top:6px">
+      <div class="st"><div class="v n">$${r0(st.balance)}</div><div class="k">Balance ${st.manual?"":"(est.)"}</div></div>
+      <div class="st"><div class="v ${plCls}">${st.pl>=0?"+":"-"}$${r0(Math.abs(st.pl))}</div><div class="k">P&amp;L</div></div>
+      <div class="st"><div class="v b">$${r0(st.cap)}</div><div class="k">Capital</div></div>
+    </div>
+    ${barra}
+    ${reglas.length?`<div class="note" style="text-align:left;margin:10px 0 4px">📋 ${reglas.join(" · ")}</div>`:""}
+    ${ligados}
+    ${comp.length?`<div class="note" style="text-align:left">💰 ${comp.join(" · ")}</div>`:""}
+    ${c.nota?`<div class="trade-n">${esc(c.nota)}</div>`:""}
+    <div class="trade-act">
+      <button class="ta" data-ed="1">✏️ Editar</button>
+      <button class="ta" data-av="1">⏭️ Avanzar fase</button>
+      <button class="ta danger" data-del="1">🗑️ Borrar</button>
+    </div>`;
+  card.querySelector("[data-ed]").onclick=()=>cuentaModal(c.id);
+  card.querySelector("[data-av]").onclick=()=>avanzarFase(c.id);
+  card.querySelector("[data-del]").onclick=()=>borrarCuenta(c.id);
+  return card;
+}
+
+function avanzarFase(id){
+  const c=CUENTAS.find(x=>x.id===id); if(!c) return;
+  const i=FASES.indexOf(c.fase);
+  if(i<0 || i>=FASES.length-1){ toast("Ya está en la fase final"); return; }
+  if(!confirm(`¿Pasar "${c.alias||c.firma}" de ${c.fase} a ${FASES[i+1]}?`)) return;
+  c.fase=FASES[i+1]; guardarCuentas(); refrescarCuentas(); toast("Fase actualizada ✓");
+}
+function borrarCuenta(id){
+  const c=CUENTAS.find(x=>x.id===id); if(!c) return;
+  const nT=TRADES.filter(t=>t.cuenta===id).length;
+  if(!confirm(`¿Borrar la cuenta "${c.alias||c.firma}"?`+(nT?` Sus ${nT} trades NO se borran, solo quedan sin cuenta.`:""))) return;
+  CUENTAS=CUENTAS.filter(x=>x.id!==id); guardarCuentas(); refrescarCuentas(); toast("Cuenta borrada");
+}
+
+/* Formulario de alta/edición (modal) */
+function cuentaModal(id){
+  const c = id ? CUENTAS.find(x=>x.id===id) : {};
+  const val=(k,d="")=>c[k]!==undefined&&c[k]!==null?esc(c[k]):d;
+  const opt=(arr,sel)=>arr.map(x=>`<option${x===sel?" selected":""}>${esc(x)}</option>`).join("");
+  const html=`<div class="ayuda"><h3>${id?"Editar cuenta":"Nueva cuenta"}</h3></div>
+    <div class="fl">Alias (cómo la llamas)</div>
+    <input class="inp" id="ac_alias" placeholder="Ej: FTMO 100K #1" value="${val("alias")}" style="margin-bottom:12px">
+    <div class="g2">
+      <div><div class="fl">Firma</div><input class="inp" id="ac_firma" list="ac_firmas" placeholder="FTMO..." value="${val("firma")}">
+        <datalist id="ac_firmas">${FIRMAS_SUG.map(f=>`<option value="${f}">`).join("")}</datalist></div>
+      <div><div class="fl">Fase</div><select class="inp" id="ac_fase">${opt(FASES, c.fase||"Examen F1")}</select></div>
+    </div>
+    <div class="g2">
+      <div><div class="fl">Capital ($)</div><input class="inp" id="ac_capital" inputmode="decimal" placeholder="100000" value="${val("capital")}"></div>
+      <div><div class="fl">Riesgo por trade (%)</div><input class="inp" id="ac_riesgo" inputmode="decimal" placeholder="0.5" value="${val("riesgoPct","0.5")}"></div>
+    </div>
+    <div class="fl" style="color:var(--gold);margin-top:6px">Reglas de la firma</div>
+    <div class="g2">
+      <div><div class="fl">Drawdown máx (%)</div><input class="inp" id="ac_ddmax" inputmode="decimal" placeholder="10" value="${val("ddMaxPct")}"></div>
+      <div><div class="fl">Tipo de DD</div><select class="inp" id="ac_ddtipo">${opt(["Estático","Trailing"], c.ddTipo||"Estático")}</select></div>
+    </div>
+    <div class="g2">
+      <div><div class="fl">Daily drawdown (%)</div><input class="inp" id="ac_dddaily" inputmode="decimal" placeholder="5" value="${val("ddDailyPct")}"></div>
+      <div><div class="fl">Profit target (%)</div><input class="inp" id="ac_target" inputmode="decimal" placeholder="10" value="${val("targetPct")}"></div>
+    </div>
+    <div class="g3">
+      <div><div class="fl">Días mín.</div><input class="inp" id="ac_diasmin" inputmode="numeric" placeholder="4" value="${val("diasMin")}"></div>
+      <div><div class="fl">Precio reto ($)</div><input class="inp" id="ac_precio" inputmode="decimal" placeholder="540" value="${val("precio")}"></div>
+      <div><div class="fl">Split (%)</div><input class="inp" id="ac_split" inputmode="decimal" placeholder="80" value="${val("splitPct")}"></div>
+    </div>
+    <div class="fl" style="color:var(--gold);margin-top:6px">Rendimiento</div>
+    <div class="fld"><div class="fl">Balance actual ($) — vacío = se calcula con tus trades</div>
+      <input class="inp" id="ac_balance" inputmode="decimal" placeholder="(automático)" value="${val("balance")}"></div>
+    <div class="fl" style="color:var(--gold)">Interés compuesto / payouts</div>
+    <div class="g2">
+      <div><div class="fl">Retirado ($)</div><input class="inp" id="ac_retiros" inputmode="decimal" placeholder="0" value="${val("retiros")}"></div>
+      <div><div class="fl">Reinvertido ($)</div><input class="inp" id="ac_reinv" inputmode="decimal" placeholder="0" value="${val("reinvertido")}"></div>
+    </div>
+    <div class="g2">
+      <div><div class="fl">Próximo payout</div><input class="inp" id="ac_payout" placeholder="Ej: 15 sep" value="${val("proxPayout")}"></div>
+      <div><div class="fl">Meta de escalado</div><input class="inp" id="ac_meta" placeholder="Ej: llegar a 200K" value="${val("metaEscalado")}"></div>
+    </div>
+    <div class="fl" style="color:var(--gold)">Notas y gestión</div>
+    <div class="fld"><div class="fl">Perfil de la cuenta</div>
+      <select class="inp" id="ac_perfil">${opt(["Normal","Conservadora","Agresiva"], c.perfil||"Normal")}</select></div>
+    <div class="fld"><div class="fl">Nota / cómo tratarla / estado</div>
+      <textarea class="inp" id="ac_nota" placeholder="Ej: cuenta clave, ir conservador; no romper daily; ...">${val("nota")}</textarea></div>`;
+  abrirModal(html, [
+    { t:"💾 Guardar", cls:"gold", fn:()=>guardarCuentaForm(id) },
+    { t:"Cancelar", fn:cerrarModal }
+  ]);
+}
+function guardarCuentaForm(id){
+  const g=(i)=>{ const e=$("#"+i); return e?e.value.trim():""; };
+  const alias=g("ac_alias"), firma=g("ac_firma");
+  if(!alias && !firma){ toast("Ponle al menos un alias o la firma"); return; }
+  const datos={
+    alias, firma, fase:g("ac_fase")||"Examen F1",
+    capital:g("ac_capital"), riesgoPct:g("ac_riesgo")||"0.5",
+    ddMaxPct:g("ac_ddmax"), ddTipo:g("ac_ddtipo"), ddDailyPct:g("ac_dddaily"),
+    targetPct:g("ac_target"), diasMin:g("ac_diasmin"), precio:g("ac_precio"), splitPct:g("ac_split"),
+    balance:g("ac_balance"), retiros:g("ac_retiros"), reinvertido:g("ac_reinv"),
+    proxPayout:g("ac_payout"), metaEscalado:g("ac_meta"),
+    perfil:g("ac_perfil"), nota:g("ac_nota")
+  };
+  if(id){
+    const c=CUENTAS.find(x=>x.id===id);
+    if(c) Object.assign(c,datos);
+    toast("Cuenta actualizada ✓");
+  }else{
+    CUENTAS.push(Object.assign({ id:"cta"+Date.now()+Math.floor(Math.random()*1000), creada:Date.now() }, datos));
+    toast("Cuenta creada ✓");
+  }
+  guardarCuentas(); cerrarModal(); refrescarCuentas();
+}
+
+/* Resumen de cuentas para Roberto (acceso total) */
+function iaCuentas(){
+  if(!CUENTAS.length) return "";
+  let s="\n[CUENTAS DE FONDEO de Rey — tienes acceso total; ayúdalo a gestionarlas, protegerlas y escalar con interés compuesto y diversificación]:\n";
+  CUENTAS.forEach(c=>{
+    const st=statsCuenta(c);
+    s+=`· ${c.alias||c.firma||"Cuenta"} (${c.firma||"?"}, ${c.fase}): capital $${r0(st.cap)}, balance ~$${r0(st.balance)} (P&L ${st.pl>=0?"+":""}$${r0(st.pl)}, ${r1(st.progresoPct)}% de ${c.targetPct||"?"}% objetivo). DD máx ${c.ddMaxPct||"?"}%${c.ddTipo?" "+c.ddTipo:""}, daily ${c.ddDailyPct||"?"}%, riesgo ${c.riesgoPct||"?"}%/trade.`;
+    if(st.m) s+=` Trades ligados: ${st.m.n}, WR ${pct(st.m.wr*100)}, net ${r1(st.m.rNeto)}R, exp ${r2(st.m.exp)}R.`;
+    if(c.retiros) s+=` Retirado $${r0(+c.retiros)}.`;
+    if(c.metaEscalado) s+=` Meta: ${c.metaEscalado}.`;
+    if(c.perfil) s+=` Perfil ${c.perfil}.`;
+    if(c.nota) s+=` Nota: ${c.nota}.`;
+    s+="\n";
+  });
+  const firmas=[...new Set(CUENTAS.map(c=>c.firma).filter(Boolean))];
+  s+=`Diversificación: ${firmas.length} firma(s)${firmas.length?" ("+firmas.join(", ")+")":""}.`;
+  if(firmas.length<2 && CUENTAS.length>1) s+=" OJO: todo en una sola firma, recuérdale diversificar.";
+  return s+"\n";
+}
+
+/* ============================================================
    MENTOR IA — botón flotante + chat con Claude (vía tu puente)
    Con MEMORIA (conversaciones guardadas) + CONOCIMIENTO PROFUNDO
    de la estrategia de Rey y de su indicador CRT Elite.
@@ -2738,7 +3013,7 @@ function iaContexto(){
   rank.sort((a,b)=>b.exp-a.exp);
   if(rank.length){ const b=rank[0], w=rank[rank.length-1];
     c+=`Mejor categoría: ${b.dim} "${b.k}" (${r2(b.exp)}R exp en ${b.n}). Peor categoría: ${w.dim} "${w.k}" (${r2(w.exp)}R exp en ${w.n}).`; }
-  return c;
+  return c + iaCuentas();
 }
 
 /* Convierte un mensaje guardado al formato de la API.
@@ -2818,7 +3093,7 @@ async function iaEnviar(textoForzado){
    ============================================================ */
 function init(){
   const c=$("#views");
-  c.append(viewChecklist(),viewConf(),viewRutina(),viewReglas(),viewRiesgo(),viewGatillo(),viewDiario(),viewAlmanaque(),viewAnalisis(),viewMentor(),viewPlan());
+  c.append(viewChecklist(),viewConf(),viewRutina(),viewReglas(),viewRiesgo(),viewGatillo(),viewDiario(),viewCuentas(),viewAlmanaque(),viewAnalisis(),viewMentor(),viewPlan());
   buildNav();
   fillPlanDinamico();
   initDiarioControles();

@@ -1,5 +1,25 @@
-CRT ELITE v4.5 — PLAN OPERATIVO + BACKTESTING
+CRT ELITE v4.6 — PLAN OPERATIVO + BACKTESTING
 ==============================================
+
+NOVEDADES v4.6  (NUEVA PESTANA: GESTION DE CUENTAS 🏦)
+=====================================================
+Nueva pestana "Cuentas" para gestionar tus exámenes, fondeadas, reales y
+cuentas propias en un solo lugar.
+- ➕ Nueva cuenta: registras firma, fase, capital, riesgo, y las REGLAS
+  (drawdown máx y tipo, daily DD, profit target, días mín, precio del
+  reto, split), el RENDIMIENTO (balance — vacío = se calcula solo con tus
+  trades), INTERES COMPUESTO/payouts (retirado, reinvertido, próximo
+  payout, meta de escalado) y NOTAS (perfil + estado/cómo tratarla).
+- Ciclo de vida: boton ⏭️ Avanzar fase (Examen F1 → F2 → Fondeada → Real).
+- CONEXION CON EL DIARIO: al registrar un trade eliges su CUENTA; esa
+  cuenta suma su rendimiento automaticamente (balance, P&L, WR, R neto).
+- Barra de progreso hacia el objetivo, resumen general (capital
+  gestionado, cuantas fondeadas) y AVISO de diversificacion si tienes
+  todo en una sola firma.
+- ROBERTO tiene ACCESO TOTAL a tus cuentas: te ayuda a gestionarlas,
+  protegerlas y escalar con interes compuesto y diversificacion.
+- Boton "?" de ayuda tambien explica esta pestana.
+Todo se guarda en tu telefono. NO toca el puente (worker).
 
 NOVEDADES v4.5  (COMPARAR FIRMAS RAPIDO, SIN COLGARSE)
 =====================================================
