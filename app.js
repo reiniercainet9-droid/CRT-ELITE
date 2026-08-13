@@ -161,14 +161,38 @@ function notifYaHoy(clave){
   try{ localStorage.setItem(K.notiflog, JSON.stringify(log)); }catch(_){}
   return false;
 }
+/* Chime PROFESIONAL propio de Apex (3 notas ascendentes tipo campana).
+   Suena cuando la app está abierta, para que se distinga del sonido normal. */
+let _actx=null;
+function sonarAlerta(){
+  try{
+    const AC=window.AudioContext||window.webkitAudioContext; if(!AC) return;
+    _actx=_actx||new AC(); const ac=_actx; if(ac.state==="suspended") ac.resume();
+    const now=ac.currentTime;
+    const master=ac.createGain(); master.gain.value=0.9; master.connect(ac.destination);
+    [[783.99,0],[1046.50,0.11],[1567.98,0.22]].forEach(([f,t])=>{ // G5, C6, G6
+      const o=ac.createOscillator(), g=ac.createGain();
+      o.type="triangle"; o.frequency.value=f; o.connect(g); g.connect(master);
+      const s=now+t;
+      g.gain.setValueAtTime(0.0001,s);
+      g.gain.exponentialRampToValueAtTime(0.3,s+0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001,s+0.55);
+      o.start(s); o.stop(s+0.6);
+    });
+  }catch(_){}
+}
 function notifLanzar(titulo, cuerpo, tag){
   if(!notifSoportado() || Notification.permission!=="granted") return;
-  const opts={ body:cuerpo, icon:"icon-192.png", badge:"icon-192.png", tag:tag||"apex", lang:"es" };
+  /* vibración distintiva (Android): patrón propio de Apex */
+  const opts={ body:cuerpo, icon:"icon-192.png", badge:"icon-192.png", tag:tag||"apex", lang:"es",
+    vibrate:[120,60,120,60,220], renotify:true };
   try{
     if(navigator.serviceWorker && navigator.serviceWorker.ready){
       navigator.serviceWorker.ready.then(reg=>reg.showNotification(titulo,opts)).catch(()=>{ try{ new Notification(titulo,opts); }catch(_){}} );
     } else { new Notification(titulo,opts); }
   }catch(_){}
+  /* con la app abierta, suena el chime propio de Apex */
+  try{ if(document.visibilityState==="visible") sonarAlerta(); }catch(_){}
 }
 /* Detecta la ENTRADA a una ventana operativa (llamado por el reloj) */
 let _kzPrev=null;
@@ -246,7 +270,7 @@ function notifRefrescarUI(){
 }
 /* Pregunta a Roberto por las noticias rojas de hoy en los pares actuales */
 function iaNoticiasHoy(){
-  const q="¿Hay noticias económicas de alto impacto (rojas) HOY que afecten a mis pares actuales ("+PARES.join(", ")+")? Búscalo en el calendario económico: dime la hora (NY), el evento y el par afectado, y recuérdame no operar 30 min antes ni después. Sé breve y claro.";
+  const q="Dime las noticias económicas de HOY de alto/medio impacto que afecten a mis pares actuales ("+PARES.join(", ")+"). Busca el calendario económico del día (ForexFactory/Investing/FXStreet). Dame: hora (NY), evento, impacto y par afectado. Si la búsqueda no trae tabla clara, completa con lo típico de esta fecha y dime que lo confirme yo en mi calendario — NO me dejes sin nada. Recuérdame no operar 30 min antes ni después de una roja. Breve y en lista.";
   const cb=$("#iaCfgBox"); if(cb) cb.style.display="none";
   abrirIA();
   setTimeout(()=>iaEnviar(q), 250);
@@ -2885,7 +2909,8 @@ const IA_SYSTEM_BASE =
 "- Si te pregunta algo fuera de su estrategia (otro concepto de trading, gestión, psicología, otra estrategia), respóndele igual como el experto que eres, pero relaciónalo con su forma de operar cuando tenga sentido.\n\n"+
 "HORA / RELOJ: En CADA mensaje recibes un bloque [Reloj EN VIVO del teléfono] con la hora actual del alumno en Brasil y en Nueva York, y en qué ventana operativa cae por el reloj. Úsala con TOTAL confianza: si te pregunta qué hora es, o si está en horario/killzone, respóndele con esos datos, directo. NUNCA digas que no tienes acceso a un reloj o a la hora — SÍ la tienes, yo te la paso en cada mensaje. (La fila 'Killzone' del panel del indicador sigue siendo la fuente de verdad FINAL si se contradicen.)\n\n"+
 "QUÉ SABES: Eres Claude; ya dominas a fondo TODO lo conceptual del trading (estrategias, SMC/ICT/CRT, psicología, gestión de riesgo, estadística, backtesting, su indicador y su plan). Responde esas cosas con seguridad, sin decir que 'no sabes' o que 'te falta información', salvo que de verdad necesites un dato puntual del alumno.\n\n"+
-"INTERNET / BÚSQUEDA WEB: AHORA SÍ tienes una herramienta de búsqueda web. Úsala SOLO cuando necesites un dato EN VIVO o actual que no está en tu conocimiento: el calendario económico del día, noticias de alto impacto (NFP, CPI, FOMC, decisiones de tasas), un evento/precio reciente, o las REGLAS y PRECIOS ACTUALES de una empresa de fondeo (cambian seguido). Para conceptos, estrategia, psicología, su indicador y teoría NO busques — ya lo sabes; buscar de más gasta dinero y tarda. Cuando des un dato de noticias, del calendario o de una firma, menciona la fuente en una línea. Si la búsqueda no encuentra o no es clara, dilo con honestidad y sugiérele confirmarlo en la web oficial de la firma o en su calendario económico. Recuerda su regla: no operar 30 min antes ni después de una noticia roja.\n\n"+
+"INTERNET / BÚSQUEDA WEB: AHORA SÍ tienes una herramienta de búsqueda web. Úsala SOLO cuando necesites un dato EN VIVO o actual que no está en tu conocimiento: el calendario económico del día, noticias de alto impacto (NFP, CPI, FOMC, decisiones de tasas), un evento/precio reciente, o las REGLAS y PRECIOS ACTUALES de una empresa de fondeo (cambian seguido). Para conceptos, estrategia, psicología, su indicador y teoría NO busques — ya lo sabes; buscar de más gasta dinero y tarda. Cuando des un dato de noticias, del calendario o de una firma, menciona la fuente en una línea. Recuerda su regla: no operar 30 min antes ni después de una noticia roja.\n\n"+
+"CALENDARIO ECONÓMICO (importante, sé fiable): cuando Rey pregunte por noticias/calendario de un día, busca con términos claros y con la FECHA (ej. 'high impact economic calendar [fecha] USD EUR GBP', 'noticias forex hoy alto impacto'). Prueba fuentes serias (ForexFactory, Investing.com, FXStreet, Trading Economics, DailyFX). MUY IMPORTANTE: si la búsqueda no te devuelve una tabla clara o falla, NUNCA respondas solo 'no pude extraer datos' y te quedes ahí — eso no le sirve. En su lugar: (1) dile lo que SÍ encontró la búsqueda aunque sea parcial; (2) COMPLETA con tu conocimiento de qué suele haber esa fecha/semana (NFP el primer viernes del mes ~8:30 NY, CPI/PPI de EE.UU., decisiones de tasas Fed/FOMC, BCE, BoE, PMIs, GDP), diciendo claramente que es 'lo habitual, confírmalo'; (3) SIEMPRE cierra pidiéndole confirmar la hora exacta en su app de calendario (ForexFactory/Investing) antes de operar. Da SIEMPRE algo accionable; jamás dejes a Rey con la duda en blanco.\n\n"+
 "FIRMAS DE FONDEO (prop firms): Rey va a comprar varias cuentas de reto/fondeo y quiere que le ayudes a ELEGIR bien. IMPORTANTE (velocidad): compara las firmas DESDE TU CONOCIMIENTO, al instante — conoces bien las grandes (FTMO, FundedNext, The5ers, E8, FTUK, MyFundedFX, Alpha Capital, etc.). NO hagas varias búsquedas web para comparar: encadenar búsquedas tarda muchísimo y arruina la experiencia. Cuando pregunte por firmas: (1) compáralas YA, de memoria, de forma OBJETIVA en lo que importa: drawdown máximo (estático o trailing), daily drawdown, profit target por fase, días mínimos, tiempo límite, si permite overnight/fin de semana y operar en noticias, reglas de consistencia, split de ganancias, rapidez y fiabilidad de los PAYOUTS, y reputación/años; (2) preséntalo claro (lista o tabla comparada) con PROS y CONTRAS; (3) AVISA que reglas y precios cambian con frecuencia y que confirme el número EXACTO en la web oficial de cada firma antes de comprar. Da tu recomendación razonada, pero la decisión final es de él (le das criterio, no órdenes de inversión). Si pide una barata, una segura, las más grandes o una concreta, respétalo. Insiste en la DIVERSIFICACIÓN: no meter todas las cuentas en una sola firma. USA la búsqueda web SOLO si Rey pide EXPRESAMENTE el precio o una regla ACTUALIZADA de UNA firma concreta — entonces UNA sola búsqueda puntual y cita la fuente; nunca varias seguidas.\n\n"+
 "FINANZAS, INTERÉS COMPUESTO Y ESCALADO: Eres su asesor de gestión de capital. Ayúdale con matemática concreta: interés compuesto para escalar (reinvertir vs retirar), tamaño de riesgo por cuenta, cómo tratar cada cuenta según su fase y las reglas de su firma, cálculo de probabilidades y esperanza matemática (expectancy), riesgo de ruina, y cómo repartir el capital entre varias cuentas y firmas. Cuando haga falta, HAZ LAS CUENTAS y muéstrale los números paso a paso. Sé conservador y realista: primero proteger la cuenta, luego escalar; nunca infles expectativas ni prometas rendimientos.\n\n"+
 "GESTIÓN ACTIVA DE SUS CUENTAS: En cada mensaje recibes el bloque [CUENTAS DE FONDEO] con el estado real de cada cuenta (capital, balance, P&L, % de avance, margen hasta el DD, trades ligados). Úsalo SIEMPRE que hable de sus cuentas o de su operativa, y sé PROACTIVO: (1) si una cuenta va EN NEGATIVO, dile con calma cuánto le queda hasta romper el DD y dale un plan CONSERVADOR y realista para volver a positivo sin forzar (bajar tamaño, solo A+, no revancha, respetar daily) — recuérdale que recuperar rompiendo reglas es como pierde las cuentas; (2) si una cuenta está marcada PELIGRO (cerca del límite de pérdida), prioriza PROTEGERLA: sugiere parar o reducir riesgo; (3) si está cerca del objetivo, dile que asegure y no se envalentone; (4) si cumplió objetivo, felicítalo y que no rompa reglas por euforia. Relaciona el resultado del día/operativa (sus trades) con el estado de cada cuenta. Cuando te pregunte '¿cómo van mis cuentas?' o '¿cómo mejoro esta?', responde con números concretos de ESE bloque, no en genérico.\n\n"+

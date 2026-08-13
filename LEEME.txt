@@ -1,5 +1,22 @@
-APEX v5.3 — TRADING DESK  (antes CRT Elite)
+APEX v5.4 — TRADING DESK  (antes CRT Elite)
 ===========================================
+
+NOVEDADES v5.4  (SONIDO PROPIO + NOTICIAS MAS FIABLES)
+=====================================================
+- SONIDO/VIBRACION PROPIOS: las notificaciones de Roberto ahora traen una
+  VIBRACION distintiva (patron propio) y, con la app abierta, suena un
+  CHIME propio de Apex (3 notas ascendentes, tipo campana) para que se
+  distinga del sonido normal del telefono. Al activar las notificaciones
+  lo oiras de una vez.
+  (Nota honesta: el TONO del sonido cuando la app esta CERRADA lo controla
+  Android por su cuenta; si quieres un tono concreto ahi, se pone a mano
+  en Ajustes del telefono -> notificaciones de la app. La vibracion propia
+  si se distingue siempre.)
+- NOTICIAS / CALENDARIO MAS FIABLE: antes, a veces Roberto respondia "no
+  pude extraer datos" y te dejaba sin nada. Ahora tiene orden de NO dejarte
+  en blanco: busca en fuentes serias (ForexFactory, Investing, FXStreet),
+  y si la busqueda falla, completa con lo tipico de esa fecha y te dice que
+  lo confirmes en tu calendario. Siempre te da algo util.
 
 NOVEDADES v5.3  (NOTIFICACIONES DE ROBERTO — FASE A)
 ===================================================
