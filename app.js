@@ -14,7 +14,8 @@ const K = {
   iaurl  : "crtelite_iaurl_v3",
   iachat : "crtelite_iachat_v3",
   iaconvs: "crtelite_iaconvs_v3",
-  iaact  : "crtelite_iaact_v3"
+  iaact  : "crtelite_iaact_v3",
+  iavoz  : "crtelite_iavoz_v3"
 };
 const load = (k,d)=>{ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):d; }catch(e){ return d; } };
 const save = (k,v)=>{ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){ toast("No se pudo guardar"); } };
@@ -150,6 +151,41 @@ function buildNav(){
     const b=el("button",t.id===TAB?"on":"",`<span class="i">${t.ic}</span>${t.n}`);
     b.dataset.t=t.id; b.onclick=()=>irA(t.id); n.appendChild(b);
   });
+}
+
+/* ============================================================
+   AYUDA (?) — qué es y para qué sirve cada sección de la app.
+   El botón "?" de la cabecera abre la ayuda de la pestaña actual.
+   ============================================================ */
+const AYUDA = {
+  checklist:{ t:"✅ Checklist", h:`<p><b>Para qué sirve:</b> tu lista de control ANTES de operar. Marca cada casilla del setup; las marcadas como <b>CLAVE</b> son obligatorias.</p>
+    <p><b>Cómo usarlo:</b> repásalo antes de cada entrada. Si falta una casilla CLAVE, el veredicto de abajo te dice <b>NO OPERAR</b>. Pulsa <b>🔄 Reiniciar</b> para empezar limpio en cada setup nuevo.</p>` },
+  conf:{ t:"🎯 Confluencias", h:`<p><b>Para qué sirve:</b> tus 5 confluencias del método CRT (sweep, estructura, zona, etc.). Es tu recordatorio de qué debe alinearse para que un setup sea válido.</p>
+    <p><b>Cómo usarlo:</b> consúltalo cuando dudes si un setup tiene peso suficiente. Regla de oro: <b>sin sweep = sin setup</b>.</p>` },
+  rutina:{ t:"🗺️ Rutina", h:`<p><b>Para qué sirve:</b> tu mapa de trabajo por temporalidades — qué mira cada una (Daily = bias, H4 = zonas, 15M/1H = validación, 5M/3M = gatillo).</p>
+    <p><b>Cómo usarlo:</b> síguelo de arriba hacia abajo antes de operar, para no saltarte pasos ni validar en la temporalidad equivocada.</p>` },
+  reglas:{ t:"⛔ Reglas", h:`<p><b>Para qué sirve:</b> tus reglas inviolables. Tócalas para marcarlas como leídas/repasadas.</p>
+    <p><b>Cómo usarlo:</b> léelas al empezar la sesión. Son la barrera contra tus fugas (sobre todo el <b>timing prematuro</b>).</p>` },
+  riesgo:{ t:"💰 Riesgo", h:`<p><b>Para qué sirve:</b> tu <b>calculadora de lotaje</b>. Metes balance, % de riesgo (0.5% fijo), pips de SL y el par, y te da el tamaño exacto de la posición.</p>
+    <p><b>Cómo usarlo:</b> calcúlalo antes de cada entrada para no arriesgar de más. Nunca improvises el lotaje.</p>` },
+  gatillo:{ t:"⚡ Gatillo", h:`<p><b>Para qué sirve:</b> el detalle fino de tu <b>Fase 4</b> — el momento EXACTO de entrar (toque del POI → vela de rechazo → cierre de confirmación).</p>
+    <p><b>Cómo usarlo:</b> úsalo para no entrar antes de tiempo. Solo disparas con la <b>vela de confirmación cerrada</b>.</p>` },
+  diario:{ t:"📒 Diario", h:`<p><b>Para qué sirve:</b> aquí registras cada operación con todos sus detalles (par, resultado en R, momento de entrada, emoción, si rompiste el plan…).</p>
+    <p><b>Cómo usarlo:</b> registra TODO, real y backtest. Usa la barra de arriba para elegir el contexto (Real / Backtest + estrategia). De estos datos se alimentan el Análisis y Roberto.</p>` },
+  almanaque:{ t:"📅 Almanaque", h:`<p><b>Para qué sirve:</b> tu calendario de resultados. Ves cada día pintado en verde/rojo según tu R, para detectar patrones (qué días operas mejor).</p>
+    <p><b>Cómo usarlo:</b> toca un día para ver sus trades. Cambia de mes con las flechas.</p>` },
+  analisis:{ t:"📈 Análisis", h:`<p><b>Para qué sirve:</b> tus estadísticas frías — win rate, profit factor, expectancy, drawdown, y cortes por categoría (por par, por momento, por sesión…).</p>
+    <p><b>Cómo usarlo:</b> míralo cada semana para ver qué funciona y qué no, con números y no con sensaciones.</p>` },
+  mentor:{ t:"🧠 Mentor (análisis automático)", h:`<p><b>Para qué sirve:</b> esta pestaña traduce tus números a <b>palabras</b>: qué hiciste bien, qué corregir y un plan — todo calculado en tu teléfono, sin internet.</p>
+    <p><b>Ojo, no confundir:</b> esto es el <b>análisis automático</b>. El mentor con el que <b>chateas</b> es <b>Roberto</b>, el botón ✨ abajo a la derecha: a él le hablas, le mandas fotos y te responde (y te habla en voz si lo activas).</p>` },
+  plan:{ t:"📋 Plan", h:`<p><b>Para qué sirve:</b> tu plan operativo completo y tu portada — reglas, ventanas, gestión, todo en un solo lugar de lectura.</p>
+    <p><b>Cómo usarlo:</b> es tu documento de referencia. Despliega cada sección para repasar tu método cuando lo necesites.</p>` },
+  roberto:{ t:"✨ Roberto — tu mentor IA", h:`<p><b>Para qué sirve:</b> Roberto es tu mentor de bolsillo con inteligencia artificial. Conoce tu estrategia, tu indicador, tus reglas y tus datos. Domina trading, finanzas, interés compuesto y las empresas de fondeo.</p>
+    <p><b>Cómo usarlo:</b> pulsa ✨, escríbele o mándale una <b>foto</b> de tu gráfico (📎 galería o 📷 cámara). Guarda tus conversaciones (🗂️). En ajustes (⚙️) activas que <b>te hable en voz</b> y ves tu saldo.</p>` }
+};
+function abrirAyuda(id){
+  const a=AYUDA[id]; if(!a) return;
+  abrirModal(`<div class="ayuda"><h3>${a.t}</h3>${a.h}</div>`, [{t:"Entendido 👍", cls:"gold", fn:cerrarModal}]);
 }
 
 /* ============================================================
@@ -2259,7 +2295,7 @@ const IA_URL_DEFAULT = "https://elitepro-worker.reiniercainet9.workers.dev";
 
 /* --- PERSONALIDAD + REGLAS DE COMPORTAMIENTO DEL MENTOR --- */
 const IA_SYSTEM_BASE =
-"Eres el Mentor Élite de trading de Rey, dentro de su app CRT Elite. Eres un trader profesional de altísima experiencia real en SMC, ICT y Candle Range Theory (CRT), y también su coach de disciplina y psicología de trading. Tu misión: que Rey pase sus retos de fondeo y proteja sus cuentas fondeadas operando con consistencia.\n\n"+
+"Te llamas ROBERTO. Eres el mentor personal de trading de Rey, dentro de su app CRT Elite. Preséntate y firma como Roberto cuando sea natural, sin repetir tu nombre en cada mensaje. Eres un trader profesional de altísima experiencia real en SMC, ICT y Candle Range Theory (CRT), y ADEMÁS un experto sólido en finanzas, contabilidad, gestión de capital, interés compuesto, estadística y probabilidad aplicada al trading — porque este negocio es de números y de gestión, no solo de entradas. También eres su coach de disciplina y psicología. Tu misión: que Rey pase sus retos de fondeo, proteja sus cuentas fondeadas y ESCALE su capital con cabeza fría y matemática, operando con consistencia.\n\n"+
 "CÓMO ERES:\n"+
 "- Hablas SIEMPRE en español, cercano, cálido y con confianza, como un mentor que le tiene cariño a su alumno pero lo respeta demasiado como para mentirle.\n"+
 "- Tienes PERSONALIDAD y criterio propio. No eres un asistente complaciente. Si Rey se equivoca, quiere saltarse una regla, o pide algo que va contra su propio plan o contra la buena práctica de trading, lo CORRIGES con claridad y firmeza — con respeto, pero sin suavizar la verdad. Frases tipo: 'Para ahí, eso está mal y te explico por qué…'. Nunca haces algo solo porque él lo quiere así si es un error.\n"+
@@ -2276,7 +2312,9 @@ const IA_SYSTEM_BASE =
 "- Si te pregunta algo fuera de su estrategia (otro concepto de trading, gestión, psicología, otra estrategia), respóndele igual como el experto que eres, pero relaciónalo con su forma de operar cuando tenga sentido.\n\n"+
 "HORA / RELOJ: En CADA mensaje recibes un bloque [Reloj EN VIVO del teléfono] con la hora actual del alumno en Brasil y en Nueva York, y en qué ventana operativa cae por el reloj. Úsala con TOTAL confianza: si te pregunta qué hora es, o si está en horario/killzone, respóndele con esos datos, directo. NUNCA digas que no tienes acceso a un reloj o a la hora — SÍ la tienes, yo te la paso en cada mensaje. (La fila 'Killzone' del panel del indicador sigue siendo la fuente de verdad FINAL si se contradicen.)\n\n"+
 "QUÉ SABES: Eres Claude; ya dominas a fondo TODO lo conceptual del trading (estrategias, SMC/ICT/CRT, psicología, gestión de riesgo, estadística, backtesting, su indicador y su plan). Responde esas cosas con seguridad, sin decir que 'no sabes' o que 'te falta información', salvo que de verdad necesites un dato puntual del alumno.\n\n"+
-"INTERNET / BÚSQUEDA WEB: AHORA SÍ tienes una herramienta de búsqueda web. Úsala SOLO cuando necesites un dato EN VIVO o actual que no está en tu conocimiento: el calendario económico del día, noticias de alto impacto (NFP, CPI, FOMC, decisiones de tasas), o un evento/precio reciente. Para conceptos, estrategia, psicología, su indicador y teoría NO busques — ya lo sabes; buscar de más gasta dinero y tarda. Cuando des un dato de noticias o del calendario, menciona la fuente en una línea. Si la búsqueda no encuentra o no es clara, dilo con honestidad y sugiérele confirmarlo en su calendario económico. Recuerda su regla: no operar 30 min antes ni después de una noticia roja.\n\n"+
+"INTERNET / BÚSQUEDA WEB: AHORA SÍ tienes una herramienta de búsqueda web. Úsala SOLO cuando necesites un dato EN VIVO o actual que no está en tu conocimiento: el calendario económico del día, noticias de alto impacto (NFP, CPI, FOMC, decisiones de tasas), un evento/precio reciente, o las REGLAS y PRECIOS ACTUALES de una empresa de fondeo (cambian seguido). Para conceptos, estrategia, psicología, su indicador y teoría NO busques — ya lo sabes; buscar de más gasta dinero y tarda. Cuando des un dato de noticias, del calendario o de una firma, menciona la fuente en una línea. Si la búsqueda no encuentra o no es clara, dilo con honestidad y sugiérele confirmarlo en la web oficial de la firma o en su calendario económico. Recuerda su regla: no operar 30 min antes ni después de una noticia roja.\n\n"+
+"FIRMAS DE FONDEO (prop firms): Rey va a comprar varias cuentas de reto/fondeo y quiere que le ayudes a ELEGIR bien. Cuando pregunte por firmas: (1) usa la búsqueda web para traer las REGLAS y PRECIOS actuales de cada una; (2) compáralas de forma OBJETIVA en lo que de verdad importa para él: drawdown máximo (estático o trailing), daily drawdown, profit target por fase, días mínimos, tiempo límite, si permite mantener overnight/fin de semana y operar en noticias, reglas de consistencia, split de ganancias, rapidez y fiabilidad de los PAYOUTS, y reputación/años en el mercado; (3) preséntalo claro (lista o tabla comparada) con PROS y CONTRAS de cada firma y CITA la fuente. Da tu recomendación razonada como mentor, pero deja SIEMPRE claro que la decisión final es de él: le das criterio, no órdenes de inversión. Si te pide una barata, una segura, las más grandes, o una firma concreta, respétalo. Insiste en la DIVERSIFICACIÓN: no meter todas las cuentas en una sola firma, para que si una cierra o cambia reglas no se quede sin nada.\n\n"+
+"FINANZAS, INTERÉS COMPUESTO Y ESCALADO: Eres su asesor de gestión de capital. Ayúdale con matemática concreta: interés compuesto para escalar (reinvertir vs retirar), tamaño de riesgo por cuenta, cómo tratar cada cuenta según su fase y las reglas de su firma, cálculo de probabilidades y esperanza matemática (expectancy), riesgo de ruina, y cómo repartir el capital entre varias cuentas y firmas. Cuando haga falta, HAZ LAS CUENTAS y muéstrale los números paso a paso. Sé conservador y realista: primero proteger la cuenta, luego escalar; nunca infles expectativas ni prometas rendimientos.\n\n"+
 "SALDO / RECARGA: Tú NO puedes ver el saldo ni el consumo de la cuenta de Anthropic de Rey (no tienes acceso a esa información). Si te pregunta cuánto le queda o cómo recargar, díselo con honestidad y pásale el enlace directo: https://console.anthropic.com/settings/billing (ahí ve su saldo, pulsa 'Add credits' para recargar y puede activar recarga automática). Nunca inventes una cifra de saldo.\n\n"+
 "IMÁGENES / GRÁFICOS: Rey puede enviarte CAPTURAS o FOTOS de su gráfico (a veces una foto en directo de la pantalla). Cuando te mande una imagen, léela como un trader profesional: identifica el par y la temporalidad si se ven, el bias/dirección, la estructura (BOS/CHoCH), los BARRIDOS de liquidez (sweep con mecha, no con cierre), las zonas (OB/FVG/premium/discount/tierra de nadie) y, si aparece el panel de su indicador CRT Elite, úsalo (sesgo, Secuencia F3, alineación de TFs, CRT H4). Dile con claridad si hay un setup VÁLIDO según SU método (sweep obligatorio, MSS en 15M/1H, gatillo en M5/M3 con vela de confirmación), qué clasificación tendría (A+/B/C) y qué haría él. NO inventes lo que no se ve: si la imagen está borrosa, cortada o le falta la temporalidad o una zona clave, pídele otra toma o el dato que necesites antes de opinar.";
 
@@ -2345,7 +2383,8 @@ function iaConocimiento(){
 function iaSystemFull(){ return IA_SYSTEM_BASE+"\n\n"+iaConocimiento(); }
 
 /* ---- ESTADO: varias conversaciones con memoria ---- */
-let IA = { url:"", convs:[], actId:null, busy:false, pendImg:null };
+let IA = { url:"", convs:[], actId:null, busy:false, pendImg:null,
+           voz:{on:false, name:null}, hablandoIdx:null };
 
 function iaGuardarConvs(){
   try{
@@ -2400,6 +2439,8 @@ function iaInit(){
   IA.url   = load(K.iaurl, IA_URL_DEFAULT);
   IA.convs = load(K.iaconvs, null);
   IA.actId = load(K.iaact, null);
+  IA.voz   = load(K.iavoz, {on:false, name:null});
+  if(!IA.voz || typeof IA.voz!=="object") IA.voz={on:false, name:null};
   /* Migración: si venías de la versión de un solo chat, lo conservo como conversación */
   if(!IA.convs){
     IA.convs=[];
@@ -2409,7 +2450,7 @@ function iaInit(){
   }
 
   const fab=el("button","fab",'✨<span class="fab-badge">IA</span>');
-  fab.id="fab"; fab.setAttribute("aria-label","Mentor IA");
+  fab.id="fab"; fab.setAttribute("aria-label","Roberto, tu mentor");
   fab.onclick=abrirIA;
   document.body.appendChild(fab);
 
@@ -2417,7 +2458,7 @@ function iaInit(){
   ov.innerHTML=`
     <div class="ia-panel">
       <div class="ia-head">
-        <div class="ia-title"><span class="ia-dot"></span> Mentor IA</div>
+        <div class="ia-title"><span class="ia-dot"></span> Roberto</div>
         <div class="ia-head-btns">
           <button class="ia-ic" id="iaNew" aria-label="Nueva conversación">✚</button>
           <button class="ia-ic" id="iaConvs" aria-label="Conversaciones">🗂️</button>
@@ -2431,6 +2472,10 @@ function iaInit(){
         <div class="ia-conv-list" id="iaConvList"></div>
       </div>
       <div class="ia-cfg" id="iaCfgBox" style="display:none">
+        <div class="fl">🔊 Voz de Roberto</div>
+        <button class="btn" id="iaVozToggle" style="margin-bottom:8px">🔇 Que Roberto me hable: apagado</button>
+        <select class="inp" id="iaVozSel" style="margin-bottom:8px"></select>
+        <button class="btn" id="iaVozTest" style="margin-bottom:14px">▶️ Probar voz</button>
         <div class="fl">Dirección de tu puente (Worker)</div>
         <input class="inp" id="iaUrl" placeholder="https://...workers.dev">
         <button class="btn gold" id="iaSaveUrl" style="margin-top:8px">Guardar dirección</button>
@@ -2445,6 +2490,8 @@ function iaInit(){
         <button class="ia-chip" data-q="Explícame con un ejemplo claro cómo confirmar el gatillo (barrido + MSS 15M + FVG) sin entrar antes de tiempo.">🎯 Cómo gatillar</button>
         <button class="ia-chip" data-q="Recuérdame qué alarmas de mi indicador CRT Elite debo tener activas en cada par y por qué, y qué debo hacer cada vez que actualizo el indicador.">🔔 Mis alarmas</button>
         <button class="ia-chip" data-q="Voy a comprar 5 cuentas de fondeo para hacer los exámenes. Dame un plan concreto para pasarlos sin romper mis reglas.">🏦 Plan de fondeo</button>
+        <button class="ia-chip" data-q="Compara las principales empresas de fondeo del mercado ahora mismo (reglas exactas, drawdown, precio, payouts, reputación). Busca datos actuales, cítame la fuente y dime cuáles me convienen y por qué, sin olvidar la diversificación.">⚖️ Comparar firmas</button>
+        <button class="ia-chip" data-q="Explícame cómo usar el interés compuesto para escalar mis cuentas de fondeo con riesgo 0.5%. Hazme los números paso a paso con un ejemplo realista.">📈 Interés compuesto</button>
       </div>
       <div class="ia-att" id="iaAtt" style="display:none"></div>
       <div class="ia-input">
@@ -2463,7 +2510,18 @@ function iaInit(){
   $("#iaNew").onclick=iaNuevaConv;
   $("#iaNew2").onclick=iaNuevaConv;
   $("#iaConvs").onclick=()=>{ const b=$("#iaConvsBox"); const show=b.style.display==="none"; $("#iaCfgBox").style.display="none"; b.style.display=show?"block":"none"; if(show) renderConvList(); };
-  $("#iaCfg").onclick=()=>{ const b=$("#iaCfgBox"); const show=b.style.display==="none"; $("#iaConvsBox").style.display="none"; b.style.display=show?"block":"none"; if(show) $("#iaUrl").value=IA.url; };
+  $("#iaCfg").onclick=()=>{ const b=$("#iaCfgBox"); const show=b.style.display==="none"; $("#iaConvsBox").style.display="none"; b.style.display=show?"block":"none"; if(show){ $("#iaUrl").value=IA.url; iaVozRefrescarUI(); } };
+  /* Controles de voz */
+  const vt=$("#iaVozToggle");
+  if(!TTS){ if(vt){ vt.disabled=true; vt.innerHTML="🔇 Tu teléfono no permite voz"; } const vs=$("#iaVozSel"), vp=$("#iaVozTest"); if(vs)vs.style.display="none"; if(vp)vp.style.display="none"; }
+  else{
+    vt.onclick=()=>{ IA.voz.on=!IA.voz.on; iaGuardarVoz(); iaVozRefrescarUI();
+      if(IA.voz.on) iaHablar("Listo, Rey. A partir de ahora te hablo yo, Roberto. Vamos a por esas cuentas.", -1);
+      else iaVozParar();
+      toast(IA.voz.on?"Roberto te hablará 🔊":"Voz apagada"); };
+    $("#iaVozSel").onchange=function(){ IA.voz.name=this.value||null; iaGuardarVoz(); iaHablar("Esta es mi voz. ¿Te gusta?", -1); };
+    $("#iaVozTest").onclick=()=>iaHablar("Hola Rey, soy Roberto, tu mentor de trading. Estoy listo para ayudarte a pasar tus fondeos y escalar tu capital.", -1);
+  }
   $("#iaSaveUrl").onclick=()=>{ IA.url=$("#iaUrl").value.trim()||IA_URL_DEFAULT; save(K.iaurl,IA.url); $("#iaCfgBox").style.display="none"; toast("Puente guardado ✓"); };
   $("#iaClear").onclick=()=>{ if(confirm("¿Borrar la conversación actual?")){ const c=iaConvAct(); c.msgs=[]; c.t=""; iaGuardarConvs(); $("#iaCfgBox").style.display="none"; pintarIAChat(); } };
   $("#iaSend").onclick=()=>iaEnviar();
@@ -2514,7 +2572,7 @@ function iaPintarAtt(){
   $("#iaAttX").onclick=()=>{ IA.pendImg=null; iaPintarAtt(); };
 }
 function abrirIA(){ $("#iaOv").classList.add("show"); pintarIAChat(); setTimeout(()=>{ const t=$("#iaText"); if(t)t.focus(); },220); }
-function cerrarIA(){ $("#iaOv").classList.remove("show"); }
+function cerrarIA(){ $("#iaOv").classList.remove("show"); iaVozParar(); }
 
 /* Formato ligero de la respuesta: **negritas**, enlaces tocables y saltos de línea */
 function fmtIA(s){
@@ -2526,22 +2584,109 @@ function fmtIA(s){
 /* Enlace directo para recargar créditos de Anthropic (el mentor no ve tu saldo) */
 const IA_RECARGA_URL = "https://console.anthropic.com/settings/billing";
 
+/* ============================================================
+   VOZ DE ROBERTO — texto a voz (Web Speech API del teléfono)
+   Gratis, sin internet, sin tocar el puente. Lee sus respuestas.
+   ============================================================ */
+const TTS = ("speechSynthesis" in window) ? window.speechSynthesis : null;
+let _iaVoces = [];
+function iaCargarVoces(){
+  if(!TTS) return;
+  _iaVoces = TTS.getVoices()||[];
+}
+if(TTS){
+  iaCargarVoces();
+  TTS.onvoiceschanged = iaCargarVoces;
+}
+/* Elige la mejor voz en español disponible (prefiere la guardada por Rey). */
+function iaVozEspanol(){
+  if(!TTS) return null;
+  if(!_iaVoces.length) iaCargarVoces();
+  const es = _iaVoces.filter(v=>/es(-|_|$)/i.test(v.lang));
+  if(IA.voz.name){ const g=_iaVoces.find(v=>v.name===IA.voz.name); if(g) return g; }
+  /* Prefiere una voz masculina/latina si el nombre lo insinúa, si no la primera en español */
+  const pref = es.find(v=>/(latin|america|mexic|us|estados|jorge|diego|carlos|pablo|male|hombre)/i.test(v.name));
+  return pref || es[0] || null;
+}
+/* Limpia el texto para que suene natural: sin markdown, sin emojis, sin URLs largas */
+function iaTextoParaVoz(s){
+  return String(s||"")
+    .replace(/https?:\/\/[^\s]+/g,"el enlace que te dejé")
+    .replace(/\*\*(.+?)\*\*/g,"$1")
+    .replace(/[*#_`>]/g,"")
+    .replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2190}-\u{21FF}\u{2B00}-\u{2BFF}]/gu,"")
+    .replace(/\s+\n/g,". ")
+    .replace(/\n+/g,". ")
+    .replace(/\s{2,}/g," ")
+    .trim();
+}
+function iaVozParar(){
+  if(TTS) try{ TTS.cancel(); }catch(_){}
+  IA.hablandoIdx=null;
+  pintarIAChat();
+}
+/* Habla un texto. idx = índice del mensaje en la conversación (para el botón). */
+function iaHablar(texto, idx){
+  if(!TTS){ toast("Tu teléfono no permite voz"); return; }
+  try{ TTS.cancel(); }catch(_){}
+  const limpio=iaTextoParaVoz(texto);
+  if(!limpio){ return; }
+  const u=new SpeechSynthesisUtterance(limpio);
+  const v=iaVozEspanol();
+  if(v){ u.voice=v; u.lang=v.lang; } else { u.lang="es-ES"; }
+  u.rate=1.02; u.pitch=1.0;
+  u.onstart=()=>{ IA.hablandoIdx=(idx==null?-1:idx); pintarIAChat(); };
+  u.onend  =()=>{ IA.hablandoIdx=null; pintarIAChat(); };
+  u.onerror=()=>{ IA.hablandoIdx=null; pintarIAChat(); };
+  /* iOS/Chrome a veces se "duerme": lo despertamos */
+  try{ TTS.resume(); }catch(_){}
+  TTS.speak(u);
+}
+/* Rellena el <select> de voces en ajustes */
+function iaPintarVoces(){
+  const sel=$("#iaVozSel"); if(!sel) return;
+  if(!_iaVoces.length) iaCargarVoces();
+  const es=_iaVoces.filter(v=>/es(-|_|$)/i.test(v.lang));
+  const lista = es.length?es:_iaVoces;
+  if(!lista.length){ sel.innerHTML=`<option value="">Sin voces en este teléfono</option>`; return; }
+  const actual=iaVozEspanol();
+  sel.innerHTML=lista.map(v=>`<option value="${esc(v.name)}"${actual&&v.name===actual.name?" selected":""}>${esc(v.name)} (${esc(v.lang)})</option>`).join("");
+}
+function iaGuardarVoz(){ save(K.iavoz, IA.voz); }
+/* Refresca el botón de encendido y el selector de voces en ajustes */
+function iaVozRefrescarUI(){
+  const vt=$("#iaVozToggle");
+  if(vt && TTS){
+    vt.innerHTML = IA.voz.on ? "🔊 Que Roberto me hable: ACTIVADO" : "🔇 Que Roberto me hable: apagado";
+    vt.classList.toggle("gold", !!IA.voz.on);
+  }
+  iaPintarVoces();
+}
+
 function pintarIAChat(){
   const m=$("#iaMsgs"); if(!m) return;
   const c=iaConvAct();
   if(!c.msgs.length && !IA.busy){
     m.innerHTML=`<div class="ia-welcome"><div class="ia-w-emoji">🧠</div>
-      <div class="ia-w-t">Soy tu mentor de trading</div>
-      <div class="ia-w-s">Conozco tu estrategia CRT, tu indicador, tus reglas y tus datos. Pregúntame lo que sea, o pídeme que analice tu operativa. Si te equivocas, te lo digo claro: estoy para que mejores.</div></div>`;
+      <div class="ia-w-t">Soy Roberto, tu mentor</div>
+      <div class="ia-w-s">Conozco tu estrategia CRT, tu indicador, tus reglas y tus datos. Domino trading, finanzas, interés compuesto y las empresas de fondeo. Pregúntame lo que sea o mándame una foto de tu gráfico. Si te equivocas, te lo digo claro: estoy para que mejores.</div></div>`;
     return;
   }
-  m.innerHTML=c.msgs.map(x=>{
+  m.innerHTML=c.msgs.map((x,i)=>{
     const cuerpo=x.role==="user"?esc(x.content):fmtIA(x.content);
     const foto=x.img?`<img class="ia-msg-img" src="${x.img}" alt="gráfico">`:"";
-    return `<div class="ia-msg ${x.role==="user"?"user":"bot"}">${foto}${cuerpo}</div>`;
+    if(x.role==="user") return `<div class="ia-msg user">${foto}${cuerpo}</div>`;
+    const habla = IA.hablandoIdx===i;
+    const btn = TTS ? `<button class="ia-speak${habla?" on":""}" data-speak="${i}">${habla?"⏹ Parar":"🔊 Escuchar"}</button>` : "";
+    return `<div class="ia-msg bot">${foto}${cuerpo}${btn}</div>`;
   }).join("")
-    + (IA.busy?`<div class="ia-msg bot ia-typing"><span></span><span></span><span></span></div>`:"");
+    + (IA.busy?`<div class="ia-msg bot ia-typing"><span></span><span></span><span></span></div>
+       <div class="ia-wait">Roberto está pensando… si busca en internet (firmas, noticias) tarda un poco más. Espera los puntitos.</div>`:"");
   m.scrollTop=m.scrollHeight;
+  m.querySelectorAll("[data-speak]").forEach(b=>{
+    b.onclick=()=>{ const i=+b.dataset.speak;
+      if(IA.hablandoIdx===i){ iaVozParar(); } else { iaHablar(c.msgs[i].content, i); } };
+  });
 }
 
 /* Reloj real desde el teléfono: hora Brasil + Nueva York + ventana operativa.
@@ -2643,6 +2788,13 @@ async function iaEnviar(textoForzado){
     c.msgs.push({role:"assistant",content:"⚠️ No pude conectar con el puente. Revisa tu internet o la dirección en ajustes (⚙️)."});
   }
   iaGuardarConvs(); pintarIAChat();
+  /* Si Rey activó la voz, Roberto lee en alto su última respuesta */
+  if(IA.voz.on){
+    const ult=c.msgs[c.msgs.length-1];
+    if(ult && ult.role==="assistant" && ult.content && !/^⚠️|^💳/.test(ult.content)){
+      iaHablar(ult.content, c.msgs.length-1);
+    }
+  }
 }
 
 /* ============================================================
@@ -2661,6 +2813,7 @@ function init(){
   onParCalc();
 
   refreshChecklist(); refreshConf(); refreshReglas(); renderDiario();
+  const ba=$("#btnAyuda"); if(ba) ba.onclick=()=>abrirAyuda(TAB);
   irA("checklist");
   tickRelojes(); setInterval(tickRelojes,10000);
   iaInit();

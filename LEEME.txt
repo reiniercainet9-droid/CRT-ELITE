@@ -1,5 +1,38 @@
-CRT ELITE v4.1 — PLAN OPERATIVO + BACKTESTING
+CRT ELITE v4.2 — PLAN OPERATIVO + BACKTESTING
 ==============================================
+
+NOVEDADES v4.2  (ROBERTO: VOZ + CEREBRO DE FINANZAS + AYUDA "?")
+===============================================================
+1) TU MENTOR AHORA SE LLAMA ROBERTO. Abre el boton ✨ y saludalo.
+
+2) ROBERTO TE HABLA EN VOZ (audio real).
+   - En Roberto, entra en Ajustes (⚙️) y pulsa "Que Roberto me hable".
+   - Elige la voz en espanol que mas te guste y toca "Probar voz".
+   - Con la voz activada, Roberto LEE en alto cada respuesta.
+   - Ademas, cada respuesta tiene un boton "🔊 Escuchar" por si quieres
+     oir una en concreto (o "⏹ Parar" para cortarlo).
+   - Es gratis y funciona sin internet (usa la voz de tu telefono).
+
+3) ROBERTO, EXPERTO EN FINANZAS Y FONDEO.
+   - Ahora domina finanzas, contabilidad, INTERES COMPUESTO, probabilidad
+     y gestion de capital, ademas de tu estrategia CRT.
+   - COMPARA EMPRESAS DE FONDEO: pulsa el chip "⚖️ Comparar firmas" y te
+     trae reglas exactas (drawdown, profit target, precio, payouts,
+     reputacion) de internet, con PROS y CONTRAS, y te dice cual te
+     conviene y por que — recordandote la DIVERSIFICACION (no todas las
+     cuentas en una sola firma). La decision final siempre es tuya.
+   - Chip nuevo "📈 Interes compuesto" para escalar tus cuentas con numeros.
+   - OJO: comparar firmas usa internet, asi que tarda un poco mas. Mientras
+     trabaja veras los puntitos y el aviso "Roberto esta pensando...".
+
+4) BOTON DE AYUDA "?" EN CADA PANTALLA.
+   - Arriba a la derecha hay un circulo con "?". Tocalo y te explica
+     PARA QUE SIRVE la pantalla en la que estas y como usarla.
+   - Asi no te pierdes a medida que la app crece.
+
+IMPORTANTE: la voz y todo lo de Roberto es SOLO en la app; NO hace falta
+tocar el puente (worker) de Cloudflare. Sube app.js, data.js, index.html
+y sw.js y listo.
 
 NOVEDADES v4.1  (MENTOR CON INTERNET)
 =====================================

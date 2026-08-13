@@ -3,7 +3,7 @@
    Todo el contenido del plan operativo de Rey.
    ============================================================ */
 
-const APP_VERSION = "4.1";
+const APP_VERSION = "4.2";
 
 /* --- CHECKLIST OPERATIVO (4 bloques) --- */
 const CHECKLIST = [
