@@ -392,9 +392,67 @@ function calTextoDe(rel){
     return `- ${day} ${hora} NY | ${imp} | ${e.country} | ${e.title}`+(e.forecast?` (prev ${e.previous||"?"}, fcst ${e.forecast})`:"");
   }).join("\n");
 }
+/* Próxima ventana operativa (para el parte del día) */
+function proximaVentana(){ const ny=horaNY(); for(const v of VENTANAS){ if(v.s!=null && !v.bad && v.s>ny.dec) return v; } return null; }
+/* Resumen rápido de cuentas: total, en negativo, en peligro (cerca del DD) */
+function cuentasResumen(){
+  let peligro=0, negativo=0;
+  (CUENTAS||[]).forEach(c=>{ const ddMax=+c.ddMaxPct||0; const st=statsCuenta(c);
+    if(st && st.progresoPct<0){ negativo++; if(ddMax && (ddMax-Math.abs(st.progresoPct))<=ddMax*0.3) peligro++; } });
+  return { total:(CUENTAS||[]).length, peligro, negativo };
+}
+/* MEJORA 2 — Veredicto "¿Puedo operar ahora?" cruzando ventana + noticias + cuentas */
+function verdictoOperar(rel){
+  const motivos=[]; let ok=true;
+  const v=ventanaActiva();
+  if(v) motivos.push({ic:"✅", t:"En ventana operativa: "+v.n});
+  else { ok=false; const p=proximaVentana(); motivos.push({ic:"⛔", t:"Fuera de ventana"+(p?" · próxima "+p.n+" "+p.h.split("−")[0]+" NY":"")}); }
+  const now=Date.now();
+  const cerca=(rel||[]).map(e=>({e,m:Math.round((Date.parse(e.date)-now)/60000)})).filter(x=>!isNaN(x.m)&&Math.abs(x.m)<=30);
+  if(cerca.length){ ok=false; const c=cerca.sort((a,b)=>Math.abs(a.m)-Math.abs(b.m))[0]; const imp=/High/i.test(c.e.impact)?"🔴":"🟠";
+    motivos.push({ic:"⛔", t:"Noticia "+imp+" "+(c.m>=0?("en "+c.m+" min"):("hace "+(-c.m)+" min"))+": "+c.e.title+" (no operes)"}); }
+  else motivos.push({ic:"✅", t:"Sin noticias a menos de 30 min"});
+  const res=cuentasResumen();
+  if(res.peligro) motivos.push({ic:"⚠️", t:res.peligro+" cuenta(s) cerca del límite (DD) — extrema el cuidado"});
+  return { ok, motivos };
+}
+/* MEJORA 1 — "Parte del día": ventana + noticias + cuentas, de un vistazo */
+function renderBrief(rel){
+  const box=$("#ntBrief"); if(!box) return;
+  const hoy=nyFechaISO(0);
+  const hoyEv=(rel||[]).filter(e=>String(e.date).slice(0,10)===hoy);
+  const alto=hoyEv.filter(e=>/High/i.test(e.impact)).length, medio=hoyEv.filter(e=>/Medium/i.test(e.impact)).length;
+  const v=ventanaActiva(), prox=proximaVentana();
+  const ventTxt = v ? ("✅ "+v.n+" · ACTIVA") : ("⛔ Fuera de ventana"+(prox?" · próxima "+prox.n+" "+prox.h.split("−")[0]+" NY":""));
+  const noticiasTxt = hoyEv.length ? ((alto?("🔴 "+alto+"  "):"")+(medio?("🟠 "+medio+"  "):"")+"hoy en tus pares") : "Sin noticias de impacto hoy en tus pares";
+  const res=cuentasResumen();
+  const ctaTxt = res.total ? (res.peligro?("⚠️ "+res.peligro+" en peligro"):(res.negativo?(res.negativo+" en negativo"):"todas OK"))+" · "+res.total+" cuenta(s)" : "";
+  const fecha=new Intl.DateTimeFormat("es",{timeZone:"America/New_York",weekday:"long",day:"2-digit",month:"short"}).format(new Date());
+  box.innerHTML=`<div class="card brief">
+    <div class="brief-h">☀️ Parte del día<span class="brief-d">${esc(fecha)}</span></div>
+    <div class="brief-row"><span class="brief-ic">🕐</span><span>${esc(ventTxt)}</span></div>
+    <div class="brief-row"><span class="brief-ic">📰</span><span>${esc(noticiasTxt)}</span></div>
+    ${res.total?`<div class="brief-row"><span class="brief-ic">🏦</span><span>${esc(ctaTxt)}</span></div>`:""}
+    <button class="btn gold" id="ntPuedo" style="margin-top:12px">🚦 ¿Puedo operar AHORA?</button>
+    <div id="ntVerdict"></div>
+  </div>`;
+  const bp=$("#ntPuedo");
+  if(bp) bp.onclick=()=>{
+    const vd=verdictoOperar(rel);
+    const vb=$("#ntVerdict");
+    vb.innerHTML=`<div class="verdict ${vd.ok?"ok":"no"}">
+      <div class="verdict-t">${vd.ok?"✅ Puedes operar (con checklist)":"⛔ Mejor NO operar ahora"}</div>
+      ${vd.motivos.map(m=>`<div class="verdict-l">${m.ic} ${esc(m.t)}</div>`).join("")}
+      <button class="btn" id="ntPuedoIA" style="margin-top:10px">🧠 Que Roberto lo confirme</button>
+    </div>`;
+    const bi=$("#ntPuedoIA");
+    if(bi) bi.onclick=()=>{ abrirIA(); setTimeout(()=>iaEnviar("¿Puedo operar AHORA mismo? Dame un veredicto corto y directo (SÍ/NO en la 1ª línea) cruzando: mi ventana operativa por el reloj, si hay noticia roja/naranja a menos de 30 min en mis pares (mira el bloque del calendario), y el estado de mis cuentas. Si es NO, dime por qué en una línea."),250); };
+  };
+}
 function viewNoticias(){
   const v=el("div","view"); v.id="v-noticias";
   v.innerHTML=`
+    <div id="ntBrief"></div>
     <div class="card">
       <div class="nt-head">
         <div class="nt-htxt"><div class="nt-tt">📅 Calendario económico</div>
@@ -425,6 +483,7 @@ function renderNoticias(){
 }
 async function cargarNoticiasUI(){
   const body=$("#ntBody"); if(!body) return;
+  renderBrief([]);   /* parte del día (ventana + cuentas) al instante, antes del feed */
   body.innerHTML=`<div class="card"><div class="nt-load">⏳ Cargando calendario de ForexFactory…</div></div>`;
   if(!IA.url){
     body.innerHTML=`<div class="card"><div class="empty"><div class="t">Falta el puente</div>
@@ -442,6 +501,7 @@ async function cargarNoticiasUI(){
     const day=String(e.date||"").slice(0,10);
     return (day===hoy||day===man) && mon.has(String(e.country||"").toUpperCase()) && /High|Medium/i.test(e.impact||"");
   }).sort((a,b)=>String(a.date||"").localeCompare(String(b.date||"")));
+  renderBrief(rel);   /* ahora con el conteo real de noticias de hoy */
   if(!rel.length){
     body.innerHTML=`<div class="card"><div class="nt-ok"><div class="t">✅ Vía libre</div>
       <div class="s">Sin noticias de alto/medio impacto para <b>${esc(CAL_FILTRO.join(", "))}</b> hoy ni mañana. Opera dentro de tu ventana con normalidad.</div></div></div>`;

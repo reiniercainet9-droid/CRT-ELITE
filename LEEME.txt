@@ -1,5 +1,25 @@
-APEX v5.8 — TRADING DESK  (antes CRT Elite)
-===========================================
+APEX v5.10 — TRADING DESK  (antes CRT Elite)
+============================================
+
+NOVEDADES v5.10  (2 MEJORAS DE ROBERTO)
+=======================================
+1) PARTE DEL DIA (arriba en 📰 Noticias)
+   Al abrir la app ves una tarjeta con: tu ventana operativa ahora, las
+   noticias de hoy en tus pares y el estado de tus cuentas. De un vistazo.
+2) BOTON "🚦 ¿Puedo operar AHORA?"
+   Un toque y Roberto cruza: ventana operativa + noticia roja/naranja a
+   menos de 30 min + cuentas cerca del limite -> veredicto ✅/⛔ al momento
+   (sin gastar). Y un boton para que Roberto te lo confirme hablando.
+   Todo aditivo, no rompe nada de lo anterior. (No toca el worker.)
+
+NOVEDADES v5.8/5.9 (WEB PUSH + VIGILANTE DE NOTICIAS)
+====================================================
+- Avisos con la app CERRADA (Web Push). Roberto te empuja al telefono.
+- Vigilante: cada 15 min revisa el calendario de TUS pares y te avisa
+  ~30 min antes de cada noticia 🔴/🟠 (con la app cerrada).
+- El sonido/vibracion los ajustas en Android (canal de notif de Apex +
+  bateria "Sin restricciones" + "No molestar" apagado).
+
 
 NOVEDADES v5.8  (WEB PUSH — AVISOS CON LA APP CERRADA)
 =====================================================
