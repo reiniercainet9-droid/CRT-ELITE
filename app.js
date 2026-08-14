@@ -262,7 +262,9 @@ function urlB64ToUint8Array(base64){
   return out;
 }
 function pushSoportado(){ return ("serviceWorker" in navigator) && ("PushManager" in window); }
-/* Suscribe este teléfono al push y manda la suscripción al worker */
+/* Pares que debe vigilar el worker = filtro del calendario + pares de notificaciones (sin repetir) */
+function paresParaPush(){ return [...new Set((CAL_FILTRO||[]).concat(PARES||[]))]; }
+/* Suscribe este teléfono al push y manda la suscripción + sus pares al worker */
 async function pushSubscribe(){
   if(!pushSoportado() || !IA.url) return false;
   try{
@@ -272,10 +274,17 @@ async function pushSubscribe(){
       sub=await reg.pushManager.subscribe({ userVisibleOnly:true, applicationServerKey:urlB64ToUint8Array(VAPID_PUBLIC) });
     }
     const r=await fetch(IA.url.replace(/\/+$/,"")+"/push/subscribe",{
-      method:"POST", headers:{"content-type":"application/json"}, body:JSON.stringify({subscription:sub})
+      method:"POST", headers:{"content-type":"application/json"}, body:JSON.stringify({subscription:sub, pares:paresParaPush()})
     });
     return r.ok;
   }catch(e){ return false; }
+}
+/* Actualiza en el worker los pares que vigila el aviso automático de noticias */
+async function pushConfigPares(){
+  if(!IA.url) return;
+  try{ await fetch(IA.url.replace(/\/+$/,"")+"/push/config",{
+    method:"POST", headers:{"content-type":"application/json"}, body:JSON.stringify({pares:paresParaPush()})
+  }); }catch(_){}
 }
 /* Prueba en vivo: pide al worker que empuje un aviso a este teléfono (para probar con la app cerrada) */
 async function pushProbar(){
@@ -410,7 +419,7 @@ function renderNoticias(){
   if(ac) ac.onclick=()=>{
     const val=($("#ntPares").value||"").split(",").map(x=>x.trim()).filter(Boolean);
     if(!val.length){ toast("Escribe al menos un par"); return; }
-    CAL_FILTRO=val; save(K.calpares,CAL_FILTRO); toast("Filtrando: "+val.join(", ")); cargarNoticiasUI();
+    CAL_FILTRO=val; save(K.calpares,CAL_FILTRO); pushConfigPares(); toast("Filtrando: "+val.join(", ")); cargarNoticiasUI();
   };
   cargarNoticiasUI();
 }
@@ -3336,7 +3345,7 @@ function iaInit(){
   }
   const nkz=$("#iaNotifKz"); if(nkz) nkz.onchange=()=>{ NOTIF.killzone=nkz.checked; guardarNotif(); if(NOTIF.on) notifProgramarKillzones(); };
   const ndd=$("#iaNotifDD"); if(ndd) ndd.onchange=()=>{ NOTIF.cuentaDD=ndd.checked; guardarNotif(); if(NOTIF.on) notifChequearCuentasDD(); };
-  const ps=$("#iaParesSave"); if(ps) ps.onclick=()=>{ const v=($("#iaPares").value||"").split(",").map(x=>x.trim()).filter(Boolean); if(!v.length){ toast("Escribe al menos un par"); return; } PARES=v; guardarPares(); toast("Pares guardados ✓"); };
+  const ps=$("#iaParesSave"); if(ps) ps.onclick=()=>{ const v=($("#iaPares").value||"").split(",").map(x=>x.trim()).filter(Boolean); if(!v.length){ toast("Escribe al menos un par"); return; } PARES=v; guardarPares(); pushConfigPares(); toast("Pares guardados ✓"); };
   const nn=$("#iaNotifNews"); if(nn) nn.onclick=iaNoticiasHoy;
   const pt=$("#iaPushTest");
   if(pt){ if(!pushSoportado()){ pt.disabled=true; pt.textContent="📲 Tu teléfono no soporta Web Push"; } else { pt.onclick=pushProbar; } }
@@ -3730,7 +3739,7 @@ function init(){
   }
   /* Reprograma avisos si Roberto los tenía activados */
   if(NOTIF.on && notifSoportado() && Notification.permission==="granted"){
-    setTimeout(()=>{ notifProgramarKillzones(); notifChequearCuentasDD(); }, 1500);
+    setTimeout(()=>{ notifProgramarKillzones(); notifChequearCuentasDD(); pushSubscribe(); }, 1500);
   } else if(NOTIF.on){ NOTIF.on=false; guardarNotif(); }
 }
 document.addEventListener("DOMContentLoaded",init);
