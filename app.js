@@ -24,7 +24,8 @@ const K = {
   calpares:"crtelite_calpares_v3",
   reminders:"crtelite_reminders_v3",
   vigila:"crtelite_vigila_v3",
-  robertolog:"crtelite_robertolog_v3"
+  robertolog:"crtelite_robertolog_v3",
+  pin:"crtelite_pin_v3"
 };
 const load = (k,d)=>{ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):d; }catch(e){ return d; } };
 const save = (k,v)=>{ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){ toast("No se pudo guardar"); } };
@@ -322,6 +323,27 @@ async function pushProbar(){
     if(j && j.sent>0) toast("Aviso enviado ✓ (a "+j.sent+" dispositivo/s)");
     else toast("No había suscripción activa. Vuelve a activar las notificaciones.");
   }catch(_){ toast("No pude contactar el puente para la prueba"); }
+}
+/* ---------- ACCESO RÁPIDO FIJO DE ROBERTO (notificación persistente) ---------- */
+let PIN = load(K.pin, {on:false});
+if(!PIN || typeof PIN!=="object") PIN={on:false};
+function guardarPin(){ save(K.pin, PIN); }
+async function pinRoberto(on){
+  if(on){
+    const ok=await notifPermiso();
+    if(!ok){ toast("Activa los permisos de notificación del teléfono"); return false; }
+    try{ const reg=await navigator.serviceWorker.ready; (reg.active||navigator.serviceWorker.controller)?.postMessage({type:"pinShow"}); }catch(_){}
+    PIN.on=true; guardarPin(); return true;
+  }
+  try{ const reg=await navigator.serviceWorker.ready; (reg.active||navigator.serviceWorker.controller)?.postMessage({type:"pinHide"}); }catch(_){}
+  PIN.on=false; guardarPin(); return false;
+}
+/* Navega a donde pida el acceso rápido (?go= o mensaje del SW) */
+function apexGo(go){
+  if(!go) return;
+  if(go==="roberto"){ setTimeout(abrirIA, 60); return; }
+  const ok=["noticias","avisos","checklist","conf","rutina","reglas","riesgo","gatillo","diario","cuentas","almanaque","analisis","mentor","plan"];
+  if(ok.includes(go)) setTimeout(()=>irA(go), 60);
 }
 /* Enciende/apaga las notificaciones */
 async function notifActivar(on){
@@ -3503,6 +3525,8 @@ function iaInit(){
         <button class="btn" id="iaParesSave" style="margin-top:8px">Guardar pares</button>
         <button class="btn" id="iaNotifNews" style="margin-top:8px">📰 ¿Hay noticias rojas hoy en mis pares?</button>
         <button class="btn gold" id="iaPushTest" style="margin-top:8px">📲 Probar aviso con la app CERRADA</button>
+        <button class="btn" id="iaPinToggle" style="margin-top:8px">📌 Acceso rápido de Roberto: apagado</button>
+        <div class="note" style="text-align:left;margin:6px 0 0">Deja una notificación FIJA con botones (💬 Roberto · 📒 Registrar · 🏦 Cuentas). Desde cualquier app (TradingView…) la tocas y abre Apex al instante en ese lugar.</div>
         <div class="note" style="text-align:left;margin-bottom:14px">Activa las notificaciones y toca <b>📲 Probar aviso con la app CERRADA</b>: sal de la app y en unos segundos debe llegarte el aviso de Roberto. Con la app abierta te aviso siempre. Cuando montemos el puente, los pares vendrán solos de TradingView.</div>
         <div class="fl">Dirección de tu puente (Worker)</div>
         <input class="inp" id="iaUrl" placeholder="https://...workers.dev">
@@ -3553,6 +3577,10 @@ function iaInit(){
   const nn=$("#iaNotifNews"); if(nn) nn.onclick=iaNoticiasHoy;
   const pt=$("#iaPushTest");
   if(pt){ if(!pushSoportado()){ pt.disabled=true; pt.textContent="📲 Tu teléfono no soporta Web Push"; } else { pt.onclick=pushProbar; } }
+  const pn=$("#iaPinToggle");
+  if(pn){ const pinta=()=>{ pn.innerHTML=PIN.on?"📌 Acceso rápido de Roberto: ACTIVO":"📌 Acceso rápido de Roberto: apagado"; pn.classList.toggle("gold",!!PIN.on); }; pinta();
+    if(!notifSoportado()){ pn.disabled=true; pn.textContent="📌 Tu teléfono no permite notificaciones"; }
+    else pn.onclick=async()=>{ const r=await pinRoberto(!PIN.on); pinta(); toast(r?"Acceso rápido activado 📌":"Acceso rápido apagado"); }; }
   const vg=$("#iaVigilaToggle");
   if(vg){ const pinta=()=>{ vg.innerHTML=VIGILA.on?"🛡️ Vigilante: activado":"💤 Vigilante: apagado"; vg.classList.toggle("gold",!!VIGILA.on); }; pinta();
     vg.onclick=()=>{ VIGILA.on=!VIGILA.on; guardarVigila(); pinta(); toast(VIGILA.on?"Roberto te vigila 🛡️":"Vigilante apagado"); }; }
@@ -4170,7 +4198,13 @@ function init(){
 
   if("serviceWorker" in navigator){
     navigator.serviceWorker.register("sw.js").catch(()=>{});
+    /* Mensajes del acceso rápido (al tocar un botón del pin con la app ya abierta) */
+    navigator.serviceWorker.addEventListener("message", ev=>{ const d=ev.data||{}; if(d.type==="apexGo") apexGo(d.go); });
+    /* Si estaba activado el acceso fijo, lo re-anclamos al abrir */
+    if(PIN.on) setTimeout(()=>pinRoberto(true), 1800);
   }
+  /* Si la app se abrió desde el acceso rápido (?go=roberto / diario / …), navega ahí */
+  try{ const go=new URLSearchParams(location.search).get("go"); if(go){ setTimeout(()=>apexGo(go), 500); } }catch(_){}
   /* Reprograma avisos si Roberto los tenía activados */
   if(NOTIF.on && notifSoportado() && Notification.permission==="granted"){
     setTimeout(()=>{ notifProgramarKillzones(); notifChequearCuentasDD(); pushSubscribe(); }, 1500);

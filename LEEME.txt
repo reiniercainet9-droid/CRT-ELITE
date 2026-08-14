@@ -1,5 +1,20 @@
-APEX v5.17 — TRADING DESK  (antes CRT Elite)
+APEX v5.18 — TRADING DESK  (antes CRT Elite)
 ============================================
+
+NOVEDADES v5.18  (ACCESO RÁPIDO FIJO DE ROBERTO)
+================================================
+Notificación FIJA con botones para llegar a Roberto/Apex desde CUALQUIER
+app (TradingView, etc.) con un toque:
+- Botones: 💬 Roberto · 📒 Registrar · 🏦 Cuentas.
+- La tocas desde donde estés y abre Apex al instante en ese lugar (Roberto
+  o la sección) para escribir/hablar o meter un dato en caliente.
+- Actívalo en Roberto (✨) → ⚙️ → "📌 Acceso rápido de Roberto".
+
+Nota honesta: NO se escribe/habla DENTRO de la notificación (eso solo lo
+hacen apps nativas). Es un acceso directo de 1 toque que abre el chat/sección.
+Una burbuja flotante SOBRE otras apps NO es posible con una web/PWA (solo
+apps nativas de Android). Solo la app (worker no cambia).
+
 
 NOVEDADES v5.16/5.17  (MAS MANOS + TU CONTROL TOTAL)
 ====================================================
