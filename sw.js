@@ -1,4 +1,4 @@
-const CACHE = "crt-elite-v5-8";
+const CACHE = "crt-elite-v5-9";
 const FILES = ["./","./index.html","./data.js","./app.js","./manifest.json","./icon-192.png","./icon-512.png"];
 const WORKER = "https://elitepro-worker.reiniercainet9.workers.dev";
 /* Web Push: al llegar un aviso (con la app CERRADA), muestra la notificación.
@@ -16,7 +16,8 @@ self.addEventListener("push", e => {
     await self.registration.showNotification(msg.title, {
       body: msg.body, tag: msg.tag || "apex", renotify: true,
       icon: "./icon-192.png", badge: "./icon-192.png",
-      vibrate: [120,60,120,60,220], data: { url: "./index.html" }
+      vibrate: [220,90,220,90,320], silent: false, requireInteraction: true,
+      timestamp: Date.now(), data: { url: "./index.html" }
     });
   })());
 });
