@@ -1,5 +1,17 @@
-APEX v5.7 — TRADING DESK  (antes CRT Elite)
+APEX v5.8 — TRADING DESK  (antes CRT Elite)
 ===========================================
+
+NOVEDADES v5.8  (WEB PUSH — AVISOS CON LA APP CERRADA)
+=====================================================
+Ahora la app puede avisarte AUNQUE ESTE CERRADA (Web Push).
+IMPORTANTE: esto necesita 3 pasos tuyos en Cloudflare (Claude te guia):
+  1) Crear un "KV namespace" y enlazarlo al worker con el nombre PUSH.
+  2) Anadir el secreto VAPID_PRIVATE al worker.
+  3) Pegar el worker nuevo (worker-elitepro-v5.7-push.js) y desplegarlo.
+Luego, en la app: Roberto (✨) -> ⚙️ -> activa Notificaciones y toca
+"📲 Probar aviso con la app CERRADA": sal de la app y en unos segundos
+debe llegarte el aviso. (En Android/Chrome funciona bien.)
+
 
 NOVEDADES v5.7  (ARREGLOS QUE PEDISTE)
 ======================================

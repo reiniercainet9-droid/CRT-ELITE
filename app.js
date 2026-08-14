@@ -252,12 +252,51 @@ function notifChequearCuentasDD(){
     }
   });
 }
+/* ---------- WEB PUSH: avisos con la app CERRADA ---------- */
+const VAPID_PUBLIC = "BMW3WSJQ0xxRIeDchPvPQ2FQM55W4zw5XUE8Dgb4oyYRYpRjglqjuRRI0tz_ROyLdCI4cfhXG4g3jaVDNK6npog";
+function urlB64ToUint8Array(base64){
+  const pad="=".repeat((4-base64.length%4)%4);
+  const b=(base64+pad).replace(/-/g,"+").replace(/_/g,"/");
+  const raw=atob(b); const out=new Uint8Array(raw.length);
+  for(let i=0;i<raw.length;i++) out[i]=raw.charCodeAt(i);
+  return out;
+}
+function pushSoportado(){ return ("serviceWorker" in navigator) && ("PushManager" in window); }
+/* Suscribe este teléfono al push y manda la suscripción al worker */
+async function pushSubscribe(){
+  if(!pushSoportado() || !IA.url) return false;
+  try{
+    const reg=await navigator.serviceWorker.ready;
+    let sub=await reg.pushManager.getSubscription();
+    if(!sub){
+      sub=await reg.pushManager.subscribe({ userVisibleOnly:true, applicationServerKey:urlB64ToUint8Array(VAPID_PUBLIC) });
+    }
+    const r=await fetch(IA.url.replace(/\/+$/,"")+"/push/subscribe",{
+      method:"POST", headers:{"content-type":"application/json"}, body:JSON.stringify({subscription:sub})
+    });
+    return r.ok;
+  }catch(e){ return false; }
+}
+/* Prueba en vivo: pide al worker que empuje un aviso a este teléfono (para probar con la app cerrada) */
+async function pushProbar(){
+  if(!IA.url){ toast("Configura el puente (⚙️)"); return; }
+  const ok=await pushSubscribe();
+  if(!ok){ toast("No pude suscribir el push. Revisa el permiso y el puente."); return; }
+  toast("Enviando aviso de prueba… cierra la app para verlo llegar");
+  try{
+    const r=await fetch(IA.url.replace(/\/+$/,"")+"/push/selftest");
+    const j=await r.json().catch(()=>({}));
+    if(j && j.sent>0) toast("Aviso enviado ✓ (a "+j.sent+" dispositivo/s)");
+    else toast("No había suscripción activa. Vuelve a activar las notificaciones.");
+  }catch(_){ toast("No pude contactar el puente para la prueba"); }
+}
 /* Enciende/apaga las notificaciones */
 async function notifActivar(on){
   if(on){
     const ok=await notifPermiso();
     if(!ok){ toast("Activa los permisos de notificación del teléfono"); NOTIF.on=false; guardarNotif(); return false; }
     NOTIF.on=true; guardarNotif();
+    pushSubscribe();  /* suscribe el push para avisos con la app cerrada (best-effort) */
     notifLanzar("🔔 Roberto activado", "Te avisaré de tus ventanas operativas y si una cuenta se acerca al límite.", "test");
     notifProgramarKillzones(); notifChequearCuentasDD();
     return true;
@@ -3250,7 +3289,8 @@ function iaInit(){
         <input class="inp" id="iaPares" placeholder="EUR/USD, GBP/USD, XAU/USD">
         <button class="btn" id="iaParesSave" style="margin-top:8px">Guardar pares</button>
         <button class="btn" id="iaNotifNews" style="margin-top:8px">📰 ¿Hay noticias rojas hoy en mis pares?</button>
-        <div class="note" style="text-align:left;margin-bottom:14px">Con la app abierta te aviso siempre. Con la app cerrada tu teléfono puede tardar o no avisar (lo reforzamos con Web Push más adelante). Cuando montemos el puente, los pares vendrán solos de TradingView.</div>
+        <button class="btn gold" id="iaPushTest" style="margin-top:8px">📲 Probar aviso con la app CERRADA</button>
+        <div class="note" style="text-align:left;margin-bottom:14px">Activa las notificaciones y toca <b>📲 Probar aviso con la app CERRADA</b>: sal de la app y en unos segundos debe llegarte el aviso de Roberto. Con la app abierta te aviso siempre. Cuando montemos el puente, los pares vendrán solos de TradingView.</div>
         <div class="fl">Dirección de tu puente (Worker)</div>
         <input class="inp" id="iaUrl" placeholder="https://...workers.dev">
         <button class="btn gold" id="iaSaveUrl" style="margin-top:8px">Guardar dirección</button>
@@ -3298,6 +3338,8 @@ function iaInit(){
   const ndd=$("#iaNotifDD"); if(ndd) ndd.onchange=()=>{ NOTIF.cuentaDD=ndd.checked; guardarNotif(); if(NOTIF.on) notifChequearCuentasDD(); };
   const ps=$("#iaParesSave"); if(ps) ps.onclick=()=>{ const v=($("#iaPares").value||"").split(",").map(x=>x.trim()).filter(Boolean); if(!v.length){ toast("Escribe al menos un par"); return; } PARES=v; guardarPares(); toast("Pares guardados ✓"); };
   const nn=$("#iaNotifNews"); if(nn) nn.onclick=iaNoticiasHoy;
+  const pt=$("#iaPushTest");
+  if(pt){ if(!pushSoportado()){ pt.disabled=true; pt.textContent="📲 Tu teléfono no soporta Web Push"; } else { pt.onclick=pushProbar; } }
   /* Controles de voz */
   const vt=$("#iaVozToggle");
   if(!TTS){ if(vt){ vt.disabled=true; vt.innerHTML="🔇 Tu teléfono no permite voz"; } const vs=$("#iaVozSel"), vp=$("#iaVozTest"); if(vs)vs.style.display="none"; if(vp)vp.style.display="none"; }
