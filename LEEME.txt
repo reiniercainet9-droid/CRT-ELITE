@@ -1,5 +1,34 @@
-APEX v5.6 — TRADING DESK  (antes CRT Elite)
+APEX v5.7 — TRADING DESK  (antes CRT Elite)
 ===========================================
+
+NOVEDADES v5.7  (ARREGLOS QUE PEDISTE)
+======================================
+1) ALINEACION DE LA SECCION NOTICIAS ARREGLADA
+   El filtro de pares ya se ve bien: el cuadro de escribir es ancho y el
+   boton "✓ Aceptar" a su lado del tamano justo. El titulo y el boton
+   "ForexFactory ↗" tambien quedaron alineados.
+
+2) ROBERTO YA TIENE ACCESO A TODO
+   Ahora Roberto RECIBE, en cada mensaje, las noticias reales del dia
+   (calendario ForexFactory de tus pares), el estado de tus cuentas, tu
+   reloj y tus estadisticas. Ya NO dira "no tengo acceso a esa parte de la
+   app": tiene los datos servidos. Preguntale hablando "¿que noticias hay
+   hoy?" y te las dice al momento. Conoce todas las secciones de la app y
+   todo lo que se vaya mejorando.
+
+3) LA APP ABRE PRIMERO EN "📰 Noticias"
+   Al abrir, lo primero que ves es el calendario del dia (antes abria en
+   Checklist). Asi revisas como viene el dia ANTES de analizar o entrar.
+   Roberto tambien tiene esto como regla: lo primero del dia son las
+   noticias, porque pueden cambiar todo tu analisis.
+
+4) ROBERTO MAS NATURAL Y AMIGO
+   Tono de amigo/hermano de verdad: cercano, puede bromear y darte animo,
+   sin dejar de ser claro y serio cuando se trata de dinero, riesgo y
+   reglas. Un hermano que ademas es un crack del trading.
+
+   (No hace falta tocar el worker; sigue usando el mismo puente.)
+
 
 NOVEDADES v5.6  (HABLARLE A ROBERTO + SECCION NOTICIAS)
 ======================================================
