@@ -1,4 +1,4 @@
-const CACHE = "crt-elite-v5-5";
+const CACHE = "crt-elite-v5-6";
 const FILES = ["./","./index.html","./data.js","./app.js","./manifest.json","./icon-192.png","./icon-512.png"];
 /* Al tocar una notificación de Roberto, abre/enfoca la app */
 self.addEventListener("notificationclick", e => {

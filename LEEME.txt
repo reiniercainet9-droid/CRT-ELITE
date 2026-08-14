@@ -1,5 +1,28 @@
-APEX v5.5 — TRADING DESK  (antes CRT Elite)
+APEX v5.6 — TRADING DESK  (antes CRT Elite)
 ===========================================
+
+NOVEDADES v5.6  (HABLARLE A ROBERTO + SECCION NOTICIAS)
+======================================================
+1) HABLARLE A ROBERTO POR VOZ (microfono)
+   Ahora ademas de escribirle, PUEDES HABLARLE. Abre a Roberto (boton ✨),
+   toca el 🎤 al lado de la caja de escribir, habla natural como con un
+   amigo, y al terminar el te responde solo (por texto y por voz si la
+   tienes activada). Toca 🎤 otra vez para cortar antes. La primera vez el
+   telefono te pedira permiso de microfono: dale "Permitir".
+   (Si tu telefono no soporta dictado, el boton sale apagado.)
+
+2) NUEVA SECCION "📰 Noticias"  (primera en el menu ☰)
+   El calendario economico REAL de ForexFactory dentro de la app, visual,
+   con colores (🔴 alto / 🟠 medio), hora de Nueva York, pronostico y previo.
+   - Tiene un FILTRO DE PARES arriba: viene con tus pares, pero puedes
+     borrarlo y escribir los que estes operando (ej. USD/JPY, XAU/USD) y
+     tocar "✓ Aceptar" para traer SOLO esas noticias.
+   - Boton "ForexFactory ↗" abre tu cuenta completa en el navegador.
+   - Boton "🧠 Que Roberto me explique" le pasa el calendario y te dice
+     como operar y en que ventanas NO entrar.
+   Esta seccion usa el MISMO puente/worker del calendario (el de v5.5). Si
+   ya lo actualizaste, funciona directo; no hay que tocar el worker de nuevo.
+
 
 NOVEDADES v5.5  (CALENDARIO REAL DE FOREXFACTORY)
 =================================================

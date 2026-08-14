@@ -20,7 +20,8 @@ const K = {
   fabpos : "crtelite_fabpos_v3",
   notif  : "crtelite_notif_v3",
   pares  : "crtelite_pares_v3",
-  notiflog:"crtelite_notiflog_v3"
+  notiflog:"crtelite_notiflog_v3",
+  calpares:"crtelite_calpares_v3"
 };
 const load = (k,d)=>{ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):d; }catch(e){ return d; } };
 const save = (k,v)=>{ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){ toast("No se pudo guardar"); } };
@@ -47,6 +48,10 @@ function guardarCuentas(){ save(K.cuentas, CUENTAS); }
 let PARES = load(K.pares, ["EUR/USD","GBP/USD"]);
 if(!Array.isArray(PARES) || !PARES.length) PARES = ["EUR/USD","GBP/USD"];
 function guardarPares(){ save(K.pares, PARES); }
+/* Filtro de la sección Noticias — independiente de los pares de las notificaciones.
+   Arranca con los pares actuales, pero Rey puede escribir otros que esté operando. */
+let CAL_FILTRO = load(K.calpares, null);
+if(!Array.isArray(CAL_FILTRO) || !CAL_FILTRO.length) CAL_FILTRO = PARES.slice();
 /* Ajustes de notificaciones de Roberto */
 let NOTIF = load(K.notif, { on:false, killzone:true, cuentaDD:true });
 if(!NOTIF || typeof NOTIF!=="object") NOTIF = { on:false, killzone:true, cuentaDD:true };
@@ -268,13 +273,15 @@ function notifRefrescarUI(){
   const ndd=$("#iaNotifDD"); if(ndd) ndd.checked=!!NOTIF.cuentaDD;
   const p=$("#iaPares"); if(p) p.value=PARES.join(", ");
 }
-/* Monedas que le importan a Rey, sacadas de sus pares (EUR/USD → EUR, USD) */
-function paresMonedas(){
+/* Monedas de una lista de pares cualquiera (EUR/USD → EUR, USD) */
+function monedasDe(arr){
   const set=new Set();
-  PARES.forEach(p=>{ (String(p).match(/[A-Za-z]{3}/g)||[]).forEach(m=>set.add(m.toUpperCase())); });
+  (arr||[]).forEach(p=>{ (String(p).match(/[A-Za-z]{3}/g)||[]).forEach(m=>set.add(m.toUpperCase())); });
   if(set.has("XAU")||set.has("XAG")) set.add("USD"); // oro/plata se mueven con el USD
   return set;
 }
+/* Monedas que le importan a Rey, sacadas de sus pares de notificaciones */
+function paresMonedas(){ return monedasDe(PARES); }
 /* Fecha YYYY-MM-DD en Nueva York (off=0 hoy, 1 mañana) */
 function nyFechaISO(off){
   const d=new Date(Date.now()+(off||0)*86400000);
@@ -326,8 +333,102 @@ async function iaNoticiasHoy(){
   setTimeout(()=>iaEnviar(q),200);
 }
 
+/* ---------- SECCIÓN 📰 NOTICIAS (calendario ForexFactory con filtro de pares) ---------- */
+/* Texto compacto de una lista ya filtrada de eventos (para pasársela a Roberto) */
+function calTextoDe(rel){
+  const hoy=nyFechaISO(0);
+  return rel.map(e=>{
+    const day=String(e.date).slice(0,10)===hoy?"HOY":"MAÑANA";
+    const hora=String(e.date).slice(11,16);
+    const imp=/High/i.test(e.impact)?"ALTO 🔴":"MEDIO 🟠";
+    return `- ${day} ${hora} NY | ${imp} | ${e.country} | ${e.title}`+(e.forecast?` (prev ${e.previous||"?"}, fcst ${e.forecast})`:"");
+  }).join("\n");
+}
+function viewNoticias(){
+  const v=el("div","view"); v.id="v-noticias";
+  v.innerHTML=`
+    <div class="card">
+      <div class="nt-head">
+        <div><div class="nt-tt">📅 Calendario económico</div>
+          <div class="nt-sub">Datos reales de ForexFactory · hora de Nueva York</div></div>
+        <a class="btn nt-ff" id="ntFF" href="https://www.forexfactory.com/calendar" target="_blank" rel="noopener">ForexFactory ↗</a>
+      </div>
+      <div class="nt-filtro">
+        <label class="nt-lb" for="ntPares">Filtra por los pares que estés operando ahora:</label>
+        <div class="nt-row">
+          <input class="inp" id="ntPares" placeholder="EUR/USD, GBP/USD, XAU/USD">
+          <button class="btn gold" id="ntAceptar">✓ Aceptar</button>
+        </div>
+        <div class="nt-hint">Escribe los pares separados por coma y toca <b>✓ Aceptar</b> para traer solo sus noticias.</div>
+      </div>
+    </div>
+    <div id="ntBody"></div>`;
+  return v;
+}
+function renderNoticias(){
+  const inp=$("#ntPares"); if(inp && document.activeElement!==inp) inp.value=CAL_FILTRO.join(", ");
+  const ac=$("#ntAceptar");
+  if(ac) ac.onclick=()=>{
+    const val=($("#ntPares").value||"").split(",").map(x=>x.trim()).filter(Boolean);
+    if(!val.length){ toast("Escribe al menos un par"); return; }
+    CAL_FILTRO=val; save(K.calpares,CAL_FILTRO); toast("Filtrando: "+val.join(", ")); cargarNoticiasUI();
+  };
+  cargarNoticiasUI();
+}
+async function cargarNoticiasUI(){
+  const body=$("#ntBody"); if(!body) return;
+  body.innerHTML=`<div class="card"><div class="nt-load">⏳ Cargando calendario de ForexFactory…</div></div>`;
+  if(!IA.url){
+    body.innerHTML=`<div class="card"><div class="empty"><div class="t">Falta el puente</div>
+      <div class="s">Abre a Roberto (✨) → ⚙️ Ajustes y guarda la dirección del puente para poder leer el calendario.</div></div></div>`;
+    return;
+  }
+  const eventos=await cargarCalendario();
+  if(!eventos){
+    body.innerHTML=`<div class="card"><div class="empty"><div class="t">No pude leer el calendario</div>
+      <div class="s">Revisa tu conexión o el puente. También puedes abrir ForexFactory con el botón de arriba ↗.</div></div></div>`;
+    return;
+  }
+  const mon=monedasDe(CAL_FILTRO), hoy=nyFechaISO(0), man=nyFechaISO(1);
+  const rel=eventos.filter(e=>{
+    const day=String(e.date||"").slice(0,10);
+    return (day===hoy||day===man) && mon.has(String(e.country||"").toUpperCase()) && /High|Medium/i.test(e.impact||"");
+  }).sort((a,b)=>String(a.date||"").localeCompare(String(b.date||"")));
+  if(!rel.length){
+    body.innerHTML=`<div class="card"><div class="nt-ok"><div class="t">✅ Vía libre</div>
+      <div class="s">Sin noticias de alto/medio impacto para <b>${esc(CAL_FILTRO.join(", "))}</b> hoy ni mañana. Opera dentro de tu ventana con normalidad.</div></div></div>`;
+    return;
+  }
+  const grupos={};
+  rel.forEach(e=>{ const day=String(e.date).slice(0,10); (grupos[day]=grupos[day]||[]).push(e); });
+  let html="";
+  Object.keys(grupos).sort().forEach(day=>{
+    const et=day===hoy?"HOY":(day===man?"MAÑANA":day);
+    html+=`<div class="card"><div class="nt-day">${et}</div>`;
+    grupos[day].forEach(e=>{
+      const hora=String(e.date).slice(11,16);
+      const alto=/High/i.test(e.impact);
+      html+=`<div class="nt-ev ${alto?"alto":"medio"}">
+        <div class="nt-ev-l"><span class="nt-dot"></span><span class="nt-hh">${esc(hora)}</span></div>
+        <div class="nt-ev-m"><div class="nt-ev-t">${esc(e.title||"")}</div>
+          <div class="nt-ev-s">${esc(e.country||"")} · ${alto?"ALTO 🔴":"MEDIO 🟠"}${e.forecast?` · prev ${esc(String(e.previous||"?"))} → fcst ${esc(String(e.forecast))}`:""}</div></div>
+      </div>`;
+    });
+    html+=`</div>`;
+  });
+  html+=`<div class="card"><button class="btn gold" id="ntRoberto" style="width:100%">🧠 Que Roberto me explique cómo operar con esto</button></div>`;
+  body.innerHTML=html;
+  const rb=$("#ntRoberto");
+  if(rb) rb.onclick=()=>{
+    const texto=calTextoDe(rel);
+    abrirIA();
+    setTimeout(()=>iaEnviar("Este es el CALENDARIO REAL de ForexFactory para los pares que estoy operando ("+CAL_FILTRO.join(", ")+"), HOY y MAÑANA (hora NY):\n"+texto+"\n\nDime en lista breve cómo me afectan, en qué ventanas NO debo operar (30 min antes y después de cada roja/naranja), y prioriza las de ALTO impacto. Usa SOLO esta lista, no inventes otras."),250);
+  };
+}
+
 /* ---------- NAVEGACIÓN ---------- */
 const TABS=[
+  {id:"noticias",  ic:"📰", n:"Noticias"},
   {id:"checklist", ic:"✅", n:"Checklist"},
   {id:"conf",      ic:"🎯", n:"Confluencias"},
   {id:"rutina",    ic:"🗺️", n:"Rutina"},
@@ -354,6 +455,7 @@ function irA(id){
   if(id==="mentor")   renderMentor();
   if(id==="almanaque")renderAlmanaque();
   if(id==="cuentas")  renderCuentas();
+  if(id==="noticias") renderNoticias();
 }
 function buildNav(){
   const n=$("#nav"); n.innerHTML="";
@@ -417,6 +519,8 @@ function hacerArrastrable(fab){
    El botón "?" de la cabecera abre la ayuda de la pestaña actual.
    ============================================================ */
 const AYUDA = {
+  noticias:{ t:"📰 Noticias (calendario económico)", h:`<p><b>Para qué sirve:</b> el calendario económico <b>real de ForexFactory</b> con las noticias de HOY y MAÑANA que mueven tus pares (🔴 alto / 🟠 medio impacto), con hora de Nueva York, pronóstico y dato previo.</p>
+    <p><b>Cómo usarlo:</b> arriba tienes un <b>filtro de pares</b> — viene con tus pares actuales, pero puedes borrarlo y escribir los que estés operando ahora (ej. <i>USD/JPY, XAU/USD</i>) y tocar <b>✓ Aceptar</b> para traer solo esas noticias. Regla de oro: <b>no operes 30 min antes ni después</b> de una roja. El botón <b>ForexFactory ↗</b> abre tu cuenta completa, y <b>🧠 Roberto</b> te explica cómo operar con lo que haya.</p>` },
   checklist:{ t:"✅ Checklist", h:`<p><b>Para qué sirve:</b> tu lista de control ANTES de operar. Marca cada casilla del setup; las marcadas como <b>CLAVE</b> son obligatorias.</p>
     <p><b>Cómo usarlo:</b> repásalo antes de cada entrada. Si falta una casilla CLAVE, el veredicto de abajo te dice <b>NO OPERAR</b>. Pulsa <b>🔄 Reiniciar</b> para empezar limpio en cada setup nuevo.</p>` },
   conf:{ t:"🎯 Confluencias", h:`<p><b>Para qué sirve:</b> tus 5 confluencias del método CRT (sweep, estructura, zona, etc.). Es tu recordatorio de qué debe alinearse para que un setup sea válido.</p>
@@ -2975,7 +3079,8 @@ const PERFIL_REY =
 "- Vive en Brasil, zona horaria UTC−3 FIJA (Brasil no tiene horario de verano). Sus killzones están en hora de Nueva York. DESFASE EXACTO Brasil↔NY: Nueva York es UTC−5 en invierno (EST, ~nov a mar) y UTC−4 en verano (EDT, ~mar a nov). Por tanto Brasil va 2 horas ADELANTE de NY en invierno y 1 hora ADELANTE en verano. Para pasar una hora de NY a hora de Brasil: en invierno súmale 2h, en verano súmale 1h. Ejemplo: Pre-NY Killzone 7:30–9:30 AM NY = en verano 8:30–10:30 hora Brasil, en invierno 9:30–11:30 hora Brasil. El indicador ya maneja el cambio EST/EDT automáticamente; la fila 'Killzone' del panel (Dentro/Fuera) es la fuente de verdad — si dice Fuera, no se opera aunque el setup se vea bien.\n"+
 "- Cuentas: tiene cuentas fondeadas de $6K y está por comprar 5 cuentas de reto/fondeo más para hacer los exámenes. Objetivo inmediato: pasar esos challenges y no romper reglas. Riesgo FIJO 0.5% por trade.\n"+
 "- Su mayor debilidad histórica, reconocida por él mismo: TIMING PREMATURO — su dirección suele ser correcta, pero entra ANTES de que la trampa se liquide y se confirme. Trabájasela siempre.\n"+
-"- No sabe programar. La app Apex (esta, antes llamada CRT Elite) es su diario, backtester, calculadora de lotaje, gestor de cuentas de fondeo y mentor de bolsillo (tú).";
+"- No sabe programar. La app Apex (esta, antes llamada CRT Elite) es su diario, backtester, calculadora de lotaje, gestor de cuentas de fondeo y mentor de bolsillo (tú).\n"+
+"- Rey puede escribirte O HABLARTE por voz (micrófono). Cuando te habla, su mensaje llega transcrito y puede traer pequeños errores de dictado o palabras pegadas: interpreta con sentido común, no le corrijas la ortografía y responde a lo que quiso decir. Eres su mentor Y su amigo de confianza: cercano, directo y humano.";
 
 /* Dossier del indicador CRT Elite que construimos juntos en TradingView */
 const INDICADOR_DOSSIER =
@@ -3164,7 +3269,8 @@ function iaInit(){
       <div class="ia-input">
         <button class="ia-attbtn" id="iaClip" aria-label="Adjuntar imagen">📎</button>
         <button class="ia-attbtn" id="iaCamBtn" aria-label="Tomar foto">📷</button>
-        <textarea id="iaText" rows="1" placeholder="Pregúntale lo que sea de trading..."></textarea>
+        <button class="ia-attbtn" id="iaMicBtn" aria-label="Hablar con Roberto">🎤</button>
+        <textarea id="iaText" rows="1" placeholder="Escríbele o toca 🎤 para hablarle..."></textarea>
         <button class="ia-send" id="iaSend" aria-label="Enviar">➤</button>
       </div>
       <input type="file" id="iaFile" accept="image/*" hidden>
@@ -3213,6 +3319,9 @@ function iaInit(){
   // Adjuntar imagen (galería/archivos) y cámara en directo
   $("#iaClip").onclick=()=>$("#iaFile").click();
   $("#iaCamBtn").onclick=()=>$("#iaCam").click();
+  // Hablarle a Roberto con el micrófono
+  const mic=$("#iaMicBtn");
+  if(mic){ if(!iaMicSoportado()){ mic.disabled=true; mic.title="Tu teléfono no permite dictado por voz"; } else { mic.onclick=iaEscuchar; } }
   const onPick=(inp)=>{ const f=inp.files&&inp.files[0]; inp.value=""; if(!f) return;
     if(!/^image\//.test(f.type)){ toast("Por ahora solo imágenes"); return; }
     toast("Preparando imagen…");
@@ -3305,6 +3414,49 @@ function iaVozParar(){
   if(TTS) try{ TTS.cancel(); }catch(_){}
   IA.hablandoIdx=null;
   pintarIAChat();
+}
+
+/* ---------- VOZ DE IDA: Rey le HABLA a Roberto (micrófono) ---------- */
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition || null;
+let REC=null, RECon=false;
+function iaMicSoportado(){ return !!SR; }
+function iaMicUI(on){
+  const b=$("#iaMicBtn"); if(!b) return;
+  b.classList.toggle("rec",!!on);
+  b.textContent=on?"⏹️":"🎤";
+  b.setAttribute("aria-label",on?"Detener":"Hablar con Roberto");
+}
+function iaEscuchar(){
+  if(!SR){ toast("Tu teléfono no permite dictado por voz"); return; }
+  if(RECon){ try{ REC && REC.stop(); }catch(_){} return; }   /* segundo toque = parar */
+  iaVozParar();                                              /* que Roberto calle mientras Rey habla */
+  const ta=$("#iaText");
+  const base=(ta && ta.value ? ta.value.replace(/\s+$/,"")+" " : "");
+  let fin="";
+  try{
+    REC=new SR();
+    REC.lang="es-ES"; REC.interimResults=true; REC.maxAlternatives=1; REC.continuous=false;
+    REC.onstart=()=>{ RECon=true; iaMicUI(true); toast("Te escucho, Rey… habla 🎙️"); };
+    REC.onresult=(e)=>{
+      let interim="";
+      for(let i=e.resultIndex;i<e.results.length;i++){
+        const t=e.results[i][0].transcript;
+        if(e.results[i].isFinal) fin+=t; else interim+=t;
+      }
+      if(ta){ ta.value=(base+fin+interim).replace(/\s{2,}/g," ").replace(/^\s+/,"");
+        ta.style.height="auto"; ta.style.height=Math.min(ta.scrollHeight,120)+"px"; }
+    };
+    REC.onerror=(ev)=>{ RECon=false; iaMicUI(false);
+      const er=ev&&ev.error;
+      if(er==="not-allowed"||er==="service-not-allowed") toast("Debes permitir el micrófono al navegador");
+      else if(er==="no-speech") toast("No te escuché, prueba otra vez");
+      else if(er!=="aborted") toast("No pude usar el micrófono"); };
+    REC.onend=()=>{ RECon=false; iaMicUI(false);
+      const txt=(ta&&ta.value||"").trim();
+      if(txt) setTimeout(()=>iaEnviar(),150);   /* al terminar de hablar, Roberto responde solo */
+    };
+    REC.start();
+  }catch(_){ RECon=false; iaMicUI(false); toast("No pude iniciar el micrófono"); }
 }
 /* Habla un texto. idx = índice del mensaje en la conversación (para el botón). */
 function iaHablar(texto, idx){
@@ -3487,7 +3639,7 @@ async function iaEnviar(textoForzado){
    ============================================================ */
 function init(){
   const c=$("#views");
-  c.append(viewChecklist(),viewConf(),viewRutina(),viewReglas(),viewRiesgo(),viewGatillo(),viewDiario(),viewCuentas(),viewAlmanaque(),viewAnalisis(),viewMentor(),viewPlan());
+  c.append(viewNoticias(),viewChecklist(),viewConf(),viewRutina(),viewReglas(),viewRiesgo(),viewGatillo(),viewDiario(),viewCuentas(),viewAlmanaque(),viewAnalisis(),viewMentor(),viewPlan());
   buildNav();
   fillPlanDinamico();
   initDiarioControles();
