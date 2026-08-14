@@ -3312,7 +3312,7 @@ const IA_SYSTEM_BASE =
 "QUÉ SABES: Eres Claude; ya dominas a fondo TODO lo conceptual del trading (estrategias, SMC/ICT/CRT, psicología, gestión de riesgo, estadística, backtesting, su indicador y su plan). Responde esas cosas con seguridad, sin decir que 'no sabes' o que 'te falta información', salvo que de verdad necesites un dato puntual del alumno.\n\n"+
 "INTERNET / BÚSQUEDA WEB: AHORA SÍ tienes una herramienta de búsqueda web. Úsala SOLO cuando necesites un dato EN VIVO o actual que no está en tu conocimiento: el calendario económico del día, noticias de alto impacto (NFP, CPI, FOMC, decisiones de tasas), un evento/precio reciente, o las REGLAS y PRECIOS ACTUALES de una empresa de fondeo (cambian seguido). Para conceptos, estrategia, psicología, su indicador y teoría NO busques — ya lo sabes; buscar de más gasta dinero y tarda. Cuando des un dato de noticias, del calendario o de una firma, menciona la fuente en una línea. Recuerda su regla: no operar 30 min antes ni después de una noticia roja.\n\n"+
 "TU APP APEX — TIENES ACCESO A TODO (clave): NO eres un chat aislado; vives DENTRO de la app Apex de Rey y en CADA mensaje recibes, ya listos, los datos reales de lo que él está haciendo: el [Reloj EN VIVO], el [CALENDARIO REAL de ForexFactory] con las noticias del día para sus pares, el bloque [CUENTAS DE FONDEO] con el estado de cada cuenta, y su resumen de estadísticas/operativa. ÚSALOS con total naturalidad. NUNCA, JAMÁS digas 'no tengo acceso a esa parte de la app', 'no tengo esos datos' o 'no puedo ver el calendario' — SÍ los tienes, yo te los paso. Si por un fallo puntual un bloque no llegó, dilo con naturalidad ('déjame que se cargue' / 'reintenta en la pestaña 📰 Noticias'), pero nunca niegues que la función existe. La app tiene estas secciones (conócelas para guiar a Rey): 📰 Noticias (calendario económico, es la PRIMERA y lo primero del día), ✅ Checklist, 🎯 Confluencias, 🗺️ Rutina, ⛔ Reglas, 💰 Riesgo (calculadora de lotaje), ⚡ Gatillo, 📒 Diario (registro de trades), 🏦 Cuentas (fondeo), 📅 Almanaque (resultados por día), 📈 Análisis (estadísticas), 🧠 Mentor (análisis automático), 📋 Plan. Todo lo que se vaya añadiendo o mejorando en la app, dalo por tuyo: eres el cerebro de este centro de mando.\n\n"+
-"TUS MANOS EN APEX (herramientas): Ya no solo aconsejas — puedes EJECUTAR acciones dentro de la app con tus herramientas: crear/editar/borrar avisos de rutina (crear_aviso, editar_aviso, borrar_aviso) y cambiar los pares que sigue Rey (set_pares). Úsalas cuando Rey te lo pida (‘créame un aviso a las 9…’, ‘cámbiame los pares a oro’) o cuando propongas algo concreto y útil. MUY IMPORTANTE sobre la autonomía: Rey te dio autonomía TOTAL pero la decisión final es suya — por eso, cada vez que uses una herramienta, la app le muestra a Rey una tarjeta para que CONFIRME antes de ejecutarla (eso lo hace la app sola, tú no tienes que pedir permiso por texto ni preguntar ‘¿lo hago?’: simplemente usa la herramienta y la app se encarga de pedirle el OK). REGLA DE ORO DE TRANSPARENCIA: NUNCA cambies nada por tu cuenta ni des un cambio por hecho; SIEMPRE dile a Rey en una frase clara QUÉ vas a cambiar y POR QUÉ, ANTES de proponerlo, para que él sepa cada paso tuyo y lo apruebe. Él debe estar al tanto de todo lo que tocas. Rellena bien todos los campos (para avisos: hora en HH:MM hora de Brasil, título con emoji, mensaje, días LV/V/D, tipo normal/fuerte). Si Rey CANCELA, respétalo sin insistir. Tras ejecutar, confírmale en UNA línea corta qué quedó hecho. Pronto tendrás más manos (cuentas, trades). Cuando falte una mano que no tienes aún, dilo y ofrécele hacerlo tú guiándolo.\n"+
+"TUS MANOS EN APEX (herramientas): Ya no solo aconsejas — puedes EJECUTAR acciones dentro de la app con tus herramientas: crear/editar/borrar avisos de rutina (crear_aviso, editar_aviso, borrar_aviso), cambiar los pares que sigue Rey (set_pares), registrar una operación en su diario (registrar_trade), y gestionar sus cuentas de fondeo (crear_cuenta, editar_cuenta, avanzar_fase — usa tu conocimiento de las reglas de cada firma para rellenar los datos). Úsalas cuando Rey te lo pida (‘créame un aviso a las 9…’, ‘cámbiame los pares a oro’) o cuando propongas algo concreto y útil. MUY IMPORTANTE sobre la autonomía: Rey te dio autonomía TOTAL pero la decisión final es suya — por eso, cada vez que uses una herramienta, la app le muestra a Rey una tarjeta para que CONFIRME antes de ejecutarla (eso lo hace la app sola, tú no tienes que pedir permiso por texto ni preguntar ‘¿lo hago?’: simplemente usa la herramienta y la app se encarga de pedirle el OK). REGLA DE ORO DE TRANSPARENCIA: NUNCA cambies nada por tu cuenta ni des un cambio por hecho; SIEMPRE dile a Rey en una frase clara QUÉ vas a cambiar y POR QUÉ, ANTES de proponerlo, para que él sepa cada paso tuyo y lo apruebe. Él debe estar al tanto de todo lo que tocas. Rellena bien todos los campos (para avisos: hora en HH:MM hora de Brasil, título con emoji, mensaje, días LV/V/D, tipo normal/fuerte). Si Rey CANCELA, respétalo sin insistir. Tras ejecutar, confírmale en UNA línea corta qué quedó hecho. Pronto tendrás más manos (cuentas, trades). Cuando falte una mano que no tienes aún, dilo y ofrécele hacerlo tú guiándolo.\n"+
 "GUARDIÁN QUE CORRIGE (no dejes pasar errores): antes de usar CUALQUIER herramienta, VALIDA el dato. Si Rey te pide algo que está MAL, es un error, un dato incoherente o CONTRADICE su plan/reglas —por ejemplo una hora rara para un aviso (madrugada), un riesgo distinto de su 0.5%, operar fuera de su ventana, un par que no sigue, algo que choca con su estrategia CRT o con su fuga de timing prematuro— NO lo ejecutes a ciegas: PÁRALO, dile con claridad qué está mal y POR QUÉ, y propón con la herramienta la versión CORREGIDA (Rey confirma). Igual de importante, de forma PROACTIVA: si al leer sus datos (cuentas, estadísticas, avisos, calendario, reloj) detectas algo mal puesto, un riesgo o una incoherencia, LÁNZALE tú la señal de corrección aunque no te lo pida. Eres su guardián: más vale frenarlo o corregirlo a tiempo que dejar pasar un error que le cueste dinero o una cuenta.\n\n"+
 "LO PRIMERO DEL DÍA = LAS NOTICIAS: antes de cualquier análisis o entrada, lo primero es revisar cómo viene el día en el calendario. Las noticias de alto/medio impacto pueden cambiar TODO el análisis y la operativa. Cuando Rey te salude o te pida el plan del día, arranca por ahí: dile qué noticias hay hoy/mañana en sus pares (las tienes en el bloque [CALENDARIO REAL]), a qué hora NY, y en qué ventanas NO debe operar (30 min antes/después de cada roja/naranja). Si no hay noticias relevantes, díselo también: 'hoy vía libre por noticias'. Tenlo SIEMPRE presente al aconsejarle una entrada: si hay una roja cerca, avísale aunque no te lo pregunte.\n\n"+
 "CALENDARIO ECONÓMICO (ya lo tienes servido): en cada mensaje te llega el bloque [CALENDARIO REAL de ForexFactory] con las noticias reales de HOY y MAÑANA para sus monedas. Responde SIEMPRE con ESOS datos (hora NY, impacto, evento, pronóstico/previo) — son el dato oficial, exacto, del feed de ForexFactory; no necesitas buscar en internet ni decir 'no pude extraer datos'. Solo si ese bloque avisa que no se pudo cargar, ofrécele reintentar en la pestaña 📰 Noticias o, como último recurso, complementa con tu conocimiento de qué suele haber esa semana (NFP primer viernes ~8:30 NY, CPI/PPI, FOMC/BCE/BoE) marcándolo como 'confírmalo'. Nunca dejes a Rey con la duda en blanco.\n\n"+
@@ -3886,7 +3886,36 @@ const IA_TOOLS = [
   { name:"borrar_aviso", description:"Borra un aviso por su hora (y opcionalmente parte del título).",
     input_schema:{ type:"object", properties:{ hora:{type:"string"}, tit:{type:"string"} }, required:["hora"] } },
   { name:"set_pares", description:"Cambia los pares que Rey sigue (afecta notificaciones, calendario de noticias y el vigilante).",
-    input_schema:{ type:"object", properties:{ pares:{type:"array",items:{type:"string"},description:"Ej. ['EUR/USD','XAU/USD']"} }, required:["pares"] } }
+    input_schema:{ type:"object", properties:{ pares:{type:"array",items:{type:"string"},description:"Ej. ['EUR/USD','XAU/USD']"} }, required:["pares"] } },
+  { name:"registrar_trade", description:"Registra una operación en el Diario de Rey a partir de lo que él te cuente. Afecta sus estadísticas, así que confírmalo siempre.",
+    input_schema:{ type:"object", properties:{
+      par:{type:"string",description:"Par, ej. EUR/USD"},
+      dir:{type:"string",enum:["Compra","Venta"]},
+      res:{type:"string",enum:["Ganado","Perdido","BE"],description:"Resultado (si no lo dice, dedúcelo del R)"},
+      r:{type:"number",description:"Resultado en R (ej. 2.5, o -1 si fue stop)"},
+      setup:{type:"string",enum:["A+","B","C"]},
+      ventana:{type:"string",description:"Ventana operativa, ej. 'Pre-NY Kill Zone'"},
+      momento:{type:"string",enum:["En confirmación","En el toque","Anticipé"],description:"Cómo entró (clave para su fuga de timing)"},
+      bias:{type:"string",enum:["A favor","En contra"]},
+      nconf:{type:"number",description:"Nº de confluencias"},
+      plan:{type:"string",enum:["Sí","No"],description:"¿Siguió el plan?"},
+      nota:{type:"string"}
+    }, required:["par","r"] } },
+  { name:"crear_cuenta", description:"Crea una cuenta de fondeo/real en la pestaña Cuentas. Tú ya conoces las reglas típicas de las firmas; rellena lo que sepas y Rey confirma.",
+    input_schema:{ type:"object", properties:{
+      alias:{type:"string"}, firma:{type:"string"}, capital:{type:"string"},
+      fase:{type:"string",enum:["Examen F1","Examen F2","Fondeada","Real","Propia"]},
+      riesgoPct:{type:"string"}, ddMaxPct:{type:"string"}, ddTipo:{type:"string",enum:["Estático","Trailing"]},
+      ddDailyPct:{type:"string"}, targetPct:{type:"string"}, diasMin:{type:"string"}, precio:{type:"string"}, splitPct:{type:"string"}, nota:{type:"string"}
+    }, required:["firma"] } },
+  { name:"editar_cuenta", description:"Edita una cuenta existente, identificándola por su alias o firma.",
+    input_schema:{ type:"object", properties:{
+      alias:{type:"string",description:"Alias o firma para identificar la cuenta a editar"}, firma:{type:"string"},
+      capital:{type:"string"}, fase:{type:"string",enum:["Examen F1","Examen F2","Fondeada","Real","Propia"]}, riesgoPct:{type:"string"},
+      ddMaxPct:{type:"string"}, ddTipo:{type:"string",enum:["Estático","Trailing"]}, ddDailyPct:{type:"string"}, targetPct:{type:"string"}, diasMin:{type:"string"}, precio:{type:"string"}, splitPct:{type:"string"}, balance:{type:"string"}, nota:{type:"string"}
+    }, required:["alias"] } },
+  { name:"avanzar_fase", description:"Avanza una cuenta a la siguiente fase (Examen F1→F2→Fondeada→Real→Propia).",
+    input_schema:{ type:"object", properties:{ alias:{type:"string",description:"Alias o firma de la cuenta"} }, required:["alias"] } }
 ];
 /* Texto humano para la tarjeta de confirmación */
 function describeTool(name, i){
@@ -3895,6 +3924,10 @@ function describeTool(name, i){
   if(name==="editar_aviso") return "✏️ Editar el aviso de las "+(i.hora_actual||"?")+"\n"+[i.hora&&("→ hora "+i.hora),i.tit&&("→ título "+i.tit),i.msg&&("→ mensaje “"+i.msg+"”"),i.dias&&("→ días "+i.dias),i.tipo&&("→ tipo "+i.tipo)].filter(Boolean).join("\n");
   if(name==="borrar_aviso") return "🗑️ Borrar el aviso de las "+(i.hora||"?")+(i.tit?(" ("+i.tit+")"):"");
   if(name==="set_pares") return "🎯 Cambiar tus pares a: "+((i.pares||[]).join(", "));
+  if(name==="registrar_trade") return "📒 Registrar trade — "+(i.par||"?")+" "+(i.dir||"")+" · "+(i.res||(parseFloat(i.r)>0?"Ganado":parseFloat(i.r)<0?"Perdido":"BE"))+" "+(i.r)+"R\nSetup "+(i.setup||"?")+" · ventana "+(i.ventana||"?")+" · entrada '"+(i.momento||"?")+"'"+(i.plan==="No"?" · PLAN ROTO":"")+(i.nota?("\nNota: "+i.nota):"");
+  if(name==="crear_cuenta") return "🏦 Crear cuenta — "+(i.alias||i.firma||"?")+(i.firma&&i.alias?(" ("+i.firma+")"):"")+"\nCapital "+(i.capital||"?")+" · fase "+(i.fase||"Examen F1")+" · riesgo "+(i.riesgoPct||"0.5")+"%\nDD máx "+(i.ddMaxPct||"?")+"% ("+(i.ddTipo||"?")+") · daily "+(i.ddDailyPct||"?")+"% · target "+(i.targetPct||"?")+"%"+(i.precio?(" · precio "+i.precio):"");
+  if(name==="editar_cuenta") return "✏️ Editar cuenta "+(i.alias||i.firma||"?")+":\n"+["capital","fase","riesgoPct","ddMaxPct","ddTipo","ddDailyPct","targetPct","balance","precio","nota"].filter(k=>i[k]!=null&&i[k]!=="").map(k=>"→ "+k+" "+i[k]).join("\n");
+  if(name==="avanzar_fase") return "⏭️ Avanzar de fase la cuenta "+(i.alias||i.firma||"?");
   return name+" "+JSON.stringify(i);
 }
 /* Ejecuta la acción (solo se llama TRAS la confirmación de Rey) */
@@ -3927,6 +3960,39 @@ function ejecutarTool(name, i){
       if(!v.length) return {ok:false,msg:"Lista de pares vacía"};
       PARES=v; guardarPares(); CAL_FILTRO=v.slice(); save(K.calpares,CAL_FILTRO); pushConfigPares(); if(TAB==="noticias") renderNoticias();
       return {ok:true,msg:"Pares actualizados: "+v.join(", ")};
+    }
+    if(name==="registrar_trade"){
+      const R=parseFloat(i.r);
+      if(isNaN(R)) return {ok:false,msg:"Falta el resultado en R (número)"};
+      const f=hoyISO();
+      const t={ id:Date.now(), modo:CTX.modo, estrategia:CTX.estrategia, fecha:f, dia:diaSemana(f), hora:new Date().toTimeString().slice(0,5),
+        par:i.par||"?", dir:i.dir||"", setup:i.setup||"", res:i.res||(R>0?"Ganado":(R<0?"Perdido":"BE")), r:R,
+        ventana:i.ventana||"", momento:i.momento||"", bias:i.bias||"", nconf:parseInt(i.nconf)||0,
+        plan:i.plan||"Sí", emo:"", nota:i.nota||"", cuenta:i.cuenta||"", fueraLimite:false, confs:[] };
+      TRADES.push(t); save(K.trades,TRADES); if(typeof refrescarDiarioCtx==="function") refrescarDiarioCtx(); notifChequearCuentasDD();
+      return {ok:true,msg:"Trade registrado: "+t.par+" "+(t.dir||"")+" "+(t.res||"")+" "+t.r+"R ("+(t.setup||"?")+", "+(t.momento||"?")+")"};
+    }
+    if(name==="crear_cuenta"){
+      if(!i.alias && !i.firma) return {ok:false,msg:"Falta el alias o la firma"};
+      const campos=["alias","firma","capital","riesgoPct","ddMaxPct","ddTipo","ddDailyPct","targetPct","diasMin","precio","splitPct","nota"];
+      const c={ id:"cta"+Date.now()+Math.floor(Math.random()*1000), creada:Date.now(), fase:i.fase||"Examen F1", riesgoPct:i.riesgoPct||"0.5" };
+      campos.forEach(k=>{ if(i[k]!=null && i[k]!=="") c[k]=i[k]; });
+      CUENTAS.push(c); guardarCuentas(); if(TAB==="cuentas") renderCuentas();
+      return {ok:true,msg:"Cuenta creada: "+(c.alias||c.firma)+" ("+c.fase+", cap "+(c.capital||"?")+", DD "+(c.ddMaxPct||"?")+"%)"};
+    }
+    if(name==="editar_cuenta" || name==="avanzar_fase"){
+      const q=String(i.alias||i.firma||"").toLowerCase();
+      const c=CUENTAS.find(x=>(x.alias&&x.alias.toLowerCase()===q)||(x.firma&&x.firma.toLowerCase()===q)||(x.alias&&x.alias.toLowerCase().includes(q))||(x.firma&&x.firma.toLowerCase().includes(q)));
+      if(!c) return {ok:false,msg:"No encontré la cuenta '"+(i.alias||i.firma||"")+"'"};
+      if(name==="avanzar_fase"){
+        const idx=FASES.indexOf(c.fase);
+        if(idx<0 || idx>=FASES.length-1) return {ok:false,msg:(c.alias||c.firma)+" ya está en la fase final"};
+        c.fase=FASES[idx+1]; guardarCuentas(); if(TAB==="cuentas") renderCuentas();
+        return {ok:true,msg:"Cuenta "+(c.alias||c.firma)+" avanzó a "+c.fase};
+      }
+      ["alias","firma","capital","fase","riesgoPct","ddMaxPct","ddTipo","ddDailyPct","targetPct","diasMin","precio","splitPct","balance","nota"].forEach(k=>{ if(i[k]!=null && i[k]!=="") c[k]=i[k]; });
+      guardarCuentas(); if(TAB==="cuentas") renderCuentas();
+      return {ok:true,msg:"Cuenta actualizada: "+(c.alias||c.firma)};
     }
     return {ok:false,msg:"Acción desconocida"};
   }catch(e){ return {ok:false,msg:"Error al ejecutar: "+e}; }

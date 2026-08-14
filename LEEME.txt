@@ -1,5 +1,18 @@
-APEX v5.15 — TRADING DESK  (antes CRT Elite)
+APEX v5.17 — TRADING DESK  (antes CRT Elite)
 ============================================
+
+NOVEDADES v5.16/5.17  (MAS MANOS + TU CONTROL TOTAL)
+====================================================
+- Roberto SIEMPRE te dice QUE va a cambiar y tu APRUEBAS antes (nada pasa
+  sin tu ✓). Nuevo "🗒️ Historial de Roberto" en ✨ -> ⚙️: cada cambio que
+  hizo, con fecha. Tu al tanto de todo.
+- Roberto ya tiene mas manos (siempre con tu confirmacion):
+    · Registrar un TRADE en el diario (hablandole).
+    · Crear / editar CUENTAS de fondeo y avanzar de fase.
+  Ej: "Roberto, registra un trade EUR/USD compra, gané 2.5R en A+".
+  Ej: "créame la cuenta FTMO de 10k" -> te la propone con sus reglas.
+Solo se sube la APP (el worker no cambia).
+
 
 NOVEDADES v5.15  (ROBERTO VIGILANTE — pendiente de TODO)
 =======================================================
