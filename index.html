@@ -33,6 +33,7 @@
   --purple:#A78BFA;
   --r:16px;
   --safe-b:env(safe-area-inset-bottom,0px);
+  --safe-t:env(safe-area-inset-top,0px);
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;padding:0}
@@ -575,6 +576,18 @@ select.inp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns
 .dia-chip{flex:1;min-width:40px;padding:10px 4px;border-radius:10px;background:var(--card2);border:1px solid var(--line);color:var(--txt2);font-size:13px;font-weight:700}
 .dia-chip.on{background:var(--gold);color:#1A1200;border-color:var(--gold)}
 .dia-chip:active{transform:scale(.94)}
+/* ---- Banner del vigilante de Roberto ---- */
+.rob-banner{position:fixed;left:10px;right:10px;top:calc(10px + var(--safe-t));z-index:300;display:flex;align-items:flex-start;gap:10px;padding:13px 14px;border-radius:14px;background:linear-gradient(180deg,#2A2140,#1A1530);border:1px solid var(--gold-soft);box-shadow:0 10px 30px rgba(0,0,0,.5);transform:translateY(-140%);opacity:0;transition:transform .28s,opacity .28s;cursor:pointer}
+.rob-banner.show{transform:none;opacity:1}
+.rob-ic{font-size:20px;flex-shrink:0;line-height:1.3}
+.rob-tx{flex:1;font-size:13.5px;color:var(--txt);line-height:1.4;font-weight:500}
+.rob-x{flex-shrink:0;background:none;color:var(--txt2);font-size:16px;padding:0 2px;line-height:1}
+/* ---- Historial de Roberto ---- */
+.hist-box{max-height:50vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.hist-row{padding:9px 0;border-top:1px solid var(--line)}
+.hist-row:first-child{border-top:none}
+.hist-f{font-size:11px;color:var(--txt2);font-variant-numeric:tabular-nums;margin-bottom:2px}
+.hist-t{font-size:13.5px;color:var(--txt);line-height:1.4}
 </style>
 </head>
 <body>

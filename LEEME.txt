@@ -1,5 +1,22 @@
-APEX v5.13 — TRADING DESK  (antes CRT Elite)
+APEX v5.15 — TRADING DESK  (antes CRT Elite)
 ============================================
+
+NOVEDADES v5.15  (ROBERTO VIGILANTE — pendiente de TODO)
+=======================================================
+Roberto ahora vigila CADA accion que haces en Apex (registrar un trade,
+crear/editar un aviso, guardar/avanzar una cuenta, cambiar pares) y te
+avisa SOLO si algo esta mal, es riesgoso o mejorable segun tu plan. Si esta
+bien, se queda callado. Aparece un banner arriba (🛡️) y queda en el chat.
+- Sin botones: es automatico, invisible, en tiempo real.
+- Interruptor en Roberto (✨) -> ⚙️ -> "🛡️ Vigilante".
+Las alarmas de TradingView ya le llegan; el grafico en vivo llegara con el
+puente. Todo se enchufa a este mismo vigilante.
+
+Tambien v5.14: edicion de avisos facil (toca la tarjeta entera) + Roberto
+corrige antes de ejecutar una accion mal pedida.
+
+IMPORTANTE: redesplegar worker (worker-elitepro-v5.15.js) + subir app v5.15.
+
 
 NOVEDADES v5.13  (DIAS DE AVISOS TOTALMENTE CONFIGURABLES)
 =========================================================
