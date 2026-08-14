@@ -3721,9 +3721,9 @@ function init(){
   refreshChecklist(); refreshConf(); refreshReglas(); renderDiario();
   const ba=$("#btnAyuda"); if(ba) ba.onclick=()=>abrirAyuda(TAB);
   const bm=$("#btnMenu"); if(bm) bm.onclick=abrirMenu;
+  iaInit();          /* inicializa el puente (IA.url) ANTES de mostrar Noticias, que lo necesita */
   irA("noticias");   /* lo primero del día: ver cómo viene el calendario antes de analizar */
   tickRelojes(); setInterval(tickRelojes,10000);
-  iaInit();
 
   if("serviceWorker" in navigator){
     navigator.serviceWorker.register("sw.js").catch(()=>{});
