@@ -545,7 +545,8 @@ select.inp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns
 .verdict-l{font-size:13px;color:var(--txt);padding:3px 0;line-height:1.35}
 /* ---- ⏰ Avisos ---- */
 .modal-t{font-weight:800;font-size:18px;color:var(--gold-soft);margin-bottom:12px}
-.av{transition:opacity .2s}
+.av{transition:opacity .2s;cursor:pointer}
+.av:active{background:var(--card2)}
 .av-off{opacity:.5}
 .av-top{display:flex;align-items:center;gap:10px}
 .av-hora{font-weight:800;font-size:18px;color:var(--gold);flex-shrink:0;font-variant-numeric:tabular-nums}
@@ -558,9 +559,9 @@ select.inp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns
 .av-foot{display:flex;align-items:center;gap:8px;margin-top:11px;flex-wrap:wrap}
 .av-tag{font-size:11px;color:var(--txt2);background:var(--card2);border:1px solid var(--line);border-radius:20px;padding:3px 10px}
 .av-tag.fuerte{color:var(--gold-soft);border-color:var(--gold-soft)}
-.av-actions{margin-left:auto;display:flex;gap:12px}
-.av-lnk{font-size:13px;color:var(--blue);font-weight:600;background:none;padding:2px}
-.av-lnk.del{color:var(--red)}
+.av-actions{margin-left:auto;display:flex;gap:8px}
+.av-btn{width:auto;margin-top:0;padding:9px 14px;font-size:13px}
+.av-btn.del{padding:9px 12px;background:rgba(255,107,122,.10);border-color:rgba(255,107,122,.4);color:var(--red)}
 /* ---- Tarjeta de confirmación de acciones de Roberto ---- */
 .ia-tool{background:linear-gradient(180deg,rgba(107,138,255,.12),var(--card2));border:1px solid var(--blue);border-radius:14px;padding:13px 15px;margin:8px 0;animation:fi .2s}
 .ia-tool-h{font-weight:800;font-size:14px;color:var(--blue);margin-bottom:8px}
