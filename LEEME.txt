@@ -1,5 +1,24 @@
-APEX v5.10 — TRADING DESK  (antes CRT Elite)
+APEX v5.11 — TRADING DESK  (antes CRT Elite)
 ============================================
+
+NOVEDADES v5.11  (SECCION ⏰ AVISOS / RUTINA)
+============================================
+Tus recordatorios de rutina (los que tenias en la otra app) ahora VIVEN
+en Apex y te llegan en SEGUNDO PLANO (app cerrada):
+- Seccion "⏰ Avisos" con tus 8 avisos cargados (reset disciplina, correr
+  prompt, Pre-NY, NY Open, NY apertura, almuerzo, sesion cerrada, viernes).
+- Activa/pausa cada uno, editalos, crea nuevos (o pideselo a Roberto).
+- Tipo "Fuerte" = se queda en pantalla + vibracion fuerte (tipo alarma).
+- Vibracion DISTINTA de las alarmas de trading para diferenciarlos.
+
+IMPORTANTE (2 pasos en Cloudflare):
+  1) Redesplegar el worker nuevo (worker-elitepro-v5.12.js).
+  2) Cambiar el Cron de */15 a */5 (para que los avisos salgan al minuto).
+     Configuracion -> Eventos de activacion -> editar el cron -> */5 * * * *
+
+Nota honesta: con la app cerrada el SONIDO lo pone Android (un solo canal
+para toda Apex); lo que cambia por tipo es el emoji/titulo y la vibracion.
+
 
 NOVEDADES v5.10  (2 MEJORAS DE ROBERTO)
 =======================================

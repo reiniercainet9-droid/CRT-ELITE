@@ -21,7 +21,8 @@ const K = {
   notif  : "crtelite_notif_v3",
   pares  : "crtelite_pares_v3",
   notiflog:"crtelite_notiflog_v3",
-  calpares:"crtelite_calpares_v3"
+  calpares:"crtelite_calpares_v3",
+  reminders:"crtelite_reminders_v3"
 };
 const load = (k,d)=>{ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):d; }catch(e){ return d; } };
 const save = (k,v)=>{ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){ toast("No se pudo guardar"); } };
@@ -52,6 +53,27 @@ function guardarPares(){ save(K.pares, PARES); }
    Arranca con los pares actuales, pero Rey puede escribir otros que esté operando. */
 let CAL_FILTRO = load(K.calpares, null);
 if(!Array.isArray(CAL_FILTRO) || !CAL_FILTRO.length) CAL_FILTRO = PARES.slice();
+
+/* ⏰ AVISOS / RUTINA — recordatorios por hora (Brasil), en segundo plano vía Web Push.
+   dias: "LV"=lun-vie, "V"=viernes, "D"=todos. tipo: "normal" | "fuerte" (persistente+vibración fuerte). */
+const AVISOS_DEFAULT = [
+  { id:"r1", hora:"07:55", tit:"🧭 Reset de disciplina", dias:"LV", tipo:"normal", on:true, msg:"RESET DE DISCIPLINA antes de Pre-NY. Máx 2 trades hoy. Riesgo 0.5%. Solo setups A+ y B. Si 2 SL, cierro plataforma." },
+  { id:"r2", hora:"08:00", tit:"🧠 Correr prompt diario", dias:"LV", tipo:"fuerte", on:true, msg:"Correr prompt DIARIO en Claude. Pre-NY Kill Zone en 30 min. Revisar setup A+ o B en el indicador." },
+  { id:"r3", hora:"08:30", tit:"⚡ Pre-NY Kill Zone abierta", dias:"LV", tipo:"fuerte", on:true, msg:"Pre-NY Kill Zone abierta (08:30–10:30 Brasil). MEJOR ventana del día. Espera señal de entrada del indicador en M5/M3." },
+  { id:"r4", hora:"10:15", tit:"🔔 NY Open en 15 min", dias:"LV", tipo:"normal", on:true, msg:"NY Open en 15 min. Confirma zona de reacción." },
+  { id:"r5", hora:"10:30", tit:"🇺🇸 NY Apertura activa", dias:"LV", tipo:"normal", on:true, msg:"NY Apertura activa. Ventana válida hasta las 12:30 Brasil." },
+  { id:"r6", hora:"12:15", tit:"⚠️ NY almuerzo en 15 min", dias:"LV", tipo:"normal", on:true, msg:"NY almuerzo en 15 min. Cierra ventana de entradas." },
+  { id:"r7", hora:"12:30", tit:"🚫 Sesión cerrada", dias:"LV", tipo:"normal", on:true, msg:"Sesión cerrada. No más entradas. Solo gestión de posiciones." },
+  { id:"r8", hora:"13:00", tit:"📅 Viernes — cerrar posiciones", dias:"V", tipo:"fuerte", on:true, msg:"Viernes — cierra posiciones antes del fin de semana. No abras nuevas. Revisa la bitácora de la semana." }
+];
+let REMINDERS = load(K.reminders, null);
+if(!Array.isArray(REMINDERS)) REMINDERS = AVISOS_DEFAULT.map(x=>({...x}));
+function guardarReminders(){ save(K.reminders, REMINDERS); }
+/* Sube los avisos al worker para que el vigilante (cron) los dispare en segundo plano */
+async function syncReminders(){
+  if(!IA.url) return;
+  try{ await fetch(IA.url.replace(/\/+$/,"")+"/rem/set",{ method:"POST", headers:{"content-type":"application/json"}, body:JSON.stringify({reminders:REMINDERS}) }); }catch(_){}
+}
 /* Ajustes de notificaciones de Roberto */
 let NOTIF = load(K.notif, { on:false, killzone:true, cuentaDD:true });
 if(!NOTIF || typeof NOTIF!=="object") NOTIF = { on:false, killzone:true, cuentaDD:true };
@@ -534,9 +556,89 @@ async function cargarNoticiasUI(){
   };
 }
 
+/* ---------- SECCIÓN ⏰ AVISOS (rutina / recordatorios) ---------- */
+const DIAS_LABEL = { LV:"Lun–Vie", V:"Viernes", D:"Todos los días" };
+function viewAvisos(){
+  const v=el("div","view"); v.id="v-avisos";
+  v.innerHTML=`
+    <div class="card">
+      <div class="nt-head">
+        <div class="nt-htxt"><div class="nt-tt">⏰ Mis avisos</div>
+          <div class="nt-sub">Tu rutina del día · te llegan aunque la app esté cerrada</div></div>
+        <button class="btn nt-ff gold" id="avNuevo">＋ Nuevo</button>
+      </div>
+    </div>
+    <div id="avBody"></div>`;
+  return v;
+}
+function renderAvisos(){
+  const nb=$("#avNuevo"); if(nb) nb.onclick=()=>avisoModal(null);
+  const body=$("#avBody"); if(!body) return;
+  if(!REMINDERS.length){
+    body.innerHTML=`<div class="card"><div class="empty"><div class="t">Sin avisos</div>
+      <div class="s">Toca ＋ Nuevo para crear tu primer recordatorio (o pídeselo a Roberto).</div></div></div>`;
+    return;
+  }
+  const ord=REMINDERS.slice().sort((a,b)=>String(a.hora).localeCompare(String(b.hora)));
+  body.innerHTML = ord.map(r=>`
+    <div class="card av ${r.on?"":"av-off"}">
+      <div class="av-top">
+        <div class="av-hora">${esc(r.hora)}</div>
+        <div class="av-tit">${esc(r.tit)}</div>
+        <button class="av-sw ${r.on?"on":""}" data-tog="${r.id}" aria-label="Activar/desactivar"><span></span></button>
+      </div>
+      <div class="av-msg">${esc(r.msg)}</div>
+      <div class="av-foot">
+        <span class="av-tag">${esc(DIAS_LABEL[r.dias]||r.dias)}</span>
+        <span class="av-tag ${r.tipo==="fuerte"?"fuerte":""}">${r.tipo==="fuerte"?"🔔 fuerte":"aviso"}</span>
+        <span class="av-actions"><button class="av-lnk" data-edit="${r.id}">Editar</button><button class="av-lnk del" data-del="${r.id}">Borrar</button></span>
+      </div>
+    </div>`).join("") +
+    `<div class="card"><button class="btn" id="avRoberto" style="width:100%">🧠 Pídele a Roberto una rutina nueva</button></div>`;
+  body.querySelectorAll("[data-tog]").forEach(b=>b.onclick=()=>toggleAviso(b.dataset.tog));
+  body.querySelectorAll("[data-edit]").forEach(b=>b.onclick=()=>avisoModal(b.dataset.edit));
+  body.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>borrarAviso(b.dataset.del));
+  const rb=$("#avRoberto"); if(rb) rb.onclick=()=>{ abrirIA(); setTimeout(()=>iaEnviar("Ayúdame a crear un recordatorio nuevo para mi rutina de trading. Pregúntame la hora, qué me recordará y si es de lunes a viernes o un día concreto. Cuando lo tengamos, dímelo en una línea corta y clara para que yo lo guarde en mis avisos."),250); };
+}
+function toggleAviso(id){ const r=REMINDERS.find(x=>x.id===id); if(!r) return; r.on=!r.on; guardarReminders(); syncReminders(); renderAvisos(); toast(r.on?"Aviso activado":"Aviso en pausa"); }
+function borrarAviso(id){ const r=REMINDERS.find(x=>x.id===id); if(!r) return;
+  abrirModal(`<div class="modal-t">¿Borrar este aviso?</div><p class="desc">${esc(r.hora)} · ${esc(r.tit)}</p>`,
+    [{t:"Cancelar",fn:cerrarModal},{t:"Borrar",cls:"danger",fn:()=>{ REMINDERS=REMINDERS.filter(x=>x.id!==id); guardarReminders(); syncReminders(); cerrarModal(); renderAvisos(); toast("Aviso borrado"); }}]); }
+function avisoModal(id){
+  const r = id ? REMINDERS.find(x=>x.id===id) : { hora:"08:00", tit:"", msg:"", dias:"LV", tipo:"normal" };
+  if(!r) return;
+  const opt=(val,cur,txt)=>`<option value="${val}" ${val===cur?"selected":""}>${txt}</option>`;
+  abrirModal(`
+    <div class="modal-t">${id?"Editar aviso":"Nuevo aviso"}</div>
+    <label class="fl">Hora (Brasil)</label>
+    <input class="inp" id="avHora" type="time" value="${esc(r.hora)}">
+    <label class="fl" style="margin-top:10px">Título (con emoji)</label>
+    <input class="inp" id="avTit" placeholder="⚡ Pre-NY Kill Zone" value="${esc(r.tit)}">
+    <label class="fl" style="margin-top:10px">Mensaje</label>
+    <textarea class="inp" id="avMsg" rows="3" placeholder="Qué te recuerda…">${esc(r.msg)}</textarea>
+    <label class="fl" style="margin-top:10px">Días</label>
+    <select class="inp" id="avDias">${opt("LV",r.dias,"Lunes a viernes")}${opt("V",r.dias,"Solo viernes")}${opt("D",r.dias,"Todos los días")}</select>
+    <label class="fl" style="margin-top:10px">Tipo</label>
+    <select class="inp" id="avTipo">${opt("normal",r.tipo,"Aviso normal")}${opt("fuerte",r.tipo,"Fuerte (se queda en pantalla + vibración fuerte)")}</select>
+  `,[{t:"Cancelar",fn:cerrarModal},{t:"Guardar",cls:"gold",fn:()=>guardarAvisoForm(id)}]);
+}
+function guardarAvisoForm(id){
+  const hora=($("#avHora").value||"").trim();
+  const tit=($("#avTit").value||"").trim();
+  const msg=($("#avMsg").value||"").trim();
+  const dias=$("#avDias").value, tipo=$("#avTipo").value;
+  if(!/^\d{2}:\d{2}$/.test(hora)){ toast("Pon una hora válida"); return; }
+  if(!tit){ toast("Ponle un título"); return; }
+  if(!msg){ toast("Escribe el mensaje"); return; }
+  if(id){ const r=REMINDERS.find(x=>x.id===id); if(r){ Object.assign(r,{hora,tit,msg,dias,tipo}); } }
+  else { REMINDERS.push({ id:"r"+Date.now().toString(36), hora, tit, msg, dias, tipo, on:true }); }
+  guardarReminders(); syncReminders(); cerrarModal(); renderAvisos(); toast("Aviso guardado ✓");
+}
+
 /* ---------- NAVEGACIÓN ---------- */
 const TABS=[
   {id:"noticias",  ic:"📰", n:"Noticias"},
+  {id:"avisos",    ic:"⏰", n:"Avisos"},
   {id:"checklist", ic:"✅", n:"Checklist"},
   {id:"conf",      ic:"🎯", n:"Confluencias"},
   {id:"rutina",    ic:"🗺️", n:"Rutina"},
@@ -564,6 +666,7 @@ function irA(id){
   if(id==="almanaque")renderAlmanaque();
   if(id==="cuentas")  renderCuentas();
   if(id==="noticias") renderNoticias();
+  if(id==="avisos")   renderAvisos();
 }
 function buildNav(){
   const n=$("#nav"); n.innerHTML="";
@@ -629,6 +732,8 @@ function hacerArrastrable(fab){
 const AYUDA = {
   noticias:{ t:"📰 Noticias (calendario económico)", h:`<p><b>Para qué sirve:</b> el calendario económico <b>real de ForexFactory</b> con las noticias de HOY y MAÑANA que mueven tus pares (🔴 alto / 🟠 medio impacto), con hora de Nueva York, pronóstico y dato previo.</p>
     <p><b>Cómo usarlo:</b> arriba tienes un <b>filtro de pares</b> — viene con tus pares actuales, pero puedes borrarlo y escribir los que estés operando ahora (ej. <i>USD/JPY, XAU/USD</i>) y tocar <b>✓ Aceptar</b> para traer solo esas noticias. Regla de oro: <b>no operes 30 min antes ni después</b> de una roja. El botón <b>ForexFactory ↗</b> abre tu cuenta completa, y <b>🧠 Roberto</b> te explica cómo operar con lo que haya.</p>` },
+  avisos:{ t:"⏰ Mis avisos (rutina)", h:`<p><b>Para qué sirve:</b> tus recordatorios del día (reset de disciplina, apertura de killzones, cierre de sesión, viernes…). Te llegan al teléfono <b>aunque la app esté cerrada</b>, a la hora de Brasil.</p>
+    <p><b>Cómo usarlo:</b> activa/pausa cada aviso con el interruptor, edítalos o crea nuevos con <b>＋ Nuevo</b> (o pídeselo a <b>Roberto</b>). Los de tipo <b>Fuerte</b> se quedan en pantalla hasta que los tocas, con vibración fuerte (tipo alarma).</p>` },
   checklist:{ t:"✅ Checklist", h:`<p><b>Para qué sirve:</b> tu lista de control ANTES de operar. Marca cada casilla del setup; las marcadas como <b>CLAVE</b> son obligatorias.</p>
     <p><b>Cómo usarlo:</b> repásalo antes de cada entrada. Si falta una casilla CLAVE, el veredicto de abajo te dice <b>NO OPERAR</b>. Pulsa <b>🔄 Reiniciar</b> para empezar limpio en cada setup nuevo.</p>` },
   conf:{ t:"🎯 Confluencias", h:`<p><b>Para qué sirve:</b> tus 5 confluencias del método CRT (sweep, estructura, zona, etc.). Es tu recordatorio de qué debe alinearse para que un setup sea válido.</p>
@@ -3777,7 +3882,7 @@ async function iaEnviar(textoForzado){
    ============================================================ */
 function init(){
   const c=$("#views");
-  c.append(viewNoticias(),viewChecklist(),viewConf(),viewRutina(),viewReglas(),viewRiesgo(),viewGatillo(),viewDiario(),viewCuentas(),viewAlmanaque(),viewAnalisis(),viewMentor(),viewPlan());
+  c.append(viewNoticias(),viewAvisos(),viewChecklist(),viewConf(),viewRutina(),viewReglas(),viewRiesgo(),viewGatillo(),viewDiario(),viewCuentas(),viewAlmanaque(),viewAnalisis(),viewMentor(),viewPlan());
   buildNav();
   fillPlanDinamico();
   initDiarioControles();
@@ -3791,6 +3896,7 @@ function init(){
   const ba=$("#btnAyuda"); if(ba) ba.onclick=()=>abrirAyuda(TAB);
   const bm=$("#btnMenu"); if(bm) bm.onclick=abrirMenu;
   iaInit();          /* inicializa el puente (IA.url) ANTES de mostrar Noticias, que lo necesita */
+  setTimeout(syncReminders, 1800);   /* sube los avisos al vigilante (cron) */
   irA("noticias");   /* lo primero del día: ver cómo viene el calendario antes de analizar */
   tickRelojes(); setInterval(tickRelojes,10000);
 
