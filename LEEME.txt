@@ -1,5 +1,16 @@
-APEX v5.12 — TRADING DESK  (antes CRT Elite)
+APEX v5.13 — TRADING DESK  (antes CRT Elite)
 ============================================
+
+NOVEDADES v5.13  (DIAS DE AVISOS TOTALMENTE CONFIGURABLES)
+=========================================================
+Ya NO estas atado a "lunes a viernes". Ahora eliges los dias que quieras
+para cada aviso: solo lunes, lun+mie+vie, fin de semana, todos, lo que sea.
+- En ⏰ Avisos -> Nuevo/Editar: toca los dias (Lun Mar Mie Jue Vie Sab Dom).
+- Roberto tambien: dile "un aviso solo los lunes a las 9" y lo crea bien.
+Tus 8 avisos anteriores siguen funcionando igual.
+
+IMPORTANTE: redesplegar el worker (worker-elitepro-v5.14.js) + subir app v5.13.
+
 
 NOVEDADES v5.12  (ROBERTO CON MANOS — AUTONOMIA CON TU OK)
 =========================================================

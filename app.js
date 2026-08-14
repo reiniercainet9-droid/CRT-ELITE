@@ -557,7 +557,27 @@ async function cargarNoticiasUI(){
 }
 
 /* ---------- SECCIÓN ⏰ AVISOS (rutina / recordatorios) ---------- */
-const DIAS_LABEL = { LV:"Lun–Vie", V:"Viernes", D:"Todos los días" };
+/* Días configurables: guardamos un array [1..7] (1=Lun … 7=Dom).
+   parseDias acepta arrays, "LV"/"V"/"D"/"todos"/"finde" o "lun,mie" y devuelve el array. */
+const DIA_NOMS = ["","Lun","Mar","Mié","Jue","Vie","Sáb","Dom"];
+const DIA_MAP = { lun:1,mon:1,mar:2,tue:2,mie:3,wed:3,jue:4,thu:4,vie:5,fri:5,sab:6,sat:6,dom:7,sun:7 };
+function parseDias(v){
+  if(Array.isArray(v)){ const out=v.map(x=> typeof x==="number" ? x : DIA_MAP[String(x).toLowerCase().slice(0,3)] ).filter(Boolean); return [...new Set(out)].sort((a,b)=>a-b); }
+  const s=String(v||"").toLowerCase().trim();
+  if(s==="d"||s==="todos"||s==="diario") return [1,2,3,4,5,6,7];
+  if(s==="lv"||s==="l-v") return [1,2,3,4,5];
+  if(s==="v") return [5];
+  if(s==="finde"||s==="fin de semana") return [6,7];
+  const parts=s.split(/[ ,;]+/).map(x=>DIA_MAP[x.slice(0,3)]).filter(Boolean);
+  return parts.length ? [...new Set(parts)].sort((a,b)=>a-b) : [1,2,3,4,5];
+}
+function diasLabel(v){
+  const a=parseDias(v);
+  if(a.length===7) return "Todos los días";
+  if(a.join()==="1,2,3,4,5") return "Lun–Vie";
+  if(a.join()==="6,7") return "Fin de semana";
+  return a.map(d=>DIA_NOMS[d]).join(", ");
+}
 function viewAvisos(){
   const v=el("div","view"); v.id="v-avisos";
   v.innerHTML=`
@@ -589,7 +609,7 @@ function renderAvisos(){
       </div>
       <div class="av-msg">${esc(r.msg)}</div>
       <div class="av-foot">
-        <span class="av-tag">${esc(DIAS_LABEL[r.dias]||r.dias)}</span>
+        <span class="av-tag">${esc(diasLabel(r.dias))}</span>
         <span class="av-tag ${r.tipo==="fuerte"?"fuerte":""}">${r.tipo==="fuerte"?"🔔 fuerte":"aviso"}</span>
         <span class="av-actions"><button class="av-lnk" data-edit="${r.id}">Editar</button><button class="av-lnk del" data-del="${r.id}">Borrar</button></span>
       </div>
@@ -607,7 +627,9 @@ function borrarAviso(id){ const r=REMINDERS.find(x=>x.id===id); if(!r) return;
 function avisoModal(id){
   const r = id ? REMINDERS.find(x=>x.id===id) : { hora:"08:00", tit:"", msg:"", dias:"LV", tipo:"normal" };
   if(!r) return;
+  const sel=parseDias(r.dias);
   const opt=(val,cur,txt)=>`<option value="${val}" ${val===cur?"selected":""}>${txt}</option>`;
+  const chips=[1,2,3,4,5,6,7].map(d=>`<button type="button" class="dia-chip${sel.includes(d)?" on":""}" data-dia="${d}">${DIA_NOMS[d]}</button>`).join("");
   abrirModal(`
     <div class="modal-t">${id?"Editar aviso":"Nuevo aviso"}</div>
     <label class="fl">Hora (Brasil)</label>
@@ -616,20 +638,23 @@ function avisoModal(id){
     <input class="inp" id="avTit" placeholder="⚡ Pre-NY Kill Zone" value="${esc(r.tit)}">
     <label class="fl" style="margin-top:10px">Mensaje</label>
     <textarea class="inp" id="avMsg" rows="3" placeholder="Qué te recuerda…">${esc(r.msg)}</textarea>
-    <label class="fl" style="margin-top:10px">Días</label>
-    <select class="inp" id="avDias">${opt("LV",r.dias,"Lunes a viernes")}${opt("V",r.dias,"Solo viernes")}${opt("D",r.dias,"Todos los días")}</select>
-    <label class="fl" style="margin-top:10px">Tipo</label>
+    <label class="fl" style="margin-top:10px">Días (toca los que quieras)</label>
+    <div class="dias-row" id="avDias">${chips}</div>
+    <label class="fl" style="margin-top:12px">Tipo</label>
     <select class="inp" id="avTipo">${opt("normal",r.tipo,"Aviso normal")}${opt("fuerte",r.tipo,"Fuerte (se queda en pantalla + vibración fuerte)")}</select>
   `,[{t:"Cancelar",fn:cerrarModal},{t:"Guardar",cls:"gold",fn:()=>guardarAvisoForm(id)}]);
+  document.querySelectorAll("#avDias .dia-chip").forEach(b=>b.onclick=()=>b.classList.toggle("on"));
 }
 function guardarAvisoForm(id){
   const hora=($("#avHora").value||"").trim();
   const tit=($("#avTit").value||"").trim();
   const msg=($("#avMsg").value||"").trim();
-  const dias=$("#avDias").value, tipo=$("#avTipo").value;
+  const dias=[...document.querySelectorAll("#avDias .dia-chip.on")].map(b=>+b.dataset.dia).sort((a,b)=>a-b);
+  const tipo=$("#avTipo").value;
   if(!/^\d{2}:\d{2}$/.test(hora)){ toast("Pon una hora válida"); return; }
   if(!tit){ toast("Ponle un título"); return; }
   if(!msg){ toast("Escribe el mensaje"); return; }
+  if(!dias.length){ toast("Elige al menos un día"); return; }
   if(id){ const r=REMINDERS.find(x=>x.id===id); if(r){ Object.assign(r,{hora,tit,msg,dias,tipo}); } }
   else { REMINDERS.push({ id:"r"+Date.now().toString(36), hora, tit, msg, dias, tipo, on:true }); }
   guardarReminders(); syncReminders(); cerrarModal(); renderAvisos(); toast("Aviso guardado ✓");
@@ -3833,13 +3858,13 @@ const IA_TOOLS = [
       hora:{type:"string",description:"Hora HH:MM 24h (hora de Brasil)"},
       tit:{type:"string",description:"Título corto, empieza con un emoji"},
       msg:{type:"string",description:"Texto del recordatorio"},
-      dias:{type:"string",enum:["LV","V","D"],description:"LV=lun-vie, V=solo viernes, D=todos los días"},
+      dias:{type:"array",items:{type:"string",enum:["lun","mar","mie","jue","vie","sab","dom"]},description:"Días de la semana en que suena. Elige LOS QUE HAGAN FALTA (uno, varios o todos). Ej: ['lun'] solo lunes; ['lun','mie','vie']; ['sab','dom'] fin de semana; los 7 = todos los días."},
       tipo:{type:"string",enum:["normal","fuerte"],description:"fuerte = se queda en pantalla con vibración fuerte"}
-    }, required:["hora","tit","msg"] } },
+    }, required:["hora","tit","msg","dias"] } },
   { name:"editar_aviso", description:"Edita un aviso existente, identificándolo por su hora ACTUAL.",
     input_schema:{ type:"object", properties:{
       hora_actual:{type:"string",description:"Hora actual (HH:MM) del aviso a editar"},
-      hora:{type:"string"}, tit:{type:"string"}, msg:{type:"string"}, dias:{type:"string",enum:["LV","V","D"]}, tipo:{type:"string",enum:["normal","fuerte"]}
+      hora:{type:"string"}, tit:{type:"string"}, msg:{type:"string"}, dias:{type:"array",items:{type:"string",enum:["lun","mar","mie","jue","vie","sab","dom"]},description:"Nuevos días (los que hagan falta)"}, tipo:{type:"string",enum:["normal","fuerte"]}
     }, required:["hora_actual"] } },
   { name:"borrar_aviso", description:"Borra un aviso por su hora (y opcionalmente parte del título).",
     input_schema:{ type:"object", properties:{ hora:{type:"string"}, tit:{type:"string"} }, required:["hora"] } },
@@ -3849,7 +3874,7 @@ const IA_TOOLS = [
 /* Texto humano para la tarjeta de confirmación */
 function describeTool(name, i){
   i=i||{};
-  if(name==="crear_aviso") return "⏰ Crear aviso — "+(i.hora||"?")+" · "+(i.tit||"")+"\n"+(i.msg||"")+"\n("+(DIAS_LABEL[i.dias||"LV"]||i.dias||"Lun–Vie")+" · "+(i.tipo||"normal")+")";
+  if(name==="crear_aviso") return "⏰ Crear aviso — "+(i.hora||"?")+" · "+(i.tit||"")+"\n"+(i.msg||"")+"\n("+diasLabel(i.dias||"LV")+" · "+(i.tipo||"normal")+")";
   if(name==="editar_aviso") return "✏️ Editar el aviso de las "+(i.hora_actual||"?")+"\n"+[i.hora&&("→ hora "+i.hora),i.tit&&("→ título "+i.tit),i.msg&&("→ mensaje “"+i.msg+"”"),i.dias&&("→ días "+i.dias),i.tipo&&("→ tipo "+i.tipo)].filter(Boolean).join("\n");
   if(name==="borrar_aviso") return "🗑️ Borrar el aviso de las "+(i.hora||"?")+(i.tit?(" ("+i.tit+")"):"");
   if(name==="set_pares") return "🎯 Cambiar tus pares a: "+((i.pares||[]).join(", "));
@@ -3862,14 +3887,15 @@ function ejecutarTool(name, i){
     if(name==="crear_aviso"){
       if(!/^\d{1,2}:\d{2}$/.test(String(i.hora||""))) return {ok:false,msg:"Hora inválida"};
       const hora=i.hora.length===4?("0"+i.hora):i.hora;
-      const r={ id:"r"+Date.now().toString(36), hora, tit:i.tit||"⏰ Aviso", msg:i.msg||"", dias:(["LV","V","D"].includes(i.dias)?i.dias:"LV"), tipo:(i.tipo==="fuerte"?"fuerte":"normal"), on:true };
+      const r={ id:"r"+Date.now().toString(36), hora, tit:i.tit||"⏰ Aviso", msg:i.msg||"", dias:parseDias(i.dias||"LV"), tipo:(i.tipo==="fuerte"?"fuerte":"normal"), on:true };
       REMINDERS.push(r); guardarReminders(); syncReminders(); if(TAB==="avisos") renderAvisos();
-      return {ok:true,msg:"Aviso creado: "+r.hora+" · "+r.tit};
+      return {ok:true,msg:"Aviso creado: "+r.hora+" · "+r.tit+" ("+diasLabel(r.dias)+")"};
     }
     if(name==="editar_aviso"){
       const r=REMINDERS.find(x=>x.hora===i.hora_actual);
       if(!r) return {ok:false,msg:"No hay un aviso a las "+i.hora_actual};
-      ["hora","tit","msg","dias","tipo"].forEach(k=>{ if(i[k]!=null && i[k]!=="") r[k]=i[k]; });
+      ["hora","tit","msg","tipo"].forEach(k=>{ if(i[k]!=null && i[k]!=="") r[k]=i[k]; });
+      if(i.dias!=null && i.dias!=="") r.dias=parseDias(i.dias);
       guardarReminders(); syncReminders(); if(TAB==="avisos") renderAvisos();
       return {ok:true,msg:"Aviso actualizado: "+r.hora+" · "+r.tit};
     }
