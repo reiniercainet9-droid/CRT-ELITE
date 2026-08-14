@@ -1,5 +1,21 @@
-APEX v5.11 — TRADING DESK  (antes CRT Elite)
+APEX v5.12 — TRADING DESK  (antes CRT Elite)
 ============================================
+
+NOVEDADES v5.12  (ROBERTO CON MANOS — AUTONOMIA CON TU OK)
+=========================================================
+Roberto ya no solo aconseja: EJECUTA acciones dentro de Apex, pero SIEMPRE
+te muestra una tarjeta para que CONFIRMES antes de hacerlas (tú decides).
+Primeras manos:
+  - Crear / editar / borrar tus AVISOS de rutina (hablándole).
+  - Cambiar tus PARES seguidos.
+Ejemplo: dile "créame un aviso a las 9 para revisar el dólar, de lunes a
+viernes" -> Roberto propone -> tú tocas ✓ Confirmar -> aparece en ⏰ Avisos.
+Si tocas Cancelar, no hace nada.
+Pronto: manos para Cuentas y Trades (mismo motor).
+
+IMPORTANTE: hay que REDESPLEGAR el worker (worker-elitepro-v5.13.js) para
+que Roberto pueda usar sus manos. La app es la v5.12.
+
 
 NOVEDADES v5.11  (SECCION ⏰ AVISOS / RUTINA)
 ============================================

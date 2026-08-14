@@ -3279,6 +3279,7 @@ const IA_SYSTEM_BASE =
 "QUÉ SABES: Eres Claude; ya dominas a fondo TODO lo conceptual del trading (estrategias, SMC/ICT/CRT, psicología, gestión de riesgo, estadística, backtesting, su indicador y su plan). Responde esas cosas con seguridad, sin decir que 'no sabes' o que 'te falta información', salvo que de verdad necesites un dato puntual del alumno.\n\n"+
 "INTERNET / BÚSQUEDA WEB: AHORA SÍ tienes una herramienta de búsqueda web. Úsala SOLO cuando necesites un dato EN VIVO o actual que no está en tu conocimiento: el calendario económico del día, noticias de alto impacto (NFP, CPI, FOMC, decisiones de tasas), un evento/precio reciente, o las REGLAS y PRECIOS ACTUALES de una empresa de fondeo (cambian seguido). Para conceptos, estrategia, psicología, su indicador y teoría NO busques — ya lo sabes; buscar de más gasta dinero y tarda. Cuando des un dato de noticias, del calendario o de una firma, menciona la fuente en una línea. Recuerda su regla: no operar 30 min antes ni después de una noticia roja.\n\n"+
 "TU APP APEX — TIENES ACCESO A TODO (clave): NO eres un chat aislado; vives DENTRO de la app Apex de Rey y en CADA mensaje recibes, ya listos, los datos reales de lo que él está haciendo: el [Reloj EN VIVO], el [CALENDARIO REAL de ForexFactory] con las noticias del día para sus pares, el bloque [CUENTAS DE FONDEO] con el estado de cada cuenta, y su resumen de estadísticas/operativa. ÚSALOS con total naturalidad. NUNCA, JAMÁS digas 'no tengo acceso a esa parte de la app', 'no tengo esos datos' o 'no puedo ver el calendario' — SÍ los tienes, yo te los paso. Si por un fallo puntual un bloque no llegó, dilo con naturalidad ('déjame que se cargue' / 'reintenta en la pestaña 📰 Noticias'), pero nunca niegues que la función existe. La app tiene estas secciones (conócelas para guiar a Rey): 📰 Noticias (calendario económico, es la PRIMERA y lo primero del día), ✅ Checklist, 🎯 Confluencias, 🗺️ Rutina, ⛔ Reglas, 💰 Riesgo (calculadora de lotaje), ⚡ Gatillo, 📒 Diario (registro de trades), 🏦 Cuentas (fondeo), 📅 Almanaque (resultados por día), 📈 Análisis (estadísticas), 🧠 Mentor (análisis automático), 📋 Plan. Todo lo que se vaya añadiendo o mejorando en la app, dalo por tuyo: eres el cerebro de este centro de mando.\n\n"+
+"TUS MANOS EN APEX (herramientas): Ya no solo aconsejas — puedes EJECUTAR acciones dentro de la app con tus herramientas: crear/editar/borrar avisos de rutina (crear_aviso, editar_aviso, borrar_aviso) y cambiar los pares que sigue Rey (set_pares). Úsalas cuando Rey te lo pida (‘créame un aviso a las 9…’, ‘cámbiame los pares a oro’) o cuando propongas algo concreto y útil. MUY IMPORTANTE sobre la autonomía: Rey te dio autonomía TOTAL pero la decisión final es suya — por eso, cada vez que uses una herramienta, la app le muestra a Rey una tarjeta para que CONFIRME antes de ejecutarla (eso lo hace la app sola, tú no tienes que pedir permiso por texto ni preguntar ‘¿lo hago?’: simplemente usa la herramienta y la app se encarga de pedirle el OK). Rellena bien todos los campos (para avisos: hora en HH:MM hora de Brasil, título con emoji, mensaje, días LV/V/D, tipo normal/fuerte). Si Rey CANCELA, respétalo sin insistir. Tras ejecutar, confírmale en UNA línea corta qué quedó hecho. Pronto tendrás más manos (cuentas, trades). Cuando falte una mano que no tienes aún, dilo y ofrécele hacerlo tú guiándolo.\n\n"+
 "LO PRIMERO DEL DÍA = LAS NOTICIAS: antes de cualquier análisis o entrada, lo primero es revisar cómo viene el día en el calendario. Las noticias de alto/medio impacto pueden cambiar TODO el análisis y la operativa. Cuando Rey te salude o te pida el plan del día, arranca por ahí: dile qué noticias hay hoy/mañana en sus pares (las tienes en el bloque [CALENDARIO REAL]), a qué hora NY, y en qué ventanas NO debe operar (30 min antes/después de cada roja/naranja). Si no hay noticias relevantes, díselo también: 'hoy vía libre por noticias'. Tenlo SIEMPRE presente al aconsejarle una entrada: si hay una roja cerca, avísale aunque no te lo pregunte.\n\n"+
 "CALENDARIO ECONÓMICO (ya lo tienes servido): en cada mensaje te llega el bloque [CALENDARIO REAL de ForexFactory] con las noticias reales de HOY y MAÑANA para sus monedas. Responde SIEMPRE con ESOS datos (hora NY, impacto, evento, pronóstico/previo) — son el dato oficial, exacto, del feed de ForexFactory; no necesitas buscar en internet ni decir 'no pude extraer datos'. Solo si ese bloque avisa que no se pudo cargar, ofrécele reintentar en la pestaña 📰 Noticias o, como último recurso, complementa con tu conocimiento de qué suele haber esa semana (NFP primer viernes ~8:30 NY, CPI/PPI, FOMC/BCE/BoE) marcándolo como 'confírmalo'. Nunca dejes a Rey con la duda en blanco.\n\n"+
 "FIRMAS DE FONDEO (prop firms): Rey va a comprar varias cuentas de reto/fondeo y quiere que le ayudes a ELEGIR bien. IMPORTANTE (velocidad): compara las firmas DESDE TU CONOCIMIENTO, al instante — conoces bien las grandes (FTMO, FundedNext, The5ers, E8, FTUK, MyFundedFX, Alpha Capital, etc.). NO hagas varias búsquedas web para comparar: encadenar búsquedas tarda muchísimo y arruina la experiencia. Cuando pregunte por firmas: (1) compáralas YA, de memoria, de forma OBJETIVA en lo que importa: drawdown máximo (estático o trailing), daily drawdown, profit target por fase, días mínimos, tiempo límite, si permite overnight/fin de semana y operar en noticias, reglas de consistencia, split de ganancias, rapidez y fiabilidad de los PAYOUTS, y reputación/años; (2) preséntalo claro (lista o tabla comparada) con PROS y CONTRAS; (3) AVISA que reglas y precios cambian con frecuencia y que confirme el número EXACTO en la web oficial de cada firma antes de comprar. Da tu recomendación razonada, pero la decisión final es de él (le das criterio, no órdenes de inversión). Si pide una barata, una segura, las más grandes o una concreta, respétalo. Insiste en la DIVERSIFICACIÓN: no meter todas las cuentas en una sola firma. USA la búsqueda web SOLO si Rey pide EXPRESAMENTE el precio o una regla ACTUALIZADA de UNA firma concreta — entonces UNA sola búsqueda puntual y cita la fuente; nunca varias seguidas.\n\n"+
@@ -3822,6 +3823,136 @@ function iaMsgApi(x, conFoto){
   return { role:x.role, content:x.content };
 }
 
+/* ============================================================
+   MANOS DE ROBERTO — herramientas que ejecuta DENTRO de Apex
+   (siempre con tarjeta de confirmación: Rey aprueba y recién ahí se ejecuta)
+   ============================================================ */
+const IA_TOOLS = [
+  { name:"crear_aviso", description:"Crea un recordatorio/aviso de rutina en la sección Avisos de Apex. Le llega a Rey en segundo plano a la hora indicada (hora de Brasil).",
+    input_schema:{ type:"object", properties:{
+      hora:{type:"string",description:"Hora HH:MM 24h (hora de Brasil)"},
+      tit:{type:"string",description:"Título corto, empieza con un emoji"},
+      msg:{type:"string",description:"Texto del recordatorio"},
+      dias:{type:"string",enum:["LV","V","D"],description:"LV=lun-vie, V=solo viernes, D=todos los días"},
+      tipo:{type:"string",enum:["normal","fuerte"],description:"fuerte = se queda en pantalla con vibración fuerte"}
+    }, required:["hora","tit","msg"] } },
+  { name:"editar_aviso", description:"Edita un aviso existente, identificándolo por su hora ACTUAL.",
+    input_schema:{ type:"object", properties:{
+      hora_actual:{type:"string",description:"Hora actual (HH:MM) del aviso a editar"},
+      hora:{type:"string"}, tit:{type:"string"}, msg:{type:"string"}, dias:{type:"string",enum:["LV","V","D"]}, tipo:{type:"string",enum:["normal","fuerte"]}
+    }, required:["hora_actual"] } },
+  { name:"borrar_aviso", description:"Borra un aviso por su hora (y opcionalmente parte del título).",
+    input_schema:{ type:"object", properties:{ hora:{type:"string"}, tit:{type:"string"} }, required:["hora"] } },
+  { name:"set_pares", description:"Cambia los pares que Rey sigue (afecta notificaciones, calendario de noticias y el vigilante).",
+    input_schema:{ type:"object", properties:{ pares:{type:"array",items:{type:"string"},description:"Ej. ['EUR/USD','XAU/USD']"} }, required:["pares"] } }
+];
+/* Texto humano para la tarjeta de confirmación */
+function describeTool(name, i){
+  i=i||{};
+  if(name==="crear_aviso") return "⏰ Crear aviso — "+(i.hora||"?")+" · "+(i.tit||"")+"\n"+(i.msg||"")+"\n("+(DIAS_LABEL[i.dias||"LV"]||i.dias||"Lun–Vie")+" · "+(i.tipo||"normal")+")";
+  if(name==="editar_aviso") return "✏️ Editar el aviso de las "+(i.hora_actual||"?")+"\n"+[i.hora&&("→ hora "+i.hora),i.tit&&("→ título "+i.tit),i.msg&&("→ mensaje “"+i.msg+"”"),i.dias&&("→ días "+i.dias),i.tipo&&("→ tipo "+i.tipo)].filter(Boolean).join("\n");
+  if(name==="borrar_aviso") return "🗑️ Borrar el aviso de las "+(i.hora||"?")+(i.tit?(" ("+i.tit+")"):"");
+  if(name==="set_pares") return "🎯 Cambiar tus pares a: "+((i.pares||[]).join(", "));
+  return name+" "+JSON.stringify(i);
+}
+/* Ejecuta la acción (solo se llama TRAS la confirmación de Rey) */
+function ejecutarTool(name, i){
+  i=i||{};
+  try{
+    if(name==="crear_aviso"){
+      if(!/^\d{1,2}:\d{2}$/.test(String(i.hora||""))) return {ok:false,msg:"Hora inválida"};
+      const hora=i.hora.length===4?("0"+i.hora):i.hora;
+      const r={ id:"r"+Date.now().toString(36), hora, tit:i.tit||"⏰ Aviso", msg:i.msg||"", dias:(["LV","V","D"].includes(i.dias)?i.dias:"LV"), tipo:(i.tipo==="fuerte"?"fuerte":"normal"), on:true };
+      REMINDERS.push(r); guardarReminders(); syncReminders(); if(TAB==="avisos") renderAvisos();
+      return {ok:true,msg:"Aviso creado: "+r.hora+" · "+r.tit};
+    }
+    if(name==="editar_aviso"){
+      const r=REMINDERS.find(x=>x.hora===i.hora_actual);
+      if(!r) return {ok:false,msg:"No hay un aviso a las "+i.hora_actual};
+      ["hora","tit","msg","dias","tipo"].forEach(k=>{ if(i[k]!=null && i[k]!=="") r[k]=i[k]; });
+      guardarReminders(); syncReminders(); if(TAB==="avisos") renderAvisos();
+      return {ok:true,msg:"Aviso actualizado: "+r.hora+" · "+r.tit};
+    }
+    if(name==="borrar_aviso"){
+      const c=REMINDERS.filter(x=>x.hora===i.hora && (!i.tit || String(x.tit).toLowerCase().includes(String(i.tit).toLowerCase())));
+      if(!c.length) return {ok:false,msg:"No encontré ese aviso"};
+      const r=c[0]; REMINDERS=REMINDERS.filter(x=>x.id!==r.id); guardarReminders(); syncReminders(); if(TAB==="avisos") renderAvisos();
+      return {ok:true,msg:"Aviso borrado: "+r.hora+" · "+r.tit};
+    }
+    if(name==="set_pares"){
+      const v=(i.pares||[]).map(x=>String(x).trim()).filter(Boolean);
+      if(!v.length) return {ok:false,msg:"Lista de pares vacía"};
+      PARES=v; guardarPares(); CAL_FILTRO=v.slice(); save(K.calpares,CAL_FILTRO); pushConfigPares(); if(TAB==="noticias") renderNoticias();
+      return {ok:true,msg:"Pares actualizados: "+v.join(", ")};
+    }
+    return {ok:false,msg:"Acción desconocida"};
+  }catch(e){ return {ok:false,msg:"Error al ejecutar: "+e}; }
+}
+/* Muestra la tarjeta de confirmación y espera la decisión de Rey */
+function confirmarTool(tu){
+  return new Promise(resolve=>{
+    const cont=$("#iaMsgs"); if(!cont){ resolve({confirmed:false}); return; }
+    const card=el("div","ia-tool");
+    card.innerHTML=`<div class="ia-tool-h">🤖 Roberto quiere hacer esto:</div>
+      <div class="ia-tool-d">${esc(describeTool(tu.name, tu.input)).replace(/\n/g,"<br>")}</div>
+      <div class="ia-tool-bar"><button class="btn danger ia-tool-no">Cancelar</button><button class="btn gold ia-tool-si">✓ Confirmar</button></div>`;
+    cont.appendChild(card); cont.scrollTop=cont.scrollHeight;
+    card.querySelector(".ia-tool-si").onclick=()=>{ card.querySelector(".ia-tool-bar").innerHTML="<span class='ia-tool-done'>✓ Confirmado</span>"; const res=ejecutarTool(tu.name, tu.input); resolve({confirmed:true, res}); };
+    card.querySelector(".ia-tool-no").onclick=()=>{ card.querySelector(".ia-tool-bar").innerHTML="<span class='ia-tool-cancel'>🚫 Cancelado</span>"; resolve({confirmed:false}); };
+  });
+}
+/* Bucle de conversación con herramientas: maneja texto, errores y acciones a confirmar */
+async function iaLoop(msgs, c){
+  let guard=0;
+  while(guard++ < 6){
+    let r, data={};
+    try{
+      r=await fetch(IA.url,{method:"POST",headers:{"content-type":"application/json"},
+        body:JSON.stringify({system:iaSystemFull(), messages:msgs, clientTools:IA_TOOLS})});
+      try{ data=await r.json(); }catch(_){}
+    }catch(e){ IA.busy=false; c.msgs.push({role:"assistant",content:"⚠️ No pude conectar con el puente. Revisa tu internet o la dirección en ajustes (⚙️)."}); iaGuardarConvs(); pintarIAChat(); return; }
+    if(!r.ok || (data&&data.error)){
+      IA.busy=false;
+      const em=((data&&data.error)||("Error "+ (r?r.status:"?"))).toString();
+      const sinCredito = /credit|balance|billing|quota|insufficient|saldo|402/i.test(em) || (r&&r.status===402);
+      c.msgs.push({role:"assistant",content: sinCredito
+        ? ("💳 **Se agotaron tus créditos de la IA.**\n\nRecarga aquí y en 1 minuto vuelvo:\n"+IA_RECARGA_URL)
+        : ("⚠️ "+em+"\n\nRevisa tu puente en ajustes (⚙️) o tu conexión.")});
+      iaGuardarConvs(); pintarIAChat(); return;
+    }
+    if(data.stop==="tool_use" && Array.isArray(data.content)){
+      const pre=data.content.filter(b=>b.type==="text").map(b=>b.text||"").join("").trim();
+      IA.busy=false;
+      if(pre) c.msgs.push({role:"assistant",content:pre});
+      iaGuardarConvs(); pintarIAChat();
+      msgs.push({role:"assistant", content:data.content});
+      const tus=data.content.filter(b=>b.type==="tool_use");
+      const results=[];
+      for(const tu of tus){
+        const dec=await confirmarTool(tu);
+        if(dec.confirmed){
+          const rr=dec.res||{ok:false,msg:"sin resultado"};
+          c.msgs.push({role:"assistant",content:(rr.ok?"✅ ":"⚠️ ")+rr.msg}); iaGuardarConvs(); pintarIAChat();
+          results.push({type:"tool_result", tool_use_id:tu.id, content:(rr.ok?"HECHO: ":"NO SE PUDO: ")+rr.msg});
+        }else{
+          c.msgs.push({role:"assistant",content:"🚫 Cancelaste esta acción."}); iaGuardarConvs(); pintarIAChat();
+          results.push({type:"tool_result", tool_use_id:tu.id, content:"El usuario CANCELÓ esta acción; no la hagas."});
+        }
+      }
+      msgs.push({role:"user", content:results});
+      IA.busy=true; pintarIAChat();
+      continue;
+    }
+    IA.busy=false;
+    const txt=(data.text||"").trim();
+    c.msgs.push({role:"assistant",content: txt || "⚠️ No me llegó respuesta. Cierra la app y ábrela otra vez, o empieza un chat nuevo con ✚."});
+    iaGuardarConvs(); pintarIAChat();
+    if(IA.voz.on){ const ult=c.msgs[c.msgs.length-1]; if(ult && ult.role==="assistant" && ult.content && !/^⚠️|^💳|^🚫|^✅/.test(ult.content)) iaHablar(ult.content, c.msgs.length-1); }
+    return;
+  }
+  IA.busy=false; pintarIAChat();
+}
+
 async function iaEnviar(textoForzado){
   const ta=$("#iaText");
   let texto=(textoForzado!=null?textoForzado:(ta?ta.value:"")).trim();
@@ -3837,44 +3968,17 @@ async function iaEnviar(textoForzado){
   IA.busy=true;
   if(!iaGuardarConvs()) toast("Imagen muy pesada: se envía pero quizá no se guarde en el historial");
   pintarIAChat();
-  try{
-    let hist=c.msgs.slice(-14);
-    while(hist.length && hist[0].role!=="user") hist.shift();
-    // La foto solo viaja en el ÚLTIMO mensaje; los turnos anteriores van sin ella.
-    let msgs=hist.map((x,i)=>iaMsgApi(x, i===hist.length-1));
-    // Inyecta el contexto de datos en el bloque de texto del último mensaje del usuario
-    let calTxt=""; try{ const ev=await cargarCalendarioCache(); calTxt=iaCalendarioContexto(ev)+"\n"; }catch(_){ calTxt=""; }
-    const inj=iaReloj()+"\n"+calTxt+iaContexto()+"\n\nPregunta de Rey: "+texto;
-    const last=msgs[msgs.length-1];
-    if(Array.isArray(last.content)){ last.content[last.content.length-1]={type:"text",text:inj}; }
-    else{ last.content=inj; }
-    const r=await fetch(IA.url,{method:"POST",headers:{"content-type":"application/json"},
-      body:JSON.stringify({system:iaSystemFull(), messages:msgs})});
-    let data={}; try{ data=await r.json(); }catch(_){}
-    IA.busy=false;
-    if(!r.ok || data.error){
-      const em=((data&&data.error)||("Error "+r.status)).toString();
-      const sinCredito = /credit|balance|billing|quota|insufficient|saldo|402/i.test(em) || r.status===402;
-      if(sinCredito){
-        c.msgs.push({role:"assistant",content:"💳 **Se agotaron tus créditos de la IA.**\n\nRecarga aquí (toca el enlace) y en 1 minuto vuelvo a funcionar:\n"+IA_RECARGA_URL+"\n\nInicia sesión con tu cuenta de Google, pulsa **Add credits / Buy credits** y listo. (Puedes activar la recarga automática ahí mismo para no quedarte sin saldo nunca.)"});
-      }else{
-        c.msgs.push({role:"assistant",content:"⚠️ "+em+"\n\nRevisa tu puente en ajustes (⚙️) o tu conexión. Si dice algo de crédito/billing, recarga en:\n"+IA_RECARGA_URL});
-      }
-    }else{
-      c.msgs.push({role:"assistant",content:(data.text||"").trim()||"⚠️ No me llegó respuesta. Cierra la app del todo y ábrela otra vez (para cargar la última versión), o empieza un chat nuevo con ✚ e inténtalo de nuevo."});
-    }
-  }catch(e){
-    IA.busy=false;
-    c.msgs.push({role:"assistant",content:"⚠️ No pude conectar con el puente. Revisa tu internet o la dirección en ajustes (⚙️)."});
-  }
-  iaGuardarConvs(); pintarIAChat();
-  /* Si Rey activó la voz, Roberto lee en alto su última respuesta */
-  if(IA.voz.on){
-    const ult=c.msgs[c.msgs.length-1];
-    if(ult && ult.role==="assistant" && ult.content && !/^⚠️|^💳/.test(ult.content)){
-      iaHablar(ult.content, c.msgs.length-1);
-    }
-  }
+  let hist=c.msgs.slice(-14);
+  while(hist.length && hist[0].role!=="user") hist.shift();
+  // La foto solo viaja en el ÚLTIMO mensaje; los turnos anteriores van sin ella.
+  let msgs=hist.map((x,i)=>iaMsgApi(x, i===hist.length-1));
+  // Inyecta el contexto de datos en el bloque de texto del último mensaje del usuario
+  let calTxt=""; try{ const ev=await cargarCalendarioCache(); calTxt=iaCalendarioContexto(ev)+"\n"; }catch(_){ calTxt=""; }
+  const inj=iaReloj()+"\n"+calTxt+iaContexto()+"\n\nPregunta de Rey: "+texto;
+  const last=msgs[msgs.length-1];
+  if(Array.isArray(last.content)){ last.content[last.content.length-1]={type:"text",text:inj}; }
+  else{ last.content=inj; }
+  await iaLoop(msgs, c);
 }
 
 /* ============================================================
