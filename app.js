@@ -4203,8 +4203,8 @@ function init(){
     /* Si estaba activado el acceso fijo, lo re-anclamos al abrir */
     if(PIN.on) setTimeout(()=>pinRoberto(true), 1800);
   }
-  /* Si la app se abrió desde el acceso rápido (?go=roberto / diario / …), navega ahí */
-  try{ const go=new URLSearchParams(location.search).get("go"); if(go){ setTimeout(()=>apexGo(go), 500); } }catch(_){}
+  /* Si la app se abrió desde el acceso rápido (?go=roberto / diario / …), navega ahí y limpia la URL */
+  try{ const go=new URLSearchParams(location.search).get("go"); if(go){ setTimeout(()=>apexGo(go), 500); try{ history.replaceState({}, "", location.pathname); }catch(_){} } }catch(_){}
   /* Reprograma avisos si Roberto los tenía activados */
   if(NOTIF.on && notifSoportado() && Notification.permission==="granted"){
     setTimeout(()=>{ notifProgramarKillzones(); notifChequearCuentasDD(); pushSubscribe(); }, 1500);

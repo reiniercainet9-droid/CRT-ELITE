@@ -1,4 +1,4 @@
-const CACHE = "crt-elite-v5-18";
+const CACHE = "crt-elite-v5-18-1";
 const FILES = ["./","./index.html","./data.js","./app.js","./manifest.json","./icon-192.png","./icon-512.png"];
 const WORKER = "https://elitepro-worker.reiniercainet9.workers.dev";
 /* Web Push: al llegar un aviso (con la app CERRADA), muestra la notificación.
@@ -46,14 +46,14 @@ self.addEventListener("notificationclick", e => {
   e.waitUntil((async () => {
     // Si era el acceso fijo, lo volvemos a mostrar para que siga anclado
     if (isPin) { try { await self.registration.showNotification(PIN_TITLE, PIN_OPTS); } catch(_){} }
+    const url = "./index.html" + (go ? ("?go=" + go) : "");
     const cs = await clients.matchAll({ type:"window", includeUncontrolled:true });
     for (const c of cs) {
-      if ("focus" in c) { try{ await c.focus(); }catch(_){}
-        if (go) { try{ c.postMessage({ type:"apexGo", go }); }catch(_){} }
-        return;
-      }
+      // Llevar la app abierta directo por URL (confiable) en vez de mensaje (que Android descarta)
+      try { if ("navigate" in c) await c.navigate(url); } catch(_){}
+      try { if ("focus" in c) { await c.focus(); return; } } catch(_){}
     }
-    if (clients.openWindow) return clients.openWindow("./index.html" + (go ? ("?go=" + go) : ""));
+    if (clients.openWindow) return clients.openWindow(url);
   })());
 });
 /* La app puede pedirle al SW que muestre/oculte el acceso fijo */
