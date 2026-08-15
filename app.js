@@ -247,10 +247,17 @@ function notifLanzar(titulo, cuerpo, tag){
   /* con la app abierta, suena el chime propio de Apex */
   try{ if(document.visibilityState==="visible") sonarAlerta(); }catch(_){}
 }
-/* Detecta la ENTRADA a una ventana operativa (llamado por el reloj) */
-let _kzPrev=null;
+/* Detecta la ENTRADA a una ventana operativa (llamado por el reloj).
+   IMPORTANTE: el aviso "a la hora que toca CON LA APP CERRADA" lo manda el
+   SERVIDOR (Cloudflare cron + Web Push), no esto. Esto es solo un extra para
+   cuando la app está ABIERTA. Por eso, al abrir Apex estando YA dentro de una
+   ventana, NO disparamos nada (sería un aviso viejo y molesto, como pasaba a
+   las 12pm): sembramos el estado en el primer tick y solo avisamos en la
+   TRANSICIÓN real de entrar a una ventana con la app ya abierta. */
+let _kzPrev=null, _kzInit=false;
 function notifChequearKillzone(activa){
   const nom=activa?activa.n:null;
+  if(!_kzInit){ _kzPrev=nom; _kzInit=true; return; }   // primer tick al abrir: no avisar
   if(NOTIF.on && NOTIF.killzone && nom && nom!==_kzPrev){
     if(!notifYaHoy(hoyISO()+"|kz|"+nom)){
       const best = activa.cls==="hl";
