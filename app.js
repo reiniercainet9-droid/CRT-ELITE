@@ -4320,6 +4320,25 @@ async function iaBgResuelto(jobId, d){
   pintarIAChat();
   if(IA.voz.on){ const ult=c.msgs[c.msgs.length-1]; if(ult && ult.role==="assistant" && ult.content && !/^⚠️|^💳|^🚫|^✅/.test(ult.content)) iaHablar(ult.content, c.msgs.length-1); }
 }
+/* Muestra en el chat la respuesta de un job concreto (el de la notificación que
+   tocaste). Busca su resultado y lo añade a la conversación, sin duplicar. */
+async function iaMostrarJob(jobId, intentos){
+  intentos=intentos||0;
+  if(!jobId) return;
+  let d=null;
+  try{ const r=await fetch(iaBase()+"/chat/bg?job="+encodeURIComponent(jobId),{cache:"no-store"}); d=await r.json(); }catch(_){}
+  if((!d || !d.ready) && intentos<20){ setTimeout(()=>iaMostrarJob(jobId, intentos+1), 3000); return; }
+  if(!d || !d.ready) return;
+  iaPendBorrar(jobId);
+  if(d.toolUse){ iaBgResuelto(jobId, d); return; }   // si son "manos", usa el flujo con tarjetas
+  const c=iaConvAct();
+  const txt=(d.error?("⚠️ "+d.error):(d.text||"")).trim();
+  if(!txt) return;
+  const ya=c.msgs.some(m=>m.role==="assistant" && m.content===txt);
+  if(!ya) c.msgs.push({role:"assistant",content:txt});
+  IA.busy=false; iaGuardarConvs(); pintarIAChat();
+  if(IA.voz.on && !ya && !/^⚠️|^💳|^🚫|^✅/.test(txt)) iaHablar(txt, c.msgs.length-1);
+}
 /* Al abrir la app, recupera respuestas que terminaron mientras estaba cerrada */
 function iaResumePend(){
   const ps=iaPendCargar();
@@ -4383,8 +4402,8 @@ function init(){
   /* Al volver a la app (no cerrarla del todo), recupera lo que haya terminado */
   document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible") iaResumePend(); });
   /* Si abriste tocando el push de una respuesta de Roberto, abre el chat con ella */
-  try{ if(navigator.serviceWorker){ navigator.serviceWorker.addEventListener("message", ev=>{ if(ev.data && ev.data.type==="apex-open-chat"){ iaResumePend(); if(typeof abrirIA==="function") abrirIA(); } }); } }catch(_){}
-  try{ if(new URLSearchParams(location.search).get("open")==="chat"){ setTimeout(()=>{ iaResumePend(); if(typeof abrirIA==="function") abrirIA(); }, 400); } }catch(_){}
+  try{ if(navigator.serviceWorker){ navigator.serviceWorker.addEventListener("message", ev=>{ if(ev.data && ev.data.type==="apex-open-chat"){ if(typeof abrirIA==="function") abrirIA(); if(ev.data.jobId) iaMostrarJob(ev.data.jobId); else iaResumePend(); } }); } }catch(_){}
+  try{ const sp=new URLSearchParams(location.search); if(sp.get("open")==="chat"){ const jb=sp.get("job"); setTimeout(()=>{ if(typeof abrirIA==="function") abrirIA(); if(jb) iaMostrarJob(jb); else iaResumePend(); }, 400); } }catch(_){}
   setTimeout(syncReminders, 1800);   /* sube los avisos al vigilante (cron) */
   irA("noticias");   /* lo primero del día: ver cómo viene el calendario antes de analizar */
   tickRelojes(); setInterval(tickRelojes,10000);
