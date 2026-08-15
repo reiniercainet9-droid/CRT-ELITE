@@ -4270,7 +4270,15 @@ function iaPollJob(jobId){
     let d=null;
     try{ const r=await fetch(iaBase()+"/chat/bg?job="+encodeURIComponent(jobId),{cache:"no-store"}); d=await r.json(); }catch(_){}
     if(d && d.ready){ clearTimeout(_iaPolling[jobId]); delete _iaPolling[jobId]; iaBgResuelto(jobId, d); return; }
-    if(tries>60){ clearTimeout(_iaPolling[jobId]); delete _iaPolling[jobId]; return; } // ~3 min sondeando en foreground
+    if(tries>60){ // ~3 min sondeando: nunca dejar los puntitos colgados para siempre
+      clearTimeout(_iaPolling[jobId]); delete _iaPolling[jobId];
+      const pend=iaPendCargar().find(x=>x.jobId===jobId);
+      const c=(pend && IA.convs.find(x=>x.id===pend.convId)) || iaConvAct();
+      iaPendBorrar(jobId); IA.busy=false;
+      c.msgs.push({role:"assistant",content:"⚠️ Roberto tardó más de lo normal. Reintenta la pregunta, por favor."});
+      iaGuardarConvs(); if(iaAbierto()) pintarIAChat();
+      return;
+    }
     _iaPolling[jobId]=setTimeout(tick, 3000);
   };
   _iaPolling[jobId]=setTimeout(tick, 2500);
