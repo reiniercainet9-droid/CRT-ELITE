@@ -4131,7 +4131,9 @@ async function iaLoop(msgs, c){
       // TOPE DE TIEMPO: si el puente tarda demasiado, cortamos y reintentamos
       // rápido SIN búsqueda web (antes se colgaba varios minutos esperando).
       const ctrl=new AbortController();
-      const tId=setTimeout(()=>{ try{ctrl.abort();}catch(_){} }, sinBusqueda?55000:35000);
+      // 75s de margen: medimos que una respuesta completa tarda ~20s, y en 4G la
+      // subida del contexto + bajada puede sumar bastante. Antes cortaba a 35s.
+      const tId=setTimeout(()=>{ try{ctrl.abort();}catch(_){} }, sinBusqueda?60000:75000);
       try{
         r=await fetch(IA.url,{method:"POST",headers:{"content-type":"application/json"},
           body:JSON.stringify({system:iaSystemFull(), messages:msgs, clientTools:IA_TOOLS, noSearch:sinBusqueda}),
