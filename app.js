@@ -4247,7 +4247,7 @@ function iaPendBorrar(jobId){ try{ localStorage.setItem(IA_PEND_KEY, JSON.string
 const _iaPolling={};
 /* Arranca una consulta en segundo plano */
 async function iaBgStart(msgs, c){
-  IA.busy=true; if(iaAbierto()) pintarIAChat();
+  IA.busy=true; pintarIAChat();
   let jobId;
   try{
     const r=await fetch(iaBase()+"/chat/bg",{method:"POST",headers:{"content-type":"application/json"},
@@ -4256,7 +4256,7 @@ async function iaBgStart(msgs, c){
     jobId=d && d.jobId;
     if(!jobId) throw new Error("sin jobId");
   }catch(e){
-    IA.busy=false; c.msgs.push({role:"assistant",content:"⚠️ No pude enviar tu mensaje. Revisa tu internet y reintenta."}); iaGuardarConvs(); if(iaAbierto()) pintarIAChat(); return;
+    IA.busy=false; c.msgs.push({role:"assistant",content:"⚠️ No pude enviar tu mensaje. Revisa tu internet y reintenta."}); iaGuardarConvs(); pintarIAChat(); return;
   }
   iaPendGuardar({ jobId, convId:c.id, msgs, ts:Date.now() });
   iaPollJob(jobId);
@@ -4276,7 +4276,7 @@ function iaPollJob(jobId){
       const c=(pend && IA.convs.find(x=>x.id===pend.convId)) || iaConvAct();
       iaPendBorrar(jobId); IA.busy=false;
       c.msgs.push({role:"assistant",content:"⚠️ Roberto tardó más de lo normal. Reintenta la pregunta, por favor."});
-      iaGuardarConvs(); if(iaAbierto()) pintarIAChat();
+      iaGuardarConvs(); pintarIAChat();
       return;
     }
     _iaPolling[jobId]=setTimeout(tick, 3000);
@@ -4288,35 +4288,36 @@ async function iaBgResuelto(jobId, d){
   const pend=iaPendCargar().find(x=>x.jobId===jobId);
   const c = (pend && IA.convs.find(x=>x.id===pend.convId)) || iaConvAct();
   iaPendBorrar(jobId);
-  if(d.error){ IA.busy=false; c.msgs.push({role:"assistant",content:"⚠️ "+d.error}); iaGuardarConvs(); if(iaAbierto()) pintarIAChat(); return; }
+  IA.actId=c.id;   // deja como activa la conversación de la respuesta, para que se vea al abrir el chat
+  if(d.error){ IA.busy=false; c.msgs.push({role:"assistant",content:"⚠️ "+d.error}); iaGuardarConvs(); pintarIAChat(); return; }
   if(d.toolUse && Array.isArray(d.content)){
     const pre=d.content.filter(b=>b.type==="text").map(b=>b.text||"").join("").trim();
     if(pre) c.msgs.push({role:"assistant",content:pre});
     const baseMsgs=(pend && Array.isArray(pend.msgs)) ? pend.msgs.slice() : [];
     baseMsgs.push({role:"assistant", content:d.content});
-    iaGuardarConvs(); if(iaAbierto()) pintarIAChat();
+    iaGuardarConvs(); pintarIAChat();
     const tus=d.content.filter(b=>b.type==="tool_use");
     const results=[];
     for(const tu of tus){
       const dec=await confirmarTool(tu);
-      if(dec.confirmed){ const rr=dec.res||{ok:false,msg:"sin resultado"}; c.msgs.push({role:"assistant",content:(rr.ok?"✅ ":"⚠️ ")+rr.msg}); iaGuardarConvs(); if(iaAbierto()) pintarIAChat(); results.push({type:"tool_result",tool_use_id:tu.id,content:(rr.ok?"HECHO: ":"NO SE PUDO: ")+rr.msg}); }
-      else{ c.msgs.push({role:"assistant",content:"🚫 Cancelaste esta acción."}); iaGuardarConvs(); if(iaAbierto()) pintarIAChat(); results.push({type:"tool_result",tool_use_id:tu.id,content:"El usuario CANCELÓ esta acción; no la hagas."}); }
+      if(dec.confirmed){ const rr=dec.res||{ok:false,msg:"sin resultado"}; c.msgs.push({role:"assistant",content:(rr.ok?"✅ ":"⚠️ ")+rr.msg}); iaGuardarConvs(); pintarIAChat(); results.push({type:"tool_result",tool_use_id:tu.id,content:(rr.ok?"HECHO: ":"NO SE PUDO: ")+rr.msg}); }
+      else{ c.msgs.push({role:"assistant",content:"🚫 Cancelaste esta acción."}); iaGuardarConvs(); pintarIAChat(); results.push({type:"tool_result",tool_use_id:tu.id,content:"El usuario CANCELÓ esta acción; no la hagas."}); }
     }
     baseMsgs.push({role:"user", content:results});
-    IA.busy=true; if(iaAbierto()) pintarIAChat();
+    IA.busy=true; pintarIAChat();
     try{
       const r=await fetch(iaBase()+"/chat/bg",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({system:iaSystemFull(),messages:baseMsgs,clientTools:IA_TOOLS})});
       const dd=await r.json().catch(()=>({}));
       if(dd&&dd.jobId){ iaPendGuardar({jobId:dd.jobId,convId:c.id,msgs:baseMsgs,ts:Date.now()}); iaPollJob(dd.jobId); }
-      else { IA.busy=false; if(iaAbierto()) pintarIAChat(); }
-    }catch(_){ IA.busy=false; if(iaAbierto()) pintarIAChat(); }
+      else { IA.busy=false; pintarIAChat(); }
+    }catch(_){ IA.busy=false; pintarIAChat(); }
     return;
   }
   IA.busy=false;
   const txt=(d.text||"").trim();
   c.msgs.push({role:"assistant",content: txt || "⚠️ No me llegó respuesta, reintenta."});
   iaGuardarConvs();
-  if(iaAbierto()) pintarIAChat();
+  pintarIAChat();
   if(IA.voz.on){ const ult=c.msgs[c.msgs.length-1]; if(ult && ult.role==="assistant" && ult.content && !/^⚠️|^💳|^🚫|^✅/.test(ult.content)) iaHablar(ult.content, c.msgs.length-1); }
 }
 /* Al abrir la app, recupera respuestas que terminaron mientras estaba cerrada */
@@ -4328,7 +4329,7 @@ function iaResumePend(){
     if(p.convId===IA.actId) hayActiva=true;
     iaPollJob(p.jobId);
   });
-  if(hayActiva){ IA.busy=true; if(iaAbierto()) pintarIAChat(); }
+  if(hayActiva){ IA.busy=true; pintarIAChat(); }
 }
 
 async function iaEnviar(textoForzado){
@@ -4381,6 +4382,9 @@ function init(){
   iaResumePend();    /* recupera respuestas de Roberto que terminaron con la app cerrada */
   /* Al volver a la app (no cerrarla del todo), recupera lo que haya terminado */
   document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible") iaResumePend(); });
+  /* Si abriste tocando el push de una respuesta de Roberto, abre el chat con ella */
+  try{ if(navigator.serviceWorker){ navigator.serviceWorker.addEventListener("message", ev=>{ if(ev.data && ev.data.type==="apex-open-chat"){ iaResumePend(); if(typeof abrirIA==="function") abrirIA(); } }); } }catch(_){}
+  try{ if(new URLSearchParams(location.search).get("open")==="chat"){ setTimeout(()=>{ iaResumePend(); if(typeof abrirIA==="function") abrirIA(); }, 400); } }catch(_){}
   setTimeout(syncReminders, 1800);   /* sube los avisos al vigilante (cron) */
   irA("noticias");   /* lo primero del día: ver cómo viene el calendario antes de analizar */
   tickRelojes(); setInterval(tickRelojes,10000);

@@ -1,4 +1,4 @@
-const CACHE = "crt-elite-v5-32";
+const CACHE = "crt-elite-v5-33";
 const FILES = ["./","./index.html","./data.js","./app.js","./manifest.json","./icon-192.png","./icon-512.png"];
 const WORKER = "https://elitepro-worker.reiniercainet9.workers.dev";
 /* Web Push: al llegar un aviso (con la app CERRADA), muestra la notificación.
@@ -29,9 +29,12 @@ self.addEventListener("push", e => {
 /* Al tocar una notificación de Roberto, abre/enfoca la app */
 self.addEventListener("notificationclick", e => {
   e.notification.close();
+  const tag=(e.notification.tag||"");
+  const esChat = tag.indexOf("apex-chat")===0;   // respuesta de Roberto → abrir el chat
+  const url = esChat ? "./index.html?open=chat" : "./index.html";
   e.waitUntil(clients.matchAll({type:"window",includeUncontrolled:true}).then(cs => {
-    for(const c of cs){ if("focus" in c) return c.focus(); }
-    if(clients.openWindow) return clients.openWindow("./index.html");
+    for(const c of cs){ if("focus" in c){ if(esChat && c.postMessage) c.postMessage({type:"apex-open-chat"}); return c.focus(); } }
+    if(clients.openWindow) return clients.openWindow(url);
   }));
 });
 self.addEventListener("install", e => {
