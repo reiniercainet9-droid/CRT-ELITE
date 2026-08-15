@@ -4230,6 +4230,98 @@ function resumenTradeVigila(t){
     (t.news==="Noticia cerca"?", con NOTICIA CERCA":"")+". Riesgo fijo 0.5%.";
 }
 
+/* ============================================================
+   ROBERTO ASÍNCRONO — el servidor procesa y AVISA POR PUSH al terminar.
+   Así funciona aunque cierres/minimices la app (el móvil ya no corta nada):
+   1) la app manda la pregunta y recibe un jobId al instante
+   2) el servidor piensa en segundo plano y te manda un push cuando termina
+   3) al abrir la app, recupera la respuesta guardada y la muestra
+   ============================================================ */
+const IA_PEND_KEY = "crtelite_pendchat_v3";
+function iaBase(){ return (IA.url||IA_URL_DEFAULT).replace(/\/+$/,""); }
+function iaAbierto(){ const ov=$("#iaOv"); return !!(ov && ov.classList.contains("show")); }
+function iaPendCargar(){ try{ return JSON.parse(localStorage.getItem(IA_PEND_KEY)||"[]"); }catch(_){ return []; } }
+function iaPendGuardar(p){ const a=iaPendCargar().filter(x=>x.jobId!==p.jobId); a.push(p); try{ localStorage.setItem(IA_PEND_KEY, JSON.stringify(a)); }catch(_){} }
+function iaPendBorrar(jobId){ try{ localStorage.setItem(IA_PEND_KEY, JSON.stringify(iaPendCargar().filter(x=>x.jobId!==jobId))); }catch(_){} }
+const _iaPolling={};
+/* Arranca una consulta en segundo plano */
+async function iaBgStart(msgs, c){
+  IA.busy=true; if(iaAbierto()) pintarIAChat();
+  let jobId;
+  try{
+    const r=await fetch(iaBase()+"/chat/bg",{method:"POST",headers:{"content-type":"application/json"},
+      body:JSON.stringify({system:iaSystemFull(), messages:msgs, clientTools:IA_TOOLS})});
+    const d=await r.json().catch(()=>({}));
+    jobId=d && d.jobId;
+    if(!jobId) throw new Error("sin jobId");
+  }catch(e){
+    IA.busy=false; c.msgs.push({role:"assistant",content:"⚠️ No pude enviar tu mensaje. Revisa tu internet y reintenta."}); iaGuardarConvs(); if(iaAbierto()) pintarIAChat(); return;
+  }
+  iaPendGuardar({ jobId, convId:c.id, msgs, ts:Date.now() });
+  iaPollJob(jobId);
+}
+/* Sondea el resultado mientras la app está abierta (el push cubre lo demás) */
+function iaPollJob(jobId){
+  if(_iaPolling[jobId]) return;
+  let tries=0;
+  const tick=async()=>{
+    tries++;
+    let d=null;
+    try{ const r=await fetch(iaBase()+"/chat/bg?job="+encodeURIComponent(jobId),{cache:"no-store"}); d=await r.json(); }catch(_){}
+    if(d && d.ready){ clearTimeout(_iaPolling[jobId]); delete _iaPolling[jobId]; iaBgResuelto(jobId, d); return; }
+    if(tries>60){ clearTimeout(_iaPolling[jobId]); delete _iaPolling[jobId]; return; } // ~3 min sondeando en foreground
+    _iaPolling[jobId]=setTimeout(tick, 3000);
+  };
+  _iaPolling[jobId]=setTimeout(tick, 2500);
+}
+/* Procesa la respuesta ya lista (texto, error, o manos que pedir confirmación) */
+async function iaBgResuelto(jobId, d){
+  const pend=iaPendCargar().find(x=>x.jobId===jobId);
+  const c = (pend && IA.convs.find(x=>x.id===pend.convId)) || iaConvAct();
+  iaPendBorrar(jobId);
+  if(d.error){ IA.busy=false; c.msgs.push({role:"assistant",content:"⚠️ "+d.error}); iaGuardarConvs(); if(iaAbierto()) pintarIAChat(); return; }
+  if(d.toolUse && Array.isArray(d.content)){
+    const pre=d.content.filter(b=>b.type==="text").map(b=>b.text||"").join("").trim();
+    if(pre) c.msgs.push({role:"assistant",content:pre});
+    const baseMsgs=(pend && Array.isArray(pend.msgs)) ? pend.msgs.slice() : [];
+    baseMsgs.push({role:"assistant", content:d.content});
+    iaGuardarConvs(); if(iaAbierto()) pintarIAChat();
+    const tus=d.content.filter(b=>b.type==="tool_use");
+    const results=[];
+    for(const tu of tus){
+      const dec=await confirmarTool(tu);
+      if(dec.confirmed){ const rr=dec.res||{ok:false,msg:"sin resultado"}; c.msgs.push({role:"assistant",content:(rr.ok?"✅ ":"⚠️ ")+rr.msg}); iaGuardarConvs(); if(iaAbierto()) pintarIAChat(); results.push({type:"tool_result",tool_use_id:tu.id,content:(rr.ok?"HECHO: ":"NO SE PUDO: ")+rr.msg}); }
+      else{ c.msgs.push({role:"assistant",content:"🚫 Cancelaste esta acción."}); iaGuardarConvs(); if(iaAbierto()) pintarIAChat(); results.push({type:"tool_result",tool_use_id:tu.id,content:"El usuario CANCELÓ esta acción; no la hagas."}); }
+    }
+    baseMsgs.push({role:"user", content:results});
+    IA.busy=true; if(iaAbierto()) pintarIAChat();
+    try{
+      const r=await fetch(iaBase()+"/chat/bg",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({system:iaSystemFull(),messages:baseMsgs,clientTools:IA_TOOLS})});
+      const dd=await r.json().catch(()=>({}));
+      if(dd&&dd.jobId){ iaPendGuardar({jobId:dd.jobId,convId:c.id,msgs:baseMsgs,ts:Date.now()}); iaPollJob(dd.jobId); }
+      else { IA.busy=false; if(iaAbierto()) pintarIAChat(); }
+    }catch(_){ IA.busy=false; if(iaAbierto()) pintarIAChat(); }
+    return;
+  }
+  IA.busy=false;
+  const txt=(d.text||"").trim();
+  c.msgs.push({role:"assistant",content: txt || "⚠️ No me llegó respuesta, reintenta."});
+  iaGuardarConvs();
+  if(iaAbierto()) pintarIAChat();
+  if(IA.voz.on){ const ult=c.msgs[c.msgs.length-1]; if(ult && ult.role==="assistant" && ult.content && !/^⚠️|^💳|^🚫|^✅/.test(ult.content)) iaHablar(ult.content, c.msgs.length-1); }
+}
+/* Al abrir la app, recupera respuestas que terminaron mientras estaba cerrada */
+function iaResumePend(){
+  const ps=iaPendCargar();
+  let hayActiva=false;
+  ps.forEach(p=>{
+    if(Date.now()-p.ts > 2*3600000){ iaPendBorrar(p.jobId); return; }
+    if(p.convId===IA.actId) hayActiva=true;
+    iaPollJob(p.jobId);
+  });
+  if(hayActiva){ IA.busy=true; if(iaAbierto()) pintarIAChat(); }
+}
+
 async function iaEnviar(textoForzado){
   const ta=$("#iaText");
   let texto=(textoForzado!=null?textoForzado:(ta?ta.value:"")).trim();
@@ -4255,7 +4347,7 @@ async function iaEnviar(textoForzado){
   const last=msgs[msgs.length-1];
   if(Array.isArray(last.content)){ last.content[last.content.length-1]={type:"text",text:inj}; }
   else{ last.content=inj; }
-  await iaLoop(msgs, c);
+  await iaBgStart(msgs, c);
 }
 
 /* ============================================================
@@ -4277,6 +4369,9 @@ function init(){
   const ba=$("#btnAyuda"); if(ba) ba.onclick=()=>abrirAyuda(TAB);
   const bm=$("#btnMenu"); if(bm) bm.onclick=abrirMenu;
   iaInit();          /* inicializa el puente (IA.url) ANTES de mostrar Noticias, que lo necesita */
+  iaResumePend();    /* recupera respuestas de Roberto que terminaron con la app cerrada */
+  /* Al volver a la app (no cerrarla del todo), recupera lo que haya terminado */
+  document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible") iaResumePend(); });
   setTimeout(syncReminders, 1800);   /* sube los avisos al vigilante (cron) */
   irA("noticias");   /* lo primero del día: ver cómo viene el calendario antes de analizar */
   tickRelojes(); setInterval(tickRelojes,10000);
