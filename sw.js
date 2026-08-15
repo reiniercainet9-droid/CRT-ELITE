@@ -1,4 +1,4 @@
-const CACHE = "crt-elite-v5-18-1";
+const CACHE = "crt-elite-v5-18-2";
 const FILES = ["./","./index.html","./data.js","./app.js","./manifest.json","./icon-192.png","./icon-512.png"];
 const WORKER = "https://elitepro-worker.reiniercainet9.workers.dev";
 /* Web Push: al llegar un aviso (con la app CERRADA), muestra la notificación.
@@ -38,22 +38,25 @@ const PIN_OPTS = {
     { action: "cuentas", title: "🏦 Cuentas" }
   ]
 };
-/* Al tocar una notificación (o un botón), abre/enfoca la app en la sección correcta */
+/* Al tocar una notificación (o un botón), abre/enfoca la app en la sección correcta.
+   CLAVE: abrir la app PRIMERO (sin awaits largos) para no perder la activación del usuario;
+   re-anclar el pin AL FINAL (que no bloquee la apertura). */
 self.addEventListener("notificationclick", e => {
   const isPin = e.notification.tag === "apex-pin";
   const go = e.action || (isPin ? "roberto" : "");
+  const url = "./index.html" + (go ? ("?go=" + go) : "");
   e.notification.close();
   e.waitUntil((async () => {
-    // Si era el acceso fijo, lo volvemos a mostrar para que siga anclado
-    if (isPin) { try { await self.registration.showNotification(PIN_TITLE, PIN_OPTS); } catch(_){} }
-    const url = "./index.html" + (go ? ("?go=" + go) : "");
     const cs = await clients.matchAll({ type:"window", includeUncontrolled:true });
-    for (const c of cs) {
-      // Llevar la app abierta directo por URL (confiable) en vez de mensaje (que Android descarta)
-      try { if ("navigate" in c) await c.navigate(url); } catch(_){}
-      try { if ("focus" in c) { await c.focus(); return; } } catch(_){}
+    if (cs.length) {
+      const c = cs[0];
+      try { if ("navigate" in c) c.navigate(url); } catch(_){}   // sin await (no bloquear)
+      try { await c.focus(); } catch(_){}
+    } else if (clients.openWindow) {
+      try { await clients.openWindow(url); } catch(_){}
     }
-    if (clients.openWindow) return clients.openWindow(url);
+    // Re-anclar el acceso fijo (al final, ya con la app abierta)
+    if (isPin) { try { await self.registration.showNotification(PIN_TITLE, PIN_OPTS); } catch(_){} }
   })());
 });
 /* La app puede pedirle al SW que muestre/oculte el acceso fijo */
