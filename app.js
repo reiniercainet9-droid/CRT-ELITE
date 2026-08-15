@@ -4124,14 +4124,18 @@ function confirmarTool(tu){
 }
 /* Bucle de conversación con herramientas: maneja texto, errores y acciones a confirmar */
 async function iaLoop(msgs, c){
-  let guard=0;
-  while(guard++ < 6){
+  let guard=0, sinBusqueda=false, reintentoVacio=0;
+  while(guard++ < 8){
     let r, data={};
     try{
       r=await fetch(IA.url,{method:"POST",headers:{"content-type":"application/json"},
-        body:JSON.stringify({system:iaSystemFull(), messages:msgs, clientTools:IA_TOOLS})});
+        body:JSON.stringify({system:iaSystemFull(), messages:msgs, clientTools:IA_TOOLS, noSearch:sinBusqueda})});
       try{ data=await r.json(); }catch(_){}
-    }catch(e){ IA.busy=false; c.msgs.push({role:"assistant",content:"⚠️ No pude conectar con el puente. Revisa tu internet o la dirección en ajustes (⚙️)."}); iaGuardarConvs(); pintarIAChat(); return; }
+    }catch(e){
+      // Fallo de red: reintenta UNA vez en silencio antes de rendirse (móvil/4G)
+      if(reintentoVacio<1){ reintentoVacio++; sinBusqueda=true; continue; }
+      IA.busy=false; c.msgs.push({role:"assistant",content:"⚠️ No pude conectar con el puente. Revisa tu internet o la dirección en ajustes (⚙️)."}); iaGuardarConvs(); pintarIAChat(); return;
+    }
     if(!r.ok || (data&&data.error)){
       IA.busy=false;
       const em=((data&&data.error)||("Error "+ (r?r.status:"?"))).toString();
@@ -4164,9 +4168,12 @@ async function iaLoop(msgs, c){
       IA.busy=true; pintarIAChat();
       continue;
     }
-    IA.busy=false;
     const txt=(data.text||"").trim();
-    c.msgs.push({role:"assistant",content: txt || "⚠️ No me llegó respuesta. Cierra la app y ábrela otra vez, o empieza un chat nuevo con ✚."});
+    // Blindaje anti-vacío: si volvió sin texto, reintenta en silencio SIN búsqueda
+    // web (la causa más común del bache) antes de mostrar ningún error.
+    if(!txt && reintentoVacio<2){ reintentoVacio++; sinBusqueda=true; IA.busy=true; continue; }
+    IA.busy=false;
+    c.msgs.push({role:"assistant",content: txt || "⚠️ No me llegó respuesta. Dame un momento y vuelve a intentar — si sigue, abre un chat nuevo con ✚."});
     iaGuardarConvs(); pintarIAChat();
     if(IA.voz.on){ const ult=c.msgs[c.msgs.length-1]; if(ult && ult.role==="assistant" && ult.content && !/^⚠️|^💳|^🚫|^✅/.test(ult.content)) iaHablar(ult.content, c.msgs.length-1); }
     return;
