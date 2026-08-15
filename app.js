@@ -4128,13 +4128,20 @@ async function iaLoop(msgs, c){
   while(guard++ < 8){
     let r, data={};
     try{
-      r=await fetch(IA.url,{method:"POST",headers:{"content-type":"application/json"},
-        body:JSON.stringify({system:iaSystemFull(), messages:msgs, clientTools:IA_TOOLS, noSearch:sinBusqueda})});
-      try{ data=await r.json(); }catch(_){}
+      // TOPE DE TIEMPO: si el puente tarda demasiado, cortamos y reintentamos
+      // rápido SIN búsqueda web (antes se colgaba varios minutos esperando).
+      const ctrl=new AbortController();
+      const tId=setTimeout(()=>{ try{ctrl.abort();}catch(_){} }, sinBusqueda?55000:35000);
+      try{
+        r=await fetch(IA.url,{method:"POST",headers:{"content-type":"application/json"},
+          body:JSON.stringify({system:iaSystemFull(), messages:msgs, clientTools:IA_TOOLS, noSearch:sinBusqueda}),
+          signal:ctrl.signal});
+        try{ data=await r.json(); }catch(_){}
+      }finally{ clearTimeout(tId); }
     }catch(e){
-      // Fallo de red: reintenta UNA vez en silencio antes de rendirse (móvil/4G)
-      if(reintentoVacio<1){ reintentoVacio++; sinBusqueda=true; continue; }
-      IA.busy=false; c.msgs.push({role:"assistant",content:"⚠️ No pude conectar con el puente. Revisa tu internet o la dirección en ajustes (⚙️)."}); iaGuardarConvs(); pintarIAChat(); return;
+      // Timeout o fallo de red: reintenta SIN búsqueda (más rápido) antes de rendirse.
+      if(reintentoVacio<2){ reintentoVacio++; sinBusqueda=true; continue; }
+      IA.busy=false; c.msgs.push({role:"assistant",content:"⚠️ El puente tardó demasiado. Vuelve a intentarlo en un momento — si sigue, revisa tu internet o abre un chat nuevo con ✚."}); iaGuardarConvs(); pintarIAChat(); return;
     }
     if(!r.ok || (data&&data.error)){
       IA.busy=false;
