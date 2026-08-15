@@ -1,4 +1,4 @@
-const CACHE = "crt-elite-v5-18-2";
+const CACHE = "crt-elite-v5-19";
 const FILES = ["./","./index.html","./data.js","./app.js","./manifest.json","./icon-192.png","./icon-512.png"];
 const WORKER = "https://elitepro-worker.reiniercainet9.workers.dev";
 /* Web Push: al llegar un aviso (con la app CERRADA), muestra la notificación.
@@ -26,44 +26,13 @@ self.addEventListener("push", e => {
     });
   })());
 });
-/* Acceso rápido FIJO de Roberto (notificación persistente con botones) */
-const PIN_TITLE = "🧠 Roberto · Apex";
-const PIN_OPTS = {
-  body: "Toca 💬 para hablar con Roberto, o entra directo a una sección.",
-  tag: "apex-pin", renotify: false, silent: true, requireInteraction: true,
-  icon: "./icon-192.png", badge: "./icon-192.png",
-  actions: [
-    { action: "roberto", title: "💬 Roberto" },
-    { action: "diario",  title: "📒 Registrar" },
-    { action: "cuentas", title: "🏦 Cuentas" }
-  ]
-};
-/* Al tocar una notificación (o un botón), abre/enfoca la app en la sección correcta.
-   CLAVE: abrir la app PRIMERO (sin awaits largos) para no perder la activación del usuario;
-   re-anclar el pin AL FINAL (que no bloquee la apertura). */
+/* Al tocar una notificación de Roberto, abre/enfoca la app */
 self.addEventListener("notificationclick", e => {
-  const isPin = e.notification.tag === "apex-pin";
-  const go = e.action || (isPin ? "roberto" : "");
-  const url = "./index.html" + (go ? ("?go=" + go) : "");
   e.notification.close();
-  e.waitUntil((async () => {
-    const cs = await clients.matchAll({ type:"window", includeUncontrolled:true });
-    if (cs.length) {
-      const c = cs[0];
-      try { if ("navigate" in c) c.navigate(url); } catch(_){}   // sin await (no bloquear)
-      try { await c.focus(); } catch(_){}
-    } else if (clients.openWindow) {
-      try { await clients.openWindow(url); } catch(_){}
-    }
-    // Re-anclar el acceso fijo (al final, ya con la app abierta)
-    if (isPin) { try { await self.registration.showNotification(PIN_TITLE, PIN_OPTS); } catch(_){} }
-  })());
-});
-/* La app puede pedirle al SW que muestre/oculte el acceso fijo */
-self.addEventListener("message", e => {
-  const d = e.data || {};
-  if (d.type === "pinShow") self.registration.showNotification(PIN_TITLE, PIN_OPTS);
-  if (d.type === "pinHide") self.registration.getNotifications({ tag:"apex-pin" }).then(ns => ns.forEach(n => n.close()));
+  e.waitUntil(clients.matchAll({type:"window",includeUncontrolled:true}).then(cs => {
+    for(const c of cs){ if("focus" in c) return c.focus(); }
+    if(clients.openWindow) return clients.openWindow("./index.html");
+  }));
 });
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(()=>self.skipWaiting()));

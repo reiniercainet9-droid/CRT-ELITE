@@ -1,5 +1,11 @@
-APEX v5.18 — TRADING DESK  (antes CRT Elite)
+APEX v5.19 — TRADING DESK  (antes CRT Elite)
 ============================================
+NOTA v5.19: se QUITÓ el "acceso rápido / notificación fija" (no enrutaba bien
+en el Motorola G54 — limitación de las notis de apps web en ese teléfono).
+Apex queda limpio, sin funciones a medias. Todo lo demás intacto.
+
+APEX v5.18 — (retirado)
+=======================
 
 NOVEDADES v5.18  (ACCESO RÁPIDO FIJO DE ROBERTO)
 ================================================
