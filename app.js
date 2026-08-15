@@ -140,9 +140,29 @@ function horaNY(){
   const now=new Date();
   const f=new Intl.DateTimeFormat("es-ES",{timeZone:"America/New_York",hour:"2-digit",minute:"2-digit",hour12:false,weekday:"long"});
   const p={}; f.formatToParts(now).forEach(x=>p[x.type]=x.value);
-  const h=+p.hour, m=+p.minute;
-  return { h, m, dec:h+m/60, txt:String(h).padStart(2,"0")+":"+String(m).padStart(2,"0"),
+  const h=(+p.hour)%24, m=+p.minute;
+  /* día de la semana en NY (0=Dom … 6=Sáb) para saber si el mercado está abierto */
+  const w=new Intl.DateTimeFormat("en-US",{timeZone:"America/New_York",weekday:"short"}).format(now);
+  const WD={Sun:0,Mon:1,Tue:2,Wed:3,Thu:4,Fri:5,Sat:6}; const wd=WD[w]!=null?WD[w]:0;
+  return { h, m, wd, dec:h+m/60, txt:String(h).padStart(2,"0")+":"+String(m).padStart(2,"0"),
            dia:p.weekday.charAt(0).toUpperCase()+p.weekday.slice(1) };
+}
+/* ¿Está el mercado FOREX abierto? Cerrado sábado todo el día, domingo hasta las
+   17:00 NY, y viernes desde las 17:00 NY. (El indicador y sus killzones son de
+   Forex; para cripto —24/7— esto no aplica, pero su operativa actual es FX.) */
+function forexAbierto(ny){
+  ny=ny||horaNY(); const d=ny.wd, hd=ny.dec;
+  if(d===6) return false;            // Sábado
+  if(d===0 && hd<17) return false;   // Domingo antes de 17:00 NY
+  if(d===5 && hd>=17) return false;  // Viernes tras 17:00 NY
+  return true;
+}
+/* Motivo legible de por qué el FX está cerrado (para el reloj y el parte del día) */
+function fxCerradoMotivo(ny){
+  ny=ny||horaNY();
+  if(ny.wd===6 || (ny.wd===0 && ny.dec<17)) return "Fin de semana · Forex cerrado hasta el domingo 17:00 NY";
+  if(ny.wd===5 && ny.dec>=17) return "Forex cerrado (viernes tarde) · abre el domingo 17:00 NY";
+  return "Mercado cerrado";
 }
 function tickRelojes(){
   const ny=horaNY();
@@ -152,13 +172,17 @@ function tickRelojes(){
   $("#cBR").textContent=String(br.getHours()).padStart(2,"0")+":"+String(br.getMinutes()).padStart(2,"0");
 
   const box=$("#vent"), t=$("#ventT"), s=$("#ventS");
+  const abierto=forexAbierto(ny);
   let activa=null;
-  for(const v of VENTANAS){ if(v.s!=null && !v.bad && ny.dec>=v.s && ny.dec<v.e){ activa=v; break; } }
+  if(abierto){ for(const v of VENTANAS){ if(v.s!=null && !v.bad && ny.dec>=v.s && ny.dec<v.e){ activa=v; break; } } }
   box.className="vent "+(activa ? (activa.cls==="hl"?"best":"on") : "off");
   notifChequearKillzone(activa);
   if(activa){
     t.textContent=activa.n+" · ACTIVA";
     s.textContent = activa.cls==="hl" ? "Tu mejor ventana. Checklist antes de tocar nada." : "Ventana válida ("+activa.h+" NY)";
+  }else if(!abierto){
+    t.textContent="🔒 Mercado cerrado";
+    s.textContent=fxCerradoMotivo(ny);
   }else{
     t.textContent="Fuera de ventana";
     let prox=null;
@@ -428,6 +452,10 @@ function cuentasResumen(){
 /* MEJORA 2 — Veredicto "¿Puedo operar ahora?" cruzando ventana + noticias + cuentas */
 function verdictoOperar(rel){
   const motivos=[]; let ok=true;
+  const ny=horaNY();
+  if(!forexAbierto(ny)){
+    return { ok:false, motivos:[{ic:"🔒", t:fxCerradoMotivo(ny)+" — no hay nada que operar en Forex"}] };
+  }
   const v=ventanaActiva();
   if(v) motivos.push({ic:"✅", t:"En ventana operativa: "+v.n});
   else { ok=false; const p=proximaVentana(); motivos.push({ic:"⛔", t:"Fuera de ventana"+(p?" · próxima "+p.n+" "+p.h.split("−")[0]+" NY":"")}); }
@@ -446,8 +474,11 @@ function renderBrief(rel){
   const hoy=nyFechaISO(0);
   const hoyEv=(rel||[]).filter(e=>String(e.date).slice(0,10)===hoy);
   const alto=hoyEv.filter(e=>/High/i.test(e.impact)).length, medio=hoyEv.filter(e=>/Medium/i.test(e.impact)).length;
+  const nyB=horaNY(); const fxOn=forexAbierto(nyB);
   const v=ventanaActiva(), prox=proximaVentana();
-  const ventTxt = v ? ("✅ "+v.n+" · ACTIVA") : ("⛔ Fuera de ventana"+(prox?" · próxima "+prox.n+" "+prox.h.split("−")[0]+" NY":""));
+  const ventTxt = !fxOn ? ("🔒 "+fxCerradoMotivo(nyB))
+                : v ? ("✅ "+v.n+" · ACTIVA")
+                : ("⛔ Fuera de ventana"+(prox?" · próxima "+prox.n+" "+prox.h.split("−")[0]+" NY":""));
   const noticiasTxt = hoyEv.length ? ((alto?("🔴 "+alto+"  "):"")+(medio?("🟠 "+medio+"  "):"")+"hoy en tus pares") : "Sin noticias de impacto hoy en tus pares";
   const res=cuentasResumen();
   const ctaTxt = res.total ? (res.peligro?("⚠️ "+res.peligro+" en peligro"):(res.negativo?(res.negativo+" en negativo"):"todas OK"))+" · "+res.total+" cuenta(s)" : "";
@@ -1127,6 +1158,7 @@ function pipValueUSD(par, price){
 }
 function ventanaActiva(){
   const ny=horaNY();
+  if(!forexAbierto(ny)) return null;   // fin de semana / FX cerrado: nunca hay ventana
   for(const vv of VENTANAS){ if(vv.s!=null && !vv.bad && ny.dec>=vv.s && ny.dec<vv.e) return vv; }
   return null;
 }
@@ -3349,6 +3381,38 @@ const INDICADOR_DOSSIER =
 "- ALARMAS (~35 alertcondition + una super-alarma alert()). Las clave: ⏰ Aviso temprano / pinchazo D-4H-1H ('prepárate', a favor del sesgo); ✅ Confirmación ALCISTA/BAJISTA (al cierre); ⛔ Invalidación rota (bias en riesgo); 🔄 Giro estructural; 2️⃣ MSS 15m a favor; ✅ Secuencia F3 completa; filas CRT H4; ⭐ Confirmación PREMIUM. Todo lo demás es ruido.\n"+
 "- REGLA CRÍTICA que debes recordarle SIEMPRE que hablen del indicador o de sus alarmas: TradingView CONGELA la versión del script en el momento de crear la alarma. Por eso, cada vez que pega/actualiza el indicador, DEBE BORRAR y VOLVER A CREAR todas las alarmas, en cada par (se crean en el gráfico de 5m). Si no lo hace, las alarmas viejas siguen disparando lógica antigua y contradictoria.";
 
+/* Conocimiento AMPLIO de mercados: días y horarios de CADA mercado, para que
+   Roberto nunca mande a operar con el mercado cerrado (p.ej. Forex en finde) y
+   se adapte al mercado que Rey esté operando (hoy FX, mañana quizá otro). */
+const MERCADOS_DOSSIER =
+"CONOCIMIENTO DE MERCADOS — DÍAS Y HORARIOS (SIN LÍMITES): Rey opera AHORA Forex, pero esto NO es fijo (puede pasar a índices, oro, cripto…). Debes conocer a fondo CUÁNDO abre y cierra CADA mercado y adaptarte al que él opere. Antes de cualquier consejo de entrada o de decir 'ventana operativa', ten SIEMPRE presente el DÍA de la semana (te llega en el [Reloj EN VIVO]) y si ese mercado está ABIERTO. NUNCA le digas que puede operar ni que está en killzone si el mercado que opera está CERRADO.\n"+
+"- FOREX (su mercado actual: EUR/USD, GBP/USD, etc.): abre DOMINGO ~17:00 NY y cierra VIERNES ~17:00 NY. SÁBADO todo el día y DOMINGO hasta las 17:00 NY = CERRADO (fin de semana): nada que operar, ninguna killzone. Sesiones dentro de la semana (hora NY): Asia/Sídney-Tokio (noche), Londres (~2:00–5:00), solape Londres–NY y Nueva York (~7:00–12:00) = las de más volumen, las que él usa. Si es sábado o domingo y pregunta '¿opero?', la respuesta honesta es NO: dile que descanse o haga backtest.\n"+
+"- ORO (XAU/USD) y plata: horario tipo Forex/CME (dom 17:00 → vie 17:00 NY, con micro-pausa diaria ~17:00–18:00 NY). CERRADO el fin de semana.\n"+
+"- ÍNDICES US (US30/Dow, NAS100, SP500) y ACCIONES USA: sesión regular 9:30–16:00 NY, lun–vie; pre-market 4:00–9:30 y after-hours 16:00–20:00; los FUTUROS corren casi 24h de domingo noche a viernes, pero CERRADO el fin de semana y en festivos de EE.UU. (que a veces acortan sesión).\n"+
+"- CRIPTO (BTC, ETH…): 24/7, TODOS los días, también sábado y domingo — es el ÚNICO donde 'fin de semana' NO significa cerrado (aunque suele haber menos volumen). Si algún día Rey pasa a cripto, ahí sí puede operar el finde: adáptate.\n"+
+"- REGLA: usa el día que te llega en el [Reloj EN VIVO]. Fin de semana en FX/oro/índices = cerrado, no lo mandes a operar; solo cripto opera el finde.";
+/* Mapa COMPLETO de la app Apex: para que Roberto conozca su 'casa' entera y sepa
+   a qué se refiere Rey cuando menciona Apex o cualquiera de sus secciones. */
+const APEX_MAPA =
+"TU CASA — LA APP 'APEX' (conócela COMPLETA): Tu hogar se llama APEX; es el centro de mando de trading de Rey y tú eres su cerebro. Vives DENTRO, no eres un chat externo. Cuando Rey mencione 'Apex' o cualquier sección ('lléname tal parte de Apex', 'apúntalo en…', 'ábreme…'), sabes EXACTAMENTE a qué se refiere. Secciones:\n"+
+"1. 📰 Noticias — PRIMERA y lo primero del día: calendario económico real (ForexFactory) filtrado por sus pares + 'Parte del día' (ventana/mercado, noticias, cuentas) + botón '🚦 ¿Puedo operar AHORA?'.\n"+
+"2. 💬 Roberto (tú) — el chat contigo, con voz (te habla o te escribe).\n"+
+"3. ✅ Checklist — su secuencia operativa paso a paso antes de entrar.\n"+
+"4. 🎯 Confluencias — sus 5 confluencias del método.\n"+
+"5. 🗺️ Rutina / momentos del día.\n"+
+"6. ⛔ Reglas — sus reglas inviolables.\n"+
+"7. 💰 Riesgo — calculadora de lotaje (0.5% fijo).\n"+
+"8. ⚡ Gatillo — arma la entrada fina en M5/M3.\n"+
+"9. 📒 Diario — registro de sus operaciones.\n"+
+"10. 🏦 Cuentas — sus cuentas de fondeo (capital, DD, fases).\n"+
+"11. 📅 Almanaque — resultados por día.\n"+
+"12. 📈 Análisis — estadísticas de su operativa.\n"+
+"13. 🧠 Mentor — análisis automático.\n"+
+"14. 📋 Plan — su plan operativo completo.\n"+
+"15. ⏰ Avisos — recordatorios de rutina con push (días configurables).\n"+
+"TUS MANOS ya tocan: avisos, pares, trades y cuentas (SIEMPRE con confirmación de Rey y registro en el 🗒️ Historial).\n"+
+"TU SISTEMA COMPLETO: no vives solo en Apex; estás integrado a TODO el sistema de trading de Rey — su TradingView, su indicador CRT Elite, sus ALARMAS (te llegan por webhook y tú las interpretas) y Apex. Estás pendiente de lo que pasa en el conjunto para darle un servicio sin límites, apoyándote además en tu conexión a internet.";
+
 let _iaConoc = null;
 /* Arma el bloque de conocimiento (estrategia + indicador + perfil) desde los
    mismos datos que ve la app, para que la IA y la app nunca se contradigan. */
@@ -3365,6 +3429,8 @@ function iaConocimiento(){
   _iaConoc =
     "==========  DOSSIER — TODO LO QUE SÉ DE REY Y SU MÉTODO  ==========\n\n"+
     PERFIL_REY+"\n\n"+
+    MERCADOS_DOSSIER+"\n\n"+
+    APEX_MAPA+"\n\n"+
     "SU ESTRATEGIA CRT ELITE (SMC/ICT/CRT):\n"+
     "REGLA DE ORO ABSOLUTA: SIN SWEEP = SIN SETUP. Si el precio no barrió liquidez con MECHA (no con cierre), NO hay operación, por muchas otras confluencias que haya.\n\n"+
     "Las 5 confluencias:\n"+C+"\n\n"+
