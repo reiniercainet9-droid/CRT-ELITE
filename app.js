@@ -4712,12 +4712,15 @@ function iaPollJob(jobId){
   _iaPolling[jobId]=setTimeout(tick, 2500);
 }
 /* Procesa la respuesta ya lista (texto, error, o manos que pedir confirmación) */
+/* Detecta si el error del chat es por CRÉDITOS de Anthropic y añade el aviso de recarga */
+function iaEsCredito(m){ return /credit|balance|billing|saldo|insufficient|quota|payment|402/i.test(String(m||"")); }
+function iaErrMsg(m){ const s=String(m||"Error"); if(iaEsCredito(s)) return "💳 **Se agotaron los créditos de Roberto** (tu cuenta de Anthropic). Recárgalos y en 1 minuto vuelvo:\n"+IA_RECARGA_URL+"\n(También en ⚙️ → «💳 Saldo / recargar créditos».)"; return "⚠️ "+s; }
 async function iaBgResuelto(jobId, d){
   const pend=iaPendCargar().find(x=>x.jobId===jobId);
   const c = (pend && IA.convs.find(x=>x.id===pend.convId)) || iaConvAct();
   iaPendBorrar(jobId);
   IA.actId=c.id;   // deja como activa la conversación de la respuesta, para que se vea al abrir el chat
-  if(d.error){ IA.busy=false; c.msgs.push({role:"assistant",content:"⚠️ "+d.error}); iaGuardarConvs(); pintarIAChat(); return; }
+  if(d.error){ IA.busy=false; c.msgs.push({role:"assistant",content:iaErrMsg(d.error)}); iaGuardarConvs(); pintarIAChat(); return; }
   if(d.toolUse && Array.isArray(d.content)){
     const pre=d.content.filter(b=>b.type==="text").map(b=>b.text||"").join("").trim();
     if(pre) c.msgs.push({role:"assistant",content:pre});
@@ -4760,7 +4763,7 @@ async function iaMostrarJob(jobId, intentos){
   iaPendBorrar(jobId);
   if(d.toolUse){ iaBgResuelto(jobId, d); return; }   // si son "manos", usa el flujo con tarjetas
   const c=iaConvAct();
-  const txt=(d.error?("⚠️ "+d.error):(d.text||"")).trim();
+  const txt=(d.error?iaErrMsg(d.error):(d.text||"")).trim();
   if(!txt) return;
   const ya=c.msgs.some(m=>m.role==="assistant" && m.content===txt);
   if(!ya) c.msgs.push({role:"assistant",content:txt});
