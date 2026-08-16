@@ -85,6 +85,51 @@ function nubePintarEstado(){
 /* 📸 Capturas del gráfico: la app PIDE la foto (el Puente la saca y la sube). */
 async function nubeShotReq(sym, id){ try{ await fetch(nubeUrl()+"/shot/req",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({sym,id})}); }catch(_){}}
 async function nubeShotGet(id){ try{ const r=await fetch(nubeUrl()+"/shot/get?id="+encodeURIComponent(id)); if(!r.ok) return null; const d=await r.json(); return (d&&d.img)?d.img:null; }catch(_){ return null; } }
+async function nubeShotDel(ids){ try{ await fetch(nubeUrl()+"/shot/del",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({ids:Array.isArray(ids)?ids:[ids]})}); }catch(_){}}
+function dataURLtoBlob(u){ const parts=String(u).split(","); const mime=(parts[0].match(/:(.*?);/)||[])[1]||"image/jpeg"; const bin=atob(parts[1]||""); const arr=new Uint8Array(bin.length); for(let k=0;k<bin.length;k++)arr[k]=bin.charCodeAt(k); return new Blob([arr],{type:mime}); }
+/* Visor de foto DENTRO de Apex (no abre pestaña) con compartir/descargar/borrar */
+async function abrirFoto(id, meta){
+  const ov=el("div","foto-ov");
+  ov.style.cssText="position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.93);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px";
+  ov.innerHTML=`<div style="color:#ccc">Cargando…</div>`;
+  document.body.appendChild(ov);
+  const cerrar=()=>ov.remove();
+  const img=await nubeShotGet(id);
+  ov.innerHTML=(img?`<img src="${img}" style="max-width:100%;max-height:70vh;border-radius:10px;object-fit:contain">`:`<div style="color:#fff;text-align:center">No pude cargar la imagen.<br><span style="font-size:12px;color:#aaa">(Puede que aún se esté subiendo — reintenta en unos segundos.)</span></div>`)+
+    `<div style="color:#bbb;font-size:12px;margin-top:8px">${esc(meta||"")}</div>
+     <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:14px">
+       <button class="btn" id="fShare">📤 Compartir</button>
+       <button class="btn" id="fDown">⬇️ Descargar</button>
+       <button class="btn danger" id="fDel">🗑️ Borrar</button>
+       <button class="btn gold" id="fClose">Cerrar</button>
+     </div>`;
+  ov.onclick=(e)=>{ if(e.target===ov) cerrar(); };
+  ov.querySelector("#fClose").onclick=cerrar;
+  const down=()=>{ if(!img) return; const a=document.createElement("a"); a.href=img; a.download="apex_"+id+".jpg"; document.body.appendChild(a); a.click(); a.remove(); };
+  ov.querySelector("#fDown").onclick=down;
+  ov.querySelector("#fShare").onclick=async()=>{
+    if(!img) return;
+    try{
+      const file=new File([dataURLtoBlob(img)],"apex_"+id+".jpg",{type:"image/jpeg"});
+      if(navigator.canShare && navigator.canShare({files:[file]})) await navigator.share({files:[file], title:"Captura Apex", text:meta||"Captura de operación"});
+      else { down(); toast("Tu teléfono no permite compartir la imagen directa; la descargué."); }
+    }catch(_){}
+  };
+  ov.querySelector("#fDel").onclick=()=>{ if(!confirm("¿Borrar esta captura? Se quita de Apex y de la nube.")) return; borrarCaptura(id); cerrar(); };
+}
+function borrarCaptura(id){
+  let cambio=false;
+  const n=SHOTS.length; SHOTS=SHOTS.filter(s=>s.id!==id); if(SHOTS.length!==n){ save(K.shots,SHOTS); cambio=true; }
+  TRADES.forEach(t=>{
+    if(t.shotOpen===id){ delete t.shotOpen; cambio=true; }
+    if(t.shotClose===id){ delete t.shotClose; cambio=true; }
+    if(Array.isArray(t.shots) && t.shots.includes(id)){ t.shots=t.shots.filter(x=>x!==id); cambio=true; }
+  });
+  if(cambio) save(K.trades,TRADES);
+  nubeShotDel(id);
+  toast("Captura borrada");
+  if(TAB==="galeria") renderGaleria();
+}
 
 let TRADES = load(K.trades, []);
 let SHOTS  = load(K.shots, []);   // capturas sueltas (sin trade) para la Galería
@@ -1973,10 +2018,11 @@ async function cargarShots(t){
   let alguna=false;
   for(const it of items){
     const img=await nubeShotGet(it.id);
-    if(img){ alguna=true; html+='<div style="margin:6px 0"><div style="font-size:12px;color:var(--txt3);margin-bottom:3px">'+it.lbl+'</div><img src="'+img+'" style="width:100%;border-radius:8px;border:1px solid rgba(255,255,255,.12)" onclick="window.open(this.src)"></div>'; }
+    if(img){ alguna=true; html+='<div style="margin:6px 0"><div style="font-size:12px;color:var(--txt3);margin-bottom:3px">'+it.lbl+'</div><img src="'+img+'" class="dt-shot" data-fid="'+esc(it.id)+'" data-meta="'+esc(it.lbl)+'" style="width:100%;border-radius:8px;border:1px solid rgba(255,255,255,.12);cursor:pointer"></div>'; }
     else { html+='<div style="margin:6px 0;font-size:12px;color:var(--txt3)">'+it.lbl+': aún subiéndose o no disponible.</div>'; }
   }
   cont.innerHTML=html;
+  cont.querySelectorAll(".dt-shot").forEach(im=>im.onclick=()=>abrirFoto(im.dataset.fid, im.dataset.meta));
 }
 
 /* ============================================================
@@ -2051,12 +2097,12 @@ function renderGaleria(){
 }
 function pintarGrupoGaleria(cont, caps){
   cont.innerHTML=`<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">`+
-    caps.map(c=>`<div class="gal-item" data-id="${esc(c.id)}" style="cursor:pointer">
+    caps.map(c=>`<div class="gal-item" data-id="${esc(c.id)}" data-meta="${esc((c.par||"")+" · "+c.tipo+" · "+fechaCorta(c.fecha))}" style="cursor:pointer">
       <div data-img="${esc(c.id)}" style="aspect-ratio:16/10;background:rgba(255,255,255,.05);border-radius:8px;overflow:hidden;display:flex;align-items:center;justify-content:center"><span style="font-size:11px;color:var(--txt3)">cargando…</span></div>
       <div style="font-size:11px;color:var(--txt3);margin-top:3px">${esc(c.par||"")} · ${esc(c.tipo)} · ${esc(fechaCorta(c.fecha))}</div>
     </div>`).join("")+`</div>`;
   cont.querySelectorAll("[data-img]").forEach(async d=>{ const img=await nubeShotGet(d.dataset.img); d.innerHTML=img?`<img src="${img}" style="width:100%;height:100%;object-fit:cover">`:`<span style="font-size:11px;color:var(--txt3)">no disponible</span>`; });
-  cont.querySelectorAll(".gal-item").forEach(it=>it.onclick=async()=>{ const img=await nubeShotGet(it.dataset.id); if(img) window.open(img); });
+  cont.querySelectorAll(".gal-item").forEach(it=>it.onclick=()=>abrirFoto(it.dataset.id, it.dataset.meta));
 }
 function abrirModal(html, botones){
   cerrarModal();
@@ -4282,6 +4328,8 @@ const IA_TOOLS = [
     }, required:[] } },
   { name:"capturar_grafico", description:"Pide al Puente una CAPTURA de pantalla del gráfico de un par (además de las automáticas de apertura/cierre). Úsalo cuando Rey diga 'saca captura' o quieras guardar una imagen para analizar. Tarda unos segundos (el Puente la sube a la nube). Si hay una entrada abierta de ese par, la foto se guarda en ella.",
     input_schema:{ type:"object", properties:{ par:{type:"string",description:"Par a capturar, ej. EUR/USD (di el que Rey esté operando)"} }, required:["par"] } },
+  { name:"limpiar_capturas", description:"Borra capturas SUELTAS (las que no están dentro de un trade) para liberar espacio. Filtra por par y/o fecha; sin filtro borra TODAS las sueltas. Las capturas ligadas a un trade NO se tocan. Confírmalo siempre.",
+    input_schema:{ type:"object", properties:{ par:{type:"string"}, fecha:{type:"string",description:"YYYY-MM-DD"} }, required:[] } },
   { name:"borrar_trade", description:"Borra un registro del 📒 Diario. Identifícalo por el par (toma el MÁS RECIENTE de ese par) o por par+fecha. Afecta estadísticas: confírmalo SIEMPRE.",
     input_schema:{ type:"object", properties:{ par:{type:"string",description:"Par del trade a borrar"}, fecha:{type:"string",description:"YYYY-MM-DD (opcional, para precisar cuál)"} }, required:["par"] } },
   { name:"editar_trade", description:"Edita un registro existente del 📒 Diario, identificándolo por el par (el más reciente) o par+fecha. Cambia SOLO los campos que pases. Confírmalo siempre.",
@@ -4320,6 +4368,7 @@ function describeTool(name, i){
   if(name==="registrar_entrada") return "✍️ Registrar ENTRADA (abierta) — "+(i.par||"?")+" "+(i.dir||"")+"\nEntrada "+(i.entrada!=null?i.entrada:"?")+" · SL "+(i.sl!=null?i.sl:"?")+" · TP "+(i.tp!=null?i.tp:"?")+(i.rr?(" · RR 1:"+i.rr):"")+(i.riesgoPct?(" · riesgo "+i.riesgoPct+"%"):"")+"\nSetup "+(i.setup||"?")+" · "+(i.ventana||"?")+" · '"+(i.momento||"En confirmación")+"'"+(i.zona?(" · "+i.zona):"")+(i.poi?(" · "+i.poi):"")+(i.gtf?(" · gatillo "+i.gtf):"")+(i.nota?("\nNota: "+i.nota):"");
   if(name==="cerrar_entrada"){ const rr=(i.r!=null&&i.r!=="")?(i.r+"R"):(i.precio_cierre!=null?("cierre en "+i.precio_cierre+" → calculo el R"):"?"); return "🏁 Cerrar entrada "+(i.par||"(la más reciente)")+" → "+rr+(i.res?(" · "+i.res):"")+(i.nota?("\nNota: "+i.nota):""); }
   if(name==="capturar_grafico") return "📸 Capturar el gráfico de "+(i.par||"(par actual)");
+  if(name==="limpiar_capturas") return "🧹 Limpiar capturas sueltas"+(i.par?(" de "+i.par):"")+(i.fecha?(" del "+i.fecha):" (todas las sueltas)");
   if(name==="borrar_trade") return "🗑️ Borrar del Diario el trade de "+(i.par||"?")+(i.fecha?(" del "+i.fecha):" (el más reciente)");
   if(name==="editar_trade"){ const c=["r","res","setup","momento","bias","ventana","nconf","zona","entrada","sl","tp","nota"].filter(k=>i[k]!=null&&i[k]!=="").map(k=>k+"→"+i[k]).join(", "); return "✏️ Editar el trade de "+(i.par||"?")+(i.fecha?(" del "+i.fecha):" (el más reciente)")+"\n"+(c||"(sin cambios)"); }
   if(name==="crear_cuenta") return "🏦 Crear cuenta — "+(i.alias||i.firma||"?")+(i.firma&&i.alias?(" ("+i.firma+")"):"")+"\nCapital "+(i.capital||"?")+" · fase "+(i.fase||"Examen F1")+" · riesgo "+(i.riesgoPct||"0.5")+"%\nDD máx "+(i.ddMaxPct||"?")+"% ("+(i.ddTipo||"?")+") · daily "+(i.ddDailyPct||"?")+"% · target "+(i.targetPct||"?")+"%"+(i.precio?(" · precio "+i.precio):"");
@@ -4438,6 +4487,16 @@ function ejecutarTool(name, i){
       else { SHOTS.unshift({ id:sid, fecha:hoyISO(), par:(par||"—"), tipo:"Manual", ts:Date.now() }); save(K.shots,SHOTS); } // suelta → visible en la Galería
       nubeShotReq(par||(t&&t.par)||"", sid);
       return {ok:true,msg:"📸 Captura pedida"+(par?(" de "+par):"")+" — el Puente la sube en unos segundos; la verás en la 🖼️ Galería"+(t?" y en tu entrada abierta.":".")};
+    }
+    if(name==="limpiar_capturas"){
+      const q=String(i.par||"").toLowerCase();
+      const match=s=>(!q||String(s.par||"").toLowerCase().includes(q)) && (!i.fecha||s.fecha===i.fecha);
+      const borrar=(Array.isArray(SHOTS)?SHOTS:[]).filter(match);
+      if(!borrar.length) return {ok:false,msg:"No hay capturas sueltas que borrar con ese filtro"};
+      SHOTS=SHOTS.filter(s=>!match(s)); save(K.shots,SHOTS);
+      nubeShotDel(borrar.map(s=>s.id));
+      if(TAB==="galeria") renderGaleria();
+      return {ok:true,msg:"Borré "+borrar.length+" captura(s) suelta(s)"+(i.par?(" de "+i.par):"")+"."};
     }
     if(name==="crear_cuenta"){
       if(!i.alias && !i.firma) return {ok:false,msg:"Falta el alias o la firma"};
