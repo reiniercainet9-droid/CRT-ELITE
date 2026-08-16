@@ -2025,21 +2025,35 @@ function renderGaleria(){
   const grupos={};
   caps.forEach(c=>{ const k=galPeriodo(c.fecha, GAL_MODO); (grupos[k]=grupos[k]||[]).push(c); });
   const keys=Object.keys(grupos).sort((a,b)=>b.localeCompare(a));
-  body.innerHTML=keys.map(k=>`
-    <div class="card">
-      <div style="font-weight:700;margin-bottom:8px">${esc(galLabel(k,GAL_MODO))} <span style="color:var(--txt3);font-weight:400">· ${grupos[k].length} foto(s)</span></div>
-      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">
-        ${grupos[k].map(c=>`<div class="gal-item" data-id="${esc(c.id)}" style="cursor:pointer">
-          <div data-img="${esc(c.id)}" style="aspect-ratio:16/10;background:rgba(255,255,255,.05);border-radius:8px;overflow:hidden;display:flex;align-items:center;justify-content:center"><span style="font-size:11px;color:var(--txt3)">cargando…</span></div>
-          <div style="font-size:11px;color:var(--txt3);margin-top:3px">${esc(c.par||"")} · ${esc(c.tipo)} · ${esc(fechaCorta(c.fecha))}</div>
-        </div>`).join("")}
+  // Lista de periodos plegables: tocas un día/semana/mes/año y se abren SUS capturas
+  const gruposArr=keys.map(k=>grupos[k]);
+  body.innerHTML=keys.map((k,idx)=>`
+    <div class="card" style="padding-top:10px">
+      <div class="gal-head" data-k="${idx}" style="display:flex;justify-content:space-between;align-items:center;cursor:pointer">
+        <div style="font-weight:700">${esc(galLabel(k,GAL_MODO))}</div>
+        <div style="color:var(--txt3);font-size:13px">${grupos[k].length} foto(s) &nbsp;<span class="gal-arrow">▸</span></div>
       </div>
+      <div class="gal-body" id="galg${idx}" data-loaded="0" style="display:none;margin-top:10px"></div>
     </div>`).join("");
-  body.querySelectorAll("[data-img]").forEach(async cont=>{
-    const img=await nubeShotGet(cont.dataset.img);
-    cont.innerHTML = img ? `<img src="${img}" style="width:100%;height:100%;object-fit:cover">` : `<span style="font-size:11px;color:var(--txt3)">no disponible</span>`;
+  body.querySelectorAll(".gal-head").forEach(h=>{
+    h.onclick=()=>{
+      const idx=+h.dataset.k, cont=document.getElementById("galg"+idx); if(!cont) return;
+      const abrir=cont.style.display==="none";
+      cont.style.display=abrir?"block":"none";
+      const ar=h.querySelector(".gal-arrow"); if(ar) ar.textContent=abrir?"▾":"▸";
+      if(abrir && cont.dataset.loaded==="0"){ cont.dataset.loaded="1"; pintarGrupoGaleria(cont, gruposArr[idx]); }
+    };
   });
-  body.querySelectorAll(".gal-item").forEach(it=>it.onclick=async()=>{ const img=await nubeShotGet(it.dataset.id); if(img) window.open(img); });
+  const first=body.querySelector(".gal-head"); if(first) first.click(); // abre el más reciente por defecto
+}
+function pintarGrupoGaleria(cont, caps){
+  cont.innerHTML=`<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">`+
+    caps.map(c=>`<div class="gal-item" data-id="${esc(c.id)}" style="cursor:pointer">
+      <div data-img="${esc(c.id)}" style="aspect-ratio:16/10;background:rgba(255,255,255,.05);border-radius:8px;overflow:hidden;display:flex;align-items:center;justify-content:center"><span style="font-size:11px;color:var(--txt3)">cargando…</span></div>
+      <div style="font-size:11px;color:var(--txt3);margin-top:3px">${esc(c.par||"")} · ${esc(c.tipo)} · ${esc(fechaCorta(c.fecha))}</div>
+    </div>`).join("")+`</div>`;
+  cont.querySelectorAll("[data-img]").forEach(async d=>{ const img=await nubeShotGet(d.dataset.img); d.innerHTML=img?`<img src="${img}" style="width:100%;height:100%;object-fit:cover">`:`<span style="font-size:11px;color:var(--txt3)">no disponible</span>`; });
+  cont.querySelectorAll(".gal-item").forEach(it=>it.onclick=async()=>{ const img=await nubeShotGet(it.dataset.id); if(img) window.open(img); });
 }
 function abrirModal(html, botones){
   cerrarModal();
