@@ -27,7 +27,60 @@ const K = {
   robertolog:"crtelite_robertolog_v3"
 };
 const load = (k,d)=>{ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):d; }catch(e){ return d; } };
-const save = (k,v)=>{ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){ toast("No se pudo guardar"); } };
+const save = (k,v)=>{ try{ localStorage.setItem(k,JSON.stringify(v)); nubeMarcar(); }catch(e){ toast("No se pudo guardar"); } };
+
+/* ============================================================
+   ☁️ RESPALDO EN LA NUBE — recupera Apex en CUALQUIER teléfono
+   Sube TODOS los registros al Worker bajo el CÓDIGO de respaldo de Rey.
+   En otro móvil, con el mismo código, restaura todo intacto (nada se pierde).
+   No usa claves del sistema (el repo es público): el código ES la llave.
+   ============================================================ */
+const NUBE_KEYS = ["crtelite_trades_v2","crtelite_cuentas_v3","crtelite_reminders_v3","crtelite_chk_v2","crtelite_conf_v2","crtelite_reglas_v2","crtelite_balance_v2","crtelite_ctx_v3","crtelite_estrategias_v3","crtelite_pares_v3","crtelite_calpares_v3","crtelite_notif_v3","crtelite_vigila_v3","crtelite_fabpos_v3","crtelite_iavoz_v3"];
+const NUBE_CODE_KEY="crtelite_nubecode_v1", NUBE_TS_KEY="crtelite_datats_v1", NUBE_LAST_KEY="crtelite_nubelast_v1";
+let NUBE_RESTAURANDO=false, _nubeTimer=null;
+function nubeCode(){ try{ return (localStorage.getItem(NUBE_CODE_KEY)||"").trim(); }catch(_){ return ""; } }
+function nubeTs(){ return parseInt(localStorage.getItem(NUBE_TS_KEY)||"0",10)||0; }
+function nubeUrl(){ try{ return (typeof iaBase==="function")? iaBase() : "https://elitepro-worker.reiniercainet9.workers.dev"; }catch(_){ return "https://elitepro-worker.reiniercainet9.workers.dev"; } }
+function nubeMarcar(){
+  if(NUBE_RESTAURANDO) return;
+  try{ localStorage.setItem(NUBE_TS_KEY,String(Date.now())); }catch(_){}
+  if(!nubeCode()) return;
+  clearTimeout(_nubeTimer); _nubeTimer=setTimeout(()=>{ nubeSubir(); }, 4000);
+}
+async function nubeSubir(){
+  const code=nubeCode(); if(!code) return;
+  try{
+    const data={};
+    NUBE_KEYS.forEach(k=>{ const v=localStorage.getItem(k); if(v!=null) data[k]=v; });
+    const ts=nubeTs()||Date.now();
+    const r=await fetch(nubeUrl()+"/backup/set",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({code,ts,data})});
+    if(r.ok){ const d=await r.json(); if(d && d.ok){ localStorage.setItem(NUBE_LAST_KEY,String(Date.now())); nubePintarEstado(); } }
+  }catch(_){}
+}
+async function nubeRestaurar(auto){
+  const code=nubeCode(); if(!code){ if(!auto) toast("Primero pon tu código de respaldo"); return; }
+  try{
+    const r=await fetch(nubeUrl()+"/backup/get",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({code})});
+    if(!r.ok){ if(!auto) toast("No pude conectar con la nube"); return; }
+    const d=await r.json(); const bk=d && d.backup;
+    if(!bk || !bk.data || !bk.ts){ if(!auto) toast("No hay respaldo en la nube con ese código"); return; }
+    const localTs=nubeTs();
+    if(auto && localTs && localTs>=bk.ts) return; // lo local es igual o más nuevo: no toco nada
+    if(!auto && localTs>bk.ts){ if(!confirm("Tu teléfono tiene datos MÁS nuevos que la nube. ¿Restaurar igualmente y reemplazarlos?")) return; }
+    NUBE_RESTAURANDO=true;
+    Object.keys(bk.data).forEach(k=>{ if(k.indexOf("crtelite_")===0){ try{ localStorage.setItem(k, bk.data[k]); }catch(_){}} });
+    localStorage.setItem(NUBE_TS_KEY,String(bk.ts));
+    NUBE_RESTAURANDO=false;
+    toast("☁️ Restaurado desde la nube — recargando…");
+    setTimeout(()=>location.reload(), 900);
+  }catch(_){ if(!auto) toast("Error restaurando"); }
+}
+function nubePintarEstado(){
+  const e=document.getElementById("nubeEstado"); if(!e) return;
+  const code=nubeCode(); const last=parseInt(localStorage.getItem(NUBE_LAST_KEY)||"0",10);
+  if(!code){ e.textContent="Sin código: el respaldo en la nube está apagado."; return; }
+  e.textContent = last? ("✅ Último respaldo: "+new Date(last).toLocaleString()) : "Código puesto. Se respaldará al primer cambio.";
+}
 
 let TRADES = load(K.trades, []);
 let CHK    = load(K.chk, {});
@@ -1825,13 +1878,14 @@ function renderDiario(){
         const d=el("div","trade");
         d.style.cursor="pointer";
         d.innerHTML=`<div class="trade-top">
-          <div><span class="pill ${pc}">${t.setup}</span>
+          <div><span class="pill ${pc}">${t.setup||"—"}</span>
+            ${t.abierta?'<span class="pill c">✍️ ABIERTA</span>':""}
             ${t.plan==="No"?'<span class="pill br">PLAN ROTO</span>':""}
             ${t.fueraLimite?'<span class="pill br">R6</span>':""}
             <span class="trade-p">${esc(t.par)} · ${esc(t.dir)}</span></div>
           <div style="display:flex;align-items:center;gap:6px">
-            <span class="trade-r ${col}">${t.r>0?"+":""}${r1(t.r)}R</span></div></div>
-          <div class="trade-m">${fechaCorta(t.fecha)} ${esc(t.dia||"")}${t.hora?" · "+esc(t.hora):""} · ${esc(t.ventana)}<br>
+            <span class="trade-r ${col}">${t.abierta?"abierta":((t.r>0?"+":"")+r1(t.r)+"R")}</span></div></div>
+          <div class="trade-m">${t.abierta&&t.entrada!=null?("Entrada "+t.entrada+(t.sl!=null?" · SL "+t.sl:"")+(t.tp!=null?" · TP "+t.tp:"")+(t.rr?" · RR 1:"+t.rr:"")+(t.riesgoPct?" · riesgo "+t.riesgoPct+"%":"")+"<br>"):""}${fechaCorta(t.fecha)} ${esc(t.dia||"")}${t.hora?" · "+esc(t.hora):""} · ${esc(t.ventana)}<br>
             ${t.nconf||0}/5 confluencias · ${esc(t.zona||"—")} · ${esc(t.poi||"—")} · ${esc(t.emo)}
             ${t.mae!=null?" · MAE "+r1(t.mae)+"R":""}${t.mfe!=null?" · MFE "+r1(t.mfe)+"R":""}</div>
           ${t.nota?`<div class="trade-n">${esc(t.nota)}</div>`:""}
@@ -2051,6 +2105,7 @@ function tradesPeriodo(){
 
 /* ---- Núcleo estadístico. Recibe array de trades, devuelve métricas ---- */
 function metricas(list){
+  list=(list||[]).filter(t=>!t.abierta); // las ENTRADAS abiertas no cuentan en estadísticas hasta cerrarse
   const n=list.length;
   if(!n) return null;
   const wins  = list.filter(t=>t.r>0);
@@ -3428,7 +3483,8 @@ const APEX_MAPA =
 const PUENTE_DOSSIER =
 "👁️ TU VISTA EN VIVO DEL GRÁFICO (PUENTE APEX): Ya tienes OJOS sobre el gráfico real de Rey en TradingView. Cuando su PC está encendida con el 'Puente Apex' corriendo, en CADA mensaje recibes un bloque [👁️ GRÁFICO EN VIVO ...] con el símbolo, timeframe, precio, el dashboard COMPLETO del indicador CRT Elite (killzone, sesgo, estado del día, zona premium/discount, alineación de temporalidades, SMT, secuencia F3…), los niveles clave y las herramientas de posición (Long/Short) que Rey haya puesto con entrada/SL/TP/RR/riesgo. ESO ES REAL Y ACTUAL — úsalo como tu fuente de verdad del gráfico; no inventes ni contradigas esos números. "+
 "Si el bloque dice que la PC NO está conectada (no hay lectura fresca), NO afirmes que ves el gráfico: dile con cariño que encienda la PC y abra el 'Puente Apex' (doble clic en 'Arrancar Puente Apex') para que puedas verlo en vivo. "+
-"Cuando SÍ estés conectado y estén operando juntos, ve CANTÁNDOLE las confluencias que se cumplen según ese bloque (barrido de liquidez, MSS de 15m, zona tocada, Secuencia F3, killzone activa) y recuérdale SIEMPRE esperar la vela de confirmación cerrada, nunca entrar en el toque.";
+"Cuando SÍ estés conectado y estén operando juntos, ve CANTÁNDOLE las confluencias que se cumplen según ese bloque (barrido de liquidez, MSS de 15m, zona tocada, Secuencia F3, killzone activa) y recuérdale SIEMPRE esperar la vela de confirmación cerrada, nunca entrar en el toque.\n"+
+"✍️ CAPTURA DE ENTRADAS: cuando en el gráfico en vivo veas una herramienta de posición (Long/Short) que Rey acaba de poner y que NO aparezca en la lista de '[📒 ENTRADAS ABIERTAS ya registradas]', OFRÉCELE registrarla tú con la mano registrar_entrada (rellenas par, dirección, entrada, SL, TP, RR y riesgo leídos del gráfico + setup/ventana/momento/bias/zona según tu análisis), SIEMPRE con tu tarjeta de confirmación. Antes de registrar, valida/rectifica la entrada según sus reglas (¿hubo sweep? ¿zona correcta premium/discount? ¿killzone? ¿a favor del sesgo? ¿RR sano?) y adviértele si algo no cuadra. Cuando Rey te diga que cerró la operación, usa cerrar_entrada con el resultado en R. Detección en CUALQUIER par que tenga abierto, nada fijo.";
 
 /* Frameworks de los DOS análisis de Rey (semanal + diario), adaptados para que
    Roberto los ejecute con el gráfico EN VIVO (su indicador CRT Elite ya calculó
@@ -3627,6 +3683,13 @@ function iaInit(){
         <a class="btn" href="https://console.anthropic.com/settings/billing" target="_blank" rel="noopener" style="margin-top:8px;display:block;text-align:center;text-decoration:none">💳 Saldo / recargar créditos</a>
         <button class="btn" id="iaClear" style="margin-top:8px">🗑️ Borrar esta conversación</button>
         <div class="note" style="text-align:left">Tu clave de Claude vive segura en el puente, nunca aquí. Los centavos por pregunta se cargan a tu cuenta de Anthropic. La IA no ve tu saldo; míralo en "Saldo / recargar".</div>
+        <div style="margin-top:12px;border-top:1px solid rgba(255,255,255,.12);padding-top:10px">
+          <div class="note" style="text-align:left"><b>☁️ Respaldo en la nube</b> — para no perder NADA y recuperar Apex en otro teléfono. Elige un código secreto y recuérdalo (con él restauras todo).</div>
+          <input class="inp" id="nubeCodeInp" placeholder="Tu código de respaldo (mín. 4 letras/números)" style="margin-top:6px">
+          <button class="btn gold" id="nubeSave" style="margin-top:8px">💾 Guardar código y respaldar ahora</button>
+          <button class="btn" id="nubeRestore" style="margin-top:8px">☁️ Restaurar todo desde la nube</button>
+          <div class="note" id="nubeEstado" style="text-align:left;margin-top:6px"></div>
+        </div>
       </div>
       <div class="ia-msgs" id="iaMsgs"></div>
       <div class="ia-quick" id="iaQuick">
@@ -3692,6 +3755,9 @@ function iaInit(){
   }
   $("#iaSaveUrl").onclick=()=>{ IA.url=$("#iaUrl").value.trim()||IA_URL_DEFAULT; save(K.iaurl,IA.url); $("#iaCfgBox").style.display="none"; toast("Puente guardado ✓"); };
   $("#iaClear").onclick=()=>{ if(confirm("¿Borrar la conversación actual?")){ const c=iaConvAct(); c.msgs=[]; c.t=""; iaGuardarConvs(); $("#iaCfgBox").style.display="none"; pintarIAChat(); } };
+  { const ci=$("#nubeCodeInp"); if(ci) ci.value=nubeCode(); nubePintarEstado(); }
+  { const bs=$("#nubeSave"); if(bs) bs.onclick=async()=>{ const c=($("#nubeCodeInp").value||"").trim(); if(c.length<4){ toast("El código debe tener al menos 4"); return; } localStorage.setItem(NUBE_CODE_KEY,c); localStorage.setItem(NUBE_TS_KEY,String(Date.now())); toast("Subiendo a la nube…"); await nubeSubir(); nubePintarEstado(); toast("☁️ Respaldo guardado ✓"); }; }
+  { const br=$("#nubeRestore"); if(br) br.onclick=async()=>{ const c=($("#nubeCodeInp").value||"").trim(); if(c.length>=4) localStorage.setItem(NUBE_CODE_KEY,c); await nubeRestaurar(false); }; }
   $("#iaSend").onclick=()=>iaEnviar();
   const ta=$("#iaText");
   ta.addEventListener("keydown",e=>{ if(e.key==="Enter" && !e.shiftKey){ e.preventDefault(); iaEnviar(); } });
@@ -3990,6 +4056,15 @@ async function iaGrafico(){
   }catch(_){ return "[👁️ GRÁFICO EN VIVO: no pude leer el puente en este instante.]"; }
 }
 
+/* Entradas ABIERTAS ya registradas en el Diario, para que Roberto NO las duplique
+   y sepa cuáles posiciones del gráfico en vivo aún NO ha registrado (y las ofrezca). */
+function iaEntradasAbiertas(){
+  const ab=(Array.isArray(TRADES)?TRADES:[]).filter(t=>t.abierta && t.modo===CTX.modo && t.estrategia===CTX.estrategia);
+  if(!ab.length) return "[📒 ENTRADAS ABIERTAS ya registradas en el Diario: ninguna. Si ves una posición en el gráfico en vivo, aún no la has registrado → ofrécele a Rey registrarla con registrar_entrada.]";
+  const filas=ab.map(t=>"  "+t.par+" "+t.dir+" ent "+(t.entrada!=null?t.entrada:"?")+(t.sl!=null?" SL "+t.sl:"")+(t.tp!=null?" TP "+t.tp:"")+(t.rr?" RR 1:"+t.rr:"")).join("\n");
+  return "[📒 ENTRADAS ABIERTAS ya registradas en el Diario (NO las vuelvas a registrar; si el gráfico muestra una posición que NO está en esta lista, ESA sí ofrécele registrarla):\n"+filas+"]";
+}
+
 /* Calendario en caché (10 min) para no golpear la red en cada mensaje a Roberto */
 let _calCache=null, _calCacheTs=0;
 async function cargarCalendarioCache(){
@@ -4068,6 +4143,31 @@ const IA_TOOLS = [
       plan:{type:"string",enum:["Sí","No"],description:"¿Siguió el plan?"},
       nota:{type:"string"}
     }, required:["par","r"] } },
+  { name:"registrar_entrada", description:"Registra en el 📒 Diario una ENTRADA que Rey ACABA de poner (posición ABIERTA, aún sin resultado) con sus datos de precio. Úsalo cuando VEAS una herramienta de posición nueva en el gráfico en vivo (léela: entrada/SL/TP/RR/riesgo) o cuando Rey lo pida. NO afecta las estadísticas hasta que se cierre. SIEMPRE con confirmación.",
+    input_schema:{ type:"object", properties:{
+      par:{type:"string",description:"Par, ej. EUR/USD"},
+      dir:{type:"string",enum:["Compra","Venta"]},
+      entrada:{type:"number",description:"Precio de entrada leído del gráfico"},
+      sl:{type:"number",description:"Precio del Stop Loss"},
+      tp:{type:"number",description:"Precio del Take Profit"},
+      rr:{type:"number",description:"Riesgo:beneficio, ej. 2.3"},
+      riesgoPct:{type:"string",description:"Riesgo en % (ej. '0.5')"},
+      setup:{type:"string",enum:["A+","B","C"]},
+      ventana:{type:"string",description:"Ventana operativa, ej. 'Pre-NY Kill Zone'"},
+      momento:{type:"string",enum:["En confirmación","En el toque","Anticipé"],description:"Cómo entró (clave para su fuga de timing)"},
+      bias:{type:"string",enum:["A favor","En contra"]},
+      nconf:{type:"number",description:"Nº de confluencias"},
+      zona:{type:"string",description:"Zona, ej. Premium/Discount/OB/FVG"},
+      cuenta:{type:"string",description:"Cuenta en la que opera (alias/firma)"},
+      nota:{type:"string"}
+    }, required:["par","dir","entrada"] } },
+  { name:"cerrar_entrada", description:"Cierra una ENTRADA abierta del Diario y le pone su resultado en R (pasa a contar en las estadísticas). Identifícala por el par (o toma la más reciente abierta).",
+    input_schema:{ type:"object", properties:{
+      par:{type:"string",description:"Par de la entrada a cerrar (si se omite, la más reciente abierta)"},
+      r:{type:"number",description:"Resultado en R (ej. 2.5, o -1 si fue stop)"},
+      res:{type:"string",enum:["Ganado","Perdido","BE"]},
+      nota:{type:"string"}
+    }, required:["r"] } },
   { name:"crear_cuenta", description:"Crea una cuenta de fondeo/real en la pestaña Cuentas. Tú ya conoces las reglas típicas de las firmas; rellena lo que sepas y Rey confirma.",
     input_schema:{ type:"object", properties:{
       alias:{type:"string"}, firma:{type:"string"}, capital:{type:"string"},
@@ -4093,6 +4193,8 @@ function describeTool(name, i){
   if(name==="borrar_aviso") return "🗑️ Borrar el aviso de las "+(i.hora||"?")+(i.tit?(" ("+i.tit+")"):"");
   if(name==="set_pares") return "🎯 Cambiar tus pares a: "+((i.pares||[]).join(", "));
   if(name==="registrar_trade") return "📒 Registrar trade — "+(i.par||"?")+" "+(i.dir||"")+" · "+(i.res||(parseFloat(i.r)>0?"Ganado":parseFloat(i.r)<0?"Perdido":"BE"))+" "+(i.r)+"R\nSetup "+(i.setup||"?")+" · ventana "+(i.ventana||"?")+" · entrada '"+(i.momento||"?")+"'"+(i.plan==="No"?" · PLAN ROTO":"")+(i.nota?("\nNota: "+i.nota):"");
+  if(name==="registrar_entrada") return "✍️ Registrar ENTRADA (abierta) — "+(i.par||"?")+" "+(i.dir||"")+"\nEntrada "+(i.entrada!=null?i.entrada:"?")+" · SL "+(i.sl!=null?i.sl:"?")+" · TP "+(i.tp!=null?i.tp:"?")+(i.rr?(" · RR 1:"+i.rr):"")+(i.riesgoPct?(" · riesgo "+i.riesgoPct+"%"):"")+"\nSetup "+(i.setup||"?")+" · "+(i.ventana||"?")+" · '"+(i.momento||"?")+"'"+(i.zona?(" · "+i.zona):"")+(i.nota?("\nNota: "+i.nota):"");
+  if(name==="cerrar_entrada") return "🏁 Cerrar entrada "+(i.par||"(la más reciente)")+" → "+(i.res||(parseFloat(i.r)>0?"Ganado":parseFloat(i.r)<0?"Perdido":"BE"))+" "+(i.r)+"R"+(i.nota?("\nNota: "+i.nota):"");
   if(name==="crear_cuenta") return "🏦 Crear cuenta — "+(i.alias||i.firma||"?")+(i.firma&&i.alias?(" ("+i.firma+")"):"")+"\nCapital "+(i.capital||"?")+" · fase "+(i.fase||"Examen F1")+" · riesgo "+(i.riesgoPct||"0.5")+"%\nDD máx "+(i.ddMaxPct||"?")+"% ("+(i.ddTipo||"?")+") · daily "+(i.ddDailyPct||"?")+"% · target "+(i.targetPct||"?")+"%"+(i.precio?(" · precio "+i.precio):"");
   if(name==="editar_cuenta") return "✏️ Editar cuenta "+(i.alias||i.firma||"?")+":\n"+["capital","fase","riesgoPct","ddMaxPct","ddTipo","ddDailyPct","targetPct","balance","precio","nota"].filter(k=>i[k]!=null&&i[k]!=="").map(k=>"→ "+k+" "+i[k]).join("\n");
   if(name==="avanzar_fase") return "⏭️ Avanzar de fase la cuenta "+(i.alias||i.firma||"?");
@@ -4145,6 +4247,28 @@ function ejecutarTool(name, i){
         plan:i.plan||"Sí", emo:"", nota:i.nota||"", cuenta:i.cuenta||"", fueraLimite:false, confs:[] };
       TRADES.push(t); save(K.trades,TRADES); if(typeof refrescarDiarioCtx==="function") refrescarDiarioCtx(); notifChequearCuentasDD();
       return {ok:true,msg:"Trade registrado: "+t.par+" "+(t.dir||"")+" "+(t.res||"")+" "+t.r+"R ("+(t.setup||"?")+", "+(t.momento||"?")+")"};
+    }
+    if(name==="registrar_entrada"){
+      if(i.entrada==null || isNaN(parseFloat(i.entrada))) return {ok:false,msg:"Falta el precio de entrada"};
+      const f=hoyISO();
+      const num=v=>(v!=null && !isNaN(parseFloat(v)))?parseFloat(v):null;
+      const t={ id:Date.now(), modo:CTX.modo, estrategia:CTX.estrategia, fecha:f, dia:diaSemana(f), hora:new Date().toTimeString().slice(0,5),
+        par:i.par||"?", dir:i.dir||"", setup:i.setup||"", res:"Abierta", r:0, abierta:true,
+        entrada:num(i.entrada), sl:num(i.sl), tp:num(i.tp), rr:num(i.rr), riesgoPct:i.riesgoPct||"",
+        ventana:i.ventana||"", momento:i.momento||"", bias:i.bias||"", nconf:parseInt(i.nconf)||0,
+        plan:"Sí", emo:"", nota:i.nota||"", zona:i.zona||"", cuenta:i.cuenta||"", fueraLimite:false, confs:[] };
+      TRADES.push(t); save(K.trades,TRADES); if(typeof refrescarDiarioCtx==="function") refrescarDiarioCtx();
+      return {ok:true,msg:"Entrada registrada (ABIERTA): "+t.par+" "+t.dir+" ent "+(t.entrada!=null?t.entrada:"?")+" SL "+(t.sl!=null?t.sl:"?")+" TP "+(t.tp!=null?t.tp:"?")+(t.rr?(" RR 1:"+t.rr):"")};
+    }
+    if(name==="cerrar_entrada"){
+      const R=parseFloat(i.r); if(isNaN(R)) return {ok:false,msg:"Falta el resultado en R (número)"};
+      const q=String(i.par||"").toLowerCase();
+      const abiertas=TRADES.filter(t=>t.abierta && t.modo===CTX.modo && t.estrategia===CTX.estrategia);
+      const t = q ? abiertas.filter(x=>String(x.par||"").toLowerCase().includes(q)).slice(-1)[0] : abiertas.slice(-1)[0];
+      if(!t) return {ok:false,msg:"No encontré una entrada abierta"+(i.par?(" en "+i.par):"")};
+      t.abierta=false; t.r=R; t.res=i.res||(R>0?"Ganado":R<0?"Perdido":"BE"); if(i.nota) t.nota=(t.nota?t.nota+" · ":"")+i.nota;
+      save(K.trades,TRADES); if(typeof refrescarDiarioCtx==="function") refrescarDiarioCtx(); notifChequearCuentasDD();
+      return {ok:true,msg:"Entrada cerrada: "+t.par+" "+t.res+" "+t.r+"R"};
     }
     if(name==="crear_cuenta"){
       if(!i.alias && !i.firma) return {ok:false,msg:"Falta el alias o la firma"};
@@ -4451,7 +4575,7 @@ async function iaEnviar(textoForzado, promptExtra){
   let grafTxt=""; try{ grafTxt=await iaGrafico()+"\n"; }catch(_){ grafTxt=""; }
   // promptExtra = framework de análisis (semanal/diario) que va a la API pero NO se muestra en el chat
   const marco = promptExtra ? ("\n\n=== INSTRUCCIONES DEL ANÁLISIS QUE PIDE REY ===\n"+promptExtra+"\n=== FIN INSTRUCCIONES ===") : "";
-  const inj=iaReloj()+"\n"+grafTxt+calTxt+iaContexto()+"\n"+iaAvisos()+marco+"\n\nPregunta de Rey: "+texto;
+  const inj=iaReloj()+"\n"+grafTxt+calTxt+iaContexto()+"\n"+iaAvisos()+"\n"+iaEntradasAbiertas()+marco+"\n\nPregunta de Rey: "+texto;
   const last=msgs[msgs.length-1];
   if(Array.isArray(last.content)){ last.content[last.content.length-1]={type:"text",text:inj}; }
   else{ last.content=inj; }
@@ -4478,6 +4602,7 @@ function init(){
   const bm=$("#btnMenu"); if(bm) bm.onclick=abrirMenu;
   iaInit();          /* inicializa el puente (IA.url) ANTES de mostrar Noticias, que lo necesita */
   iaResumePend();    /* recupera respuestas de Roberto que terminaron con la app cerrada */
+  try{ nubeRestaurar(true); }catch(_){}  /* ☁️ si la nube tiene datos más nuevos (otro teléfono), restaura solo */
   /* Al volver a la app (no cerrarla del todo), recupera lo que haya terminado */
   document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible") iaResumePend(); });
   /* Si abriste tocando el push de una respuesta de Roberto, abre el chat con ella */
