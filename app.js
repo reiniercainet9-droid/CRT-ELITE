@@ -3425,6 +3425,11 @@ const APEX_MAPA =
 "TU ROL DE GUARDIÁN (avisos): Hay un GUARDIÁN DE VENTANAS en el servidor que ya avisa a Rey —con la app CERRADA y en hora NY exacta, correcto todo el año— cuando abre cada killzone (Londres 2:00, ⭐Pre-NY 7:30, NY 9:30, aviso NY-Lunch 11:30 NY). Por eso, los recordatorios MANUALES de killzone que Rey tenía en ⏰ Avisos con hora fija de Brasil (Pre-NY, NY apertura, NY-lunch) ahora SOBRAN y lo DUPLICAN: si Rey te lo pide (o si lo detectas), desactívalos tú con tus manos (editar_aviso con on:false) para no saturarlo, y confírmaselo. La sección ⏰ Avisos SIGUE siendo de Rey para sus recordatorios PERSONALES, totalmente configurables (día/hora/tono): esos no los toques salvo que él lo pida.\n"+
 "TU MISIÓN DE VIGILANTE (estar pendiente de TODO): tu trabajo es estar atento y avisarle de TODO lo importante que ocurra en su sistema: apertura de killzones, noticias rojas/naranjas cerca, alarmas de su indicador, y cuentas cerca del límite (DD). Y cuando estén CONECTADOS al gráfico en vivo (puente de lectura de TradingView), tu papel es AÚN MAYOR: irle cantando las CONFLUENCIAS que se van cumpliendo según el gráfico, el indicador y las alarmas —barrido de liquidez ✅, MSS de 15m ✅, zona premium/discount tocada, Secuencia F3 completa, killzone activa— para acompañarlo paso a paso mientras operan juntos, recordándole SIEMPRE su regla de oro: esperar la vela de confirmación cerrada, no entrar en el toque.";
 
+const PUENTE_DOSSIER =
+"👁️ TU VISTA EN VIVO DEL GRÁFICO (PUENTE APEX): Ya tienes OJOS sobre el gráfico real de Rey en TradingView. Cuando su PC está encendida con el 'Puente Apex' corriendo, en CADA mensaje recibes un bloque [👁️ GRÁFICO EN VIVO ...] con el símbolo, timeframe, precio, el dashboard COMPLETO del indicador CRT Elite (killzone, sesgo, estado del día, zona premium/discount, alineación de temporalidades, SMT, secuencia F3…), los niveles clave y las herramientas de posición (Long/Short) que Rey haya puesto con entrada/SL/TP/RR/riesgo. ESO ES REAL Y ACTUAL — úsalo como tu fuente de verdad del gráfico; no inventes ni contradigas esos números. "+
+"Si el bloque dice que la PC NO está conectada (no hay lectura fresca), NO afirmes que ves el gráfico: dile con cariño que encienda la PC y abra el 'Puente Apex' (doble clic en 'Arrancar Puente Apex') para que puedas verlo en vivo. "+
+"Cuando SÍ estés conectado y estén operando juntos, ve CANTÁNDOLE las confluencias que se cumplen según ese bloque (barrido de liquidez, MSS de 15m, zona tocada, Secuencia F3, killzone activa) y recuérdale SIEMPRE esperar la vela de confirmación cerrada, nunca entrar en el toque.";
+
 let _iaConoc = null;
 /* Arma el bloque de conocimiento (estrategia + indicador + perfil) desde los
    mismos datos que ve la app, para que la IA y la app nunca se contradigan. */
@@ -3443,6 +3448,7 @@ function iaConocimiento(){
     PERFIL_REY+"\n\n"+
     MERCADOS_DOSSIER+"\n\n"+
     APEX_MAPA+"\n\n"+
+    PUENTE_DOSSIER+"\n\n"+
     "SU ESTRATEGIA CRT ELITE (SMC/ICT/CRT):\n"+
     "REGLA DE ORO ABSOLUTA: SIN SWEEP = SIN SETUP. Si el precio no barrió liquidez con MECHA (no con cierre), NO hay operación, por muchas otras confluencias que haya.\n\n"+
     "Las 5 confluencias:\n"+C+"\n\n"+
@@ -3914,6 +3920,35 @@ function iaAvisos(){
   return "[⏰ AVISOS actuales de Rey en Apex (YA los tienes aquí — NO le pidas la lista ni capturas). Para tus manos: identifícalos por su HORA. Para APAGAR uno usa editar_aviso con on:false (NO hace falta borrarlo); para reactivar, on:true.\n"+filas+"\nNOTA: el GUARDIÁN del servidor ya cubre los killzones (Londres/Pre-NY/NY/NY-Lunch) en hora NY. Si ves aquí avisos MANUALES de killzone con hora fija, están DUPLICADOS: ofrécele apagarlos con tu tarjeta de confirmación.]";
 }
 
+/* PUENTE APEX — lee el estado del gráfico en vivo desde el Worker (/chart/state).
+   Si la PC está conectada (viva), Roberto "ve" el gráfico: dashboard, posición,
+   precio y niveles. Si no, se lo dice claro para que Rey encienda la PC. */
+async function iaGrafico(){
+  try{
+    const r=await fetch(iaBase()+"/chart/state",{cache:"no-store"});
+    if(!r.ok) return "[👁️ GRÁFICO EN VIVO: el puente no respondió en este instante.]";
+    const d=await r.json();
+    if(!d || !d.viva || !d.estado)
+      return "[👁️ GRÁFICO EN VIVO: la PC de Rey NO está conectada ahora (sin lectura fresca del puente). Si te pide análisis del gráfico en vivo, dile con cariño que encienda la PC y abra el 'Puente Apex' (doble clic en 'Arrancar Puente Apex'). NO inventes niveles ni digas que ves el gráfico si no está vivo.]";
+    const e=d.estado;
+    let s="[👁️ GRÁFICO EN VIVO (leído hace "+(d.edad_seg||0)+"s por el Puente Apex — ES REAL, úsalo como verdad):\n";
+    s+="Símbolo: "+(e.symbol||"?")+" · TF: "+(e.resolution||"?")+" · Precio: "+(e.price!=null?e.price:"?")+"\n";
+    if(Array.isArray(e.tablas) && e.tablas.length){ s+="Dashboard CRT Elite:\n"; e.tablas.forEach(t=>(t.rows||[]).forEach(row=>{ s+="   "+row+"\n"; })); }
+    if(Array.isArray(e.posiciones) && e.posiciones.length){
+      s+="Herramienta(s) de posición puesta(s) por Rey (léelas y ayúdalo con la entrada):\n";
+      e.posiciones.forEach(p=>{ s+="   "+p.dir+" · entrada "+p.entry+" · SL "+p.sl+" · TP "+p.tp+" · RR 1:"+p.rr+" · riesgo "+(p.riesgo_pct!=null?p.riesgo_pct+"%":"?")+"\n"; });
+    }
+    if(Array.isArray(e.niveles) && e.niveles.length && e.price!=null){
+      const arr=e.niveles.map(n=>n.price).filter(v=>v!=null);
+      const arriba=arr.filter(v=>v>e.price).sort((a,b)=>a-b).slice(0,6);
+      const abajo=arr.filter(v=>v<e.price).sort((a,b)=>b-a).slice(0,6);
+      if(arriba.length) s+="Niveles por encima: "+arriba.join(", ")+"\n";
+      if(abajo.length)  s+="Niveles por debajo: "+abajo.join(", ")+"\n";
+    }
+    return s+"]";
+  }catch(_){ return "[👁️ GRÁFICO EN VIVO: no pude leer el puente en este instante.]"; }
+}
+
 /* Calendario en caché (10 min) para no golpear la red en cada mensaje a Roberto */
 let _calCache=null, _calCacheTs=0;
 async function cargarCalendarioCache(){
@@ -4372,7 +4407,8 @@ async function iaEnviar(textoForzado){
   let msgs=hist.map((x,i)=>iaMsgApi(x, i===hist.length-1));
   // Inyecta el contexto de datos en el bloque de texto del último mensaje del usuario
   let calTxt=""; try{ const ev=await cargarCalendarioCache(); calTxt=iaCalendarioContexto(ev)+"\n"; }catch(_){ calTxt=""; }
-  const inj=iaReloj()+"\n"+calTxt+iaContexto()+"\n"+iaAvisos()+"\n\nPregunta de Rey: "+texto;
+  let grafTxt=""; try{ grafTxt=await iaGrafico()+"\n"; }catch(_){ grafTxt=""; }
+  const inj=iaReloj()+"\n"+grafTxt+calTxt+iaContexto()+"\n"+iaAvisos()+"\n\nPregunta de Rey: "+texto;
   const last=msgs[msgs.length-1];
   if(Array.isArray(last.content)){ last.content[last.content.length-1]={type:"text",text:inj}; }
   else{ last.content=inj; }
