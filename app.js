@@ -24,7 +24,8 @@ const K = {
   calpares:"crtelite_calpares_v3",
   reminders:"crtelite_reminders_v3",
   vigila:"crtelite_vigila_v3",
-  robertolog:"crtelite_robertolog_v3"
+  robertolog:"crtelite_robertolog_v3",
+  shots:"crtelite_shots_v1"
 };
 const load = (k,d)=>{ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):d; }catch(e){ return d; } };
 const save = (k,v)=>{ try{ localStorage.setItem(k,JSON.stringify(v)); nubeMarcar(); }catch(e){ toast("No se pudo guardar"); } };
@@ -35,7 +36,7 @@ const save = (k,v)=>{ try{ localStorage.setItem(k,JSON.stringify(v)); nubeMarcar
    En otro móvil, con el mismo código, restaura todo intacto (nada se pierde).
    No usa claves del sistema (el repo es público): el código ES la llave.
    ============================================================ */
-const NUBE_KEYS = ["crtelite_trades_v2","crtelite_cuentas_v3","crtelite_reminders_v3","crtelite_chk_v2","crtelite_conf_v2","crtelite_reglas_v2","crtelite_balance_v2","crtelite_ctx_v3","crtelite_estrategias_v3","crtelite_pares_v3","crtelite_calpares_v3","crtelite_notif_v3","crtelite_vigila_v3","crtelite_fabpos_v3","crtelite_iavoz_v3"];
+const NUBE_KEYS = ["crtelite_trades_v2","crtelite_cuentas_v3","crtelite_reminders_v3","crtelite_chk_v2","crtelite_conf_v2","crtelite_reglas_v2","crtelite_balance_v2","crtelite_ctx_v3","crtelite_estrategias_v3","crtelite_pares_v3","crtelite_calpares_v3","crtelite_notif_v3","crtelite_vigila_v3","crtelite_fabpos_v3","crtelite_iavoz_v3","crtelite_shots_v1"];
 const NUBE_CODE_KEY="crtelite_nubecode_v1", NUBE_TS_KEY="crtelite_datats_v1", NUBE_LAST_KEY="crtelite_nubelast_v1";
 let NUBE_RESTAURANDO=false, _nubeTimer=null;
 function nubeCode(){ try{ return (localStorage.getItem(NUBE_CODE_KEY)||"").trim(); }catch(_){ return ""; } }
@@ -86,6 +87,7 @@ async function nubeShotReq(sym, id){ try{ await fetch(nubeUrl()+"/shot/req",{met
 async function nubeShotGet(id){ try{ const r=await fetch(nubeUrl()+"/shot/get?id="+encodeURIComponent(id)); if(!r.ok) return null; const d=await r.json(); return (d&&d.img)?d.img:null; }catch(_){ return null; } }
 
 let TRADES = load(K.trades, []);
+let SHOTS  = load(K.shots, []);   // capturas sueltas (sin trade) para la Galería
 let CHK    = load(K.chk, {});
 let CONF   = load(K.conf, {});
 let RLEIDAS= load(K.reglas, {});
@@ -1998,6 +2000,7 @@ function galeriaCaps(){
     const add=(id,tipo)=>{ if(id) caps.push({id, fecha:t.fecha, par:t.par, tipo}); };
     add(t.shotOpen,"Entrada"); add(t.shotClose,"Cierre"); (t.shots||[]).forEach((s,i)=>add(s,"Extra "+(i+1)));
   });
+  (Array.isArray(SHOTS)?SHOTS:[]).forEach(s=>{ if(s&&s.id) caps.push({id:s.id, fecha:s.fecha, par:s.par||"—", tipo:s.tipo||"Manual"}); });
   return caps.sort((a,b)=>String(b.fecha).localeCompare(String(a.fecha)));
 }
 function galPeriodo(fecha, modo){
@@ -4432,8 +4435,9 @@ function ejecutarTool(name, i){
       const abiertas=TRADES.filter(t=>t.abierta && t.modo===CTX.modo && t.estrategia===CTX.estrategia);
       const t = q ? abiertas.filter(x=>String(x.par||"").toLowerCase().includes(q)).slice(-1)[0] : abiertas.slice(-1)[0];
       if(t){ t.shots=Array.isArray(t.shots)?t.shots:[]; t.shots.push(sid); save(K.trades,TRADES); }
+      else { SHOTS.unshift({ id:sid, fecha:hoyISO(), par:(par||"—"), tipo:"Manual", ts:Date.now() }); save(K.shots,SHOTS); } // suelta → visible en la Galería
       nubeShotReq(par||(t&&t.par)||"", sid);
-      return {ok:true,msg:"📸 Captura pedida"+(par?(" de "+par):"")+" — el Puente la sube en unos segundos"+(t?" y se guarda en tu entrada abierta.":".")};
+      return {ok:true,msg:"📸 Captura pedida"+(par?(" de "+par):"")+" — el Puente la sube en unos segundos; la verás en la 🖼️ Galería"+(t?" y en tu entrada abierta.":".")};
     }
     if(name==="crear_cuenta"){
       if(!i.alias && !i.firma) return {ok:false,msg:"Falta el alias o la firma"};
