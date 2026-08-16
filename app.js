@@ -3434,7 +3434,8 @@ const PUENTE_DOSSIER =
    Roberto los ejecute con el gráfico EN VIVO (su indicador CRT Elite ya calculó
    las temporalidades y marcó niveles/etiquetas). Van a la API, no se muestran. */
 const ANALISIS_SEMANAL_PROM =
-"Eres mi MENTOR y ANALISTA ELITE. Hazme el ANÁLISIS SEMANAL del par que veo en el gráfico en vivo. FUENTE OBLIGATORIA: el bloque [👁️ GRÁFICO EN VIVO] que ya tienes (mi indicador CRT Elite YA calculó las temporalidades W/D/4H/1H y marcó niveles y etiquetas). NO inventes: si un dato no está en el bloque, dilo. Método SMC/CRT/liquidez. Si la PC no está conectada (no hay lectura viva), dímelo y pídeme encender el Puente.\n"+
+"Eres mi MENTOR y ANALISTA ELITE. Hazme el ANÁLISIS SEMANAL del/los par(es) que veo en el gráfico en vivo. FUENTE OBLIGATORIA: el bloque [👁️ GRÁFICO EN VIVO] que ya tienes (mi indicador CRT Elite YA calculó las temporalidades W/D/4H/1H y marcó niveles y etiquetas). NO inventes: si un dato no está en el bloque, dilo. Método SMC/CRT/liquidez. Si la PC no está conectada (no hay lectura viva), dímelo y pídeme encender el Puente.\n"+
+"MULTI-PAR: si en el bloque hay VARIOS pares, EMPIEZA diciéndome en cuál veo mejor oportunidad para la semana (o si en ambos) y por qué; luego haz el análisis completo de cada par que tenga contexto operable. Si te nombro un par concreto, analiza solo ese.\n"+
 "ESCRÍBEME en este formato exacto:\n"+
 "🗓️ CONTEXTO GRANDE: zona del rango (Deep Discount/Discount/Equilibrio/Premium/Deep Premium) y estructura (alcista/bajista/rango) según el sesgo y la alineación TF del indicador.\n"+
 "📊 LIQUIDEZ PENDIENTE: niveles clave con precio (usa W H/W L, D H/D L, 4H, EQH/EQL, BSL/SSL del bloque), arriba y abajo del precio actual.\n"+
@@ -3447,7 +3448,8 @@ const ANALISIS_SEMANAL_PROM =
 "🏦 POR CUENTA (OBLIGATORIO): con mis cuentas registradas, dime cómo actuar en CADA UNA por separado esta semana (riesgo, operar o no según su DD) y marca en CUÁL debo operar — PROTEGE la fondeada crítica.\n"+
 "Reglas: el semanal MANDA sobre el diario. Sin sweep = sin setup. No dibujes en el gráfico todavía (eso llega pronto); dame el análisis y el plan en texto, directo y claro.";
 const ANALISIS_DIARIO_PROM =
-"Eres mi MENTOR y ANALISTA ELITE. Hazme el ANÁLISIS DEL DÍA del par que veo en el gráfico en vivo. FUENTE OBLIGATORIA: el bloque [👁️ GRÁFICO EN VIVO] (mi indicador CRT Elite ya calculó D/H4/1H/15/5, zona premium/discount, alineación TF, CRT H4, SMT, Secuencia F3, killzone y nivel de invalidación) + etiquetas/niveles. NO inventes datos que no estén. Si la PC no está conectada, dímelo y pídeme encender el Puente.\n"+
+"Eres mi MENTOR y ANALISTA ELITE. Hazme el ANÁLISIS DEL DÍA del/los par(es) que veo en el gráfico en vivo. FUENTE OBLIGATORIA: el bloque [👁️ GRÁFICO EN VIVO] (mi indicador CRT Elite ya calculó D/H4/1H/15/5, zona premium/discount, alineación TF, CRT H4, SMT, Secuencia F3, killzone y nivel de invalidación) + etiquetas/niveles. NO inventes datos que no estén. Si la PC no está conectada, dímelo y pídeme encender el Puente.\n"+
+"MULTI-PAR: si en el bloque hay VARIOS pares, EMPIEZA diciéndome en cuál hay mejor oportunidad HOY (o si en ambos, o en ninguno) y por qué; luego haz el análisis completo de cada par con setup válido. Si te nombro un par concreto, analiza solo ese. Compara cuál tiene la confluencia más limpia (sweep + MSS + zona + killzone).\n"+
 "ESCRÍBEME en este formato exacto:\n"+
 "📅 DAILY — BIAS: alcista/bajista/rango + liquidez pendiente (precios).\n"+
 "📊 H4 — zona clave (precio), premium/discount, CRT H4, ¿válido para operar?\n"+
@@ -3965,24 +3967,26 @@ async function iaGrafico(){
     const r=await fetch(iaBase()+"/chart/state",{cache:"no-store"});
     if(!r.ok) return "[👁️ GRÁFICO EN VIVO: el puente no respondió en este instante.]";
     const d=await r.json();
-    if(!d || !d.viva || !d.estado)
+    const pares=Array.isArray(d.pares)?d.pares:(d.estado?[d.estado]:[]);
+    if(!d || !d.viva || !pares.length)
       return "[👁️ GRÁFICO EN VIVO: la PC de Rey NO está conectada ahora (sin lectura fresca del puente). Si te pide análisis del gráfico en vivo, dile con cariño que encienda la PC y abra el 'Puente Apex' (doble clic en 'Arrancar Puente Apex'). NO inventes niveles ni digas que ves el gráfico si no está vivo.]";
-    const e=d.estado;
-    let s="[👁️ GRÁFICO EN VIVO (leído hace "+(d.edad_seg||0)+"s por el Puente Apex — ES REAL, úsalo como verdad):\n";
-    s+="Símbolo: "+(e.symbol||"?")+" · TF: "+(e.resolution||"?")+" · Precio: "+(e.price!=null?e.price:"?")+"\n";
-    if(Array.isArray(e.tablas) && e.tablas.length){ s+="Dashboard CRT Elite:\n"; e.tablas.forEach(t=>(t.rows||[]).forEach(row=>{ s+="   "+row+"\n"; })); }
-    if(Array.isArray(e.posiciones) && e.posiciones.length){
-      s+="Herramienta(s) de posición puesta(s) por Rey (léelas y ayúdalo con la entrada):\n";
-      e.posiciones.forEach(p=>{ s+="   "+p.dir+" · entrada "+p.entry+" · SL "+p.sl+" · TP "+p.tp+" · RR 1:"+p.rr+" · riesgo "+(p.riesgo_pct!=null?p.riesgo_pct+"%":"?")+"\n"; });
-    }
-    if(Array.isArray(e.niveles) && e.niveles.length && e.price!=null){
-      const arr=e.niveles.map(n=>n.price).filter(v=>v!=null);
-      const arriba=arr.filter(v=>v>e.price).sort((a,b)=>a-b).slice(0,6);
-      const abajo=arr.filter(v=>v<e.price).sort((a,b)=>b-a).slice(0,6);
-      if(arriba.length) s+="Niveles por encima: "+arriba.join(", ")+"\n";
-      if(abajo.length)  s+="Niveles por debajo: "+abajo.join(", ")+"\n";
-    }
-    return s+"]";
+    let s="[👁️ GRÁFICOS EN VIVO ("+pares.length+" par(es), leído(s) hace "+(d.edad_seg||0)+"s por el Puente Apex — ES REAL, úsalo como verdad):\n";
+    pares.forEach(e=>{
+      s+="\n── "+(e.symbol||"?")+" · TF "+(e.resolution||"?")+" · Precio "+(e.price!=null?e.price:"?")+" ──\n";
+      if(Array.isArray(e.tablas) && e.tablas.length){ e.tablas.forEach(t=>(t.rows||[]).forEach(row=>{ s+="   "+row+"\n"; })); }
+      if(Array.isArray(e.posiciones) && e.posiciones.length){
+        s+="  Posición puesta por Rey (léela y valídala/rectifícala): "+e.posiciones.map(p=>p.dir+" ent "+p.entry+" SL "+p.sl+" TP "+p.tp+" RR 1:"+p.rr+" ("+(p.riesgo_pct!=null?p.riesgo_pct+"%":"?")+")").join(" | ")+"\n";
+      }
+      if(Array.isArray(e.niveles) && e.niveles.length && e.price!=null){
+        const arr=e.niveles.map(n=>n.price).filter(v=>v!=null);
+        const arriba=arr.filter(v=>v>e.price).sort((a,b)=>a-b).slice(0,5);
+        const abajo=arr.filter(v=>v<e.price).sort((a,b)=>b-a).slice(0,5);
+        if(arriba.length) s+="  Niveles arriba: "+arriba.join(", ")+"\n";
+        if(abajo.length)  s+="  Niveles abajo: "+abajo.join(", ")+"\n";
+      }
+    });
+    s+="]\nCÓMO USAR ESTO: si Rey te nombra UN par ('analiza EUR/USD'), analiza ESE. Si NO especifica y hay VARIOS pares, compáralos y dile en CUÁL hay mejor oportunidad hoy (o si en ambos) y por qué, luego enfoca el/los que tengan setup válido. Nunca mezcles datos de un par con otro.";
+    return s;
   }catch(_){ return "[👁️ GRÁFICO EN VIVO: no pude leer el puente en este instante.]"; }
 }
 
