@@ -4262,6 +4262,8 @@ const IA_TOOLS = [
       bias:{type:"string",enum:["A favor","En contra"]},
       nconf:{type:"number",description:"Nº de confluencias"},
       zona:{type:"string",description:"Zona, ej. Premium/Discount/OB/FVG"},
+      poi:{type:"string",enum:["FVG","Order Block","Breaker"],description:"Punto de interés de entrada (para que coincida con el ⚡ Gatillo)"},
+      gtf:{type:"string",description:"Temporalidad del gatillo, ej. 5M o 3M (por defecto 5M)"},
       cuenta:{type:"string",description:"Cuenta en la que opera (alias/firma)"},
       nota:{type:"string"}
     }, required:["par","dir","entrada"] } },
@@ -4312,7 +4314,7 @@ function describeTool(name, i){
   if(name==="borrar_aviso") return "🗑️ Borrar el aviso de las "+(i.hora||"?")+(i.tit?(" ("+i.tit+")"):"");
   if(name==="set_pares") return "🎯 Cambiar tus pares a: "+((i.pares||[]).join(", "));
   if(name==="registrar_trade") return "📒 Registrar trade — "+(i.par||"?")+" "+(i.dir||"")+" · "+(i.res||(parseFloat(i.r)>0?"Ganado":parseFloat(i.r)<0?"Perdido":"BE"))+" "+(i.r)+"R\nSetup "+(i.setup||"?")+" · ventana "+(i.ventana||"?")+" · entrada '"+(i.momento||"?")+"'"+(i.plan==="No"?" · PLAN ROTO":"")+(i.nota?("\nNota: "+i.nota):"");
-  if(name==="registrar_entrada") return "✍️ Registrar ENTRADA (abierta) — "+(i.par||"?")+" "+(i.dir||"")+"\nEntrada "+(i.entrada!=null?i.entrada:"?")+" · SL "+(i.sl!=null?i.sl:"?")+" · TP "+(i.tp!=null?i.tp:"?")+(i.rr?(" · RR 1:"+i.rr):"")+(i.riesgoPct?(" · riesgo "+i.riesgoPct+"%"):"")+"\nSetup "+(i.setup||"?")+" · "+(i.ventana||"?")+" · '"+(i.momento||"?")+"'"+(i.zona?(" · "+i.zona):"")+(i.nota?("\nNota: "+i.nota):"");
+  if(name==="registrar_entrada") return "✍️ Registrar ENTRADA (abierta) — "+(i.par||"?")+" "+(i.dir||"")+"\nEntrada "+(i.entrada!=null?i.entrada:"?")+" · SL "+(i.sl!=null?i.sl:"?")+" · TP "+(i.tp!=null?i.tp:"?")+(i.rr?(" · RR 1:"+i.rr):"")+(i.riesgoPct?(" · riesgo "+i.riesgoPct+"%"):"")+"\nSetup "+(i.setup||"?")+" · "+(i.ventana||"?")+" · '"+(i.momento||"En confirmación")+"'"+(i.zona?(" · "+i.zona):"")+(i.poi?(" · "+i.poi):"")+(i.gtf?(" · gatillo "+i.gtf):"")+(i.nota?("\nNota: "+i.nota):"");
   if(name==="cerrar_entrada"){ const rr=(i.r!=null&&i.r!=="")?(i.r+"R"):(i.precio_cierre!=null?("cierre en "+i.precio_cierre+" → calculo el R"):"?"); return "🏁 Cerrar entrada "+(i.par||"(la más reciente)")+" → "+rr+(i.res?(" · "+i.res):"")+(i.nota?("\nNota: "+i.nota):""); }
   if(name==="capturar_grafico") return "📸 Capturar el gráfico de "+(i.par||"(par actual)");
   if(name==="borrar_trade") return "🗑️ Borrar del Diario el trade de "+(i.par||"?")+(i.fecha?(" del "+i.fecha):" (el más reciente)");
@@ -4377,8 +4379,12 @@ function ejecutarTool(name, i){
       const t={ id:Date.now(), modo:CTX.modo, estrategia:CTX.estrategia, fecha:f, dia:diaSemana(f), hora:new Date().toTimeString().slice(0,5),
         par:i.par||"?", dir:i.dir||"", setup:i.setup||"", res:"Abierta", r:0, abierta:true,
         entrada:num(i.entrada), sl:num(i.sl), tp:num(i.tp), rr:num(i.rr), riesgoPct:i.riesgoPct||"",
-        ventana:i.ventana||"", momento:i.momento||"", bias:i.bias||"", nconf:parseInt(i.nconf)||0,
-        plan:"Sí", emo:"", nota:i.nota||"", zona:i.zona||"", cuenta:i.cuenta||"", fueraLimite:false, confs:[] };
+        ventana:i.ventana||"", momento:i.momento||"En confirmación", bias:i.bias||"", nconf:parseInt(i.nconf)||0,
+        zona:i.zona||(i.dir==="Venta"?"Premium":"Discount"),
+        poi:i.poi||"FVG", disp:i.disp||((i.poi==="Order Block")?"Order Block":(i.poi==="Breaker")?"Breaker":"FVG 50%"), gtf:i.gtf||"5M",
+        plan:"Sí", emo:"", nota:i.nota||"", cuenta:i.cuenta||"", fueraLimite:false, confs:[] };
+      // Coherencia con el ⚡ Gatillo: refleja la dirección de la entrada registrada
+      try{ if(typeof GAT!=="undefined"){ GAT.dir=(t.dir==="Venta"?"Venta":"Compra"); if(TAB==="gatillo") renderGatillo(); } }catch(_){}
       t.shotOpen=t.id+"_open"; nubeShotReq(t.par, t.shotOpen); // 📸 captura de apertura
       TRADES.push(t); save(K.trades,TRADES); if(typeof refrescarDiarioCtx==="function") refrescarDiarioCtx();
       return {ok:true,msg:"Entrada registrada (ABIERTA): "+t.par+" "+t.dir+" ent "+(t.entrada!=null?t.entrada:"?")+" SL "+(t.sl!=null?t.sl:"?")+" TP "+(t.tp!=null?t.tp:"?")+(t.rr?(" RR 1:"+t.rr):"")+" · 📸 pedí captura del gráfico"};
