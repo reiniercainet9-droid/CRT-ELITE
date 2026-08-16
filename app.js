@@ -25,7 +25,8 @@ const K = {
   reminders:"crtelite_reminders_v3",
   vigila:"crtelite_vigila_v3",
   robertolog:"crtelite_robertolog_v3",
-  shots:"crtelite_shots_v1"
+  shots:"crtelite_shots_v1",
+  plansem:"crtelite_plansem_v1"
 };
 const load = (k,d)=>{ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):d; }catch(e){ return d; } };
 const save = (k,v)=>{ try{ localStorage.setItem(k,JSON.stringify(v)); nubeMarcar(); }catch(e){ toast("No se pudo guardar"); } };
@@ -36,7 +37,7 @@ const save = (k,v)=>{ try{ localStorage.setItem(k,JSON.stringify(v)); nubeMarcar
    En otro móvil, con el mismo código, restaura todo intacto (nada se pierde).
    No usa claves del sistema (el repo es público): el código ES la llave.
    ============================================================ */
-const NUBE_KEYS = ["crtelite_trades_v2","crtelite_cuentas_v3","crtelite_reminders_v3","crtelite_chk_v2","crtelite_conf_v2","crtelite_reglas_v2","crtelite_balance_v2","crtelite_ctx_v3","crtelite_estrategias_v3","crtelite_pares_v3","crtelite_calpares_v3","crtelite_notif_v3","crtelite_vigila_v3","crtelite_fabpos_v3","crtelite_iavoz_v3","crtelite_shots_v1"];
+const NUBE_KEYS = ["crtelite_trades_v2","crtelite_cuentas_v3","crtelite_reminders_v3","crtelite_chk_v2","crtelite_conf_v2","crtelite_reglas_v2","crtelite_balance_v2","crtelite_ctx_v3","crtelite_estrategias_v3","crtelite_pares_v3","crtelite_calpares_v3","crtelite_notif_v3","crtelite_vigila_v3","crtelite_fabpos_v3","crtelite_iavoz_v3","crtelite_shots_v1","crtelite_plansem_v1"];
 const NUBE_CODE_KEY="crtelite_nubecode_v1", NUBE_TS_KEY="crtelite_datats_v1", NUBE_LAST_KEY="crtelite_nubelast_v1";
 let NUBE_RESTAURANDO=false, _nubeTimer=null;
 function nubeCode(){ try{ return (localStorage.getItem(NUBE_CODE_KEY)||"").trim(); }catch(_){ return ""; } }
@@ -133,6 +134,7 @@ function borrarCaptura(id){
 
 let TRADES = load(K.trades, []);
 let SHOTS  = load(K.shots, []);   // capturas sueltas (sin trade) para la Galería
+let PLANSEM = load(K.plansem, null);  // plan de la semana (bias/zonas/invalidación) persistente
 let CHK    = load(K.chk, {});
 let CONF   = load(K.conf, {});
 let RLEIDAS= load(K.reglas, {});
@@ -3655,7 +3657,8 @@ const ANALISIS_SEMANAL_PROM =
 "🎯 PLAN DE LA SEMANA: qué busco, zona principal y secundaria (precio), nivel que INVALIDA el bias, mejor día para operar, días a evitar.\n"+
 "📝 NOTAS DEL MENTOR: 3-4 líneas con el consejo clave de esta semana.\n"+
 "🏦 POR CUENTA (OBLIGATORIO): con mis cuentas registradas, dime cómo actuar en CADA UNA por separado esta semana (riesgo, operar o no según su DD) y marca en CUÁL debo operar — PROTEGE la fondeada crítica.\n"+
-"Reglas: el semanal MANDA sobre el diario. Sin sweep = sin setup. No dibujes en el gráfico todavía (eso llega pronto); dame el análisis y el plan en texto, directo y claro.";
+"Reglas: el semanal MANDA sobre el diario. Sin sweep = sin setup. No dibujes en el gráfico todavía (eso llega pronto); dame el análisis y el plan en texto, directo y claro.\n"+
+"AL TERMINAR: usa la mano guardar_plan_semanal para GUARDAR el plan (bias, zona principal, zona secundaria, nivel de invalidación y mejor día), así lo recuerdas TODA la semana y podrás detectar si se invalida.";
 const ANALISIS_DIARIO_PROM =
 "Eres mi MENTOR y ANALISTA ELITE. Hazme el ANÁLISIS DEL DÍA del/los par(es) que veo en el gráfico en vivo. FUENTE OBLIGATORIA: el bloque [👁️ GRÁFICO EN VIVO] (mi indicador CRT Elite ya calculó D/H4/1H/15/5, zona premium/discount, alineación TF, CRT H4, SMT, Secuencia F3, killzone y nivel de invalidación) + etiquetas/niveles. NO inventes datos que no estén. Si la PC no está conectada, dímelo y pídeme encender el Puente.\n"+
 "MULTI-PAR: si en el bloque hay VARIOS pares, EMPIEZA diciéndome en cuál hay mejor oportunidad HOY (o si en ambos, o en ninguno) y por qué; luego haz el análisis completo de cada par con setup válido. Si te nombro un par concreto, analiza solo ese. Compara cuál tiene la confluencia más limpia (sweep + MSS + zona + killzone).\n"+
@@ -3668,7 +3671,8 @@ const ANALISIS_DIARIO_PROM =
 "📰 NOTICIAS del día (del calendario ya inyectado).\n"+
 "🔴 VEREDICTO: OPERAR AHORA / ESPERAR CONFIRMACIÓN / NO HAY SETUP + razón en 2-3 líneas.\n"+
 "🏦 POR CUENTA (OBLIGATORIO): cómo actuar HOY en CADA cuenta registrada por separado y en cuál operar — PROTEGE la fondeada crítica.\n"+
-"Regla: el semanal manda sobre el diario; si el setup va contra el bias semanal, NO operar. No dibujes en el gráfico todavía; dame análisis y plan en texto.";
+"Regla: el semanal manda sobre el diario; si el setup va contra el bias semanal, NO operar. No dibujes en el gráfico todavía; dame análisis y plan en texto.\n"+
+"COMPARA con el [🗓️ PLAN SEMANAL VIGENTE] que ya tienes: EMPIEZA diciéndome si sigue VÁLIDO o si CAMBIÓ/SE INVALIDÓ (porque el precio en vivo rompió su nivel de invalidación o una noticia fuerte cambió el panorama). Si cambió, dímelo claro y ADÁPTALO con guardar_plan_semanal antes de darme el plan del día.";
 function analisisSemanal(){ iaEnviar("🗓️ Hazme mi análisis SEMANAL con el gráfico en vivo.", ANALISIS_SEMANAL_PROM); }
 function analisisDiario(){ iaEnviar("📆 Hazme mi análisis DEL DÍA con el gráfico en vivo.", ANALISIS_DIARIO_PROM); }
 
@@ -4209,6 +4213,22 @@ async function iaGrafico(){
   }catch(_){ return "[👁️ GRÁFICO EN VIVO: no pude leer el puente en este instante.]"; }
 }
 
+/* PLAN DE LA SEMANA persistente: se inyecta en CADA mensaje para que Roberto lo
+   recuerde toda la semana y detecte si se invalidó por precio o noticias. */
+function iaPlanSemanal(){
+  if(!PLANSEM || !PLANSEM.bias) return "[🗓️ PLAN SEMANAL: aún no hay uno guardado. Cuando hagas el análisis semanal, guárdalo con guardar_plan_semanal para recordarlo toda la semana.]";
+  let s="[🗓️ PLAN SEMANAL VIGENTE (guardado el "+PLANSEM.fecha+" — RECUÉRDALO y compáralo con el gráfico en vivo y las noticias en CADA respuesta):\n";
+  s+="Bias: "+PLANSEM.bias+(PLANSEM.par?(" ("+PLANSEM.par+")"):"")+"\n";
+  if(PLANSEM.zonaP) s+="Zona principal: "+PLANSEM.zonaP+"\n";
+  if(PLANSEM.zonaS) s+="Zona secundaria: "+PLANSEM.zonaS+"\n";
+  if(PLANSEM.invalid) s+="⚠️ Nivel de INVALIDACIÓN: "+PLANSEM.invalid+" — si el precio en vivo lo rompió (o una noticia roja cambió el panorama), el SESGO SEMANAL CAMBIÓ: díselo claramente a Rey y ADÁPTATE (actualiza el plan con guardar_plan_semanal).\n";
+  if(PLANSEM.mejorDia) s+="Mejor día: "+PLANSEM.mejorDia+"\n";
+  if(PLANSEM.evitar) s+="Días a evitar: "+PLANSEM.evitar+"\n";
+  if(PLANSEM.notas) s+="Notas: "+PLANSEM.notas+"\n";
+  s+="REGLA: el plan semanal MANDA sobre el diario, salvo que se invalide por ruptura de estructura mayor o noticia fuerte. Si sigue válido, respétalo.]";
+  return s;
+}
+
 /* Entradas ABIERTAS ya registradas en el Diario, para que Roberto NO las duplique
    y sepa cuáles posiciones del gráfico en vivo aún NO ha registrado (y las ofrezca). */
 function iaEntradasAbiertas(){
@@ -4330,6 +4350,17 @@ const IA_TOOLS = [
     input_schema:{ type:"object", properties:{ par:{type:"string",description:"Par a capturar, ej. EUR/USD (di el que Rey esté operando)"} }, required:["par"] } },
   { name:"limpiar_capturas", description:"Borra capturas SUELTAS (las que no están dentro de un trade) para liberar espacio. Filtra por par y/o fecha; sin filtro borra TODAS las sueltas. Las capturas ligadas a un trade NO se tocan. Confírmalo siempre.",
     input_schema:{ type:"object", properties:{ par:{type:"string"}, fecha:{type:"string",description:"YYYY-MM-DD"} }, required:[] } },
+  { name:"guardar_plan_semanal", description:"Guarda/actualiza el PLAN DE LA SEMANA de Rey para RECORDARLO toda la semana y detectar si se invalida. Úsalo al terminar el análisis semanal, o cuando el plan CAMBIE por una ruptura del nivel de invalidación o una noticia fuerte. Confírmalo siempre.",
+    input_schema:{ type:"object", properties:{
+      bias:{type:"string",description:"COMPRAS / VENTAS / RANGO-ESPERAR"},
+      par:{type:"string",description:"Par(es) del plan, ej. GBP/USD"},
+      zona_principal:{type:"string",description:"Zona de interés principal con precio"},
+      zona_secundaria:{type:"string"},
+      nivel_invalidacion:{type:"string",description:"Precio que INVALIDA el bias si el precio lo rompe"},
+      mejor_dia:{type:"string"},
+      dias_evitar:{type:"string"},
+      notas:{type:"string"}
+    }, required:["bias"] } },
   { name:"borrar_trade", description:"Borra un registro del 📒 Diario. Identifícalo por el par (toma el MÁS RECIENTE de ese par) o por par+fecha. Afecta estadísticas: confírmalo SIEMPRE.",
     input_schema:{ type:"object", properties:{ par:{type:"string",description:"Par del trade a borrar"}, fecha:{type:"string",description:"YYYY-MM-DD (opcional, para precisar cuál)"} }, required:["par"] } },
   { name:"editar_trade", description:"Edita un registro existente del 📒 Diario, identificándolo por el par (el más reciente) o par+fecha. Cambia SOLO los campos que pases. Confírmalo siempre.",
@@ -4369,6 +4400,7 @@ function describeTool(name, i){
   if(name==="cerrar_entrada"){ const rr=(i.r!=null&&i.r!=="")?(i.r+"R"):(i.precio_cierre!=null?("cierre en "+i.precio_cierre+" → calculo el R"):"?"); return "🏁 Cerrar entrada "+(i.par||"(la más reciente)")+" → "+rr+(i.res?(" · "+i.res):"")+(i.nota?("\nNota: "+i.nota):""); }
   if(name==="capturar_grafico") return "📸 Capturar el gráfico de "+(i.par||"(par actual)");
   if(name==="limpiar_capturas") return "🧹 Limpiar capturas sueltas"+(i.par?(" de "+i.par):"")+(i.fecha?(" del "+i.fecha):" (todas las sueltas)");
+  if(name==="guardar_plan_semanal") return "🗓️ Guardar PLAN de la semana"+(i.par?(" ("+i.par+")"):"")+"\nBias: "+(i.bias||"?")+(i.zona_principal?("\nZona: "+i.zona_principal):"")+(i.nivel_invalidacion?("\n⚠️ Invalida en: "+i.nivel_invalidacion):"")+(i.mejor_dia?("\nMejor día: "+i.mejor_dia):"");
   if(name==="borrar_trade") return "🗑️ Borrar del Diario el trade de "+(i.par||"?")+(i.fecha?(" del "+i.fecha):" (el más reciente)");
   if(name==="editar_trade"){ const c=["r","res","setup","momento","bias","ventana","nconf","zona","entrada","sl","tp","nota"].filter(k=>i[k]!=null&&i[k]!=="").map(k=>k+"→"+i[k]).join(", "); return "✏️ Editar el trade de "+(i.par||"?")+(i.fecha?(" del "+i.fecha):" (el más reciente)")+"\n"+(c||"(sin cambios)"); }
   if(name==="crear_cuenta") return "🏦 Crear cuenta — "+(i.alias||i.firma||"?")+(i.firma&&i.alias?(" ("+i.firma+")"):"")+"\nCapital "+(i.capital||"?")+" · fase "+(i.fase||"Examen F1")+" · riesgo "+(i.riesgoPct||"0.5")+"%\nDD máx "+(i.ddMaxPct||"?")+"% ("+(i.ddTipo||"?")+") · daily "+(i.ddDailyPct||"?")+"% · target "+(i.targetPct||"?")+"%"+(i.precio?(" · precio "+i.precio):"");
@@ -4487,6 +4519,11 @@ function ejecutarTool(name, i){
       else { SHOTS.unshift({ id:sid, fecha:hoyISO(), par:(par||"—"), tipo:"Manual", ts:Date.now() }); save(K.shots,SHOTS); } // suelta → visible en la Galería
       nubeShotReq(par||(t&&t.par)||"", sid);
       return {ok:true,msg:"📸 Captura pedida"+(par?(" de "+par):"")+" — el Puente la sube en unos segundos; la verás en la 🖼️ Galería"+(t?" y en tu entrada abierta.":".")};
+    }
+    if(name==="guardar_plan_semanal"){
+      PLANSEM={ bias:i.bias||"", par:i.par||"", zonaP:i.zona_principal||"", zonaS:i.zona_secundaria||"", invalid:i.nivel_invalidacion||"", mejorDia:i.mejor_dia||"", evitar:i.dias_evitar||"", notas:i.notas||"", fecha:hoyISO() };
+      save(K.plansem, PLANSEM);
+      return {ok:true,msg:"Plan semanal guardado: "+PLANSEM.bias+(PLANSEM.par?(" en "+PLANSEM.par):"")+(PLANSEM.invalid?(" · invalida en "+PLANSEM.invalid):"")+". Lo recordaré toda la semana."};
     }
     if(name==="limpiar_capturas"){
       const q=String(i.par||"").toLowerCase();
@@ -4806,7 +4843,7 @@ async function iaEnviar(textoForzado, promptExtra){
   let grafTxt=""; try{ grafTxt=await iaGrafico()+"\n"; }catch(_){ grafTxt=""; }
   // promptExtra = framework de análisis (semanal/diario) que va a la API pero NO se muestra en el chat
   const marco = promptExtra ? ("\n\n=== INSTRUCCIONES DEL ANÁLISIS QUE PIDE REY ===\n"+promptExtra+"\n=== FIN INSTRUCCIONES ===") : "";
-  const inj=iaReloj()+"\n"+grafTxt+calTxt+iaContexto()+"\n"+iaAvisos()+"\n"+iaEntradasAbiertas()+marco+"\n\nPregunta de Rey: "+texto;
+  const inj=iaReloj()+"\n"+grafTxt+calTxt+iaContexto()+"\n"+iaPlanSemanal()+"\n"+iaAvisos()+"\n"+iaEntradasAbiertas()+marco+"\n\nPregunta de Rey: "+texto;
   const last=msgs[msgs.length-1];
   if(Array.isArray(last.content)){ last.content[last.content.length-1]={type:"text",text:inj}; }
   else{ last.content=inj; }
