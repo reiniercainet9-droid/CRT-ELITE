@@ -81,6 +81,9 @@ function nubePintarEstado(){
   if(!code){ e.textContent="Sin código: el respaldo en la nube está apagado."; return; }
   e.textContent = last? ("✅ Último respaldo: "+new Date(last).toLocaleString()) : "Código puesto. Se respaldará al primer cambio.";
 }
+/* 📸 Capturas del gráfico: la app PIDE la foto (el Puente la saca y la sube). */
+async function nubeShotReq(sym, id){ try{ await fetch(nubeUrl()+"/shot/req",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({sym,id})}); }catch(_){}}
+async function nubeShotGet(id){ try{ const r=await fetch(nubeUrl()+"/shot/get?id="+encodeURIComponent(id)); if(!r.ok) return null; const d=await r.json(); return (d&&d.img)?d.img:null; }catch(_){ return null; } }
 
 let TRADES = load(K.trades, []);
 let CHK    = load(K.chk, {});
@@ -1944,12 +1947,32 @@ function verTrade(id){
     ${fila("¿Siguió el plan?", t.plan==="Si"?"Sí, 100%":"No")}
     ${fila("Estado emocional", esc(t.emo))}
     ${t.nota?`<div class="dt-nota"><div class="dt-k" style="margin-bottom:6px">Nota / aprendizaje</div>${esc(t.nota)}</div>`:`<div class="dt-nota" style="color:var(--txt3);font-style:italic">Sin nota de aprendizaje registrada.</div>`}
+    <div id="dtShots"></div>
   `;
   abrirModal(cuerpo, [
     {t:"Editar", cls:"gold", fn:()=>{ cerrarModal(); editarTrade(id); }},
     {t:"Exportar este", cls:"", fn:()=>exportarUno(id)},
     {t:"Cerrar", cls:"", fn:cerrarModal}
   ]);
+  cargarShots(t);
+}
+/* Carga las capturas del gráfico del trade (apertura/cierre/manuales) desde la nube */
+async function cargarShots(t){
+  const cont=document.getElementById("dtShots"); if(!cont||!t) return;
+  const items=[];
+  if(t.shotOpen) items.push({lbl:"📸 Gráfico en la ENTRADA", id:t.shotOpen});
+  if(t.shotClose) items.push({lbl:"📸 Gráfico en el CIERRE", id:t.shotClose});
+  (t.shots||[]).forEach((s,i)=>items.push({lbl:"📸 Captura "+(i+1), id:s}));
+  if(!items.length) return;
+  cont.innerHTML='<div class="dt-k" style="margin:10px 0 6px">Capturas del gráfico</div><div class="note" style="text-align:left">Cargando fotos…</div>';
+  let html="<div class=\"dt-k\" style=\"margin:10px 0 6px\">Capturas del gráfico</div>";
+  let alguna=false;
+  for(const it of items){
+    const img=await nubeShotGet(it.id);
+    if(img){ alguna=true; html+='<div style="margin:6px 0"><div style="font-size:12px;color:var(--txt3);margin-bottom:3px">'+it.lbl+'</div><img src="'+img+'" style="width:100%;border-radius:8px;border:1px solid rgba(255,255,255,.12)" onclick="window.open(this.src)"></div>'; }
+    else { html+='<div style="margin:6px 0;font-size:12px;color:var(--txt3)">'+it.lbl+': aún subiéndose o no disponible.</div>'; }
+  }
+  cont.innerHTML=html;
 }
 function abrirModal(html, botones){
   cerrarModal();
@@ -3484,7 +3507,7 @@ const PUENTE_DOSSIER =
 "👁️ TU VISTA EN VIVO DEL GRÁFICO (PUENTE APEX): Ya tienes OJOS sobre el gráfico real de Rey en TradingView. Cuando su PC está encendida con el 'Puente Apex' corriendo, en CADA mensaje recibes un bloque [👁️ GRÁFICO EN VIVO ...] con el símbolo, timeframe, precio, el dashboard COMPLETO del indicador CRT Elite (killzone, sesgo, estado del día, zona premium/discount, alineación de temporalidades, SMT, secuencia F3…), los niveles clave y las herramientas de posición (Long/Short) que Rey haya puesto con entrada/SL/TP/RR/riesgo. ESO ES REAL Y ACTUAL — úsalo como tu fuente de verdad del gráfico; no inventes ni contradigas esos números. "+
 "Si el bloque dice que la PC NO está conectada (no hay lectura fresca), NO afirmes que ves el gráfico: dile con cariño que encienda la PC y abra el 'Puente Apex' (doble clic en 'Arrancar Puente Apex') para que puedas verlo en vivo. "+
 "Cuando SÍ estés conectado y estén operando juntos, ve CANTÁNDOLE las confluencias que se cumplen según ese bloque (barrido de liquidez, MSS de 15m, zona tocada, Secuencia F3, killzone activa) y recuérdale SIEMPRE esperar la vela de confirmación cerrada, nunca entrar en el toque.\n"+
-"✍️ CAPTURA DE ENTRADAS: cuando en el gráfico en vivo veas una herramienta de posición (Long/Short) que Rey acaba de poner y que NO aparezca en la lista de '[📒 ENTRADAS ABIERTAS ya registradas]', OFRÉCELE registrarla tú con la mano registrar_entrada (rellenas par, dirección, entrada, SL, TP, RR y riesgo leídos del gráfico + setup/ventana/momento/bias/zona según tu análisis), SIEMPRE con tu tarjeta de confirmación. Antes de registrar, valida/rectifica la entrada según sus reglas (¿hubo sweep? ¿zona correcta premium/discount? ¿killzone? ¿a favor del sesgo? ¿RR sano?) y adviértele si algo no cuadra. CIERRE: el gráfico NO te dice cómo cerró de verdad (puede ser BE, ganancia, pérdida o salida antes). Si una entrada que estaba como ABIERTA en el Diario YA NO aparece como posición en el gráfico en vivo, probablemente Rey la cerró: pregúntale a qué PRECIO cerró (o si tocó TP/SL/BE o salió antes) y ciérrala con cerrar_entrada pasando precio_cierre — el sistema calcula el R exacto con su entrada y SL. Nunca inventes el resultado. MAE/MFE: mientras la posición está en el gráfico, el puente calcula solo el MAE (máximo en contra) y MFE (máximo a favor) en R y aparecen en el bloque en vivo junto a la posición; al cerrar, PÁSALOS a cerrar_entrada (mae y mfe) para guardarlos y luego analizar juntos si el SL estuvo bien puesto y si cerraste muy pronto/tarde. El único dato que SOLO Rey sabe es el 'momento' (si entró en confirmación, en el toque o se anticipó): pregúntaselo al registrar la entrada. Detección en CUALQUIER par que tenga abierto, nada fijo.";
+"✍️ CAPTURA DE ENTRADAS: cuando en el gráfico en vivo veas una herramienta de posición (Long/Short) que Rey acaba de poner y que NO aparezca en la lista de '[📒 ENTRADAS ABIERTAS ya registradas]', OFRÉCELE registrarla tú con la mano registrar_entrada (rellenas par, dirección, entrada, SL, TP, RR y riesgo leídos del gráfico + setup/ventana/momento/bias/zona según tu análisis), SIEMPRE con tu tarjeta de confirmación. Antes de registrar, valida/rectifica la entrada según sus reglas (¿hubo sweep? ¿zona correcta premium/discount? ¿killzone? ¿a favor del sesgo? ¿RR sano?) y adviértele si algo no cuadra. CIERRE: el gráfico NO te dice cómo cerró de verdad (puede ser BE, ganancia, pérdida o salida antes). Si una entrada que estaba como ABIERTA en el Diario YA NO aparece como posición en el gráfico en vivo, probablemente Rey la cerró: pregúntale a qué PRECIO cerró (o si tocó TP/SL/BE o salió antes) y ciérrala con cerrar_entrada pasando precio_cierre — el sistema calcula el R exacto con su entrada y SL. Nunca inventes el resultado. MAE/MFE: mientras la posición está en el gráfico, el puente calcula solo el MAE (máximo en contra) y MFE (máximo a favor) en R y aparecen en el bloque en vivo junto a la posición; al cerrar, PÁSALOS a cerrar_entrada (mae y mfe) para guardarlos y luego analizar juntos si el SL estuvo bien puesto y si cerraste muy pronto/tarde. El único dato que SOLO Rey sabe es el 'momento' (si entró en confirmación, en el toque o se anticipó): pregúntaselo al registrar la entrada. 📸 CAPTURAS: al registrar y al cerrar una entrada, la app pide sola una foto del gráfico (se guardan con el trade en el Diario); si Rey te dice 'saca captura' o quieres guardar una imagen para analizar, usa capturar_grafico con el par. Detección en CUALQUIER par que tenga abierto, nada fijo.";
 
 /* Frameworks de los DOS análisis de Rey (semanal + diario), adaptados para que
    Roberto los ejecute con el gráfico EN VIVO (su indicador CRT Elite ya calculó
@@ -4171,6 +4194,8 @@ const IA_TOOLS = [
       mfe:{type:"number",description:"MFE en R (máximo A FAVOR). Tómalo del bloque en vivo de la posición si aparece."},
       nota:{type:"string"}
     }, required:[] } },
+  { name:"capturar_grafico", description:"Pide al Puente una CAPTURA de pantalla del gráfico de un par (además de las automáticas de apertura/cierre). Úsalo cuando Rey diga 'saca captura' o quieras guardar una imagen para analizar. Tarda unos segundos (el Puente la sube a la nube). Si hay una entrada abierta de ese par, la foto se guarda en ella.",
+    input_schema:{ type:"object", properties:{ par:{type:"string",description:"Par a capturar, ej. EUR/USD (di el que Rey esté operando)"} }, required:["par"] } },
   { name:"crear_cuenta", description:"Crea una cuenta de fondeo/real en la pestaña Cuentas. Tú ya conoces las reglas típicas de las firmas; rellena lo que sepas y Rey confirma.",
     input_schema:{ type:"object", properties:{
       alias:{type:"string"}, firma:{type:"string"}, capital:{type:"string"},
@@ -4198,6 +4223,7 @@ function describeTool(name, i){
   if(name==="registrar_trade") return "📒 Registrar trade — "+(i.par||"?")+" "+(i.dir||"")+" · "+(i.res||(parseFloat(i.r)>0?"Ganado":parseFloat(i.r)<0?"Perdido":"BE"))+" "+(i.r)+"R\nSetup "+(i.setup||"?")+" · ventana "+(i.ventana||"?")+" · entrada '"+(i.momento||"?")+"'"+(i.plan==="No"?" · PLAN ROTO":"")+(i.nota?("\nNota: "+i.nota):"");
   if(name==="registrar_entrada") return "✍️ Registrar ENTRADA (abierta) — "+(i.par||"?")+" "+(i.dir||"")+"\nEntrada "+(i.entrada!=null?i.entrada:"?")+" · SL "+(i.sl!=null?i.sl:"?")+" · TP "+(i.tp!=null?i.tp:"?")+(i.rr?(" · RR 1:"+i.rr):"")+(i.riesgoPct?(" · riesgo "+i.riesgoPct+"%"):"")+"\nSetup "+(i.setup||"?")+" · "+(i.ventana||"?")+" · '"+(i.momento||"?")+"'"+(i.zona?(" · "+i.zona):"")+(i.nota?("\nNota: "+i.nota):"");
   if(name==="cerrar_entrada"){ const rr=(i.r!=null&&i.r!=="")?(i.r+"R"):(i.precio_cierre!=null?("cierre en "+i.precio_cierre+" → calculo el R"):"?"); return "🏁 Cerrar entrada "+(i.par||"(la más reciente)")+" → "+rr+(i.res?(" · "+i.res):"")+(i.nota?("\nNota: "+i.nota):""); }
+  if(name==="capturar_grafico") return "📸 Capturar el gráfico de "+(i.par||"(par actual)");
   if(name==="crear_cuenta") return "🏦 Crear cuenta — "+(i.alias||i.firma||"?")+(i.firma&&i.alias?(" ("+i.firma+")"):"")+"\nCapital "+(i.capital||"?")+" · fase "+(i.fase||"Examen F1")+" · riesgo "+(i.riesgoPct||"0.5")+"%\nDD máx "+(i.ddMaxPct||"?")+"% ("+(i.ddTipo||"?")+") · daily "+(i.ddDailyPct||"?")+"% · target "+(i.targetPct||"?")+"%"+(i.precio?(" · precio "+i.precio):"");
   if(name==="editar_cuenta") return "✏️ Editar cuenta "+(i.alias||i.firma||"?")+":\n"+["capital","fase","riesgoPct","ddMaxPct","ddTipo","ddDailyPct","targetPct","balance","precio","nota"].filter(k=>i[k]!=null&&i[k]!=="").map(k=>"→ "+k+" "+i[k]).join("\n");
   if(name==="avanzar_fase") return "⏭️ Avanzar de fase la cuenta "+(i.alias||i.firma||"?");
@@ -4260,8 +4286,9 @@ function ejecutarTool(name, i){
         entrada:num(i.entrada), sl:num(i.sl), tp:num(i.tp), rr:num(i.rr), riesgoPct:i.riesgoPct||"",
         ventana:i.ventana||"", momento:i.momento||"", bias:i.bias||"", nconf:parseInt(i.nconf)||0,
         plan:"Sí", emo:"", nota:i.nota||"", zona:i.zona||"", cuenta:i.cuenta||"", fueraLimite:false, confs:[] };
+      t.shotOpen=t.id+"_open"; nubeShotReq(t.par, t.shotOpen); // 📸 captura de apertura
       TRADES.push(t); save(K.trades,TRADES); if(typeof refrescarDiarioCtx==="function") refrescarDiarioCtx();
-      return {ok:true,msg:"Entrada registrada (ABIERTA): "+t.par+" "+t.dir+" ent "+(t.entrada!=null?t.entrada:"?")+" SL "+(t.sl!=null?t.sl:"?")+" TP "+(t.tp!=null?t.tp:"?")+(t.rr?(" RR 1:"+t.rr):"")};
+      return {ok:true,msg:"Entrada registrada (ABIERTA): "+t.par+" "+t.dir+" ent "+(t.entrada!=null?t.entrada:"?")+" SL "+(t.sl!=null?t.sl:"?")+" TP "+(t.tp!=null?t.tp:"?")+(t.rr?(" RR 1:"+t.rr):"")+" · 📸 pedí captura del gráfico"};
     }
     if(name==="cerrar_entrada"){
       const q=String(i.par||"").toLowerCase();
@@ -4279,8 +4306,18 @@ function ejecutarTool(name, i){
       if(i.mae!=null && !isNaN(parseFloat(i.mae))) t.mae=parseFloat(i.mae);
       if(i.mfe!=null && !isNaN(parseFloat(i.mfe))) t.mfe=parseFloat(i.mfe);
       if(i.nota) t.nota=(t.nota?t.nota+" · ":"")+i.nota;
+      t.shotClose=t.id+"_close"; nubeShotReq(t.par, t.shotClose); // 📸 captura de cierre
       save(K.trades,TRADES); if(typeof refrescarDiarioCtx==="function") refrescarDiarioCtx(); notifChequearCuentasDD();
-      return {ok:true,msg:"Entrada cerrada: "+t.par+" "+t.res+" "+r1(t.r)+"R"+(t.precioCierre!=null?(" (cierre "+t.precioCierre+")"):"")};
+      return {ok:true,msg:"Entrada cerrada: "+t.par+" "+t.res+" "+r1(t.r)+"R"+(t.precioCierre!=null?(" (cierre "+t.precioCierre+")"):"")+" · 📸 pedí captura del cierre"};
+    }
+    if(name==="capturar_grafico"){
+      const par=i.par||""; const sid="m"+Date.now();
+      const q=String(par).toLowerCase();
+      const abiertas=TRADES.filter(t=>t.abierta && t.modo===CTX.modo && t.estrategia===CTX.estrategia);
+      const t = q ? abiertas.filter(x=>String(x.par||"").toLowerCase().includes(q)).slice(-1)[0] : abiertas.slice(-1)[0];
+      if(t){ t.shots=Array.isArray(t.shots)?t.shots:[]; t.shots.push(sid); save(K.trades,TRADES); }
+      nubeShotReq(par||(t&&t.par)||"", sid);
+      return {ok:true,msg:"📸 Captura pedida"+(par?(" de "+par):"")+" — el Puente la sube en unos segundos"+(t?" y se guarda en tu entrada abierta.":".")};
     }
     if(name==="crear_cuenta"){
       if(!i.alias && !i.firma) return {ok:false,msg:"Falta el alias o la firma"};
