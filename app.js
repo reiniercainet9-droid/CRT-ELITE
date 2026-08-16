@@ -770,6 +770,7 @@ const TABS=[
   {id:"riesgo",    ic:"💰", n:"Riesgo"},
   {id:"gatillo",   ic:"⚡", n:"Gatillo"},
   {id:"diario",    ic:"📒", n:"Diario"},
+  {id:"galeria",   ic:"🖼️", n:"Galería"},
   {id:"cuentas",   ic:"🏦", n:"Cuentas"},
   {id:"almanaque", ic:"📅", n:"Almanaque"},
   {id:"analisis",  ic:"📈", n:"Análisis"},
@@ -785,6 +786,7 @@ function irA(id){
   window.scrollTo({top:0,behavior:"instant"});
   if(id==="analisis") renderAnalisis();
   if(id==="diario")   renderDiario();
+  if(id==="galeria")  renderGaleria();
   if(id==="gatillo")  renderGatillo();
   if(id==="mentor")   renderMentor();
   if(id==="almanaque")renderAlmanaque();
@@ -1973,6 +1975,71 @@ async function cargarShots(t){
     else { html+='<div style="margin:6px 0;font-size:12px;color:var(--txt3)">'+it.lbl+': aún subiéndose o no disponible.</div>'; }
   }
   cont.innerHTML=html;
+}
+
+/* ============================================================
+   🖼️ GALERÍA de capturas — ordenada por día/semana/mes/año
+   ============================================================ */
+let GAL_MODO="dia";
+function viewGaleria(){
+  const v=el("div","view"); v.id="v-galeria";
+  v.innerHTML=`
+    <div class="card">
+      <div class="card-h"><span class="ic">🖼️</span><h2>Galería de capturas</h2></div>
+      <p class="desc">Todas las fotos de tus operaciones. Agrúpalas por día, semana, mes o año. Tócalas para verlas grandes.</p>
+      <div class="seg" id="galSeg" style="margin-top:8px"></div>
+    </div>
+    <div id="galBody"></div>`;
+  return v;
+}
+function galeriaCaps(){
+  const caps=[];
+  (Array.isArray(TRADES)?TRADES:[]).filter(t=>t.modo===CTX.modo && t.estrategia===CTX.estrategia).forEach(t=>{
+    const add=(id,tipo)=>{ if(id) caps.push({id, fecha:t.fecha, par:t.par, tipo}); };
+    add(t.shotOpen,"Entrada"); add(t.shotClose,"Cierre"); (t.shots||[]).forEach((s,i)=>add(s,"Extra "+(i+1)));
+  });
+  return caps.sort((a,b)=>String(b.fecha).localeCompare(String(a.fecha)));
+}
+function galPeriodo(fecha, modo){
+  const s=String(fecha||""); const p=s.split("-"), Y=p[0], M=p[1];
+  if(modo==="año") return Y||"0000";
+  if(modo==="mes") return (Y&&M)?(Y+"-"+M):"0000-00";
+  if(modo==="semana"){ const d=new Date(s); if(isNaN(d)) return "0000-00-00"; const day=(d.getDay()+6)%7; const on=new Date(d); on.setDate(d.getDate()-day); return on.toISOString().slice(0,10); }
+  return s||"0000-00-00";
+}
+function galLabel(k, modo){
+  if(modo==="año") return "Año "+k;
+  if(modo==="mes"){ const pp=k.split("-"); const mn=["","enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"]; return (mn[parseInt(pp[1],10)]||pp[1])+" "+pp[0]; }
+  if(modo==="semana") return "Semana del "+fechaCorta(k);
+  return fechaCorta(k);
+}
+function renderGaleria(){
+  const seg=$("#galSeg");
+  if(seg){ const modos=[["dia","Día"],["semana","Semana"],["mes","Mes"],["año","Año"]];
+    seg.innerHTML=modos.map(m=>`<button data-m="${m[0]}" class="${GAL_MODO===m[0]?'on':''}">${m[1]}</button>`).join("");
+    seg.querySelectorAll("button").forEach(b=>b.onclick=()=>{ GAL_MODO=b.dataset.m; renderGaleria(); });
+  }
+  const body=$("#galBody"); if(!body) return;
+  const caps=galeriaCaps();
+  if(!caps.length){ body.innerHTML=`<div class="card"><p class="desc" style="text-align:center">Aún no hay capturas. Se guardan solas al registrar y cerrar tus entradas (con el Puente encendido), o cuando le pidas a Roberto "saca captura".</p></div>`; return; }
+  const grupos={};
+  caps.forEach(c=>{ const k=galPeriodo(c.fecha, GAL_MODO); (grupos[k]=grupos[k]||[]).push(c); });
+  const keys=Object.keys(grupos).sort((a,b)=>b.localeCompare(a));
+  body.innerHTML=keys.map(k=>`
+    <div class="card">
+      <div style="font-weight:700;margin-bottom:8px">${esc(galLabel(k,GAL_MODO))} <span style="color:var(--txt3);font-weight:400">· ${grupos[k].length} foto(s)</span></div>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">
+        ${grupos[k].map(c=>`<div class="gal-item" data-id="${esc(c.id)}" style="cursor:pointer">
+          <div data-img="${esc(c.id)}" style="aspect-ratio:16/10;background:rgba(255,255,255,.05);border-radius:8px;overflow:hidden;display:flex;align-items:center;justify-content:center"><span style="font-size:11px;color:var(--txt3)">cargando…</span></div>
+          <div style="font-size:11px;color:var(--txt3);margin-top:3px">${esc(c.par||"")} · ${esc(c.tipo)} · ${esc(fechaCorta(c.fecha))}</div>
+        </div>`).join("")}
+      </div>
+    </div>`).join("");
+  body.querySelectorAll("[data-img]").forEach(async cont=>{
+    const img=await nubeShotGet(cont.dataset.img);
+    cont.innerHTML = img ? `<img src="${img}" style="width:100%;height:100%;object-fit:cover">` : `<span style="font-size:11px;color:var(--txt3)">no disponible</span>`;
+  });
+  body.querySelectorAll(".gal-item").forEach(it=>it.onclick=async()=>{ const img=await nubeShotGet(it.dataset.id); if(img) window.open(img); });
 }
 function abrirModal(html, botones){
   cerrarModal();
@@ -4196,6 +4263,16 @@ const IA_TOOLS = [
     }, required:[] } },
   { name:"capturar_grafico", description:"Pide al Puente una CAPTURA de pantalla del gráfico de un par (además de las automáticas de apertura/cierre). Úsalo cuando Rey diga 'saca captura' o quieras guardar una imagen para analizar. Tarda unos segundos (el Puente la sube a la nube). Si hay una entrada abierta de ese par, la foto se guarda en ella.",
     input_schema:{ type:"object", properties:{ par:{type:"string",description:"Par a capturar, ej. EUR/USD (di el que Rey esté operando)"} }, required:["par"] } },
+  { name:"borrar_trade", description:"Borra un registro del 📒 Diario. Identifícalo por el par (toma el MÁS RECIENTE de ese par) o por par+fecha. Afecta estadísticas: confírmalo SIEMPRE.",
+    input_schema:{ type:"object", properties:{ par:{type:"string",description:"Par del trade a borrar"}, fecha:{type:"string",description:"YYYY-MM-DD (opcional, para precisar cuál)"} }, required:["par"] } },
+  { name:"editar_trade", description:"Edita un registro existente del 📒 Diario, identificándolo por el par (el más reciente) o par+fecha. Cambia SOLO los campos que pases. Confírmalo siempre.",
+    input_schema:{ type:"object", properties:{
+      par:{type:"string",description:"Par del trade a editar"}, fecha:{type:"string",description:"YYYY-MM-DD (opcional)"},
+      r:{type:"number",description:"Nuevo resultado en R"}, res:{type:"string",enum:["Ganado","Perdido","BE"]},
+      setup:{type:"string",enum:["A+","B","C"]}, momento:{type:"string",enum:["En confirmación","En el toque","Anticipé"]},
+      bias:{type:"string",enum:["A favor","En contra"]}, ventana:{type:"string"}, nconf:{type:"number"}, zona:{type:"string"},
+      entrada:{type:"number"}, sl:{type:"number"}, tp:{type:"number"}, nota:{type:"string"}
+    }, required:["par"] } },
   { name:"crear_cuenta", description:"Crea una cuenta de fondeo/real en la pestaña Cuentas. Tú ya conoces las reglas típicas de las firmas; rellena lo que sepas y Rey confirma.",
     input_schema:{ type:"object", properties:{
       alias:{type:"string"}, firma:{type:"string"}, capital:{type:"string"},
@@ -4224,6 +4301,8 @@ function describeTool(name, i){
   if(name==="registrar_entrada") return "✍️ Registrar ENTRADA (abierta) — "+(i.par||"?")+" "+(i.dir||"")+"\nEntrada "+(i.entrada!=null?i.entrada:"?")+" · SL "+(i.sl!=null?i.sl:"?")+" · TP "+(i.tp!=null?i.tp:"?")+(i.rr?(" · RR 1:"+i.rr):"")+(i.riesgoPct?(" · riesgo "+i.riesgoPct+"%"):"")+"\nSetup "+(i.setup||"?")+" · "+(i.ventana||"?")+" · '"+(i.momento||"?")+"'"+(i.zona?(" · "+i.zona):"")+(i.nota?("\nNota: "+i.nota):"");
   if(name==="cerrar_entrada"){ const rr=(i.r!=null&&i.r!=="")?(i.r+"R"):(i.precio_cierre!=null?("cierre en "+i.precio_cierre+" → calculo el R"):"?"); return "🏁 Cerrar entrada "+(i.par||"(la más reciente)")+" → "+rr+(i.res?(" · "+i.res):"")+(i.nota?("\nNota: "+i.nota):""); }
   if(name==="capturar_grafico") return "📸 Capturar el gráfico de "+(i.par||"(par actual)");
+  if(name==="borrar_trade") return "🗑️ Borrar del Diario el trade de "+(i.par||"?")+(i.fecha?(" del "+i.fecha):" (el más reciente)");
+  if(name==="editar_trade"){ const c=["r","res","setup","momento","bias","ventana","nconf","zona","entrada","sl","tp","nota"].filter(k=>i[k]!=null&&i[k]!=="").map(k=>k+"→"+i[k]).join(", "); return "✏️ Editar el trade de "+(i.par||"?")+(i.fecha?(" del "+i.fecha):" (el más reciente)")+"\n"+(c||"(sin cambios)"); }
   if(name==="crear_cuenta") return "🏦 Crear cuenta — "+(i.alias||i.firma||"?")+(i.firma&&i.alias?(" ("+i.firma+")"):"")+"\nCapital "+(i.capital||"?")+" · fase "+(i.fase||"Examen F1")+" · riesgo "+(i.riesgoPct||"0.5")+"%\nDD máx "+(i.ddMaxPct||"?")+"% ("+(i.ddTipo||"?")+") · daily "+(i.ddDailyPct||"?")+"% · target "+(i.targetPct||"?")+"%"+(i.precio?(" · precio "+i.precio):"");
   if(name==="editar_cuenta") return "✏️ Editar cuenta "+(i.alias||i.firma||"?")+":\n"+["capital","fase","riesgoPct","ddMaxPct","ddTipo","ddDailyPct","targetPct","balance","precio","nota"].filter(k=>i[k]!=null&&i[k]!=="").map(k=>"→ "+k+" "+i[k]).join("\n");
   if(name==="avanzar_fase") return "⏭️ Avanzar de fase la cuenta "+(i.alias||i.firma||"?");
@@ -4309,6 +4388,23 @@ function ejecutarTool(name, i){
       t.shotClose=t.id+"_close"; nubeShotReq(t.par, t.shotClose); // 📸 captura de cierre
       save(K.trades,TRADES); if(typeof refrescarDiarioCtx==="function") refrescarDiarioCtx(); notifChequearCuentasDD();
       return {ok:true,msg:"Entrada cerrada: "+t.par+" "+t.res+" "+r1(t.r)+"R"+(t.precioCierre!=null?(" (cierre "+t.precioCierre+")"):"")+" · 📸 pedí captura del cierre"};
+    }
+    if(name==="borrar_trade" || name==="editar_trade"){
+      const q=String(i.par||"").toLowerCase();
+      let lst=TRADES.filter(t=>t.modo===CTX.modo && t.estrategia===CTX.estrategia && String(t.par||"").toLowerCase().includes(q));
+      if(i.fecha) lst=lst.filter(t=>t.fecha===i.fecha);
+      const t=lst.slice(-1)[0];
+      if(!t) return {ok:false,msg:"No encontré un trade de "+(i.par||"")+(i.fecha?(" del "+i.fecha):"")};
+      if(name==="borrar_trade"){
+        TRADES=TRADES.filter(x=>x.id!==t.id); save(K.trades,TRADES); if(typeof refrescarDiarioCtx==="function") refrescarDiarioCtx();
+        return {ok:true,msg:"Trade borrado: "+t.par+" "+(t.fecha||"")+" "+(t.abierta?"(abierta)":(r1(t.r)+"R"))};
+      }
+      const num=["r","nconf","entrada","sl","tp"], str=["res","setup","momento","bias","ventana","zona","nota"];
+      num.forEach(k=>{ if(i[k]!=null && !isNaN(parseFloat(i[k]))) t[k]=parseFloat(i[k]); });
+      str.forEach(k=>{ if(i[k]!=null && i[k]!=="") t[k]=i[k]; });
+      if(i.res && i.res!=="Abierta") t.abierta=false;
+      save(K.trades,TRADES); if(typeof refrescarDiarioCtx==="function") refrescarDiarioCtx(); notifChequearCuentasDD();
+      return {ok:true,msg:"Trade actualizado: "+t.par+" "+(t.fecha||"")+" ("+(t.abierta?"abierta":(r1(t.r)+"R"))+")"};
     }
     if(name==="capturar_grafico"){
       const par=i.par||""; const sid="m"+Date.now();
@@ -4636,7 +4732,7 @@ async function iaEnviar(textoForzado, promptExtra){
    ============================================================ */
 function init(){
   const c=$("#views");
-  c.append(viewNoticias(),viewAvisos(),viewChecklist(),viewConf(),viewRutina(),viewReglas(),viewRiesgo(),viewGatillo(),viewDiario(),viewCuentas(),viewAlmanaque(),viewAnalisis(),viewMentor(),viewPlan());
+  c.append(viewNoticias(),viewAvisos(),viewChecklist(),viewConf(),viewRutina(),viewReglas(),viewRiesgo(),viewGatillo(),viewDiario(),viewGaleria(),viewCuentas(),viewAlmanaque(),viewAnalisis(),viewMentor(),viewPlan());
   buildNav();
   fillPlanDinamico();
   initDiarioControles();
