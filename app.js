@@ -3430,6 +3430,37 @@ const PUENTE_DOSSIER =
 "Si el bloque dice que la PC NO está conectada (no hay lectura fresca), NO afirmes que ves el gráfico: dile con cariño que encienda la PC y abra el 'Puente Apex' (doble clic en 'Arrancar Puente Apex') para que puedas verlo en vivo. "+
 "Cuando SÍ estés conectado y estén operando juntos, ve CANTÁNDOLE las confluencias que se cumplen según ese bloque (barrido de liquidez, MSS de 15m, zona tocada, Secuencia F3, killzone activa) y recuérdale SIEMPRE esperar la vela de confirmación cerrada, nunca entrar en el toque.";
 
+/* Frameworks de los DOS análisis de Rey (semanal + diario), adaptados para que
+   Roberto los ejecute con el gráfico EN VIVO (su indicador CRT Elite ya calculó
+   las temporalidades y marcó niveles/etiquetas). Van a la API, no se muestran. */
+const ANALISIS_SEMANAL_PROM =
+"Eres mi MENTOR y ANALISTA ELITE. Hazme el ANÁLISIS SEMANAL del par que veo en el gráfico en vivo. FUENTE OBLIGATORIA: el bloque [👁️ GRÁFICO EN VIVO] que ya tienes (mi indicador CRT Elite YA calculó las temporalidades W/D/4H/1H y marcó niveles y etiquetas). NO inventes: si un dato no está en el bloque, dilo. Método SMC/CRT/liquidez. Si la PC no está conectada (no hay lectura viva), dímelo y pídeme encender el Puente.\n"+
+"ESCRÍBEME en este formato exacto:\n"+
+"🗓️ CONTEXTO GRANDE: zona del rango (Deep Discount/Discount/Equilibrio/Premium/Deep Premium) y estructura (alcista/bajista/rango) según el sesgo y la alineación TF del indicador.\n"+
+"📊 LIQUIDEZ PENDIENTE: niveles clave con precio (usa W H/W L, D H/D L, 4H, EQH/EQL, BSL/SSL del bloque), arriba y abajo del precio actual.\n"+
+"📅 BIAS CONFIRMADO EN DAILY: sí/no, según la alineación D y el sesgo del día.\n"+
+"🗺️ MAPA DE LA SEMANA: niveles de mayor a menor con el precio actual en el medio; hacia cuál irá primero y qué lo desviaría.\n"+
+"📰 NOTICIAS: usa el calendario real ya inyectado (días/horas NY de alto/medio impacto de mis monedas) + regla de no operar 30 min antes/después.\n"+
+"🔵 BIAS SEMANAL: COMPRAS / VENTAS / RANGO-ESPERAR.\n"+
+"🎯 PLAN DE LA SEMANA: qué busco, zona principal y secundaria (precio), nivel que INVALIDA el bias, mejor día para operar, días a evitar.\n"+
+"📝 NOTAS DEL MENTOR: 3-4 líneas con el consejo clave de esta semana.\n"+
+"🏦 POR CUENTA (OBLIGATORIO): con mis cuentas registradas, dime cómo actuar en CADA UNA por separado esta semana (riesgo, operar o no según su DD) y marca en CUÁL debo operar — PROTEGE la fondeada crítica.\n"+
+"Reglas: el semanal MANDA sobre el diario. Sin sweep = sin setup. No dibujes en el gráfico todavía (eso llega pronto); dame el análisis y el plan en texto, directo y claro.";
+const ANALISIS_DIARIO_PROM =
+"Eres mi MENTOR y ANALISTA ELITE. Hazme el ANÁLISIS DEL DÍA del par que veo en el gráfico en vivo. FUENTE OBLIGATORIA: el bloque [👁️ GRÁFICO EN VIVO] (mi indicador CRT Elite ya calculó D/H4/1H/15/5, zona premium/discount, alineación TF, CRT H4, SMT, Secuencia F3, killzone y nivel de invalidación) + etiquetas/niveles. NO inventes datos que no estén. Si la PC no está conectada, dímelo y pídeme encender el Puente.\n"+
+"ESCRÍBEME en este formato exacto:\n"+
+"📅 DAILY — BIAS: alcista/bajista/rango + liquidez pendiente (precios).\n"+
+"📊 H4 — zona clave (precio), premium/discount, CRT H4, ¿válido para operar?\n"+
+"⚡ 15M/1H — SETUP: A+/B/C/NO OPERAR según la Secuencia F3 y las confluencias (sweep, MSS, displacement, reacción en zona). REGLA DE ORO: sin sweep marcado = NO hay setup, PÁRATE ahí.\n"+
+"🎯 M5 — si hay setup: entrada, SL y TP aproximados con RR usando los niveles del bloque. Si hay herramienta de posición puesta, LÉELA y valídala o rectifícala (entrada/SL/TP/RR/riesgo).\n"+
+"⏰ HORARIO: ¿ventana válida (Londres/Pre-NY/NY, hora NY)? Si el mercado está cerrado o estamos fuera de killzone, dilo CLARO.\n"+
+"📰 NOTICIAS del día (del calendario ya inyectado).\n"+
+"🔴 VEREDICTO: OPERAR AHORA / ESPERAR CONFIRMACIÓN / NO HAY SETUP + razón en 2-3 líneas.\n"+
+"🏦 POR CUENTA (OBLIGATORIO): cómo actuar HOY en CADA cuenta registrada por separado y en cuál operar — PROTEGE la fondeada crítica.\n"+
+"Regla: el semanal manda sobre el diario; si el setup va contra el bias semanal, NO operar. No dibujes en el gráfico todavía; dame análisis y plan en texto.";
+function analisisSemanal(){ iaEnviar("🗓️ Hazme mi análisis SEMANAL con el gráfico en vivo.", ANALISIS_SEMANAL_PROM); }
+function analisisDiario(){ iaEnviar("📆 Hazme mi análisis DEL DÍA con el gráfico en vivo.", ANALISIS_DIARIO_PROM); }
+
 let _iaConoc = null;
 /* Arma el bloque de conocimiento (estrategia + indicador + perfil) desde los
    mismos datos que ve la app, para que la IA y la app nunca se contradigan. */
@@ -3597,6 +3628,8 @@ function iaInit(){
       </div>
       <div class="ia-msgs" id="iaMsgs"></div>
       <div class="ia-quick" id="iaQuick">
+        <button class="ia-chip" data-act="semanal">🗓️ Análisis semanal</button>
+        <button class="ia-chip" data-act="diario">📆 Análisis del día</button>
         <button class="ia-chip" data-q="Analiza mi operativa reciente con mis datos: dime con claridad qué estoy haciendo bien, qué estoy haciendo mal y cómo lo corrijo paso a paso.">📊 Analiza mi operativa</button>
         <button class="ia-chip" data-q="Según mis datos, ¿cuál es mi mayor fuga ahora mismo y qué ejercicio concreto hago esta semana para corregirla?">🩸 Mi mayor fuga</button>
         <button class="ia-chip" data-q="Explícame con un ejemplo claro cómo confirmar el gatillo (barrido + MSS 15M + FVG) sin entrar antes de tiempo.">🎯 Cómo gatillar</button>
@@ -3661,7 +3694,11 @@ function iaInit(){
   const ta=$("#iaText");
   ta.addEventListener("keydown",e=>{ if(e.key==="Enter" && !e.shiftKey){ e.preventDefault(); iaEnviar(); } });
   ta.addEventListener("input",()=>{ ta.style.height="auto"; ta.style.height=Math.min(ta.scrollHeight,120)+"px"; });
-  document.querySelectorAll("#iaQuick .ia-chip").forEach(b=>{ b.onclick=()=>iaEnviar(b.dataset.q); });
+  document.querySelectorAll("#iaQuick .ia-chip").forEach(b=>{ b.onclick=()=>{
+    if(b.dataset.act==="semanal") return analisisSemanal();
+    if(b.dataset.act==="diario")  return analisisDiario();
+    iaEnviar(b.dataset.q);
+  }; });
   // Adjuntar imagen (galería/archivos) y cámara en directo
   $("#iaClip").onclick=()=>$("#iaFile").click();
   $("#iaCamBtn").onclick=()=>$("#iaCam").click();
@@ -4386,7 +4423,7 @@ function iaResumePend(){
   if(hayActiva){ IA.busy=true; pintarIAChat(); }
 }
 
-async function iaEnviar(textoForzado){
+async function iaEnviar(textoForzado, promptExtra){
   const ta=$("#iaText");
   let texto=(textoForzado!=null?textoForzado:(ta?ta.value:"")).trim();
   const img=IA.pendImg;
@@ -4408,7 +4445,9 @@ async function iaEnviar(textoForzado){
   // Inyecta el contexto de datos en el bloque de texto del último mensaje del usuario
   let calTxt=""; try{ const ev=await cargarCalendarioCache(); calTxt=iaCalendarioContexto(ev)+"\n"; }catch(_){ calTxt=""; }
   let grafTxt=""; try{ grafTxt=await iaGrafico()+"\n"; }catch(_){ grafTxt=""; }
-  const inj=iaReloj()+"\n"+grafTxt+calTxt+iaContexto()+"\n"+iaAvisos()+"\n\nPregunta de Rey: "+texto;
+  // promptExtra = framework de análisis (semanal/diario) que va a la API pero NO se muestra en el chat
+  const marco = promptExtra ? ("\n\n=== INSTRUCCIONES DEL ANÁLISIS QUE PIDE REY ===\n"+promptExtra+"\n=== FIN INSTRUCCIONES ===") : "";
+  const inj=iaReloj()+"\n"+grafTxt+calTxt+iaContexto()+"\n"+iaAvisos()+marco+"\n\nPregunta de Rey: "+texto;
   const last=msgs[msgs.length-1];
   if(Array.isArray(last.content)){ last.content[last.content.length-1]={type:"text",text:inj}; }
   else{ last.content=inj; }
