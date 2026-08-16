@@ -3484,7 +3484,7 @@ const PUENTE_DOSSIER =
 "👁️ TU VISTA EN VIVO DEL GRÁFICO (PUENTE APEX): Ya tienes OJOS sobre el gráfico real de Rey en TradingView. Cuando su PC está encendida con el 'Puente Apex' corriendo, en CADA mensaje recibes un bloque [👁️ GRÁFICO EN VIVO ...] con el símbolo, timeframe, precio, el dashboard COMPLETO del indicador CRT Elite (killzone, sesgo, estado del día, zona premium/discount, alineación de temporalidades, SMT, secuencia F3…), los niveles clave y las herramientas de posición (Long/Short) que Rey haya puesto con entrada/SL/TP/RR/riesgo. ESO ES REAL Y ACTUAL — úsalo como tu fuente de verdad del gráfico; no inventes ni contradigas esos números. "+
 "Si el bloque dice que la PC NO está conectada (no hay lectura fresca), NO afirmes que ves el gráfico: dile con cariño que encienda la PC y abra el 'Puente Apex' (doble clic en 'Arrancar Puente Apex') para que puedas verlo en vivo. "+
 "Cuando SÍ estés conectado y estén operando juntos, ve CANTÁNDOLE las confluencias que se cumplen según ese bloque (barrido de liquidez, MSS de 15m, zona tocada, Secuencia F3, killzone activa) y recuérdale SIEMPRE esperar la vela de confirmación cerrada, nunca entrar en el toque.\n"+
-"✍️ CAPTURA DE ENTRADAS: cuando en el gráfico en vivo veas una herramienta de posición (Long/Short) que Rey acaba de poner y que NO aparezca en la lista de '[📒 ENTRADAS ABIERTAS ya registradas]', OFRÉCELE registrarla tú con la mano registrar_entrada (rellenas par, dirección, entrada, SL, TP, RR y riesgo leídos del gráfico + setup/ventana/momento/bias/zona según tu análisis), SIEMPRE con tu tarjeta de confirmación. Antes de registrar, valida/rectifica la entrada según sus reglas (¿hubo sweep? ¿zona correcta premium/discount? ¿killzone? ¿a favor del sesgo? ¿RR sano?) y adviértele si algo no cuadra. Cuando Rey te diga que cerró la operación, usa cerrar_entrada con el resultado en R. Detección en CUALQUIER par que tenga abierto, nada fijo.";
+"✍️ CAPTURA DE ENTRADAS: cuando en el gráfico en vivo veas una herramienta de posición (Long/Short) que Rey acaba de poner y que NO aparezca en la lista de '[📒 ENTRADAS ABIERTAS ya registradas]', OFRÉCELE registrarla tú con la mano registrar_entrada (rellenas par, dirección, entrada, SL, TP, RR y riesgo leídos del gráfico + setup/ventana/momento/bias/zona según tu análisis), SIEMPRE con tu tarjeta de confirmación. Antes de registrar, valida/rectifica la entrada según sus reglas (¿hubo sweep? ¿zona correcta premium/discount? ¿killzone? ¿a favor del sesgo? ¿RR sano?) y adviértele si algo no cuadra. CIERRE: el gráfico NO te dice cómo cerró de verdad (puede ser BE, ganancia, pérdida o salida antes). Si una entrada que estaba como ABIERTA en el Diario YA NO aparece como posición en el gráfico en vivo, probablemente Rey la cerró: pregúntale a qué PRECIO cerró (o si tocó TP/SL/BE o salió antes) y ciérrala con cerrar_entrada pasando precio_cierre — el sistema calcula el R exacto con su entrada y SL. Nunca inventes el resultado. Detección en CUALQUIER par que tenga abierto, nada fijo.";
 
 /* Frameworks de los DOS análisis de Rey (semanal + diario), adaptados para que
    Roberto los ejecute con el gráfico EN VIVO (su indicador CRT Elite ya calculó
@@ -4161,13 +4161,14 @@ const IA_TOOLS = [
       cuenta:{type:"string",description:"Cuenta en la que opera (alias/firma)"},
       nota:{type:"string"}
     }, required:["par","dir","entrada"] } },
-  { name:"cerrar_entrada", description:"Cierra una ENTRADA abierta del Diario y le pone su resultado en R (pasa a contar en las estadísticas). Identifícala por el par (o toma la más reciente abierta).",
+  { name:"cerrar_entrada", description:"Cierra una ENTRADA abierta del Diario y le pone su resultado (pasa a contar en estadísticas). OJO: el gráfico NO sabe cómo cerró de verdad; pídele a Rey el PRECIO al que cerró (o 'TP'/'SL'/'BE'/'salí antes en X'). Si te da el precio de cierre, pásalo en precio_cierre y el sistema calcula el R EXACTO con su entrada y SL. Si Rey te da el R directo, usa r. Identifícala por el par (o la más reciente abierta).",
     input_schema:{ type:"object", properties:{
       par:{type:"string",description:"Par de la entrada a cerrar (si se omite, la más reciente abierta)"},
-      r:{type:"number",description:"Resultado en R (ej. 2.5, o -1 si fue stop)"},
+      precio_cierre:{type:"number",description:"Precio al que Rey cerró (el sistema calcula el R con su entrada/SL). Si tocó TP, usa el precio del TP; si tocó SL, el del SL; si salió antes, el precio real de salida."},
+      r:{type:"number",description:"Resultado en R directo (solo si Rey te lo da en R, ej. 2.5 o -1). Si das precio_cierre, no hace falta."},
       res:{type:"string",enum:["Ganado","Perdido","BE"]},
       nota:{type:"string"}
-    }, required:["r"] } },
+    }, required:[] } },
   { name:"crear_cuenta", description:"Crea una cuenta de fondeo/real en la pestaña Cuentas. Tú ya conoces las reglas típicas de las firmas; rellena lo que sepas y Rey confirma.",
     input_schema:{ type:"object", properties:{
       alias:{type:"string"}, firma:{type:"string"}, capital:{type:"string"},
@@ -4194,7 +4195,7 @@ function describeTool(name, i){
   if(name==="set_pares") return "🎯 Cambiar tus pares a: "+((i.pares||[]).join(", "));
   if(name==="registrar_trade") return "📒 Registrar trade — "+(i.par||"?")+" "+(i.dir||"")+" · "+(i.res||(parseFloat(i.r)>0?"Ganado":parseFloat(i.r)<0?"Perdido":"BE"))+" "+(i.r)+"R\nSetup "+(i.setup||"?")+" · ventana "+(i.ventana||"?")+" · entrada '"+(i.momento||"?")+"'"+(i.plan==="No"?" · PLAN ROTO":"")+(i.nota?("\nNota: "+i.nota):"");
   if(name==="registrar_entrada") return "✍️ Registrar ENTRADA (abierta) — "+(i.par||"?")+" "+(i.dir||"")+"\nEntrada "+(i.entrada!=null?i.entrada:"?")+" · SL "+(i.sl!=null?i.sl:"?")+" · TP "+(i.tp!=null?i.tp:"?")+(i.rr?(" · RR 1:"+i.rr):"")+(i.riesgoPct?(" · riesgo "+i.riesgoPct+"%"):"")+"\nSetup "+(i.setup||"?")+" · "+(i.ventana||"?")+" · '"+(i.momento||"?")+"'"+(i.zona?(" · "+i.zona):"")+(i.nota?("\nNota: "+i.nota):"");
-  if(name==="cerrar_entrada") return "🏁 Cerrar entrada "+(i.par||"(la más reciente)")+" → "+(i.res||(parseFloat(i.r)>0?"Ganado":parseFloat(i.r)<0?"Perdido":"BE"))+" "+(i.r)+"R"+(i.nota?("\nNota: "+i.nota):"");
+  if(name==="cerrar_entrada"){ const rr=(i.r!=null&&i.r!=="")?(i.r+"R"):(i.precio_cierre!=null?("cierre en "+i.precio_cierre+" → calculo el R"):"?"); return "🏁 Cerrar entrada "+(i.par||"(la más reciente)")+" → "+rr+(i.res?(" · "+i.res):"")+(i.nota?("\nNota: "+i.nota):""); }
   if(name==="crear_cuenta") return "🏦 Crear cuenta — "+(i.alias||i.firma||"?")+(i.firma&&i.alias?(" ("+i.firma+")"):"")+"\nCapital "+(i.capital||"?")+" · fase "+(i.fase||"Examen F1")+" · riesgo "+(i.riesgoPct||"0.5")+"%\nDD máx "+(i.ddMaxPct||"?")+"% ("+(i.ddTipo||"?")+") · daily "+(i.ddDailyPct||"?")+"% · target "+(i.targetPct||"?")+"%"+(i.precio?(" · precio "+i.precio):"");
   if(name==="editar_cuenta") return "✏️ Editar cuenta "+(i.alias||i.firma||"?")+":\n"+["capital","fase","riesgoPct","ddMaxPct","ddTipo","ddDailyPct","targetPct","balance","precio","nota"].filter(k=>i[k]!=null&&i[k]!=="").map(k=>"→ "+k+" "+i[k]).join("\n");
   if(name==="avanzar_fase") return "⏭️ Avanzar de fase la cuenta "+(i.alias||i.firma||"?");
@@ -4261,14 +4262,21 @@ function ejecutarTool(name, i){
       return {ok:true,msg:"Entrada registrada (ABIERTA): "+t.par+" "+t.dir+" ent "+(t.entrada!=null?t.entrada:"?")+" SL "+(t.sl!=null?t.sl:"?")+" TP "+(t.tp!=null?t.tp:"?")+(t.rr?(" RR 1:"+t.rr):"")};
     }
     if(name==="cerrar_entrada"){
-      const R=parseFloat(i.r); if(isNaN(R)) return {ok:false,msg:"Falta el resultado en R (número)"};
       const q=String(i.par||"").toLowerCase();
       const abiertas=TRADES.filter(t=>t.abierta && t.modo===CTX.modo && t.estrategia===CTX.estrategia);
       const t = q ? abiertas.filter(x=>String(x.par||"").toLowerCase().includes(q)).slice(-1)[0] : abiertas.slice(-1)[0];
       if(!t) return {ok:false,msg:"No encontré una entrada abierta"+(i.par?(" en "+i.par):"")};
-      t.abierta=false; t.r=R; t.res=i.res||(R>0?"Ganado":R<0?"Perdido":"BE"); if(i.nota) t.nota=(t.nota?t.nota+" · ":"")+i.nota;
+      let R=parseFloat(i.r);
+      if(isNaN(R) && i.precio_cierre!=null && t.entrada!=null && t.sl!=null){
+        const pc=parseFloat(i.precio_cierre), riesgo=Math.abs(t.entrada-t.sl);
+        if(riesgo>0){ const dirCompra=/compra|long|alza/i.test(t.dir); R=(dirCompra?(pc-t.entrada):(t.entrada-pc))/riesgo; R=Math.round(R*100)/100; }
+      }
+      if(isNaN(R)) return {ok:false,msg:"Dime el precio al que cerraste (o el resultado en R)"};
+      t.abierta=false; t.r=R; t.res=i.res||(R>0.05?"Ganado":R<-0.05?"Perdido":"BE");
+      if(i.precio_cierre!=null) t.precioCierre=parseFloat(i.precio_cierre);
+      if(i.nota) t.nota=(t.nota?t.nota+" · ":"")+i.nota;
       save(K.trades,TRADES); if(typeof refrescarDiarioCtx==="function") refrescarDiarioCtx(); notifChequearCuentasDD();
-      return {ok:true,msg:"Entrada cerrada: "+t.par+" "+t.res+" "+t.r+"R"};
+      return {ok:true,msg:"Entrada cerrada: "+t.par+" "+t.res+" "+r1(t.r)+"R"+(t.precioCierre!=null?(" (cierre "+t.precioCierre+")"):"")};
     }
     if(name==="crear_cuenta"){
       if(!i.alias && !i.firma) return {ok:false,msg:"Falta el alias o la firma"};
