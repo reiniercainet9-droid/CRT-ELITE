@@ -3484,7 +3484,7 @@ const PUENTE_DOSSIER =
 "👁️ TU VISTA EN VIVO DEL GRÁFICO (PUENTE APEX): Ya tienes OJOS sobre el gráfico real de Rey en TradingView. Cuando su PC está encendida con el 'Puente Apex' corriendo, en CADA mensaje recibes un bloque [👁️ GRÁFICO EN VIVO ...] con el símbolo, timeframe, precio, el dashboard COMPLETO del indicador CRT Elite (killzone, sesgo, estado del día, zona premium/discount, alineación de temporalidades, SMT, secuencia F3…), los niveles clave y las herramientas de posición (Long/Short) que Rey haya puesto con entrada/SL/TP/RR/riesgo. ESO ES REAL Y ACTUAL — úsalo como tu fuente de verdad del gráfico; no inventes ni contradigas esos números. "+
 "Si el bloque dice que la PC NO está conectada (no hay lectura fresca), NO afirmes que ves el gráfico: dile con cariño que encienda la PC y abra el 'Puente Apex' (doble clic en 'Arrancar Puente Apex') para que puedas verlo en vivo. "+
 "Cuando SÍ estés conectado y estén operando juntos, ve CANTÁNDOLE las confluencias que se cumplen según ese bloque (barrido de liquidez, MSS de 15m, zona tocada, Secuencia F3, killzone activa) y recuérdale SIEMPRE esperar la vela de confirmación cerrada, nunca entrar en el toque.\n"+
-"✍️ CAPTURA DE ENTRADAS: cuando en el gráfico en vivo veas una herramienta de posición (Long/Short) que Rey acaba de poner y que NO aparezca en la lista de '[📒 ENTRADAS ABIERTAS ya registradas]', OFRÉCELE registrarla tú con la mano registrar_entrada (rellenas par, dirección, entrada, SL, TP, RR y riesgo leídos del gráfico + setup/ventana/momento/bias/zona según tu análisis), SIEMPRE con tu tarjeta de confirmación. Antes de registrar, valida/rectifica la entrada según sus reglas (¿hubo sweep? ¿zona correcta premium/discount? ¿killzone? ¿a favor del sesgo? ¿RR sano?) y adviértele si algo no cuadra. CIERRE: el gráfico NO te dice cómo cerró de verdad (puede ser BE, ganancia, pérdida o salida antes). Si una entrada que estaba como ABIERTA en el Diario YA NO aparece como posición en el gráfico en vivo, probablemente Rey la cerró: pregúntale a qué PRECIO cerró (o si tocó TP/SL/BE o salió antes) y ciérrala con cerrar_entrada pasando precio_cierre — el sistema calcula el R exacto con su entrada y SL. Nunca inventes el resultado. Detección en CUALQUIER par que tenga abierto, nada fijo.";
+"✍️ CAPTURA DE ENTRADAS: cuando en el gráfico en vivo veas una herramienta de posición (Long/Short) que Rey acaba de poner y que NO aparezca en la lista de '[📒 ENTRADAS ABIERTAS ya registradas]', OFRÉCELE registrarla tú con la mano registrar_entrada (rellenas par, dirección, entrada, SL, TP, RR y riesgo leídos del gráfico + setup/ventana/momento/bias/zona según tu análisis), SIEMPRE con tu tarjeta de confirmación. Antes de registrar, valida/rectifica la entrada según sus reglas (¿hubo sweep? ¿zona correcta premium/discount? ¿killzone? ¿a favor del sesgo? ¿RR sano?) y adviértele si algo no cuadra. CIERRE: el gráfico NO te dice cómo cerró de verdad (puede ser BE, ganancia, pérdida o salida antes). Si una entrada que estaba como ABIERTA en el Diario YA NO aparece como posición en el gráfico en vivo, probablemente Rey la cerró: pregúntale a qué PRECIO cerró (o si tocó TP/SL/BE o salió antes) y ciérrala con cerrar_entrada pasando precio_cierre — el sistema calcula el R exacto con su entrada y SL. Nunca inventes el resultado. MAE/MFE: mientras la posición está en el gráfico, el puente calcula solo el MAE (máximo en contra) y MFE (máximo a favor) en R y aparecen en el bloque en vivo junto a la posición; al cerrar, PÁSALOS a cerrar_entrada (mae y mfe) para guardarlos y luego analizar juntos si el SL estuvo bien puesto y si cerraste muy pronto/tarde. El único dato que SOLO Rey sabe es el 'momento' (si entró en confirmación, en el toque o se anticipó): pregúntaselo al registrar la entrada. Detección en CUALQUIER par que tenga abierto, nada fijo.";
 
 /* Frameworks de los DOS análisis de Rey (semanal + diario), adaptados para que
    Roberto los ejecute con el gráfico EN VIVO (su indicador CRT Elite ya calculó
@@ -4041,7 +4041,7 @@ async function iaGrafico(){
       s+="\n── "+(e.symbol||"?")+" · TF "+(e.resolution||"?")+" · Precio "+(e.price!=null?e.price:"?")+" ──\n";
       if(Array.isArray(e.tablas) && e.tablas.length){ e.tablas.forEach(t=>(t.rows||[]).forEach(row=>{ s+="   "+row+"\n"; })); }
       if(Array.isArray(e.posiciones) && e.posiciones.length){
-        s+="  Posición puesta por Rey (léela y valídala/rectifícala): "+e.posiciones.map(p=>p.dir+" ent "+p.entry+" SL "+p.sl+" TP "+p.tp+" RR 1:"+p.rr+" ("+(p.riesgo_pct!=null?p.riesgo_pct+"%":"?")+")").join(" | ")+"\n";
+        s+="  Posición puesta por Rey (léela y valídala/rectifícala): "+e.posiciones.map(p=>p.dir+" ent "+p.entry+" SL "+p.sl+" TP "+p.tp+" RR 1:"+p.rr+" ("+(p.riesgo_pct!=null?p.riesgo_pct+"%":"?")+")"+(p.mae!=null?" · MAE "+p.mae+"R":"")+(p.mfe!=null?" · MFE "+p.mfe+"R":"")).join(" | ")+"\n";
       }
       if(Array.isArray(e.niveles) && e.niveles.length && e.price!=null){
         const arr=e.niveles.map(n=>n.price).filter(v=>v!=null);
@@ -4167,6 +4167,8 @@ const IA_TOOLS = [
       precio_cierre:{type:"number",description:"Precio al que Rey cerró (el sistema calcula el R con su entrada/SL). Si tocó TP, usa el precio del TP; si tocó SL, el del SL; si salió antes, el precio real de salida."},
       r:{type:"number",description:"Resultado en R directo (solo si Rey te lo da en R, ej. 2.5 o -1). Si das precio_cierre, no hace falta."},
       res:{type:"string",enum:["Ganado","Perdido","BE"]},
+      mae:{type:"number",description:"MAE en R (máximo EN CONTRA). Tómalo del bloque en vivo de la posición si aparece (el puente lo calculó solo)."},
+      mfe:{type:"number",description:"MFE en R (máximo A FAVOR). Tómalo del bloque en vivo de la posición si aparece."},
       nota:{type:"string"}
     }, required:[] } },
   { name:"crear_cuenta", description:"Crea una cuenta de fondeo/real en la pestaña Cuentas. Tú ya conoces las reglas típicas de las firmas; rellena lo que sepas y Rey confirma.",
@@ -4274,6 +4276,8 @@ function ejecutarTool(name, i){
       if(isNaN(R)) return {ok:false,msg:"Dime el precio al que cerraste (o el resultado en R)"};
       t.abierta=false; t.r=R; t.res=i.res||(R>0.05?"Ganado":R<-0.05?"Perdido":"BE");
       if(i.precio_cierre!=null) t.precioCierre=parseFloat(i.precio_cierre);
+      if(i.mae!=null && !isNaN(parseFloat(i.mae))) t.mae=parseFloat(i.mae);
+      if(i.mfe!=null && !isNaN(parseFloat(i.mfe))) t.mfe=parseFloat(i.mfe);
       if(i.nota) t.nota=(t.nota?t.nota+" · ":"")+i.nota;
       save(K.trades,TRADES); if(typeof refrescarDiarioCtx==="function") refrescarDiarioCtx(); notifChequearCuentasDD();
       return {ok:true,msg:"Entrada cerrada: "+t.par+" "+t.res+" "+r1(t.r)+"R"+(t.precioCierre!=null?(" (cierre "+t.precioCierre+")"):"")};
