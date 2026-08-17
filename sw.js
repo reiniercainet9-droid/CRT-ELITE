@@ -1,5 +1,5 @@
-const CACHE = "crt-elite-v5-50";
-const FILES = ["./","./index.html","./data.js","./app.js","./manifest.json","./icon-192.png","./icon-512.png"];
+const CACHE = "crt-elite-v5-51";
+const FILES = ["./","./index.html","./data.js","./app.js","./tv.html","./manifest.json","./icon-192.png","./icon-512.png"];
 const WORKER = "https://elitepro-worker.reiniercainet9.workers.dev";
 /* Web Push: al llegar un aviso (con la app CERRADA), muestra la notificación.
    El push viaja sin datos; el texto real lo pide al puente (/push/latest). */
@@ -35,9 +35,11 @@ self.addEventListener("notificationclick", e => {
      para revisar la señal al instante. Si el móvil tiene la app de TradingView y
      los enlaces verificados, abre la app; si no, abre el gráfico web (mismo par+TF). */
   if(data.sym){
+    /* Abre la página puente tv.html (mismo origen -> openWindow siempre funciona);
+       esa página redirige con un intent de Android a la APP de TradingView (y si no
+       está, cae al gráfico web). Así se abre en la app, no en el navegador. */
     const intv = data.tvint ? ("&interval="+encodeURIComponent(data.tvint)) : "";
-    const tvUrl = "https://www.tradingview.com/chart/?symbol="+encodeURIComponent(data.sym)+intv;
-    e.waitUntil(clients.openWindow(tvUrl));
+    e.waitUntil(clients.openWindow("./tv.html?symbol="+encodeURIComponent(data.sym)+intv));
     return;
   }
   const esChat = tag.indexOf("apex-chat")===0 || data.kind==="chat";   // respuesta de Roberto → abrir el chat

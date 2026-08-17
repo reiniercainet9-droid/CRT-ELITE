@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Abriendo TradingView…</title>
+<style>
+  html,body{margin:0;height:100%;background:#0E1226;color:#EAECEF;
+    font-family:-apple-system,system-ui,Segoe UI,Roboto,sans-serif}
+  .wrap{height:100%;display:flex;flex-direction:column;align-items:center;
+    justify-content:center;text-align:center;padding:24px}
+  .dot{font-size:34px;margin-bottom:14px}
+  a{color:#C9A24B;font-weight:700;margin-top:22px;font-size:16px;text-decoration:none}
+  .sub{color:#8A90A2;font-size:13px;margin-top:8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="dot">📈</div>
+  <div id="msg">Abriendo TradingView…</div>
+  <a id="web" href="#">Abrir el gráfico web</a>
+  <div class="sub" id="par"></div>
+</div>
+<script>
+(function(){
+  var q = new URLSearchParams(location.search);
+  var sym = (q.get("symbol")||"").trim();
+  var intv = (q.get("interval")||"").trim();
+  if(!sym){ location.replace("./index.html"); return; }
+  var qs = "symbol="+encodeURIComponent(sym)+(intv?("&interval="+encodeURIComponent(intv)):"");
+  var web = "https://www.tradingview.com/chart/?"+qs;
+  document.getElementById("web").href = web;
+  document.getElementById("par").textContent = sym + (intv? (" · "+intv) : "");
+  // Intent de Android: fuerza la APP de TradingView (com.tradingview.tradingviewapp).
+  // Si la app no está o no lo soporta, cae al gráfico web (browser_fallback_url).
+  var intent = "intent://www.tradingview.com/chart/?"+qs
+    + "#Intent;scheme=https;package=com.tradingview.tradingviewapp;"
+    + "S.browser_fallback_url="+encodeURIComponent(web)+";end";
+  var done = false;
+  // Cuando la app pase a primer plano, esta pestaña queda oculta -> la cerramos.
+  document.addEventListener("visibilitychange", function(){
+    if(document.hidden){ done = true; setTimeout(function(){ try{ window.close(); }catch(e){} }, 500); }
+  });
+  try { location.replace(intent); } catch(e) {}
+  // Respaldo: si a los ~1.4s seguimos visibles (intent no soportado), abrimos el web.
+  setTimeout(function(){ if(!done && !document.hidden){ location.replace(web); } }, 1400);
+})();
+</script>
+</body>
+</html>
