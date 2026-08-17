@@ -1,4 +1,4 @@
-const CACHE = "crt-elite-v5-54";
+const CACHE = "crt-elite-v5-55";
 const FILES = ["./","./index.html","./data.js","./app.js","./manifest.json","./icon-192.png","./icon-512.png"];
 const WORKER = "https://elitepro-worker.reiniercainet9.workers.dev";
 /* Web Push: al llegar un aviso (con la app CERRADA), muestra la notificación.
@@ -52,7 +52,16 @@ self.addEventListener("notificationclick", e => {
   }));
 });
 self.addEventListener("install", e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(()=>self.skipWaiting()));
+  /* Baja los archivos FRESCOS del servidor (cache:"reload" salta la caché HTTP del
+     navegador). Antes se usaba addAll, que reutilizaba la copia vieja del navegador y
+     por eso el app.js se quedaba desactualizado aunque cambiara la versión. */
+  e.waitUntil((async () => {
+    const c = await caches.open(CACHE);
+    await Promise.all(FILES.map(f =>
+      fetch(f, { cache: "reload" }).then(r => { if (r && r.ok) return c.put(f, r); }).catch(()=>{})
+    ));
+    await self.skipWaiting();
+  })());
 });
 self.addEventListener("activate", e => {
   e.waitUntil(caches.keys().then(ks =>
@@ -60,8 +69,13 @@ self.addEventListener("activate", e => {
 });
 self.addEventListener("fetch", e => {
   if(e.request.method!=="GET") return;
+  /* Archivos propios (mismo origen: app.js, index.html, data.js…): SIEMPRE revalida
+     con el servidor (no-cache) para no volver a servir una versión vieja. El resto
+     (imágenes, etc.) va normal. Sin conexión, cae a la caché. */
+  const sameOrigin = new URL(e.request.url).origin === self.location.origin;
+  const opts = sameOrigin ? { cache: "no-cache" } : undefined;
   e.respondWith(
-    fetch(e.request).then(r=>{
+    fetch(e.request, opts).then(r=>{
       const cp=r.clone();
       caches.open(CACHE).then(c=>c.put(e.request,cp)).catch(()=>{});
       return r;
