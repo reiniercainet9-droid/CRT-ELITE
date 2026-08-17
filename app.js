@@ -3550,6 +3550,7 @@ const IA_SYSTEM_BASE =
 "- Conoces a Rey y su estrategia a fondo (abajo tienes su dossier completo). No hables en genérico: habla de SU estrategia, SU indicador, SUS reglas, SUS ventanas, SUS números.\n\n"+
 "CÓMO RESPONDES:\n"+
 "- Claro y accionable. Usa **negritas** para lo esencial y pasos concretos numerados cuando ayuden.\n"+
+"- RESPUESTAS VIVAS, NO un muro de texto plano. La app renderiza Markdown, así que ÚSALO para que se lea con vida cuando el contenido lo pida: **tablas** con | columnas | (comparaciones, checklists, niveles, pros/contras, plan por temporalidad), encabezados con ##, listas con - o numeradas, citas con > para la idea clave o la regla, `código` para valores/precios, y **emojis** con criterio (✅ ❌ 🟢 alcista / 🔴 bajista / ⚠️ / 🎯 / 🧠 / 📊). No abuses: usa la estructura SOLO cuando aporta claridad; una respuesta corta de una línea va en una línea. El objetivo es que Rey capte de un vistazo, no adornar por adornar.\n"+
 "- RESPONDE PRIMERO, en la PRIMERA línea, la pregunta concreta que te hace, decidido (SÍ / NO / el dato exacto). Después el detalle. Nunca entierres la respuesta al final ni la dejes ambigua.\n"+
 "- HORARIO OPERATIVO: la fila 'Killzone' del panel del indicador es la FUENTE DE VERDAD (ya maneja el cambio EST/EDT solo). Si dice Fuera → el alumno está FUERA de horario y NO se opera: díselo claro y directo, sin rodeos. Si tu cálculo de husos no cuadra con el panel, MANDA EL PANEL y dilo en una sola línea (que revise qué killzone tiene configurada), sin contradecirte ni marearlo con dos versiones.\n"+
 "- Sé decidido y ve al grano. NO propongas revisar otros pares, ni 'esperar juntos', ni tareas extra, a menos que el alumno lo pida. Si no hay setup u horario, dilo con seguridad y para ahí.\n"+
@@ -3975,11 +3976,47 @@ function abrirIA(){ $("#iaOv").classList.add("show"); pintarIAChat(); setTimeout
 function cerrarIA(){ $("#iaOv").classList.remove("show"); iaVozParar(); }
 
 /* Formato ligero de la respuesta: **negritas**, enlaces tocables y saltos de línea */
+/* Renderiza las respuestas de Roberto como markdown VIVO: tablas, encabezados,
+   listas, citas, código, negritas, enlaces y emojis. Escapa el HTML primero
+   (seguro) y luego aplica el formato. */
 function fmtIA(s){
-  return esc(s)
-    .replace(/\*\*(.+?)\*\*/g,"<b>$1</b>")
-    .replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target="_blank" rel="noopener" class="ia-link">$1</a>')
-    .replace(/\n/g,"<br>");
+  const lines = String(s==null?"":s).replace(/\r\n?/g,"\n").split("\n");
+  const inline = (t)=> esc(t)
+    .replace(/`([^`]+)`/g,'<code>$1</code>')
+    .replace(/\*\*(.+?)\*\*/g,'<b>$1</b>')
+    .replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target="_blank" rel="noopener" class="ia-link">$1</a>');
+  const esSep = (l)=> l.includes('-') && /^\s*\|?[\s:|-]*-[\s:|-]*\|?\s*$/.test(l);
+  const fila = (l)=> l.replace(/^\s*\|/,'').replace(/\|\s*$/,'').split('|').map(c=>c.trim());
+  const esEspecial = (l)=> /^\s*([-*]\s|>\s?|#{1,3}\s|\d+[.)]\s)/.test(l);
+  let html="", i=0;
+  while(i<lines.length){
+    const l=lines[i];
+    if(!l.trim()){ i++; continue; }
+    // TABLA: línea con | seguida de una línea separadora ---
+    if(l.includes('|') && i+1<lines.length && esSep(lines[i+1])){
+      const th=fila(l); i+=2; const rows=[];
+      while(i<lines.length && lines[i].includes('|') && lines[i].trim()){ rows.push(fila(lines[i])); i++; }
+      let t='<div class="ia-md-tw"><table><thead><tr>'+th.map(h=>'<th>'+inline(h)+'</th>').join('')+'</tr></thead><tbody>';
+      for(const r of rows){ t+='<tr>'+r.map(c=>'<td>'+inline(c)+'</td>').join('')+'</tr>'; }
+      html+=t+'</tbody></table></div>'; continue;
+    }
+    // ENCABEZADO # ## ###
+    const mh=l.match(/^\s*(#{1,3})\s+(.*)$/);
+    if(mh){ html+='<div class="ia-md-h h'+mh[1].length+'">'+inline(mh[2])+'</div>'; i++; continue; }
+    // LÍNEA HORIZONTAL --- *** ___
+    if(/^\s*([-*_])\1{2,}\s*$/.test(l)){ html+='<hr>'; i++; continue; }
+    // CITA >
+    if(/^\s*>\s?/.test(l)){ const q=[]; while(i<lines.length && /^\s*>\s?/.test(lines[i])){ q.push(lines[i].replace(/^\s*>\s?/,'')); i++; } html+='<blockquote>'+inline(q.join(' '))+'</blockquote>'; continue; }
+    // LISTA con viñetas
+    if(/^\s*[-*]\s+/.test(l)){ const it=[]; while(i<lines.length && /^\s*[-*]\s+/.test(lines[i])){ it.push(lines[i].replace(/^\s*[-*]\s+/,'')); i++; } html+='<ul>'+it.map(x=>'<li>'+inline(x)+'</li>').join('')+'</ul>'; continue; }
+    // LISTA numerada
+    if(/^\s*\d+[.)]\s+/.test(l)){ const it=[]; while(i<lines.length && /^\s*\d+[.)]\s+/.test(lines[i])){ it.push(lines[i].replace(/^\s*\d+[.)]\s+/,'')); i++; } html+='<ol>'+it.map(x=>'<li>'+inline(x)+'</li>').join('')+'</ol>'; continue; }
+    // PÁRRAFO (junta líneas seguidas)
+    const par=[l]; i++;
+    while(i<lines.length && lines[i].trim() && !esEspecial(lines[i]) && !(lines[i].includes('|') && i+1<lines.length && esSep(lines[i+1]))){ par.push(lines[i]); i++; }
+    html+='<p>'+par.map(inline).join('<br>')+'</p>';
+  }
+  return '<div class="ia-md">'+html+'</div>';
 }
 /* Enlace directo para recargar créditos de Anthropic (el mentor no ve tu saldo) */
 const IA_RECARGA_URL = "https://console.anthropic.com/settings/billing";
