@@ -3552,6 +3552,7 @@ const IA_SYSTEM_BASE =
 "- Claro y accionable. Usa **negritas** para lo esencial y pasos concretos numerados cuando ayuden.\n"+
 "- RESPUESTAS VIVAS, NO un muro de texto plano. La app renderiza Markdown, así que ÚSALO para que se lea con vida cuando el contenido lo pida: **tablas** con | columnas | (comparaciones, checklists, niveles, pros/contras, plan por temporalidad), encabezados con ##, listas con - o numeradas, citas con > para la idea clave o la regla, `código` para valores/precios, y **emojis** con criterio (✅ ❌ 🟢 alcista / 🔴 bajista / ⚠️ / 🎯 / 🧠 / 📊). No abuses: usa la estructura SOLO cuando aporta claridad; una respuesta corta de una línea va en una línea. El objetivo es que Rey capte de un vistazo, no adornar por adornar.\n"+
 "- SIEMPRE que COMPARES dos o más cosas (pares, cuentas, escenarios, temporalidades), preséntalo en una TABLA Markdown con | columnas | y su fila de guiones ---, no en párrafos ni en lista de guiones. Es la forma más clara y Rey lo pide así.\n"+
+"- TU MEMORIA PERMANENTE: tienes una memoria propia (si ya hay datos guardados, te aparecen en el contexto con su id entre paréntesis). Sirve para ADAPTARTE y APRENDER de Rey con el tiempo. Cuando descubras algo VERDADERAMENTE relevante para tu aprendizaje sobre él (su forma de operar, su psicología, una preferencia suya, un patrón o una lección importante), propón guardarlo con la mano guardar_memoria — pero con INTELIGENCIA y CRITERIO: filtra, NO guardes todo ni trivialidades ni cosas de un solo momento, solo lo que de verdad te servirá a futuro. Rey lee y APRUEBA antes de que se guarde. Si algo que recordabas ya no es cierto o quedó obsoleto, propón borrarlo con borrar_memoria. Nunca guardas ni borras nada sin su confirmación. No satures: propón guardar solo cuando de verdad aporta a tu cerebro.\n"+
 "- RESPONDE PRIMERO, en la PRIMERA línea, la pregunta concreta que te hace, decidido (SÍ / NO / el dato exacto). Después el detalle. Nunca entierres la respuesta al final ni la dejes ambigua.\n"+
 "- HORARIO OPERATIVO: la fila 'Killzone' del panel del indicador es la FUENTE DE VERDAD (ya maneja el cambio EST/EDT solo). Si dice Fuera → el alumno está FUERA de horario y NO se opera: díselo claro y directo, sin rodeos. Si tu cálculo de husos no cuadra con el panel, MANDA EL PANEL y dilo en una sola línea (que revise qué killzone tiene configurada), sin contradecirte ni marearlo con dos versiones.\n"+
 "- Sé decidido y ve al grano. NO propongas revisar otros pares, ni 'esperar juntos', ni tareas extra, a menos que el alumno lo pida. Si no hay setup u horario, dilo con seguridad y para ahí.\n"+
@@ -4425,7 +4426,14 @@ const IA_TOOLS = [
       ddMaxPct:{type:"string"}, ddTipo:{type:"string",enum:["Estático","Trailing"]}, ddDailyPct:{type:"string"}, targetPct:{type:"string"}, diasMin:{type:"string"}, precio:{type:"string"}, splitPct:{type:"string"}, balance:{type:"string"}, nota:{type:"string"}
     }, required:["alias"] } },
   { name:"avanzar_fase", description:"Avanza una cuenta a la siguiente fase (Examen F1→F2→Fondeada→Real→Propia).",
-    input_schema:{ type:"object", properties:{ alias:{type:"string",description:"Alias o firma de la cuenta"} }, required:["alias"] } }
+    input_schema:{ type:"object", properties:{ alias:{type:"string",description:"Alias o firma de la cuenta"} }, required:["alias"] } },
+  { name:"guardar_memoria", description:"Guarda en tu MEMORIA permanente un dato importante que debas recordar en el futuro sobre Rey, su forma de operar, su psicología, sus preferencias, o un patrón/lección de trading. Úsalo SOLO con lo verdaderamente RELEVANTE para tu adaptación y aprendizaje — NO guardes todo ni trivialidades ni cosas de un solo momento; filtra con criterio lo que de verdad te servirá a futuro. Rey lo aprueba antes de guardar.",
+    input_schema:{ type:"object", properties:{
+      tipo:{type:"string", enum:["perfil","aprendizaje","preferencia","patron","resultado"], description:"Categoría del recuerdo."},
+      texto:{type:"string", description:"El dato a recordar, claro y en 1-2 frases."}
+    }, required:["texto"] } },
+  { name:"borrar_memoria", description:"Borra un dato de tu memoria por su id (aparece entre paréntesis en tu bloque de memoria) cuando descubras que ya no es cierto o quedó obsoleto. Rey lo aprueba.",
+    input_schema:{ type:"object", properties:{ id:{type:"string"} }, required:["id"] } }
 ];
 /* Texto humano para la tarjeta de confirmación */
 function describeTool(name, i){
@@ -4446,6 +4454,8 @@ function describeTool(name, i){
   if(name==="crear_cuenta") return "🏦 Crear cuenta — "+(i.alias||i.firma||"?")+(i.firma&&i.alias?(" ("+i.firma+")"):"")+"\nCapital "+(i.capital||"?")+" · fase "+(i.fase||"Examen F1")+" · riesgo "+(i.riesgoPct||"0.5")+"%\nDD máx "+(i.ddMaxPct||"?")+"% ("+(i.ddTipo||"?")+") · daily "+(i.ddDailyPct||"?")+"% · target "+(i.targetPct||"?")+"%"+(i.precio?(" · precio "+i.precio):"");
   if(name==="editar_cuenta") return "✏️ Editar cuenta "+(i.alias||i.firma||"?")+":\n"+["capital","fase","riesgoPct","ddMaxPct","ddTipo","ddDailyPct","targetPct","balance","precio","nota"].filter(k=>i[k]!=null&&i[k]!=="").map(k=>"→ "+k+" "+i[k]).join("\n");
   if(name==="avanzar_fase") return "⏭️ Avanzar de fase la cuenta "+(i.alias||i.firma||"?");
+  if(name==="guardar_memoria"){ const et={perfil:"🧍 Perfil",aprendizaje:"💡 Aprendizaje",preferencia:"⭐ Preferencia",patron:"📊 Patrón",resultado:"📓 Resultado"}; return "🧠 Roberto quiere RECORDAR esto en su memoria:\n"+(et[i.tipo]||"💡 Aprendizaje")+"\n“"+(i.texto||"")+"”"; }
+  if(name==="borrar_memoria") return "🗑️ Roberto quiere BORRAR de su memoria el dato "+(i.id||"?");
   return name+" "+JSON.stringify(i);
 }
 /* Ejecuta la acción (solo se llama TRAS la confirmación de Rey) */
@@ -4564,6 +4574,19 @@ function ejecutarTool(name, i){
       PLANSEM={ bias:i.bias||"", par:i.par||"", zonaP:i.zona_principal||"", zonaS:i.zona_secundaria||"", invalid:i.nivel_invalidacion||"", mejorDia:i.mejor_dia||"", evitar:i.dias_evitar||"", notas:i.notas||"", fecha:hoyISO() };
       save(K.plansem, PLANSEM);
       return {ok:true,msg:"Plan semanal guardado: "+PLANSEM.bias+(PLANSEM.par?(" en "+PLANSEM.par):"")+(PLANSEM.invalid?(" · invalida en "+PLANSEM.invalid):"")+". Lo recordaré toda la semana."};
+    }
+    if(name==="guardar_memoria"){
+      const texto=String(i.texto||"").trim();
+      if(!texto) return {ok:false,msg:"No había nada que recordar"};
+      const tipo=i.tipo||"aprendizaje";
+      try{ fetch(nubeUrl()+"/mem",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({tipo,texto})}).catch(()=>{}); }catch(_){}
+      return {ok:true,msg:"Guardado en mi memoria: “"+texto+"”. Lo recordaré de aquí en adelante."};
+    }
+    if(name==="borrar_memoria"){
+      const id=String(i.id||"").trim();
+      if(!id) return {ok:false,msg:"Falta el id a borrar"};
+      try{ fetch(nubeUrl()+"/mem",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({del:id})}).catch(()=>{}); }catch(_){}
+      return {ok:true,msg:"Listo, borré ese dato de mi memoria."};
     }
     if(name==="limpiar_capturas"){
       const q=String(i.par||"").toLowerCase();
