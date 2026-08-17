@@ -1,4 +1,4 @@
-const CACHE = "crt-elite-v5-49";
+const CACHE = "crt-elite-v5-50";
 const FILES = ["./","./index.html","./data.js","./app.js","./manifest.json","./icon-192.png","./icon-512.png"];
 const WORKER = "https://elitepro-worker.reiniercainet9.workers.dev";
 /* Web Push: al llegar un aviso (con la app CERRADA), muestra la notificación.
@@ -22,7 +22,7 @@ self.addEventListener("push", e => {
       icon: "./icon-192.png", badge: "./icon-192.png",
       vibrate: vibra, silent: false,
       requireInteraction: esRutina ? fuerte : true,
-      timestamp: Date.now(), data: { url: "./index.html", jobId: msg.jobId || "", kind: msg.kind || "" }
+      timestamp: Date.now(), data: { url: "./index.html", jobId: msg.jobId || "", kind: msg.kind || "", sym: msg.sym || "", tvint: msg.tvint || "" }
     });
   })());
 });
@@ -31,6 +31,15 @@ self.addEventListener("notificationclick", e => {
   e.notification.close();
   const tag=(e.notification.tag||"");
   const data=e.notification.data||{};
+  /* ALARMA de trading con par (y temporalidad): abre TradingView en ESE par y ESA TF
+     para revisar la señal al instante. Si el móvil tiene la app de TradingView y
+     los enlaces verificados, abre la app; si no, abre el gráfico web (mismo par+TF). */
+  if(data.sym){
+    const intv = data.tvint ? ("&interval="+encodeURIComponent(data.tvint)) : "";
+    const tvUrl = "https://www.tradingview.com/chart/?symbol="+encodeURIComponent(data.sym)+intv;
+    e.waitUntil(clients.openWindow(tvUrl));
+    return;
+  }
   const esChat = tag.indexOf("apex-chat")===0 || data.kind==="chat";   // respuesta de Roberto → abrir el chat
   const jobId = data.jobId || "";
   const url = esChat ? ("./index.html?open=chat"+(jobId?("&job="+encodeURIComponent(jobId)):"")) : "./index.html";
