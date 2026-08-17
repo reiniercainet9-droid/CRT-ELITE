@@ -28,12 +28,15 @@
   var intv = (q.get("interval")||"").trim();
   if(!sym){ location.replace("./index.html"); return; }
   var qs = "symbol="+encodeURIComponent(sym)+(intv?("&interval="+encodeURIComponent(intv)):"");
+  // Gráfico web COMPLETO (par + temporalidad + tu layout/indicador): respaldo si no hay app.
   var web = "https://www.tradingview.com/chart/?"+qs;
+  // Página de SÍMBOLO: este SÍ es un enlace que la app de TradingView tiene verificado,
+  // así que el intent la puede abrir. (La temporalidad exacta no viaja por esta vía.)
   document.getElementById("web").href = web;
   document.getElementById("par").textContent = sym + (intv? (" · "+intv) : "");
-  // Intent de Android: fuerza la APP de TradingView (com.tradingview.tradingviewapp).
-  // Si la app no está o no lo soporta, cae al gráfico web (browser_fallback_url).
-  var intent = "intent://www.tradingview.com/chart/?"+qs
+  // Intent de Android: abre la APP de TradingView (com.tradingview.tradingviewapp) en el símbolo.
+  // Si la app no está, cae al gráfico web completo (browser_fallback_url).
+  var intent = "intent://www.tradingview.com/symbols/"+encodeURIComponent(sym)+"/"
     + "#Intent;scheme=https;package=com.tradingview.tradingviewapp;"
     + "S.browser_fallback_url="+encodeURIComponent(web)+";end";
   var done = false;
