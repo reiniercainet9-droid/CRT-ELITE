@@ -3552,6 +3552,7 @@ const IA_SYSTEM_BASE =
 "- Claro y accionable. Usa **negritas** para lo esencial y pasos concretos numerados cuando ayuden.\n"+
 "- RESPUESTAS VIVAS, NO un muro de texto plano. La app renderiza Markdown, así que ÚSALO para que se lea con vida cuando el contenido lo pida: **tablas** con | columnas | (comparaciones, checklists, niveles, pros/contras, plan por temporalidad), encabezados con ##, listas con - o numeradas, citas con > para la idea clave o la regla, `código` para valores/precios, y **emojis** con criterio (✅ ❌ 🟢 alcista / 🔴 bajista / ⚠️ / 🎯 / 🧠 / 📊). No abuses: usa la estructura SOLO cuando aporta claridad; una respuesta corta de una línea va en una línea. El objetivo es que Rey capte de un vistazo, no adornar por adornar.\n"+
 "- SIEMPRE que COMPARES dos o más cosas (pares, cuentas, escenarios, temporalidades), preséntalo en una TABLA Markdown con | columnas | y su fila de guiones ---, no en párrafos ni en lista de guiones. Es la forma más clara y Rey lo pide así.\n"+
+"- MANOS EN EL GRÁFICO (por el Puente Apex): puedes CAMBIAR el gráfico de Rey en su PC con las manos cambiar_par, cambiar_temporalidad y cambiar_tipo_grafico — SIEMPRE con su aprobación (le sale una tarjeta). Requieren la PC encendida con el Puente Apex: si el bloque de GRÁFICO EN VIVO indica que NO está conectada, avísale de que la encienda antes de intentarlo. Úsalas cuando Rey te lo pida (ej. 'ponme GBP/USD en 15m' → cambiar_par GBPUSD + cambiar_temporalidad 15) o cuando propongas revisar algo y él acepte. Códigos de temporalidad: 1/3/5/15/30/60(=1h)/240(=4h)/D/W. (Pronto tendrás también manos para AJUSTAR los inputs del indicador y las alarmas.)\n"+
 "- TU MEMORIA PERMANENTE: tienes una memoria propia (si ya hay datos guardados, te aparecen en el contexto con su id entre paréntesis). Sirve para ADAPTARTE y APRENDER de Rey con el tiempo. Cuando descubras algo VERDADERAMENTE relevante y NUEVO para tu aprendizaje sobre él (su forma de operar, su psicología, una preferencia, un patrón o una lección importante) que NO esté ya en tus reglas/plan/contexto, propón guardarlo. **MUY IMPORTANTE — cómo se propone:** LLAMA DIRECTAMENTE a la mano guardar_memoria. NO preguntes en texto '¿quieres que lo guarde?' ni digas 'lo anoto' sin llamar a la mano: la ÚNICA forma de proponer y pedir permiso es LLAMANDO a la mano — al hacerlo, a Rey le aparece una tarjeta para APROBAR o RECHAZAR, y solo se guarda si él aprueba. Filtra con CRITERIO: no guardes todo ni trivialidades ni cosas de un solo momento, solo lo que de verdad te servirá a futuro. Si Rey te dice explícitamente 'recuerda que X' y X es algo nuevo (no ya en tus reglas), LLAMA a guardar_memoria para proponerlo. Si algo que recordabas ya no es cierto, LLAMA a borrar_memoria (con su id). Nunca pidas permiso por texto para la memoria: siempre con la mano.\n"+
 "- RESPONDE PRIMERO, en la PRIMERA línea, la pregunta concreta que te hace, decidido (SÍ / NO / el dato exacto). Después el detalle. Nunca entierres la respuesta al final ni la dejes ambigua.\n"+
 "- HORARIO OPERATIVO: la fila 'Killzone' del panel del indicador es la FUENTE DE VERDAD (ya maneja el cambio EST/EDT solo). Si dice Fuera → el alumno está FUERA de horario y NO se opera: díselo claro y directo, sin rodeos. Si tu cálculo de husos no cuadra con el panel, MANDA EL PANEL y dilo en una sola línea (que revise qué killzone tiene configurada), sin contradecirte ni marearlo con dos versiones.\n"+
@@ -4427,6 +4428,12 @@ const IA_TOOLS = [
     }, required:["alias"] } },
   { name:"avanzar_fase", description:"Avanza una cuenta a la siguiente fase (Examen F1→F2→Fondeada→Real→Propia).",
     input_schema:{ type:"object", properties:{ alias:{type:"string",description:"Alias o firma de la cuenta"} }, required:["alias"] } },
+  { name:"cambiar_par", description:"Cambia el PAR (símbolo) que muestra el gráfico de TradingView de Rey en su PC, por el Puente Apex. Úsalo cuando Rey te pida ver o cambiar a otro par. Requiere la PC encendida con el Puente. Rey lo aprueba con una tarjeta.",
+    input_schema:{ type:"object", properties:{ symbol:{type:"string",description:"Símbolo TradingView, ej. 'GBPUSD', 'OANDA:EURUSD', 'XAUUSD'"}, target:{type:"string",description:"(opcional) par ACTUAL de la pestaña a cambiar, si hay varias abiertas"} }, required:["symbol"] } },
+  { name:"cambiar_temporalidad", description:"Cambia la TEMPORALIDAD del gráfico de Rey por el Puente. Requiere PC con Puente. Rey aprueba.",
+    input_schema:{ type:"object", properties:{ timeframe:{type:"string",description:"Código TradingView: '1','3','5','15','30','60','240','D','W'"}, target:{type:"string",description:"(opcional) par de la pestaña a cambiar"} }, required:["timeframe"] } },
+  { name:"cambiar_tipo_grafico", description:"Cambia el TIPO de gráfico (velas, línea, Heikin Ashi…) por el Puente. Requiere PC con Puente. Rey aprueba.",
+    input_schema:{ type:"object", properties:{ chart_type:{type:"string",enum:["Candles","HeikinAshi","Line","Area","Bars","HollowCandles"]}, target:{type:"string",description:"(opcional) par de la pestaña"} }, required:["chart_type"] } },
   { name:"guardar_memoria", description:"Guarda en tu MEMORIA permanente un dato importante que debas recordar en el futuro sobre Rey, su forma de operar, su psicología, sus preferencias, o un patrón/lección de trading. Úsalo SOLO con lo verdaderamente RELEVANTE para tu adaptación y aprendizaje — NO guardes todo ni trivialidades ni cosas de un solo momento; filtra con criterio lo que de verdad te servirá a futuro. Rey lo aprueba antes de guardar.",
     input_schema:{ type:"object", properties:{
       tipo:{type:"string", enum:["perfil","aprendizaje","preferencia","patron","resultado"], description:"Categoría del recuerdo."},
@@ -4454,6 +4461,9 @@ function describeTool(name, i){
   if(name==="crear_cuenta") return "🏦 Crear cuenta — "+(i.alias||i.firma||"?")+(i.firma&&i.alias?(" ("+i.firma+")"):"")+"\nCapital "+(i.capital||"?")+" · fase "+(i.fase||"Examen F1")+" · riesgo "+(i.riesgoPct||"0.5")+"%\nDD máx "+(i.ddMaxPct||"?")+"% ("+(i.ddTipo||"?")+") · daily "+(i.ddDailyPct||"?")+"% · target "+(i.targetPct||"?")+"%"+(i.precio?(" · precio "+i.precio):"");
   if(name==="editar_cuenta") return "✏️ Editar cuenta "+(i.alias||i.firma||"?")+":\n"+["capital","fase","riesgoPct","ddMaxPct","ddTipo","ddDailyPct","targetPct","balance","precio","nota"].filter(k=>i[k]!=null&&i[k]!=="").map(k=>"→ "+k+" "+i[k]).join("\n");
   if(name==="avanzar_fase") return "⏭️ Avanzar de fase la cuenta "+(i.alias||i.firma||"?");
+  if(name==="cambiar_par") return "📈 Cambiar el gráfico al par "+(i.symbol||"?")+(i.target?(" (pestaña "+i.target+")"):"");
+  if(name==="cambiar_temporalidad"){ const tf={ "1":"1m","3":"3m","5":"5m","15":"15m","30":"30m","60":"1h","240":"4h","D":"Diario","W":"Semanal" }; return "🕐 Cambiar la temporalidad a "+(tf[i.timeframe]||i.timeframe||"?")+(i.target?(" ("+i.target+")"):""); }
+  if(name==="cambiar_tipo_grafico") return "📊 Cambiar el tipo de gráfico a "+(i.chart_type||"?");
   if(name==="guardar_memoria"){ const et={perfil:"🧍 Perfil",aprendizaje:"💡 Aprendizaje",preferencia:"⭐ Preferencia",patron:"📊 Patrón",resultado:"📓 Resultado"}; return "🧠 Roberto quiere RECORDAR esto en su memoria:\n"+(et[i.tipo]||"💡 Aprendizaje")+"\n“"+(i.texto||"")+"”"; }
   if(name==="borrar_memoria") return "🗑️ Roberto quiere BORRAR de su memoria el dato "+(i.id||"?");
   return name+" "+JSON.stringify(i);
@@ -4574,6 +4584,18 @@ function ejecutarTool(name, i){
       PLANSEM={ bias:i.bias||"", par:i.par||"", zonaP:i.zona_principal||"", zonaS:i.zona_secundaria||"", invalid:i.nivel_invalidacion||"", mejorDia:i.mejor_dia||"", evitar:i.dias_evitar||"", notas:i.notas||"", fecha:hoyISO() };
       save(K.plansem, PLANSEM);
       return {ok:true,msg:"Plan semanal guardado: "+PLANSEM.bias+(PLANSEM.par?(" en "+PLANSEM.par):"")+(PLANSEM.invalid?(" · invalida en "+PLANSEM.invalid):"")+". Lo recordaré toda la semana."};
+    }
+    if(name==="cambiar_par" || name==="cambiar_temporalidad" || name==="cambiar_tipo_grafico"){
+      const map={ cambiar_par:"set_symbol", cambiar_temporalidad:"set_timeframe", cambiar_tipo_grafico:"set_chart_type" };
+      const params={};
+      if(name==="cambiar_par") params.symbol=i.symbol;
+      if(name==="cambiar_temporalidad") params.timeframe=i.timeframe;
+      if(name==="cambiar_tipo_grafico") params.chart_type=i.chart_type;
+      if(i.target) params.target=i.target;
+      if((name==="cambiar_par"&&!i.symbol)||(name==="cambiar_temporalidad"&&!i.timeframe)||(name==="cambiar_tipo_grafico"&&!i.chart_type)) return {ok:false,msg:"Falta el dato para la orden"};
+      const cid="c"+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+      try{ fetch(nubeUrl()+"/cmd/enqueue",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({id:cid,action:map[name],params})}).catch(()=>{}); }catch(_){}
+      return {ok:true, msg:"Orden enviada al Puente. Se aplica en tu gráfico en unos segundos (necesita la PC encendida con el Puente Apex)."};
     }
     if(name==="guardar_memoria"){
       const texto=String(i.texto||"").trim();
