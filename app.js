@@ -11,6 +11,7 @@ const K = {
   bal    : "crtelite_balance_v2",
   ctx    : "crtelite_ctx_v3",
   estr   : "crtelite_estrategias_v3",
+  estrdef: "crtelite_estrdefs_v1",
   iaurl  : "crtelite_iaurl_v3",
   iachat : "crtelite_iachat_v3",
   iaconvs: "crtelite_iaconvs_v3",
@@ -37,7 +38,7 @@ const save = (k,v)=>{ try{ localStorage.setItem(k,JSON.stringify(v)); nubeMarcar
    En otro móvil, con el mismo código, restaura todo intacto (nada se pierde).
    No usa claves del sistema (el repo es público): el código ES la llave.
    ============================================================ */
-const NUBE_KEYS = ["crtelite_trades_v2","crtelite_cuentas_v3","crtelite_reminders_v3","crtelite_chk_v2","crtelite_conf_v2","crtelite_reglas_v2","crtelite_balance_v2","crtelite_ctx_v3","crtelite_estrategias_v3","crtelite_pares_v3","crtelite_calpares_v3","crtelite_notif_v3","crtelite_vigila_v3","crtelite_fabpos_v3","crtelite_iavoz_v3","crtelite_shots_v1","crtelite_plansem_v1"];
+const NUBE_KEYS = ["crtelite_trades_v2","crtelite_cuentas_v3","crtelite_reminders_v3","crtelite_chk_v2","crtelite_conf_v2","crtelite_reglas_v2","crtelite_balance_v2","crtelite_ctx_v3","crtelite_estrategias_v3","crtelite_estrdefs_v1","crtelite_pares_v3","crtelite_calpares_v3","crtelite_notif_v3","crtelite_vigila_v3","crtelite_fabpos_v3","crtelite_iavoz_v3","crtelite_shots_v1","crtelite_plansem_v1"];
 const NUBE_CODE_KEY="crtelite_nubecode_v1", NUBE_TS_KEY="crtelite_datats_v1", NUBE_LAST_KEY="crtelite_nubelast_v1";
 let NUBE_RESTAURANDO=false, _nubeTimer=null;
 function nubeCode(){ try{ return (localStorage.getItem(NUBE_CODE_KEY)||"").trim(); }catch(_){ return ""; } }
@@ -143,6 +144,28 @@ let BAL    = load(K.bal, {bal:6000, pct:0.5, pips:10});
 /* Lista de estrategias registradas (nombres). Siempre existe "CRT Elite". */
 let ESTRATEGIAS = load(K.estr, ["CRT Elite"]);
 if(!ESTRATEGIAS.length) ESTRATEGIAS = ["CRT Elite"];
+/* Definición EDITABLE por estrategia (para adaptar CRT y añadir estrategias nuevas —
+   Oro, índices, acciones… — con su instrumento y sus reglas/ajustes propios).
+   Mapa { "Nombre estrategia": { instrumento, ajustes } }. Roberto lee la de la activa. */
+let ESTR_DEFS = load(K.estrdef, {});
+if(!ESTR_DEFS || typeof ESTR_DEFS!=="object") ESTR_DEFS={};
+function guardarEstrDefs(){ save(K.estrdef, ESTR_DEFS); }
+/* Bloque de la ESTRATEGIA ACTIVA para Roberto: su instrumento y las reglas/ajustes
+   editables. Así Roberto sigue la estrategia correcta (CRT u otra que Rey añada). */
+function iaEstrategiaDef(){
+  const nom=CTX.estrategia||"";
+  const def=ESTR_DEFS[nom]||{};
+  const otras=(ESTRATEGIAS||[]).filter(e=>e!==nom);
+  let s="[🎯 ESTRATEGIA ACTIVA: \""+nom+"\""+(def.instrumento?(" · instrumento: "+def.instrumento):"")+"\n";
+  if(def.ajustes) s+="Reglas/ajustes propios (Rey los edita para adaptarse — RESPÉTALOS y ayúdalo a mejorarlos): "+def.ajustes+"\n";
+  else if(/CRT/i.test(nom)) s+="(Base: tu dossier completo de CRT Elite. Si Rey añade ajustes propios, aparecerán aquí.)\n";
+  else s+="(Esta estrategia AÚN no tiene definición. Si Rey opera con ella, proponle con tu mano editar_estrategia definir su instrumento y reglas; mientras, guíate por lo que él diga y tu conocimiento del instrumento — NO le apliques las reglas de CRT si no corresponden.)\n";
+  if(otras.length) s+="Otras estrategias suyas: "+otras.join(", ")+" (usa SIEMPRE la ACTIVA, no las mezcles).";
+  return s+"]";
+}
+/* Interés compuesto: Roberto arma un plan de crecimiento realista con los números reales. */
+const PLAN_COMPUESTO_PROM = "Rey quiere un PLAN DE INTERÉS COMPUESTO realista para crecer su capital. Usa sus CUENTAS y estadísticas REALES del contexto (capital, win rate, R por trade/expectancy, riesgo %/trade). (1) En 2-3 frases, el poder del compuesto en trading (reinvertir, proteger, crecer sostenido). (2) Una PROYECCIÓN realista en TABLA Markdown: partiendo de su capital y su expectancy/win-rate reales, con riesgo FIJO y un nº PRUDENTE de trades, cuánto podría crecer mes a mes durante 3-6 meses (conservador, rango realista, no promesas). (3) Reglas para que funcione: riesgo fijo %, subir riesgo SOLO cuando la cuenta crece (nunca en drawdown ni por revancha), retirar parciales, respetar la disciplina y el límite diario. (4) 1-2 focos concretos. Honesto y realista; recuérdale que proteger el capital y la disciplina son la BASE del compuesto. Si le faltan datos (pocas operaciones para una expectancy fiable), díselo y da un plan por escenarios.";
+function planCompuesto(){ if(typeof abrirIA==="function") abrirIA(); setTimeout(()=>iaEnviar("📈 Hazme mi plan de interés compuesto con mis números reales.", PLAN_COMPUESTO_PROM),250); }
 
 /* Contexto activo: modo (real/backtest) + estrategia seleccionada */
 let CTX = load(K.ctx, { modo:"real", estrategia:"CRT Elite" });
@@ -1471,10 +1494,20 @@ function barraContexto(onChange){
   return c;
 }
 
+function definirEstrategia(nombre){
+  const def=ESTR_DEFS[nombre]||{};
+  const inst=prompt("Instrumento(s) de \""+nombre+"\" (ej. Forex EUR/USD-GBP/USD, Oro XAU/USD, Índices US30/NAS100, Acciones):", def.instrumento||"");
+  if(inst===null) return; // canceló
+  const aj=prompt("Reglas / ajustes / aprendizajes de \""+nombre+"\" (lo que Roberto debe respetar y adaptar en esta estrategia — escribe libre, se puede editar cuando quieras):", def.ajustes||"");
+  if(aj===null) return;
+  ESTR_DEFS[nombre]={ instrumento:inst.trim(), ajustes:aj.trim() };
+  guardarEstrDefs();
+  toast("Definición guardada ✓");
+}
 function menuEstrategias(){
   const acc=prompt(
     "GESTIÓN DE ESTRATEGIAS\n\nEstrategias actuales:\n· "+ESTRATEGIAS.join("\n· ")+
-    "\n\nEscribe:\n  N = nueva estrategia\n  R = renombrar la actual ("+CTX.estrategia+")\n  X = borrar la actual (y sus trades)\n\nDeja vacío para cancelar."
+    "\n\nEscribe:\n  N = nueva estrategia\n  D = definir/editar la actual ("+CTX.estrategia+")\n  R = renombrar la actual\n  X = borrar la actual (y sus trades)\n\nDeja vacío para cancelar."
   );
   if(!acc) return;
   const a=acc.trim().toUpperCase();
@@ -1486,7 +1519,10 @@ function menuEstrategias(){
       ESTRATEGIAS.push(nn); guardarEstrategias();
       CTX.estrategia=nn; guardarCtx();
       refrescarDiarioCtx(); toast("Estrategia creada ✓");
+      definirEstrategia(nn);   // pide instrumento + reglas de la nueva
     }
+  }else if(a==="D"){
+    definirEstrategia(CTX.estrategia);
   }else if(a==="R"){
     const nom=prompt("Nuevo nombre para \""+CTX.estrategia+"\":", CTX.estrategia);
     if(nom && nom.trim() && nom.trim()!==CTX.estrategia){
@@ -1494,6 +1530,7 @@ function menuEstrategias(){
       if(ESTRATEGIAS.includes(nn)){ toast("Ya existe ese nombre"); return; }
       ESTRATEGIAS=ESTRATEGIAS.map(e=>e===viejo?nn:e); guardarEstrategias();
       TRADES.forEach(t=>{ if(t.estrategia===viejo) t.estrategia=nn; }); save(K.trades,TRADES);
+      if(ESTR_DEFS[viejo]){ ESTR_DEFS[nn]=ESTR_DEFS[viejo]; delete ESTR_DEFS[viejo]; guardarEstrDefs(); }
       CTX.estrategia=nn; guardarCtx();
       refrescarDiarioCtx(); toast("Estrategia renombrada ✓");
     }
@@ -1504,6 +1541,7 @@ function menuEstrategias(){
       const viejo=CTX.estrategia;
       TRADES=TRADES.filter(t=>t.estrategia!==viejo); save(K.trades,TRADES);
       ESTRATEGIAS=ESTRATEGIAS.filter(e=>e!==viejo); guardarEstrategias();
+      if(ESTR_DEFS[viejo]){ delete ESTR_DEFS[viejo]; guardarEstrDefs(); }
       CTX.estrategia=ESTRATEGIAS[0]; guardarCtx();
       refrescarDiarioCtx(); toast("Estrategia borrada");
     }
@@ -3330,7 +3368,8 @@ function viewCuentas(){
   head.innerHTML=`<div class="card-h"><span class="ic">🏦</span><h2>Mis cuentas</h2></div>
     <p class="desc">Registra tus exámenes, cuentas fondeadas y reales con sus reglas y su avance. Liga cada trade a su cuenta en el Diario y aquí verás su rendimiento. Roberto ve todo esto para ayudarte a gestionarlas y escalar.</p>
     <div id="cuentasResumen"></div>
-    <button class="btn green" id="btnNuevaCuenta" style="margin-top:6px">➕ Nueva cuenta</button>`;
+    <button class="btn green" id="btnNuevaCuenta" style="margin-top:6px">➕ Nueva cuenta</button>
+    <button class="btn" id="btnPlanComp" style="margin-top:6px">📈 Plan de interés compuesto (con Roberto)</button>`;
   v.appendChild(head);
   const body=el("div"); body.id="cuentasBody"; v.appendChild(body);
   return v;
@@ -3340,6 +3379,7 @@ function refrescarCuentas(){ renderCuentas(); pintarSelCuentaTrade(); }
 
 function renderCuentas(){
   const bn=$("#btnNuevaCuenta"); if(bn) bn.onclick=()=>cuentaModal(null);
+  const bp=$("#btnPlanComp"); if(bp) bp.onclick=planCompuesto;
   const res=$("#cuentasResumen");
   const body=$("#cuentasBody"); if(!body) return; body.innerHTML="";
 
@@ -3602,6 +3642,8 @@ const IA_SYSTEM_BASE =
 "- 🛡️ GUARDIÁN DE RIESGO: en cada mensaje tienes el bloque [🛡️ GUARDIÁN DE RIESGO] con el estado EN VIVO de sus cuentas de fondeo: pérdida del día vs límite DIARIO, drawdown total vs DD máximo, trades y SL de hoy, y semáforos (🟢/🟡/🔔/🔴). ES TU DEBER usarlo: ANTES de respaldar CUALQUIER entrada, comprueba que cabe en el margen diario que le queda; si no cabe, dile que NO. Si el semáforo diario o total está 🟡/🔔, avísale y frena las entradas nuevas de hoy; si está 🔴, o ya lleva 2 trades / 2 SL, EXÍGELE cerrar la plataforma en la 1ª línea. Estas cuentas son su capital y las tiene en riesgo — protegerlas va ANTES que cualquier operación. Nunca lo animes a 'recuperar' lo perdido con más riesgo (eso es revancha).\n"+
 "- CADA CUENTA ES DISTINTA — trátalas por SEPARADO y ADÁPTATE a su clasificación y a las reglas de SU firma/broker (no todas son de fondeo): (a) EXAMEN/FONDEADA (FundedNext, FTMO, etc.) = capital y reto reales, reglas estrictas de la firma (DD diario, DD máx estático o trailing, target, días mínimos, consistencia): protégelas al máximo. (b) CAPITAL PROPIO/REAL = su dinero real: protección total. (c) DEMO (p.ej. su Pepperstone demo) = PRÁCTICA: exígele EXACTAMENTE la misma disciplina, plan y reglas (para entrenar), pero sin el miedo del dinero real — es el lugar ideal para practicar el plan y probar cosas nuevas SIN arriesgar las fondeadas. Evalúa y aprende de TODAS por igual, pero cada una con su vara. Cuando Rey registre o te hable de una cuenta, identifica su tipo y háblale acorde.\n"+
 "- CONOCIMIENTO DE BROKERS Y FIRMAS: domina ampliamente los BROKERS de Rey (Pepperstone y su otro broker) y las EMPRESAS DE FONDEO (FundedNext, FTMO, The5ers, E8, FTUK, Funding Pips, etc.): sus modelos, tipos de cuenta, spreads/comisiones, ejecución, y las REGLAS de cada reto (DD diario/máximo, estático vs trailing, targets, días mínimos, consistencia, payout/split). Si no estás seguro de la regla EXACTA o actual de una firma/broker/modelo, BÚSCALA en internet y dale el dato correcto y actualizado — NO te quedes colgado ni inventes; dile de dónde sale y que confirme en la web oficial si hay duda.\n"+
+"- ESTRATEGIA ACTIVA Y MULTI-ESTRATEGIA: en cada mensaje tienes el bloque [🎯 ESTRATEGIA ACTIVA] con la estrategia que Rey está usando, su instrumento y sus reglas/ajustes EDITABLES. CRT Elite es su estrategia principal (tu dossier), pero Rey puede tener OTRAS (Oro, índices, acciones, etc.) — SIGUE SIEMPRE la ACTIVA: si es CRT usa tu dossier + los ajustes que él haya añadido; si es otra, usa SU definición (no le apliques las reglas de CRT si no corresponden a ese instrumento). Estas definiciones son EDITABLES para adaptarse a lo que van aprendiendo: cuando acuerden una mejora o regla nueva, o al crear una estrategia nueva, proponle guardarla con tu mano editar_estrategia (con su aprobación). Así el método evoluciona con ustedes.\n"+
+"- 📈 INTERÉS COMPUESTO: dominas el interés compuesto aplicado al trading y es parte del plan de largo plazo de Rey (crecer hacia gran capital). Cuando te lo pida (o cuando encaje), arma un plan REALISTA con sus números reales: riesgo fijo %, crecer el tamaño SOLO cuando la cuenta sube (nunca en drawdown ni por revancha), retirar parciales, y proteger el capital como base. Proyecciones honestas en tabla, sin promesas irreales. La disciplina y la gestión de riesgo son el cimiento del compuesto.\n"+
 "- 🗂️ ORGANIZA TUS CHATS (mano organizar_chat, AUTOMÁTICA, sin tarjeta): tienes 3 carpetas — 📌 Fijados (temas EN CURSO a tener a mano), ⭐ Importantes (lecciones o decisiones CLAVE) y 🔍 Por revisar (algo pendiente que Rey debe repasar contigo). Con CRITERIO propio, marca ESTA conversación cuando lo merezca (p.ej. una lección o regla importante que acordaron → ⭐; un plan/análisis en curso → 📌; algo que quedó pendiente de repasar → 🔍) y QUÍTALE la marca cuando deje de aplicar. Hazlo tú mismo, sin pedir permiso (es reversible y Rey también las toca a mano). No abuses: solo lo que de verdad aporte orden. Así el chat de Roberto queda estructurado, no suelto.\n"+
 "- TU MEMORIA PERMANENTE: tienes una memoria propia (si ya hay datos guardados, te aparecen en el contexto con su id entre paréntesis). Sirve para ADAPTARTE y APRENDER de Rey con el tiempo. Cuando descubras algo VERDADERAMENTE relevante y NUEVO para tu aprendizaje sobre él (su forma de operar, su psicología, una preferencia, un patrón o una lección importante) que NO esté ya en tus reglas/plan/contexto, propón guardarlo. **MUY IMPORTANTE — cómo se propone:** LLAMA DIRECTAMENTE a la mano guardar_memoria. NO preguntes en texto '¿quieres que lo guarde?' ni digas 'lo anoto' sin llamar a la mano: la ÚNICA forma de proponer y pedir permiso es LLAMANDO a la mano — al hacerlo, a Rey le aparece una tarjeta para APROBAR o RECHAZAR, y solo se guarda si él aprueba. Filtra con CRITERIO: no guardes todo ni trivialidades ni cosas de un solo momento, solo lo que de verdad te servirá a futuro. Si Rey te dice explícitamente 'recuerda que X' y X es algo nuevo (no ya en tus reglas), LLAMA a guardar_memoria para proponerlo. Si algo que recordabas ya no es cierto, LLAMA a borrar_memoria (con su id). Nunca pidas permiso por texto para la memoria: siempre con la mano.\n"+
 "- RESPONDE PRIMERO, en la PRIMERA línea, la pregunta concreta que te hace, decidido (SÍ / NO / el dato exacto). Después el detalle. Nunca entierres la respuesta al final ni la dejes ambigua.\n"+
@@ -4576,7 +4618,9 @@ const IA_TOOLS = [
   { name:"borrar_dibujos", description:"Borra los dibujos. Por defecto borra SOLO los que TÚ (Roberto) has dibujado, dejando intactos los de Rey. Si Rey pide limpiar TODO el gráfico, pasa todo=true. Requiere PC con Puente. Rey aprueba.",
     input_schema:{ type:"object", properties:{ todo:{type:"boolean",description:"true = borra TODOS los dibujos del gráfico (incluidos los manuales de Rey). Por defecto false = solo los de Roberto."}, target:{type:"string",description:"(opcional) par de la pestaña"} }, required:[] } },
   { name:"organizar_chat", description:"Organiza ESTA conversación en tu estructura de chats, con criterio propio. Carpetas: 📌 fijar (temas EN CURSO a tener a mano), ⭐ estrella (lecciones o decisiones CLAVE) y 🔍 revisar (algo pendiente que Rey debe repasar). Márcala cuando lo merezca y QUÍTALE la marca cuando deje de aplicar (true para marcar, false para quitar). Es AUTOMÁTICO (sin tarjeta) y reversible — Rey también las toca a mano. Úsalo con juicio, no abuses.",
-    input_schema:{ type:"object", properties:{ fijar:{type:"boolean",description:"true fija 📌, false quita"}, estrella:{type:"boolean",description:"true marca importante ⭐, false quita"}, revisar:{type:"boolean",description:"true marca por revisar 🔍, false quita"}, motivo:{type:"string",description:"(opcional) por qué la marcas, 1 frase"} }, required:[] } }
+    input_schema:{ type:"object", properties:{ fijar:{type:"boolean",description:"true fija 📌, false quita"}, estrella:{type:"boolean",description:"true marca importante ⭐, false quita"}, revisar:{type:"boolean",description:"true marca por revisar 🔍, false quita"}, motivo:{type:"string",description:"(opcional) por qué la marcas, 1 frase"} }, required:[] } },
+  { name:"editar_estrategia", description:"Define o edita las REGLAS/ajustes de una de las estrategias de Rey, para ADAPTARLA a lo que van aprendiendo, o para definir una NUEVA (Oro, índices, acciones, etc.) con su instrumento y sus reglas. Por defecto edita la estrategia ACTIVA. Úsalo cuando Rey y tú acuerden un cambio/mejora en su método o al crear una estrategia nueva. Rey lo aprueba con tarjeta.",
+    input_schema:{ type:"object", properties:{ nombre:{type:"string",description:"(opcional) estrategia a editar; por defecto la activa"}, instrumento:{type:"string",description:"(opcional) instrumento(s), ej. 'Oro XAU/USD', 'Índices US30/NAS100'"}, ajustes:{type:"string",description:"(opcional) reglas/ajustes/aprendizajes de la estrategia, en texto"} }, required:[] } }
 ];
 /* Texto humano para la tarjeta de confirmación */
 function describeTool(name, i){
@@ -4607,6 +4651,7 @@ function describeTool(name, i){
   if(name==="marcar_entrada") return "🎯 Marcar entrada "+((String(i.direccion||"").toLowerCase().indexOf("vent")>=0)?"VENTA 🔴":"COMPRA 🟢")+" en "+(i.precio!=null?i.precio:"?")+(i.texto?(" — “"+i.texto+"”"):"");
   if(name==="borrar_dibujos") return i.todo?"🧹 Borrar TODOS los dibujos del gráfico (incluidos los tuyos)":"🧹 Borrar los dibujos que hizo Roberto";
   if(name==="organizar_chat"){ const p=[]; if(i.fijar!=null)p.push(i.fijar?"📌 fijar":"quitar 📌"); if(i.estrella!=null)p.push(i.estrella?"⭐ importante":"quitar ⭐"); if(i.revisar!=null)p.push(i.revisar?"🔍 por revisar":"quitar 🔍"); return "🗂️ Organizar este chat: "+(p.join(", ")||"(sin cambios)"); }
+  if(name==="editar_estrategia"){ return "🎯 Definir/editar la estrategia \""+(i.nombre||CTX.estrategia)+"\":\n"+[i.instrumento&&("→ instrumento: "+i.instrumento), i.ajustes&&("→ reglas/ajustes: "+i.ajustes)].filter(Boolean).join("\n"); }
   if(name==="guardar_memoria"){ const et={perfil:"🧍 Perfil",aprendizaje:"💡 Aprendizaje",preferencia:"⭐ Preferencia",patron:"📊 Patrón",resultado:"📓 Resultado"}; return "🧠 Roberto quiere RECORDAR esto en su memoria:\n"+(et[i.tipo]||"💡 Aprendizaje")+"\n“"+(i.texto||"")+"”"; }
   if(name==="borrar_memoria") return "🗑️ Roberto quiere BORRAR de su memoria el dato "+(i.id||"?");
   return name+" "+JSON.stringify(i);
@@ -4769,6 +4814,15 @@ async function ejecutarTool(name, i){
       else if(name==="borrar_dibujos"){ if(i.todo===true) params.todo=true; }
       if(i.target) params.target=i.target;
       return await enviarComando(name, params);
+    }
+    if(name==="editar_estrategia"){
+      const nom=(i.nombre && ESTRATEGIAS.includes(i.nombre))?i.nombre:CTX.estrategia;
+      if(!nom) return {ok:false,msg:"No hay estrategia activa"};
+      const def=ESTR_DEFS[nom]||{};
+      if(i.instrumento!=null && i.instrumento!=="") def.instrumento=String(i.instrumento);
+      if(i.ajustes!=null && i.ajustes!=="") def.ajustes=String(i.ajustes);
+      ESTR_DEFS[nom]=def; guardarEstrDefs();
+      return {ok:true,msg:"Actualicé la estrategia “"+nom+"”: "+[def.instrumento&&("instrumento "+def.instrumento), def.ajustes&&"reglas/ajustes actualizados"].filter(Boolean).join(", ")+". La tendré en cuenta."};
     }
     if(name==="organizar_chat"){
       const c=iaConvAct(); if(!c) return {ok:false,msg:"No hay chat activo"};
@@ -5114,7 +5168,7 @@ async function iaEnviar(textoForzado, promptExtra){
   let grafTxt=""; try{ grafTxt=await iaGrafico()+"\n"; }catch(_){ grafTxt=""; }
   // promptExtra = framework de análisis (semanal/diario) que va a la API pero NO se muestra en el chat
   const marco = promptExtra ? ("\n\n=== INSTRUCCIONES DEL ANÁLISIS QUE PIDE REY ===\n"+promptExtra+"\n=== FIN INSTRUCCIONES ===") : "";
-  const inj=iaReloj()+"\n"+grafTxt+calTxt+iaContexto()+"\n"+guardianRiesgo()+"\n"+iaPlanSemanal()+"\n"+iaAvisos()+"\n"+iaEntradasAbiertas()+marco+"\n\nPregunta de Rey: "+texto;
+  const inj=iaReloj()+"\n"+grafTxt+calTxt+iaContexto()+"\n"+iaEstrategiaDef()+"\n"+guardianRiesgo()+"\n"+iaPlanSemanal()+"\n"+iaAvisos()+"\n"+iaEntradasAbiertas()+marco+"\n\nPregunta de Rey: "+texto;
   const last=msgs[msgs.length-1];
   if(Array.isArray(last.content)){ last.content[last.content.length-1]={type:"text",text:inj}; }
   else{ last.content=inj; }
