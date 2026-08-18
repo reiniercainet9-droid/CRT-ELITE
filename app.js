@@ -3283,6 +3283,43 @@ function statsCuenta(c){
   return { list, m, cap, riesgo, plTrades, manual, balance, pl, progresoPct, target };
 }
 
+/* 🛡️ GUARDIÁN DE RIESGO — estado EN VIVO del riesgo del día por cada cuenta, para que
+   Roberto FRENE a Rey antes de romper una regla. Mira: pérdida del día vs límite DIARIO,
+   drawdown total vs DD máximo, nº de trades y de SL hoy (regla 2/día · 2 SL = parar).
+   Basado en los trades REGISTRADOS (R × riesgo%); es aprox pero suficiente para disciplina. */
+function guardianRiesgo(){
+  const cuentas=(Array.isArray(CUENTAS)?CUENTAS:[]).filter(c=>c.fase!=="Cerrada");
+  if(!cuentas.length) return "[🛡️ GUARDIÁN DE RIESGO: Rey aún no tiene cuentas registradas. Aun así, recuérdale SIEMPRE sus reglas de riesgo si va a operar: 0.5% por trade, máx 2 trades/día, 2 SL = cerrar plataforma.]";
+  const hoy=hoyISO();
+  const sem=(usado,limite)=>{ if(!(limite>0)) return "🟢"; const fl=(limite-usado)/limite; if(fl<=0) return "🔴"; if(fl<=0.3) return "🔔"; if(fl<=0.5) return "🟡"; return "🟢"; };
+  let s="[🛡️ GUARDIÁN DE RIESGO (hoy "+hoy+") — datos EN VIVO de sus cuentas. Úsalo para FRENARLO ANTES de que rompa una regla, con firmeza:\n";
+  cuentas.forEach(c=>{
+    const st=statsCuenta(c);
+    const riesgoPct=+c.riesgoPct||0.5;
+    const hoyT=TRADES.filter(t=>t.cuenta===c.id && t.fecha===hoy && !t.abierta);
+    const rHoy=hoyT.reduce((a,t)=>a+(parseFloat(t.r)||0),0);
+    const slHoy=hoyT.filter(t=>(parseFloat(t.r)||0)<0).length;
+    const diaPct=rHoy*riesgoPct;                       // % del capital ganado/perdido hoy (aprox por R)
+    const ddDaily=+c.ddDailyPct||0, ddMax=+c.ddMaxPct||0;
+    const usadoDia=diaPct<0?Math.abs(diaPct):0;
+    const margenDia=ddDaily>0?Math.max(0,ddDaily-usadoDia):null;
+    const usadoTot=st.progresoPct<0?Math.abs(st.progresoPct):0;
+    const margenTot=ddMax>0?Math.max(0,ddMax-usadoTot):null;
+    s+="── "+(c.alias||c.firma||"Cuenta")+" ("+(c.firma||"?")+" · "+(c.fase||"?")+") ──\n";
+    s+="  Riesgo/trade "+riesgoPct+"% · Trades hoy "+hoyT.length+"/2 · SL hoy "+slHoy+"\n";
+    s+="  HOY: "+(diaPct>=0?"+":"")+r1(diaPct)+"%"+(ddDaily>0?(" · límite -"+ddDaily+"% · margen "+r1(margenDia)+"% "+sem(usadoDia,ddDaily)):"")+"\n";
+    s+="  TOTAL: "+(st.progresoPct>=0?"+":"")+r1(st.progresoPct)+"%"+(ddMax>0?(" · DD máx -"+ddMax+"% ("+(c.ddTipo||"?")+") · margen "+r1(margenTot)+"% "+sem(usadoTot,ddMax)):"")+"\n";
+    const av=[];
+    if(hoyT.length>=2) av.push("⚠️ YA lleva 2 trades hoy (regla: parar).");
+    if(slHoy>=2) av.push("🔴 2 SL hoy → REGLA: cerrar plataforma hasta mañana.");
+    if(ddDaily>0 && margenDia!=null && margenDia<=ddDaily*0.3) av.push("🔔 Cerca del límite DIARIO (queda "+r1(margenDia)+"%): NO respaldes más entradas hoy.");
+    if(ddMax>0 && margenTot!=null && margenTot<=ddMax*0.3) av.push("🔴 Cerca del DD MÁXIMO (queda "+r1(margenTot)+"%): protégela, para o baja riesgo.");
+    if(av.length) s+="  "+av.join(" ")+"\n";
+  });
+  s+="REGLA: si ves 🟡/🔔, avísaselo y frena las entradas nuevas de hoy; si ves 🔴, EXÍGELE cerrar/parar en la 1ª línea. Antes de respaldar CUALQUIER entrada, comprueba que cabe en el margen diario. La disciplina va PRIMERO.]";
+  return s;
+}
+
 function viewCuentas(){
   const v=el("div","view"); v.id="v-cuentas";
   const head=el("div","card");
@@ -3556,6 +3593,7 @@ const IA_SYSTEM_BASE =
 "- AJUSTAR EL INDICADOR (mano ajustar_indicador, por el Puente, con aprobación): puedes cambiar CUALQUIER ajuste del indicador CRT Elite de Rey referenciándolo por su NOMBRE. Ajustes reales que puedes tocar: PIVOTES por temporalidad ('Pivote 4H', 'Pivote 15m', 'Pivote Diario', 'Pivote 1m-5m', 'Pivote Semanal+', 'Sensibilidad de pivotes', 'Auto: pivote + tolerancia EQ según la temporalidad') y sus tolerancias ('Tol% H4', 'Tol% D', 'Tol% 15'); KILLZONES ('Killzone Londres', 'Killzone Nueva York (Pre-NY + Apertura)', 'Solo operar en Killzones', 'Sesión Asia', 'Sesión Londres'); SESGO/GIRO ('Solo a favor del sesgo HTF (Diario)', 'Máximo de giros confirmados por día', 'Temporalidad que confirma el GIRO (CHoCH)', 'Giro operativo por alineación H4+15M'); ENTRADAS ('Máximo de entradas por sesión', 'Grado mínimo a dibujar', 'No entrar contra la zona Premium/Discount', 'Separación mínima entre entradas (pips)'); GESTIÓN/RIESGO ('Riesgo:Beneficio (TP final)', 'Mover a Breakeven en (R)', 'TP1 parcial en (R)', 'TP2 parcial en (R)', 'Riesgo por trade (%)', 'Límite de pérdida diaria (%)', 'Pérdida máxima de cuenta (%)', 'Tamaño de la cuenta ($)'). Si el nombre es ambiguo (ej. solo 'Pivote'), el puente te avisa y afinas. OJO con lo que Rey remarca: el PIVOTE de temporalidad ALTA (4H/Diario/Semanal = contexto y sesgo) es distinto del de GATILLO (1m-5m/15m = ejecución) — no los confundas al ajustar. Propón un ajuste SOLO cuando Rey lo pida o cuando de verdad mejore algo, y explícale el porqué en una línea.\n"+
 "- DIBUJAR EN EL GRÁFICO (por el Puente, con aprobación): puedes MARCAR el gráfico de Rey con estas manos: dibujar_linea (un nivel horizontal: resistencia, soporte, PDH/PDL, liquidez, objetivo), dibujar_zona (un rango: Premium/Discount, order block, FVG, POI — pasas precio_alto y precio_bajo), dibujar_texto (una nota corta a un precio), marcar_entrada (una flecha de entrada/reacción: direccion 'compra' = flecha verde arriba, 'venta' = flecha roja abajo, en la temporalidad de gatillo) y borrar_dibujos (borra SOLO lo tuyo por defecto; todo=true borra TODO). Úsalas para señalarle a Rey una zona de interés, un punto donde esperar reacción, o un buen punto de entrada — leyendo antes el precio y los niveles del GRÁFICO EN VIVO para que los precios tengan sentido. SIEMPRE con su aprobación (tarjeta) y con la PC+Puente encendidos. Cuando marques, di en una línea POR QUÉ ahí (ej. 'te marco la zona Premium 15m: si barre y da MSS bajista, es tu venta'). COLOR AUTOMÁTICO: NO necesitas pasar 'color' — los dibujos ADAPTAN su color al fondo del gráfico (si Rey tiene fondo claro u oscuro, el puente lo detecta y elige el contraste correcto). Pasa 'color' SOLO si Rey pide un color concreto.\n"+
 "- ⚖️ DISCIPLINA Y REGLAS — ES TU MISIÓN #1 CON REY (él te lo pidió expresamente): su punto DÉBIL es la disciplina y respetar las reglas, y para él es lo MÁS importante para lograrlo. Sé su GUARDIÁN, no solo su analista. La disciplina, el orden y la estructura van ANTES que cualquier análisis. MÁRCALE SIEMPRE y EXÍGELE (con respeto pero con firmeza): respetar sus HORARIOS y rutina (incluida la evaluación de la tarde y el cierre de semana — son parte de su disciplina, no opcionales) y las VENTANAS/killzones; y las REGLAS de CRT Elite (SIN SWEEP=SIN SETUP, esperar la vela de confirmación CERRADA, nunca entrar en el toque, solo A+/B, riesgo 0.5%, máx 2 trades/día, no operar contra el sesgo del día ni fuera de zona Premium/Discount, nada 30 min alrededor de noticia roja, respetar el límite de pérdida diaria). Si ves que se salta —o va a saltarse— una regla, un horario o su estructura, PÁRALO y díselo en la 1ª línea, sin suavizarlo. Recuérdale que el mejor análisis no sirve sin disciplina.\n"+
+"- 🛡️ GUARDIÁN DE RIESGO: en cada mensaje tienes el bloque [🛡️ GUARDIÁN DE RIESGO] con el estado EN VIVO de sus cuentas de fondeo: pérdida del día vs límite DIARIO, drawdown total vs DD máximo, trades y SL de hoy, y semáforos (🟢/🟡/🔔/🔴). ES TU DEBER usarlo: ANTES de respaldar CUALQUIER entrada, comprueba que cabe en el margen diario que le queda; si no cabe, dile que NO. Si el semáforo diario o total está 🟡/🔔, avísale y frena las entradas nuevas de hoy; si está 🔴, o ya lleva 2 trades / 2 SL, EXÍGELE cerrar la plataforma en la 1ª línea. Estas cuentas son su capital y las tiene en riesgo — protegerlas va ANTES que cualquier operación. Nunca lo animes a 'recuperar' lo perdido con más riesgo (eso es revancha).\n"+
 "- 🗂️ ORGANIZA TUS CHATS (mano organizar_chat, AUTOMÁTICA, sin tarjeta): tienes 3 carpetas — 📌 Fijados (temas EN CURSO a tener a mano), ⭐ Importantes (lecciones o decisiones CLAVE) y 🔍 Por revisar (algo pendiente que Rey debe repasar contigo). Con CRITERIO propio, marca ESTA conversación cuando lo merezca (p.ej. una lección o regla importante que acordaron → ⭐; un plan/análisis en curso → 📌; algo que quedó pendiente de repasar → 🔍) y QUÍTALE la marca cuando deje de aplicar. Hazlo tú mismo, sin pedir permiso (es reversible y Rey también las toca a mano). No abuses: solo lo que de verdad aporte orden. Así el chat de Roberto queda estructurado, no suelto.\n"+
 "- TU MEMORIA PERMANENTE: tienes una memoria propia (si ya hay datos guardados, te aparecen en el contexto con su id entre paréntesis). Sirve para ADAPTARTE y APRENDER de Rey con el tiempo. Cuando descubras algo VERDADERAMENTE relevante y NUEVO para tu aprendizaje sobre él (su forma de operar, su psicología, una preferencia, un patrón o una lección importante) que NO esté ya en tus reglas/plan/contexto, propón guardarlo. **MUY IMPORTANTE — cómo se propone:** LLAMA DIRECTAMENTE a la mano guardar_memoria. NO preguntes en texto '¿quieres que lo guarde?' ni digas 'lo anoto' sin llamar a la mano: la ÚNICA forma de proponer y pedir permiso es LLAMANDO a la mano — al hacerlo, a Rey le aparece una tarjeta para APROBAR o RECHAZAR, y solo se guarda si él aprueba. Filtra con CRITERIO: no guardes todo ni trivialidades ni cosas de un solo momento, solo lo que de verdad te servirá a futuro. Si Rey te dice explícitamente 'recuerda que X' y X es algo nuevo (no ya en tus reglas), LLAMA a guardar_memoria para proponerlo. Si algo que recordabas ya no es cierto, LLAMA a borrar_memoria (con su id). Nunca pidas permiso por texto para la memoria: siempre con la mano.\n"+
 "- RESPONDE PRIMERO, en la PRIMERA línea, la pregunta concreta que te hace, decidido (SÍ / NO / el dato exacto). Después el detalle. Nunca entierres la respuesta al final ni la dejes ambigua.\n"+
@@ -5068,7 +5106,7 @@ async function iaEnviar(textoForzado, promptExtra){
   let grafTxt=""; try{ grafTxt=await iaGrafico()+"\n"; }catch(_){ grafTxt=""; }
   // promptExtra = framework de análisis (semanal/diario) que va a la API pero NO se muestra en el chat
   const marco = promptExtra ? ("\n\n=== INSTRUCCIONES DEL ANÁLISIS QUE PIDE REY ===\n"+promptExtra+"\n=== FIN INSTRUCCIONES ===") : "";
-  const inj=iaReloj()+"\n"+grafTxt+calTxt+iaContexto()+"\n"+iaPlanSemanal()+"\n"+iaAvisos()+"\n"+iaEntradasAbiertas()+marco+"\n\nPregunta de Rey: "+texto;
+  const inj=iaReloj()+"\n"+grafTxt+calTxt+iaContexto()+"\n"+guardianRiesgo()+"\n"+iaPlanSemanal()+"\n"+iaAvisos()+"\n"+iaEntradasAbiertas()+marco+"\n\nPregunta de Rey: "+texto;
   const last=msgs[msgs.length-1];
   if(Array.isArray(last.content)){ last.content[last.content.length-1]={type:"text",text:inj}; }
   else{ last.content=inj; }
