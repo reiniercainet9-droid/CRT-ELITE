@@ -1,4 +1,4 @@
-const CACHE = "crt-elite-v5-63";
+const CACHE = "crt-elite-v5-64";
 const FILES = ["./","./index.html","./data.js","./app.js","./manifest.json","./icon-192.png","./icon-512.png"];
 const WORKER = "https://elitepro-worker.reiniercainet9.workers.dev";
 /* Web Push: al llegar un aviso (con la app CERRADA), muestra la notificación.
@@ -22,7 +22,7 @@ self.addEventListener("push", e => {
       icon: "./icon-192.png", badge: "./icon-192.png",
       vibrate: vibra, silent: false,
       requireInteraction: esRutina ? fuerte : true,
-      timestamp: Date.now(), data: { url: "./index.html", jobId: msg.jobId || "", kind: msg.kind || "", sym: msg.sym || "", tvint: msg.tvint || "" }
+      timestamp: Date.now(), data: { url: "./index.html", jobId: msg.jobId || "", kind: msg.kind || "", sym: msg.sym || "", tvint: msg.tvint || "", seed: msg.seed || "" }
     });
   })());
 });
@@ -45,9 +45,10 @@ self.addEventListener("notificationclick", e => {
   }
   const esChat = tag.indexOf("apex-chat")===0 || data.kind==="chat";   // respuesta de Roberto → abrir el chat
   const jobId = data.jobId || "";
-  const url = esChat ? ("./index.html?open=chat"+(jobId?("&job="+encodeURIComponent(jobId)):"")) : "./index.html";
+  const seed = data.seed || "";   // eval_dia / eval_semana → Roberto evalúa solo al abrir
+  const url = esChat ? ("./index.html?open=chat"+(jobId?("&job="+encodeURIComponent(jobId)):"")+(seed?("&seed="+encodeURIComponent(seed)):"")) : "./index.html";
   e.waitUntil(clients.matchAll({type:"window",includeUncontrolled:true}).then(cs => {
-    for(const c of cs){ if("focus" in c){ if(esChat && c.postMessage) c.postMessage({type:"apex-open-chat", jobId}); return c.focus(); } }
+    for(const c of cs){ if("focus" in c){ if(esChat && c.postMessage) c.postMessage({type:"apex-open-chat", jobId, seed}); return c.focus(); } }
     if(clients.openWindow) return clients.openWindow(url);
   }));
 });

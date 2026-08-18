@@ -3684,6 +3684,37 @@ const ANALISIS_DIARIO_PROM =
 function analisisSemanal(){ iaEnviar("🗓️ Hazme mi análisis SEMANAL con el gráfico en vivo.", ANALISIS_SEMANAL_PROM); }
 function analisisDiario(){ iaEnviar("📆 Hazme mi análisis DEL DÍA con el gráfico en vivo.", ANALISIS_DIARIO_PROM); }
 
+/* 🤖 ROBERTO PROACTIVO — evaluaciones que arranca solo al tocar su notificación.
+   El worker (cron) empuja el aviso a la tarde / los viernes; al abrir, Roberto EVALÚA
+   leyendo el Diario real (le paso los trades del día / de la semana en el marco oculto). */
+const EVAL_DIA_PROM = "Rey quiere que EVALÚES su operativa de HOY, como su mentor que cierra el día con él. Abajo tienes SUS TRADES DE HOY (los cerrados). Si hay trades: evalúa CADA uno — qué hizo bien y qué mal, el R obtenido, si respetó el plan y las reglas (sweep obligatorio, killzone/ventana, sesgo del día, zona premium/discount, esperar la vela de confirmación CERRADA) y su gestión (SL/TP/parciales/BE); si ves su fuga de TIMING PREMATURO, díselo; termina con LA LECCIÓN del día (1 frase) y EL FOCO para mañana (1 frase). Si NO hay trades hoy: dilo en 1 línea, valora si estuvo bien no forzar según su plan y ventanas, y deja 1 nota breve. Cálido pero honesto y directo. Formato vivo (tabla si hay varios trades). Empieza saludándolo por el cierre del día.";
+const EVAL_SEMANA_PROM = "Rey quiere el CIERRE DE SEMANA, como su mentor. Abajo tienes SUS TRADES DE LA SEMANA (cerrados). Saca los números en una TABLA: nº de trades, ganados / perdidos / BE, R acumulado, win rate aprox., y cuántos con plan roto / fuera de ventana / con prisa. Luego 2-3 conclusiones (su mejor y peor hábito de la semana, mejor ventana/setup) y 1-2 FOCOS concretos para la próxima semana. Cálido, honesto, directo. Empieza reconociendo el cierre de la semana.";
+function tradesTexto(list){
+  return list.map(t=>{
+    const rr=(t.r!=null&&t.r!=="")?(t.r+"R"):"?";
+    const res=t.res||(parseFloat(t.r)>0?"Ganado":parseFloat(t.r)<0?"Perdido":"BE");
+    return "• "+(t.fecha||"?")+" "+(t.par||"?")+" "+(t.dir||"")+" · "+res+" "+rr
+      +(t.setup?(" · setup "+t.setup):"")+(t.ventana?(" · "+t.ventana):"")
+      +(t.momento?(" · '"+t.momento+"'"):"")+(t.zona?(" · "+t.zona):"")
+      +(t.bias?(" · bias "+t.bias):"")+(t.plan==="No"?" · ⚠️PLAN ROTO":"")
+      +(t.nota?(" · nota: "+t.nota):"");
+  }).join("\n");
+}
+function evalDia(){
+  const hoy=hoyISO();
+  const ts=tradesCtx().filter(t=>t.fecha===hoy && !t.abierta);
+  const data=ts.length?tradesTexto(ts):"(No hay trades cerrados registrados hoy.)";
+  iaEnviar("🤖 Evalúa mi operativa de HOY.", EVAL_DIA_PROM+"\n\nSUS TRADES DE HOY ("+hoy+"):\n"+data);
+}
+function evalSemana(){
+  const d=new Date(); d.setDate(d.getDate()-7);
+  const cut=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+  const ts=tradesCtx().filter(t=>t.fecha>=cut && !t.abierta).sort((a,b)=>(a.fecha<b.fecha?-1:1));
+  const data=ts.length?tradesTexto(ts):"(No hay trades cerrados en los últimos 7 días.)";
+  iaEnviar("🤖 Hazme el CIERRE de mi semana.", EVAL_SEMANA_PROM+"\n\nSUS TRADES DE LA SEMANA (desde "+cut+"):\n"+data);
+}
+function iaProactivo(seed){ if(seed==="eval_dia") return evalDia(); if(seed==="eval_semana") return evalSemana(); }
+
 let _iaConoc = null;
 /* Arma el bloque de conocimiento (estrategia + indicador + perfil) desde los
    mismos datos que ve la app, para que la IA y la app nunca se contradigan. */
@@ -5033,8 +5064,8 @@ function init(){
   /* Al volver a la app (no cerrarla del todo), recupera lo que haya terminado */
   document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible") iaResumePend(); });
   /* Si abriste tocando el push de una respuesta de Roberto, abre el chat con ella */
-  try{ if(navigator.serviceWorker){ navigator.serviceWorker.addEventListener("message", ev=>{ if(ev.data && ev.data.type==="apex-open-chat"){ if(typeof abrirIA==="function") abrirIA(); if(ev.data.jobId) iaMostrarJob(ev.data.jobId); else iaResumePend(); } }); } }catch(_){}
-  try{ const sp=new URLSearchParams(location.search); if(sp.get("open")==="chat"){ const jb=sp.get("job"); setTimeout(()=>{ if(typeof abrirIA==="function") abrirIA(); if(jb) iaMostrarJob(jb); else iaResumePend(); }, 400); } }catch(_){}
+  try{ if(navigator.serviceWorker){ navigator.serviceWorker.addEventListener("message", ev=>{ if(ev.data && ev.data.type==="apex-open-chat"){ if(typeof abrirIA==="function") abrirIA(); if(ev.data.seed){ setTimeout(()=>iaProactivo(ev.data.seed),300); } else if(ev.data.jobId) iaMostrarJob(ev.data.jobId); else iaResumePend(); } }); } }catch(_){}
+  try{ const sp=new URLSearchParams(location.search); if(sp.get("open")==="chat"){ const jb=sp.get("job"); const seed=sp.get("seed"); setTimeout(()=>{ if(typeof abrirIA==="function") abrirIA(); if(seed) setTimeout(()=>iaProactivo(seed),350); else if(jb) iaMostrarJob(jb); else iaResumePend(); }, 500); } }catch(_){}
   setTimeout(syncReminders, 1800);   /* sube los avisos al vigilante (cron) */
   irA("noticias");   /* lo primero del día: ver cómo viene el calendario antes de analizar */
   tickRelojes(); setInterval(tickRelojes,10000);
