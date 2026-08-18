@@ -468,8 +468,16 @@ select.inp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns
 .ia-conv-b{flex:1;padding:11px 13px;min-width:0}
 .ia-conv-t{color:var(--txt);font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ia-conv-d{color:var(--txt3);font-size:11.5px;margin-top:3px}
-.ia-conv-x{width:44px;flex-shrink:0;background:transparent;border:none;border-left:1px solid var(--line);color:var(--txt3);font-size:15px}
+.ia-conv-x{width:40px;flex-shrink:0;background:transparent;border:none;border-left:1px solid var(--line);color:var(--txt3);font-size:15px}
 .ia-conv-x:active{background:var(--card3)}
+/* 🗂️ Carpetas y marcadores de chats (fijar/importante/revisar) */
+.ia-conv-fold{color:var(--gold);font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;opacity:.9;margin:12px 2px 3px}
+.ia-conv-list > .ia-conv-fold:first-child{margin-top:2px}
+.ia-conv-flags{display:flex;align-items:stretch;flex-shrink:0;border-left:1px solid var(--line)}
+.ia-conv-flags .ia-conv-x{border-left:none}
+.ia-flag{width:30px;align-self:stretch;background:transparent;border:none;font-size:13.5px;opacity:.3;filter:grayscale(1);cursor:pointer}
+.ia-flag.on{opacity:1;filter:none}
+.ia-flag:active{background:var(--card3)}
 .ia-msgs{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px}
 .ia-msg{max-width:86%;padding:12px 14px;border-radius:14px;font-size:14.5px;line-height:1.5;word-wrap:break-word;overflow-wrap:anywhere}
 .ia-msg.user{align-self:flex-end;background:var(--gold);color:#1A1200;border-bottom-right-radius:5px;font-weight:500}

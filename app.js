@@ -3555,6 +3555,8 @@ const IA_SYSTEM_BASE =
 "- MANOS EN EL GRÁFICO (por el Puente Apex): puedes CAMBIAR el gráfico de Rey en su PC con las manos cambiar_par, cambiar_temporalidad y cambiar_tipo_grafico — SIEMPRE con su aprobación (le sale una tarjeta). Requieren la PC encendida con el Puente Apex: si el bloque de GRÁFICO EN VIVO indica que NO está conectada, avísale de que la encienda antes de intentarlo. Úsalas cuando Rey te lo pida (ej. 'ponme GBP/USD en 15m' → cambiar_par GBPUSD + cambiar_temporalidad 15) o cuando propongas revisar algo y él acepte. Códigos de temporalidad: 1/3/5/15/30/60(=1h)/240(=4h)/D/W. (Pronto tendrás también manos para AJUSTAR los inputs del indicador y las alarmas.)\n"+
 "- AJUSTAR EL INDICADOR (mano ajustar_indicador, por el Puente, con aprobación): puedes cambiar CUALQUIER ajuste del indicador CRT Elite de Rey referenciándolo por su NOMBRE. Ajustes reales que puedes tocar: PIVOTES por temporalidad ('Pivote 4H', 'Pivote 15m', 'Pivote Diario', 'Pivote 1m-5m', 'Pivote Semanal+', 'Sensibilidad de pivotes', 'Auto: pivote + tolerancia EQ según la temporalidad') y sus tolerancias ('Tol% H4', 'Tol% D', 'Tol% 15'); KILLZONES ('Killzone Londres', 'Killzone Nueva York (Pre-NY + Apertura)', 'Solo operar en Killzones', 'Sesión Asia', 'Sesión Londres'); SESGO/GIRO ('Solo a favor del sesgo HTF (Diario)', 'Máximo de giros confirmados por día', 'Temporalidad que confirma el GIRO (CHoCH)', 'Giro operativo por alineación H4+15M'); ENTRADAS ('Máximo de entradas por sesión', 'Grado mínimo a dibujar', 'No entrar contra la zona Premium/Discount', 'Separación mínima entre entradas (pips)'); GESTIÓN/RIESGO ('Riesgo:Beneficio (TP final)', 'Mover a Breakeven en (R)', 'TP1 parcial en (R)', 'TP2 parcial en (R)', 'Riesgo por trade (%)', 'Límite de pérdida diaria (%)', 'Pérdida máxima de cuenta (%)', 'Tamaño de la cuenta ($)'). Si el nombre es ambiguo (ej. solo 'Pivote'), el puente te avisa y afinas. OJO con lo que Rey remarca: el PIVOTE de temporalidad ALTA (4H/Diario/Semanal = contexto y sesgo) es distinto del de GATILLO (1m-5m/15m = ejecución) — no los confundas al ajustar. Propón un ajuste SOLO cuando Rey lo pida o cuando de verdad mejore algo, y explícale el porqué en una línea.\n"+
 "- DIBUJAR EN EL GRÁFICO (por el Puente, con aprobación): puedes MARCAR el gráfico de Rey con estas manos: dibujar_linea (un nivel horizontal: resistencia, soporte, PDH/PDL, liquidez, objetivo), dibujar_zona (un rango: Premium/Discount, order block, FVG, POI — pasas precio_alto y precio_bajo), dibujar_texto (una nota corta a un precio), marcar_entrada (una flecha de entrada/reacción: direccion 'compra' = flecha verde arriba, 'venta' = flecha roja abajo, en la temporalidad de gatillo) y borrar_dibujos (borra SOLO lo tuyo por defecto; todo=true borra TODO). Úsalas para señalarle a Rey una zona de interés, un punto donde esperar reacción, o un buen punto de entrada — leyendo antes el precio y los niveles del GRÁFICO EN VIVO para que los precios tengan sentido. SIEMPRE con su aprobación (tarjeta) y con la PC+Puente encendidos. Cuando marques, di en una línea POR QUÉ ahí (ej. 'te marco la zona Premium 15m: si barre y da MSS bajista, es tu venta'). COLOR AUTOMÁTICO: NO necesitas pasar 'color' — los dibujos ADAPTAN su color al fondo del gráfico (si Rey tiene fondo claro u oscuro, el puente lo detecta y elige el contraste correcto). Pasa 'color' SOLO si Rey pide un color concreto.\n"+
+"- ⚖️ DISCIPLINA Y REGLAS — ES TU MISIÓN #1 CON REY (él te lo pidió expresamente): su punto DÉBIL es la disciplina y respetar las reglas, y para él es lo MÁS importante para lograrlo. Sé su GUARDIÁN, no solo su analista. La disciplina, el orden y la estructura van ANTES que cualquier análisis. MÁRCALE SIEMPRE y EXÍGELE (con respeto pero con firmeza): respetar sus HORARIOS y rutina (incluida la evaluación de la tarde y el cierre de semana — son parte de su disciplina, no opcionales) y las VENTANAS/killzones; y las REGLAS de CRT Elite (SIN SWEEP=SIN SETUP, esperar la vela de confirmación CERRADA, nunca entrar en el toque, solo A+/B, riesgo 0.5%, máx 2 trades/día, no operar contra el sesgo del día ni fuera de zona Premium/Discount, nada 30 min alrededor de noticia roja, respetar el límite de pérdida diaria). Si ves que se salta —o va a saltarse— una regla, un horario o su estructura, PÁRALO y díselo en la 1ª línea, sin suavizarlo. Recuérdale que el mejor análisis no sirve sin disciplina.\n"+
+"- 🗂️ ORGANIZA TUS CHATS (mano organizar_chat, AUTOMÁTICA, sin tarjeta): tienes 3 carpetas — 📌 Fijados (temas EN CURSO a tener a mano), ⭐ Importantes (lecciones o decisiones CLAVE) y 🔍 Por revisar (algo pendiente que Rey debe repasar contigo). Con CRITERIO propio, marca ESTA conversación cuando lo merezca (p.ej. una lección o regla importante que acordaron → ⭐; un plan/análisis en curso → 📌; algo que quedó pendiente de repasar → 🔍) y QUÍTALE la marca cuando deje de aplicar. Hazlo tú mismo, sin pedir permiso (es reversible y Rey también las toca a mano). No abuses: solo lo que de verdad aporte orden. Así el chat de Roberto queda estructurado, no suelto.\n"+
 "- TU MEMORIA PERMANENTE: tienes una memoria propia (si ya hay datos guardados, te aparecen en el contexto con su id entre paréntesis). Sirve para ADAPTARTE y APRENDER de Rey con el tiempo. Cuando descubras algo VERDADERAMENTE relevante y NUEVO para tu aprendizaje sobre él (su forma de operar, su psicología, una preferencia, un patrón o una lección importante) que NO esté ya en tus reglas/plan/contexto, propón guardarlo. **MUY IMPORTANTE — cómo se propone:** LLAMA DIRECTAMENTE a la mano guardar_memoria. NO preguntes en texto '¿quieres que lo guarde?' ni digas 'lo anoto' sin llamar a la mano: la ÚNICA forma de proponer y pedir permiso es LLAMANDO a la mano — al hacerlo, a Rey le aparece una tarjeta para APROBAR o RECHAZAR, y solo se guarda si él aprueba. Filtra con CRITERIO: no guardes todo ni trivialidades ni cosas de un solo momento, solo lo que de verdad te servirá a futuro. Si Rey te dice explícitamente 'recuerda que X' y X es algo nuevo (no ya en tus reglas), LLAMA a guardar_memoria para proponerlo. Si algo que recordabas ya no es cierto, LLAMA a borrar_memoria (con su id). Nunca pidas permiso por texto para la memoria: siempre con la mano.\n"+
 "- RESPONDE PRIMERO, en la PRIMERA línea, la pregunta concreta que te hace, decidido (SÍ / NO / el dato exacto). Después el detalle. Nunca entierres la respuesta al final ni la dejes ambigua.\n"+
 "- HORARIO OPERATIVO: la fila 'Killzone' del panel del indicador es la FUENTE DE VERDAD (ya maneja el cambio EST/EDT solo). Si dice Fuera → el alumno está FUERA de horario y NO se opera: díselo claro y directo, sin rodeos. Si tu cálculo de husos no cuadra con el panel, MANDA EL PANEL y dilo en una sola línea (que revise qué killzone tiene configurada), sin contradecirte ni marearlo con dos versiones.\n"+
@@ -3794,19 +3796,36 @@ function iaDelConv(id){
   if(IA.actId===id) IA.actId = IA.convs[0]?IA.convs[0].id:null;
   iaGuardarConvs(); renderConvList(); pintarIAChat();
 }
+/* Marca/desmarca una carpeta (📌 fijado / ⭐ estrella / 🔍 revisar) en un chat.
+   Rey lo toca a mano; Roberto también con su mano organizar_chat (automático). */
+function iaToggleFlag(id, flag){
+  const c=IA.convs.find(x=>x.id===id); if(!c) return;
+  c[flag]=!c[flag]; iaGuardarConvs(); renderConvList();
+  const nom={fijado:"📌 Fijado",estrella:"⭐ Importante",revisar:"🔍 Por revisar"};
+  toast((c[flag]?"":"Quitado: ")+(nom[flag]||flag));
+}
+function iaConvItemHTML(c){
+  const d=new Date(c.ts), fecha=d.toLocaleDateString("es",{day:"2-digit",month:"short"});
+  const act=c.id===IA.actId?" act":"";
+  const fb=(flag,on,em,lbl)=>`<button class="ia-flag${on?" on":""}" data-flag="${flag}" data-fid="${c.id}" aria-label="${lbl}" title="${lbl}">${em}</button>`;
+  return `<div class="ia-conv${act}" data-id="${c.id}">
+    <div class="ia-conv-b" data-sel="${c.id}"><div class="ia-conv-t">${esc(iaTit(c))}</div>
+    <div class="ia-conv-d">${fecha} · ${c.msgs.filter(m=>m.role==="user").length} preg.</div></div>
+    <div class="ia-conv-flags">${fb("fijado",c.fijado,"📌","Fijar")}${fb("estrella",c.estrella,"⭐","Importante")}${fb("revisar",c.revisar,"🔍","Por revisar")}<button class="ia-conv-x" data-del="${c.id}" aria-label="Borrar">🗑️</button></div></div>`;
+}
 function renderConvList(){
   const box=$("#iaConvList"); if(!box) return;
   if(!IA.convs.length){ box.innerHTML=`<div class="note" style="text-align:left">Aún no tienes conversaciones guardadas.</div>`; return; }
-  box.innerHTML=IA.convs.map(c=>{
-    const d=new Date(c.ts), fecha=d.toLocaleDateString("es",{day:"2-digit",month:"short"});
-    const act=c.id===IA.actId?" act":"";
-    return `<div class="ia-conv${act}" data-id="${c.id}">
-      <div class="ia-conv-b" data-sel="${c.id}"><div class="ia-conv-t">${esc(iaTit(c))}</div>
-      <div class="ia-conv-d">${fecha} · ${c.msgs.filter(m=>m.role==="user").length} preg.</div></div>
-      <button class="ia-conv-x" data-del="${c.id}" aria-label="Borrar">🗑️</button></div>`;
-  }).join("");
+  const byTs=(a,b)=>b.ts-a.ts;
+  const fij=IA.convs.filter(c=>c.fijado).sort(byTs);
+  const imp=IA.convs.filter(c=>!c.fijado&&c.estrella).sort(byTs);
+  const rev=IA.convs.filter(c=>!c.fijado&&!c.estrella&&c.revisar).sort(byTs);
+  const resto=IA.convs.filter(c=>!c.fijado&&!c.estrella&&!c.revisar).sort(byTs);
+  const sec=(tit,arr)=> arr.length?(`<div class="ia-conv-fold">${tit} · ${arr.length}</div>`+arr.map(iaConvItemHTML).join("")):"";
+  box.innerHTML = sec("📌 Fijados",fij)+sec("⭐ Importantes",imp)+sec("🔍 Por revisar",rev)+sec("🕘 Recientes",resto);
   box.querySelectorAll("[data-sel]").forEach(b=>b.onclick=()=>iaSelConv(b.dataset.sel));
-  box.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>iaDelConv(b.dataset.del));
+  box.querySelectorAll("[data-del]").forEach(b=>b.onclick=(e)=>{ e.stopPropagation(); iaDelConv(b.dataset.del); });
+  box.querySelectorAll("[data-flag]").forEach(b=>b.onclick=(e)=>{ e.stopPropagation(); iaToggleFlag(b.dataset.fid, b.dataset.flag); });
 }
 
 function iaInit(){
@@ -4509,7 +4528,9 @@ const IA_TOOLS = [
   { name:"marcar_entrada", description:"Marca un PUNTO DE ENTRADA o de reacción con una flecha en el gráfico (verde hacia arriba para compra, roja hacia abajo para venta), en la temporalidad de gatillo. Úsalo para señalarle a Rey un buen punto de entrada o dónde esperar una reacción. Requiere PC con Puente. Rey aprueba.",
     input_schema:{ type:"object", properties:{ precio:{type:"number",description:"Precio de la entrada/reacción"}, direccion:{type:"string",enum:["compra","venta"],description:"'compra' (flecha verde arriba) o 'venta' (flecha roja abajo)"}, texto:{type:"string",description:"(opcional) etiqueta, ej. 'Entrada 5m', 'Espera reacción'"}, target:{type:"string",description:"(opcional) par de la pestaña"} }, required:["precio","direccion"] } },
   { name:"borrar_dibujos", description:"Borra los dibujos. Por defecto borra SOLO los que TÚ (Roberto) has dibujado, dejando intactos los de Rey. Si Rey pide limpiar TODO el gráfico, pasa todo=true. Requiere PC con Puente. Rey aprueba.",
-    input_schema:{ type:"object", properties:{ todo:{type:"boolean",description:"true = borra TODOS los dibujos del gráfico (incluidos los manuales de Rey). Por defecto false = solo los de Roberto."}, target:{type:"string",description:"(opcional) par de la pestaña"} }, required:[] } }
+    input_schema:{ type:"object", properties:{ todo:{type:"boolean",description:"true = borra TODOS los dibujos del gráfico (incluidos los manuales de Rey). Por defecto false = solo los de Roberto."}, target:{type:"string",description:"(opcional) par de la pestaña"} }, required:[] } },
+  { name:"organizar_chat", description:"Organiza ESTA conversación en tu estructura de chats, con criterio propio. Carpetas: 📌 fijar (temas EN CURSO a tener a mano), ⭐ estrella (lecciones o decisiones CLAVE) y 🔍 revisar (algo pendiente que Rey debe repasar). Márcala cuando lo merezca y QUÍTALE la marca cuando deje de aplicar (true para marcar, false para quitar). Es AUTOMÁTICO (sin tarjeta) y reversible — Rey también las toca a mano. Úsalo con juicio, no abuses.",
+    input_schema:{ type:"object", properties:{ fijar:{type:"boolean",description:"true fija 📌, false quita"}, estrella:{type:"boolean",description:"true marca importante ⭐, false quita"}, revisar:{type:"boolean",description:"true marca por revisar 🔍, false quita"}, motivo:{type:"string",description:"(opcional) por qué la marcas, 1 frase"} }, required:[] } }
 ];
 /* Texto humano para la tarjeta de confirmación */
 function describeTool(name, i){
@@ -4539,6 +4560,7 @@ function describeTool(name, i){
   if(name==="dibujar_texto") return "✍️ Escribir nota en "+(i.precio!=null?i.precio:"?")+":\n“"+(i.texto||"")+"”";
   if(name==="marcar_entrada") return "🎯 Marcar entrada "+((String(i.direccion||"").toLowerCase().indexOf("vent")>=0)?"VENTA 🔴":"COMPRA 🟢")+" en "+(i.precio!=null?i.precio:"?")+(i.texto?(" — “"+i.texto+"”"):"");
   if(name==="borrar_dibujos") return i.todo?"🧹 Borrar TODOS los dibujos del gráfico (incluidos los tuyos)":"🧹 Borrar los dibujos que hizo Roberto";
+  if(name==="organizar_chat"){ const p=[]; if(i.fijar!=null)p.push(i.fijar?"📌 fijar":"quitar 📌"); if(i.estrella!=null)p.push(i.estrella?"⭐ importante":"quitar ⭐"); if(i.revisar!=null)p.push(i.revisar?"🔍 por revisar":"quitar 🔍"); return "🗂️ Organizar este chat: "+(p.join(", ")||"(sin cambios)"); }
   if(name==="guardar_memoria"){ const et={perfil:"🧍 Perfil",aprendizaje:"💡 Aprendizaje",preferencia:"⭐ Preferencia",patron:"📊 Patrón",resultado:"📓 Resultado"}; return "🧠 Roberto quiere RECORDAR esto en su memoria:\n"+(et[i.tipo]||"💡 Aprendizaje")+"\n“"+(i.texto||"")+"”"; }
   if(name==="borrar_memoria") return "🗑️ Roberto quiere BORRAR de su memoria el dato "+(i.id||"?");
   return name+" "+JSON.stringify(i);
@@ -4702,6 +4724,15 @@ async function ejecutarTool(name, i){
       if(i.target) params.target=i.target;
       return await enviarComando(name, params);
     }
+    if(name==="organizar_chat"){
+      const c=iaConvAct(); if(!c) return {ok:false,msg:"No hay chat activo"};
+      const ch=[];
+      if(i.fijar!=null){ c.fijado=!!i.fijar; ch.push(c.fijado?"📌 fijado":"quité el fijado"); }
+      if(i.estrella!=null){ c.estrella=!!i.estrella; ch.push(c.estrella?"⭐ importante":"quité la estrella"); }
+      if(i.revisar!=null){ c.revisar=!!i.revisar; ch.push(c.revisar?"🔍 por revisar":"quité el 'por revisar'"); }
+      iaGuardarConvs(); try{ renderConvList(); }catch(_){}
+      return {ok:true,msg:"Organicé este chat: "+(ch.join(", ")||"sin cambios")};
+    }
     if(name==="guardar_memoria"){
       const texto=String(i.texto||"").trim();
       if(!texto) return {ok:false,msg:"No había nada que recordar"};
@@ -4767,6 +4798,10 @@ function histRobertoModal(){
 }
 /* Muestra la tarjeta de confirmación y espera la decisión de Rey */
 function confirmarTool(tu){
+  // 🗂️ Organizar chats: automático, SIN tarjeta (Rey pidió autonomía). Reversible y de bajo riesgo.
+  if(tu.name==="organizar_chat"){
+    return (async()=>{ let res; try{ res=await ejecutarTool(tu.name, tu.input); }catch(e){ res={ok:false,msg:"Error: "+e}; } if(res&&res.ok) toast(res.msg); return {confirmed:true, res}; })();
+  }
   return new Promise(resolve=>{
     const cont=$("#iaMsgs"); if(!cont){ resolve({confirmed:false}); return; }
     const card=el("div","ia-tool");
