@@ -4151,13 +4151,37 @@ function iaVozRefrescarUI(){
   iaPintarVoces();
 }
 
+/* Saludo natural según la hora real de Rey (reloj del teléfono, zona Brasil).
+   Hace que al abrir a Roberto salude como un compañero: "Buenos días… ¿en qué
+   vamos a trabajar hoy?", cambiando mañana / tarde / noche y el día de la semana. */
+function saludoRey(){
+  const now=new Date();
+  let h=now.getHours(), wd="";
+  try{
+    const p=new Intl.DateTimeFormat("en-US",{timeZone:"America/Sao_Paulo",hour:"2-digit",hour12:false,weekday:"long"}).formatToParts(now);
+    p.forEach(x=>{ if(x.type==="hour")h=+x.value; if(x.type==="weekday")wd=x.value; });
+  }catch(_){}
+  const dias={Monday:"lunes",Tuesday:"martes",Wednesday:"miércoles",Thursday:"jueves",Friday:"viernes",Saturday:"sábado",Sunday:"domingo"};
+  const dia=dias[wd]||"";
+  let saludo, emoji, franja;
+  if(h>=5 && h<12){ saludo="Buenos días"; emoji="☀️"; franja="esta mañana"; }
+  else if(h>=12 && h<19){ saludo="Buenas tardes"; emoji="🌤️"; franja="esta tarde"; }
+  else { saludo="Buenas noches"; emoji="🌙"; franja="esta noche"; }
+  const finde=(wd==="Saturday"||wd==="Sunday");
+  const cierre = finde
+    ? `Hoy es ${dia} — el mercado FX está cerrado, buen momento para repasar, analizar o preparar la semana. ¿Qué quieres hacer ${franja}?`
+    : `¿En qué vamos a trabajar ${franja}${dia?`, este ${dia}`:""}? Cuéntame qué tienes en el gráfico o pregúntame lo que sea.`;
+  return { saludo, emoji, cierre };
+}
+
 function pintarIAChat(){
   const m=$("#iaMsgs"); if(!m) return;
   const c=iaConvAct();
   if(!c.msgs.length && !IA.busy){
-    m.innerHTML=`<div class="ia-welcome"><div class="ia-w-emoji">🧠</div>
-      <div class="ia-w-t">Soy Roberto, tu mentor</div>
-      <div class="ia-w-s">Conozco tu estrategia CRT, tu indicador, tus reglas y tus datos. Domino trading, finanzas, interés compuesto y las empresas de fondeo. Pregúntame lo que sea o mándame una foto de tu gráfico. Si te equivocas, te lo digo claro: estoy para que mejores.</div></div>`;
+    const s=saludoRey();
+    m.innerHTML=`<div class="ia-welcome"><div class="ia-w-emoji">${s.emoji}</div>
+      <div class="ia-w-t">${s.saludo}, Rey — soy Roberto</div>
+      <div class="ia-w-s">${s.cierre} Conozco tu estrategia CRT, tu indicador, tus reglas y tus datos, y domino trading, finanzas, interés compuesto y las empresas de fondeo. Si te equivocas, te lo digo claro: estoy para que mejores.</div></div>`;
     return;
   }
   m.innerHTML=c.msgs.map((x,i)=>{
