@@ -4472,8 +4472,25 @@ function describeTool(name, i){
   if(name==="borrar_memoria") return "🗑️ Roberto quiere BORRAR de su memoria el dato "+(i.id||"?");
   return name+" "+JSON.stringify(i);
 }
+/* Envía un comando al Puente (por la nube) y ESPERA su resultado real (hasta ~32s,
+   el puente consulta cada ~20s). Así Roberto sabe si de verdad se aplicó o si el
+   Puente no estaba encendido — no más "listo" falso. */
+async function enviarComando(action, params){
+  const cid="c"+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+  try{ await fetch(nubeUrl()+"/cmd/enqueue",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({id:cid,action,params})}); }
+  catch(_){ return {ok:false,msg:"No pude enviar la orden (sin conexión con la nube)."}; }
+  for(let t=0;t<16;t++){
+    await new Promise(r=>setTimeout(r,2000));
+    try{
+      const r=await fetch(nubeUrl()+"/cmd/get?id="+encodeURIComponent(cid),{cache:"no-store"});
+      const d=await r.json();
+      if(d && d.ok && d.result) return { ok: !!d.result.ok, msg: d.result.msg || (d.result.ok?"Hecho":"No se pudo") };
+    }catch(_){}
+  }
+  return {ok:false,msg:"El Puente no respondió — la orden NO se aplicó. Enciende tu PC con el Puente Apex corriendo y vuelve a intentarlo."};
+}
 /* Ejecuta la acción (solo se llama TRAS la confirmación de Rey) */
-function ejecutarTool(name, i){
+async function ejecutarTool(name, i){
   i=i||{};
   try{
     if(name==="crear_aviso"){
@@ -4591,10 +4608,8 @@ function ejecutarTool(name, i){
     }
     if(name==="ajustar_indicador"){
       if(!i.ajuste || i.valor===undefined || i.valor===null || i.valor==="") return {ok:false,msg:"Falta el ajuste o el valor"};
-      const cid="c"+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
       const params={ ajuste:i.ajuste, valor:i.valor }; if(i.target) params.target=i.target;
-      try{ fetch(nubeUrl()+"/cmd/enqueue",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({id:cid,action:"ajustar_indicador",params})}).catch(()=>{}); }catch(_){}
-      return {ok:true, msg:"Ajuste enviado al Puente. Se aplica en tu indicador en unos segundos (PC con Puente encendido)."};
+      return await enviarComando("ajustar_indicador", params);
     }
     if(name==="cambiar_par" || name==="cambiar_temporalidad" || name==="cambiar_tipo_grafico"){
       const map={ cambiar_par:"set_symbol", cambiar_temporalidad:"set_timeframe", cambiar_tipo_grafico:"set_chart_type" };
@@ -4604,9 +4619,7 @@ function ejecutarTool(name, i){
       if(name==="cambiar_tipo_grafico") params.chart_type=i.chart_type;
       if(i.target) params.target=i.target;
       if((name==="cambiar_par"&&!i.symbol)||(name==="cambiar_temporalidad"&&!i.timeframe)||(name==="cambiar_tipo_grafico"&&!i.chart_type)) return {ok:false,msg:"Falta el dato para la orden"};
-      const cid="c"+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
-      try{ fetch(nubeUrl()+"/cmd/enqueue",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({id:cid,action:map[name],params})}).catch(()=>{}); }catch(_){}
-      return {ok:true, msg:"Orden enviada al Puente. Se aplica en tu gráfico en unos segundos (necesita la PC encendida con el Puente Apex)."};
+      return await enviarComando(map[name], params);
     }
     if(name==="guardar_memoria"){
       const texto=String(i.texto||"").trim();
@@ -4680,7 +4693,7 @@ function confirmarTool(tu){
       <div class="ia-tool-d">${esc(describeTool(tu.name, tu.input)).replace(/\n/g,"<br>")}</div>
       <div class="ia-tool-bar"><button class="btn danger ia-tool-no">Cancelar</button><button class="btn gold ia-tool-si">✓ Confirmar</button></div>`;
     cont.appendChild(card); cont.scrollTop=cont.scrollHeight;
-    card.querySelector(".ia-tool-si").onclick=()=>{ card.querySelector(".ia-tool-bar").innerHTML="<span class='ia-tool-done'>✓ Confirmado</span>"; const res=ejecutarTool(tu.name, tu.input); if(res&&res.ok) logRoberto(res.msg); resolve({confirmed:true, res}); };
+    card.querySelector(".ia-tool-si").onclick=async ()=>{ const bar=card.querySelector(".ia-tool-bar"); bar.innerHTML="<span class='ia-tool-done'>⏳ Ejecutando…</span>"; let res; try{ res=await ejecutarTool(tu.name, tu.input); }catch(e){ res={ok:false,msg:"Error: "+e}; } if(res&&res.ok) logRoberto(res.msg); bar.innerHTML="<span class='ia-tool-done'>"+((res&&res.ok)?"✓ Hecho":"⚠️ No se aplicó")+"</span>"; resolve({confirmed:true, res}); };
     card.querySelector(".ia-tool-no").onclick=()=>{ card.querySelector(".ia-tool-bar").innerHTML="<span class='ia-tool-cancel'>🚫 Cancelado</span>"; resolve({confirmed:false}); };
   });
 }
