@@ -3171,7 +3171,9 @@ function fillPlanDinamico(){
    Registro de exámenes/fondeadas/reales/propias con sus reglas,
    rendimiento (conectado al Diario), interés compuesto y notas.
    ============================================================ */
-const FASES = ["Examen F1","Examen F2","Fondeada","Real","Propia"];
+const FASES = ["Examen F1","Examen F2","Fondeada","Real","Propia","Demo"];
+/* Fases que NO entran en la cadena de "avanzar" (no son de reto): capital propio y demo. */
+const FASES_SIN_AVANCE = ["Propia","Demo"];
 const FIRMAS_SUG = ["FTMO","FundedNext","The5ers","E8 Markets","FTUK","MyFundedFX","Alpha Capital","Funding Pips","Otra"];
 /* Reglas TÍPICAS de reto (2 fases) por firma — relleno instantáneo offline.
    Son valores aproximados y editables; Roberto puede traer los exactos. */
@@ -3265,7 +3267,7 @@ async function rellenarReglasIA(){
     if(btn){ btn.disabled=false; btn.textContent="🤖 Traer reglas con Roberto"; }
   }
 }
-function faseColor(f){ return /Fondeada/.test(f)?"var(--green)":/Real/.test(f)?"var(--blue)":/Propia/.test(f)?"var(--purple)":"var(--orange)"; }
+function faseColor(f){ return /Demo/.test(f)?"var(--txt3)":/Fondeada/.test(f)?"var(--green)":/Real/.test(f)?"var(--blue)":/Propia/.test(f)?"var(--purple)":"var(--orange)"; }
 function faseBadge(f){ const col=faseColor(f); return `<span class="cta-badge" style="color:${col};border-color:${col}">${esc(f||"—")}</span>`; }
 
 /* Rendimiento de una cuenta a partir de sus trades ligados + sus datos */
@@ -3305,7 +3307,9 @@ function guardianRiesgo(){
     const margenDia=ddDaily>0?Math.max(0,ddDaily-usadoDia):null;
     const usadoTot=st.progresoPct<0?Math.abs(st.progresoPct):0;
     const margenTot=ddMax>0?Math.max(0,ddMax-usadoTot):null;
+    const esDemo=/Demo/i.test(c.fase||"");
     s+="── "+(c.alias||c.firma||"Cuenta")+" ("+(c.firma||"?")+" · "+(c.fase||"?")+") ──\n";
+    if(esDemo) s+="  (DEMO = PRÁCTICA: exígele la MISMA disciplina y reglas para entrenar el plan, pero SIN el miedo del dinero real; enfoque de práctica, no de supervivencia de capital.)\n";
     s+="  Riesgo/trade "+riesgoPct+"% · Trades hoy "+hoyT.length+"/2 · SL hoy "+slHoy+"\n";
     s+="  HOY: "+(diaPct>=0?"+":"")+r1(diaPct)+"%"+(ddDaily>0?(" · límite -"+ddDaily+"% · margen "+r1(margenDia)+"% "+sem(usadoDia,ddDaily)):"")+"\n";
     s+="  TOTAL: "+(st.progresoPct>=0?"+":"")+r1(st.progresoPct)+"%"+(ddMax>0?(" · DD máx -"+ddMax+"% ("+(c.ddTipo||"?")+") · margen "+r1(margenTot)+"% "+sem(usadoTot,ddMax)):"")+"\n";
@@ -3446,10 +3450,12 @@ function tarjetaCuenta(c){
 
 function avanzarFase(id){
   const c=CUENTAS.find(x=>x.id===id); if(!c) return;
-  const i=FASES.indexOf(c.fase);
-  if(i<0 || i>=FASES.length-1){ toast("Ya está en la fase final"); return; }
-  if(!confirm(`¿Pasar "${c.alias||c.firma}" de ${c.fase} a ${FASES[i+1]}?`)) return;
-  c.fase=FASES[i+1]; guardarCuentas(); refrescarCuentas(); toast("Fase actualizada ✓");
+  if(FASES_SIN_AVANCE.includes(c.fase)){ toast(c.fase==="Demo"?"Una demo no avanza de fase":"El capital propio no avanza de fase"); return; }
+  const chain=FASES.filter(f=>!FASES_SIN_AVANCE.includes(f)); // Examen F1→F2→Fondeada→Real
+  const i=chain.indexOf(c.fase);
+  if(i<0 || i>=chain.length-1){ toast("Ya está en la fase final"); return; }
+  if(!confirm(`¿Pasar "${c.alias||c.firma}" de ${c.fase} a ${chain[i+1]}?`)) return;
+  c.fase=chain[i+1]; guardarCuentas(); refrescarCuentas(); toast("Fase actualizada ✓");
   robertoVigila("Avanzó de fase la cuenta "+(c.alias||c.firma)+": ahora en "+c.fase+".");
 }
 function borrarCuenta(id){
@@ -3548,7 +3554,7 @@ function guardarCuentaForm(id){
 /* Resumen de cuentas para Roberto (acceso total) */
 function iaCuentas(){
   if(!CUENTAS.length) return "\n[CUENTAS DE FONDEO de Rey: en este momento hay 0 cuentas guardadas en Apex. IMPORTANTE: NO digas 'no me llegó el bloque de cuentas' — el bloque SÍ te llegó, y dice que no hay ninguna registrada. Si Rey te habla de sus cuentas, dile con naturalidad que aún NO las ves registradas en Apex y ofrécete a registrarlas TÚ con tu mano crear_cuenta (pídele firma, capital, fase y el % o monto de pérdida actual de cada una, y créalas con tu tarjeta de confirmación). Nunca le pidas que 'busque el dato él'.]\n";
-  let s="\n[CUENTAS DE FONDEO de Rey — tienes acceso total; ayúdalo a gestionarlas, protegerlas y escalar con interés compuesto y diversificación]:\n";
+  let s="\n[CUENTAS de Rey (pueden ser de FONDEO/examen, CAPITAL PROPIO/real, o DEMO de práctica) — tienes acceso total; trátalas por SEPARADO, cada una con las reglas de SU firma y su clasificación. Ayúdalo a gestionarlas, protegerlas y escalar]:\n";
   CUENTAS.forEach(c=>{
     const st=statsCuenta(c);
     s+=`· ${c.alias||c.firma||"Cuenta"} (${c.firma||"?"}, ${c.fase}): capital $${r0(st.cap)}, balance ~$${r0(st.balance)} (P&L ${st.pl>=0?"+":""}$${r0(st.pl)}, ${r1(st.progresoPct)}% de ${c.targetPct||"?"}% objetivo). DD máx ${c.ddMaxPct||"?"}%${c.ddTipo?" "+c.ddTipo:""}, daily ${c.ddDailyPct||"?"}%, riesgo ${c.riesgoPct||"?"}%/trade.`;
@@ -3594,6 +3600,8 @@ const IA_SYSTEM_BASE =
 "- DIBUJAR EN EL GRÁFICO (por el Puente, con aprobación): puedes MARCAR el gráfico de Rey con estas manos: dibujar_linea (un nivel horizontal: resistencia, soporte, PDH/PDL, liquidez, objetivo), dibujar_zona (un rango: Premium/Discount, order block, FVG, POI — pasas precio_alto y precio_bajo), dibujar_texto (una nota corta a un precio), marcar_entrada (una flecha de entrada/reacción: direccion 'compra' = flecha verde arriba, 'venta' = flecha roja abajo, en la temporalidad de gatillo) y borrar_dibujos (borra SOLO lo tuyo por defecto; todo=true borra TODO). Úsalas para señalarle a Rey una zona de interés, un punto donde esperar reacción, o un buen punto de entrada — leyendo antes el precio y los niveles del GRÁFICO EN VIVO para que los precios tengan sentido. SIEMPRE con su aprobación (tarjeta) y con la PC+Puente encendidos. Cuando marques, di en una línea POR QUÉ ahí (ej. 'te marco la zona Premium 15m: si barre y da MSS bajista, es tu venta'). COLOR AUTOMÁTICO: NO necesitas pasar 'color' — los dibujos ADAPTAN su color al fondo del gráfico (si Rey tiene fondo claro u oscuro, el puente lo detecta y elige el contraste correcto). Pasa 'color' SOLO si Rey pide un color concreto.\n"+
 "- ⚖️ DISCIPLINA Y REGLAS — ES TU MISIÓN #1 CON REY (él te lo pidió expresamente): su punto DÉBIL es la disciplina y respetar las reglas, y para él es lo MÁS importante para lograrlo. Sé su GUARDIÁN, no solo su analista. La disciplina, el orden y la estructura van ANTES que cualquier análisis. MÁRCALE SIEMPRE y EXÍGELE (con respeto pero con firmeza): respetar sus HORARIOS y rutina (incluida la evaluación de la tarde y el cierre de semana — son parte de su disciplina, no opcionales) y las VENTANAS/killzones; y las REGLAS de CRT Elite (SIN SWEEP=SIN SETUP, esperar la vela de confirmación CERRADA, nunca entrar en el toque, solo A+/B, riesgo 0.5%, máx 2 trades/día, no operar contra el sesgo del día ni fuera de zona Premium/Discount, nada 30 min alrededor de noticia roja, respetar el límite de pérdida diaria). Si ves que se salta —o va a saltarse— una regla, un horario o su estructura, PÁRALO y díselo en la 1ª línea, sin suavizarlo. Recuérdale que el mejor análisis no sirve sin disciplina.\n"+
 "- 🛡️ GUARDIÁN DE RIESGO: en cada mensaje tienes el bloque [🛡️ GUARDIÁN DE RIESGO] con el estado EN VIVO de sus cuentas de fondeo: pérdida del día vs límite DIARIO, drawdown total vs DD máximo, trades y SL de hoy, y semáforos (🟢/🟡/🔔/🔴). ES TU DEBER usarlo: ANTES de respaldar CUALQUIER entrada, comprueba que cabe en el margen diario que le queda; si no cabe, dile que NO. Si el semáforo diario o total está 🟡/🔔, avísale y frena las entradas nuevas de hoy; si está 🔴, o ya lleva 2 trades / 2 SL, EXÍGELE cerrar la plataforma en la 1ª línea. Estas cuentas son su capital y las tiene en riesgo — protegerlas va ANTES que cualquier operación. Nunca lo animes a 'recuperar' lo perdido con más riesgo (eso es revancha).\n"+
+"- CADA CUENTA ES DISTINTA — trátalas por SEPARADO y ADÁPTATE a su clasificación y a las reglas de SU firma/broker (no todas son de fondeo): (a) EXAMEN/FONDEADA (FundedNext, FTMO, etc.) = capital y reto reales, reglas estrictas de la firma (DD diario, DD máx estático o trailing, target, días mínimos, consistencia): protégelas al máximo. (b) CAPITAL PROPIO/REAL = su dinero real: protección total. (c) DEMO (p.ej. su Pepperstone demo) = PRÁCTICA: exígele EXACTAMENTE la misma disciplina, plan y reglas (para entrenar), pero sin el miedo del dinero real — es el lugar ideal para practicar el plan y probar cosas nuevas SIN arriesgar las fondeadas. Evalúa y aprende de TODAS por igual, pero cada una con su vara. Cuando Rey registre o te hable de una cuenta, identifica su tipo y háblale acorde.\n"+
+"- CONOCIMIENTO DE BROKERS Y FIRMAS: domina ampliamente los BROKERS de Rey (Pepperstone y su otro broker) y las EMPRESAS DE FONDEO (FundedNext, FTMO, The5ers, E8, FTUK, Funding Pips, etc.): sus modelos, tipos de cuenta, spreads/comisiones, ejecución, y las REGLAS de cada reto (DD diario/máximo, estático vs trailing, targets, días mínimos, consistencia, payout/split). Si no estás seguro de la regla EXACTA o actual de una firma/broker/modelo, BÚSCALA en internet y dale el dato correcto y actualizado — NO te quedes colgado ni inventes; dile de dónde sale y que confirme en la web oficial si hay duda.\n"+
 "- 🗂️ ORGANIZA TUS CHATS (mano organizar_chat, AUTOMÁTICA, sin tarjeta): tienes 3 carpetas — 📌 Fijados (temas EN CURSO a tener a mano), ⭐ Importantes (lecciones o decisiones CLAVE) y 🔍 Por revisar (algo pendiente que Rey debe repasar contigo). Con CRITERIO propio, marca ESTA conversación cuando lo merezca (p.ej. una lección o regla importante que acordaron → ⭐; un plan/análisis en curso → 📌; algo que quedó pendiente de repasar → 🔍) y QUÍTALE la marca cuando deje de aplicar. Hazlo tú mismo, sin pedir permiso (es reversible y Rey también las toca a mano). No abuses: solo lo que de verdad aporte orden. Así el chat de Roberto queda estructurado, no suelto.\n"+
 "- TU MEMORIA PERMANENTE: tienes una memoria propia (si ya hay datos guardados, te aparecen en el contexto con su id entre paréntesis). Sirve para ADAPTARTE y APRENDER de Rey con el tiempo. Cuando descubras algo VERDADERAMENTE relevante y NUEVO para tu aprendizaje sobre él (su forma de operar, su psicología, una preferencia, un patrón o una lección importante) que NO esté ya en tus reglas/plan/contexto, propón guardarlo. **MUY IMPORTANTE — cómo se propone:** LLAMA DIRECTAMENTE a la mano guardar_memoria. NO preguntes en texto '¿quieres que lo guarde?' ni digas 'lo anoto' sin llamar a la mano: la ÚNICA forma de proponer y pedir permiso es LLAMANDO a la mano — al hacerlo, a Rey le aparece una tarjeta para APROBAR o RECHAZAR, y solo se guarda si él aprueba. Filtra con CRITERIO: no guardes todo ni trivialidades ni cosas de un solo momento, solo lo que de verdad te servirá a futuro. Si Rey te dice explícitamente 'recuerda que X' y X es algo nuevo (no ya en tus reglas), LLAMA a guardar_memoria para proponerlo. Si algo que recordabas ya no es cierto, LLAMA a borrar_memoria (con su id). Nunca pidas permiso por texto para la memoria: siempre con la mano.\n"+
 "- RESPONDE PRIMERO, en la PRIMERA línea, la pregunta concreta que te hace, decidido (SÍ / NO / el dato exacto). Después el detalle. Nunca entierres la respuesta al final ni la dejes ambigua.\n"+
