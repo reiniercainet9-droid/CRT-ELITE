@@ -200,7 +200,7 @@ if(!ESTRATEGIAS.includes(CTX.estrategia)) CTX.estrategia = ESTRATEGIAS[0];
 
 /* Cuentas de fondeo/reales/propias registradas (v4.6) */
 let CUENTAS = load(K.cuentas, []);
-function guardarCuentas(){ save(K.cuentas, CUENTAS); }
+function guardarCuentas(){ save(K.cuentas, CUENTAS); if(typeof syncRiesgo==="function") syncRiesgo(); }
 
 /* Pares que sigue Rey (configurables; con el puente vendrán de TradingView) */
 let PARES = load(K.pares, ["EUR/USD","GBP/USD"]);
@@ -3388,6 +3388,42 @@ function guardianRiesgo(){
   s+="REGLA: si ves 🟡/🔔, avísaselo y frena las entradas nuevas de hoy; si ves 🔴, EXÍGELE cerrar/parar en la 1ª línea. Antes de respaldar CUALQUIER entrada, comprueba que cabe en el margen diario. La disciplina va PRIMERO.]";
   return s;
 }
+/* 🛡️ GUARDIÁN PROACTIVO — resumen compacto del PELIGRO de cada cuenta REAL (no demo),
+   para sincronizar a la nube y que te avise (app cerrada) al acercarte al límite. */
+function riesgoResumen(){
+  const cuentas=(Array.isArray(CUENTAS)?CUENTAS:[]).filter(c=>c.fase!=="Cerrada" && !/Demo/i.test(c.fase||""));
+  const hoy=hoyISO();
+  const nivel=(usado,limite)=>{ if(!(limite>0)) return 0; const fl=(limite-usado)/limite; if(fl<=0) return 3; if(fl<=0.3) return 2; if(fl<=0.5) return 1; return 0; };
+  const out=[];
+  cuentas.forEach(c=>{
+    const st=statsCuenta(c);
+    const riesgoPct=+c.riesgoPct||0.5;
+    const hoyT=TRADES.filter(t=>t.cuenta===c.id && t.fecha===hoy && !t.abierta);
+    const rHoy=hoyT.reduce((a,t)=>a+(parseFloat(t.r)||0),0);
+    const diaPct=rHoy*riesgoPct;
+    const ddDaily=+c.ddDailyPct||0, ddMax=+c.ddMaxPct||0;
+    const usadoDia=diaPct<0?Math.abs(diaPct):0;
+    const usadoTot=st.progresoPct<0?Math.abs(st.progresoPct):0;
+    const margenDia=ddDaily>0?Math.max(0,ddDaily-usadoDia):null;
+    const margenTot=ddMax>0?Math.max(0,ddMax-usadoTot):null;
+    const peor=Math.max(ddDaily>0?nivel(usadoDia,ddDaily):0, ddMax>0?nivel(usadoTot,ddMax):0);
+    out.push({ alias:(c.alias||c.firma||"Cuenta"), peor, mDia:margenDia!=null?+r1(margenDia):null, mTot:margenTot!=null?+r1(margenTot):null });
+  });
+  return out;
+}
+/* Sincroniza a la nube el estado de riesgo (para el aviso proactivo con la app cerrada). */
+function syncRiesgo(){
+  try{
+    const r=riesgoResumen();
+    if(typeof nubeUrl==="function") fetch(nubeUrl()+"/riesgo",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({cuentas:r})}).catch(()=>{});
+  }catch(_){}
+}
+/* Al tocar la notificación del guardián, Roberto revisa el riesgo y te frena. */
+function revisarRiesgo(){
+  if(typeof abrirIA==="function") abrirIA();
+  setTimeout(()=>iaEnviar("🛡️ Revisemos el riesgo de mis cuentas ahora.",
+    "Rey abrió esto desde un AVISO del Guardián de Riesgo. Con el bloque [🛡️ GUARDIÁN DE RIESGO] del contexto: dile CLARO en la 1ª línea cuál cuenta está en peligro y cuánto margen le queda (diario y total), y qué hacer YA para PROTEGERLA (parar, cerrar plataforma, no operar hoy). Recuérdale que proteger el capital va ANTES que cualquier operación y que recuperar se hace SOBREVIVIENDO, no forzando. Breve, firme, honesto."),250);
+}
 
 function viewCuentas(){
   const v=el("div","view"); v.id="v-cuentas";
@@ -3832,7 +3868,7 @@ function evalSemana(){
   const data=ts.length?tradesTexto(ts):"(No hay trades cerrados en los últimos 7 días.)";
   iaEnviar("🤖 Hazme el CIERRE de mi semana.", EVAL_SEMANA_PROM+"\n\nSUS TRADES DE LA SEMANA (desde "+cut+"):\n"+data);
 }
-function iaProactivo(seed){ if(seed==="eval_dia") return evalDia(); if(seed==="eval_semana") return evalSemana(); if(seed==="revisar_pendientes") return revisarPendientes(); }
+function iaProactivo(seed){ if(seed==="eval_dia") return evalDia(); if(seed==="eval_semana") return evalSemana(); if(seed==="revisar_pendientes") return revisarPendientes(); if(seed==="revisar_riesgo") return revisarRiesgo(); }
 
 let _iaConoc = null;
 /* Arma el bloque de conocimiento (estrategia + indicador + perfil) desde los
@@ -4751,7 +4787,7 @@ async function ejecutarTool(name, i){
         par:i.par||"?", dir:i.dir||"", setup:i.setup||"", res:i.res||(R>0?"Ganado":(R<0?"Perdido":"BE")), r:R,
         ventana:i.ventana||"", momento:i.momento||"", bias:i.bias||"", nconf:parseInt(i.nconf)||0,
         plan:i.plan||"Sí", emo:"", nota:i.nota||"", cuenta:i.cuenta||"", fueraLimite:false, confs:[] };
-      TRADES.push(t); save(K.trades,TRADES); if(typeof refrescarDiarioCtx==="function") refrescarDiarioCtx(); notifChequearCuentasDD();
+      TRADES.push(t); save(K.trades,TRADES); if(typeof refrescarDiarioCtx==="function") refrescarDiarioCtx(); notifChequearCuentasDD(); syncRiesgo();
       return {ok:true,msg:"Trade registrado: "+t.par+" "+(t.dir||"")+" "+(t.res||"")+" "+t.r+"R ("+(t.setup||"?")+", "+(t.momento||"?")+")"};
     }
     if(name==="registrar_entrada"){
@@ -5234,6 +5270,7 @@ function init(){
   iaInit();          /* inicializa el puente (IA.url) ANTES de mostrar Noticias, que lo necesita */
   iaResumePend();    /* recupera respuestas de Roberto que terminaron con la app cerrada */
   setTimeout(syncPendientes, 1500);   /* informa a la nube cuántas cosas 🔍 hay pendientes (para el aviso periódico) */
+  setTimeout(syncRiesgo, 1800);        /* informa a la nube el estado de riesgo de las cuentas (Guardián proactivo) */
   try{ nubeRestaurar(true); }catch(_){}  /* ☁️ si la nube tiene datos más nuevos (otro teléfono), restaura solo */
   /* Al volver a la app (no cerrarla del todo), recupera lo que haya terminado */
   document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible") iaResumePend(); });
