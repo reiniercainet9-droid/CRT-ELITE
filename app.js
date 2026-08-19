@@ -272,6 +272,9 @@ function iaRacha(){
   if(r.motivo) return "[🏆 RACHA DE DISCIPLINA: se CORTÓ ("+r.motivo+"). Sin drama: anímalo a arrancar una racha nueva HOY — cada día disciplinado suma.]";
   return "";
 }
+/* 💰 PAYOUTS Y ESCALADO — Roberto arma el plan para escalar cuentas con las ganancias REALES. */
+const ESCALADO_PROM = "Rey quiere su PLAN DE ESCALADO de cuentas de fondeo. Con sus CUENTAS reales del contexto (capital, fase, progreso, RETIROS ya cobrados) y su rendimiento real: (1) foto honesta de dónde está el negocio HOY (cuentas, fases, ganancias reales retiradas); (2) el CAMINO de escalado: qué tiene que pasar (en números: % objetivo, disciplina) para el siguiente paso — pasar examen, primer payout, o comprar la SIGUIENTE cuenta; (3) regla de oro del escalado: las cuentas nuevas se compran con GANANCIAS retiradas (no con dinero fresco si se puede evitar), y diversificar de firma cuando haya base; (4) si sus cuentas están en recuperación, sé claro: primero PROTEGER y recuperar, después escalar — sin prisa. Tabla si ayuda. Realista, sin humo: este es el plan de negocio de Rey.";
+function escaladoRoberto(){ if(typeof abrirIA==="function") abrirIA(); iaTemaChat("💰 Payouts y escalado"); setTimeout(()=>iaEnviar("💰 Hazme mi plan de payouts y escalado de cuentas.", ESCALADO_PROM),250); }
 /* 🌅 PARTE MATUTINO HABLADO — al abrir la app por la mañana (1 vez al día), Roberto da el
    resumen del día EN VOZ: saludo, ventanas de hoy, noticias clave, plan semanal, estado de
    cuentas/disciplina y pendientes. Corto y accionable, como un briefing de mentor. */
@@ -4117,9 +4120,33 @@ function iaConvItemHTML(c){
     <div class="ia-conv-d">${fecha} · ${c.msgs.filter(m=>m.role==="user").length} preg.</div></div>
     <div class="ia-conv-flags">${fb("fijado",c.fijado,"📌","Fijar")}${fb("estrella",c.estrella,"⭐","Importante")}${fb("revisar",c.revisar,"🔍","Por revisar")}<button class="ia-conv-x" data-del="${c.id}" aria-label="Borrar">🗑️</button></div></div>`;
 }
+/* 🔎 BUSCADOR de chats y memoria */
+let _iaMemCache=null;
+function iaBuscarMemoria(q){
+  const out=$("#iaMemHits"); if(!out) return;
+  if(!q){ out.innerHTML=""; return; }
+  const pinta=(entries)=>{
+    const hits=(entries||[]).filter(e=>String(e.texto||"").toLowerCase().includes(q)).slice(0,5);
+    out.innerHTML = hits.length ? `<div class="ia-conv-fold">🧠 En la memoria de Roberto · ${hits.length}</div>`+
+      hits.map(e=>`<div class="note" style="text-align:left;margin:0 0 6px;font-size:12.5px">${esc(e.texto)}</div>`).join("") : "";
+  };
+  if(_iaMemCache){ pinta(_iaMemCache); return; }
+  try{ fetch(nubeUrl()+"/mem",{cache:"no-store"}).then(r=>r.json()).then(d=>{ _iaMemCache=(d&&d.entries)||[]; pinta(_iaMemCache); }).catch(()=>{}); }catch(_){}
+}
 function renderConvList(){
   const box=$("#iaConvList"); if(!box) return;
   if(!IA.convs.length){ box.innerHTML=`<div class="note" style="text-align:left">Aún no tienes conversaciones guardadas.</div>`; return; }
+  const q=($("#iaBuscar")?.value||"").trim().toLowerCase();
+  if(q){
+    iaBuscarMemoria(q);
+    const hits=IA.convs.filter(c=> iaTit(c).toLowerCase().includes(q) || (c.msgs||[]).some(m=>String(m.content||"").toLowerCase().includes(q)) ).sort((a,b)=>b.ts-a.ts);
+    box.innerHTML = (hits.length?`<div class="ia-conv-fold">💬 Chats que coinciden · ${hits.length}</div>`+hits.map(iaConvItemHTML).join(""):`<div class="note" style="text-align:left">Sin chats que coincidan con “${esc(q)}”.</div>`);
+    box.querySelectorAll("[data-sel]").forEach(b=>b.onclick=()=>iaSelConv(b.dataset.sel));
+    box.querySelectorAll("[data-del]").forEach(b=>b.onclick=(e)=>{ e.stopPropagation(); iaDelConv(b.dataset.del); });
+    box.querySelectorAll("[data-flag]").forEach(b=>b.onclick=(e)=>{ e.stopPropagation(); iaToggleFlag(b.dataset.fid, b.dataset.flag); });
+    return;
+  }
+  const mh=$("#iaMemHits"); if(mh) mh.innerHTML="";
   const byTs=(a,b)=>b.ts-a.ts;
   const fij=IA.convs.filter(c=>c.fijado).sort(byTs);
   const imp=IA.convs.filter(c=>!c.fijado&&c.estrella).sort(byTs);
@@ -4167,6 +4194,8 @@ function iaInit(){
       <div class="ia-cfg" id="iaConvsBox" style="display:none">
         <div class="ia-cfg-h"><div class="fl" style="margin:0">Tus conversaciones</div>
           <button class="btn gold ia-mini" id="iaNew2">✚ Nueva</button></div>
+        <input class="inp" id="iaBuscar" placeholder="🔎 Buscar en chats y memoria…" style="margin:0 0 8px" autocomplete="off">
+        <div id="iaMemHits"></div>
         <div class="ia-conv-list" id="iaConvList"></div>
       </div>
       <div class="ia-cfg" id="iaCfgBox" style="display:none">
@@ -4217,6 +4246,7 @@ function iaInit(){
         <button class="ia-chip" data-act="checkemo">🧠 Check antes de operar</button>
         <button class="ia-chip" data-act="gonogo">✅ GO/NO-GO</button>
         <button class="ia-chip" data-act="progreso">📊 Mi progreso</button>
+        <button class="ia-chip" data-act="escalado">💰 Escalado</button>
         <button class="ia-chip" data-act="parte">🌅 Parte del día</button>
         <button class="ia-chip" data-act="comparar">⚖️ Comparar pares</button>
         <button class="ia-chip" data-act="replay">🎬 Práctica Replay</button>
@@ -4245,7 +4275,8 @@ function iaInit(){
   ov.onclick=(e)=>{ if(e.target===ov) cerrarIA(); };
   $("#iaNew").onclick=iaNuevaConv;
   $("#iaNew2").onclick=iaNuevaConv;
-  $("#iaConvs").onclick=()=>{ const b=$("#iaConvsBox"); const show=b.style.display==="none"; $("#iaCfgBox").style.display="none"; b.style.display=show?"block":"none"; if(show) renderConvList(); };
+  $("#iaConvs").onclick=()=>{ const b=$("#iaConvsBox"); const show=b.style.display==="none"; $("#iaCfgBox").style.display="none"; b.style.display=show?"block":"none"; if(show){ _iaMemCache=null; renderConvList(); } };
+  const bq=$("#iaBuscar"); if(bq){ let _bqT=null; bq.addEventListener("input",()=>{ clearTimeout(_bqT); _bqT=setTimeout(renderConvList,250); }); }
   $("#iaCfg").onclick=()=>{ const b=$("#iaCfgBox"); const show=b.style.display==="none"; $("#iaConvsBox").style.display="none"; b.style.display=show?"block":"none"; if(show){ $("#iaUrl").value=IA.url; iaVozRefrescarUI(); notifRefrescarUI(); } };
   /* Controles de notificaciones */
   const nt=$("#iaNotifToggle");
@@ -4294,6 +4325,7 @@ function iaInit(){
     if(b.dataset.act==="parte")    return parteMatutino();
     if(b.dataset.act==="gonogo")   return goNoGo();
     if(b.dataset.act==="progreso") return progresoRoberto();
+    if(b.dataset.act==="escalado") return escaladoRoberto();
     if(b.dataset.act==="comparar") return compararPares();
     if(b.dataset.act==="replay")   return practicaReplay();
     iaEnviar(b.dataset.q);
@@ -4849,6 +4881,8 @@ const IA_TOOLS = [
     input_schema:{ type:"object", properties:{ fijar:{type:"boolean",description:"true fija 📌, false quita"}, estrella:{type:"boolean",description:"true marca importante ⭐, false quita"}, revisar:{type:"boolean",description:"true marca por revisar 🔍, false quita"}, motivo:{type:"string",description:"(opcional) por qué la marcas, 1 frase"} }, required:[] } },
   { name:"editar_estrategia", description:"Define o edita las REGLAS/ajustes de una de las estrategias de Rey, para ADAPTARLA a lo que van aprendiendo, o para definir una NUEVA (Oro, índices, acciones, etc.) con su instrumento y sus reglas. Por defecto edita la estrategia ACTIVA. Úsalo cuando Rey y tú acuerden un cambio/mejora en su método o al crear una estrategia nueva. Rey lo aprueba con tarjeta.",
     input_schema:{ type:"object", properties:{ nombre:{type:"string",description:"(opcional) estrategia a editar; por defecto la activa"}, instrumento:{type:"string",description:"(opcional) instrumento(s), ej. 'Oro XAU/USD', 'Índices US30/NAS100'"}, ajustes:{type:"string",description:"(opcional) reglas/ajustes/aprendizajes de la estrategia, en texto"} }, required:[] } },
+  { name:"registrar_retiro", description:"Registra un RETIRO/PAYOUT que Rey cobró de una de sus cuentas (dinero real ganado). Suma al total retirado de esa cuenta (y ajusta su balance si lo lleva manual). Úsalo cuando Rey te diga que cobró/retiró dinero. Rey lo aprueba con tarjeta.",
+    input_schema:{ type:"object", properties:{ cuenta:{type:"string",description:"Alias o firma de la cuenta (ej. 'FundedNext fondeada')"}, monto:{type:"number",description:"Monto retirado en USD"}, nota:{type:"string",description:"(opcional) nota"} }, required:["monto"] } },
   { name:"revisar_indicador", description:"LEE los ajustes ACTUALES del indicador CRT Elite de Rey en su gráfico (pivotes por temporalidad y sus tolerancias, killzones/sesiones, sesgo/giro, entradas, gestión y riesgo) para AUDITARLOS. Es SOLO LECTURA. Úsalo cuando Rey te pida revisar/auditar su indicador, o cuando quieras comprobar que su configuración es coherente antes de sugerir algo. Cuando tengas los ajustes, dile en claro qué está BIEN y qué conviene AJUSTAR y por qué, y ofrécete a cambiarlo con ajustar_indicador. Requiere PC con Puente.",
     input_schema:{ type:"object", properties:{ target:{type:"string",description:"(opcional) par de la pestaña a leer"} }, required:[] } }
 ];
@@ -4883,6 +4917,7 @@ function describeTool(name, i){
   if(name==="organizar_chat"){ const p=[]; if(i.fijar!=null)p.push(i.fijar?"📌 fijar":"quitar 📌"); if(i.estrella!=null)p.push(i.estrella?"⭐ importante":"quitar ⭐"); if(i.revisar!=null)p.push(i.revisar?"🔍 por revisar":"quitar 🔍"); return "🗂️ Organizar este chat: "+(p.join(", ")||"(sin cambios)"); }
   if(name==="editar_estrategia"){ return "🎯 Definir/editar la estrategia \""+(i.nombre||CTX.estrategia)+"\":\n"+[i.instrumento&&("→ instrumento: "+i.instrumento), i.ajustes&&("→ reglas/ajustes: "+i.ajustes)].filter(Boolean).join("\n"); }
   if(name==="revisar_indicador") return "🔍 Leer y auditar los ajustes actuales del indicador CRT"+(i.target?(" ("+i.target+")"):"");
+  if(name==="registrar_retiro") return "💰 Registrar RETIRO de $"+(i.monto!=null?i.monto:"?")+(i.cuenta?(" de "+i.cuenta):"")+(i.nota?("\nNota: "+i.nota):"");
   if(name==="guardar_memoria"){ const et={perfil:"🧍 Perfil",aprendizaje:"💡 Aprendizaje",preferencia:"⭐ Preferencia",patron:"📊 Patrón",resultado:"📓 Resultado"}; return "🧠 Roberto quiere RECORDAR esto en su memoria:\n"+(et[i.tipo]||"💡 Aprendizaje")+"\n“"+(i.texto||"")+"”"; }
   if(name==="borrar_memoria") return "🗑️ Roberto quiere BORRAR de su memoria el dato "+(i.id||"?");
   return name+" "+JSON.stringify(i);
@@ -5049,6 +5084,19 @@ async function ejecutarTool(name, i){
     if(name==="revisar_indicador"){
       const params={}; if(i.target) params.target=i.target;
       return await enviarComando("revisar_indicador", params);
+    }
+    if(name==="registrar_retiro"){
+      const monto=parseFloat(i.monto);
+      if(!(monto>0)) return {ok:false,msg:"Monto de retiro inválido"};
+      let c=null; const q=String(i.cuenta||"").toLowerCase().trim();
+      if(q) c=CUENTAS.find(x=>(((x.alias||"")+" "+(x.firma||"")).toLowerCase().includes(q)));
+      if(!c && CUENTAS.length===1) c=CUENTAS[0];
+      if(!c) return {ok:false,msg:"No encontré la cuenta"+(i.cuenta?(" “"+i.cuenta+"”"):"")+". Dime su alias exacto."};
+      c.retiros=(+c.retiros||0)+monto;
+      if(c.balance!==undefined && c.balance!==null && c.balance!=="") c.balance=(+c.balance||0)-monto;
+      if(i.nota) c.nota=((c.nota?c.nota+" · ":"")+"Retiro $"+monto+": "+i.nota).slice(0,300);
+      guardarCuentas(); try{ refrescarCuentas(); }catch(_){}
+      return {ok:true,msg:"💰 Retiro registrado: $"+r0(monto)+" de "+(c.alias||c.firma)+". Total retirado: $"+r0(+c.retiros)+". ¡Dinero REAL en tu bolsillo — eso es el negocio funcionando!"};
     }
     if(name==="editar_estrategia"){
       const nom=(i.nombre && ESTRATEGIAS.includes(i.nombre))?i.nombre:CTX.estrategia;
