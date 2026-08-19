@@ -3735,6 +3735,7 @@ const IA_SYSTEM_BASE =
 "- ⚖️ DISCIPLINA Y REGLAS — ES TU MISIÓN #1 CON REY (él te lo pidió expresamente): su punto DÉBIL es la disciplina y respetar las reglas, y para él es lo MÁS importante para lograrlo. Sé su GUARDIÁN, no solo su analista. La disciplina, el orden y la estructura van ANTES que cualquier análisis. MÁRCALE SIEMPRE y EXÍGELE (con respeto pero con firmeza): respetar sus HORARIOS y rutina (incluida la evaluación de la tarde y el cierre de semana — son parte de su disciplina, no opcionales) y las VENTANAS/killzones; y las REGLAS de CRT Elite (SIN SWEEP=SIN SETUP, esperar la vela de confirmación CERRADA, nunca entrar en el toque, solo A+/B, riesgo 0.5%, máx 2 trades/día, no operar contra el sesgo del día ni fuera de zona Premium/Discount, nada 30 min alrededor de noticia roja, respetar el límite de pérdida diaria). Si ves que se salta —o va a saltarse— una regla, un horario o su estructura, PÁRALO y díselo en la 1ª línea, sin suavizarlo. Recuérdale que el mejor análisis no sirve sin disciplina.\n"+
 "- 🛡️ GUARDIÁN DE RIESGO: en cada mensaje tienes el bloque [🛡️ GUARDIÁN DE RIESGO] con el estado EN VIVO de sus cuentas de fondeo: pérdida del día vs límite DIARIO, drawdown total vs DD máximo, trades y SL de hoy, y semáforos (🟢/🟡/🔔/🔴). ES TU DEBER usarlo: ANTES de respaldar CUALQUIER entrada, comprueba que cabe en el margen diario que le queda; si no cabe, dile que NO. Si el semáforo diario o total está 🟡/🔔, avísale y frena las entradas nuevas de hoy; si está 🔴, o ya lleva 2 trades / 2 SL, EXÍGELE cerrar la plataforma en la 1ª línea. Estas cuentas son su capital y las tiene en riesgo — protegerlas va ANTES que cualquier operación. Nunca lo animes a 'recuperar' lo perdido con más riesgo (eso es revancha).\n"+
 "- 🛑 FRENO DEL DÍA y 🚑 MODO RECUPERACIÓN: si en el contexto aparece el bloque [🛑 FRENO DEL DÍA ACTIVO], es una regla INQUEBRANTABLE — se acabó el día de trading en esa cuenta; en la 1ª línea dile que CIERRE la plataforma hasta mañana y NO respaldes ninguna entrada más hoy (es anti-revancha; reconócele la disciplina de parar). Si aparece [🚑 MODO RECUPERACIÓN ACTIVO], esa cuenta va muy tocada: exige modo ULTRA-CONSERVADOR (solo A+, riesgo a la MITAD, máx 1 entrada/día, solo killzone y a favor del sesgo), y el objetivo es SOBREVIVIR y subir despacio — celebra cada peldaño de vuelta. Estos dos estados MANDAN sobre cualquier análisis o señal.\n"+
+"- 🧠 APRENDE DE CADA OPERACIÓN Y CUIDA SU MENTE: (a) Cuando Rey CIERRE/registre un trade —sobre todo si fue pérdida o rompió el plan— reflexiona en 1-2 líneas qué se aprende, y si hay una LECCIÓN valiosa y nueva, propón guardarla con tu mano guardar_memoria (así mejoras sesión a sesión). (b) Tienes el bloque [🧠 FUGAS PSICOLÓGICAS] con sus patrones recientes (revancha, prisa, overtrading, fuera de ventana, plan roto): úsalo para AVISARLE ANTES de repetir la fuga, no después. (c) Si Rey hace su 'check antes de operar', tómale el pulso mental y dale luz verde/roja con honestidad. La psicología y la disciplina son la mitad del juego — cuídaselas.\n"+
 "- CADA CUENTA ES DISTINTA — trátalas por SEPARADO y ADÁPTATE a su clasificación y a las reglas de SU firma/broker (no todas son de fondeo): (a) EXAMEN/FONDEADA (FundedNext, FTMO, etc.) = capital y reto reales, reglas estrictas de la firma (DD diario, DD máx estático o trailing, target, días mínimos, consistencia): protégelas al máximo. (b) CAPITAL PROPIO/REAL = su dinero real: protección total. (c) DEMO (p.ej. su Pepperstone demo) = PRÁCTICA: exígele EXACTAMENTE la misma disciplina, plan y reglas (para entrenar), pero sin el miedo del dinero real — es el lugar ideal para practicar el plan y probar cosas nuevas SIN arriesgar las fondeadas. Evalúa y aprende de TODAS por igual, pero cada una con su vara. Cuando Rey registre o te hable de una cuenta, identifica su tipo y háblale acorde.\n"+
 "- CONOCIMIENTO DE BROKERS Y FIRMAS: domina ampliamente los BROKERS de Rey (Pepperstone y su otro broker) y las EMPRESAS DE FONDEO (FundedNext, FTMO, The5ers, E8, FTUK, Funding Pips, etc.): sus modelos, tipos de cuenta, spreads/comisiones, ejecución, y las REGLAS de cada reto (DD diario/máximo, estático vs trailing, targets, días mínimos, consistencia, payout/split). Si no estás seguro de la regla EXACTA o actual de una firma/broker/modelo, BÚSCALA en internet y dale el dato correcto y actualizado — NO te quedes colgado ni inventes; dile de dónde sale y que confirme en la web oficial si hay duda.\n"+
 "- ESTRATEGIA ACTIVA Y MULTI-ESTRATEGIA: en cada mensaje tienes el bloque [🎯 ESTRATEGIA ACTIVA] con la estrategia que Rey está usando, su instrumento y sus reglas/ajustes EDITABLES. CRT Elite es su estrategia principal (tu dossier), pero Rey puede tener OTRAS (Oro, índices, acciones, etc.) — SIGUE SIEMPRE la ACTIVA: si es CRT usa tu dossier + los ajustes que él haya añadido; si es otra, usa SU definición (no le apliques las reglas de CRT si no corresponden a ese instrumento). Estas definiciones son EDITABLES para adaptarse a lo que van aprendiendo: cuando acuerden una mejora o regla nueva, o al crear una estrategia nueva, proponle guardarla con tu mano editar_estrategia (con su aprobación). Así el método evoluciona con ustedes.\n"+
@@ -3869,6 +3870,32 @@ const ANALISIS_DIARIO_PROM =
 "COMPARA con el [🗓️ PLAN SEMANAL VIGENTE] que ya tienes: EMPIEZA diciéndome si sigue VÁLIDO o si CAMBIÓ/SE INVALIDÓ (porque el precio en vivo rompió su nivel de invalidación o una noticia fuerte cambió el panorama). Si cambió, dímelo claro y ADÁPTALO con guardar_plan_semanal antes de darme el plan del día.";
 function analisisSemanal(){ iaEnviar("🗓️ Hazme mi análisis SEMANAL con el gráfico en vivo.", ANALISIS_SEMANAL_PROM); }
 function analisisDiario(){ iaEnviar("📆 Hazme mi análisis DEL DÍA con el gráfico en vivo.", ANALISIS_DIARIO_PROM); }
+/* 🧠 CHECK EMOCIONAL antes de operar — Roberto le toma el pulso mental y da luz verde/roja. */
+const CHECK_EMO_PROM = "Rey va a hacer su CHECK EMOCIONAL antes de operar. Hazle 2-3 preguntas MUY breves para tomarle el pulso mental AHORA: ¿cómo llega (tranquilo / acelerado / cansado / frustrado)?, ¿viene de una pérdida o siente ganas de revancha?, ¿tiene claro su plan y su límite de hoy? Espera su respuesta y, cruzándola con lo que ves en el contexto (sus fugas psicológicas, su estado de riesgo, freno/recuperación), dale LUZ VERDE (mente lista, adelante con disciplina) o LUZ ROJA (mejor NO operar hoy, con el motivo claro). Sé breve, humano y honesto; si detectas tilt, revancha o cansancio, prioriza PROTEGERLO por encima de operar.";
+function checkEmocional(){ if(typeof abrirIA==="function") abrirIA(); setTimeout(()=>iaEnviar("🧠 Hazme el check emocional antes de operar.", CHECK_EMO_PROM),250); }
+/* 🧠 DETECTOR DE FUGAS PSICOLÓGICAS — lee los trades recientes y marca patrones (revancha,
+   prisa, overtrading, fuera de ventana, plan roto) para que Roberto avise ANTES de repetirlos. */
+function iaFugas(){
+  const base=(typeof tradesCtx==="function"?tradesCtx():[]).filter(t=>!t.abierta);
+  if(base.length<3) return "";
+  const rec=base.slice().sort((a,b)=>(a.fecha<b.fecha?1:-1)).slice(0,12);
+  const nPrisa=rec.filter(t=>t.emo==="Ansioso"||t.emo==="Con prisa").length;
+  const nRoto=rec.filter(t=>t.plan==="No").length;
+  const nFuera=rec.filter(t=>t.ventana==="Fuera de ventana").length;
+  const porDia={}; rec.forEach(t=>{ porDia[t.fecha]=(porDia[t.fecha]||0)+1; });
+  const diasExceso=Object.values(porDia).filter(n=>n>2).length;
+  let revancha=0; const byDay={};
+  rec.slice().sort((a,b)=>(a.fecha<b.fecha?-1:1)).forEach(t=>{ (byDay[t.fecha]=byDay[t.fecha]||[]).push(t); });
+  Object.values(byDay).forEach(arr=>{ for(let i=1;i<arr.length;i++){ if((parseFloat(arr[i-1].r)||0)<0) revancha++; } });
+  const flags=[];
+  if(nPrisa>=2) flags.push(nPrisa+" trades con prisa/ansiedad");
+  if(nRoto>=2) flags.push(nRoto+" con PLAN ROTO");
+  if(nFuera>=1) flags.push(nFuera+" fuera de ventana");
+  if(diasExceso>=1) flags.push("overtrading ("+diasExceso+" día(s) con +2 trades)");
+  if(revancha>=1) flags.push(revancha+" posible(s) entrada(s) de REVANCHA tras una pérdida");
+  if(!flags.length) return "[🧠 FUGAS PSICOLÓGICAS: en tus últimos trades no veo patrones de fuga marcados — buena disciplina.]";
+  return "[🧠 FUGAS PSICOLÓGICAS DETECTADAS (últimos "+rec.length+" trades): "+flags.join(" · ")+". AVÍSALE ANTES de repetirlo: si hoy va camino de una de estas (revancha tras SL, prisa, operar fuera de ventana, +2 trades), FRÉNALO con cariño y firmeza y recuérdale su regla. La mente es donde se gana o se pierde.]";
+}
 
 /* 🤖 ROBERTO PROACTIVO — evaluaciones que arranca solo al tocar su notificación.
    El worker (cron) empuja el aviso a la tarde / los viernes; al abrir, Roberto EVALÚA
@@ -4095,6 +4122,7 @@ function iaInit(){
       <div class="ia-quick" id="iaQuick">
         <button class="ia-chip" data-act="semanal">🗓️ Análisis semanal</button>
         <button class="ia-chip" data-act="diario">📆 Análisis del día</button>
+        <button class="ia-chip" data-act="checkemo">🧠 Check antes de operar</button>
         <button class="ia-chip" data-q="Analiza mi operativa reciente con mis datos: dime con claridad qué estoy haciendo bien, qué estoy haciendo mal y cómo lo corrijo paso a paso.">📊 Analiza mi operativa</button>
         <button class="ia-chip" data-q="Según mis datos, ¿cuál es mi mayor fuga ahora mismo y qué ejercicio concreto hago esta semana para corregirla?">🩸 Mi mayor fuga</button>
         <button class="ia-chip" data-q="Explícame con un ejemplo claro cómo confirmar el gatillo (barrido + MSS 15M + FVG) sin entrar antes de tiempo.">🎯 Cómo gatillar</button>
@@ -4165,6 +4193,7 @@ function iaInit(){
   document.querySelectorAll("#iaQuick .ia-chip").forEach(b=>{ b.onclick=()=>{
     if(b.dataset.act==="semanal") return analisisSemanal();
     if(b.dataset.act==="diario")  return analisisDiario();
+    if(b.dataset.act==="checkemo") return checkEmocional();
     iaEnviar(b.dataset.q);
   }; });
   // Adjuntar imagen (galería/archivos) y cámara en directo
@@ -5273,7 +5302,7 @@ async function iaEnviar(textoForzado, promptExtra){
   let grafTxt=""; try{ grafTxt=await iaGrafico()+"\n"; }catch(_){ grafTxt=""; }
   // promptExtra = framework de análisis (semanal/diario) que va a la API pero NO se muestra en el chat
   const marco = promptExtra ? ("\n\n=== INSTRUCCIONES DEL ANÁLISIS QUE PIDE REY ===\n"+promptExtra+"\n=== FIN INSTRUCCIONES ===") : "";
-  const inj=iaReloj()+"\n"+grafTxt+calTxt+iaContexto()+"\n"+iaEstrategiaDef()+"\n"+guardianRiesgo()+"\n"+(estadoRecuperacionFreno().block||"")+iaPendientes()+"\n"+iaPlanSemanal()+"\n"+iaAvisos()+"\n"+iaEntradasAbiertas()+marco+"\n\nPregunta de Rey: "+texto;
+  const inj=iaReloj()+"\n"+grafTxt+calTxt+iaContexto()+"\n"+iaEstrategiaDef()+"\n"+guardianRiesgo()+"\n"+(estadoRecuperacionFreno().block||"")+iaFugas()+"\n"+iaPendientes()+"\n"+iaPlanSemanal()+"\n"+iaAvisos()+"\n"+iaEntradasAbiertas()+marco+"\n\nPregunta de Rey: "+texto;
   const last=msgs[msgs.length-1];
   if(Array.isArray(last.content)){ last.content[last.content.length-1]={type:"text",text:inj}; }
   else{ last.content=inj; }
