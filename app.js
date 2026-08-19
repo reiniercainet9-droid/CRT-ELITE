@@ -3418,6 +3418,32 @@ function syncRiesgo(){
     if(typeof nubeUrl==="function") fetch(nubeUrl()+"/riesgo",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({cuentas:r})}).catch(()=>{});
   }catch(_){}
 }
+/* 🚑 MODO RECUPERACIÓN + 🛑 FRENO DEL DÍA — se calculan de las cuentas REALES y los trades de hoy.
+   Recuperación = cuenta muy tocada (>50% del DD usado): ultra-conservador + celebrar el ascenso.
+   Freno del día = 2+ SL hoy o límite diario tocado: se acabó el día, cerrar plataforma (anti-revancha). */
+function estadoRecuperacionFreno(){
+  const cuentas=(Array.isArray(CUENTAS)?CUENTAS:[]).filter(c=>c.fase!=="Cerrada" && !/Demo/i.test(c.fase||""));
+  if(!cuentas.length) return { block:"", frenoActivo:false, recupActivo:false, frenos:[], recup:[] };
+  const hoy=hoyISO(); const recup=[]; const frenos=[];
+  cuentas.forEach(c=>{
+    const st=statsCuenta(c);
+    const riesgoPct=+c.riesgoPct||0.5;
+    const hoyT=TRADES.filter(t=>t.cuenta===c.id && t.fecha===hoy && !t.abierta);
+    const slHoy=hoyT.filter(t=>(parseFloat(t.r)||0)<0).length;
+    const rHoy=hoyT.reduce((a,t)=>a+(parseFloat(t.r)||0),0);
+    const diaPct=rHoy*riesgoPct;
+    const ddDaily=+c.ddDailyPct||0, ddMax=+c.ddMaxPct||0;
+    const usadoDia=diaPct<0?Math.abs(diaPct):0;
+    const usadoTot=st.progresoPct<0?Math.abs(st.progresoPct):0;
+    const alias=(c.alias||c.firma||"Cuenta");
+    if(ddMax>0 && usadoTot>=ddMax*0.5) recup.push({alias, progresoPct:st.progresoPct});
+    if(slHoy>=2 || (ddDaily>0 && usadoDia>=ddDaily)) frenos.push({alias, motivo:(slHoy>=2?(slHoy+" SL hoy"):"límite diario tocado")});
+  });
+  let block="";
+  if(frenos.length) block+="[🛑 FRENO DEL DÍA ACTIVO en: "+frenos.map(f=>f.alias+" ("+f.motivo+")").join(", ")+". REGLA INQUEBRANTABLE: se acabó el día de trading en esa(s) cuenta(s). Dile en la 1ª línea que CIERRE LA PLATAFORMA hasta mañana. NO respaldes NINGUNA entrada más hoy, por buena que parezca — es para que no reviente la cuenta por revancha. Reconócele la disciplina de parar.]\n";
+  if(recup.length) block+="[🚑 MODO RECUPERACIÓN ACTIVO en: "+recup.map(r=>r.alias+" ("+r1(r.progresoPct)+"%)").join(", ")+". Esta(s) cuenta(s) van muy tocadas (>50% del DD usado). MODO ULTRA-CONSERVADOR: SOLO setups A+ (nada de B ni dudosos), riesgo REDUCIDO (la mitad de lo normal), MÁX 1 entrada al día, solo en killzone y a favor del sesgo. El objetivo NO es recuperar rápido — es SOBREVIVIR y subir despacio; celebra cada peldaño de vuelta a terreno seguro. Recuperar se hace con paciencia, no forzando.]\n";
+  return { block, frenoActivo:frenos.length>0, recupActivo:recup.length>0, frenos, recup };
+}
 /* Al tocar la notificación del guardián, Roberto revisa el riesgo y te frena. */
 function revisarRiesgo(){
   if(typeof abrirIA==="function") abrirIA();
@@ -3460,7 +3486,11 @@ function renderCuentas(){
   const nFond=activas.filter(c=>/Fondeada|Real/.test(c.fase)).length;
   const nExam=activas.filter(c=>/Examen/.test(c.fase)).length;
   const firmas=[...new Set(activas.map(c=>c.firma).filter(Boolean))];
-  if(res) res.innerHTML=`<div class="stats" style="margin-bottom:12px">
+  const est=(typeof estadoRecuperacionFreno==="function")?estadoRecuperacionFreno():{frenoActivo:false,recupActivo:false,frenos:[],recup:[]};
+  let banner="";
+  if(est.frenoActivo) banner+=`<div class="card alert" style="border-color:var(--red);margin-bottom:10px"><b style="color:var(--red)">🛑 FRENO DEL DÍA</b><br><span style="font-size:13.5px;color:var(--txt2)">Se acabó el trading de hoy en: ${esc(est.frenos.map(f=>f.alias+" ("+f.motivo+")").join(", "))}. Cierra la plataforma hasta mañana — proteger la cuenta va primero, no operes por revancha.</span></div>`;
+  if(est.recupActivo) banner+=`<div class="card" style="border-color:var(--gold);margin-bottom:10px"><b style="color:var(--gold)">🚑 Modo Recuperación</b><br><span style="font-size:13.5px;color:var(--txt2)">${esc(est.recup.map(r=>r.alias).join(", "))} muy tocada(s): solo A+, riesgo a la mitad, máx 1 trade/día, solo en killzone. Sobrevivir y subir despacio.</span></div>`;
+  if(res) res.innerHTML=banner+`<div class="stats" style="margin-bottom:12px">
     <div class="st"><div class="v">${activas.length}</div><div class="k">Cuentas</div></div>
     <div class="st"><div class="v b">$${r0(capTotal)}</div><div class="k">Capital gestionado</div></div>
     <div class="st"><div class="v g">${nFond}</div><div class="k">Fondeadas/reales</div></div>
@@ -3704,6 +3734,7 @@ const IA_SYSTEM_BASE =
 "- DIBUJAR EN EL GRÁFICO (por el Puente, con aprobación): puedes MARCAR el gráfico de Rey con estas manos: dibujar_linea (un nivel horizontal: resistencia, soporte, PDH/PDL, liquidez, objetivo), dibujar_zona (un rango: Premium/Discount, order block, FVG, POI — pasas precio_alto y precio_bajo), dibujar_texto (una nota corta a un precio), marcar_entrada (una flecha de entrada/reacción: direccion 'compra' = flecha verde arriba, 'venta' = flecha roja abajo, en la temporalidad de gatillo) y borrar_dibujos (borra SOLO lo tuyo por defecto; todo=true borra TODO). Úsalas para señalarle a Rey una zona de interés, un punto donde esperar reacción, o un buen punto de entrada — leyendo antes el precio y los niveles del GRÁFICO EN VIVO para que los precios tengan sentido. SIEMPRE con su aprobación (tarjeta) y con la PC+Puente encendidos. Cuando marques, di en una línea POR QUÉ ahí (ej. 'te marco la zona Premium 15m: si barre y da MSS bajista, es tu venta'). COLOR AUTOMÁTICO: NO necesitas pasar 'color' — los dibujos ADAPTAN su color al fondo del gráfico (si Rey tiene fondo claro u oscuro, el puente lo detecta y elige el contraste correcto). Pasa 'color' SOLO si Rey pide un color concreto.\n"+
 "- ⚖️ DISCIPLINA Y REGLAS — ES TU MISIÓN #1 CON REY (él te lo pidió expresamente): su punto DÉBIL es la disciplina y respetar las reglas, y para él es lo MÁS importante para lograrlo. Sé su GUARDIÁN, no solo su analista. La disciplina, el orden y la estructura van ANTES que cualquier análisis. MÁRCALE SIEMPRE y EXÍGELE (con respeto pero con firmeza): respetar sus HORARIOS y rutina (incluida la evaluación de la tarde y el cierre de semana — son parte de su disciplina, no opcionales) y las VENTANAS/killzones; y las REGLAS de CRT Elite (SIN SWEEP=SIN SETUP, esperar la vela de confirmación CERRADA, nunca entrar en el toque, solo A+/B, riesgo 0.5%, máx 2 trades/día, no operar contra el sesgo del día ni fuera de zona Premium/Discount, nada 30 min alrededor de noticia roja, respetar el límite de pérdida diaria). Si ves que se salta —o va a saltarse— una regla, un horario o su estructura, PÁRALO y díselo en la 1ª línea, sin suavizarlo. Recuérdale que el mejor análisis no sirve sin disciplina.\n"+
 "- 🛡️ GUARDIÁN DE RIESGO: en cada mensaje tienes el bloque [🛡️ GUARDIÁN DE RIESGO] con el estado EN VIVO de sus cuentas de fondeo: pérdida del día vs límite DIARIO, drawdown total vs DD máximo, trades y SL de hoy, y semáforos (🟢/🟡/🔔/🔴). ES TU DEBER usarlo: ANTES de respaldar CUALQUIER entrada, comprueba que cabe en el margen diario que le queda; si no cabe, dile que NO. Si el semáforo diario o total está 🟡/🔔, avísale y frena las entradas nuevas de hoy; si está 🔴, o ya lleva 2 trades / 2 SL, EXÍGELE cerrar la plataforma en la 1ª línea. Estas cuentas son su capital y las tiene en riesgo — protegerlas va ANTES que cualquier operación. Nunca lo animes a 'recuperar' lo perdido con más riesgo (eso es revancha).\n"+
+"- 🛑 FRENO DEL DÍA y 🚑 MODO RECUPERACIÓN: si en el contexto aparece el bloque [🛑 FRENO DEL DÍA ACTIVO], es una regla INQUEBRANTABLE — se acabó el día de trading en esa cuenta; en la 1ª línea dile que CIERRE la plataforma hasta mañana y NO respaldes ninguna entrada más hoy (es anti-revancha; reconócele la disciplina de parar). Si aparece [🚑 MODO RECUPERACIÓN ACTIVO], esa cuenta va muy tocada: exige modo ULTRA-CONSERVADOR (solo A+, riesgo a la MITAD, máx 1 entrada/día, solo killzone y a favor del sesgo), y el objetivo es SOBREVIVIR y subir despacio — celebra cada peldaño de vuelta. Estos dos estados MANDAN sobre cualquier análisis o señal.\n"+
 "- CADA CUENTA ES DISTINTA — trátalas por SEPARADO y ADÁPTATE a su clasificación y a las reglas de SU firma/broker (no todas son de fondeo): (a) EXAMEN/FONDEADA (FundedNext, FTMO, etc.) = capital y reto reales, reglas estrictas de la firma (DD diario, DD máx estático o trailing, target, días mínimos, consistencia): protégelas al máximo. (b) CAPITAL PROPIO/REAL = su dinero real: protección total. (c) DEMO (p.ej. su Pepperstone demo) = PRÁCTICA: exígele EXACTAMENTE la misma disciplina, plan y reglas (para entrenar), pero sin el miedo del dinero real — es el lugar ideal para practicar el plan y probar cosas nuevas SIN arriesgar las fondeadas. Evalúa y aprende de TODAS por igual, pero cada una con su vara. Cuando Rey registre o te hable de una cuenta, identifica su tipo y háblale acorde.\n"+
 "- CONOCIMIENTO DE BROKERS Y FIRMAS: domina ampliamente los BROKERS de Rey (Pepperstone y su otro broker) y las EMPRESAS DE FONDEO (FundedNext, FTMO, The5ers, E8, FTUK, Funding Pips, etc.): sus modelos, tipos de cuenta, spreads/comisiones, ejecución, y las REGLAS de cada reto (DD diario/máximo, estático vs trailing, targets, días mínimos, consistencia, payout/split). Si no estás seguro de la regla EXACTA o actual de una firma/broker/modelo, BÚSCALA en internet y dale el dato correcto y actualizado — NO te quedes colgado ni inventes; dile de dónde sale y que confirme en la web oficial si hay duda.\n"+
 "- ESTRATEGIA ACTIVA Y MULTI-ESTRATEGIA: en cada mensaje tienes el bloque [🎯 ESTRATEGIA ACTIVA] con la estrategia que Rey está usando, su instrumento y sus reglas/ajustes EDITABLES. CRT Elite es su estrategia principal (tu dossier), pero Rey puede tener OTRAS (Oro, índices, acciones, etc.) — SIGUE SIEMPRE la ACTIVA: si es CRT usa tu dossier + los ajustes que él haya añadido; si es otra, usa SU definición (no le apliques las reglas de CRT si no corresponden a ese instrumento). Estas definiciones son EDITABLES para adaptarse a lo que van aprendiendo: cuando acuerden una mejora o regla nueva, o al crear una estrategia nueva, proponle guardarla con tu mano editar_estrategia (con su aprobación). Así el método evoluciona con ustedes.\n"+
@@ -5242,7 +5273,7 @@ async function iaEnviar(textoForzado, promptExtra){
   let grafTxt=""; try{ grafTxt=await iaGrafico()+"\n"; }catch(_){ grafTxt=""; }
   // promptExtra = framework de análisis (semanal/diario) que va a la API pero NO se muestra en el chat
   const marco = promptExtra ? ("\n\n=== INSTRUCCIONES DEL ANÁLISIS QUE PIDE REY ===\n"+promptExtra+"\n=== FIN INSTRUCCIONES ===") : "";
-  const inj=iaReloj()+"\n"+grafTxt+calTxt+iaContexto()+"\n"+iaEstrategiaDef()+"\n"+guardianRiesgo()+"\n"+iaPendientes()+"\n"+iaPlanSemanal()+"\n"+iaAvisos()+"\n"+iaEntradasAbiertas()+marco+"\n\nPregunta de Rey: "+texto;
+  const inj=iaReloj()+"\n"+grafTxt+calTxt+iaContexto()+"\n"+iaEstrategiaDef()+"\n"+guardianRiesgo()+"\n"+(estadoRecuperacionFreno().block||"")+iaPendientes()+"\n"+iaPlanSemanal()+"\n"+iaAvisos()+"\n"+iaEntradasAbiertas()+marco+"\n\nPregunta de Rey: "+texto;
   const last=msgs[msgs.length-1];
   if(Array.isArray(last.content)){ last.content[last.content.length-1]={type:"text",text:inj}; }
   else{ last.content=inj; }
