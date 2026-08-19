@@ -177,6 +177,26 @@ function revisarPendientes(){
 /* Sincroniza al worker cuántas cosas quedan 🔍 pendientes, para que la nube te avise
    (notificación fuerte) cada cierto tiempo AUNQUE tengas la app cerrada. Se llama al
    marcar/desmarcar 🔍 y al abrir la app. Sin datos sensibles: solo el nº y unos títulos. */
+/* 📸 CAPTURAS AUTOMÁTICAS: cuando el sistema detecta una ENTRADA tuya, el puente le saca
+   una foto al gráfico en ese momento. Aquí la app recoge esas capturas de la nube y las
+   mete en tu Galería (tipo "Auto-entrada") para revisarlas después con Roberto. */
+function syncAutoShots(){
+  try{
+    if(typeof nubeUrl!=="function") return;
+    fetch(nubeUrl()+"/shot/auto",{cache:"no-store"}).then(r=>r.json()).then(d=>{
+      if(!d || !Array.isArray(d.shots) || !d.shots.length) return;
+      let n=0;
+      d.shots.forEach(s=>{
+        if(!s || !s.id || SHOTS.some(x=>x.id===s.id)) return;
+        const dt=new Date(s.ts||Date.now());
+        const f=dt.getFullYear()+"-"+String(dt.getMonth()+1).padStart(2,"0")+"-"+String(dt.getDate()).padStart(2,"0");
+        SHOTS.unshift({ id:s.id, fecha:f, par:(s.sym||"—"), tipo:"Auto-entrada", ts:s.ts||Date.now() });
+        n++;
+      });
+      if(n){ save(K.shots,SHOTS); toast("📸 "+n+" captura(s) de tu(s) entrada(s) guardada(s) en la Galería"); try{ if(typeof renderGaleria==="function") renderGaleria(); }catch(_){} }
+    }).catch(()=>{});
+  }catch(_){}
+}
 function syncPendientes(){
   try{
     const p=(IA.convs||[]).filter(c=>c.revisar && c.msgs && c.msgs.length);
@@ -198,6 +218,25 @@ function iaEstrategiaDef(){
 /* Interés compuesto: Roberto arma un plan de crecimiento realista con los números reales. */
 const PLAN_COMPUESTO_PROM = "Rey quiere un PLAN DE INTERÉS COMPUESTO realista para crecer su capital. Usa sus CUENTAS y estadísticas REALES del contexto (capital, win rate, R por trade/expectancy, riesgo %/trade). (1) En 2-3 frases, el poder del compuesto en trading (reinvertir, proteger, crecer sostenido). (2) Una PROYECCIÓN realista en TABLA Markdown: partiendo de su capital y su expectancy/win-rate reales, con riesgo FIJO y un nº PRUDENTE de trades, cuánto podría crecer mes a mes durante 3-6 meses (conservador, rango realista, no promesas). (3) Reglas para que funcione: riesgo fijo %, subir riesgo SOLO cuando la cuenta crece (nunca en drawdown ni por revancha), retirar parciales, respetar la disciplina y el límite diario. (4) 1-2 focos concretos. Honesto y realista; recuérdale que proteger el capital y la disciplina son la BASE del compuesto. Si le faltan datos (pocas operaciones para una expectancy fiable), díselo y da un plan por escenarios.";
 function planCompuesto(){ if(typeof abrirIA==="function") abrirIA(); iaTemaChat("📈 Interés compuesto"); setTimeout(()=>iaEnviar("📈 Hazme mi plan de interés compuesto con mis números reales.", PLAN_COMPUESTO_PROM),250); }
+/* 🌅 PARTE MATUTINO HABLADO — al abrir la app por la mañana (1 vez al día), Roberto da el
+   resumen del día EN VOZ: saludo, ventanas de hoy, noticias clave, plan semanal, estado de
+   cuentas/disciplina y pendientes. Corto y accionable, como un briefing de mentor. */
+const PARTE_PROM = "Dale a Rey su PARTE MATUTINO del día, como un briefing corto de mentor (máx ~150 palabras, tono cálido y directo — se va a LEER EN VOZ ALTA, así que nada de tablas ni símbolos raros: frases habladas). Incluye solo lo que aplique HOY: saludo por la mañana; qué día es y las ventanas/killzones de hoy; las noticias de alto impacto del calendario que le afecten (con su hora NY); el estado de su plan semanal en una frase; el estado de sus cuentas y su disciplina en una frase (si están en recuperación/freno, recuérdaselo con firmeza); y si tiene cosas pendientes 🔍, menciónalo. Cierra con EL foco del día en una frase.";
+function parteMatutino(){
+  if(typeof abrirIA==="function") abrirIA();
+  iaTemaChat("🌅 Parte del día");
+  IA.autoHablarUna=true;   // este parte se LEE EN VOZ aunque el modo voz esté apagado
+  setTimeout(()=>iaEnviar("🌅 Dame mi parte del día.", PARTE_PROM),300);
+}
+/* Dispara el parte automáticamente 1 vez al día si abres la app por la mañana (5:00–12:00). */
+function parteMatutinoAuto(){
+  try{
+    const h=new Date().getHours(); if(h<5 || h>=12) return;
+    const hoy=hoyISO(); if(localStorage.getItem("crtelite_partedia_v1")===hoy) return;
+    localStorage.setItem("crtelite_partedia_v1", hoy);
+    parteMatutino();
+  }catch(_){}
+}
 
 /* Contexto activo: modo (real/backtest) + estrategia seleccionada */
 let CTX = load(K.ctx, { modo:"real", estrategia:"CRT Elite" });
@@ -4107,6 +4146,7 @@ function iaInit(){
         <button class="ia-chip" data-act="semanal">🗓️ Análisis semanal</button>
         <button class="ia-chip" data-act="diario">📆 Análisis del día</button>
         <button class="ia-chip" data-act="checkemo">🧠 Check antes de operar</button>
+        <button class="ia-chip" data-act="parte">🌅 Parte del día</button>
         <button class="ia-chip" data-act="comparar">⚖️ Comparar pares</button>
         <button class="ia-chip" data-act="replay">🎬 Práctica Replay</button>
         <button class="ia-chip" data-q="Analiza mi operativa reciente con mis datos: dime con claridad qué estoy haciendo bien, qué estoy haciendo mal y cómo lo corrijo paso a paso.">📊 Analiza mi operativa</button>
@@ -4180,6 +4220,7 @@ function iaInit(){
     if(b.dataset.act==="semanal") return analisisSemanal();
     if(b.dataset.act==="diario")  return analisisDiario();
     if(b.dataset.act==="checkemo") return checkEmocional();
+    if(b.dataset.act==="parte")    return parteMatutino();
     if(b.dataset.act==="comparar") return compararPares();
     if(b.dataset.act==="replay")   return practicaReplay();
     iaEnviar(b.dataset.q);
@@ -5233,7 +5274,7 @@ async function iaBgResuelto(jobId, d){
   c.msgs.push({role:"assistant",content: txt || "⚠️ No me llegó respuesta, reintenta."});
   iaGuardarConvs();
   pintarIAChat();
-  if(IA.voz.on){ const ult=c.msgs[c.msgs.length-1]; if(ult && ult.role==="assistant" && ult.content && !/^⚠️|^💳|^🚫|^✅/.test(ult.content)) iaHablar(ult.content, c.msgs.length-1); }
+  if(IA.voz.on || IA.autoHablarUna){ const ult=c.msgs[c.msgs.length-1]; if(ult && ult.role==="assistant" && ult.content && !/^⚠️|^💳|^🚫|^✅/.test(ult.content)) iaHablar(ult.content, c.msgs.length-1); IA.autoHablarUna=false; }
 }
 /* Muestra en el chat la respuesta de un job concreto (el de la notificación que
    tocaste). Busca su resultado y lo añade a la conversación, sin duplicar. */
@@ -5252,7 +5293,7 @@ async function iaMostrarJob(jobId, intentos){
   const ya=c.msgs.some(m=>m.role==="assistant" && m.content===txt);
   if(!ya) c.msgs.push({role:"assistant",content:txt});
   IA.busy=false; iaGuardarConvs(); pintarIAChat();
-  if(IA.voz.on && !ya && !/^⚠️|^💳|^🚫|^✅/.test(txt)) iaHablar(txt, c.msgs.length-1);
+  if((IA.voz.on || IA.autoHablarUna) && !ya && !/^⚠️|^💳|^🚫|^✅/.test(txt)){ iaHablar(txt, c.msgs.length-1); IA.autoHablarUna=false; }
 }
 /* Al abrir la app, recupera respuestas que terminaron mientras estaba cerrada */
 function iaResumePend(){
@@ -5319,6 +5360,9 @@ function init(){
   iaResumePend();    /* recupera respuestas de Roberto que terminaron con la app cerrada */
   setTimeout(syncPendientes, 1500);   /* informa a la nube cuántas cosas 🔍 hay pendientes (para el aviso periódico) */
   setTimeout(syncRiesgo, 1800);        /* informa a la nube el estado de riesgo de las cuentas (Guardián proactivo) */
+  setTimeout(syncAutoShots, 2200);     /* 📸 recoge capturas automáticas de entradas → Galería */
+  document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible") syncAutoShots(); });
+  setTimeout(parteMatutinoAuto, 3200); /* 🌅 parte del día EN VOZ (1 vez al día, si abres por la mañana) */
   try{ nubeRestaurar(true); }catch(_){}  /* ☁️ si la nube tiene datos más nuevos (otro teléfono), restaura solo */
   /* Al volver a la app (no cerrarla del todo), recupera lo que haya terminado */
   document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible") iaResumePend(); });
