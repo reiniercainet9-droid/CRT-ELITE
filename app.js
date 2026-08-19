@@ -218,6 +218,60 @@ function iaEstrategiaDef(){
 /* Interés compuesto: Roberto arma un plan de crecimiento realista con los números reales. */
 const PLAN_COMPUESTO_PROM = "Rey quiere un PLAN DE INTERÉS COMPUESTO realista para crecer su capital. Usa sus CUENTAS y estadísticas REALES del contexto (capital, win rate, R por trade/expectancy, riesgo %/trade). (1) En 2-3 frases, el poder del compuesto en trading (reinvertir, proteger, crecer sostenido). (2) Una PROYECCIÓN realista en TABLA Markdown: partiendo de su capital y su expectancy/win-rate reales, con riesgo FIJO y un nº PRUDENTE de trades, cuánto podría crecer mes a mes durante 3-6 meses (conservador, rango realista, no promesas). (3) Reglas para que funcione: riesgo fijo %, subir riesgo SOLO cuando la cuenta crece (nunca en drawdown ni por revancha), retirar parciales, respetar la disciplina y el límite diario. (4) 1-2 focos concretos. Honesto y realista; recuérdale que proteger el capital y la disciplina son la BASE del compuesto. Si le faltan datos (pocas operaciones para una expectancy fiable), díselo y da un plan por escenarios.";
 function planCompuesto(){ if(typeof abrirIA==="function") abrirIA(); iaTemaChat("📈 Interés compuesto"); setTimeout(()=>iaEnviar("📈 Hazme mi plan de interés compuesto con mis números reales.", PLAN_COMPUESTO_PROM),250); }
+/* 📊 PROGRESO + MEJOR CONTEXTO — arma un digest con las estadísticas reales por dimensión
+   (setup, ventana, día, par…) y Roberto le dice a Rey dónde mejora, dónde no, y en qué
+   contexto concentrarse (y cuál evitar). */
+const PROGRESO_PROM = "Rey quiere su INFORME DE PROGRESO como trader. Abajo tienes sus estadísticas REALES (globales + por dimensión). Dale: (1) la foto general en 2-3 frases honestas (R neto, expectancy, win rate, drawdown — ¿está mejorando o no?); (2) una TABLA con sus 3-4 MEJORES contextos (dimensión+categoría, n, expectancy) y sus 2-3 PEORES — usa solo categorías con n≥3; (3) el veredicto de MEJOR CONTEXTO: en qué setup/ventana/par/día debería CONCENTRARSE y qué debería EVITAR, con el porqué; (4) 1-2 focos concretos para la próxima semana. Si hay pocos trades para conclusiones firmes, dilo (honestidad ante todo) y da lo que sí se pueda leer.";
+function progresoDigest(){
+  const list=tradesCtx().filter(t=>!t.abierta);
+  if(list.length<3) return null;
+  const m=metricas(list);
+  let s="ESTADÍSTICAS GLOBALES ("+m.n+" trades, contexto "+(CTX.modo==="real"?"REAL":"BACKTEST")+" · "+CTX.estrategia+"): R neto "+r1(m.rNeto)+"R · expectancy "+r2(m.exp)+"R/trade · win rate "+pct(m.wr*100)+" · profit factor "+fmtPF(m.pf)+" · DD máx "+r1(m.dd)+"R · racha máx +"+m.maxW+"/-"+m.maxL+" · plan roto "+m.roto+" · fuera de ventana "+m.fueraVent+" · con prisa/ansiedad "+m.emoMal+"\n";
+  s+="CURVA R acumulada (últimos 20 puntos): "+m.curve.slice(-20).map(v=>r1(v)).join(", ")+"\n";
+  s+="POR DIMENSIÓN (categoría · n · expectancy R · win rate):\n";
+  DIMS_MENTOR.forEach(([dim,fn])=>{
+    const cortes=cortePor(list,fn).filter(x=>x.n>=2);
+    if(!cortes.length) return;
+    s+="· "+dim+": "+cortes.map(x=>x.k+" (n"+x.n+", "+r2(x.exp)+"R, "+pct(x.wr*100)+")").join(" | ")+"\n";
+  });
+  return s;
+}
+function progresoRoberto(){
+  const dig=progresoDigest();
+  if(typeof abrirIA==="function") abrirIA();
+  iaTemaChat("📊 Mi progreso");
+  setTimeout(()=>iaEnviar("📊 Dime cómo voy: mi progreso y mi mejor contexto.",
+    dig ? (PROGRESO_PROM+"\n\n"+dig) : "Rey pidió su informe de progreso pero aún tiene MENOS de 3 trades cerrados en este contexto. Díselo con ánimo: que registre sus operaciones (reales y de backtest) y en cuanto haya datos le sacas la foto completa de su progreso y su mejor contexto."),250);
+}
+/* ✅ GO/NO-GO — checklist de confluencias EN VIVO antes de entrar: Roberto valida con el
+   gráfico real (sweep→MSS→zona→confirmación) + riesgo/disciplina y da el veredicto. */
+const GONOGO_PROM = "Rey está A PUNTO DE ENTRAR a una operación y te pide el GO/NO-GO. Valida con el GRÁFICO EN VIVO (si la PC no está conectada, dile que sin gráfico vivo no puedes validar y que la encienda — NO valides a ciegas). Recorre EL CHECKLIST en orden con lo que ves en el panel del CRT: (1) ¿killzone activa?; (2) ¿sesgo del día claro y a favor?; (3) Secuencia F3: ¿sweep hecho? ¿MSS confirmado? ¿zona válida (Discount para compra / Premium para venta)?; (4) ¿confluencias suficientes?; (5) riesgo/disciplina: ¿cabe en su margen diario? ¿freno o recuperación activos? ¿ya lleva trades hoy? Preséntalo como checklist con ✅/❌ por punto y cierra con el VEREDICTO en negrita: **GO** (con recordatorio: esperar la vela de CONFIRMACIÓN CERRADA, nunca el toque) o **NO-GO** (con el motivo #1). Sé estricto: ante la duda, NO-GO — su fuga es entrar antes de tiempo.";
+function goNoGo(){ if(typeof abrirIA==="function") abrirIA(); iaTemaChat("✅ GO/NO-GO"); setTimeout(()=>iaEnviar("✅ Valida mi entrada AHORA: ¿GO o NO-GO?", GONOGO_PROM),250); }
+/* 🏆 RACHA DE DISCIPLINA — días operados consecutivos SIN romper reglas (plan seguido,
+   ≤2 trades/día, dentro de ventana). Los días sin operar no rompen la racha. */
+function rachaDisciplina(){
+  const list=tradesCtx().filter(t=>!t.abierta);
+  if(!list.length) return { dias:0, motivo:null };
+  const porDia={};
+  list.forEach(t=>{ (porDia[t.fecha]=porDia[t.fecha]||[]).push(t); });
+  const fechas=Object.keys(porDia).sort().reverse(); // días CON trades, del más reciente hacia atrás
+  let dias=0, motivo=null;
+  for(const f of fechas){
+    const ts=porDia[f];
+    const roto=ts.some(t=>t.plan==="No");
+    const exceso=ts.length>2;
+    const fuera=ts.some(t=>t.ventana==="Fuera de ventana");
+    if(roto||exceso||fuera){ if(dias===0) motivo=(roto?"plan roto":(exceso?"más de 2 trades":"fuera de ventana"))+" el "+f; break; }
+    dias++;
+  }
+  return { dias, motivo };
+}
+function iaRacha(){
+  const r=rachaDisciplina();
+  if(r.dias>0) return "[🏆 RACHA DE DISCIPLINA: "+r.dias+" día(s) operados consecutivos SIN romper reglas (plan seguido, ≤2 trades, en ventana). CELÉBRASELA cuando encaje y recuérdale que no la corte — la disciplina es un juego que va ganando.]";
+  if(r.motivo) return "[🏆 RACHA DE DISCIPLINA: se CORTÓ ("+r.motivo+"). Sin drama: anímalo a arrancar una racha nueva HOY — cada día disciplinado suma.]";
+  return "";
+}
 /* 🌅 PARTE MATUTINO HABLADO — al abrir la app por la mañana (1 vez al día), Roberto da el
    resumen del día EN VOZ: saludo, ventanas de hoy, noticias clave, plan semanal, estado de
    cuentas/disciplina y pendientes. Corto y accionable, como un briefing de mentor. */
@@ -2496,6 +2550,21 @@ function renderAnalisis(){
     return;
   }
 
+  /* ---------- 0. 🏆 RACHA DE DISCIPLINA + informe de Roberto ---------- */
+  try{
+    const rr=rachaDisciplina();
+    const rc=el("div","card");
+    rc.innerHTML=`<div style="display:flex;align-items:center;gap:12px;justify-content:space-between;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:26px">🏆</span>
+        <div><b style="font-size:16px">${rr.dias>0?("Racha de disciplina: "+rr.dias+" día"+(rr.dias!==1?"s":"")):"Racha de disciplina"}</b><br>
+        <span style="color:var(--txt2);font-size:12.5px">${rr.dias>0?"Días operados seguidos sin romper reglas. ¡No la cortes!":(rr.motivo?("Se cortó ("+esc(rr.motivo)+"). Arranca una nueva hoy 💪"):"Opera con disciplina y aquí verás tu racha crecer.")}</span></div>
+      </div>
+      <button class="btn gold" id="btnProgresoIA" style="margin:0;width:auto;padding:9px 14px">🤖 Roberto: mi progreso</button></div>`;
+    body.appendChild(rc);
+    const bp=rc.querySelector("#btnProgresoIA"); if(bp) bp.onclick=progresoRoberto;
+  }catch(_){}
+
   /* ---------- 1. VEREDICTO ---------- */
   const diag=el("div","card");
   diag.innerHTML=`<div class="card-h"><span class="ic">🧠</span><h2>Veredicto</h2></div>`;
@@ -4146,6 +4215,8 @@ function iaInit(){
         <button class="ia-chip" data-act="semanal">🗓️ Análisis semanal</button>
         <button class="ia-chip" data-act="diario">📆 Análisis del día</button>
         <button class="ia-chip" data-act="checkemo">🧠 Check antes de operar</button>
+        <button class="ia-chip" data-act="gonogo">✅ GO/NO-GO</button>
+        <button class="ia-chip" data-act="progreso">📊 Mi progreso</button>
         <button class="ia-chip" data-act="parte">🌅 Parte del día</button>
         <button class="ia-chip" data-act="comparar">⚖️ Comparar pares</button>
         <button class="ia-chip" data-act="replay">🎬 Práctica Replay</button>
@@ -4221,6 +4292,8 @@ function iaInit(){
     if(b.dataset.act==="diario")  return analisisDiario();
     if(b.dataset.act==="checkemo") return checkEmocional();
     if(b.dataset.act==="parte")    return parteMatutino();
+    if(b.dataset.act==="gonogo")   return goNoGo();
+    if(b.dataset.act==="progreso") return progresoRoberto();
     if(b.dataset.act==="comparar") return compararPares();
     if(b.dataset.act==="replay")   return practicaReplay();
     iaEnviar(b.dataset.q);
@@ -5331,7 +5404,7 @@ async function iaEnviar(textoForzado, promptExtra){
   let grafTxt=""; try{ grafTxt=await iaGrafico()+"\n"; }catch(_){ grafTxt=""; }
   // promptExtra = framework de análisis (semanal/diario) que va a la API pero NO se muestra en el chat
   const marco = promptExtra ? ("\n\n=== INSTRUCCIONES DEL ANÁLISIS QUE PIDE REY ===\n"+promptExtra+"\n=== FIN INSTRUCCIONES ===") : "";
-  const inj=iaReloj()+"\n"+grafTxt+calTxt+iaContexto()+"\n"+iaEstrategiaDef()+"\n"+guardianRiesgo()+"\n"+(estadoRecuperacionFreno().block||"")+iaFugas()+"\n"+iaPendientes()+"\n"+iaPlanSemanal()+"\n"+iaAvisos()+"\n"+iaEntradasAbiertas()+marco+"\n\nPregunta de Rey: "+texto;
+  const inj=iaReloj()+"\n"+grafTxt+calTxt+iaContexto()+"\n"+iaEstrategiaDef()+"\n"+guardianRiesgo()+"\n"+(estadoRecuperacionFreno().block||"")+iaFugas()+"\n"+iaRacha()+"\n"+iaPendientes()+"\n"+iaPlanSemanal()+"\n"+iaAvisos()+"\n"+iaEntradasAbiertas()+marco+"\n\nPregunta de Rey: "+texto;
   const last=msgs[msgs.length-1];
   if(Array.isArray(last.content)){ last.content[last.content.length-1]={type:"text",text:inj}; }
   else{ last.content=inj; }
