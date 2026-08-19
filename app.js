@@ -170,6 +170,7 @@ function revisarPendientes(){
   const p=(IA.convs||[]).filter(c=>c.revisar && c.msgs && c.msgs.length);
   const lista=p.length?p.slice(0,10).map(c=>"• "+iaTit(c)).join("\n"):"(no hay nada marcado 🔍 en este momento)";
   if(typeof abrirIA==="function") abrirIA();
+  iaTemaChat("🔍 Repaso de pendientes");
   setTimeout(()=>iaEnviar("🔍 Repasemos lo que tengo a medias / por revisar.",
     "Rey quiere REPASAR sus temas INCONCLUSOS / por revisar. Chats marcados 🔍 (por su título):\n"+lista+"\nPor CADA uno, en 1 línea recuérdale qué quedó pendiente (dedúcelo del título) y pregúntale con cuál quiere seguir HOY. Si ves alguno ya terminado, dile que puede quitarle el 🔍. Ordenado y breve, en lista."),250);
 }
@@ -196,7 +197,7 @@ function iaEstrategiaDef(){
 }
 /* Interés compuesto: Roberto arma un plan de crecimiento realista con los números reales. */
 const PLAN_COMPUESTO_PROM = "Rey quiere un PLAN DE INTERÉS COMPUESTO realista para crecer su capital. Usa sus CUENTAS y estadísticas REALES del contexto (capital, win rate, R por trade/expectancy, riesgo %/trade). (1) En 2-3 frases, el poder del compuesto en trading (reinvertir, proteger, crecer sostenido). (2) Una PROYECCIÓN realista en TABLA Markdown: partiendo de su capital y su expectancy/win-rate reales, con riesgo FIJO y un nº PRUDENTE de trades, cuánto podría crecer mes a mes durante 3-6 meses (conservador, rango realista, no promesas). (3) Reglas para que funcione: riesgo fijo %, subir riesgo SOLO cuando la cuenta crece (nunca en drawdown ni por revancha), retirar parciales, respetar la disciplina y el límite diario. (4) 1-2 focos concretos. Honesto y realista; recuérdale que proteger el capital y la disciplina son la BASE del compuesto. Si le faltan datos (pocas operaciones para una expectancy fiable), díselo y da un plan por escenarios.";
-function planCompuesto(){ if(typeof abrirIA==="function") abrirIA(); setTimeout(()=>iaEnviar("📈 Hazme mi plan de interés compuesto con mis números reales.", PLAN_COMPUESTO_PROM),250); }
+function planCompuesto(){ if(typeof abrirIA==="function") abrirIA(); iaTemaChat("📈 Interés compuesto"); setTimeout(()=>iaEnviar("📈 Hazme mi plan de interés compuesto con mis números reales.", PLAN_COMPUESTO_PROM),250); }
 
 /* Contexto activo: modo (real/backtest) + estrategia seleccionada */
 let CTX = load(K.ctx, { modo:"real", estrategia:"CRT Elite" });
@@ -3451,6 +3452,7 @@ function estadoRecuperacionFreno(){
 /* Al tocar la notificación del guardián, Roberto revisa el riesgo y te frena. */
 function revisarRiesgo(){
   if(typeof abrirIA==="function") abrirIA();
+  iaTemaChat("🛡️ Guardián de riesgo");
   setTimeout(()=>iaEnviar("🛡️ Revisemos el riesgo de mis cuentas ahora.",
     "Rey abrió esto desde un AVISO del Guardián de Riesgo. Con el bloque [🛡️ GUARDIÁN DE RIESGO] del contexto: dile CLARO en la 1ª línea cuál cuenta está en peligro y cuánto margen le queda (diario y total), y qué hacer YA para PROTEGERLA (parar, cerrar plataforma, no operar hoy). Recuérdale que proteger el capital va ANTES que cualquier operación y que recuperar se hace SOBREVIVIENDO, no forzando. Breve, firme, honesto."),250);
 }
@@ -3823,17 +3825,17 @@ const ANALISIS_DIARIO_PROM =
 "🏦 POR CUENTA (OBLIGATORIO): cómo actuar HOY en CADA cuenta registrada por separado y en cuál operar — PROTEGE la fondeada crítica.\n"+
 "Regla: el semanal manda sobre el diario; si el setup va contra el bias semanal, NO operar. No dibujes en el gráfico todavía; dame análisis y plan en texto.\n"+
 "COMPARA con el [🗓️ PLAN SEMANAL VIGENTE] que ya tienes: EMPIEZA diciéndome si sigue VÁLIDO o si CAMBIÓ/SE INVALIDÓ (porque el precio en vivo rompió su nivel de invalidación o una noticia fuerte cambió el panorama). Si cambió, dímelo claro y ADÁPTALO con guardar_plan_semanal antes de darme el plan del día.";
-function analisisSemanal(){ iaEnviar("🗓️ Hazme mi análisis SEMANAL con el gráfico en vivo.", ANALISIS_SEMANAL_PROM); }
-function analisisDiario(){ iaEnviar("📆 Hazme mi análisis DEL DÍA con el gráfico en vivo.", ANALISIS_DIARIO_PROM); }
+function analisisSemanal(){ iaTemaChat("🗓️ Análisis semanal"); iaEnviar("🗓️ Hazme mi análisis SEMANAL con el gráfico en vivo.", ANALISIS_SEMANAL_PROM); }
+function analisisDiario(){ iaTemaChat("📆 Análisis del día"); iaEnviar("📆 Hazme mi análisis DEL DÍA con el gráfico en vivo.", ANALISIS_DIARIO_PROM); }
 /* 🧠 CHECK EMOCIONAL antes de operar — Roberto le toma el pulso mental y da luz verde/roja. */
 const CHECK_EMO_PROM = "Rey va a hacer su CHECK EMOCIONAL antes de operar. Hazle 2-3 preguntas MUY breves para tomarle el pulso mental AHORA: ¿cómo llega (tranquilo / acelerado / cansado / frustrado)?, ¿viene de una pérdida o siente ganas de revancha?, ¿tiene claro su plan y su límite de hoy? Espera su respuesta y, cruzándola con lo que ves en el contexto (sus fugas psicológicas, su estado de riesgo, freno/recuperación), dale LUZ VERDE (mente lista, adelante con disciplina) o LUZ ROJA (mejor NO operar hoy, con el motivo claro). Sé breve, humano y honesto; si detectas tilt, revancha o cansancio, prioriza PROTEGERLO por encima de operar.";
-function checkEmocional(){ if(typeof abrirIA==="function") abrirIA(); setTimeout(()=>iaEnviar("🧠 Hazme el check emocional antes de operar.", CHECK_EMO_PROM),250); }
+function checkEmocional(){ if(typeof abrirIA==="function") abrirIA(); iaTemaChat("🧠 Check emocional"); setTimeout(()=>iaEnviar("🧠 Hazme el check emocional antes de operar.", CHECK_EMO_PROM),250); }
 /* ⚖️ COMPARADOR DE PARES — Roberto compara los pares en vivo y dice dónde está la mejor oportunidad. */
 const COMPARAR_PROM = "Rey quiere COMPARAR sus pares para saber dónde operar HOY. Usa el bloque de GRÁFICOS EN VIVO (si su PC está conectada; si no, dile con cariño que la encienda). Compara TODOS los pares abiertos: para cada uno mira sesgo del día, killzone, zona premium/discount, confluencias/alineación TF y si hay sweep/MSS (Fase 3). Preséntalo en una TABLA (par | sesgo | zona | confluencias | ¿setup?) y DECIDE: ¿en cuál hay la MEJOR oportunidad ahora (o en ninguna todavía) y por qué? Respeta el riesgo, el freno y el modo recuperación del contexto. Breve y accionable.";
-function compararPares(){ if(typeof abrirIA==="function") abrirIA(); setTimeout(()=>iaEnviar("⚖️ Compara mis pares y dime dónde está la mejor oportunidad hoy.", COMPARAR_PROM),250); }
+function compararPares(){ if(typeof abrirIA==="function") abrirIA(); iaTemaChat("⚖️ Comparar pares"); setTimeout(()=>iaEnviar("⚖️ Compara mis pares y dime dónde está la mejor oportunidad hoy.", COMPARAR_PROM),250); }
 /* 🎬 PRÁCTICA GUIADA CON REPLAY — Roberto dirige un ejercicio de backtest para entrenar el gatillo. */
 const REPLAY_PROM = "Rey quiere una PRÁCTICA GUIADA con el modo Replay de TradingView (backtest sin arriesgar, ideal en su demo Pepperstone). Guíalo paso a paso: (1) cómo activar Replay y elegir una fecha antes de una killzone; (2) que avance vela a vela buscando el modelo CRT (sweep de liquidez → MSS 15M → zona premium/discount → gatillo M5); (3) por cada intento pídele que te diga qué ve y confírmale si es válido o por qué no (sobre todo cazando su fuga de entrar ANTES de confirmar); (4) que registre el resultado como backtest en su Diario. Que sea un ejercicio corto y concreto (1-2 escenarios), no una clase teórica. Empieza proponiéndole un drill.";
-function practicaReplay(){ if(typeof abrirIA==="function") abrirIA(); setTimeout(()=>iaEnviar("🎬 Dirígeme una práctica con Replay para entrenar mi gatillo.", REPLAY_PROM),250); }
+function practicaReplay(){ if(typeof abrirIA==="function") abrirIA(); iaTemaChat("🎬 Backtesting (gimnasio)"); setTimeout(()=>iaEnviar("🎬 Dirígeme una práctica con Replay para entrenar mi gatillo.", REPLAY_PROM),250); }
 /* 🧠 DETECTOR DE FUGAS PSICOLÓGICAS — lee los trades recientes y marca patrones (revancha,
    prisa, overtrading, fuera de ventana, plan roto) para que Roberto avise ANTES de repetirlos. */
 function iaFugas(){
@@ -3875,12 +3877,14 @@ function tradesTexto(list){
   }).join("\n");
 }
 function evalDia(){
+  iaTemaChat("🤖 Cierre del día");
   const hoy=hoyISO();
   const ts=tradesCtx().filter(t=>t.fecha===hoy && !t.abierta);
   const data=ts.length?tradesTexto(ts):"(No hay trades cerrados registrados hoy.)";
   iaEnviar("🤖 Evalúa mi operativa de HOY.", EVAL_DIA_PROM+"\n\nSUS TRADES DE HOY ("+hoy+"):\n"+data);
 }
 function evalSemana(){
+  iaTemaChat("🤖 Cierre de semana");
   const d=new Date(); d.setDate(d.getDate()-7);
   const cut=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
   const ts=tradesCtx().filter(t=>t.fecha>=cut && !t.abierta).sort((a,b)=>(a.fecha<b.fecha?-1:1));
@@ -3952,6 +3956,25 @@ function iaTit(c){
   const u=c.msgs.find(m=>m.role==="user");
   if(u){ let s=u.content.replace(/\s+/g," ").trim(); return s.length>40?s.slice(0,40)+"…":s; }
   return "Nueva conversación";
+}
+/* 🗂️ CADA TEMA EN SU CHAT (Rey lo exigió: nada apilado en un solo chat). Cuando llega una
+   notificación de Roberto o se toca un botón de tema (evaluación, pendientes, riesgo, backtest,
+   análisis…), se abre EL CHAT QUE CORRESPONDE: si HOY ya existe un chat de ese tema, se continúa
+   ahí; si no, se abre uno NUEVO con su título. Así Roberto organiza cada cosa en su lugar. */
+function iaTemaChat(titulo){
+  try{
+    const hoy=new Date().toDateString();
+    let c=IA.convs.find(x=>x.t===titulo && new Date(x.ts).toDateString()===hoy);
+    if(!c){
+      const vacia=IA.convs.find(x=>!x.msgs.length);
+      c=vacia||{ id:iaNuevoId(), t:"", ts:Date.now(), msgs:[] };
+      if(!vacia) IA.convs.unshift(c);
+      c.t=titulo; c.ts=Date.now();
+    }
+    IA.actId=c.id; iaGuardarConvs();
+    const box=$("#iaConvsBox"); if(box) box.style.display="none";
+    pintarIAChat();
+  }catch(_){}
 }
 function iaNuevaConv(){
   const vacia=IA.convs.find(x=>!x.msgs.length);
