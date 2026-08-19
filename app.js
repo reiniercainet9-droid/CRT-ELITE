@@ -152,6 +152,33 @@ if(!ESTR_DEFS || typeof ESTR_DEFS!=="object") ESTR_DEFS={};
 function guardarEstrDefs(){ save(K.estrdef, ESTR_DEFS); }
 /* Bloque de la ESTRATEGIA ACTIVA para Roberto: su instrumento y las reglas/ajustes
    editables. Así Roberto sigue la estrategia correcta (CRT u otra que Rey añada). */
+/* 🔍 PENDIENTES / COSAS A MEDIAS — Roberto recuerda lo inconcluso (los chats que él o Rey
+   marcan con 🔍 "Por revisar"). Se inyecta en su contexto para que no se pierda nada y pueda
+   recordárselo. Al TERMINAR algo, se le quita el 🔍 con organizar_chat(revisar:false). */
+function iaPendientes(){
+  const p=(IA.convs||[]).filter(c=>c.revisar && c.msgs && c.msgs.length);
+  if(!p.length) return "[🔍 PENDIENTES / A MEDIAS: ahora no hay nada marcado por revisar.]";
+  const lista=p.slice(0,8).map(c=>"• "+iaTit(c)).join("\n");
+  return "[🔍 PENDIENTES / COSAS A MEDIAS de Rey ("+p.length+" chat(s) marcados 🔍 'Por revisar'):\n"+lista+"\nSi encaja en la charla, RECUÉRDASELOS para que los retome, o pregúntale con cuál seguir. Cuando algo quede TERMINADO, quítale el 🔍 con organizar_chat(revisar:false). Marca 🔍 lo que dejen a medias con organizar_chat(revisar:true).]";
+}
+/* Al tocar la notificación de "revisar pendientes", Roberto repasa lo inconcluso. */
+function revisarPendientes(){
+  const p=(IA.convs||[]).filter(c=>c.revisar && c.msgs && c.msgs.length);
+  const lista=p.length?p.slice(0,10).map(c=>"• "+iaTit(c)).join("\n"):"(no hay nada marcado 🔍 en este momento)";
+  if(typeof abrirIA==="function") abrirIA();
+  setTimeout(()=>iaEnviar("🔍 Repasemos lo que tengo a medias / por revisar.",
+    "Rey quiere REPASAR sus temas INCONCLUSOS / por revisar. Chats marcados 🔍 (por su título):\n"+lista+"\nPor CADA uno, en 1 línea recuérdale qué quedó pendiente (dedúcelo del título) y pregúntale con cuál quiere seguir HOY. Si ves alguno ya terminado, dile que puede quitarle el 🔍. Ordenado y breve, en lista."),250);
+}
+/* Sincroniza al worker cuántas cosas quedan 🔍 pendientes, para que la nube te avise
+   (notificación fuerte) cada cierto tiempo AUNQUE tengas la app cerrada. Se llama al
+   marcar/desmarcar 🔍 y al abrir la app. Sin datos sensibles: solo el nº y unos títulos. */
+function syncPendientes(){
+  try{
+    const p=(IA.convs||[]).filter(c=>c.revisar && c.msgs && c.msgs.length);
+    const body={ n:p.length, ejemplos:p.slice(0,3).map(c=>iaTit(c)) };
+    if(typeof nubeUrl==="function") fetch(nubeUrl()+"/pendientes",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(body)}).catch(()=>{});
+  }catch(_){}
+}
 function iaEstrategiaDef(){
   const nom=CTX.estrategia||"";
   const def=ESTR_DEFS[nom]||{};
@@ -3646,6 +3673,7 @@ const IA_SYSTEM_BASE =
 "- ESTRATEGIA ACTIVA Y MULTI-ESTRATEGIA: en cada mensaje tienes el bloque [🎯 ESTRATEGIA ACTIVA] con la estrategia que Rey está usando, su instrumento y sus reglas/ajustes EDITABLES. CRT Elite es su estrategia principal (tu dossier), pero Rey puede tener OTRAS (Oro, índices, acciones, etc.) — SIGUE SIEMPRE la ACTIVA: si es CRT usa tu dossier + los ajustes que él haya añadido; si es otra, usa SU definición (no le apliques las reglas de CRT si no corresponden a ese instrumento). Estas definiciones son EDITABLES para adaptarse a lo que van aprendiendo: cuando acuerden una mejora o regla nueva, o al crear una estrategia nueva, proponle guardarla con tu mano editar_estrategia (con su aprobación). Así el método evoluciona con ustedes.\n"+
 "- 📈 INTERÉS COMPUESTO: dominas el interés compuesto aplicado al trading y es parte del plan de largo plazo de Rey (crecer hacia gran capital). Cuando te lo pida (o cuando encaje), arma un plan REALISTA con sus números reales: riesgo fijo %, crecer el tamaño SOLO cuando la cuenta sube (nunca en drawdown ni por revancha), retirar parciales, y proteger el capital como base. Proyecciones honestas en tabla, sin promesas irreales. La disciplina y la gestión de riesgo son el cimiento del compuesto.\n"+
 "- 🗂️ ORGANIZA TUS CHATS (mano organizar_chat, AUTOMÁTICA, sin tarjeta): tienes 3 carpetas — 📌 Fijados (temas EN CURSO a tener a mano), ⭐ Importantes (lecciones o decisiones CLAVE) y 🔍 Por revisar (algo pendiente que Rey debe repasar contigo). Con CRITERIO propio, marca ESTA conversación cuando lo merezca (p.ej. una lección o regla importante que acordaron → ⭐; un plan/análisis en curso → 📌; algo que quedó pendiente de repasar → 🔍) y QUÍTALE la marca cuando deje de aplicar. Hazlo tú mismo, sin pedir permiso (es reversible y Rey también las toca a mano). No abuses: solo lo que de verdad aporte orden. Así el chat de Roberto queda estructurado, no suelto.\n"+
+"- 🔍 COSAS A MEDIAS / INCONCLUSAS (tu memoria de lo pendiente): cuando ustedes dejen algo SIN TERMINAR o a medias (un análisis, una tarea, una decisión sin cerrar, algo que retomarán después), MÁRCA esa conversación con 🔍 (organizar_chat revisar:true) — así queda en la carpeta 'Por revisar / a medias' y podrán RETOMARLO desde donde lo dejaron, sin perder nada. Tienes el bloque [🔍 PENDIENTES] con lo que está a medias: cuando encaje (sobre todo al EMPEZAR una sesión o cuando Rey pregunte qué falta), recuérdaselo y ofrécele retomar el que quiera. En cuanto algo quede TERMINADO, quítale el 🔍 (revisar:false). Eres su memoria de lo inconcluso: no dejes que se pierda nada.\n"+
 "- TU MEMORIA PERMANENTE: tienes una memoria propia (si ya hay datos guardados, te aparecen en el contexto con su id entre paréntesis). Sirve para ADAPTARTE y APRENDER de Rey con el tiempo. Cuando descubras algo VERDADERAMENTE relevante y NUEVO para tu aprendizaje sobre él (su forma de operar, su psicología, una preferencia, un patrón o una lección importante) que NO esté ya en tus reglas/plan/contexto, propón guardarlo. **MUY IMPORTANTE — cómo se propone:** LLAMA DIRECTAMENTE a la mano guardar_memoria. NO preguntes en texto '¿quieres que lo guarde?' ni digas 'lo anoto' sin llamar a la mano: la ÚNICA forma de proponer y pedir permiso es LLAMANDO a la mano — al hacerlo, a Rey le aparece una tarjeta para APROBAR o RECHAZAR, y solo se guarda si él aprueba. Filtra con CRITERIO: no guardes todo ni trivialidades ni cosas de un solo momento, solo lo que de verdad te servirá a futuro. Si Rey te dice explícitamente 'recuerda que X' y X es algo nuevo (no ya en tus reglas), LLAMA a guardar_memoria para proponerlo. Si algo que recordabas ya no es cierto, LLAMA a borrar_memoria (con su id). Nunca pidas permiso por texto para la memoria: siempre con la mano.\n"+
 "- RESPONDE PRIMERO, en la PRIMERA línea, la pregunta concreta que te hace, decidido (SÍ / NO / el dato exacto). Después el detalle. Nunca entierres la respuesta al final ni la dejes ambigua.\n"+
 "- HORARIO OPERATIVO: la fila 'Killzone' del panel del indicador es la FUENTE DE VERDAD (ya maneja el cambio EST/EDT solo). Si dice Fuera → el alumno está FUERA de horario y NO se opera: díselo claro y directo, sin rodeos. Si tu cálculo de husos no cuadra con el panel, MANDA EL PANEL y dilo en una sola línea (que revise qué killzone tiene configurada), sin contradecirte ni marearlo con dos versiones.\n"+
@@ -3804,7 +3832,7 @@ function evalSemana(){
   const data=ts.length?tradesTexto(ts):"(No hay trades cerrados en los últimos 7 días.)";
   iaEnviar("🤖 Hazme el CIERRE de mi semana.", EVAL_SEMANA_PROM+"\n\nSUS TRADES DE LA SEMANA (desde "+cut+"):\n"+data);
 }
-function iaProactivo(seed){ if(seed==="eval_dia") return evalDia(); if(seed==="eval_semana") return evalSemana(); }
+function iaProactivo(seed){ if(seed==="eval_dia") return evalDia(); if(seed==="eval_semana") return evalSemana(); if(seed==="revisar_pendientes") return revisarPendientes(); }
 
 let _iaConoc = null;
 /* Arma el bloque de conocimiento (estrategia + indicador + perfil) desde los
@@ -3890,6 +3918,7 @@ function iaDelConv(id){
 function iaToggleFlag(id, flag){
   const c=IA.convs.find(x=>x.id===id); if(!c) return;
   c[flag]=!c[flag]; iaGuardarConvs(); renderConvList();
+  if(flag==="revisar") syncPendientes();
   const nom={fijado:"📌 Fijado",estrella:"⭐ Importante",revisar:"🔍 Por revisar"};
   toast((c[flag]?"":"Quitado: ")+(nom[flag]||flag));
 }
@@ -3911,7 +3940,7 @@ function renderConvList(){
   const rev=IA.convs.filter(c=>!c.fijado&&!c.estrella&&c.revisar).sort(byTs);
   const resto=IA.convs.filter(c=>!c.fijado&&!c.estrella&&!c.revisar).sort(byTs);
   const sec=(tit,arr)=> arr.length?(`<div class="ia-conv-fold">${tit} · ${arr.length}</div>`+arr.map(iaConvItemHTML).join("")):"";
-  box.innerHTML = sec("📌 Fijados",fij)+sec("⭐ Importantes",imp)+sec("🔍 Por revisar",rev)+sec("🕘 Recientes",resto);
+  box.innerHTML = sec("📌 Fijados",fij)+sec("⭐ Importantes",imp)+sec("🔍 Por revisar / a medias",rev)+sec("🕘 Recientes",resto);
   box.querySelectorAll("[data-sel]").forEach(b=>b.onclick=()=>iaSelConv(b.dataset.sel));
   box.querySelectorAll("[data-del]").forEach(b=>b.onclick=(e)=>{ e.stopPropagation(); iaDelConv(b.dataset.del); });
   box.querySelectorAll("[data-flag]").forEach(b=>b.onclick=(e)=>{ e.stopPropagation(); iaToggleFlag(b.dataset.fid, b.dataset.flag); });
@@ -4839,6 +4868,7 @@ async function ejecutarTool(name, i){
       if(i.estrella!=null){ c.estrella=!!i.estrella; ch.push(c.estrella?"⭐ importante":"quité la estrella"); }
       if(i.revisar!=null){ c.revisar=!!i.revisar; ch.push(c.revisar?"🔍 por revisar":"quité el 'por revisar'"); }
       iaGuardarConvs(); try{ renderConvList(); }catch(_){}
+      if(i.revisar!=null) syncPendientes();
       return {ok:true,msg:"Organicé este chat: "+(ch.join(", ")||"sin cambios")};
     }
     if(name==="guardar_memoria"){
@@ -5176,7 +5206,7 @@ async function iaEnviar(textoForzado, promptExtra){
   let grafTxt=""; try{ grafTxt=await iaGrafico()+"\n"; }catch(_){ grafTxt=""; }
   // promptExtra = framework de análisis (semanal/diario) que va a la API pero NO se muestra en el chat
   const marco = promptExtra ? ("\n\n=== INSTRUCCIONES DEL ANÁLISIS QUE PIDE REY ===\n"+promptExtra+"\n=== FIN INSTRUCCIONES ===") : "";
-  const inj=iaReloj()+"\n"+grafTxt+calTxt+iaContexto()+"\n"+iaEstrategiaDef()+"\n"+guardianRiesgo()+"\n"+iaPlanSemanal()+"\n"+iaAvisos()+"\n"+iaEntradasAbiertas()+marco+"\n\nPregunta de Rey: "+texto;
+  const inj=iaReloj()+"\n"+grafTxt+calTxt+iaContexto()+"\n"+iaEstrategiaDef()+"\n"+guardianRiesgo()+"\n"+iaPendientes()+"\n"+iaPlanSemanal()+"\n"+iaAvisos()+"\n"+iaEntradasAbiertas()+marco+"\n\nPregunta de Rey: "+texto;
   const last=msgs[msgs.length-1];
   if(Array.isArray(last.content)){ last.content[last.content.length-1]={type:"text",text:inj}; }
   else{ last.content=inj; }
@@ -5203,6 +5233,7 @@ function init(){
   const bm=$("#btnMenu"); if(bm) bm.onclick=abrirMenu;
   iaInit();          /* inicializa el puente (IA.url) ANTES de mostrar Noticias, que lo necesita */
   iaResumePend();    /* recupera respuestas de Roberto que terminaron con la app cerrada */
+  setTimeout(syncPendientes, 1500);   /* informa a la nube cuántas cosas 🔍 hay pendientes (para el aviso periódico) */
   try{ nubeRestaurar(true); }catch(_){}  /* ☁️ si la nube tiene datos más nuevos (otro teléfono), restaura solo */
   /* Al volver a la app (no cerrarla del todo), recupera lo que haya terminado */
   document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible") iaResumePend(); });
