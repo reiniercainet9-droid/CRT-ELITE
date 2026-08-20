@@ -1,4 +1,4 @@
-const CACHE = "crt-elite-v5-87";
+const CACHE = "crt-elite-v5-88";
 const FILES = ["./","./index.html","./data.js","./app.js","./manifest.json","./icon-192.png","./icon-512.png"];
 const WORKER = "https://elitepro-worker.reiniercainet9.workers.dev";
 /* Web Push: al llegar un aviso (con la app CERRADA), muestra la notificación.
@@ -27,7 +27,7 @@ self.addEventListener("push", e => {
       icon: "./icon-192.png", badge: "./icon-192.png",
       vibrate: vibra, silent: false,
       requireInteraction: true,
-      timestamp: Date.now(), data: { url: "./index.html", jobId: msg.jobId || "", kind: msg.kind || "", sym: msg.sym || "", tvint: msg.tvint || "", seed: msg.seed || "" }
+      timestamp: Date.now(), data: { url: "./index.html", jobId: msg.jobId || "", kind: msg.kind || "", sym: msg.sym || "", tvint: msg.tvint || "", seed: msg.seed || "", ir: msg.ir || "" }
     });
   })());
 });
@@ -36,6 +36,17 @@ self.addEventListener("notificationclick", e => {
   e.notification.close();
   const tag=(e.notification.tag||"");
   const data=e.notification.data||{};
+  /* 🎯 DESTINO DEL AVISO: si el aviso trae un "ir", abre Apex DIRECTAMENTE ahí —
+     una sección (hoy, arranque, diario…) o una acción de Roberto (memoria, parte,
+     gonogo…). Si la app ya está abierta, le manda el destino sin recargarla. */
+  if(data.ir){
+    const destino="./index.html?ir="+encodeURIComponent(data.ir);
+    e.waitUntil(clients.matchAll({type:"window",includeUncontrolled:true}).then(cs => {
+      for(const c of cs){ if("focus" in c){ if(c.postMessage) c.postMessage({type:"apex-ir", ir:data.ir}); return c.focus(); } }
+      if(clients.openWindow) return clients.openWindow(destino);
+    }));
+    return;
+  }
   /* ALARMA de trading con par (y temporalidad): abre TradingView en ESE par y ESA TF
      para revisar la señal al instante. Si el móvil tiene la app de TradingView y
      los enlaces verificados, abre la app; si no, abre el gráfico web (mismo par+TF). */

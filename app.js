@@ -1001,6 +1001,71 @@ function diasLabel(v){
   if(a.join()==="6,7") return "Fin de semana";
   return a.map(d=>DIA_NOMS[d]).join(", ");
 }
+/* ============================================================
+   🎯 DESTINOS DE LOS AVISOS — cada cosa a su sitio
+   Al programar un aviso eliges a dónde te lleva el toque: una sección de Apex
+   o una acción de Roberto. Así una notificación de "revisar la memoria" abre
+   la memoria, y una de "parte del día" abre el parte. Cero navegación.
+   ============================================================ */
+const IR_DESTINOS = [
+  { v:"",              t:"— La app, sin más —" },
+  /* Secciones de Apex */
+  { v:"tab:hoy",       t:"🎯 Hoy" },
+  { v:"tab:arranque",  t:"🧭 Plan con Roberto" },
+  { v:"tab:checklist", t:"✅ Checklist" },
+  { v:"tab:gatillo",   t:"⚡ Gatillo" },
+  { v:"tab:riesgo",    t:"💰 Riesgo" },
+  { v:"tab:diario",    t:"📒 Diario" },
+  { v:"tab:analisis",  t:"📈 Análisis" },
+  { v:"tab:galeria",   t:"🖼️ Galería" },
+  { v:"tab:cuentas",   t:"🏦 Cuentas" },
+  { v:"tab:noticias",  t:"📰 Noticias" },
+  { v:"tab:almanaque", t:"📅 Almanaque" },
+  { v:"tab:reglas",    t:"⛔ Reglas" },
+  { v:"tab:conf",      t:"🎯 Confluencias" },
+  { v:"tab:rutina",    t:"🗺️ Rutina" },
+  { v:"tab:plan",      t:"📋 Plan" },
+  /* Acciones de Roberto */
+  { v:"rob:memoria",   t:"🧠 Roberto · Mi memoria" },
+  { v:"rob:plan",      t:"🧭 Roberto · Por dónde voy en mi plan" },
+  { v:"rob:parte",     t:"🌅 Roberto · Parte del día" },
+  { v:"rob:gonogo",    t:"✅ Roberto · GO/NO-GO" },
+  { v:"rob:diario",    t:"📆 Roberto · Análisis del día" },
+  { v:"rob:semanal",   t:"🗓️ Roberto · Análisis semanal" },
+  { v:"rob:progreso",  t:"📊 Roberto · Mi progreso" },
+  { v:"rob:capturas",  t:"📸 Roberto · Estudia mis capturas" },
+  { v:"rob:avisos",    t:"📥 Roberto · Avisos recibidos" },
+  { v:"rob:chat",      t:"💬 Roberto · Abrir el chat" },
+];
+function irDestinoLabel(v){ const d=IR_DESTINOS.find(x=>x.v===v); return d?d.t:""; }
+/* Lleva a Rey al destino del aviso. Se usa al abrir por notificación y desde el propio aviso. */
+function irDestino(v){
+  const s=String(v||"");
+  if(!s) return;
+  if(s.indexOf("tab:")===0){
+    const id=s.slice(4);
+    if(TABS.some(t=>t.id===id)) irA(id);
+    return;
+  }
+  if(s.indexOf("rob:")!==0) return;
+  const acc=s.slice(4);
+  if(typeof abrirIA==="function") abrirIA();
+  const F={
+    memoria: ()=>verMemoria(),
+    plan:    ()=>preguntarPlan(),
+    parte:   ()=>parteMatutino(),
+    gonogo:  ()=>goNoGo(),
+    diario:  ()=>evalDia(),
+    semanal: ()=>evalSemana(),
+    progreso:()=>progresoRoberto(),
+    capturas:()=>estudiarCapturas(),
+    avisos:  ()=>verAvisos(),
+    chat:    ()=>{}
+  };
+  const fn=F[acc];
+  if(fn) setTimeout(fn, 260);
+}
+
 function viewAvisos(){
   const v=el("div","view"); v.id="v-avisos";
   v.innerHTML=`
@@ -1034,6 +1099,7 @@ function renderAvisos(){
       <div class="av-foot">
         <span class="av-tag">${esc(diasLabel(r.dias))}</span>
         <span class="av-tag ${r.tipo==="fuerte"?"fuerte":""}">${r.tipo==="fuerte"?"🔔 fuerte":"aviso"}</span>
+        ${r.ir?`<span class="av-tag ir">→ ${esc(irDestinoLabel(r.ir))}</span>`:""}
         <span class="av-actions"><button class="btn av-btn" data-edit="${r.id}">✏️ Editar</button><button class="btn av-btn del" data-del="${r.id}">🗑️</button></span>
       </div>
     </div>`).join("") +
@@ -1065,6 +1131,8 @@ function avisoModal(id){
     <textarea class="inp" id="avMsg" rows="3" placeholder="Qué te recuerda…">${esc(r.msg)}</textarea>
     <label class="fl" style="margin-top:10px">Días (toca los que quieras)</label>
     <div class="dias-row" id="avDias">${chips}</div>
+    <label class="fl" style="margin-top:10px">Al tocar la notificación, abrir</label>
+    <select class="inp" id="avIr">${IR_DESTINOS.map(d=>`<option value="${d.v}"${d.v===(r.ir||"")?" selected":""}>${d.t}</option>`).join("")}</select>
     <label class="fl" style="margin-top:12px">Tipo</label>
     <select class="inp" id="avTipo">${opt("normal",r.tipo,"Aviso normal")}${opt("fuerte",r.tipo,"Fuerte (se queda en pantalla + vibración fuerte)")}</select>
   `,[{t:"Cancelar",fn:cerrarModal},{t:"Guardar",cls:"gold",fn:()=>guardarAvisoForm(id)}]);
@@ -1080,8 +1148,9 @@ function guardarAvisoForm(id){
   if(!tit){ toast("Ponle un título"); return; }
   if(!msg){ toast("Escribe el mensaje"); return; }
   if(!dias.length){ toast("Elige al menos un día"); return; }
-  if(id){ const r=REMINDERS.find(x=>x.id===id); if(r){ Object.assign(r,{hora,tit,msg,dias,tipo}); } }
-  else { REMINDERS.push({ id:"r"+Date.now().toString(36), hora, tit, msg, dias, tipo, on:true }); }
+  const ir=($("#avIr")&&$("#avIr").value)||"";
+  if(id){ const r=REMINDERS.find(x=>x.id===id); if(r){ Object.assign(r,{hora,tit,msg,dias,tipo,ir}); } }
+  else { REMINDERS.push({ id:"r"+Date.now().toString(36), hora, tit, msg, dias, tipo, ir, on:true }); }
   guardarReminders(); syncReminders(); cerrarModal(); renderAvisos(); toast("Aviso guardado ✓");
   robertoVigila((id?"Editó":"Creó")+" un AVISO de rutina: "+hora+" · "+tit+" — “"+msg+"” ("+diasLabel(dias)+", "+tipo+").");
 }
@@ -5415,7 +5484,8 @@ const IA_TOOLS = [
       tit:{type:"string",description:"Título corto, empieza con un emoji"},
       msg:{type:"string",description:"Texto del recordatorio"},
       dias:{type:"array",items:{type:"string",enum:["lun","mar","mie","jue","vie","sab","dom"]},description:"Días de la semana en que suena. Elige LOS QUE HAGAN FALTA (uno, varios o todos). Ej: ['lun'] solo lunes; ['lun','mie','vie']; ['sab','dom'] fin de semana; los 7 = todos los días."},
-      tipo:{type:"string",enum:["normal","fuerte"],description:"fuerte = se queda en pantalla con vibración fuerte"}
+      tipo:{type:"string",enum:["normal","fuerte"],description:"fuerte = se queda en pantalla con vibración fuerte"},
+      destino:{type:"string", enum:["","tab:hoy","tab:arranque","tab:checklist","tab:gatillo","tab:riesgo","tab:diario","tab:analisis","tab:galeria","tab:cuentas","tab:noticias","tab:almanaque","tab:reglas","tab:conf","tab:rutina","tab:plan","rob:memoria","rob:plan","rob:parte","rob:gonogo","rob:diario","rob:semanal","rob:progreso","rob:capturas","rob:avisos","rob:chat"], description:"A DÓNDE lleva el toque de la notificación. Elige SIEMPRE el que corresponda al contenido del aviso: si el aviso es de revisar tu memoria usa 'rob:memoria', si es de registrar el trade usa 'tab:diario', si es de mirar el día usa 'tab:hoy'. Déjalo vacío solo si no encaja en ninguno."},
     }, required:["hora","tit","msg","dias"] } },
   { name:"editar_aviso", description:"Edita un aviso existente, identificándolo por su hora ACTUAL. Para APAGARLO (sin borrarlo) pasa on:false; para reactivarlo, on:true.",
     input_schema:{ type:"object", properties:{
@@ -5560,7 +5630,7 @@ const IA_TOOLS = [
 /* Texto humano para la tarjeta de confirmación */
 function describeTool(name, i){
   i=i||{};
-  if(name==="crear_aviso") return "⏰ Crear aviso — "+(i.hora||"?")+" · "+(i.tit||"")+"\n"+(i.msg||"")+"\n("+diasLabel(i.dias||"LV")+" · "+(i.tipo||"normal")+")";
+  if(name==="crear_aviso") return "⏰ Crear aviso — "+(i.hora||"?")+" · "+(i.tit||"")+"\n"+(i.msg||"")+"\n("+diasLabel(i.dias||"LV")+" · "+(i.tipo||"normal")+")"+(i.destino&&irDestinoLabel(i.destino)?("\nAl tocarla abre: "+irDestinoLabel(i.destino)):"");
   if(name==="editar_aviso"){ const onTxt = i.on===false?"→ APAGAR (no sonará)":i.on===true?"→ ACTIVAR":null;
     return "✏️ Editar el aviso de las "+(i.hora_actual||"?")+"\n"+[onTxt,i.hora&&("→ hora "+i.hora),i.tit&&("→ título "+i.tit),i.msg&&("→ mensaje “"+i.msg+"”"),i.dias&&("→ días "+i.dias),i.tipo&&("→ tipo "+i.tipo)].filter(Boolean).join("\n"); }
   if(name==="borrar_aviso") return "🗑️ Borrar el aviso de las "+(i.hora||"?")+(i.tit?(" ("+i.tit+")"):"");
@@ -5619,9 +5689,10 @@ async function ejecutarTool(name, i){
     if(name==="crear_aviso"){
       if(!/^\d{1,2}:\d{2}$/.test(String(i.hora||""))) return {ok:false,msg:"Hora inválida"};
       const hora=i.hora.length===4?("0"+i.hora):i.hora;
-      const r={ id:"r"+Date.now().toString(36), hora, tit:i.tit||"⏰ Aviso", msg:i.msg||"", dias:parseDias(i.dias||"LV"), tipo:(i.tipo==="fuerte"?"fuerte":"normal"), on:true };
+      const ir=IR_DESTINOS.some(d=>d.v===i.destino)?i.destino:"";
+      const r={ id:"r"+Date.now().toString(36), hora, tit:i.tit||"⏰ Aviso", msg:i.msg||"", dias:parseDias(i.dias||"LV"), tipo:(i.tipo==="fuerte"?"fuerte":"normal"), ir, on:true };
       REMINDERS.push(r); guardarReminders(); syncReminders(); if(TAB==="avisos") renderAvisos();
-      return {ok:true,msg:"Aviso creado: "+r.hora+" · "+r.tit+" ("+diasLabel(r.dias)+")"};
+      return {ok:true,msg:"Aviso creado: "+r.hora+" · "+r.tit+" ("+diasLabel(r.dias)+")"+(ir?(" → abre "+irDestinoLabel(ir)):"")};
     }
     if(name==="editar_aviso"){
       const normH=s=>{ s=String(s||"").trim(); const m=s.match(/^(\d{1,2}):(\d{2})$/); return m?(m[1].padStart(2,"0")+":"+m[2]):s; };
@@ -6356,6 +6427,8 @@ function init(){
   document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible") iaResumePend(); });
   /* Si abriste tocando el push de una respuesta de Roberto, abre el chat con ella */
   try{ if(navigator.serviceWorker){ navigator.serviceWorker.addEventListener("message", ev=>{ if(ev.data && ev.data.type==="apex-open-chat"){ if(typeof abrirIA==="function") abrirIA(); if(ev.data.seed){ setTimeout(()=>iaProactivo(ev.data.seed),300); } else if(ev.data.jobId) iaMostrarJob(ev.data.jobId); else iaResumePend(); } }); } }catch(_){}
+  try{ const sp=new URLSearchParams(location.search); const dst=sp.get("ir"); if(dst) setTimeout(()=>irDestino(dst), 600); }catch(_){}
+  try{ if(navigator.serviceWorker){ navigator.serviceWorker.addEventListener("message", ev=>{ if(ev.data && ev.data.type==="apex-ir" && ev.data.ir) irDestino(ev.data.ir); }); } }catch(_){}
   try{ const sp=new URLSearchParams(location.search); if(sp.get("open")==="chat"){ const jb=sp.get("job"); const seed=sp.get("seed"); setTimeout(()=>{ if(typeof abrirIA==="function") abrirIA(); if(seed) setTimeout(()=>iaProactivo(seed),350); else if(jb) iaMostrarJob(jb); else iaResumePend(); }, 500); } }catch(_){}
   setTimeout(syncReminders, 1800);   /* sube los avisos al vigilante (cron) */
   setTimeout(hoyCargarNoticias, 2000);  /* 📰 noticias del día dentro de la vista HOY */
