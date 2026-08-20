@@ -5458,9 +5458,11 @@ function pintarIAChat(){
     return `<div class="ia-msg bot">${foto}${cuerpo}${btn}${iaAccionesHTML(x,i)}</div>`;
   }).join("")
     + (IA.busy?`<div class="ia-msg bot ia-typing"><span></span><span></span><span></span></div>
+       <div class="ia-cancel-w"><button class="ia-cancel" id="iaCancel">✕ Cancelar y escribir</button></div>
        <div class="ia-wait">Roberto está pensando… si busca en internet (firmas, noticias) tarda un poco más. Espera los puntitos.</div>`:"");
   m.scrollTop=m.scrollHeight;
   /* 🆘 botones de recuperación dentro de un mensaje (reenviar / continuar / recargar) */
+  { const bc=$("#iaCancel"); if(bc) bc.onclick=iaCancelarEspera; }
   m.querySelectorAll("[data-acc]").forEach(b=>{
     b.onclick=(e)=>{ e.stopPropagation(); const a=IA_ACCIONES[b.dataset.acc]; if(a && a.fn) a.fn(); };
   });
@@ -6276,7 +6278,7 @@ function iaPendBorrar(jobId){ try{ localStorage.setItem(IA_PEND_KEY, JSON.string
 const _iaPolling={};
 /* Arranca una consulta en segundo plano */
 async function iaBgStart(msgs, c){
-  IA.busy=true; pintarIAChat();
+  IA.busy=true; pintarIAChat(); iaVigilarBusy();   /* 🛟 nunca se queda bloqueado */
   let jobId;
   try{
     const r=await fetch(iaBase()+"/chat/bg",{method:"POST",headers:{"content-type":"application/json"},
@@ -6471,17 +6473,47 @@ async function iaMostrarJob(jobId, intentos){
   if((IA.voz.on || IA.autoHablarUna) && !ya && !/^⚠️|^💳|^🚫|^✅/.test(txt)){ iaHablar(txt, c.msgs.length-1); IA.autoHablarUna=false; }
 }
 /* Al abrir la app, recupera respuestas que terminaron mientras estaba cerrada */
+/* Recupera respuestas que quedaron en marcha (app cerrada, móvil bloqueado…).
+   ⚠️ ARREGLADO: antes bloqueaba el chat con IA.busy por CUALQUIER pendiente de hasta 2 horas.
+   Si un trabajo moría (sin créditos, corte de red), el pendiente se quedaba guardado y cada
+   vez que Rey abría la app volvía a bloquearse — sin poder escribir NADA. Ahora solo bloquea
+   si el trabajo es RECIENTE (menos de 6 min, que es lo que puede tardar de verdad); los más
+   viejos se siguen sondeando por si acaso, pero NO le cierran la boca. */
+const IA_ESPERA_MAX = 6*60000;
 function iaResumePend(){
   const ps=iaPendCargar();
   let hayActiva=false;
   ps.forEach(p=>{
     if(Date.now()-p.ts > 2*3600000){ iaPendBorrar(p.jobId); return; }
-    if(p.convId===IA.actId) hayActiva=true;
+    if(p.convId===IA.actId && (Date.now()-p.ts) < IA_ESPERA_MAX) hayActiva=true;
     iaPollJob(p.jobId);
   });
-  if(hayActiva){ IA.busy=true; pintarIAChat(); }
+  IA.busy = hayActiva;          // si no hay ninguno reciente, la caja queda LIBRE
+  pintarIAChat();
+  iaVigilarBusy();
 }
-
+/* 🛟 SEGURO ANTIBLOQUEO: pase lo que pase, la caja de texto no se queda muerta.
+   Si Roberto lleva más de 6 minutos "pensando", se libera solo y avisa. */
+let _iaBusyGuard=null;
+function iaVigilarBusy(){
+  clearTimeout(_iaBusyGuard);
+  if(!IA.busy) return;
+  _iaBusyGuard=setTimeout(()=>{
+    if(!IA.busy) return;
+    IA.busy=false;
+    try{ const c=iaConvAct(); if(c){ c.msgs.push(iaMsgFallo("")); iaGuardarConvs(); } }catch(_){}
+    pintarIAChat();
+    toast("Ya puedes escribir: la respuesta anterior no llegó");
+  }, IA_ESPERA_MAX);
+}
+/* ✕ Cancelar la espera a mano: si Rey ve los puntitos y quiere escribir YA, los para. */
+function iaCancelarEspera(){
+  Object.keys(_iaPolling).forEach(j=>{ clearTimeout(_iaPolling[j]); delete _iaPolling[j]; });
+  iaPendCargar().forEach(p=>iaPendBorrar(p.jobId));
+  IA.busy=false; clearTimeout(_iaBusyGuard);
+  pintarIAChat();
+  toast("Espera cancelada — ya puedes escribir");
+}
 async function iaEnviar(textoForzado, promptExtra){
   const ta=$("#iaText");
   let texto=(textoForzado!=null?textoForzado:(ta?ta.value:"")).trim();
