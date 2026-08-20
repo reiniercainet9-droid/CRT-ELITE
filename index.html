@@ -620,6 +620,27 @@ select.inp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns
 .ia-md th{background:var(--card3);color:var(--gold);font-weight:700;white-space:nowrap;position:sticky;top:0}
 .ia-md tbody tr:nth-child(even) td{background:rgba(255,255,255,.025)}
 .ia-md b{color:var(--txt);font-weight:700}
+
+/* ===== 🎯 VISTA HOY — todo el día en una pantalla ===== */
+.hoy-top{text-align:center}
+.hoy-fecha{font-size:13px;color:var(--txt3);letter-spacing:.3px}
+.hoy-horas{font-size:20px;font-weight:800;color:var(--txt);margin:5px 0 11px;line-height:1.35}
+.hoy-horas span{font-size:11.5px;font-weight:600;color:var(--txt3);letter-spacing:.4px;text-transform:uppercase}
+.hoy-pill{display:inline-block;padding:7px 14px;border-radius:999px;font-size:13px;font-weight:700;border:1px solid}
+.hoy-pill.ok{background:rgba(55,208,141,.12);border-color:rgba(55,208,141,.42);color:var(--green)}
+.hoy-pill.warn{background:rgba(245,166,91,.12);border-color:rgba(245,166,91,.42);color:var(--orange)}
+.hoy-pill.bad{background:rgba(255,107,122,.10);border-color:rgba(255,107,122,.38);color:var(--red)}
+.hoy-row{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:11px 13px;margin-top:9px}
+.hoy-row.warn{border-color:rgba(245,166,91,.45)}
+.hoy-row.bad{border-color:rgba(255,107,122,.5);background:rgba(255,107,122,.06)}
+.hoy-row-t{font-size:14.5px;font-weight:700;color:var(--txt)}
+.hoy-row-d{font-size:12.5px;color:var(--txt2);margin-top:3px}
+.hoy-row-a{font-size:12.5px;color:var(--orange);margin-top:5px;font-weight:600}
+.hoy-row.bad .hoy-row-a{color:var(--red)}
+.hoy-ctx{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:11px 12px;
+  font-size:11.5px;line-height:1.5;color:var(--txt2);white-space:pre-wrap;word-break:break-word;
+  max-height:230px;overflow:auto;margin:0 0 4px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.note.ok{color:var(--green)} .note.bad{color:var(--red)}
 </style>
 </head>
 <body>

@@ -302,6 +302,98 @@ async function verAvisos(){
   c.msgs.push({role:"assistant",content:txt});
   iaGuardarConvs(); pintarIAChat();
 }
+/* Envía a Roberto un mensaje con BLOQUES arbitrarios (varias imágenes, documentos…)
+   sin pasar por la caja de texto. Las imágenes NO se guardan en el historial del chat
+   (solo el resumen), para no reventar el almacenamiento del teléfono. */
+async function iaEnviarBloques(bloques, resumenChat){
+  if(IA.busy) return;
+  if(!IA.url){ toast("Configura el puente (⚙️)"); return; }
+  const c=iaConvAct();
+  c.msgs.push({role:"user",content:resumenChat||"(material adjunto)"});
+  if(!c.t) c.t=iaTit(c);
+  IA.busy=true; iaGuardarConvs(); pintarIAChat();
+  let hist=c.msgs.slice(-14);
+  while(hist.length && hist[0].role!=="user") hist.shift();
+  const msgs=hist.map(x=>iaMsgApi(x,false));
+  let calTxt=""; try{ const ev=await cargarCalendarioCache(); calTxt=iaCalendarioContexto(ev)+"\n"; }catch(_){ calTxt=""; }
+  const inj=iaReloj()+"\n"+calTxt+iaContexto()+"\n"+iaEstrategiaDef()+"\n"+iaFugas()+"\n"+iaRacha()+"\n";
+  const last=msgs[msgs.length-1];
+  last.content=[{type:"text",text:inj}].concat(bloques);
+  await iaBgStart(msgs, c);
+}
+
+/* ============================================================
+   📸 QUE ROBERTO APRENDA DE TUS CAPTURAS
+   Le pasa las últimas capturas de tu Galería (con su par, fecha y resultado si son
+   de un trade) y le pide que saque PATRONES VISUALES repetidos: dónde entras, qué
+   forma tienen tus ganadoras frente a tus perdedoras, qué se repite antes de un SL.
+   Lo que aprenda lo guarda en su memoria con tema "visual".
+   ============================================================ */
+async function estudiarCapturas(n){
+  n = n || 6;
+  const caps = (typeof galeriaCaps === "function" ? galeriaCaps() : []).slice(0, n);
+  if (!caps.length) { toast("Aún no hay capturas en tu Galería 📸"); return; }
+  if (typeof abrirIA === "function") abrirIA();
+  iaTemaChat("📸 Estudia mis capturas");
+  toast("Bajando tus capturas… 📸");
+
+  const bloques = [];
+  const fichas = [];
+  for (const cap of caps) {
+    let img = null;
+    try { img = await nubeShotGet(cap.id); } catch (_) {}
+    if (!img) continue;
+    /* si la captura pertenece a un trade, adjunta su resultado: así aprende qué
+       forma tienen sus GANADORAS frente a sus PERDEDORAS, no solo cómo se ven */
+    const t = (Array.isArray(TRADES) ? TRADES : []).find(x => x.shotOpen === cap.id || x.shotClose === cap.id || (x.shots || []).indexOf(cap.id) >= 0);
+    const res = (t && !t.abierta) ? (((parseFloat(t.r) || 0) >= 0 ? "GANADORA " : "PERDEDORA ") + r1(parseFloat(t.r) || 0) + "R") : "sin resultado registrado";
+    const ficha = (cap.par || "—") + " · " + (cap.fecha || "—") + " · " + (cap.tipo || "captura") + " · " + res;
+    fichas.push(ficha);
+    const b64 = String(img).replace(/^data:image\/\w+;base64,/, "");
+    const media = /^data:image\/png/.test(String(img)) ? "image/png" : "image/jpeg";
+    bloques.push({ type: "text", text: "📸 " + ficha });
+    bloques.push({ type: "image", source: { type: "base64", media_type: media, data: b64 } });
+  }
+  if (!bloques.length) { toast("No pude descargar las capturas ahora mismo"); return; }
+
+  bloques.push({ type: "text", text:
+    "Estas son mis últimas capturas de gráfico. ESTÚDIALAS COMO MATERIAL DE APRENDIZAJE:\n" +
+    "1) Mira cada una y describe brevemente QUÉ VES (estructura, dónde está el precio, si hay barrido, en qué zona entré).\n" +
+    "2) Compara mis GANADORAS con mis PERDEDORAS y dime qué se REPITE visualmente en cada grupo.\n" +
+    "3) Dime mi patrón visual más peligroso (lo que se repite antes de una perdedora) y cómo lo reconozco EN EL MOMENTO, no después.\n" +
+    "4) Guarda en tu memoria (tema 'visual') los 2-3 patrones más sólidos que hayas descubierto.\n" +
+    "Recuerda: toda hora con AM/PM y su zona (Nueva York o Brasil)." });
+
+  await iaEnviarBloques(bloques, "📸 Estudia estas " + fichas.length + " capturas y saca mis patrones visuales.");
+}
+
+/* 🧠 MI MEMORIA — le enseña a Rey todo lo que Roberto sabe de él, agrupado por temas. */
+async function verMemoria(){
+  if(typeof abrirIA==="function") abrirIA();
+  iaTemaChat("🧠 Mi memoria");
+  const c=iaConvAct();
+  let txt="";
+  try{
+    const r=await fetch(nubeUrl()+"/mem",{cache:"no-store"});
+    const d=await r.json();
+    const entries=(d&&d.entries)||[];
+    _iaMemCache=entries;
+    if(!entries.length){
+      txt="## 🧠 Mi memoria\n\nTodavía no he guardado nada de ti. A medida que trabajemos iré guardando lo importante — y siempre te pido permiso antes.";
+    }else{
+      const grupos={};
+      entries.forEach(e=>{ const k=MEM_TEMAS_APP[e.tema]?e.tema:"general"; (grupos[k]=grupos[k]||[]).push(e); });
+      const orden=Object.keys(MEM_TEMAS_APP).filter(k=>grupos[k]);
+      txt="## 🧠 Lo que sé de ti ("+entries.length+" recuerdos)\n\n"+
+        orden.map(k=>"### "+MEM_TEMAS_APP[k]+" ("+grupos[k].length+")\n"+
+          grupos[k].slice(-12).reverse().map(e=>"- "+e.texto).join("\n")).join("\n\n")+
+        "\n\n_Si algo aquí ya no es cierto, dímelo y lo borro._";
+    }
+  }catch(_){ txt="⚠️ No pude leer mi memoria ahora mismo. Revisa tu internet."; }
+  c.msgs.push({role:"assistant",content:txt});
+  iaGuardarConvs(); pintarIAChat();
+}
+
 /* 🌅 PARTE MATUTINO HABLADO — al abrir la app por la mañana (1 vez al día), Roberto da el
    resumen del día EN VOZ: saludo, ventanas de hoy, noticias clave, plan semanal, estado de
    cuentas/disciplina y pendientes. Corto y accionable, como un briefing de mentor. */
@@ -992,6 +1084,7 @@ const TABS=[
   {id:"avisos",    ic:"⏰", n:"Avisos"},
   {id:"checklist", ic:"✅", n:"Checklist"},
   {id:"conf",      ic:"🎯", n:"Confluencias"},
+  {id:"hoy",       ic:"🎯", n:"Hoy"},
   {id:"rutina",    ic:"🗺️", n:"Rutina"},
   {id:"reglas",    ic:"⛔", n:"Reglas"},
   {id:"riesgo",    ic:"💰", n:"Riesgo"},
@@ -1004,13 +1097,14 @@ const TABS=[
   {id:"mentor",    ic:"🧠", n:"Mentor"},
   {id:"plan",      ic:"📋", n:"Plan"}
 ];
-let TAB="checklist";
+let TAB="hoy";
 
 function irA(id){
   TAB=id;
   document.querySelectorAll(".view").forEach(v=>v.classList.toggle("on",v.id==="v-"+id));
   document.querySelectorAll("#nav button").forEach(b=>b.classList.toggle("on",b.dataset.t===id));
   window.scrollTo({top:0,behavior:"instant"});
+  if(id==="hoy")      renderHoy();
   if(id==="analisis") renderAnalisis();
   if(id==="diario")   renderDiario();
   if(id==="galeria")  renderGaleria();
@@ -1118,6 +1212,127 @@ const AYUDA = {
 function abrirAyuda(id){
   const a=AYUDA[id]; if(!a) return;
   abrirModal(`<div class="ayuda"><h3>${a.t}</h3>${a.h}</div>`, [{t:"Entendido 👍", cls:"gold", fn:cerrarModal}]);
+}
+
+/* ============================================================
+   VISTA 🎯 HOY — TODO lo del día en UNA sola pantalla
+   Rey abría 5 secciones para saber en qué punto estaba. Aquí ve de un vistazo:
+   la hora (Brasil Y Nueva York), si está en ventana válida, el plan/checklist,
+   el riesgo real de cada cuenta hoy, lo que dejó pendiente y el último contexto
+   del gráfico que mandó el indicador. Sin abrir nada más.
+   ============================================================ */
+function viewHoy(){
+  const v=el("div","view"); v.id="v-hoy";
+  v.innerHTML=`<div id="hoyBody"></div>`;
+  return v;
+}
+/* Último contexto del gráfico: primero el que dejó el Puente/indicador (📡 latido), si lo hay */
+let HOY_CTX=null;
+async function hoyCargarCtx(){
+  try{
+    const r=await fetch(nubeUrl()+"/tvctx",{cache:"no-store"});
+    if(!r.ok) return;
+    const d=await r.json();
+    if(d && d.ok && d.ctx){ HOY_CTX=d; if(TAB==="hoy") renderHoy(); }
+  }catch(_){}
+}
+function renderHoy(){
+  const body=$("#hoyBody"); if(!body) return;
+  const now=new Date();
+  const fBR=new Intl.DateTimeFormat("es",{timeZone:"America/Sao_Paulo",weekday:"long",day:"2-digit",month:"long"}).format(now);
+  const hBR=new Intl.DateTimeFormat("es",{timeZone:"America/Sao_Paulo",hour:"2-digit",minute:"2-digit",hour12:true}).format(now);
+  const hNY=new Intl.DateTimeFormat("es",{timeZone:"America/New_York",hour:"2-digit",minute:"2-digit",hour12:true}).format(now);
+  const ny=horaNY(); const abierto=forexAbierto(ny); const vent=ventanaActiva(); const prox=proximaVentana();
+  let h="";
+
+  /* ── 1. RELOJ + VENTANA ── */
+  const estado = !abierto ? `<span class="hoy-pill bad">🔒 Forex cerrado</span>`
+    : vent ? `<span class="hoy-pill ok">🟢 ${esc(vent.n)} — ventana válida</span>`
+    : `<span class="hoy-pill warn">🟡 Fuera de ventana${prox?(" · próxima: "+esc(prox.n)+" a las "+esc(prox.h)):""}</span>`;
+  h+=`<div class="card hoy-top">
+    <div class="hoy-fecha">${esc(fBR.charAt(0).toUpperCase()+fBR.slice(1))}</div>
+    <div class="hoy-horas"><b>${esc(hBR)}</b> <span>Brasil</span> · <b>${esc(hNY)}</b> <span>Nueva York</span></div>
+    <div>${estado}</div>
+  </div>`;
+
+  /* ── 2. PLAN DE HOY (estrategia + checklist) ── */
+  let hechos=0, total=0;
+  CHECKLIST.forEach(bl=>bl.items.forEach(it=>{ total++; if(CHK[it.id]) hechos++; }));
+  const pctChk = total?Math.round(hechos/total*100):0;
+  const claves = []; CHECKLIST.forEach(bl=>bl.items.forEach(it=>{ if(it.key && !CHK[it.id]) claves.push(it.t); }));
+  h+=`<div class="card">
+    <div class="card-h"><span class="ic">📋</span><h2>Plan de hoy</h2><span class="cnt">${hechos}/${total}</span></div>
+    <div class="bar"><i style="width:${pctChk}%"></i></div>
+    <p class="desc" style="margin-top:8px">Estrategia activa: <b>${esc(CTX.estrategia||"—")}</b> · Modo: <b>${esc(CTX.modo==="real"?"Real":"Backtest")}</b></p>
+    ${claves.length?`<div class="note" style="text-align:left">⚠️ Te faltan pasos CLAVE: ${claves.slice(0,4).map(esc).join(" · ")}${claves.length>4?" …":""}</div>`
+      :`<div class="note ok" style="text-align:left">✅ Checklist clave completo. Puedes buscar setup.</div>`}
+    <button class="btn" id="hoyChk">Abrir checklist →</button>
+  </div>`;
+
+  /* ── 3. RIESGO DE HOY (por cuenta, en vivo) ── */
+  const hoy=hoyISO();
+  const cuentas=(Array.isArray(CUENTAS)?CUENTAS:[]).filter(c=>c.fase!=="Cerrada");
+  let filas="", frenoGlobal=false;
+  cuentas.forEach(c=>{
+    const riesgoPct=+c.riesgoPct||0.5;
+    const hoyT=TRADES.filter(t=>t.cuenta===c.id && t.fecha===hoy && !t.abierta);
+    const rHoy=hoyT.reduce((a,t)=>a+(parseFloat(t.r)||0),0);
+    const slHoy=hoyT.filter(t=>(parseFloat(t.r)||0)<0).length;
+    const diaPct=rHoy*riesgoPct;
+    const ddDaily=+c.ddDailyPct||0;
+    const usadoDia=diaPct<0?Math.abs(diaPct):0;
+    const margen=ddDaily>0?Math.max(0,ddDaily-usadoDia):null;
+    let sem="ok", aviso="";
+    if(hoyT.length>=2){ sem="bad"; aviso="Ya llevas 2 trades hoy → para."; frenoGlobal=true; }
+    if(slHoy>=2){ sem="bad"; aviso="2 SL hoy → cierra plataforma hasta mañana."; frenoGlobal=true; }
+    if(!aviso && ddDaily>0 && margen!=null && margen<=ddDaily*0.3){ sem="warn"; aviso="Cerca del límite diario (queda "+r1(margen)+"%)."; }
+    filas+=`<div class="hoy-row ${sem}">
+      <div class="hoy-row-t">${esc(c.alias||c.firma||"Cuenta")}</div>
+      <div class="hoy-row-d">${hoyT.length}/2 trades · ${slHoy} SL · <b>${diaPct>=0?"+":""}${r1(diaPct)}%</b> hoy${margen!=null?(" · margen "+r1(margen)+"%"):""}</div>
+      ${aviso?`<div class="hoy-row-a">${esc(aviso)}</div>`:""}
+    </div>`;
+  });
+  h+=`<div class="card${frenoGlobal?" alert":""}">
+    <div class="card-h"><span class="ic">🛡️</span><h2 class="${frenoGlobal?"red":""}">Riesgo de hoy</h2></div>
+    ${filas||`<p class="desc">Aún no tienes cuentas registradas. Añádelas en 🏦 Cuentas para que vigile tu riesgo real.</p>`}
+    ${frenoGlobal?`<div class="note bad" style="text-align:left">🔴 Hoy tu regla dice PARAR. No abras nada más.</div>`:""}
+  </div>`;
+
+  /* ── 4. PENDIENTES ── */
+  const pend=(IA.convs||[]).filter(c=>c.revisar && c.msgs && c.msgs.length);
+  h+=`<div class="card">
+    <div class="card-h"><span class="ic">🔍</span><h2>Pendientes</h2><span class="cnt">${pend.length}</span></div>
+    ${pend.length?pend.slice(0,5).map(c=>`<div class="hoy-row"><div class="hoy-row-t">${esc(iaTit(c))}</div></div>`).join("")
+      :`<p class="desc">Nada a medias. Todo cerrado ✅</p>`}
+    ${pend.length?`<button class="btn" id="hoyPend">Repasarlos con Roberto →</button>`:""}
+  </div>`;
+
+  /* ── 5. SETUP / CONTEXTO DEL GRÁFICO ── */
+  h+=`<div class="card">
+    <div class="card-h"><span class="ic">📈</span><h2>Contexto del gráfico</h2></div>
+    ${HOY_CTX && HOY_CTX.ctx
+      ? `<pre class="hoy-ctx">${esc(String(HOY_CTX.ctx).slice(0,1200))}</pre>
+         <p class="desc">Último dato que mandó tu indicador${HOY_CTX.ts?(" · "+new Intl.DateTimeFormat("es",{timeZone:"America/Sao_Paulo",hour:"2-digit",minute:"2-digit",hour12:true}).format(new Date(HOY_CTX.ts))+" hora de Brasil"):""}.</p>`
+      : `<p class="desc">Sin contexto todavía. Llega solo cada ~15 min desde tu indicador (latido 📡) si tienes las alarmas activas.</p>`}
+    <button class="btn" id="hoyGo">✅ Pedir GO/NO-GO a Roberto</button>
+  </div>`;
+
+  /* ── 6. CIERRE DEL DÍA / HERRAMIENTAS ── */
+  h+=`<div class="card">
+    <div class="card-h"><span class="ic">🧰</span><h2>Herramientas del día</h2></div>
+    <button class="btn" id="hoyParte">🌅 Parte del día</button>
+    <button class="btn" id="hoyInf">📄 Informe mensual</button>
+    <button class="btn" id="hoyResp">☁️ Respaldo</button>
+  </div>`;
+
+  body.innerHTML=h;
+  const on=(id,fn)=>{ const b=$("#"+id); if(b) b.onclick=fn; };
+  on("hoyChk",()=>irA("checklist"));
+  on("hoyPend",()=>{ if(typeof revisarPendientes==="function") revisarPendientes(); });
+  on("hoyGo",()=>{ if(typeof goNoGo==="function") goNoGo(); });
+  on("hoyParte",()=>{ if(typeof parteMatutino==="function") parteMatutino(); });
+  on("hoyInf",()=>informeMensual());
+  on("hoyResp",()=>compartirRespaldo());
 }
 
 /* ============================================================
@@ -4040,7 +4255,7 @@ function evalSemana(){
   const data=ts.length?tradesTexto(ts):"(No hay trades cerrados en los últimos 7 días.)";
   iaEnviar("🤖 Hazme el CIERRE de mi semana.", EVAL_SEMANA_PROM+"\n\nSUS TRADES DE LA SEMANA (desde "+cut+"):\n"+data);
 }
-function iaProactivo(seed){ if(seed==="eval_dia") return evalDia(); if(seed==="eval_semana") return evalSemana(); if(seed==="revisar_pendientes") return revisarPendientes(); if(seed==="revisar_riesgo") return revisarRiesgo(); if(seed==="practica_replay") return practicaReplay(); }
+function iaProactivo(seed){ if(seed==="informe_aprendizaje") return verMemoria(); if(seed==="eval_dia") return evalDia(); if(seed==="eval_semana") return evalSemana(); if(seed==="revisar_pendientes") return revisarPendientes(); if(seed==="revisar_riesgo") return revisarRiesgo(); if(seed==="practica_replay") return practicaReplay(); }
 
 let _iaConoc = null;
 /* Arma el bloque de conocimiento (estrategia + indicador + perfil) desde los
@@ -4158,6 +4373,14 @@ function iaConvItemHTML(c){
     <div class="ia-conv-d">${fecha} · ${c.msgs.filter(m=>m.role==="user").length} preg.</div></div>
     <div class="ia-conv-flags">${fb("fijado",c.fijado,"📌","Fijar")}${fb("estrella",c.estrella,"⭐","Importante")}${fb("revisar",c.revisar,"🔍","Por revisar")}<button class="ia-conv-x" data-del="${c.id}" aria-label="Borrar">🗑️</button></div></div>`;
 }
+/* 🗂️ TEMAS de la memoria de Roberto — la memoria ya no es una lista plana: cada recuerdo
+   pertenece a un área, y así Roberto puede razonar por áreas ("en psicología sé esto de ti"). */
+const MEM_TEMAS_APP = {
+  psicologia:"🧠 Psicología y disciplina", gestion:"💰 Gestión y riesgo", estrategia:"📚 Estrategia (CRT/SMC/ICT)",
+  pares:"💱 Pares y sus manías", mercado:"🌍 Mercado y noticias", indicador:"📈 Indicador y herramientas",
+  resultados:"📊 Resultados y estadísticas", visual:"📸 Patrones visuales (de tus capturas)",
+  personal:"🧍 Rey (rutina, vida, objetivos)", general:"🗂️ General"
+};
 /* 🔎 BUSCADOR de chats y memoria */
 let _iaMemCache=null;
 function iaBuscarMemoria(q){
@@ -4287,6 +4510,8 @@ function iaInit(){
         <button class="ia-chip" data-act="escalado">💰 Escalado</button>
         <button class="ia-chip" data-act="parte">🌅 Parte del día</button>
         <button class="ia-chip" data-act="avisos">📥 Avisos recibidos</button>
+        <button class="ia-chip" data-act="memoria">🧠 Mi memoria</button>
+        <button class="ia-chip" data-act="capturas">📸 Estudia mis capturas</button>
         <button class="ia-chip" data-act="comparar">⚖️ Comparar pares</button>
         <button class="ia-chip" data-act="replay">🎬 Práctica Replay</button>
         <button class="ia-chip" data-q="Analiza mi operativa reciente con mis datos: dime con claridad qué estoy haciendo bien, qué estoy haciendo mal y cómo lo corrijo paso a paso.">📊 Analiza mi operativa</button>
@@ -4363,6 +4588,8 @@ function iaInit(){
     if(b.dataset.act==="checkemo") return checkEmocional();
     if(b.dataset.act==="parte")    return parteMatutino();
     if(b.dataset.act==="avisos")   return verAvisos();
+    if(b.dataset.act==="memoria")  return verMemoria();
+    if(b.dataset.act==="capturas") return estudiarCapturas();
     if(b.dataset.act==="gonogo")   return goNoGo();
     if(b.dataset.act==="progreso") return progresoRoberto();
     if(b.dataset.act==="escalado") return escaladoRoberto();
@@ -4947,9 +5174,10 @@ const IA_TOOLS = [
     input_schema:{ type:"object", properties:{ chart_type:{type:"string",enum:["Candles","HeikinAshi","Line","Area","Bars","HollowCandles"]}, target:{type:"string",description:"(opcional) par de la pestaña"} }, required:["chart_type"] } },
   { name:"ajustar_indicador", description:"Ajusta UNA configuración del indicador CRT Elite de Rey en su gráfico (por el Puente). Referencia el ajuste por su NOMBRE exacto o casi (ej. 'Pivote 4H', 'Sensibilidad de pivotes', 'Riesgo por trade (%)', 'Máximo de entradas por sesión', 'Killzone Londres', 'Riesgo:Beneficio (TP final)'). El valor: número, true/false, o texto según el ajuste. SIEMPRE con la aprobación de Rey (tarjeta). Requiere PC con Puente. Propón un ajuste solo cuando Rey lo pida o cuando de verdad convenga (explícale por qué).",
     input_schema:{ type:"object", properties:{ ajuste:{type:"string",description:"Nombre del ajuste tal como aparece en el indicador"}, valor:{description:"Nuevo valor: número (5, 0.5), booleano (true/false) o texto"}, target:{type:"string",description:"(opcional) par de la pestaña"} }, required:["ajuste","valor"] } },
-  { name:"guardar_memoria", description:"Guarda en tu MEMORIA permanente un dato importante que debas recordar en el futuro sobre Rey, su forma de operar, su psicología, sus preferencias, o un patrón/lección de trading. Úsalo SOLO con lo verdaderamente RELEVANTE para tu adaptación y aprendizaje — NO guardes todo ni trivialidades ni cosas de un solo momento; filtra con criterio lo que de verdad te servirá a futuro. Rey lo aprueba antes de guardar.",
+  { name:"guardar_memoria", description:"Guarda en tu MEMORIA permanente un dato importante que debas recordar en el futuro sobre Rey, su forma de operar, su psicología, sus preferencias, o un patrón/lección de trading. Úsalo SOLO con lo verdaderamente RELEVANTE para tu adaptación y aprendizaje — NO guardes todo ni trivialidades ni cosas de un solo momento; filtra con criterio lo que de verdad te servirá a futuro. Indica SIEMPRE el TEMA: tu memoria se organiza por áreas y así podrás razonar por área. Rey lo aprueba antes de guardar.",
     input_schema:{ type:"object", properties:{
       tipo:{type:"string", enum:["perfil","aprendizaje","preferencia","patron","resultado"], description:"Categoría del recuerdo."},
+      tema:{type:"string", enum:["psicologia","gestion","estrategia","pares","mercado","indicador","resultados","visual","personal","general"], description:"Área del recuerdo. Usa 'visual' para los patrones que descubras MIRANDO sus capturas de pantalla."},
       texto:{type:"string", description:"El dato a recordar, claro y en 1-2 frases."}
     }, required:["texto"] } },
   { name:"borrar_memoria", description:"Borra un dato de tu memoria por su id (aparece entre paréntesis en tu bloque de memoria) cuando descubras que ya no es cierto o quedó obsoleto. Rey lo aprueba.",
@@ -4968,8 +5196,8 @@ const IA_TOOLS = [
     input_schema:{ type:"object", properties:{ fijar:{type:"boolean",description:"true fija 📌, false quita"}, estrella:{type:"boolean",description:"true marca importante ⭐, false quita"}, revisar:{type:"boolean",description:"true marca por revisar 🔍, false quita"}, motivo:{type:"string",description:"(opcional) por qué la marcas, 1 frase"} }, required:[] } },
   { name:"editar_estrategia", description:"Define o edita las REGLAS/ajustes de una de las estrategias de Rey, para ADAPTARLA a lo que van aprendiendo, o para definir una NUEVA (Oro, índices, acciones, etc.) con su instrumento y sus reglas. Por defecto edita la estrategia ACTIVA. Úsalo cuando Rey y tú acuerden un cambio/mejora en su método o al crear una estrategia nueva. Rey lo aprueba con tarjeta.",
     input_schema:{ type:"object", properties:{ nombre:{type:"string",description:"(opcional) estrategia a editar; por defecto la activa"}, instrumento:{type:"string",description:"(opcional) instrumento(s), ej. 'Oro XAU/USD', 'Índices US30/NAS100'"}, ajustes:{type:"string",description:"(opcional) reglas/ajustes/aprendizajes de la estrategia, en texto"} }, required:[] } },
-  { name:"buscar_memoria", description:"Busca en TODA tu memoria (incluidos los recuerdos ANTIGUOS que no aparecen en tu contexto). Úsala cuando necesites recordar algo que no ves en tu bloque de memoria actual: lecciones viejas, preferencias, patrones ('¿qué aprendí de los lunes?'). Es SOLO LECTURA y automática (sin tarjeta). El resultado te llega como texto para seguir razonando.",
-    input_schema:{ type:"object", properties:{ consulta:{type:"string",description:"Qué buscar (palabras clave), ej. 'lunes', 'revancha', 'GBP'"} }, required:["consulta"] } },
+  { name:"buscar_memoria", description:"Busca en TODA tu memoria (incluidos los recuerdos ANTIGUOS que no aparecen en tu contexto). Úsala cuando necesites recordar algo que no ves en tu bloque de memoria actual, o cuando Rey te pregunte por un ÁREA concreta ('¿qué sabes de mi psicología?', '¿qué has aprendido del EUR/USD?'): en ese caso filtra por tema. Es SOLO LECTURA y automática (sin tarjeta). El resultado te llega como texto para seguir razonando.",
+    input_schema:{ type:"object", properties:{ consulta:{type:"string",description:"Qué buscar (palabras clave), ej. 'lunes', 'revancha', 'GBP'. Puedes omitirlo si filtras por tema."}, tema:{type:"string", enum:["psicologia","gestion","estrategia","pares","mercado","indicador","resultados","visual","personal","general"], description:"(opcional) Filtra por área de tu memoria."} }, required:[] } },
   { name:"registrar_retiro", description:"Registra un RETIRO/PAYOUT que Rey cobró de una de sus cuentas (dinero real ganado). Suma al total retirado de esa cuenta (y ajusta su balance si lo lleva manual). Úsalo cuando Rey te diga que cobró/retiró dinero. Rey lo aprueba con tarjeta.",
     input_schema:{ type:"object", properties:{ cuenta:{type:"string",description:"Alias o firma de la cuenta (ej. 'FundedNext fondeada')"}, monto:{type:"number",description:"Monto retirado en USD"}, nota:{type:"string",description:"(opcional) nota"} }, required:["monto"] } },
   { name:"revisar_indicador", description:"LEE los ajustes ACTUALES del indicador CRT Elite de Rey en su gráfico (pivotes por temporalidad y sus tolerancias, killzones/sesiones, sesgo/giro, entradas, gestión y riesgo) para AUDITARLOS. Es SOLO LECTURA. Úsalo cuando Rey te pida revisar/auditar su indicador, o cuando quieras comprobar que su configuración es coherente antes de sugerir algo. Cuando tengas los ajustes, dile en claro qué está BIEN y qué conviene AJUSTAR y por qué, y ofrécete a cambiarlo con ajustar_indicador. Requiere PC con Puente.",
@@ -5177,14 +5405,22 @@ async function ejecutarTool(name, i){
     }
     if(name==="buscar_memoria"){
       const q=String(i.consulta||"").trim().toLowerCase();
-      if(!q) return {ok:false,msg:"Falta qué buscar"};
+      const tema=String(i.tema||"").trim();
+      if(!q && !tema) return {ok:false,msg:"Falta qué buscar (palabras o tema)"};
       try{
         const r=await fetch(nubeUrl()+"/mem",{cache:"no-store"}); const d=await r.json();
         const entries=(d&&d.entries)||[];
         const palabras=q.split(/\s+/).filter(w=>w.length>2);
-        const hits=entries.filter(e=>{ const t=String(e.texto||"").toLowerCase(); return palabras.length?palabras.some(w=>t.includes(w)):t.includes(q); }).slice(-15);
-        if(!hits.length) return {ok:true,msg:"No encontré recuerdos que coincidan con “"+i.consulta+"” (busqué entre "+entries.length+" recuerdos)."};
-        return {ok:true,msg:"Encontré "+hits.length+" recuerdo(s) sobre “"+i.consulta+"”:\n"+hits.map(e=>"• ["+(e.tipo||"")+"] "+e.texto).join("\n")};
+        const hits=entries.filter(e=>{
+          if(tema && (e.tema||"general")!==tema) return false;
+          if(!q) return true;
+          const t=String(e.texto||"").toLowerCase();
+          return palabras.length?palabras.some(w=>t.includes(w)):t.includes(q);
+        }).slice(-20);
+        const nom=tema?(MEM_TEMAS_APP[tema]||tema):"";
+        const crit=[q?("“"+i.consulta+"”"):"", nom?("tema "+nom):""].filter(Boolean).join(" · ");
+        if(!hits.length) return {ok:true,msg:"No encontré recuerdos con "+crit+" (busqué entre "+entries.length+" recuerdos)."};
+        return {ok:true,msg:"Encontré "+hits.length+" recuerdo(s) — "+crit+":\n"+hits.map(e=>"• ["+(MEM_TEMAS_APP[e.tema||"general"]||"🗂️ General")+"] "+e.texto).join("\n")};
       }catch(_){ return {ok:false,msg:"No pude leer la memoria en este momento."}; }
     }
     if(name==="registrar_retiro"){
@@ -5223,8 +5459,10 @@ async function ejecutarTool(name, i){
       const texto=String(i.texto||"").trim();
       if(!texto) return {ok:false,msg:"No había nada que recordar"};
       const tipo=i.tipo||"aprendizaje";
-      try{ fetch(nubeUrl()+"/mem",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({tipo,texto})}).catch(()=>{}); }catch(_){}
-      return {ok:true,msg:"Guardado en mi memoria: “"+texto+"”. Lo recordaré de aquí en adelante."};
+      const tema=MEM_TEMAS_APP[i.tema]?i.tema:"general";
+      try{ fetch(nubeUrl()+"/mem",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({tipo,texto,tema})}).catch(()=>{}); }catch(_){}
+      _iaMemCache=null;
+      return {ok:true,msg:"Guardado en mi memoria ("+(MEM_TEMAS_APP[tema])+"): “"+texto+"”. Lo recordaré de aquí en adelante."};
     }
     if(name==="borrar_memoria"){
       const id=String(i.id||"").trim();
@@ -5566,11 +5804,159 @@ async function iaEnviar(textoForzado, promptExtra){
 }
 
 /* ============================================================
+   📄 INFORME MENSUAL EXPORTABLE — el registro de tu negocio
+   Genera una página con TODO el mes (métricas, curva de R, cuentas, retiros, errores)
+   y la abre lista para "Compartir" o para "Imprimir → Guardar como PDF" desde el móvil.
+   ============================================================ */
+function mesActualISO(){ return new Intl.DateTimeFormat("en-CA",{timeZone:"America/Sao_Paulo",year:"numeric",month:"2-digit"}).format(new Date()); }
+function nombreMes(ym){
+  const pp=String(ym).split("-");
+  const mn=["","enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+  return (mn[parseInt(pp[1],10)]||pp[1])+" "+pp[0];
+}
+function informeMensualHTML(ym){
+  const lista=tradesCtx().filter(t=>String(t.fecha||"").indexOf(ym)===0 && !t.abierta);
+  const m=metricas(lista);
+  const fila=(k,v)=>`<tr><td>${esc(k)}</td><td><b>${esc(v)}</b></td></tr>`;
+  let kpis="";
+  if(m){
+    kpis=`<table class="t">
+      ${fila("Operaciones cerradas", lista.length)}
+      ${fila("Resultado neto", (m.rNeto>=0?"+":"")+r1(m.rNeto)+" R")}
+      ${fila("Win rate", Math.round(m.wr*100)+"%")}
+      ${fila("Profit factor", isFinite(m.pf)?r2(m.pf):"∞")}
+      ${fila("Expectancy", (m.exp>=0?"+":"")+r2(m.exp)+" R / trade")}
+      ${fila("RR real medio", r2(m.rrReal))}
+      ${fila("Mejor / peor", "+"+r1(m.mejor)+" R / "+r1(m.peor)+" R")}
+      ${fila("Drawdown máximo", "-"+r1(m.dd)+" R")}
+    </table>`;
+  } else {
+    kpis=`<p class="v">Sin operaciones cerradas en este mes.</p>`;
+  }
+  /* curva de R en SVG (sin librerías, se ve igual en el PDF) */
+  let curva="";
+  if(lista.length){
+    let acc=0; const pts=[0]; lista.forEach(t=>{ acc+=(parseFloat(t.r)||0); pts.push(acc); });
+    const W=560,H=160,mx=Math.max(...pts),mn=Math.min(...pts),rg=(mx-mn)||1;
+    const d=pts.map((y,i)=>(i?"L":"M")+(i/(pts.length-1)*W).toFixed(1)+","+(H-((y-mn)/rg)*H).toFixed(1)).join(" ");
+    const y0=H-((0-mn)/rg)*H;
+    curva=`<svg viewBox="0 0 ${W} ${H}" class="cv"><line x1="0" y1="${y0.toFixed(1)}" x2="${W}" y2="${y0.toFixed(1)}" class="z"/><path d="${d}"/></svg>`;
+  }
+  /* por par */
+  const porPar={};
+  lista.forEach(t=>{ const p=t.par||"—"; (porPar[p]=porPar[p]||[]).push(parseFloat(t.r)||0); });
+  const pares=Object.keys(porPar).sort((a,b)=>porPar[b].reduce((x,y)=>x+y,0)-porPar[a].reduce((x,y)=>x+y,0));
+  const tPares=pares.length?`<table class="t"><tr><th>Par</th><th>Ops</th><th>R neto</th></tr>`+
+    pares.map(p=>{ const s=porPar[p].reduce((x,y)=>x+y,0); return `<tr><td>${esc(p)}</td><td>${porPar[p].length}</td><td class="${s>=0?"g":"r"}">${s>=0?"+":""}${r1(s)} R</td></tr>`; }).join("")+`</table>`:"";
+  /* cuentas y retiros */
+  const cts=(Array.isArray(CUENTAS)?CUENTAS:[]).filter(c=>c.fase!=="Cerrada");
+  const tCuentas=cts.length?`<table class="t"><tr><th>Cuenta</th><th>Fase</th><th>Progreso</th><th>Retirado</th></tr>`+
+    cts.map(c=>{ const st=statsCuenta(c); return `<tr><td>${esc(c.alias||c.firma||"—")}</td><td>${esc(c.fase||"—")}</td><td class="${st.progresoPct>=0?"g":"r"}">${st.progresoPct>=0?"+":""}${r1(st.progresoPct)}%</td><td>${r0(+c.retiros||0)}</td></tr>`; }).join("")+`</table>`:"";
+  const retiroTotal=cts.reduce((a,c)=>a+(+c.retiros||0),0);
+  /* errores más repetidos */
+  const errs={};
+  lista.forEach(t=>{ (Array.isArray(t.errores)?t.errores:[]).forEach(e=>{ errs[e]=(errs[e]||0)+1; }); });
+  const topErr=Object.keys(errs).sort((a,b)=>errs[b]-errs[a]).slice(0,5);
+  const tErr=topErr.length?`<table class="t"><tr><th>Error</th><th>Veces</th></tr>`+topErr.map(e=>`<tr><td>${esc(e)}</td><td>${errs[e]}</td></tr>`).join("")+`</table>`:`<p class="v">Ningún error registrado este mes. 👏</p>`;
+
+  return `<title>Informe ${esc(nombreMes(ym))} · Apex</title>
+<style>
+  *{box-sizing:border-box} body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;margin:0;padding:22px;background:#fff;color:#111;line-height:1.5}
+  h1{font-size:22px;margin:0 0 2px} h2{font-size:15px;margin:22px 0 8px;color:#1a5cff;border-bottom:2px solid #e6ecff;padding-bottom:5px}
+  .sub{color:#666;font-size:13px;margin-bottom:14px}
+  .t{width:100%;border-collapse:collapse;font-size:13.5px;margin:6px 0}
+  .t td,.t th{padding:7px 9px;border-bottom:1px solid #eee;text-align:left} .t th{background:#f6f8ff;font-size:12px;text-transform:uppercase;letter-spacing:.4px;color:#555}
+  .t td:last-child,.t th:last-child{text-align:right}
+  .g{color:#0a8f3c;font-weight:700} .r{color:#d12d2d;font-weight:700} .v{color:#777;font-size:13.5px}
+  .cv{width:100%;height:160px;margin:8px 0} .cv path{fill:none;stroke:#1a5cff;stroke-width:2.2} .cv .z{stroke:#ddd;stroke-width:1;stroke-dasharray:4 4}
+  .pie{margin-top:26px;padding-top:12px;border-top:1px solid #eee;color:#888;font-size:11.5px}
+  .noprint{margin:0 0 16px} .noprint button{font:inherit;padding:10px 16px;margin-right:8px;border:0;border-radius:9px;background:#1a5cff;color:#fff;font-weight:600}
+  @media print{ .noprint{display:none} body{padding:0} }
+</style>
+<div class="noprint"><button onclick="window.print()">🖨️ Guardar como PDF</button></div>
+<h1>Informe de ${esc(nombreMes(ym))}</h1>
+<div class="sub">${esc(CTX.estrategia||"—")} · ${esc(CTX.modo==="real"?"Cuenta real":"Backtest")} · generado el ${esc(new Intl.DateTimeFormat("es",{timeZone:"America/Sao_Paulo",dateStyle:"long"}).format(new Date()))}</div>
+<h2>Resumen del mes</h2>${kpis}
+${curva?`<h2>Curva de resultados (R acumulada)</h2>${curva}`:""}
+${tPares?`<h2>Por par</h2>${tPares}`:""}
+${tCuentas?`<h2>Cuentas</h2>${tCuentas}<p class="v">Total retirado (histórico): <b>${r0(retiroTotal)}</b></p>`:""}
+<h2>Errores más repetidos</h2>${tErr}
+<div class="pie">Apex v${esc(APP_VERSION)} · Informe generado automáticamente. Los R se calculan sobre operaciones CERRADAS del contexto activo.</div>`;
+}
+async function informeMensual(ym){
+  ym=ym||mesActualISO();
+  const html=informeMensualHTML(ym);
+  const nombre="Apex_informe_"+ym+".html";
+  /* 1) intenta compartirlo (Drive, WhatsApp, Archivos…) */
+  try{
+    const file=new File([html],nombre,{type:"text/html"});
+    if(navigator.canShare && navigator.canShare({files:[file]})){
+      await navigator.share({files:[file], title:"Informe "+nombreMes(ym), text:"Informe mensual de Apex"});
+      toast("Elige dónde guardarlo 📄");
+      return;
+    }
+  }catch(e){ if(e && e.name==="AbortError") return; }
+  /* 2) si no puede compartir, lo abre para imprimir/guardar como PDF */
+  try{
+    const w=window.open("","_blank");
+    if(w){ w.document.write(html); w.document.close(); toast("Toca 🖨️ para guardarlo como PDF"); return; }
+  }catch(_){}
+  bajar(nombre,html,"text/html");
+  toast("Informe descargado 📄");
+}
+
+/* ============================================================
+   ☁️ RESPALDO PROGRAMADO — que no dependa de que te acuerdes
+   La app ya sincroniza sola con la nube. Esto es el respaldo FÍSICO a tu Drive:
+   cada X días te lo recuerda al abrir la app y lo lanza con un toque.
+   (Una app web no puede escribir en tu Drive sin tu permiso: por eso te abre
+   el menú de compartir y tú eliges Drive. Ese toque es el único paso manual.)
+   ============================================================ */
+const K_RESP_CADA="crtelite_resp_cada";
+const K_RESP_LAST="crtelite_resp_last";
+function respCada(){ const v=parseInt(localStorage.getItem(K_RESP_CADA)||"7",10); return isNaN(v)?7:v; }
+function respSetCada(n){ localStorage.setItem(K_RESP_CADA,String(n)); }
+function respLast(){ return parseInt(localStorage.getItem(K_RESP_LAST)||"0",10)||0; }
+function respMarcar(){ localStorage.setItem(K_RESP_LAST,String(Date.now())); }
+function respToca(){
+  const cada=respCada(); if(!cada) return false;              // 0 = desactivado
+  const last=respLast();
+  if(!last) return (Array.isArray(TRADES)?TRADES.length:0)>0; // nunca respaldó y ya tiene datos
+  return (Date.now()-last) >= cada*86400*1000;
+}
+function respChequear(){
+  if(!respToca()) return;
+  if($("#respOv")) return;
+  const dias=respLast()?Math.floor((Date.now()-respLast())/86400000):null;
+  const ov=el("div","menu-ov"); ov.id="respOv";
+  ov.innerHTML=`<div class="menu-sheet" style="max-width:420px">
+    <div class="menu-h"><div class="t">☁️ Toca respaldar</div><button class="x" id="respX" aria-label="Cerrar">✕</button></div>
+    <div style="padding:14px 16px 18px">
+      <p class="desc" style="text-align:left">${dias!=null?("Hace <b>"+dias+" día(s)</b> que no guardas un respaldo en tu Drive."):"Aún no has guardado ningún respaldo en tu Drive."}
+      Tus datos ya se sincronizan en la nube, pero una copia tuya en Drive es la que te salva si pierdes el teléfono.</p>
+      <button class="btn" id="respGo" style="margin-top:10px">☁️ Guardar respaldo ahora</button>
+      <button class="btn" id="respLuego">Ahora no</button>
+      <div class="note" style="text-align:left;margin-top:10px">Recordármelo cada
+        <select class="inp" id="respCada" style="display:inline-block;width:auto;margin:0 4px">
+          ${[3,7,15,30,0].map(n=>`<option value="${n}"${n===respCada()?" selected":""}>${n?(n+" días"):"nunca"}</option>`).join("")}
+        </select>
+      </div>
+    </div></div>`;
+  document.body.appendChild(ov);
+  const cerrar=()=>{ ov.remove(); };
+  ov.onclick=e=>{ if(e.target===ov) cerrar(); };
+  $("#respX").onclick=cerrar;
+  $("#respLuego").onclick=()=>{ respMarcar(); cerrar(); toast("Te lo recuerdo en "+respCada()+" días"); };
+  $("#respGo").onclick=async()=>{ cerrar(); await compartirRespaldo(); respMarcar(); };
+  $("#respCada").onchange=e=>{ respSetCada(parseInt(e.target.value,10)); toast(parseInt(e.target.value,10)?("Te lo recordaré cada "+e.target.value+" días"):"Recordatorio desactivado"); };
+}
+
+/* ============================================================
    ARRANQUE
    ============================================================ */
 function init(){
   const c=$("#views");
-  c.append(viewNoticias(),viewAvisos(),viewChecklist(),viewConf(),viewRutina(),viewReglas(),viewRiesgo(),viewGatillo(),viewDiario(),viewGaleria(),viewCuentas(),viewAlmanaque(),viewAnalisis(),viewMentor(),viewPlan());
+  c.append(viewNoticias(),viewAvisos(),viewHoy(),viewChecklist(),viewConf(),viewRutina(),viewReglas(),viewRiesgo(),viewGatillo(),viewDiario(),viewGaleria(),viewCuentas(),viewAlmanaque(),viewAnalisis(),viewMentor(),viewPlan());
   buildNav();
   fillPlanDinamico();
   initDiarioControles();
@@ -5597,7 +5983,9 @@ function init(){
   try{ if(navigator.serviceWorker){ navigator.serviceWorker.addEventListener("message", ev=>{ if(ev.data && ev.data.type==="apex-open-chat"){ if(typeof abrirIA==="function") abrirIA(); if(ev.data.seed){ setTimeout(()=>iaProactivo(ev.data.seed),300); } else if(ev.data.jobId) iaMostrarJob(ev.data.jobId); else iaResumePend(); } }); } }catch(_){}
   try{ const sp=new URLSearchParams(location.search); if(sp.get("open")==="chat"){ const jb=sp.get("job"); const seed=sp.get("seed"); setTimeout(()=>{ if(typeof abrirIA==="function") abrirIA(); if(seed) setTimeout(()=>iaProactivo(seed),350); else if(jb) iaMostrarJob(jb); else iaResumePend(); }, 500); } }catch(_){}
   setTimeout(syncReminders, 1800);   /* sube los avisos al vigilante (cron) */
-  irA("noticias");   /* lo primero del día: ver cómo viene el calendario antes de analizar */
+  setTimeout(hoyCargarCtx, 2600);      /* 📡 último contexto del indicador para la vista 🎯 HOY */
+  setTimeout(respChequear, 6000);      /* ☁️ recordatorio de respaldo a Drive cada X días */
+  irA("hoy");        /* 🎯 lo primero al abrir: TODO tu día en una pantalla */
   tickRelojes(); setInterval(tickRelojes,10000);
 
   if("serviceWorker" in navigator){
