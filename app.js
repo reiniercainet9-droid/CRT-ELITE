@@ -371,6 +371,53 @@ async function estudiarCapturas(n){
   await iaEnviarBloques(bloques, "📸 Estudia estas " + fichas.length + " capturas y saca mis patrones visuales.");
 }
 
+/* 💰 MI GASTO — en qué se va el crédito de Roberto, con datos reales del servidor. */
+async function verGasto(){
+  if(typeof abrirIA==="function") abrirIA();
+  iaTemaChat("💰 Mi gasto");
+  const c=iaConvAct();
+  let txt="";
+  try{
+    const r=await fetch(nubeUrl()+"/gasto?dias=14",{cache:"no-store"});
+    const d=await r.json();
+    const dias=(d&&d.dias)||[];
+    if(!dias.length){
+      txt="## 💰 Mi gasto\n\nTodavía no hay datos. El contador empieza a apuntar desde la próxima vez que hablemos.";
+    }else{
+      const NOM={chat:"💬 Conversaciones contigo", alarma:"🔔 Alarmas del indicador", consolidacion:"🧹 Ordenar mi memoria", informe:"🎓 Informe semanal"};
+      const hoy=dias[0]||{};
+      const total=d.total||0;
+      const media=total/dias.length;
+      txt="## 💰 En qué se va tu crédito\n\n"+
+        "**Hoy:** $"+(hoy.total||0).toFixed(2)+"  ·  **Últimos "+dias.length+" días:** $"+total.toFixed(2)+"\n\n"+
+        "A este ritmo: **~$"+(media*30).toFixed(0)+" al mes**\n\n";
+      /* por concepto, sumando todos los días */
+      const sum={};
+      dias.forEach(x=>Object.keys(x).forEach(k=>{ if(k==="fecha"||k==="total")return;
+        sum[k]=sum[k]||{n:0,coste:0,inCache:0,inNuevo:0};
+        sum[k].n+=x[k].n||0; sum[k].coste+=x[k].coste||0; sum[k].inCache+=x[k].inCache||0; sum[k].inNuevo+=x[k].inNuevo||0; }));
+      const claves=Object.keys(sum).sort((a,b)=>sum[b].coste-sum[a].coste);
+      txt+="### Por concepto\n"+claves.map(k=>{
+        const s=sum[k]; const pct=total?Math.round(s.coste/total*100):0;
+        return "- **"+(NOM[k]||k)+"** — $"+s.coste.toFixed(2)+" ("+pct+"%) · "+s.n+" llamada(s)";
+      }).join("\n")+"\n\n";
+      /* ¿el caché está funcionando? */
+      const ch=sum.chat||{inCache:0,inNuevo:0};
+      const totIn=ch.inCache+ch.inNuevo;
+      if(totIn){
+        const pctC=Math.round(ch.inCache/totIn*100);
+        txt+="### Ahorro por caché\n"+
+          (pctC>=50 ? "✅ El **"+pctC+"%** de lo que leo viene del caché — estás pagando una décima parte por esa parte."
+                    : "⚠️ Solo el **"+pctC+"%** viene del caché. Si este número no sube por encima del 50%, algo lo está invalidando y estás pagando de más.")+"\n\n";
+      }
+      txt+="### Los últimos días\n"+dias.slice(0,7).map(x=>"- "+x.fecha+": $"+(x.total||0).toFixed(2)).join("\n");
+      txt+="\n\n_Puedes ver el saldo y recargar en console.anthropic.com/settings/billing_";
+    }
+  }catch(_){ txt="⚠️ No pude leer el gasto ahora mismo. Revisa tu internet."; }
+  c.msgs.push({role:"assistant",content:txt});
+  iaGuardarConvs(); pintarIAChat();
+}
+
 /* 🧭 MI PLAN — Roberto le dice por dónde va y qué le toca HOY. */
 function preguntarPlan(){
   if(typeof abrirIA==="function") abrirIA();
@@ -1029,6 +1076,7 @@ const IR_DESTINOS = [
   { v:"tab:plan",      t:"📋 Plan" },
   /* Acciones de Roberto */
   { v:"rob:memoria",   t:"🧠 Roberto · Mi memoria" },
+  { v:"rob:gasto",     t:"💰 Roberto · Mi gasto" },
   { v:"rob:aciertos",  t:"🎯 Roberto · Cómo lee el mercado" },
   { v:"rob:plan",      t:"🧭 Roberto · Por dónde voy en mi plan" },
   { v:"rob:parte",     t:"🌅 Roberto · Parte del día" },
@@ -1055,6 +1103,7 @@ function irDestino(v){
   if(typeof abrirIA==="function") abrirIA();
   const F={
     memoria: ()=>verMemoria(),
+    gasto:   ()=>verGasto(),
     aciertos:()=>verAciertos(),
     plan:    ()=>preguntarPlan(),
     parte:   ()=>parteMatutino(),
@@ -5071,6 +5120,7 @@ function iaInit(){
         <button class="ia-chip" data-act="reintentar">🔄 Reenviar mi último mensaje</button>
         <button class="ia-chip" data-act="plan">🧭 Mi plan</button>
         <button class="ia-chip" data-act="aciertos">🎯 Cómo lees el mercado</button>
+        <button class="ia-chip" data-act="gasto">💰 Mi gasto</button>
         <button class="ia-chip" data-act="memoria">🧠 Mi memoria</button>
         <button class="ia-chip" data-act="capturas">📸 Estudia mis capturas</button>
         <button class="ia-chip" data-act="comparar">⚖️ Comparar pares</button>
@@ -5152,6 +5202,7 @@ function iaInit(){
     if(b.dataset.act==="reintentar") return iaReintentar();
     if(b.dataset.act==="plan")     return preguntarPlan();
     if(b.dataset.act==="aciertos") return verAciertos();
+    if(b.dataset.act==="gasto")    return verGasto();
     if(b.dataset.act==="memoria")  return verMemoria();
     if(b.dataset.act==="capturas") return estudiarCapturas();
     if(b.dataset.act==="gonogo")   return goNoGo();
