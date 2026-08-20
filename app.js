@@ -4155,12 +4155,15 @@ function veredAdd(o){
   guardarVered();
   return v;
 }
-/* Enlaza un trade con la lectura más reciente de Roberto sobre ese par (últimas 12 h). */
+/* Enlaza un trade con la lectura más reciente de Roberto sobre ese par (últimas 12 h).
+   Filtra por MODO y ESTRATEGIA: una lectura hecha en backtest no puede acabar enlazada
+   a una entrada real, ni las lecturas de una estrategia contaminar a otra. */
 function veredEnlazar(trade){
   if (!trade || !trade.par) return null;
   const par = String(trade.par).toUpperCase().replace(/[^A-Z0-9]/g, "");
   const limite = Date.now() - 12 * 3600 * 1000;
-  const v = VERED.find(x => !x.trade && x.par === par && x.ts >= limite);
+  const v = VERED.find(x => !x.trade && x.par === par && x.ts >= limite
+    && x.modo === trade.modo && x.estrategia === trade.estrategia);
   if (!v) return null;
   v.trade = trade.id;
   if (!trade.abierta) v.resultado = parseFloat(trade.r) || 0;
@@ -4173,9 +4176,14 @@ function veredActualizar(trade){
   const v = VERED.find(x => x.trade === trade.id);
   if (v) { v.resultado = parseFloat(trade.r) || 0; guardarVered(); }
 }
-/* Estadísticas de Roberto sobre SÍ MISMO. */
-function veredStats(desdeTs){
-  const lista = VERED.filter(v => (!desdeTs || v.ts >= desdeTs) && v.resultado !== null);
+/* Estadísticas de Roberto sobre SÍ MISMO, SIEMPRE dentro del contexto activo
+   (mismo modo y misma estrategia). El backtest es entrenamiento de lectura y cuenta
+   aparte: mezclarlo con lo real daría un número que no significa nada. */
+function veredStats(desdeTs, todo){
+  const lista = VERED.filter(v => v.resultado !== null
+    && (!desdeTs || v.ts >= desdeTs)
+    && (todo || (v.modo === CTX.modo && v.estrategia === CTX.estrategia)));
+  const propias = VERED.filter(v => todo || (v.modo === CTX.modo && v.estrategia === CTX.estrategia));
   const go = lista.filter(v => v.veredicto === "go");
   const nogo = lista.filter(v => v.veredicto === "nogo");
   const goBien = go.filter(v => v.resultado > 0).length;
@@ -4184,12 +4192,20 @@ function veredStats(desdeTs){
   const nogoAcertado = nogo.filter(v => v.resultado < 0).length;
   const nogoFallado = nogo.filter(v => v.resultado > 0).length;
   const rGo = go.reduce((a, v) => a + v.resultado, 0);
+  /* por par: para que pueda detectar dónde lee bien y dónde no */
+  const pares = {};
+  lista.forEach(v => {
+    const p = pares[v.par] = pares[v.par] || { n: 0, bien: 0, r: 0 };
+    p.n++; if (v.resultado > 0) p.bien++; p.r += v.resultado;
+  });
   return {
-    total: VERED.length, medidos: lista.length,
+    total: propias.length, medidos: lista.length,
     go: go.length, goBien, goMal,
     tasaGo: (goBien + goMal) ? Math.round(goBien / (goBien + goMal) * 100) : null,
     rGo, nogo: nogo.length, nogoAcertado, nogoFallado,
-    pendientes: VERED.filter(v => !v.trade).length
+    pendientes: propias.filter(v => !v.trade).length,
+    pares,
+    otrosContextos: VERED.length - propias.length
   };
 }
 /* Bloque que Roberto recibe en CADA conversación: su propio boletín de notas. */
@@ -4202,16 +4218,21 @@ function iaAciertos(){
     return "  · " + v.fecha + " " + v.par + " " + et + " (confianza " + v.confianza + "/5) → " + res + (v.razon ? " — dijiste: " + v.razon.slice(0, 90) : "");
   }).join("\n");
   let out = "[🎯 TU HISTORIAL DE LECTURAS — esto es lo que TÚ dijiste y en qué acabó. Úsalo para AUDITARTE, no solo para auditar a Rey.\n";
+  out += "CONTEXTO: " + (CTX.modo === "real" ? "operativa EN VIVO" : "🏋️ BACKTEST (entrenamiento de lectura)") + " · estrategia \"" + CTX.estrategia + "\". Estos números son SOLO de este contexto";
+  out += s.otrosContextos ? (" (tienes " + s.otrosContextos + " lectura(s) más en otros modos o estrategias, que NO se mezclan).\n") : ".\n";
   out += "Registradas: " + s.total + " · medidas: " + s.medidos + " · sin operar todavía: " + s.pendientes + "\n";
   if (s.medidos) {
     out += "GO que diste: " + s.go + " → " + s.goBien + " ganadoras / " + s.goMal + " perdedoras" +
       (s.tasaGo !== null ? " (aciertas el " + s.tasaGo + "% de tus GO)" : "") + " · resultado acumulado " + (s.rGo >= 0 ? "+" : "") + r1(s.rGo) + "R\n";
     if (s.nogo) out += "NO-GO que diste y Rey operó igual: " + (s.nogoAcertado + s.nogoFallado) + " → acertaste " + s.nogoAcertado + " (habría perdido) y fallaste " + s.nogoFallado + " (habría ganado)\n";
+    const porPar = Object.keys(s.pares).sort((a, b) => s.pares[b].n - s.pares[a].n).slice(0, 8)
+      .map(p => p + ": " + s.pares[p].bien + "/" + s.pares[p].n + " (" + (s.pares[p].r >= 0 ? "+" : "") + r1(s.pares[p].r) + "R)").join(" · ");
+    if (porPar) out += "POR PAR (aciertos/lecturas): " + porPar + "\n";
   }
   out += "Últimas lecturas tuyas:\n" + ult + "\n";
   out += "CÓMO LO USAS: (1) Registra SIEMPRE tu veredicto con registrar_veredicto cuando te mojes sobre un par — es automático, no molesta a Rey. ";
   out += "(2) En el análisis del día y de la semana, dile también cómo leíste TÚ, con estos números, aunque te dejen mal. ";
-  out += "(3) Si ves un patrón en tus fallos (un par donde aciertas poco, un tipo de setup que sobrevaloras, un día de la semana en que te precipitas), DÍSELO y guárdalo con guardar_memoria. ";
+  out += "(3) Mira el desglose POR PAR: si en uno aciertas mucho menos que en los demás, ese par te está costando y Rey debe saberlo. Igual con tipos de setup o días de la semana. Cuando encuentres el patrón, DÍSELO y guárdalo con guardar_memoria. ";
   out += "(4) Si tu tasa de acierto baja, sé MÁS exigente antes de dar un GO. Un mentor que se mide es un mentor que mejora.]";
   return out;
 }
