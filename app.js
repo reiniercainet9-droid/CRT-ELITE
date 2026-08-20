@@ -6303,10 +6303,23 @@ const IA_ACCIONES = {
   recargar:  { t:"💳 Recargar créditos",        fn:()=>iaRecargar() },
   reintentar:{ t:"↻ Probar otra vez",          fn:()=>iaReintentarEnvio() }
 };
-/* Pinta los botones de un mensaje que los lleve. */
+/* Pinta los botones de un mensaje que los lleve.
+   RETROCOMPATIBLE: los avisos de fallo guardados por versiones anteriores no traen el
+   campo `acc`, así que se deducen por su texto. Si no, Rey se quedaría mirando un aviso
+   viejo sin botones — que es justo lo que le pasó al actualizar. */
+function iaAccInferir(x){
+  if(!x || x.role!=="assistant") return null;
+  const t=String(x.content||"");
+  if(!/⚠️|💳/.test(t)) return null;
+  if(/sin créditos|credit balance|recarga/i.test(t)) return ["recargar","reintentar"];
+  if(/Aquí me quedé|se cortó por el camino/i.test(t)) return ["continuar","reenviar"];
+  if(/tardó demasiado|no llegó|tardó más de lo normal|NO se ha perdido/i.test(t)) return ["reintentar","reenviar"];
+  return null;
+}
 function iaAccionesHTML(x, i){
-  if(!x || !Array.isArray(x.acc) || !x.acc.length) return "";
-  return `<div class="ia-acc">`+x.acc.filter(a=>IA_ACCIONES[a])
+  const acc = (x && Array.isArray(x.acc) && x.acc.length) ? x.acc : iaAccInferir(x);
+  if(!acc || !acc.length) return "";
+  return `<div class="ia-acc">`+acc.filter(a=>IA_ACCIONES[a])
     .map(a=>`<button class="ia-acc-b${a==="recargar"?" gold":""}" data-acc="${a}" data-i="${i}">${IA_ACCIONES[a].t}</button>`)
     .join("")+`</div>`;
 }
