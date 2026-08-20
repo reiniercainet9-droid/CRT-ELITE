@@ -3987,12 +3987,23 @@ function tradesTexto(list){
       +(t.nota?(" · nota: "+t.nota):"");
   }).join("\n");
 }
-function evalDia(){
+async function evalDia(){
   iaTemaChat("🤖 Cierre del día");
   const hoy=hoyISO();
   const ts=tradesCtx().filter(t=>t.fecha===hoy && !t.abierta);
   const data=ts.length?tradesTexto(ts):"(No hay trades cerrados registrados hoy.)";
-  iaEnviar("🤖 Evalúa mi operativa de HOY.", EVAL_DIA_PROM+"\n\nSUS TRADES DE HOY ("+hoy+"):\n"+data);
+  // 📸 Adjunta la FOTO AUTOMÁTICA de la entrada de hoy (si existe) para que Roberto la VEA:
+  // evaluación con OJOS (¿entró en el toque o esperó confirmación? ¿zona válida?), no solo números.
+  let fotoNota="";
+  try{
+    const shot=(SHOTS||[]).find(s=>s.fecha===hoy && s.tipo==="Auto-entrada");
+    if(shot && !IA.pendImg){
+      const r=await fetch(nubeUrl()+"/shot/get?id="+encodeURIComponent(shot.id),{cache:"no-store"});
+      const d=await r.json();
+      if(d && d.img){ IA.pendImg=d.img; fotoNota="\n\nADJUNTA va la FOTO AUTOMÁTICA del gráfico en el MOMENTO EXACTO de su entrada de hoy ("+(shot.par||"?")+"): MÍRALA y evalúa también lo VISUAL — ¿entró en el toque o esperó la confirmación cerrada? ¿la zona era válida? ¿cómo se veía la estructura? Cruza lo que VES con lo que dicen los números."; }
+    }
+  }catch(_){}
+  iaEnviar("🤖 Evalúa mi operativa de HOY.", EVAL_DIA_PROM+fotoNota+"\n\nSUS TRADES DE HOY ("+hoy+"):\n"+data);
 }
 function evalSemana(){
   iaTemaChat("🤖 Cierre de semana");
@@ -4881,6 +4892,8 @@ const IA_TOOLS = [
     input_schema:{ type:"object", properties:{ fijar:{type:"boolean",description:"true fija 📌, false quita"}, estrella:{type:"boolean",description:"true marca importante ⭐, false quita"}, revisar:{type:"boolean",description:"true marca por revisar 🔍, false quita"}, motivo:{type:"string",description:"(opcional) por qué la marcas, 1 frase"} }, required:[] } },
   { name:"editar_estrategia", description:"Define o edita las REGLAS/ajustes de una de las estrategias de Rey, para ADAPTARLA a lo que van aprendiendo, o para definir una NUEVA (Oro, índices, acciones, etc.) con su instrumento y sus reglas. Por defecto edita la estrategia ACTIVA. Úsalo cuando Rey y tú acuerden un cambio/mejora en su método o al crear una estrategia nueva. Rey lo aprueba con tarjeta.",
     input_schema:{ type:"object", properties:{ nombre:{type:"string",description:"(opcional) estrategia a editar; por defecto la activa"}, instrumento:{type:"string",description:"(opcional) instrumento(s), ej. 'Oro XAU/USD', 'Índices US30/NAS100'"}, ajustes:{type:"string",description:"(opcional) reglas/ajustes/aprendizajes de la estrategia, en texto"} }, required:[] } },
+  { name:"buscar_memoria", description:"Busca en TODA tu memoria (incluidos los recuerdos ANTIGUOS que no aparecen en tu contexto). Úsala cuando necesites recordar algo que no ves en tu bloque de memoria actual: lecciones viejas, preferencias, patrones ('¿qué aprendí de los lunes?'). Es SOLO LECTURA y automática (sin tarjeta). El resultado te llega como texto para seguir razonando.",
+    input_schema:{ type:"object", properties:{ consulta:{type:"string",description:"Qué buscar (palabras clave), ej. 'lunes', 'revancha', 'GBP'"} }, required:["consulta"] } },
   { name:"registrar_retiro", description:"Registra un RETIRO/PAYOUT que Rey cobró de una de sus cuentas (dinero real ganado). Suma al total retirado de esa cuenta (y ajusta su balance si lo lleva manual). Úsalo cuando Rey te diga que cobró/retiró dinero. Rey lo aprueba con tarjeta.",
     input_schema:{ type:"object", properties:{ cuenta:{type:"string",description:"Alias o firma de la cuenta (ej. 'FundedNext fondeada')"}, monto:{type:"number",description:"Monto retirado en USD"}, nota:{type:"string",description:"(opcional) nota"} }, required:["monto"] } },
   { name:"revisar_indicador", description:"LEE los ajustes ACTUALES del indicador CRT Elite de Rey en su gráfico (pivotes por temporalidad y sus tolerancias, killzones/sesiones, sesgo/giro, entradas, gestión y riesgo) para AUDITARLOS. Es SOLO LECTURA. Úsalo cuando Rey te pida revisar/auditar su indicador, o cuando quieras comprobar que su configuración es coherente antes de sugerir algo. Cuando tengas los ajustes, dile en claro qué está BIEN y qué conviene AJUSTAR y por qué, y ofrécete a cambiarlo con ajustar_indicador. Requiere PC con Puente.",
@@ -4918,6 +4931,7 @@ function describeTool(name, i){
   if(name==="editar_estrategia"){ return "🎯 Definir/editar la estrategia \""+(i.nombre||CTX.estrategia)+"\":\n"+[i.instrumento&&("→ instrumento: "+i.instrumento), i.ajustes&&("→ reglas/ajustes: "+i.ajustes)].filter(Boolean).join("\n"); }
   if(name==="revisar_indicador") return "🔍 Leer y auditar los ajustes actuales del indicador CRT"+(i.target?(" ("+i.target+")"):"");
   if(name==="registrar_retiro") return "💰 Registrar RETIRO de $"+(i.monto!=null?i.monto:"?")+(i.cuenta?(" de "+i.cuenta):"")+(i.nota?("\nNota: "+i.nota):"");
+  if(name==="buscar_memoria") return "🧠 Buscar en toda su memoria: “"+(i.consulta||"?")+"”";
   if(name==="guardar_memoria"){ const et={perfil:"🧍 Perfil",aprendizaje:"💡 Aprendizaje",preferencia:"⭐ Preferencia",patron:"📊 Patrón",resultado:"📓 Resultado"}; return "🧠 Roberto quiere RECORDAR esto en su memoria:\n"+(et[i.tipo]||"💡 Aprendizaje")+"\n“"+(i.texto||"")+"”"; }
   if(name==="borrar_memoria") return "🗑️ Roberto quiere BORRAR de su memoria el dato "+(i.id||"?");
   return name+" "+JSON.stringify(i);
@@ -5085,6 +5099,18 @@ async function ejecutarTool(name, i){
       const params={}; if(i.target) params.target=i.target;
       return await enviarComando("revisar_indicador", params);
     }
+    if(name==="buscar_memoria"){
+      const q=String(i.consulta||"").trim().toLowerCase();
+      if(!q) return {ok:false,msg:"Falta qué buscar"};
+      try{
+        const r=await fetch(nubeUrl()+"/mem",{cache:"no-store"}); const d=await r.json();
+        const entries=(d&&d.entries)||[];
+        const palabras=q.split(/\s+/).filter(w=>w.length>2);
+        const hits=entries.filter(e=>{ const t=String(e.texto||"").toLowerCase(); return palabras.length?palabras.some(w=>t.includes(w)):t.includes(q); }).slice(-15);
+        if(!hits.length) return {ok:true,msg:"No encontré recuerdos que coincidan con “"+i.consulta+"” (busqué entre "+entries.length+" recuerdos)."};
+        return {ok:true,msg:"Encontré "+hits.length+" recuerdo(s) sobre “"+i.consulta+"”:\n"+hits.map(e=>"• ["+(e.tipo||"")+"] "+e.texto).join("\n")};
+      }catch(_){ return {ok:false,msg:"No pude leer la memoria en este momento."}; }
+    }
     if(name==="registrar_retiro"){
       const monto=parseFloat(i.monto);
       if(!(monto>0)) return {ok:false,msg:"Monto de retiro inválido"};
@@ -5182,9 +5208,9 @@ function histRobertoModal(){
 }
 /* Muestra la tarjeta de confirmación y espera la decisión de Rey */
 function confirmarTool(tu){
-  // 🗂️ Organizar chats: automático, SIN tarjeta (Rey pidió autonomía). Reversible y de bajo riesgo.
-  if(tu.name==="organizar_chat"){
-    return (async()=>{ let res; try{ res=await ejecutarTool(tu.name, tu.input); }catch(e){ res={ok:false,msg:"Error: "+e}; } if(res&&res.ok) toast(res.msg); return {confirmed:true, res}; })();
+  // 🗂️ Organizar chats y 🧠 buscar en memoria: automáticos, SIN tarjeta (reversibles / solo lectura).
+  if(tu.name==="organizar_chat" || tu.name==="buscar_memoria"){
+    return (async()=>{ let res; try{ res=await ejecutarTool(tu.name, tu.input); }catch(e){ res={ok:false,msg:"Error: "+e}; } if(res&&res.ok&&tu.name==="organizar_chat") toast(res.msg); return {confirmed:true, res}; })();
   }
   return new Promise(resolve=>{
     const cont=$("#iaMsgs"); if(!cont){ resolve({confirmed:false}); return; }
