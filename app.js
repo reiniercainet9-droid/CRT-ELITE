@@ -365,7 +365,7 @@ async function estudiarCapturas(n){
     "4) Guarda en tu memoria (tema 'visual') los 2-3 patrones más sólidos que hayas descubierto.\n" +
     "Recuerda: toda hora con AM/PM y su zona (Nueva York o Brasil)." });
 
-  try{ PLAN.caps=(PLAN.caps||0)+1; guardarPlan(); }catch(_){}   /* 🧭 señal de la fase 02 */
+  try{ PLAN_ARR.caps=(PLAN_ARR.caps||0)+1; guardarPlan(); }catch(_){}   /* 🧭 señal de la fase 02 */
   await iaEnviarBloques(bloques, "📸 Estudia estas " + fichas.length + " capturas y saca mis patrones visuales.");
 }
 
@@ -1237,7 +1237,7 @@ function viewArranque(){
 }
 function renderArranque(){
   const body=$("#arrBody"); if(!body) return;
-  const act=PLAN.fase||0;
+  const act=PLAN_ARR.fase||0;
   let h="";
 
   /* Cabecera: dónde estás dentro del camino completo */
@@ -1273,7 +1273,7 @@ function renderArranque(){
     /* pasos marcables */
     h+=`<div class="arr-pasos">`;
     (fa.pasos||[]).forEach(p=>{
-      const on=!!PLAN.pasos[p.id];
+      const on=!!PLAN_ARR.pasos[p.id];
       h+=`<button class="arr-paso${on?" on":""}" data-paso="${p.id}"${estado==="hecha"?" disabled":""}>
         <span class="box"></span><span class="lbl">${esc(p.t)}</span></button>`;
     });
@@ -1298,7 +1298,7 @@ function renderArranque(){
   body.innerHTML=h;
   body.querySelectorAll("[data-paso]").forEach(b=>b.onclick=()=>{
     const id=b.dataset.paso;
-    PLAN.pasos[id]=!PLAN.pasos[id]; guardarPlan(); renderArranque();
+    PLAN_ARR.pasos[id]=!PLAN_ARR.pasos[id]; guardarPlan(); renderArranque();
   });
   const on=(id,fn)=>{ const b=$("#"+id); if(b) b.onclick=fn; };
   on("arrNext",()=>planAvanzar(false));
@@ -3814,10 +3814,10 @@ function statsCuenta(c){
    (planBloque) — por eso los dos van siempre por el mismo punto y él puede
    frenarlo cuando quiere saltarse una fase.
    ============================================================ */
-let PLAN = load(K.plan, { fase:0, pasos:{}, hist:[], docs:0, caps:0 });
-function guardarPlan(){ save(K.plan, PLAN); }
-function planFaseActual(){ return PLAN_FASES[Math.min(PLAN.fase||0, PLAN_FASES.length-1)]; }
-function planPasosHechos(f){ return (f.pasos||[]).filter(p=>PLAN.pasos[p.id]).length; }
+let PLAN_ARR = load(K.plan, { fase:0, pasos:{}, hist:[], docs:0, caps:0 });
+function guardarPlan(){ save(K.plan, PLAN_ARR); }
+function planFaseActual(){ return PLAN_FASES[Math.min(PLAN_ARR.fase||0, PLAN_FASES.length-1)]; }
+function planPasosHechos(f){ return (f.pasos||[]).filter(p=>PLAN_ARR.pasos[p.id]).length; }
 
 /* Cuenta memoria de Roberto (se refresca en segundo plano; sin red usa lo último visto) */
 let PLAN_MEM=null;
@@ -3893,7 +3893,7 @@ function planSeñal(f){
   }
   if(f.auto==="nutrido"){
     const m=PLAN_MEM;
-    const mat=(PLAN.docs||0)+(PLAN.caps||0);
+    const mat=(PLAN_ARR.docs||0)+(PLAN_ARR.caps||0);
     if(!m) return { ok:false, txt:"Leyendo la memoria de Roberto…", falta:"" };
     const ok = mat>=1 && (m.nutrido||0)>=(f.min||4);
     return ok
@@ -3923,11 +3923,11 @@ function planSeñal(f){
 /* ▶️ Avanzar de fase — solo si la señal se cumple. Roberto también puede proponerlo. */
 function planAvanzar(forzar){
   const f=planFaseActual();
-  if(PLAN.fase>=PLAN_FASES.length-1){ toast("Ya estás en la última fase 🧭"); return false; }
+  if(PLAN_ARR.fase>=PLAN_FASES.length-1){ toast("Ya estás en la última fase 🧭"); return false; }
   const s=planSeñal(f);
   if(!s.ok && !forzar){ toast("Todavía no toca: "+s.falta.slice(0,60)); return false; }
-  PLAN.fase=(PLAN.fase||0)+1;
-  PLAN.hist=(PLAN.hist||[]).concat([{ fase:PLAN.fase, ts:Date.now(), forzado:!!forzar }]);
+  PLAN_ARR.fase=(PLAN_ARR.fase||0)+1;
+  PLAN_ARR.hist=(PLAN_ARR.hist||[]).concat([{ fase:PLAN_ARR.fase, ts:Date.now(), forzado:!!forzar }]);
   guardarPlan();
   const nueva=planFaseActual();
   toast("🧭 Fase "+nueva.n+" — "+nueva.t);
@@ -3935,8 +3935,8 @@ function planAvanzar(forzar){
   return true;
 }
 function planRetroceder(){
-  if(!PLAN.fase) return;
-  PLAN.fase--; guardarPlan(); renderArranque();
+  if(!PLAN_ARR.fase) return;
+  PLAN_ARR.fase--; guardarPlan(); renderArranque();
   toast("🧭 Volviste a la fase "+planFaseActual().n);
 }
 
@@ -3946,8 +3946,8 @@ function iaPlan(){
   const f=planFaseActual();
   const s=planSeñal(f);
   const hechos=planPasosHechos(f);
-  const pend=(f.pasos||[]).filter(p=>!PLAN.pasos[p.id]).map(p=>p.t);
-  const sig=PLAN_FASES[PLAN.fase+1];
+  const pend=(f.pasos||[]).filter(p=>!PLAN_ARR.pasos[p.id]).map(p=>p.t);
+  const sig=PLAN_FASES[PLAN_ARR.fase+1];
   let out="[🧭 PLAN DE ARRANQUE DE REY — ES TU HOJA DE RUTA COMPARTIDA. Vais los dos por el MISMO punto.\n";
   out+="FASE ACTUAL: "+f.n+" — "+f.t+" ("+f.cuando+")\n";
   out+="Idea de esta fase: "+f.idea+"\n";
@@ -5503,7 +5503,7 @@ function describeTool(name, i){
   if(name==="dibujar_texto") return "✍️ Escribir nota en "+(i.precio!=null?i.precio:"?")+":\n“"+(i.texto||"")+"”";
   if(name==="marcar_entrada") return "🎯 Marcar entrada "+((String(i.direccion||"").toLowerCase().indexOf("vent")>=0)?"VENTA 🔴":"COMPRA 🟢")+" en "+(i.precio!=null?i.precio:"?")+(i.texto?(" — “"+i.texto+"”"):"");
   if(name==="borrar_dibujos") return i.todo?"🧹 Borrar TODOS los dibujos del gráfico (incluidos los tuyos)":"🧹 Borrar los dibujos que hizo Roberto";
-  if(name==="avanzar_plan"){ const f=planFaseActual(); const sg=PLAN_FASES[(PLAN.fase||0)+1]; return "🧭 Pasar de la fase "+f.n+" ("+f.t+") a la "+(sg?sg.n+" ("+sg.t+")":"siguiente")+(i.motivo?("\nPorque: "+i.motivo):""); }
+  if(name==="avanzar_plan"){ const f=planFaseActual(); const sg=PLAN_FASES[(PLAN_ARR.fase||0)+1]; return "🧭 Pasar de la fase "+f.n+" ("+f.t+") a la "+(sg?sg.n+" ("+sg.t+")":"siguiente")+(i.motivo?("\nPorque: "+i.motivo):""); }
   if(name==="organizar_chat"){ const p=[]; if(i.fijar!=null)p.push(i.fijar?"📌 fijar":"quitar 📌"); if(i.estrella!=null)p.push(i.estrella?"⭐ importante":"quitar ⭐"); if(i.revisar!=null)p.push(i.revisar?"🔍 por revisar":"quitar 🔍"); return "🗂️ Organizar este chat: "+(p.join(", ")||"(sin cambios)"); }
   if(name==="editar_estrategia"){ return "🎯 Definir/editar la estrategia \""+(i.nombre||CTX.estrategia)+"\":\n"+[i.instrumento&&("→ instrumento: "+i.instrumento), i.ajustes&&("→ reglas/ajustes: "+i.ajustes)].filter(Boolean).join("\n"); }
   if(name==="revisar_indicador") return "🔍 Leer y auditar los ajustes actuales del indicador CRT"+(i.target?(" ("+i.target+")"):"");
@@ -5724,7 +5724,7 @@ async function ejecutarTool(name, i){
       PLAN_FASES.forEach(f=>(f.pasos||[]).forEach(p=>{ if(p.id===id){ paso=p; fase=f; } }));
       if(!paso) return {ok:false,msg:"No existe ese paso del plan ("+id+")"};
       const hecho=(i.hecho===false)?false:true;
-      PLAN.pasos[id]=hecho; guardarPlan();
+      PLAN_ARR.pasos[id]=hecho; guardarPlan();
       try{ if(TAB==="arranque") renderArranque(); }catch(_){}
       return {ok:true,msg:(hecho?"✅ Marcado":"↩️ Desmarcado")+" en tu plan (fase "+fase.n+"): “"+paso.t+"”"};
     }
@@ -6069,7 +6069,7 @@ async function iaEnviar(textoForzado, promptExtra){
   if(!texto && img) texto="Analiza este gráfico según mi estrategia CRT: par/temporalidad, bias, sweep, MSS y zona. Dime si hay un setup válido (A+/B/C) y qué harías.";
   if(!texto && doc) texto="Te comparto este documento para que APRENDAS de él: analízalo a fondo, dime qué aporta a mi método, qué confirma, qué mejoraría o cambiaría, y propón guardar lo valioso en tu memoria o en mi estrategia.";
   /* 🧭 cuenta el material que Rey le comparte (documentos y enlaces): es la señal de la fase 02 */
-  try{ if(doc || /https?:\/\//i.test(texto)){ PLAN.docs=(PLAN.docs||0)+1; guardarPlan(); } }catch(_){}
+  try{ if(doc || /https?:\/\//i.test(texto)){ PLAN_ARR.docs=(PLAN_ARR.docs||0)+1; guardarPlan(); } }catch(_){}
   if(ta){ ta.value=""; ta.style.height="auto"; }
   IA.pendImg=null; IA.pendDoc=null; iaPintarAtt();
   const c=iaConvAct();
