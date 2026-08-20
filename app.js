@@ -28,7 +28,8 @@ const K = {
   robertolog:"crtelite_robertolog_v3",
   shots:"crtelite_shots_v1",
   plansem:"crtelite_plansem_v1",
-  plan:"crtelite_plan_v1"
+  plan:"crtelite_plan_v1",
+  vered:"crtelite_vered_v1"
 };
 const load = (k,d)=>{ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):d; }catch(e){ return d; } };
 const save = (k,v)=>{ try{ localStorage.setItem(k,JSON.stringify(v)); nubeMarcar(); }catch(e){ toast("No se pudo guardar"); } };
@@ -317,7 +318,7 @@ async function iaEnviarBloques(bloques, resumenChat){
   while(hist.length && hist[0].role!=="user") hist.shift();
   const msgs=hist.map(x=>iaMsgApi(x,false));
   let calTxt=""; try{ const ev=await cargarCalendarioCache(); calTxt=iaCalendarioContexto(ev)+"\n"; }catch(_){ calTxt=""; }
-  const inj=iaReloj()+"\n"+calTxt+iaContexto()+"\n"+iaEstrategiaDef()+"\n"+iaPlan()+"\n"+iaFugas()+"\n"+iaRacha()+"\n";
+  const inj=iaReloj()+"\n"+calTxt+iaContexto()+"\n"+iaEstrategiaDef()+"\n"+iaPlan()+"\n"+iaAciertos()+"\n"+iaFugas()+"\n"+iaRacha()+"\n";
   const last=msgs[msgs.length-1];
   last.content=[{type:"text",text:inj}].concat(bloques);
   await iaBgStart(msgs, c);
@@ -1027,6 +1028,7 @@ const IR_DESTINOS = [
   { v:"tab:plan",      t:"📋 Plan" },
   /* Acciones de Roberto */
   { v:"rob:memoria",   t:"🧠 Roberto · Mi memoria" },
+  { v:"rob:aciertos",  t:"🎯 Roberto · Cómo lee el mercado" },
   { v:"rob:plan",      t:"🧭 Roberto · Por dónde voy en mi plan" },
   { v:"rob:parte",     t:"🌅 Roberto · Parte del día" },
   { v:"rob:gonogo",    t:"✅ Roberto · GO/NO-GO" },
@@ -1052,6 +1054,7 @@ function irDestino(v){
   if(typeof abrirIA==="function") abrirIA();
   const F={
     memoria: ()=>verMemoria(),
+    aciertos:()=>verAciertos(),
     plan:    ()=>preguntarPlan(),
     parte:   ()=>parteMatutino(),
     gonogo:  ()=>goNoGo(),
@@ -2482,6 +2485,7 @@ function guardarTrade(){
       fueraLimite
     }, datos);
     TRADES.push(t); save(K.trades,TRADES);
+    try{ veredEnlazar(t); veredActualizar(t); }catch(_){}   /* 🎯 enlaza con la lectura de Roberto */
     nuevoTrade=t;
     limpiarForm();
     if(bt) toast("Trade de backtest guardado ✓"); else toast("Trade guardado ✓");
@@ -4120,6 +4124,126 @@ function iaPlan(){
   return out;
 }
 
+/* ============================================================
+   🎯 EL HISTORIAL DE ROBERTO — sus propias lecturas, medidas
+   Roberto ve tus trades y sus resultados, pero no tenía memoria de LO QUE ÉL DIJO.
+   Podía analizarte a ti, no auditarse a sí mismo. Aquí se guarda cada veredicto suyo
+   (GO / NO-GO / ESPERA) y, cuando registras el trade, se enlazan solos: mismo par,
+   dentro de las 12 h siguientes. Con eso puede decirte, con NÚMEROS suyos, en qué
+   acierta y en qué falla — y corregirse.
+   ============================================================ */
+let VERED = load(K.vered, []);
+function guardarVered(){ save(K.vered, VERED); }
+
+/* Apunta una lectura de Roberto. La llama él mismo con su mano registrar_veredicto. */
+function veredAdd(o){
+  const v = {
+    id: "v" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5),
+    ts: Date.now(),
+    fecha: hoyISO(),
+    par: String(o.par || "").toUpperCase().replace(/[^A-Z0-9]/g, ""),
+    veredicto: ["go", "nogo", "espera"].includes(o.veredicto) ? o.veredicto : "espera",
+    razon: String(o.razon || "").slice(0, 400),
+    setup: String(o.setup || "").slice(0, 20),
+    confianza: Math.max(1, Math.min(5, parseInt(o.confianza, 10) || 3)),
+    modo: CTX.modo, estrategia: CTX.estrategia,
+    trade: null,          // id del trade con el que se enlace
+    resultado: null       // R del trade, cuando cierre
+  };
+  VERED.unshift(v);
+  VERED = VERED.slice(0, 500);
+  guardarVered();
+  return v;
+}
+/* Enlaza un trade con la lectura más reciente de Roberto sobre ese par (últimas 12 h). */
+function veredEnlazar(trade){
+  if (!trade || !trade.par) return null;
+  const par = String(trade.par).toUpperCase().replace(/[^A-Z0-9]/g, "");
+  const limite = Date.now() - 12 * 3600 * 1000;
+  const v = VERED.find(x => !x.trade && x.par === par && x.ts >= limite);
+  if (!v) return null;
+  v.trade = trade.id;
+  if (!trade.abierta) v.resultado = parseFloat(trade.r) || 0;
+  guardarVered();
+  return v;
+}
+/* Cuando un trade se cierra o se edita, actualiza el resultado de su lectura. */
+function veredActualizar(trade){
+  if (!trade || trade.abierta) return;
+  const v = VERED.find(x => x.trade === trade.id);
+  if (v) { v.resultado = parseFloat(trade.r) || 0; guardarVered(); }
+}
+/* Estadísticas de Roberto sobre SÍ MISMO. */
+function veredStats(desdeTs){
+  const lista = VERED.filter(v => (!desdeTs || v.ts >= desdeTs) && v.resultado !== null);
+  const go = lista.filter(v => v.veredicto === "go");
+  const nogo = lista.filter(v => v.veredicto === "nogo");
+  const goBien = go.filter(v => v.resultado > 0).length;
+  const goMal = go.filter(v => v.resultado < 0).length;
+  /* un NO-GO "acierta" si Rey entró igual y salió perdiendo */
+  const nogoAcertado = nogo.filter(v => v.resultado < 0).length;
+  const nogoFallado = nogo.filter(v => v.resultado > 0).length;
+  const rGo = go.reduce((a, v) => a + v.resultado, 0);
+  return {
+    total: VERED.length, medidos: lista.length,
+    go: go.length, goBien, goMal,
+    tasaGo: (goBien + goMal) ? Math.round(goBien / (goBien + goMal) * 100) : null,
+    rGo, nogo: nogo.length, nogoAcertado, nogoFallado,
+    pendientes: VERED.filter(v => !v.trade).length
+  };
+}
+/* Bloque que Roberto recibe en CADA conversación: su propio boletín de notas. */
+function iaAciertos(){
+  if (!VERED.length) return "[🎯 TU HISTORIAL DE LECTURAS: aún no has registrado ninguna. Cada vez que le des a Rey un GO, un NO-GO o un ESPERA sobre un par, apúntalo con tu mano registrar_veredicto. Es la única forma de que luego puedas medirte a ti mismo y corregirte: sin eso, opinas sin saber si aciertas.]";
+  const s = veredStats();
+  const ult = VERED.slice(0, 8).map(v => {
+    const et = v.veredicto === "go" ? "✅ GO" : v.veredicto === "nogo" ? "⛔ NO-GO" : "⏸️ ESPERA";
+    const res = v.resultado === null ? (v.trade ? "abierta" : "sin operar") : ((v.resultado >= 0 ? "+" : "") + r1(v.resultado) + "R");
+    return "  · " + v.fecha + " " + v.par + " " + et + " (confianza " + v.confianza + "/5) → " + res + (v.razon ? " — dijiste: " + v.razon.slice(0, 90) : "");
+  }).join("\n");
+  let out = "[🎯 TU HISTORIAL DE LECTURAS — esto es lo que TÚ dijiste y en qué acabó. Úsalo para AUDITARTE, no solo para auditar a Rey.\n";
+  out += "Registradas: " + s.total + " · medidas: " + s.medidos + " · sin operar todavía: " + s.pendientes + "\n";
+  if (s.medidos) {
+    out += "GO que diste: " + s.go + " → " + s.goBien + " ganadoras / " + s.goMal + " perdedoras" +
+      (s.tasaGo !== null ? " (aciertas el " + s.tasaGo + "% de tus GO)" : "") + " · resultado acumulado " + (s.rGo >= 0 ? "+" : "") + r1(s.rGo) + "R\n";
+    if (s.nogo) out += "NO-GO que diste y Rey operó igual: " + (s.nogoAcertado + s.nogoFallado) + " → acertaste " + s.nogoAcertado + " (habría perdido) y fallaste " + s.nogoFallado + " (habría ganado)\n";
+  }
+  out += "Últimas lecturas tuyas:\n" + ult + "\n";
+  out += "CÓMO LO USAS: (1) Registra SIEMPRE tu veredicto con registrar_veredicto cuando te mojes sobre un par — es automático, no molesta a Rey. ";
+  out += "(2) En el análisis del día y de la semana, dile también cómo leíste TÚ, con estos números, aunque te dejen mal. ";
+  out += "(3) Si ves un patrón en tus fallos (un par donde aciertas poco, un tipo de setup que sobrevaloras, un día de la semana en que te precipitas), DÍSELO y guárdalo con guardar_memoria. ";
+  out += "(4) Si tu tasa de acierto baja, sé MÁS exigente antes de dar un GO. Un mentor que se mide es un mentor que mejora.]";
+  return out;
+}
+/* 🎯 Vista para Rey: cómo va leyendo Roberto el mercado. */
+async function verAciertos(){
+  if(typeof abrirIA==="function") abrirIA();
+  iaTemaChat("🎯 Cómo lee Roberto");
+  const c=iaConvAct();
+  const s=veredStats();
+  let txt="";
+  if(!VERED.length){
+    txt="## 🎯 Cómo leo yo el mercado\n\nTodavía no he registrado ninguna lectura. En cuanto empieces a pedirme **✅ GO/NO-GO** antes de tus entradas, iré apuntando cada veredicto mío. Cuando registres el trade, los enlazo solos.\n\nAsí, dentro de unas semanas, podré decirte con números **en qué acierto y en qué fallo** — y corregirme.";
+  }else{
+    txt="## 🎯 Cómo leo yo el mercado\n\n"+
+      "**"+s.total+"** lecturas registradas · **"+s.medidos+"** ya con resultado · "+s.pendientes+" sin operar\n\n";
+    if(s.medidos){
+      txt+="### Mis GO\n"+s.go+" dados → **"+s.goBien+" ganadoras** / "+s.goMal+" perdedoras"+
+        (s.tasaGo!==null?("  ·  acierto **"+s.tasaGo+"%**"):"")+"  ·  "+(s.rGo>=0?"+":"")+r1(s.rGo)+"R acumulados\n\n";
+      if(s.nogo) txt+="### Mis NO-GO que operaste igual\n"+s.nogoAcertado+" veces tenía razón (perdiste) · "+s.nogoFallado+" veces me equivoqué (ganaste)\n\n";
+    }else{
+      txt+="_Aún no hay ninguna lectura con resultado: registra los trades al cerrarlos y se enlazan solos._\n\n";
+    }
+    txt+="### Últimas\n"+VERED.slice(0,10).map(v=>{
+      const et=v.veredicto==="go"?"✅ GO":v.veredicto==="nogo"?"⛔ NO-GO":"⏸️ ESPERA";
+      const res=v.resultado===null?(v.trade?"_abierta_":"_sin operar_"):("**"+(v.resultado>=0?"+":"")+r1(v.resultado)+"R**");
+      return "- "+v.fecha+" · "+v.par+" · "+et+" → "+res;
+    }).join("\n");
+  }
+  c.msgs.push({role:"assistant",content:txt});
+  iaGuardarConvs(); pintarIAChat();
+}
+
 /* 🛡️ GUARDIÁN DE RIESGO — estado EN VIVO del riesgo del día por cada cuenta, para que
    Roberto FRENE a Rey antes de romper una regla. Mira: pérdida del día vs límite DIARIO,
    drawdown total vs DD máximo, nº de trades y de SL hoy (regla 2/día · 2 SL = parar).
@@ -4923,6 +5047,7 @@ function iaInit(){
         <button class="ia-chip" data-act="parte">🌅 Parte del día</button>
         <button class="ia-chip" data-act="avisos">📥 Avisos recibidos</button>
         <button class="ia-chip" data-act="plan">🧭 Mi plan</button>
+        <button class="ia-chip" data-act="aciertos">🎯 Cómo lees el mercado</button>
         <button class="ia-chip" data-act="memoria">🧠 Mi memoria</button>
         <button class="ia-chip" data-act="capturas">📸 Estudia mis capturas</button>
         <button class="ia-chip" data-act="comparar">⚖️ Comparar pares</button>
@@ -5002,6 +5127,7 @@ function iaInit(){
     if(b.dataset.act==="parte")    return parteMatutino();
     if(b.dataset.act==="avisos")   return verAvisos();
     if(b.dataset.act==="plan")     return preguntarPlan();
+    if(b.dataset.act==="aciertos") return verAciertos();
     if(b.dataset.act==="memoria")  return verMemoria();
     if(b.dataset.act==="capturas") return estudiarCapturas();
     if(b.dataset.act==="gonogo")   return goNoGo();
@@ -5607,6 +5733,14 @@ const IA_TOOLS = [
     input_schema:{ type:"object", properties:{ precio:{type:"number",description:"Precio de la entrada/reacción"}, direccion:{type:"string",enum:["compra","venta"],description:"'compra' (flecha verde arriba) o 'venta' (flecha roja abajo)"}, texto:{type:"string",description:"(opcional) etiqueta, ej. 'Entrada 5m', 'Espera reacción'"}, target:{type:"string",description:"(opcional) par de la pestaña"} }, required:["precio","direccion"] } },
   { name:"borrar_dibujos", description:"Borra los dibujos. Por defecto borra SOLO los que TÚ (Roberto) has dibujado, dejando intactos los de Rey. Si Rey pide limpiar TODO el gráfico, pasa todo=true. Requiere PC con Puente. Rey aprueba.",
     input_schema:{ type:"object", properties:{ todo:{type:"boolean",description:"true = borra TODOS los dibujos del gráfico (incluidos los manuales de Rey). Por defecto false = solo los de Roberto."}, target:{type:"string",description:"(opcional) par de la pestaña"} }, required:[] } },
+  { name:"registrar_veredicto", description:"Apunta TU lectura sobre un par cuando te mojes: GO (entrar), NO-GO (no entrar) o ESPERA. Es AUTOMÁTICO (sin tarjeta) y no molesta a Rey. Úsalo SIEMPRE que le des un veredicto sobre una entrada, tanto si es a favor como en contra. Cuando Rey registre el trade se enlaza solo y sabrás en qué acabó tu lectura: es la ÚNICA forma que tienes de medirte y corregirte a ti mismo.",
+    input_schema:{ type:"object", properties:{
+      par:{type:"string", description:"El par sobre el que te pronuncias, ej. EURUSD"},
+      veredicto:{type:"string", enum:["go","nogo","espera"], description:"go = entrar · nogo = no entrar · espera = todavía no hay nada claro"},
+      razon:{type:"string", description:"En una o dos frases, POR QUÉ. Concreto: qué viste y qué faltaba."},
+      setup:{type:"string", description:"(opcional) Clasificación del setup: A+, B, C…"},
+      confianza:{type:"number", description:"Del 1 al 5, cuánta seguridad tienes en esta lectura. Sé honesto: un 5 se paga caro si fallas."}
+    }, required:["par","veredicto","razon"] } },
   { name:"marcar_paso_plan", description:"Marca (o desmarca) un paso del PLAN DE ARRANQUE de Rey cuando compruebes en la conversación que ya lo hizo. Es AUTOMÁTICO (sin tarjeta): úsalo cuando Rey te cuente que hizo algo del plan, para que la app y tú vayáis siempre iguales. No inventes: márcalo solo si él lo dijo o lo demostró.",
     input_schema:{ type:"object", properties:{
       paso:{type:"string", description:"El id del paso, tal y como aparece en tu bloque del plan (por ejemplo f1p2)."},
@@ -5728,7 +5862,8 @@ async function ejecutarTool(name, i){
         par:i.par||"?", dir:i.dir||"", setup:i.setup||"", res:i.res||(R>0?"Ganado":(R<0?"Perdido":"BE")), r:R,
         ventana:i.ventana||"", momento:i.momento||"", bias:i.bias||"", nconf:parseInt(i.nconf)||0,
         plan:i.plan||"Sí", emo:"", nota:i.nota||"", cuenta:i.cuenta||"", fueraLimite:false, confs:[] };
-      TRADES.push(t); save(K.trades,TRADES); if(typeof refrescarDiarioCtx==="function") refrescarDiarioCtx(); notifChequearCuentasDD(); syncRiesgo();
+      TRADES.push(t); save(K.trades,TRADES); try{ veredEnlazar(t); veredActualizar(t); }catch(_){}
+      if(typeof refrescarDiarioCtx==="function") refrescarDiarioCtx(); notifChequearCuentasDD(); syncRiesgo();
       return {ok:true,msg:"Trade registrado: "+t.par+" "+(t.dir||"")+" "+(t.res||"")+" "+t.r+"R ("+(t.setup||"?")+", "+(t.momento||"?")+")"};
     }
     if(name==="registrar_entrada"){
@@ -5745,7 +5880,8 @@ async function ejecutarTool(name, i){
       // Coherencia con el ⚡ Gatillo: refleja la dirección de la entrada registrada
       try{ if(typeof GAT!=="undefined"){ GAT.dir=(t.dir==="Venta"?"Venta":"Compra"); if(TAB==="gatillo") renderGatillo(); } }catch(_){}
       t.shotOpen=t.id+"_open"; nubeShotReq(t.par, t.shotOpen); // 📸 captura de apertura
-      TRADES.push(t); save(K.trades,TRADES); if(typeof refrescarDiarioCtx==="function") refrescarDiarioCtx();
+      TRADES.push(t); save(K.trades,TRADES); try{ veredEnlazar(t); }catch(_){}
+      if(typeof refrescarDiarioCtx==="function") refrescarDiarioCtx();
       return {ok:true,msg:"Entrada registrada (ABIERTA): "+t.par+" "+t.dir+" ent "+(t.entrada!=null?t.entrada:"?")+" SL "+(t.sl!=null?t.sl:"?")+" TP "+(t.tp!=null?t.tp:"?")+(t.rr?(" RR 1:"+t.rr):"")+" · 📸 pedí captura del gráfico"};
     }
     if(name==="cerrar_entrada"){
@@ -5760,6 +5896,7 @@ async function ejecutarTool(name, i){
       }
       if(isNaN(R)) return {ok:false,msg:"Dime el precio al que cerraste (o el resultado en R)"};
       t.abierta=false; t.r=R; t.res=i.res||(R>0.05?"Ganado":R<-0.05?"Perdido":"BE");
+      try{ if(!VERED.some(x=>x.trade===t.id)) veredEnlazar(t); veredActualizar(t); }catch(_){}   /* 🎯 cierra el círculo de la lectura de Roberto */
       if(i.precio_cierre!=null) t.precioCierre=parseFloat(i.precio_cierre);
       if(i.mae!=null && !isNaN(parseFloat(i.mae))) t.mae=parseFloat(i.mae);
       if(i.mfe!=null && !isNaN(parseFloat(i.mfe))) t.mfe=parseFloat(i.mfe);
@@ -5782,6 +5919,7 @@ async function ejecutarTool(name, i){
       num.forEach(k=>{ if(i[k]!=null && !isNaN(parseFloat(i[k]))) t[k]=parseFloat(i[k]); });
       str.forEach(k=>{ if(i[k]!=null && i[k]!=="") t[k]=i[k]; });
       if(i.res && i.res!=="Abierta") t.abierta=false;
+      try{ veredActualizar(t); }catch(_){}
       save(K.trades,TRADES); if(typeof refrescarDiarioCtx==="function") refrescarDiarioCtx(); notifChequearCuentasDD();
       return {ok:true,msg:"Trade actualizado: "+t.par+" "+(t.fecha||"")+" ("+(t.abierta?"abierta":(r1(t.r)+"R"))+")"};
     }
@@ -5870,6 +6008,11 @@ async function ejecutarTool(name, i){
       if(i.ajustes!=null && i.ajustes!=="") def.ajustes=String(i.ajustes);
       ESTR_DEFS[nom]=def; guardarEstrDefs();
       return {ok:true,msg:"Actualicé la estrategia “"+nom+"”: "+[def.instrumento&&("instrumento "+def.instrumento), def.ajustes&&"reglas/ajustes actualizados"].filter(Boolean).join(", ")+". La tendré en cuenta."};
+    }
+    if(name==="registrar_veredicto"){
+      const v=veredAdd({par:i.par, veredicto:i.veredicto, razon:i.razon, setup:i.setup, confianza:i.confianza});
+      const et=v.veredicto==="go"?"✅ GO":v.veredicto==="nogo"?"⛔ NO-GO":"⏸️ ESPERA";
+      return {ok:true,msg:"🎯 Lectura apuntada: "+v.par+" "+et+" (confianza "+v.confianza+"/5). Cuando registres el trade la enlazo y sabré en qué acabó."};
     }
     if(name==="marcar_paso_plan"){
       const id=String(i.paso||"").trim();
@@ -5967,7 +6110,7 @@ function histRobertoModal(){
 /* Muestra la tarjeta de confirmación y espera la decisión de Rey */
 function confirmarTool(tu){
   // 🗂️ Organizar chats y 🧠 buscar en memoria: automáticos, SIN tarjeta (reversibles / solo lectura).
-  if(tu.name==="organizar_chat" || tu.name==="buscar_memoria" || tu.name==="marcar_paso_plan"){
+  if(tu.name==="organizar_chat" || tu.name==="buscar_memoria" || tu.name==="marcar_paso_plan" || tu.name==="registrar_veredicto"){
     return (async()=>{ let res; try{ res=await ejecutarTool(tu.name, tu.input); }catch(e){ res={ok:false,msg:"Error: "+e}; } if(res&&res.ok&&(tu.name==="organizar_chat"||tu.name==="marcar_paso_plan")) toast(res.msg); return {confirmed:true, res}; })();
   }
   return new Promise(resolve=>{
@@ -6240,7 +6383,7 @@ async function iaEnviar(textoForzado, promptExtra){
   let grafTxt=""; try{ grafTxt=await iaGrafico()+"\n"; }catch(_){ grafTxt=""; }
   // promptExtra = framework de análisis (semanal/diario) que va a la API pero NO se muestra en el chat
   const marco = promptExtra ? ("\n\n=== INSTRUCCIONES DEL ANÁLISIS QUE PIDE REY ===\n"+promptExtra+"\n=== FIN INSTRUCCIONES ===") : "";
-  const inj=iaReloj()+"\n"+grafTxt+calTxt+iaContexto()+"\n"+iaEstrategiaDef()+"\n"+guardianRiesgo()+"\n"+iaPlan()+"\n"+(estadoRecuperacionFreno().block||"")+iaFugas()+"\n"+iaRacha()+"\n"+iaPendientes()+"\n"+iaPlanSemanal()+"\n"+iaAvisos()+"\n"+iaEntradasAbiertas()+marco+"\n\nPregunta de Rey: "+texto;
+  const inj=iaReloj()+"\n"+grafTxt+calTxt+iaContexto()+"\n"+iaEstrategiaDef()+"\n"+guardianRiesgo()+"\n"+iaPlan()+"\n"+iaAciertos()+"\n"+(estadoRecuperacionFreno().block||"")+iaFugas()+"\n"+iaRacha()+"\n"+iaPendientes()+"\n"+iaPlanSemanal()+"\n"+iaAvisos()+"\n"+iaEntradasAbiertas()+marco+"\n\nPregunta de Rey: "+texto;
   const last=msgs[msgs.length-1];
   const bloquesDoc = (typeof iaDocBloques==="function") ? iaDocBloques(doc, inj) : null;
   if(bloquesDoc){ last.content = bloquesDoc; }            // 📄 documento + contexto, en el último mensaje
