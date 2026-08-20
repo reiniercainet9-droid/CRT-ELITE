@@ -275,6 +275,33 @@ function iaRacha(){
 /* 💰 PAYOUTS Y ESCALADO — Roberto arma el plan para escalar cuentas con las ganancias REALES. */
 const ESCALADO_PROM = "Rey quiere su PLAN DE ESCALADO de cuentas de fondeo. Con sus CUENTAS reales del contexto (capital, fase, progreso, RETIROS ya cobrados) y su rendimiento real: (1) foto honesta de dónde está el negocio HOY (cuentas, fases, ganancias reales retiradas); (2) el CAMINO de escalado: qué tiene que pasar (en números: % objetivo, disciplina) para el siguiente paso — pasar examen, primer payout, o comprar la SIGUIENTE cuenta; (3) regla de oro del escalado: las cuentas nuevas se compran con GANANCIAS retiradas (no con dinero fresco si se puede evitar), y diversificar de firma cuando haya base; (4) si sus cuentas están en recuperación, sé claro: primero PROTEGER y recuperar, después escalar — sin prisa. Tabla si ayuda. Realista, sin humo: este es el plan de negocio de Rey.";
 function escaladoRoberto(){ if(typeof abrirIA==="function") abrirIA(); iaTemaChat("💰 Payouts y escalado"); setTimeout(()=>iaEnviar("💰 Hazme mi plan de payouts y escalado de cuentas.", ESCALADO_PROM),250); }
+/* 📥 AVISOS RECIBIDOS — historial permanente de TODO lo que Roberto/Apex te notificó.
+   Rey: "las notificaciones se pierden si no las reviso al momento". Ahora, aunque borres
+   la notificación del teléfono, aquí queda el aviso completo con su hora (Brasil y NY). */
+async function verAvisos(){
+  if(typeof abrirIA==="function") abrirIA();
+  iaTemaChat("📥 Avisos recibidos");
+  const c=iaConvAct();
+  let txt="";
+  try{
+    const r=await fetch(nubeUrl()+"/notif/log",{cache:"no-store"});
+    const d=await r.json();
+    const av=(d&&d.avisos)||[];
+    if(!av.length){
+      txt="## 📥 Avisos recibidos\n\nAún no hay avisos guardados. A partir de ahora, TODO lo que te notifique queda aquí aunque borres la notificación del teléfono.";
+    }else{
+      txt="## 📥 Avisos recibidos ("+av.length+")\n\n_Todo lo que te he notificado, aunque hayas borrado la notificación._\n\n"+
+        av.slice(0,25).map(a=>{
+          const dt=new Date(a.ts||Date.now());
+          const hBR=new Intl.DateTimeFormat("es",{timeZone:"America/Sao_Paulo",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit",hour12:true}).format(dt);
+          const hNY=new Intl.DateTimeFormat("es",{timeZone:"America/New_York",hour:"2-digit",minute:"2-digit",hour12:true}).format(dt);
+          return "**"+(a.t||"Aviso")+"**\n🕐 "+hBR+" (Brasil) · "+hNY+" (NY)\n\n"+(a.b||"");
+        }).join("\n\n---\n\n");
+    }
+  }catch(_){ txt="⚠️ No pude leer el historial de avisos ahora mismo. Revisa tu internet y vuelve a intentarlo."; }
+  c.msgs.push({role:"assistant",content:txt});
+  iaGuardarConvs(); pintarIAChat();
+}
 /* 🌅 PARTE MATUTINO HABLADO — al abrir la app por la mañana (1 vez al día), Roberto da el
    resumen del día EN VOZ: saludo, ventanas de hoy, noticias clave, plan semanal, estado de
    cuentas/disciplina y pendientes. Corto y accionable, como un briefing de mentor. */
@@ -4259,6 +4286,7 @@ function iaInit(){
         <button class="ia-chip" data-act="progreso">📊 Mi progreso</button>
         <button class="ia-chip" data-act="escalado">💰 Escalado</button>
         <button class="ia-chip" data-act="parte">🌅 Parte del día</button>
+        <button class="ia-chip" data-act="avisos">📥 Avisos recibidos</button>
         <button class="ia-chip" data-act="comparar">⚖️ Comparar pares</button>
         <button class="ia-chip" data-act="replay">🎬 Práctica Replay</button>
         <button class="ia-chip" data-q="Analiza mi operativa reciente con mis datos: dime con claridad qué estoy haciendo bien, qué estoy haciendo mal y cómo lo corrijo paso a paso.">📊 Analiza mi operativa</button>
@@ -4277,7 +4305,7 @@ function iaInit(){
         <textarea id="iaText" rows="1" placeholder="Escríbele o toca 🎤 para hablarle..."></textarea>
         <button class="ia-send" id="iaSend" aria-label="Enviar">➤</button>
       </div>
-      <input type="file" id="iaFile" accept="image/*" hidden>
+      <input type="file" id="iaFile" accept="image/*,application/pdf,.pdf,.txt,.md,.csv,text/plain" hidden>
       <input type="file" id="iaCam" accept="image/*" capture="environment" hidden>
     </div>`;
   document.body.appendChild(ov);
@@ -4334,6 +4362,7 @@ function iaInit(){
     if(b.dataset.act==="diario")  return analisisDiario();
     if(b.dataset.act==="checkemo") return checkEmocional();
     if(b.dataset.act==="parte")    return parteMatutino();
+    if(b.dataset.act==="avisos")   return verAvisos();
     if(b.dataset.act==="gonogo")   return goNoGo();
     if(b.dataset.act==="progreso") return progresoRoberto();
     if(b.dataset.act==="escalado") return escaladoRoberto();
@@ -4347,10 +4376,37 @@ function iaInit(){
   // Hablarle a Roberto con el micrófono
   const mic=$("#iaMicBtn");
   if(mic){ if(!iaMicSoportado()){ mic.disabled=true; mic.title="Tu teléfono no permite dictado por voz"; } else { mic.onclick=iaEscuchar; } }
+  /* 📎 ADJUNTAR para NUTRIR a Roberto: imágenes (capturas del gráfico), PDF (documentos, clases,
+     reglas de firmas) y texto (.txt/.md/.csv, apuntes). El PDF viaja como documento REAL: Roberto
+     lo LEE entero. Rey también puede pegarle ENLACES en el chat (los abre y los lee con web_fetch). */
   const onPick=(inp)=>{ const f=inp.files&&inp.files[0]; inp.value=""; if(!f) return;
-    if(!/^image\//.test(f.type)){ toast("Por ahora solo imágenes"); return; }
-    toast("Preparando imagen…");
-    iaLeerImagen(f,(dataUrl)=>{ if(!dataUrl){ toast("No pude leer la imagen"); return; } IA.pendImg=dataUrl; iaPintarAtt(); }); };
+    const esPDF = /pdf/i.test(f.type) || /\.pdf$/i.test(f.name);
+    const esTxt = /^text\//.test(f.type) || /\.(txt|md|csv)$/i.test(f.name);
+    if(/^image\//.test(f.type)){
+      toast("Preparando imagen…");
+      iaLeerImagen(f,(dataUrl)=>{ if(!dataUrl){ toast("No pude leer la imagen"); return; } IA.pendImg=dataUrl; iaPintarAtt(); });
+      return;
+    }
+    if(esPDF){
+      if(f.size > 18*1024*1024){ toast("El PDF es muy grande (máx ~18 MB)"); return; }
+      toast("Leyendo el PDF…");
+      const r=new FileReader();
+      r.onload=e=>{ const b64=String(e.target.result||"").split(",")[1]||""; if(!b64){ toast("No pude leer el PDF"); return; }
+        IA.pendDoc={ tipo:"pdf", nombre:f.name, b64 }; iaPintarAtt(); toast("📄 "+f.name+" listo — dile qué hacer con él"); };
+      r.onerror=()=>toast("No pude leer el PDF");
+      r.readAsDataURL(f);
+      return;
+    }
+    if(esTxt){
+      if(f.size > 2*1024*1024){ toast("El texto es muy grande (máx 2 MB)"); return; }
+      const r=new FileReader();
+      r.onload=e=>{ const txt=String(e.target.result||""); if(!txt.trim()){ toast("El archivo está vacío"); return; }
+        IA.pendDoc={ tipo:"txt", nombre:f.name, texto:txt.slice(0,180000) }; iaPintarAtt(); toast("📄 "+f.name+" listo"); };
+      r.onerror=()=>toast("No pude leer el archivo");
+      r.readAsText(f);
+      return;
+    }
+    toast("Formato no soportado. Usa imagen, PDF o texto (.txt/.md/.csv)"); };
   $("#iaFile").onchange=function(){ onPick(this); };
   $("#iaCam").onchange=function(){ onPick(this); };
   pintarIAChat();
@@ -4380,11 +4436,19 @@ function iaLeerImagen(file, cb){
 /* Vista previa de la imagen pendiente, encima del cuadro de texto */
 function iaPintarAtt(){
   const a=$("#iaAtt"); if(!a) return;
-  if(!IA.pendImg){ a.style.display="none"; a.innerHTML=""; return; }
+  if(!IA.pendImg && !IA.pendDoc){ a.style.display="none"; a.innerHTML=""; return; }
   a.style.display="flex";
-  a.innerHTML=`<div class="ia-att-wrap"><img class="ia-att-img" src="${IA.pendImg}" alt="adjunto">
-    <button class="ia-att-x" id="iaAttX" aria-label="Quitar imagen">✕</button></div>`;
-  $("#iaAttX").onclick=()=>{ IA.pendImg=null; iaPintarAtt(); };
+  if(IA.pendImg){
+    a.innerHTML=`<div class="ia-att-wrap"><img class="ia-att-img" src="${IA.pendImg}" alt="adjunto">
+      <button class="ia-att-x" id="iaAttX" aria-label="Quitar imagen">✕</button></div>`;
+    $("#iaAttX").onclick=()=>{ IA.pendImg=null; iaPintarAtt(); };
+  } else {
+    const d=IA.pendDoc;
+    a.innerHTML=`<div class="ia-att-wrap" style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--card3);border:1px solid var(--line);border-radius:10px">
+      <span style="font-size:18px">📄</span><span style="font-size:12.5px;color:var(--txt)">${esc(d.nombre||"documento")}${d.tipo==="pdf"?" (PDF)":""}</span>
+      <button class="ia-att-x" id="iaAttX" aria-label="Quitar documento">✕</button></div>`;
+    $("#iaAttX").onclick=()=>{ IA.pendDoc=null; iaPintarAtt(); };
+  }
 }
 function abrirIA(){ $("#iaOv").classList.add("show"); pintarIAChat(); setTimeout(()=>{ const t=$("#iaText"); if(t)t.focus(); },220); }
 function cerrarIA(){ $("#iaOv").classList.remove("show"); iaVozParar(); }
@@ -4754,6 +4818,18 @@ function iaMsgApi(x, conFoto){
     return { role:"user", content:"(Te envié un gráfico antes) "+(x.content||"") };
   }
   return { role:x.role, content:x.content };
+}
+/* 📄 Documento adjunto (PDF o texto) -> bloque real para que Roberto lo LEA entero.
+   El PDF va como document/base64 (la IA lo lee de verdad, no solo el nombre); el texto
+   se inyecta como texto plano. Solo viaja en el ÚLTIMO mensaje, nunca se guarda en el chat. */
+function iaDocBloques(doc, texto){
+  if(!doc) return null;
+  if(doc.tipo==="pdf"){
+    return [ { type:"document", source:{ type:"base64", media_type:"application/pdf", data:doc.b64 } },
+             { type:"text", text:texto||"" } ];
+  }
+  return [ { type:"text", text:"📄 DOCUMENTO QUE TE COMPARTO (\""+(doc.nombre||"documento")+"\"):\n\n"+(doc.texto||"")+"\n\n— fin del documento —" },
+           { type:"text", text:texto||"" } ];
 }
 
 /* ============================================================
@@ -5458,13 +5534,15 @@ async function iaEnviar(textoForzado, promptExtra){
   const ta=$("#iaText");
   let texto=(textoForzado!=null?textoForzado:(ta?ta.value:"")).trim();
   const img=IA.pendImg;
-  if((!texto && !img) || IA.busy) return;
+  const doc=IA.pendDoc;   // 📄 documento adjunto (PDF/texto) para nutrir a Roberto
+  if((!texto && !img && !doc) || IA.busy) return;
   if(!IA.url){ toast("Configura el puente (⚙️)"); $("#iaCfg").click(); return; }
   if(!texto && img) texto="Analiza este gráfico según mi estrategia CRT: par/temporalidad, bias, sweep, MSS y zona. Dime si hay un setup válido (A+/B/C) y qué harías.";
+  if(!texto && doc) texto="Te comparto este documento para que APRENDAS de él: analízalo a fondo, dime qué aporta a mi método, qué confirma, qué mejoraría o cambiaría, y propón guardar lo valioso en tu memoria o en mi estrategia.";
   if(ta){ ta.value=""; ta.style.height="auto"; }
-  IA.pendImg=null; iaPintarAtt();
+  IA.pendImg=null; IA.pendDoc=null; iaPintarAtt();
   const c=iaConvAct();
-  c.msgs.push({role:"user",content:texto, img:img||undefined});
+  c.msgs.push({role:"user",content:texto + (doc?("\n\n📄 (te adjunté: "+(doc.nombre||"documento")+")"):""), img:img||undefined});
   if(!c.t) c.t=iaTit(c);
   IA.busy=true;
   if(!iaGuardarConvs()) toast("Imagen muy pesada: se envía pero quizá no se guarde en el historial");
@@ -5480,7 +5558,9 @@ async function iaEnviar(textoForzado, promptExtra){
   const marco = promptExtra ? ("\n\n=== INSTRUCCIONES DEL ANÁLISIS QUE PIDE REY ===\n"+promptExtra+"\n=== FIN INSTRUCCIONES ===") : "";
   const inj=iaReloj()+"\n"+grafTxt+calTxt+iaContexto()+"\n"+iaEstrategiaDef()+"\n"+guardianRiesgo()+"\n"+(estadoRecuperacionFreno().block||"")+iaFugas()+"\n"+iaRacha()+"\n"+iaPendientes()+"\n"+iaPlanSemanal()+"\n"+iaAvisos()+"\n"+iaEntradasAbiertas()+marco+"\n\nPregunta de Rey: "+texto;
   const last=msgs[msgs.length-1];
-  if(Array.isArray(last.content)){ last.content[last.content.length-1]={type:"text",text:inj}; }
+  const bloquesDoc = (typeof iaDocBloques==="function") ? iaDocBloques(doc, inj) : null;
+  if(bloquesDoc){ last.content = bloquesDoc; }            // 📄 documento + contexto, en el último mensaje
+  else if(Array.isArray(last.content)){ last.content[last.content.length-1]={type:"text",text:inj}; }
   else{ last.content=inj; }
   await iaBgStart(msgs, c);
 }

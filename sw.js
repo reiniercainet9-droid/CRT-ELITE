@@ -1,4 +1,4 @@
-const CACHE = "crt-elite-v5-82";
+const CACHE = "crt-elite-v5-83";
 const FILES = ["./","./index.html","./data.js","./app.js","./manifest.json","./icon-192.png","./icon-512.png"];
 const WORKER = "https://elitepro-worker.reiniercainet9.workers.dev";
 /* Web Push: al llegar un aviso (con la app CERRADA), muestra la notificación.
@@ -18,10 +18,15 @@ self.addEventListener("push", e => {
     /* Vibración distinta para los avisos de rutina (⏰) vs las alarmas de trading */
     const vibra = esRutina ? (fuerte ? [500,150,500,150,500,150,500] : [400,140,400]) : [220,90,220,90,320];
     await self.registration.showNotification(msg.title || "Apex", {
-      body: msg.body, tag: msg.tag || "apex", renotify: true,
+      /* PERMANENCIA (Rey): antes TODAS las alarmas usaban el mismo tag ("apex-tv"), y en Android
+         una notificación con el mismo tag REEMPLAZA a la anterior -> si no la mirabas al momento,
+         la siguiente la borraba y perdías los datos. Ahora cada aviso lleva un tag ÚNICO: se
+         APILAN y se quedan en la bandeja hasta que TÚ las descartes. requireInteraction siempre
+         true para que no se auto-descarten. */
+      body: msg.body, tag: (msg.tag || "apex") + "-" + Date.now(), renotify: true,
       icon: "./icon-192.png", badge: "./icon-192.png",
       vibrate: vibra, silent: false,
-      requireInteraction: esRutina ? fuerte : true,
+      requireInteraction: true,
       timestamp: Date.now(), data: { url: "./index.html", jobId: msg.jobId || "", kind: msg.kind || "", sym: msg.sym || "", tvint: msg.tvint || "", seed: msg.seed || "" }
     });
   })());
