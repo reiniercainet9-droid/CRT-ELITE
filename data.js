@@ -3,7 +3,7 @@
    Todo el contenido del plan operativo de Rey.
    ============================================================ */
 
-const APP_VERSION = "5.86";
+const APP_VERSION = "5.87";
 
 /* --- CHECKLIST OPERATIVO (4 bloques) --- */
 const CHECKLIST = [
@@ -446,7 +446,7 @@ const PLAN_FASES = [
       {id:"f3p4", t:"Pedir el 📆 Análisis del día al cerrar la jornada"},
       {id:"f3p5", t:"Los domingos: leer su 🎓 informe y pedir el 🗓️ Análisis semanal"}
     ],
-    señal:"14 días seguidos sin romper ni una regla (máx. 2 trades/día y nunca 2 SL seguidos en el mismo día), con al menos 10 trades registrados.",
+    señal:"14 días seguidos sin romper ni una regla operando EN VIVO (máx. 2 trades/día y nunca 2 SL en el mismo día), con al menos 10 trades en vivo registrados. El BACKTEST no cuenta aquí: es tu gimnasio, practica sin límite.",
     auto:"disciplina", dias:14, minTrades:10
   },
   {

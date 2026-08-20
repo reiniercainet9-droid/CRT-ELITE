@@ -1087,24 +1087,32 @@ function guardarAvisoForm(id){
 }
 
 /* ---------- NAVEGACIÓN ---------- */
+/* Orden por CÓMO SE USA EL DÍA, no por cuándo se construyó cada sección:
+   1) planificar  →  2) el plan con Roberto  →  3) decidir  →  4) ejecutar
+   →  5) registrar  →  6) revisar  →  7) datos  →  8) referencia de consulta. */
 const TABS=[
-  {id:"noticias",  ic:"📰", n:"Noticias"},
-  {id:"avisos",    ic:"⏰", n:"Avisos"},
-  {id:"checklist", ic:"✅", n:"Checklist"},
-  {id:"conf",      ic:"🎯", n:"Confluencias"},
+  /* ── El día ── */
   {id:"hoy",       ic:"🎯", n:"Hoy"},
   {id:"arranque",  ic:"🧭", n:"Plan con Roberto"},
-  {id:"rutina",    ic:"🗺️", n:"Rutina"},
-  {id:"reglas",    ic:"⛔", n:"Reglas"},
-  {id:"riesgo",    ic:"💰", n:"Riesgo"},
+  /* ── Antes de entrar ── */
+  {id:"checklist", ic:"✅", n:"Checklist"},
   {id:"gatillo",   ic:"⚡", n:"Gatillo"},
+  {id:"riesgo",    ic:"💰", n:"Riesgo"},
+  /* ── Después de operar ── */
   {id:"diario",    ic:"📒", n:"Diario"},
+  {id:"analisis",  ic:"📈", n:"Análisis"},
   {id:"galeria",   ic:"🖼️", n:"Galería"},
   {id:"cuentas",   ic:"🏦", n:"Cuentas"},
+  /* ── Datos del mercado ── */
+  {id:"noticias",  ic:"📰", n:"Noticias"},
   {id:"almanaque", ic:"📅", n:"Almanaque"},
-  {id:"analisis",  ic:"📈", n:"Análisis"},
-  {id:"mentor",    ic:"🧠", n:"Mentor"},
-  {id:"plan",      ic:"📋", n:"Plan"}
+  {id:"avisos",    ic:"⏰", n:"Avisos"},
+  /* ── Consulta ── */
+  {id:"reglas",    ic:"⛔", n:"Reglas"},
+  {id:"conf",      ic:"🎯", n:"Confluencias"},
+  {id:"rutina",    ic:"🗺️", n:"Rutina"},
+  {id:"plan",      ic:"📋", n:"Plan"},
+  {id:"mentor",    ic:"🧠", n:"Mentor"}
 ];
 let TAB="hoy";
 
@@ -1113,7 +1121,7 @@ function irA(id){
   document.querySelectorAll(".view").forEach(v=>v.classList.toggle("on",v.id==="v-"+id));
   document.querySelectorAll("#nav button").forEach(b=>b.classList.toggle("on",b.dataset.t===id));
   window.scrollTo({top:0,behavior:"instant"});
-  if(id==="hoy")      renderHoy();
+  if(id==="hoy")     { renderHoy(); if(!HOY_EV) hoyCargarNoticias(); }
   if(id==="arranque") renderArranque();
   if(id==="analisis") renderAnalisis();
   if(id==="diario")   renderDiario();
@@ -1310,6 +1318,71 @@ function renderArranque(){
   });
 }
 
+/* 📰 LAS NOTICIAS DE HOY, DENTRO DE HOY.
+   Rey no debería salir de esta pantalla para saber si puede operar. Aquí ve las
+   noticias del día en hora de Nueva York Y de Brasil, y —lo que de verdad importa—
+   qué franjas quedan BLOQUEADAS (30 min antes y después de cada roja/naranja).
+   El calendario completo sigue en 📰 Noticias para cuando quiera profundizar. */
+let HOY_EV=null;
+async function hoyCargarNoticias(){
+  try{
+    const ev=await cargarCalendarioCache();
+    if(!ev) return;
+    const mon=monedasDe((CAL_FILTRO||[]).concat(PARES||[]));
+    const hoy=nyFechaISO(0);
+    HOY_EV=ev.filter(e=>String(e.date||"").slice(0,10)===hoy
+      && mon.has(String(e.country||"").toUpperCase())
+      && /High|Medium/i.test(e.impact||""))
+      .sort((a,b)=>String(a.date||"").localeCompare(String(b.date||"")));
+    if(TAB==="hoy") renderHoy();
+  }catch(_){}
+}
+/* Convierte "2026-08-20T08:30" (NY) a las dos horas legibles + minutos desde medianoche NY */
+function hoyHoraEvento(iso){
+  const hh=parseInt(String(iso).slice(11,13),10), mm=parseInt(String(iso).slice(14,16),10);
+  const dec=hh+mm/60;
+  const h12=(h)=>{ const p=h>=12?"PM":"AM"; let x=h%12; if(!x)x=12; return x+":"+String(mm).padStart(2,"0")+" "+p; };
+  return { dec, ny:h12(hh), br:h12((hh+1)%24) };   /* Brasil = NY + 1 h */
+}
+/* decimal (8.5) -> "8:30 AM"; sirve para pintar las franjas bloqueadas */
+function hoyDec12(dec){
+  let d=((dec%24)+24)%24;
+  const h=Math.floor(d), m=Math.round((d-h)*60);
+  const p=h>=12?"PM":"AM"; let x=h%12; if(!x)x=12;
+  return x+":"+String(m).padStart(2,"0")+" "+p;
+}
+function hoyBloqueNoticias(){
+  if(!HOY_EV) return `<div class="card">
+    <div class="card-h"><span class="ic">📰</span><h2>Noticias de hoy</h2></div>
+    <p class="desc">Leyendo el calendario económico…</p></div>`;
+  const ny=horaNY();
+  if(!HOY_EV.length) return `<div class="card">
+    <div class="card-h"><span class="ic">📰</span><h2>Noticias de hoy</h2><span class="cnt">0</span></div>
+    <div class="note ok" style="text-align:left">✅ Sin noticias de alto ni medio impacto en tus pares. El día está limpio: opera dentro de tu ventana con normalidad.</div>
+    <button class="btn" id="hoyNews">Ver calendario completo →</button></div>`;
+
+  const filas=HOY_EV.slice(0,8).map(e=>{
+    const h=hoyHoraEvento(e.date);
+    const alto=/High/i.test(e.impact);
+    /* ventana bloqueada: 30 min antes y 30 después */
+    const dentro = ny.dec>=(h.dec-0.5) && ny.dec<=(h.dec+0.5);
+    const pasada = ny.dec > h.dec+0.5;
+    return `<div class="hoy-row ${dentro?"bad":(alto?"warn":"")}"${pasada?' style="opacity:.5"':''}>
+      <div class="hoy-row-t">${alto?"🔴":"🟠"} ${esc(e.title||"Evento")} <span style="font-weight:500;color:var(--txt3)">${esc(e.country||"")}</span></div>
+      <div class="hoy-row-d">${esc(h.ny)} Nueva York · ${esc(h.br)} Brasil${pasada?" · ya pasó":""}</div>
+      ${dentro?`<div class="hoy-row-a">⛔ AHORA MISMO no operes — estás dentro de los 30 min de esta noticia</div>`
+        :(!pasada?`<div class="hoy-row-d" style="color:var(--orange)">No operes entre ${esc(hoyDec12(h.dec-0.5))} y ${esc(hoyDec12(h.dec+0.5))} hora de Nueva York</div>`:"")}
+    </div>`;
+  }).join("");
+  const altos=HOY_EV.filter(e=>/High/i.test(e.impact)).length;
+  return `<div class="card${altos?" alert":""}">
+    <div class="card-h"><span class="ic">📰</span><h2 class="${altos?"red":""}">Noticias de hoy</h2><span class="cnt">${HOY_EV.length}</span></div>
+    ${altos?`<div class="note bad" style="text-align:left">🔴 ${altos} noticia(s) de ALTO impacto hoy en tus pares. Respeta los 30 minutos antes y después de cada una.</div>`:""}
+    ${filas}
+    <button class="btn" id="hoyNews">Ver calendario completo →</button>
+  </div>`;
+}
+
 /* ============================================================
    VISTA 🎯 HOY — TODO lo del día en UNA sola pantalla
    Rey abría 5 secciones para saber en qué punto estaba. Aquí ve de un vistazo:
@@ -1351,7 +1424,10 @@ function renderHoy(){
     <div>${estado}</div>
   </div>`;
 
-  /* ── 2. PLAN DE HOY (estrategia + checklist) ── */
+  /* ── 2. NOTICIAS DE HOY (aquí mismo: sin salir de esta pantalla sabes si puedes operar) ── */
+  h+=hoyBloqueNoticias();
+
+  /* ── 3. PLAN DE HOY (estrategia + checklist) ── */
   let hechos=0, total=0;
   CHECKLIST.forEach(bl=>bl.items.forEach(it=>{ total++; if(CHK[it.id]) hechos++; }));
   const pctChk = total?Math.round(hechos/total*100):0;
@@ -1367,13 +1443,13 @@ function renderHoy(){
     <button class="btn" id="hoyChk">Abrir checklist →</button>
   </div>`;
 
-  /* ── 3. RIESGO DE HOY (por cuenta, en vivo) ── */
+  /* ── 4. RIESGO DE HOY (por cuenta, en vivo) ── */
   const hoy=hoyISO();
   const cuentas=(Array.isArray(CUENTAS)?CUENTAS:[]).filter(c=>c.fase!=="Cerrada");
   let filas="", frenoGlobal=false;
   cuentas.forEach(c=>{
     const riesgoPct=+c.riesgoPct||0.5;
-    const hoyT=TRADES.filter(t=>t.cuenta===c.id && t.fecha===hoy && !t.abierta);
+    const hoyT=TRADES.filter(t=>t.cuenta===c.id && t.fecha===hoy && !t.abierta && t.modo==="real");
     const rHoy=hoyT.reduce((a,t)=>a+(parseFloat(t.r)||0),0);
     const slHoy=hoyT.filter(t=>(parseFloat(t.r)||0)<0).length;
     const diaPct=rHoy*riesgoPct;
@@ -1396,7 +1472,7 @@ function renderHoy(){
     ${frenoGlobal?`<div class="note bad" style="text-align:left">🔴 Hoy tu regla dice PARAR. No abras nada más.</div>`:""}
   </div>`;
 
-  /* ── 4. PENDIENTES ── */
+  /* ── 5. PENDIENTES ── */
   const pend=(IA.convs||[]).filter(c=>c.revisar && c.msgs && c.msgs.length);
   h+=`<div class="card">
     <div class="card-h"><span class="ic">🔍</span><h2>Pendientes</h2><span class="cnt">${pend.length}</span></div>
@@ -1405,7 +1481,7 @@ function renderHoy(){
     ${pend.length?`<button class="btn" id="hoyPend">Repasarlos con Roberto →</button>`:""}
   </div>`;
 
-  /* ── 5. SETUP / CONTEXTO DEL GRÁFICO ── */
+  /* ── 6. SETUP / CONTEXTO DEL GRÁFICO ── */
   h+=`<div class="card">
     <div class="card-h"><span class="ic">📈</span><h2>Contexto del gráfico</h2></div>
     ${HOY_CTX && HOY_CTX.ctx
@@ -1415,7 +1491,7 @@ function renderHoy(){
     <button class="btn" id="hoyGo">✅ Pedir GO/NO-GO a Roberto</button>
   </div>`;
 
-  /* ── 6. CIERRE DEL DÍA / HERRAMIENTAS ── */
+  /* ── 7. CIERRE DEL DÍA / HERRAMIENTAS ── */
   h+=`<div class="card">
     <div class="card-h"><span class="ic">🧰</span><h2>Herramientas del día</h2></div>
     <button class="btn" id="hoyParte">🌅 Parte del día</button>
@@ -1427,6 +1503,7 @@ function renderHoy(){
   const on=(id,fn)=>{ const b=$("#"+id); if(b) b.onclick=fn; };
   on("hoyChk",()=>irA("checklist"));
   on("hoyPlan",()=>irA("arranque"));
+  on("hoyNews",()=>irA("noticias"));
   on("hoyPend",()=>{ if(typeof revisarPendientes==="function") revisarPendientes(); });
   on("hoyGo",()=>{ if(typeof goNoGo==="function") goNoGo(); });
   on("hoyParte",()=>{ if(typeof parteMatutino==="function") parteMatutino(); });
@@ -3836,15 +3913,20 @@ async function planCargarMem(){
 }
 
 /* 📅 Racha de disciplina: días seguidos (hasta hoy) sin romper las reglas duras.
-   Rompe una regla un día que tenga 3+ trades cerrados o 2+ SL. Los días sin
-   operar NO rompen la racha (no operar nunca es romper una regla). */
+   ⚠️ EL BACKTEST NO CUENTA. Hacer 20 entradas en una sesión de backtest es
+   ENTRENAMIENTO (el gimnasio), no indisciplina: ahí repites para aprender a ver.
+   La regla de "máximo 2 al día" existe para proteger tu cabeza y tu capital
+   cuando el mercado corre en vivo. Por eso la racha solo mira la operativa EN VIVO
+   (modo Real, sea cuenta demo o fondeada) y el backtest se cuenta aparte, a favor. */
 function planRachaDisciplina(){
-  const lista=(Array.isArray(TRADES)?TRADES:[]).filter(t=>!t.abierta && t.fecha);
-  if(!lista.length) return { dias:0, trades:0, roto:null };
+  const lista=(Array.isArray(TRADES)?TRADES:[]).filter(t=>!t.abierta && t.fecha && t.modo==="real");
+  const gym=(Array.isArray(TRADES)?TRADES:[]).filter(t=>!t.abierta && t.fecha && t.modo!=="real");
+  const diasGym=new Set(gym.map(t=>t.fecha)).size;
+  if(!lista.length) return { dias:0, trades:0, roto:null, gym:gym.length, diasGym };
   const porDia={};
   lista.forEach(t=>{ (porDia[t.fecha]=porDia[t.fecha]||[]).push(t); });
   const malDia=f=>{ const d=porDia[f]||[]; return d.length>2 || d.filter(t=>(parseFloat(t.r)||0)<0).length>=2; };
-  /* primer día con trades (para no contar racha desde el principio de los tiempos) */
+  /* primer día con trades en vivo (para no contar racha desde el principio de los tiempos) */
   const fechas=Object.keys(porDia).sort();
   const desde=new Date(fechas[0]+"T12:00:00");
   const hoy=new Date(hoyISO()+"T12:00:00");
@@ -3854,7 +3936,7 @@ function planRachaDisciplina(){
     if(malDia(f)){ roto=f; break; }
     dias++;
   }
-  return { dias, trades:lista.length, roto };
+  return { dias, trades:lista.length, roto, gym:gym.length, diasGym };
 }
 /* 📅 Meses naturales completos operando en real con las reglas intactas */
 function planMesesReal(){
@@ -3871,7 +3953,6 @@ function planMesesReal(){
   };
   return { meses:cerrados.filter(limpio).length, mes:mesHoy };
 }
-
 /* ✅ ¿Se cumple la señal de esta fase? Devuelve {ok, txt, falta} */
 function planSeñal(f){
   if(!f) return { ok:false, txt:"—", falta:"" };
@@ -3903,11 +3984,12 @@ function planSeñal(f){
   }
   if(f.auto==="disciplina"){
     const r=planRachaDisciplina();
+    const gymTxt = r.gym ? (" · 🏋️ "+r.gym+" trade(s) de backtest en "+r.diasGym+" día(s) — el gimnasio NO cuenta contra ti") : "";
     const ok = r.dias>=(f.dias||14) && r.trades>=(f.minTrades||10);
     return ok
-      ? { ok:true, txt:r.dias+" días seguidos sin romper una regla · "+r.trades+" trades ✓", falta:"" }
-      : { ok:false, txt:r.dias+" día(s) seguidos limpios · "+r.trades+" trade(s) registrados",
-          falta:"Necesitas "+(f.dias||14)+" días seguidos sin romper una regla y "+(f.minTrades||10)+" trades registrados."
+      ? { ok:true, txt:r.dias+" días seguidos sin romper una regla EN VIVO · "+r.trades+" trades ✓"+gymTxt, falta:"" }
+      : { ok:false, txt:r.dias+" día(s) seguidos limpios en vivo · "+r.trades+" trade(s) en vivo"+gymTxt,
+          falta:"Necesitas "+(f.dias||14)+" días seguidos sin romper una regla y "+(f.minTrades||10)+" trades EN VIVO (demo o real). El backtest no suma aquí: es tu entrenamiento, opera todo lo que quieras."
             +(r.roto?(" Tu racha se cortó el "+r.roto+"."):"") };
   }
   if(f.auto==="mesreal"){
@@ -3982,7 +4064,7 @@ function guardianRiesgo(){
   cuentas.forEach(c=>{
     const st=statsCuenta(c);
     const riesgoPct=+c.riesgoPct||0.5;
-    const hoyT=TRADES.filter(t=>t.cuenta===c.id && t.fecha===hoy && !t.abierta);
+    const hoyT=TRADES.filter(t=>t.cuenta===c.id && t.fecha===hoy && !t.abierta && t.modo==="real");
     const rHoy=hoyT.reduce((a,t)=>a+(parseFloat(t.r)||0),0);
     const slHoy=hoyT.filter(t=>(parseFloat(t.r)||0)<0).length;
     const diaPct=rHoy*riesgoPct;                       // % del capital ganado/perdido hoy (aprox por R)
@@ -4017,7 +4099,7 @@ function riesgoResumen(){
   cuentas.forEach(c=>{
     const st=statsCuenta(c);
     const riesgoPct=+c.riesgoPct||0.5;
-    const hoyT=TRADES.filter(t=>t.cuenta===c.id && t.fecha===hoy && !t.abierta);
+    const hoyT=TRADES.filter(t=>t.cuenta===c.id && t.fecha===hoy && !t.abierta && t.modo==="real");
     const rHoy=hoyT.reduce((a,t)=>a+(parseFloat(t.r)||0),0);
     const diaPct=rHoy*riesgoPct;
     const ddDaily=+c.ddDailyPct||0, ddMax=+c.ddMaxPct||0;
@@ -4047,7 +4129,7 @@ function estadoRecuperacionFreno(){
   cuentas.forEach(c=>{
     const st=statsCuenta(c);
     const riesgoPct=+c.riesgoPct||0.5;
-    const hoyT=TRADES.filter(t=>t.cuenta===c.id && t.fecha===hoy && !t.abierta);
+    const hoyT=TRADES.filter(t=>t.cuenta===c.id && t.fecha===hoy && !t.abierta && t.modo==="real");
     const slHoy=hoyT.filter(t=>(parseFloat(t.r)||0)<0).length;
     const rHoy=hoyT.reduce((a,t)=>a+(parseFloat(t.r)||0),0);
     const diaPct=rHoy*riesgoPct;
@@ -6276,6 +6358,7 @@ function init(){
   try{ if(navigator.serviceWorker){ navigator.serviceWorker.addEventListener("message", ev=>{ if(ev.data && ev.data.type==="apex-open-chat"){ if(typeof abrirIA==="function") abrirIA(); if(ev.data.seed){ setTimeout(()=>iaProactivo(ev.data.seed),300); } else if(ev.data.jobId) iaMostrarJob(ev.data.jobId); else iaResumePend(); } }); } }catch(_){}
   try{ const sp=new URLSearchParams(location.search); if(sp.get("open")==="chat"){ const jb=sp.get("job"); const seed=sp.get("seed"); setTimeout(()=>{ if(typeof abrirIA==="function") abrirIA(); if(seed) setTimeout(()=>iaProactivo(seed),350); else if(jb) iaMostrarJob(jb); else iaResumePend(); }, 500); } }catch(_){}
   setTimeout(syncReminders, 1800);   /* sube los avisos al vigilante (cron) */
+  setTimeout(hoyCargarNoticias, 2000);  /* 📰 noticias del día dentro de la vista HOY */
   setTimeout(planCargarMem, 2400);     /* 🧭 cuenta la memoria de Roberto para las señales del plan */
   setTimeout(hoyCargarCtx, 2600);      /* 📡 último contexto del indicador para la vista 🎯 HOY */
   setTimeout(respChequear, 6000);      /* ☁️ recordatorio de respaldo a Drive cada X días */
