@@ -5463,6 +5463,7 @@ function pintarIAChat(){
   m.scrollTop=m.scrollHeight;
   /* 🆘 botones de recuperación dentro de un mensaje (reenviar / continuar / recargar) */
   { const bc=$("#iaCancel"); if(bc) bc.onclick=iaCancelarEspera; }
+  try{ iaPintarTools(); }catch(_){}   /* 🤖 las tarjetas sobreviven a cualquier repintado */
   m.querySelectorAll("[data-acc]").forEach(b=>{
     b.onclick=(e)=>{ e.stopPropagation(); const a=IA_ACCIONES[b.dataset.acc]; if(a && a.fn) a.fn(); };
   });
@@ -6138,21 +6139,50 @@ function histRobertoModal(){
     [{t:"Cerrar", cls:"gold", fn:cerrarModal}].concat(log.length?[{t:"Borrar historial", cls:"danger", fn:()=>{ save(K.robertolog,[]); cerrarModal(); toast("Historial borrado"); }}]:[]));
 }
 /* Muestra la tarjeta de confirmación y espera la decisión de Rey */
+/* Tarjetas de confirmación PENDIENTES. Antes se colgaban del DOM a pelo y se perdían:
+   si el chat estaba cerrado se auto-cancelaban en silencio (Roberto decía "te van a salir
+   las tarjetas" y no salía ninguna), y cualquier repintado del chat las borraba a media
+   confirmación. Ahora viven aquí y se repintan siempre que se pinta el chat. */
+const IA_TOOL_PEND=[];
 function confirmarTool(tu){
-  // 🗂️ Organizar chats y 🧠 buscar en memoria: automáticos, SIN tarjeta (reversibles / solo lectura).
+  // 🗂️ Organizar chats, 🧠 buscar en memoria, 🧭 marcar paso, 🎯 veredicto: automáticos, SIN tarjeta.
   if(tu.name==="organizar_chat" || tu.name==="buscar_memoria" || tu.name==="marcar_paso_plan" || tu.name==="registrar_veredicto"){
     return (async()=>{ let res; try{ res=await ejecutarTool(tu.name, tu.input); }catch(e){ res={ok:false,msg:"Error: "+e}; } if(res&&res.ok&&(tu.name==="organizar_chat"||tu.name==="marcar_paso_plan")) toast(res.msg); return {confirmed:true, res}; })();
   }
   return new Promise(resolve=>{
-    const cont=$("#iaMsgs"); if(!cont){ resolve({confirmed:false}); return; }
+    /* si el chat está cerrado, se ABRE: nunca más una confirmación cancelada a espaldas de Rey */
+    if(!$("#iaMsgs") && typeof abrirIA==="function"){ try{ abrirIA(); }catch(_){} }
+    IA_TOOL_PEND.push({ tu, resolve, estado:"pendiente" });
+    iaPintarTools();
+    try{ if(navigator.vibrate) navigator.vibrate([120,60,120]); }catch(_){}
+  });
+}
+/* Pinta (o repinta) las tarjetas que están esperando decisión. */
+function iaPintarTools(){
+  const cont=$("#iaMsgs"); if(!cont) return;
+  cont.querySelectorAll(".ia-tool").forEach(n=>n.remove());
+  IA_TOOL_PEND.filter(p=>p.estado==="pendiente").forEach(p=>{
     const card=el("div","ia-tool");
     card.innerHTML=`<div class="ia-tool-h">🤖 Roberto quiere hacer esto:</div>
-      <div class="ia-tool-d">${esc(describeTool(tu.name, tu.input)).replace(/\n/g,"<br>")}</div>
+      <div class="ia-tool-d">${esc(describeTool(p.tu.name, p.tu.input)).replace(/\n/g,"<br>")}</div>
       <div class="ia-tool-bar"><button class="btn danger ia-tool-no">Cancelar</button><button class="btn gold ia-tool-si">✓ Confirmar</button></div>`;
-    cont.appendChild(card); cont.scrollTop=cont.scrollHeight;
-    card.querySelector(".ia-tool-si").onclick=async ()=>{ const bar=card.querySelector(".ia-tool-bar"); bar.innerHTML="<span class='ia-tool-done'>⏳ Ejecutando…</span>"; let res; try{ res=await ejecutarTool(tu.name, tu.input); }catch(e){ res={ok:false,msg:"Error: "+e}; } if(res&&res.ok) logRoberto(res.msg); bar.innerHTML="<span class='ia-tool-done'>"+((res&&res.ok)?"✓ Hecho":"⚠️ No se aplicó")+"</span>"; resolve({confirmed:true, res}); };
-    card.querySelector(".ia-tool-no").onclick=()=>{ card.querySelector(".ia-tool-bar").innerHTML="<span class='ia-tool-cancel'>🚫 Cancelado</span>"; resolve({confirmed:false}); };
+    cont.appendChild(card);
+    card.querySelector(".ia-tool-si").onclick=async ()=>{
+      const bar=card.querySelector(".ia-tool-bar");
+      bar.innerHTML="<span class='ia-tool-done'>⏳ Ejecutando…</span>";
+      let res; try{ res=await ejecutarTool(p.tu.name, p.tu.input); }catch(e){ res={ok:false,msg:"Error: "+e}; }
+      if(res&&res.ok) logRoberto(res.msg);
+      bar.innerHTML="<span class='ia-tool-done'>"+((res&&res.ok)?"✓ Hecho":"⚠️ No se aplicó")+"</span>";
+      p.estado="hecha"; const i=IA_TOOL_PEND.indexOf(p); if(i>=0) IA_TOOL_PEND.splice(i,1);
+      p.resolve({confirmed:true, res});
+    };
+    card.querySelector(".ia-tool-no").onclick=()=>{
+      card.querySelector(".ia-tool-bar").innerHTML="<span class='ia-tool-cancel'>🚫 Cancelado</span>";
+      p.estado="hecha"; const i=IA_TOOL_PEND.indexOf(p); if(i>=0) IA_TOOL_PEND.splice(i,1);
+      p.resolve({confirmed:false});
+    };
   });
+  cont.scrollTop=cont.scrollHeight;
 }
 /* Bucle de conversación con herramientas: maneja texto, errores y acciones a confirmar */
 async function iaLoop(msgs, c){
