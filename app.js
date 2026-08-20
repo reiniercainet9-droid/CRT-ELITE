@@ -5455,11 +5455,15 @@ function pintarIAChat(){
     if(x.role==="user") return `<div class="ia-msg user">${foto}${cuerpo}</div>`;
     const habla = IA.hablandoIdx===i;
     const btn = TTS ? `<button class="ia-speak${habla?" on":""}" data-speak="${i}">${habla?"⏹ Parar":"🔊 Escuchar"}</button>` : "";
-    return `<div class="ia-msg bot">${foto}${cuerpo}${btn}</div>`;
+    return `<div class="ia-msg bot">${foto}${cuerpo}${btn}${iaAccionesHTML(x,i)}</div>`;
   }).join("")
     + (IA.busy?`<div class="ia-msg bot ia-typing"><span></span><span></span><span></span></div>
        <div class="ia-wait">Roberto está pensando… si busca en internet (firmas, noticias) tarda un poco más. Espera los puntitos.</div>`:"");
   m.scrollTop=m.scrollHeight;
+  /* 🆘 botones de recuperación dentro de un mensaje (reenviar / continuar / recargar) */
+  m.querySelectorAll("[data-acc]").forEach(b=>{
+    b.onclick=(e)=>{ e.stopPropagation(); const a=IA_ACCIONES[b.dataset.acc]; if(a && a.fn) a.fn(); };
+  });
   m.querySelectorAll("[data-speak]").forEach(b=>{
     b.onclick=()=>{ const i=+b.dataset.speak;
       if(IA.hablandoIdx===i){ iaVozParar(); } else { iaHablar(c.msgs[i].content, i); } };
@@ -6286,6 +6290,72 @@ async function iaBgStart(msgs, c){
   iaPendGuardar({ jobId, convId:c.id, msgs, ts:Date.now() });
   iaPollJob(jobId);
 }
+/* ============================================================
+   🆘 CUANDO ALGO SE CORTA: BOTONES DE VERDAD, NO TEXTO
+   Antes el aviso decía "toca 🔄 para reenviar" y ese emoji NO era un botón — Rey lo
+   tocaba y no pasaba nada. Ahora cada mensaje de error lleva sus BOTONES REALES
+   pegados debajo: reenviar lo escrito, continuar desde donde se cortó, o recargar
+   créditos con el enlace directo. Vale para CUALQUIER corte, sea el motivo que sea.
+   ============================================================ */
+const IA_ACCIONES = {
+  reenviar:  { t:"🔄 Reenviar mi mensaje",     fn:()=>iaReintentar() },
+  continuar: { t:"▶️ Continuar desde ahí",      fn:()=>iaContinuar() },
+  recargar:  { t:"💳 Recargar créditos",        fn:()=>iaRecargar() },
+  reintentar:{ t:"↻ Probar otra vez",          fn:()=>iaReintentarEnvio() }
+};
+/* Pinta los botones de un mensaje que los lleve. */
+function iaAccionesHTML(x, i){
+  if(!x || !Array.isArray(x.acc) || !x.acc.length) return "";
+  return `<div class="ia-acc">`+x.acc.filter(a=>IA_ACCIONES[a])
+    .map(a=>`<button class="ia-acc-b${a==="recargar"?" gold":""}" data-acc="${a}" data-i="${i}">${IA_ACCIONES[a].t}</button>`)
+    .join("")+`</div>`;
+}
+/* ▶️ Continuar una respuesta que se quedó a medias. */
+function iaContinuar(){
+  if(IA.busy){ toast("Espera a que termine lo de ahora"); return; }
+  iaEnviar("Sigue exactamente desde donde te quedaste. No saludes ni repitas lo que ya escribiste.");
+}
+/* 💳 Abrir la página de recarga de créditos. */
+function iaRecargar(){
+  const url="https://console.anthropic.com/settings/billing";
+  try{ window.open(url,"_blank","noopener"); toast("Recarga y vuelve: Roberto arranca solo 💳"); }
+  catch(_){ try{ navigator.clipboard.writeText(url); toast("Enlace copiado: console.anthropic.com/settings/billing"); }catch(e){} }
+}
+/* ↻ Reintentar el envío tal cual, sin tocar nada. */
+function iaReintentarEnvio(){
+  let u=null; try{ u=JSON.parse(localStorage.getItem("crtelite_ultimo_msg")||"null"); }catch(_){}
+  if(!u || !u.txt){ toast("No hay mensaje que reintentar"); return; }
+  if(IA.busy){ toast("Espera a que termine lo de ahora"); return; }
+  iaEnviar(u.txt);
+}
+/* 🔄 Devuelve el texto a la caja para que Rey lo revise antes de mandarlo. */
+function iaReintentar(){
+  let u=null;
+  try{ u=JSON.parse(localStorage.getItem("crtelite_ultimo_msg")||"null"); }catch(_){}
+  if(!u || !u.txt){ toast("No hay ningún mensaje pendiente de reenviar"); return; }
+  const ta=$("#iaText");
+  if(ta){ ta.value=u.txt; ta.dispatchEvent(new Event("input")); ta.focus(); ta.scrollIntoView({block:"center"}); }
+  toast("Tu mensaje está de vuelta en la caja: revísalo y envíalo ▶️");
+}
+/* ¿El fallo fue por falta de créditos? */
+function iaEsCreditoMsg(m){ return /credit balance|credit|billing|saldo|insufficient|quota|payment|402/i.test(String(m||"")); }
+/* Construye el mensaje de error con SUS botones, según lo que pasó. */
+function iaMsgFallo(motivo, textoParcial){
+  if(iaEsCreditoMsg(motivo)){
+    return { role:"assistant",
+      content:"💳 **Te quedaste sin créditos.**\n\nNo es un fallo del sistema: mi clave de IA se quedó sin saldo y no puedo pensar hasta que recargues.\n\nRecarga abajo y vuelve — arranco solo, no hay que reiniciar nada. Tu mensaje sigue guardado.",
+      acc:["recargar","reintentar"] };
+  }
+  if(textoParcial){
+    return { role:"assistant",
+      content:textoParcial+"\n\n⚠️ _Aquí me quedé: la respuesta se cortó por el camino._",
+      acc:["continuar","reenviar"] };
+  }
+  return { role:"assistant",
+    content:"⚠️ **La respuesta no llegó.**\n\nTu mensaje NO se ha perdido. Puedes reintentarlo tal cual, o recuperarlo en la caja para revisarlo antes de mandarlo.",
+    acc:["reintentar","reenviar"] };
+}
+
 /* Sondea el resultado mientras la app está abierta (el push cubre lo demás).
    Rey escribió su historia entera, esperó 3 minutos y se quedó sin nada. Tres cambios:
    (1) espera 5 min en vez de 3 — un mensaje largo merece respuesta larga;
@@ -6307,11 +6377,11 @@ function iaPollJob(jobId){
       const c=(pend && IA.convs.find(x=>x.id===pend.convId)) || iaConvAct();
       IA.busy=false;
       if(parcial){
-        c.msgs.push({role:"assistant",content:parcial+"\n\n⚠️ _Aquí me quedé: la respuesta se cortó por el camino. Dime \"sigue\" y la remato._"});
+        c.msgs.push(iaMsgFallo("", parcial));
         iaPendBorrar(jobId);
       }else{
         /* NO se borra el pendiente: si la respuesta llega tarde por push, se recupera igual */
-        c.msgs.push({role:"assistant",content:"⚠️ Roberto tardó demasiado y la respuesta no llegó.\n\n**Tu mensaje NO se ha perdido**: toca 🔄 para reenviarlo tal cual."});
+        c.msgs.push(iaMsgFallo(""));
         iaGuardarUltimo(c);
       }
       iaGuardarConvs(); pintarIAChat();
@@ -6328,15 +6398,6 @@ function iaGuardarUltimo(c){
     if(ultimo) localStorage.setItem("crtelite_ultimo_msg", JSON.stringify({txt:String(ultimo.content||""), conv:c.id, ts:Date.now()}));
   }catch(_){}
 }
-/* 🔄 Reenvía el último mensaje que no obtuvo respuesta. */
-function iaReintentar(){
-  let u=null;
-  try{ u=JSON.parse(localStorage.getItem("crtelite_ultimo_msg")||"null"); }catch(_){}
-  if(!u || !u.txt){ toast("No hay ningún mensaje pendiente de reenviar"); return; }
-  const ta=$("#iaText");
-  if(ta){ ta.value=u.txt; ta.dispatchEvent(new Event("input")); ta.focus(); }
-  toast("Tu mensaje está de vuelta en la caja: revísalo y envíalo ▶️");
-}
 /* Procesa la respuesta ya lista (texto, error, o manos que pedir confirmación) */
 /* Detecta si el error del chat es por CRÉDITOS de Anthropic y añade el aviso de recarga */
 function iaEsCredito(m){ return /credit|balance|billing|saldo|insufficient|quota|payment|402/i.test(String(m||"")); }
@@ -6346,7 +6407,7 @@ async function iaBgResuelto(jobId, d){
   const c = (pend && IA.convs.find(x=>x.id===pend.convId)) || iaConvAct();
   iaPendBorrar(jobId);
   IA.actId=c.id;   // deja como activa la conversación de la respuesta, para que se vea al abrir el chat
-  if(d.error){ IA.busy=false; c.msgs.push({role:"assistant",content:iaErrMsg(d.error)}); iaGuardarConvs(); pintarIAChat(); return; }
+  if(d.error){ IA.busy=false; c.msgs.push(iaMsgFallo(d.error)); iaGuardarConvs(); pintarIAChat(); return; }
   if(d.toolUse && Array.isArray(d.content)){
     const pre=d.content.filter(b=>b.type==="text").map(b=>b.text||"").join("").trim();
     if(pre) c.msgs.push({role:"assistant",content:pre});
