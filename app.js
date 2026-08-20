@@ -313,6 +313,7 @@ async function iaEnviarBloques(bloques, resumenChat){
   const c=iaConvAct();
   c.msgs.push({role:"user",content:resumenChat||"(material adjunto)"});
   if(!c.t) c.t=iaTit(c);
+  try{ iaGuardarUltimo(c); }catch(_){}   /* 🔄 red de seguridad: el texto queda recuperable */
   IA.busy=true; iaGuardarConvs(); pintarIAChat();
   let hist=c.msgs.slice(-14);
   while(hist.length && hist[0].role!=="user") hist.shift();
@@ -5067,6 +5068,7 @@ function iaInit(){
         <button class="ia-chip" data-act="escalado">💰 Escalado</button>
         <button class="ia-chip" data-act="parte">🌅 Parte del día</button>
         <button class="ia-chip" data-act="avisos">📥 Avisos recibidos</button>
+        <button class="ia-chip" data-act="reintentar">🔄 Reenviar mi último mensaje</button>
         <button class="ia-chip" data-act="plan">🧭 Mi plan</button>
         <button class="ia-chip" data-act="aciertos">🎯 Cómo lees el mercado</button>
         <button class="ia-chip" data-act="memoria">🧠 Mi memoria</button>
@@ -5147,6 +5149,7 @@ function iaInit(){
     if(b.dataset.act==="checkemo") return checkEmocional();
     if(b.dataset.act==="parte")    return parteMatutino();
     if(b.dataset.act==="avisos")   return verAvisos();
+    if(b.dataset.act==="reintentar") return iaReintentar();
     if(b.dataset.act==="plan")     return preguntarPlan();
     if(b.dataset.act==="aciertos") return verAciertos();
     if(b.dataset.act==="memoria")  return verMemoria();
@@ -6283,27 +6286,56 @@ async function iaBgStart(msgs, c){
   iaPendGuardar({ jobId, convId:c.id, msgs, ts:Date.now() });
   iaPollJob(jobId);
 }
-/* Sondea el resultado mientras la app está abierta (el push cubre lo demás) */
+/* Sondea el resultado mientras la app está abierta (el push cubre lo demás).
+   Rey escribió su historia entera, esperó 3 minutos y se quedó sin nada. Tres cambios:
+   (1) espera 5 min en vez de 3 — un mensaje largo merece respuesta larga;
+   (2) si el worker guardó un AVANCE parcial, lo muestra en vez de perderlo todo;
+   (3) al rendirse NO borra el pendiente y deja el mensaje listo para reenviar de un toque,
+       así el texto que costó escribir nunca se pierde. */
 function iaPollJob(jobId){
   if(_iaPolling[jobId]) return;
-  let tries=0;
+  let tries=0, parcial="";
   const tick=async()=>{
     tries++;
     let d=null;
     try{ const r=await fetch(iaBase()+"/chat/bg?job="+encodeURIComponent(jobId),{cache:"no-store"}); d=await r.json(); }catch(_){}
+    if(d && d.parcial) parcial=d.parcial;            // el worker va guardando lo que escribe
     if(d && d.ready){ clearTimeout(_iaPolling[jobId]); delete _iaPolling[jobId]; iaBgResuelto(jobId, d); return; }
-    if(tries>60){ // ~3 min sondeando: nunca dejar los puntitos colgados para siempre
+    if(tries>100){ // ~5 min sondeando: nunca dejar los puntitos colgados para siempre
       clearTimeout(_iaPolling[jobId]); delete _iaPolling[jobId];
       const pend=iaPendCargar().find(x=>x.jobId===jobId);
       const c=(pend && IA.convs.find(x=>x.id===pend.convId)) || iaConvAct();
-      iaPendBorrar(jobId); IA.busy=false;
-      c.msgs.push({role:"assistant",content:"⚠️ Roberto tardó más de lo normal. Reintenta la pregunta, por favor."});
+      IA.busy=false;
+      if(parcial){
+        c.msgs.push({role:"assistant",content:parcial+"\n\n⚠️ _Aquí me quedé: la respuesta se cortó por el camino. Dime \"sigue\" y la remato._"});
+        iaPendBorrar(jobId);
+      }else{
+        /* NO se borra el pendiente: si la respuesta llega tarde por push, se recupera igual */
+        c.msgs.push({role:"assistant",content:"⚠️ Roberto tardó demasiado y la respuesta no llegó.\n\n**Tu mensaje NO se ha perdido**: toca 🔄 para reenviarlo tal cual."});
+        iaGuardarUltimo(c);
+      }
       iaGuardarConvs(); pintarIAChat();
       return;
     }
     _iaPolling[jobId]=setTimeout(tick, 3000);
   };
   _iaPolling[jobId]=setTimeout(tick, 2500);
+}
+/* Guarda el último mensaje de Rey para poder reenviarlo de un toque si algo falla. */
+function iaGuardarUltimo(c){
+  try{
+    const ultimo=(c.msgs||[]).slice().reverse().find(m=>m.role==="user");
+    if(ultimo) localStorage.setItem("crtelite_ultimo_msg", JSON.stringify({txt:String(ultimo.content||""), conv:c.id, ts:Date.now()}));
+  }catch(_){}
+}
+/* 🔄 Reenvía el último mensaje que no obtuvo respuesta. */
+function iaReintentar(){
+  let u=null;
+  try{ u=JSON.parse(localStorage.getItem("crtelite_ultimo_msg")||"null"); }catch(_){}
+  if(!u || !u.txt){ toast("No hay ningún mensaje pendiente de reenviar"); return; }
+  const ta=$("#iaText");
+  if(ta){ ta.value=u.txt; ta.dispatchEvent(new Event("input")); ta.focus(); }
+  toast("Tu mensaje está de vuelta en la caja: revísalo y envíalo ▶️");
 }
 /* Procesa la respuesta ya lista (texto, error, o manos que pedir confirmación) */
 /* Detecta si el error del chat es por CRÉDITOS de Anthropic y añade el aviso de recarga */
