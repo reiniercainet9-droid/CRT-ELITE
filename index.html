@@ -641,6 +641,50 @@ select.inp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns
   font-size:11.5px;line-height:1.5;color:var(--txt2);white-space:pre-wrap;word-break:break-word;
   max-height:230px;overflow:auto;margin:0 0 4px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
 .note.ok{color:var(--green)} .note.bad{color:var(--red)}
+
+/* ===== 🧭 VISTA ARRANQUE — el plan, vivo ===== */
+.arr-top{text-align:center}
+.arr-eyebrow{font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);font-weight:700}
+.arr-fase{font-size:21px;font-weight:800;color:var(--txt);margin:7px 0 2px;line-height:1.2}
+.arr-cuando{font-size:12.5px;color:var(--txt3);margin-bottom:15px}
+.arr-mapa{display:flex;align-items:center;justify-content:center;gap:0}
+.arr-mapa i{flex:0 0 16px;height:2px;background:var(--line);display:block}
+.arr-dot{width:31px;height:31px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;
+  font-size:11.5px;font-weight:700;border:2px solid var(--line);color:var(--txt3);background:var(--card2);flex:0 0 auto}
+.arr-dot.done{background:var(--green-dim);border-color:var(--green);color:#fff}
+.arr-dot.now{background:var(--gold);border-color:var(--gold);color:#1A1200;transform:scale(1.16)}
+.arr-card.cerrada{opacity:.5}
+.arr-card.hecha{border-color:rgba(55,208,141,.32)}
+.arr-card.activa{border-color:var(--gold);box-shadow:0 0 0 1px rgba(240,200,104,.18)}
+.arr-h{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+.arr-h h2{margin:0;font-size:17px;flex:1;min-width:120px}
+.arr-n{font-size:19px;font-weight:800;color:var(--gold);font-variant-numeric:tabular-nums}
+.arr-badge{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  padding:4px 9px;border-radius:999px;border:1px solid var(--line);color:var(--txt3);background:var(--card2);white-space:nowrap}
+.arr-badge.activa{background:var(--gold);border-color:var(--gold);color:#1A1200}
+.arr-badge.hecha{background:rgba(55,208,141,.14);border-color:rgba(55,208,141,.4);color:var(--green)}
+.arr-idea{font-size:13px;color:var(--txt2);margin:0 0 13px;line-height:1.5}
+.arr-pasos{display:flex;flex-direction:column;gap:7px;margin-bottom:11px}
+.arr-paso{display:flex;align-items:flex-start;gap:11px;width:100%;text-align:left;background:var(--card2);
+  border:1px solid var(--line);border-radius:11px;padding:11px 13px;color:var(--txt2);font-size:13.5px;
+  font-family:inherit;line-height:1.45;cursor:pointer}
+.arr-paso .box{flex:0 0 18px;height:18px;border-radius:5px;border:2px solid var(--line2,var(--line));margin-top:1px}
+.arr-paso.on{color:var(--txt);border-color:rgba(55,208,141,.38);background:rgba(55,208,141,.06)}
+.arr-paso.on .box{background:var(--green);border-color:var(--green);position:relative}
+.arr-paso.on .box::after{content:"✓";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  color:#04220F;font-size:12px;font-weight:900}
+.arr-paso[disabled]{opacity:.6;cursor:default}
+.arr-señal{background:var(--card2);border-left:3px solid var(--gold);border-radius:0 11px 11px 0;
+  padding:12px 14px;margin:13px 0}
+.arr-señal.ok{border-left-color:var(--green);background:rgba(55,208,141,.07)}
+.arr-señal .lbl{display:block;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--gold);margin-bottom:6px}
+.arr-señal.ok .lbl{color:var(--green)}
+.arr-señal p{margin:0 0 5px;font-size:13px;color:var(--txt2);line-height:1.5}
+.arr-señal p.est{font-weight:700;color:var(--txt)}
+.arr-señal p.falta{color:var(--orange);font-size:12.5px;margin:0}
+.arr-bloq{font-size:12.5px;color:var(--txt3);background:var(--card2);border:1px dashed var(--line);
+  border-radius:11px;padding:12px 14px;text-align:center}
 </style>
 </head>
 <body>

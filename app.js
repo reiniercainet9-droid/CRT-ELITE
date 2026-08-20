@@ -27,7 +27,8 @@ const K = {
   vigila:"crtelite_vigila_v3",
   robertolog:"crtelite_robertolog_v3",
   shots:"crtelite_shots_v1",
-  plansem:"crtelite_plansem_v1"
+  plansem:"crtelite_plansem_v1",
+  plan:"crtelite_plan_v1"
 };
 const load = (k,d)=>{ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):d; }catch(e){ return d; } };
 const save = (k,v)=>{ try{ localStorage.setItem(k,JSON.stringify(v)); nubeMarcar(); }catch(e){ toast("No se pudo guardar"); } };
@@ -316,7 +317,7 @@ async function iaEnviarBloques(bloques, resumenChat){
   while(hist.length && hist[0].role!=="user") hist.shift();
   const msgs=hist.map(x=>iaMsgApi(x,false));
   let calTxt=""; try{ const ev=await cargarCalendarioCache(); calTxt=iaCalendarioContexto(ev)+"\n"; }catch(_){ calTxt=""; }
-  const inj=iaReloj()+"\n"+calTxt+iaContexto()+"\n"+iaEstrategiaDef()+"\n"+iaFugas()+"\n"+iaRacha()+"\n";
+  const inj=iaReloj()+"\n"+calTxt+iaContexto()+"\n"+iaEstrategiaDef()+"\n"+iaPlan()+"\n"+iaFugas()+"\n"+iaRacha()+"\n";
   const last=msgs[msgs.length-1];
   last.content=[{type:"text",text:inj}].concat(bloques);
   await iaBgStart(msgs, c);
@@ -364,9 +365,16 @@ async function estudiarCapturas(n){
     "4) Guarda en tu memoria (tema 'visual') los 2-3 patrones más sólidos que hayas descubierto.\n" +
     "Recuerda: toda hora con AM/PM y su zona (Nueva York o Brasil)." });
 
+  try{ PLAN.caps=(PLAN.caps||0)+1; guardarPlan(); }catch(_){}   /* 🧭 señal de la fase 02 */
   await iaEnviarBloques(bloques, "📸 Estudia estas " + fichas.length + " capturas y saca mis patrones visuales.");
 }
 
+/* 🧭 MI PLAN — Roberto le dice por dónde va y qué le toca HOY. */
+function preguntarPlan(){
+  if(typeof abrirIA==="function") abrirIA();
+  iaTemaChat("🧭 Mi plan");
+  setTimeout(()=>iaEnviar("🧭 ¿Por dónde voy en mi plan? Dime en qué fase estoy, qué me falta exactamente para pasar a la siguiente y qué debo hacer HOY."),250);
+}
 /* 🧠 MI MEMORIA — le enseña a Rey todo lo que Roberto sabe de él, agrupado por temas. */
 async function verMemoria(){
   if(typeof abrirIA==="function") abrirIA();
@@ -1085,6 +1093,7 @@ const TABS=[
   {id:"checklist", ic:"✅", n:"Checklist"},
   {id:"conf",      ic:"🎯", n:"Confluencias"},
   {id:"hoy",       ic:"🎯", n:"Hoy"},
+  {id:"arranque",  ic:"🧭", n:"Plan con Roberto"},
   {id:"rutina",    ic:"🗺️", n:"Rutina"},
   {id:"reglas",    ic:"⛔", n:"Reglas"},
   {id:"riesgo",    ic:"💰", n:"Riesgo"},
@@ -1105,6 +1114,7 @@ function irA(id){
   document.querySelectorAll("#nav button").forEach(b=>b.classList.toggle("on",b.dataset.t===id));
   window.scrollTo({top:0,behavior:"instant"});
   if(id==="hoy")      renderHoy();
+  if(id==="arranque") renderArranque();
   if(id==="analisis") renderAnalisis();
   if(id==="diario")   renderDiario();
   if(id==="galeria")  renderGaleria();
@@ -1215,6 +1225,92 @@ function abrirAyuda(id){
 }
 
 /* ============================================================
+   VISTA 🧭 ARRANQUE — el plan, vivo
+   Ves en qué fase estás, marcas los pasos, y la app comprueba SOLA si ya
+   cumples la señal para avanzar. Las fases siguientes están cerradas hasta
+   que toque: eso es lo que impide saltárselas.
+   ============================================================ */
+function viewArranque(){
+  const v=el("div","view"); v.id="v-arranque";
+  v.innerHTML=`<div id="arrBody"></div>`;
+  return v;
+}
+function renderArranque(){
+  const body=$("#arrBody"); if(!body) return;
+  const act=PLAN.fase||0;
+  let h="";
+
+  /* Cabecera: dónde estás dentro del camino completo */
+  const f=planFaseActual(); const s=planSeñal(f);
+  h+=`<div class="card arr-top">
+    <div class="arr-eyebrow">Tu plan con Roberto</div>
+    <div class="arr-fase">Fase ${esc(f.n)} · ${esc(f.t)}</div>
+    <div class="arr-cuando">${esc(f.cuando)}</div>
+    <div class="arr-mapa">${PLAN_FASES.map((x,i)=>
+      `<span class="arr-dot ${i<act?"done":(i===act?"now":"")}" title="${esc(x.t)}">${esc(x.n)}</span>`
+    ).join("<i></i>")}</div>
+  </div>`;
+
+  /* Fases */
+  PLAN_FASES.forEach((fa,i)=>{
+    const estado = i<act ? "hecha" : (i===act ? "activa" : "cerrada");
+    const hechos=planPasosHechos(fa);
+    const tot=(fa.pasos||[]).length;
+    h+=`<div class="card arr-card ${estado}">
+      <div class="arr-h">
+        <span class="arr-n">${esc(fa.n)}</span>
+        <h2>${esc(fa.t)}</h2>
+        <span class="arr-badge ${estado}">${estado==="hecha"?"✓ Hecha":(estado==="activa"?"Aquí estás":"🔒 Aún no")}</span>
+      </div>
+      <p class="arr-idea">${esc(fa.idea)}</p>`;
+
+    if(estado==="cerrada"){
+      const previa=PLAN_FASES[i-1];
+      h+=`<div class="arr-bloq">Se abre cuando termines la fase ${esc(previa?previa.n:"anterior")}.</div></div>`;
+      return;
+    }
+
+    /* pasos marcables */
+    h+=`<div class="arr-pasos">`;
+    (fa.pasos||[]).forEach(p=>{
+      const on=!!PLAN.pasos[p.id];
+      h+=`<button class="arr-paso${on?" on":""}" data-paso="${p.id}"${estado==="hecha"?" disabled":""}>
+        <span class="box"></span><span class="lbl">${esc(p.t)}</span></button>`;
+    });
+    h+=`</div><div class="bar"><i style="width:${tot?Math.round(hechos/tot*100):0}%"></i></div>`;
+
+    if(estado==="activa"){
+      h+=`<div class="arr-señal ${s.ok?"ok":""}">
+        <span class="lbl">${s.ok?"✅ Ya puedes avanzar":"🎯 Para pasar a la siguiente fase"}</span>
+        <p>${esc(fa.señal)}</p>
+        <p class="est">${esc(s.txt)}</p>
+        ${!s.ok&&s.falta?`<p class="falta">${esc(s.falta)}</p>`:""}
+      </div>
+      <button class="btn${s.ok?" green":""}" id="arrNext"${s.ok?"":" disabled"}>${s.ok?"▶️ Pasar a la siguiente fase":"🔒 Todavía no toca"}</button>
+      <button class="btn" id="arrPreg">🧠 Preguntar a Roberto qué me falta</button>
+      ${act>0?`<button class="btn" id="arrBack">↩️ Volver a la fase anterior</button>`:""}`;
+    }
+    h+=`</div>`;
+  });
+
+  h+=`<div class="note">Roberto ve este mismo plan en cada conversación: sabe en qué fase estás, qué te falta, y te frena si intentas saltarte un punto.</div>`;
+
+  body.innerHTML=h;
+  body.querySelectorAll("[data-paso]").forEach(b=>b.onclick=()=>{
+    const id=b.dataset.paso;
+    PLAN.pasos[id]=!PLAN.pasos[id]; guardarPlan(); renderArranque();
+  });
+  const on=(id,fn)=>{ const b=$("#"+id); if(b) b.onclick=fn; };
+  on("arrNext",()=>planAvanzar(false));
+  on("arrBack",planRetroceder);
+  on("arrPreg",()=>{
+    if(typeof abrirIA==="function") abrirIA();
+    iaTemaChat("🧭 Mi plan");
+    setTimeout(()=>iaEnviar("🧭 ¿Por dónde voy en mi plan? Dime exactamente qué me falta para pasar a la siguiente fase y qué debo hacer HOY."),250);
+  });
+}
+
+/* ============================================================
    VISTA 🎯 HOY — TODO lo del día en UNA sola pantalla
    Rey abría 5 secciones para saber en qué punto estaba. Aquí ve de un vistazo:
    la hora (Brasil Y Nueva York), si está en ventana válida, el plan/checklist,
@@ -1264,6 +1360,8 @@ function renderHoy(){
     <div class="card-h"><span class="ic">📋</span><h2>Plan de hoy</h2><span class="cnt">${hechos}/${total}</span></div>
     <div class="bar"><i style="width:${pctChk}%"></i></div>
     <p class="desc" style="margin-top:8px">Estrategia activa: <b>${esc(CTX.estrategia||"—")}</b> · Modo: <b>${esc(CTX.modo==="real"?"Real":"Backtest")}</b></p>
+    <div class="hoy-row"><div class="hoy-row-t">🧭 Fase ${esc(planFaseActual().n)} · ${esc(planFaseActual().t)}</div><div class="hoy-row-d">${esc(planSeñal(planFaseActual()).txt)}</div></div>
+    <button class="btn" id="hoyPlan">Ver mi plan con Roberto →</button>
     ${claves.length?`<div class="note" style="text-align:left">⚠️ Te faltan pasos CLAVE: ${claves.slice(0,4).map(esc).join(" · ")}${claves.length>4?" …":""}</div>`
       :`<div class="note ok" style="text-align:left">✅ Checklist clave completo. Puedes buscar setup.</div>`}
     <button class="btn" id="hoyChk">Abrir checklist →</button>
@@ -1328,6 +1426,7 @@ function renderHoy(){
   body.innerHTML=h;
   const on=(id,fn)=>{ const b=$("#"+id); if(b) b.onclick=fn; };
   on("hoyChk",()=>irA("checklist"));
+  on("hoyPlan",()=>irA("arranque"));
   on("hoyPend",()=>{ if(typeof revisarPendientes==="function") revisarPendientes(); });
   on("hoyGo",()=>{ if(typeof goNoGo==="function") goNoGo(); });
   on("hoyParte",()=>{ if(typeof parteMatutino==="function") parteMatutino(); });
@@ -3708,6 +3807,168 @@ function statsCuenta(c){
   return { list, m, cap, riesgo, plTrades, manual, balance, pl, progresoPct, target };
 }
 
+/* ============================================================
+   🧭 MOTOR DEL PLAN DE ARRANQUE
+   Guarda en qué fase va Rey, qué pasos lleva marcados, y VERIFICA SOLO si ya
+   cumple la señal para avanzar. Roberto lee este mismo estado en cada chat
+   (planBloque) — por eso los dos van siempre por el mismo punto y él puede
+   frenarlo cuando quiere saltarse una fase.
+   ============================================================ */
+let PLAN = load(K.plan, { fase:0, pasos:{}, hist:[], docs:0, caps:0 });
+function guardarPlan(){ save(K.plan, PLAN); }
+function planFaseActual(){ return PLAN_FASES[Math.min(PLAN.fase||0, PLAN_FASES.length-1)]; }
+function planPasosHechos(f){ return (f.pasos||[]).filter(p=>PLAN.pasos[p.id]).length; }
+
+/* Cuenta memoria de Roberto (se refresca en segundo plano; sin red usa lo último visto) */
+let PLAN_MEM=null;
+async function planCargarMem(){
+  try{
+    const r=await fetch(nubeUrl()+"/mem",{cache:"no-store"});
+    const d=await r.json();
+    const e=(d&&d.entries)||[];
+    const temas={}; e.forEach(x=>{ const k=x.tema||"general"; temas[k]=(temas[k]||0)+1; });
+    PLAN_MEM={ total:e.length, temas, nutrido:(temas.estrategia||0)+(temas.visual||0) };
+    localStorage.setItem("crtelite_planmem", JSON.stringify(PLAN_MEM));
+    if(TAB==="arranque") renderArranque();
+  }catch(_){
+    if(!PLAN_MEM){ try{ PLAN_MEM=JSON.parse(localStorage.getItem("crtelite_planmem")||"null"); }catch(_){} }
+  }
+}
+
+/* 📅 Racha de disciplina: días seguidos (hasta hoy) sin romper las reglas duras.
+   Rompe una regla un día que tenga 3+ trades cerrados o 2+ SL. Los días sin
+   operar NO rompen la racha (no operar nunca es romper una regla). */
+function planRachaDisciplina(){
+  const lista=(Array.isArray(TRADES)?TRADES:[]).filter(t=>!t.abierta && t.fecha);
+  if(!lista.length) return { dias:0, trades:0, roto:null };
+  const porDia={};
+  lista.forEach(t=>{ (porDia[t.fecha]=porDia[t.fecha]||[]).push(t); });
+  const malDia=f=>{ const d=porDia[f]||[]; return d.length>2 || d.filter(t=>(parseFloat(t.r)||0)<0).length>=2; };
+  /* primer día con trades (para no contar racha desde el principio de los tiempos) */
+  const fechas=Object.keys(porDia).sort();
+  const desde=new Date(fechas[0]+"T12:00:00");
+  const hoy=new Date(hoyISO()+"T12:00:00");
+  let dias=0, roto=null;
+  for(let d=new Date(hoy); d>=desde; d.setDate(d.getDate()-1)){
+    const f=d.toISOString().slice(0,10);
+    if(malDia(f)){ roto=f; break; }
+    dias++;
+  }
+  return { dias, trades:lista.length, roto };
+}
+/* 📅 Meses naturales completos operando en real con las reglas intactas */
+function planMesesReal(){
+  const reales=(Array.isArray(TRADES)?TRADES:[]).filter(t=>!t.abierta && t.modo==="real" && t.fecha);
+  if(!reales.length) return { meses:0, mes:null };
+  const meses={};
+  reales.forEach(t=>{ const m=String(t.fecha).slice(0,7); (meses[m]=meses[m]||[]).push(t); });
+  const mesHoy=hoyISO().slice(0,7);
+  const cerrados=Object.keys(meses).filter(m=>m<mesHoy);
+  const limpio=m=>{
+    const porDia={};
+    meses[m].forEach(t=>{ (porDia[t.fecha]=porDia[t.fecha]||[]).push(t); });
+    return Object.keys(porDia).every(f=>porDia[f].length<=2 && porDia[f].filter(t=>(parseFloat(t.r)||0)<0).length<2);
+  };
+  return { meses:cerrados.filter(limpio).length, mes:mesHoy };
+}
+
+/* ✅ ¿Se cumple la señal de esta fase? Devuelve {ok, txt, falta} */
+function planSeñal(f){
+  if(!f) return { ok:false, txt:"—", falta:"" };
+  if(f.auto==="nube"){
+    const conectado = !!(typeof IA!=="undefined" && IA.url);
+    return conectado
+      ? { ok:true, txt:"Apex conectada con la nube ✓", falta:"" }
+      : { ok:false, txt:"Apex aún no está conectada con la nube", falta:"Configura el puente (⚙️) y comprueba que Roberto responde." };
+  }
+  if(f.auto==="memoria"){
+    const m=PLAN_MEM;
+    if(!m) return { ok:false, txt:"Leyendo la memoria de Roberto…", falta:"Espera un momento o revisa tu internet." };
+    const nTemas=Object.keys(m.temas||{}).filter(k=>k!=="general").length;
+    const ok = m.total>=(f.min||6) && nTemas>=(f.minTemas||2);
+    return ok
+      ? { ok:true, txt:"Roberto sabe "+m.total+" cosas de ti en "+nTemas+" temas ✓", falta:"" }
+      : { ok:false, txt:"Roberto sabe "+m.total+" cosa(s) de ti en "+nTemas+" tema(s)",
+          falta:"Necesitas "+(f.min||6)+" recuerdos en al menos "+(f.minTemas||2)+" temas. Habla más con él: cuéntale cómo operas y qué te cuesta." };
+  }
+  if(f.auto==="nutrido"){
+    const m=PLAN_MEM;
+    const mat=(PLAN.docs||0)+(PLAN.caps||0);
+    if(!m) return { ok:false, txt:"Leyendo la memoria de Roberto…", falta:"" };
+    const ok = mat>=1 && (m.nutrido||0)>=(f.min||4);
+    return ok
+      ? { ok:true, txt:"Le has pasado "+mat+" material(es) y aprendió "+m.nutrido+" cosas de estrategia ✓", falta:"" }
+      : { ok:false, txt:"Material compartido: "+mat+" · aprendizajes de estrategia/visuales: "+(m.nutrido||0),
+          falta:(mat<1?"Pásale al menos un documento o enlace con el clip 📎. ":"")+"Necesitas "+(f.min||4)+" recuerdos suyos de estrategia o visuales." };
+  }
+  if(f.auto==="disciplina"){
+    const r=planRachaDisciplina();
+    const ok = r.dias>=(f.dias||14) && r.trades>=(f.minTrades||10);
+    return ok
+      ? { ok:true, txt:r.dias+" días seguidos sin romper una regla · "+r.trades+" trades ✓", falta:"" }
+      : { ok:false, txt:r.dias+" día(s) seguidos limpios · "+r.trades+" trade(s) registrados",
+          falta:"Necesitas "+(f.dias||14)+" días seguidos sin romper una regla y "+(f.minTrades||10)+" trades registrados."
+            +(r.roto?(" Tu racha se cortó el "+r.roto+"."):"") };
+  }
+  if(f.auto==="mesreal"){
+    const m=planMesesReal();
+    return m.meses>=1
+      ? { ok:true, txt:m.meses+" mes(es) natural(es) en real con las reglas intactas ✓", falta:"" }
+      : { ok:false, txt:"Aún no has cerrado un mes completo en real con las reglas intactas",
+          falta:"Necesitas terminar un mes natural operando en real sin pasar de 2 trades al día ni encadenar 2 SL." };
+  }
+  return { ok:true, txt:"Esta fase no se termina: se repite cada mes.", falta:"" };
+}
+
+/* ▶️ Avanzar de fase — solo si la señal se cumple. Roberto también puede proponerlo. */
+function planAvanzar(forzar){
+  const f=planFaseActual();
+  if(PLAN.fase>=PLAN_FASES.length-1){ toast("Ya estás en la última fase 🧭"); return false; }
+  const s=planSeñal(f);
+  if(!s.ok && !forzar){ toast("Todavía no toca: "+s.falta.slice(0,60)); return false; }
+  PLAN.fase=(PLAN.fase||0)+1;
+  PLAN.hist=(PLAN.hist||[]).concat([{ fase:PLAN.fase, ts:Date.now(), forzado:!!forzar }]);
+  guardarPlan();
+  const nueva=planFaseActual();
+  toast("🧭 Fase "+nueva.n+" — "+nueva.t);
+  if(TAB==="arranque") renderArranque();
+  return true;
+}
+function planRetroceder(){
+  if(!PLAN.fase) return;
+  PLAN.fase--; guardarPlan(); renderArranque();
+  toast("🧭 Volviste a la fase "+planFaseActual().n);
+}
+
+/* 🧠 EL PLAN, PARA ROBERTO — se inyecta en CADA conversación, igual que el guardián
+   de riesgo. Con esto sabe exactamente por dónde va Rey y puede frenarlo. */
+function iaPlan(){
+  const f=planFaseActual();
+  const s=planSeñal(f);
+  const hechos=planPasosHechos(f);
+  const pend=(f.pasos||[]).filter(p=>!PLAN.pasos[p.id]).map(p=>p.t);
+  const sig=PLAN_FASES[PLAN.fase+1];
+  let out="[🧭 PLAN DE ARRANQUE DE REY — ES TU HOJA DE RUTA COMPARTIDA. Vais los dos por el MISMO punto.\n";
+  out+="FASE ACTUAL: "+f.n+" — "+f.t+" ("+f.cuando+")\n";
+  out+="Idea de esta fase: "+f.idea+"\n";
+  out+="Pasos: "+hechos+" de "+(f.pasos||[]).length+" hechos.\n";
+  if(pend.length) out+="LE FALTA POR HACER en esta fase: "+pend.join(" · ")+"\n";
+  out+="SEÑAL para avanzar: "+f.señal+"\n";
+  out+="ESTADO REAL AHORA: "+s.txt+"\n";
+  if(!s.ok) out+="POR TANTO: TODAVÍA NO PUEDE AVANZAR. Le falta: "+s.falta+"\n";
+  else out+="POR TANTO: YA CUMPLE la señal"+(sig?(" y puede pasar a la fase "+sig.n+" — "+sig.t):"")+". DÍSELO tú, felicítalo y explícale qué cambia en la fase nueva.\n";
+  if(sig) out+="SIGUIENTE FASE: "+sig.n+" — "+sig.t+" ("+sig.cuando+")\n";
+  out+="FASES COMPLETAS DEL PLAN (para que sepas el camino entero): "+PLAN_FASES.map(x=>x.n+" "+x.t).join(" → ")+"\n";
+  out+="CÓMO ACTÚAS CON ESTE PLAN:\n";
+  out+="1) Cuando Rey te pregunte qué hacer, respóndele SIEMPRE desde su fase actual, no desde el ideal.\n";
+  out+="2) Si te pide algo de una fase que TODAVÍA NO LE TOCA, FRÉNALO con cariño pero sin ceder: dile en qué fase está, qué le falta exactamente para avanzar y qué debe hacer HOY. Ejemplo: si está en la fase 01 (solo hablar) y te pide validar una entrada real, dile que aún no toca operar y por qué saltárselo lo perjudica.\n";
+  out+="3) Si YA cumple la señal, adelántatele: felicítalo y proponle pasar de fase con tu mano avanzar_plan.\n";
+  out+="4) Puedes marcar por él los pasos que veas cumplidos con marcar_paso_plan (él lo confirma).\n";
+  out+="5) Recuérdale el plan sin que te lo pida: en el parte del día y al cerrar la jornada, dile por dónde va y qué le falta.\n";
+  out+="6) El plan manda sobre las ganas. Si Rey insiste en saltarse una fase, explícale el riesgo con datos suyos; si aun así lo decide, respétalo, avísale de lo que se salta y sigue apoyándolo.]";
+  return out;
+}
+
 /* 🛡️ GUARDIÁN DE RIESGO — estado EN VIVO del riesgo del día por cada cuenta, para que
    Roberto FRENE a Rey antes de romper una regla. Mira: pérdida del día vs límite DIARIO,
    drawdown total vs DD máximo, nº de trades y de SL hoy (regla 2/día · 2 SL = parar).
@@ -4510,6 +4771,7 @@ function iaInit(){
         <button class="ia-chip" data-act="escalado">💰 Escalado</button>
         <button class="ia-chip" data-act="parte">🌅 Parte del día</button>
         <button class="ia-chip" data-act="avisos">📥 Avisos recibidos</button>
+        <button class="ia-chip" data-act="plan">🧭 Mi plan</button>
         <button class="ia-chip" data-act="memoria">🧠 Mi memoria</button>
         <button class="ia-chip" data-act="capturas">📸 Estudia mis capturas</button>
         <button class="ia-chip" data-act="comparar">⚖️ Comparar pares</button>
@@ -4588,6 +4850,7 @@ function iaInit(){
     if(b.dataset.act==="checkemo") return checkEmocional();
     if(b.dataset.act==="parte")    return parteMatutino();
     if(b.dataset.act==="avisos")   return verAvisos();
+    if(b.dataset.act==="plan")     return preguntarPlan();
     if(b.dataset.act==="memoria")  return verMemoria();
     if(b.dataset.act==="capturas") return estudiarCapturas();
     if(b.dataset.act==="gonogo")   return goNoGo();
@@ -5192,6 +5455,15 @@ const IA_TOOLS = [
     input_schema:{ type:"object", properties:{ precio:{type:"number",description:"Precio de la entrada/reacción"}, direccion:{type:"string",enum:["compra","venta"],description:"'compra' (flecha verde arriba) o 'venta' (flecha roja abajo)"}, texto:{type:"string",description:"(opcional) etiqueta, ej. 'Entrada 5m', 'Espera reacción'"}, target:{type:"string",description:"(opcional) par de la pestaña"} }, required:["precio","direccion"] } },
   { name:"borrar_dibujos", description:"Borra los dibujos. Por defecto borra SOLO los que TÚ (Roberto) has dibujado, dejando intactos los de Rey. Si Rey pide limpiar TODO el gráfico, pasa todo=true. Requiere PC con Puente. Rey aprueba.",
     input_schema:{ type:"object", properties:{ todo:{type:"boolean",description:"true = borra TODOS los dibujos del gráfico (incluidos los manuales de Rey). Por defecto false = solo los de Roberto."}, target:{type:"string",description:"(opcional) par de la pestaña"} }, required:[] } },
+  { name:"marcar_paso_plan", description:"Marca (o desmarca) un paso del PLAN DE ARRANQUE de Rey cuando compruebes en la conversación que ya lo hizo. Es AUTOMÁTICO (sin tarjeta): úsalo cuando Rey te cuente que hizo algo del plan, para que la app y tú vayáis siempre iguales. No inventes: márcalo solo si él lo dijo o lo demostró.",
+    input_schema:{ type:"object", properties:{
+      paso:{type:"string", description:"El id del paso, tal y como aparece en tu bloque del plan (por ejemplo f1p2)."},
+      hecho:{type:"boolean", description:"true para marcarlo como hecho, false para desmarcarlo. Por defecto true."}
+    }, required:["paso"] } },
+  { name:"avanzar_plan", description:"Hace pasar a Rey a la SIGUIENTE fase de su plan de arranque. Úsalo SOLO cuando el estado real diga que ya cumple la señal de su fase actual. Rey lo aprueba con tarjeta. Si todavía no cumple la señal, NO uses esta herramienta: explícale qué le falta.",
+    input_schema:{ type:"object", properties:{
+      motivo:{type:"string", description:"Por qué ya puede avanzar, en una frase, con el dato concreto que lo demuestra."}
+    }, required:[] } },
   { name:"organizar_chat", description:"Organiza ESTA conversación en tu estructura de chats, con criterio propio. Carpetas: 📌 fijar (temas EN CURSO a tener a mano), ⭐ estrella (lecciones o decisiones CLAVE) y 🔍 revisar (algo pendiente que Rey debe repasar). Márcala cuando lo merezca y QUÍTALE la marca cuando deje de aplicar (true para marcar, false para quitar). Es AUTOMÁTICO (sin tarjeta) y reversible — Rey también las toca a mano. Úsalo con juicio, no abuses.",
     input_schema:{ type:"object", properties:{ fijar:{type:"boolean",description:"true fija 📌, false quita"}, estrella:{type:"boolean",description:"true marca importante ⭐, false quita"}, revisar:{type:"boolean",description:"true marca por revisar 🔍, false quita"}, motivo:{type:"string",description:"(opcional) por qué la marcas, 1 frase"} }, required:[] } },
   { name:"editar_estrategia", description:"Define o edita las REGLAS/ajustes de una de las estrategias de Rey, para ADAPTARLA a lo que van aprendiendo, o para definir una NUEVA (Oro, índices, acciones, etc.) con su instrumento y sus reglas. Por defecto edita la estrategia ACTIVA. Úsalo cuando Rey y tú acuerden un cambio/mejora en su método o al crear una estrategia nueva. Rey lo aprueba con tarjeta.",
@@ -5231,6 +5503,7 @@ function describeTool(name, i){
   if(name==="dibujar_texto") return "✍️ Escribir nota en "+(i.precio!=null?i.precio:"?")+":\n“"+(i.texto||"")+"”";
   if(name==="marcar_entrada") return "🎯 Marcar entrada "+((String(i.direccion||"").toLowerCase().indexOf("vent")>=0)?"VENTA 🔴":"COMPRA 🟢")+" en "+(i.precio!=null?i.precio:"?")+(i.texto?(" — “"+i.texto+"”"):"");
   if(name==="borrar_dibujos") return i.todo?"🧹 Borrar TODOS los dibujos del gráfico (incluidos los tuyos)":"🧹 Borrar los dibujos que hizo Roberto";
+  if(name==="avanzar_plan"){ const f=planFaseActual(); const sg=PLAN_FASES[(PLAN.fase||0)+1]; return "🧭 Pasar de la fase "+f.n+" ("+f.t+") a la "+(sg?sg.n+" ("+sg.t+")":"siguiente")+(i.motivo?("\nPorque: "+i.motivo):""); }
   if(name==="organizar_chat"){ const p=[]; if(i.fijar!=null)p.push(i.fijar?"📌 fijar":"quitar 📌"); if(i.estrella!=null)p.push(i.estrella?"⭐ importante":"quitar ⭐"); if(i.revisar!=null)p.push(i.revisar?"🔍 por revisar":"quitar 🔍"); return "🗂️ Organizar este chat: "+(p.join(", ")||"(sin cambios)"); }
   if(name==="editar_estrategia"){ return "🎯 Definir/editar la estrategia \""+(i.nombre||CTX.estrategia)+"\":\n"+[i.instrumento&&("→ instrumento: "+i.instrumento), i.ajustes&&("→ reglas/ajustes: "+i.ajustes)].filter(Boolean).join("\n"); }
   if(name==="revisar_indicador") return "🔍 Leer y auditar los ajustes actuales del indicador CRT"+(i.target?(" ("+i.target+")"):"");
@@ -5445,6 +5718,24 @@ async function ejecutarTool(name, i){
       ESTR_DEFS[nom]=def; guardarEstrDefs();
       return {ok:true,msg:"Actualicé la estrategia “"+nom+"”: "+[def.instrumento&&("instrumento "+def.instrumento), def.ajustes&&"reglas/ajustes actualizados"].filter(Boolean).join(", ")+". La tendré en cuenta."};
     }
+    if(name==="marcar_paso_plan"){
+      const id=String(i.paso||"").trim();
+      let paso=null, fase=null;
+      PLAN_FASES.forEach(f=>(f.pasos||[]).forEach(p=>{ if(p.id===id){ paso=p; fase=f; } }));
+      if(!paso) return {ok:false,msg:"No existe ese paso del plan ("+id+")"};
+      const hecho=(i.hecho===false)?false:true;
+      PLAN.pasos[id]=hecho; guardarPlan();
+      try{ if(TAB==="arranque") renderArranque(); }catch(_){}
+      return {ok:true,msg:(hecho?"✅ Marcado":"↩️ Desmarcado")+" en tu plan (fase "+fase.n+"): “"+paso.t+"”"};
+    }
+    if(name==="avanzar_plan"){
+      const f=planFaseActual();
+      const s=planSeñal(f);
+      if(!s.ok) return {ok:false,msg:"Todavía no toca avanzar. Estás en la fase "+f.n+" — "+f.t+". "+s.falta};
+      if(!planAvanzar(false)) return {ok:false,msg:"No pude avanzar la fase"};
+      const nueva=planFaseActual();
+      return {ok:true,msg:"🧭 ¡Fase superada! Ahora estás en la "+nueva.n+" — "+nueva.t+" ("+nueva.cuando+"). "+nueva.idea};
+    }
     if(name==="organizar_chat"){
       const c=iaConvAct(); if(!c) return {ok:false,msg:"No hay chat activo"};
       const ch=[];
@@ -5523,8 +5814,8 @@ function histRobertoModal(){
 /* Muestra la tarjeta de confirmación y espera la decisión de Rey */
 function confirmarTool(tu){
   // 🗂️ Organizar chats y 🧠 buscar en memoria: automáticos, SIN tarjeta (reversibles / solo lectura).
-  if(tu.name==="organizar_chat" || tu.name==="buscar_memoria"){
-    return (async()=>{ let res; try{ res=await ejecutarTool(tu.name, tu.input); }catch(e){ res={ok:false,msg:"Error: "+e}; } if(res&&res.ok&&tu.name==="organizar_chat") toast(res.msg); return {confirmed:true, res}; })();
+  if(tu.name==="organizar_chat" || tu.name==="buscar_memoria" || tu.name==="marcar_paso_plan"){
+    return (async()=>{ let res; try{ res=await ejecutarTool(tu.name, tu.input); }catch(e){ res={ok:false,msg:"Error: "+e}; } if(res&&res.ok&&(tu.name==="organizar_chat"||tu.name==="marcar_paso_plan")) toast(res.msg); return {confirmed:true, res}; })();
   }
   return new Promise(resolve=>{
     const cont=$("#iaMsgs"); if(!cont){ resolve({confirmed:false}); return; }
@@ -5777,6 +6068,8 @@ async function iaEnviar(textoForzado, promptExtra){
   if(!IA.url){ toast("Configura el puente (⚙️)"); $("#iaCfg").click(); return; }
   if(!texto && img) texto="Analiza este gráfico según mi estrategia CRT: par/temporalidad, bias, sweep, MSS y zona. Dime si hay un setup válido (A+/B/C) y qué harías.";
   if(!texto && doc) texto="Te comparto este documento para que APRENDAS de él: analízalo a fondo, dime qué aporta a mi método, qué confirma, qué mejoraría o cambiaría, y propón guardar lo valioso en tu memoria o en mi estrategia.";
+  /* 🧭 cuenta el material que Rey le comparte (documentos y enlaces): es la señal de la fase 02 */
+  try{ if(doc || /https?:\/\//i.test(texto)){ PLAN.docs=(PLAN.docs||0)+1; guardarPlan(); } }catch(_){}
   if(ta){ ta.value=""; ta.style.height="auto"; }
   IA.pendImg=null; IA.pendDoc=null; iaPintarAtt();
   const c=iaConvAct();
@@ -5794,7 +6087,7 @@ async function iaEnviar(textoForzado, promptExtra){
   let grafTxt=""; try{ grafTxt=await iaGrafico()+"\n"; }catch(_){ grafTxt=""; }
   // promptExtra = framework de análisis (semanal/diario) que va a la API pero NO se muestra en el chat
   const marco = promptExtra ? ("\n\n=== INSTRUCCIONES DEL ANÁLISIS QUE PIDE REY ===\n"+promptExtra+"\n=== FIN INSTRUCCIONES ===") : "";
-  const inj=iaReloj()+"\n"+grafTxt+calTxt+iaContexto()+"\n"+iaEstrategiaDef()+"\n"+guardianRiesgo()+"\n"+(estadoRecuperacionFreno().block||"")+iaFugas()+"\n"+iaRacha()+"\n"+iaPendientes()+"\n"+iaPlanSemanal()+"\n"+iaAvisos()+"\n"+iaEntradasAbiertas()+marco+"\n\nPregunta de Rey: "+texto;
+  const inj=iaReloj()+"\n"+grafTxt+calTxt+iaContexto()+"\n"+iaEstrategiaDef()+"\n"+guardianRiesgo()+"\n"+iaPlan()+"\n"+(estadoRecuperacionFreno().block||"")+iaFugas()+"\n"+iaRacha()+"\n"+iaPendientes()+"\n"+iaPlanSemanal()+"\n"+iaAvisos()+"\n"+iaEntradasAbiertas()+marco+"\n\nPregunta de Rey: "+texto;
   const last=msgs[msgs.length-1];
   const bloquesDoc = (typeof iaDocBloques==="function") ? iaDocBloques(doc, inj) : null;
   if(bloquesDoc){ last.content = bloquesDoc; }            // 📄 documento + contexto, en el último mensaje
@@ -5956,7 +6249,7 @@ function respChequear(){
    ============================================================ */
 function init(){
   const c=$("#views");
-  c.append(viewNoticias(),viewAvisos(),viewHoy(),viewChecklist(),viewConf(),viewRutina(),viewReglas(),viewRiesgo(),viewGatillo(),viewDiario(),viewGaleria(),viewCuentas(),viewAlmanaque(),viewAnalisis(),viewMentor(),viewPlan());
+  c.append(viewNoticias(),viewAvisos(),viewHoy(),viewArranque(),viewChecklist(),viewConf(),viewRutina(),viewReglas(),viewRiesgo(),viewGatillo(),viewDiario(),viewGaleria(),viewCuentas(),viewAlmanaque(),viewAnalisis(),viewMentor(),viewPlan());
   buildNav();
   fillPlanDinamico();
   initDiarioControles();
@@ -5983,6 +6276,7 @@ function init(){
   try{ if(navigator.serviceWorker){ navigator.serviceWorker.addEventListener("message", ev=>{ if(ev.data && ev.data.type==="apex-open-chat"){ if(typeof abrirIA==="function") abrirIA(); if(ev.data.seed){ setTimeout(()=>iaProactivo(ev.data.seed),300); } else if(ev.data.jobId) iaMostrarJob(ev.data.jobId); else iaResumePend(); } }); } }catch(_){}
   try{ const sp=new URLSearchParams(location.search); if(sp.get("open")==="chat"){ const jb=sp.get("job"); const seed=sp.get("seed"); setTimeout(()=>{ if(typeof abrirIA==="function") abrirIA(); if(seed) setTimeout(()=>iaProactivo(seed),350); else if(jb) iaMostrarJob(jb); else iaResumePend(); }, 500); } }catch(_){}
   setTimeout(syncReminders, 1800);   /* sube los avisos al vigilante (cron) */
+  setTimeout(planCargarMem, 2400);     /* 🧭 cuenta la memoria de Roberto para las señales del plan */
   setTimeout(hoyCargarCtx, 2600);      /* 📡 último contexto del indicador para la vista 🎯 HOY */
   setTimeout(respChequear, 6000);      /* ☁️ recordatorio de respaldo a Drive cada X días */
   irA("hoy");        /* 🎯 lo primero al abrir: TODO tu día en una pantalla */

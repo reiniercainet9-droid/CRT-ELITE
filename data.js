@@ -3,7 +3,7 @@
    Todo el contenido del plan operativo de Rey.
    ============================================================ */
 
-const APP_VERSION = "5.84";
+const APP_VERSION = "5.85";
 
 /* --- CHECKLIST OPERATIVO (4 bloques) --- */
 const CHECKLIST = [
@@ -387,4 +387,91 @@ const PLAN = [
 <p><i>No entras a ningún trade sin marcar todas las casillas.</i></p>
 <div id="planChecklist"></div>
 <div class="quote" style="text-align:center">La semana se gana el domingo. El que planifica domina; el que improvisa, paga.</div>`}
+];
+
+/* ============================================================
+   🧭 PLAN DE ARRANQUE — las 6 fases para empezar a trabajar con Roberto.
+   No es un texto: es el estado real de Rey. La app comprueba sola las señales
+   de avance y Roberto lee este mismo plan en cada conversación, así los tres
+   (Rey, Apex y Roberto) van SIEMPRE por el mismo punto.
+   Cada fase: pasos que Rey marca + una SEÑAL que la app verifica sola.
+   ============================================================ */
+const PLAN_FASES = [
+  {
+    id:"f0", n:"00", t:"Encender el sistema", cuando:"Hoy · unos 20 minutos",
+    idea:"Todo lo que sigue depende de que esto quede bien hecho.",
+    pasos:[
+      {id:"f0p1", t:"Subir el worker a Cloudflare y pulsar Deploy"},
+      {id:"f0p2", t:"Subir el contenido del ZIP de la app a GitHub"},
+      {id:"f0p3", t:"Cerrar Apex del todo y volver a abrirla (debe decir la versión nueva)"},
+      {id:"f0p4", t:"Comprobar que abre en 🎯 HOY con la hora de Brasil y Nueva York"},
+      {id:"f0p5", t:"Encender el PC y el Puente"},
+      {id:"f0p6", t:"Comprobar que TradingView tiene las alarmas activas en tus pares"}
+    ],
+    señal:"Apex abre en 🎯 HOY, se conecta con la nube y ves los chips nuevos en el chat.",
+    auto:"nube"
+  },
+  {
+    id:"f1", n:"01", t:"Solo hablar", cuando:"Días 1 a 3 · sin operar",
+    idea:"Que Roberto te conozca y que tú aprendas a preguntarle. Aquí no se opera.",
+    pasos:[
+      {id:"f1p1", t:"Abrir 🎯 HOY cada mañana antes que nada"},
+      {id:"f1p2", t:"Pedir el 🌅 Parte del día y leerlo entero"},
+      {id:"f1p3", t:"Corregir a Roberto en el momento si dice algo mal"},
+      {id:"f1p4", t:"Contarle quién eres: qué te cuesta, cuándo te precipitas, qué quieres conseguir"},
+      {id:"f1p5", t:"Revisar 🧠 Mi memoria y borrar lo que no sea cierto"}
+    ],
+    señal:"Roberto tiene al menos 6 recuerdos tuyos repartidos en 2 temas o más.",
+    auto:"memoria", min:6, minTemas:2
+  },
+  {
+    id:"f2", n:"02", t:"Alimentarlo", cuando:"Días 4 a 7 · sigues sin operar",
+    idea:"Darle la teoría. Esta fase convierte a Roberto en TU mentor y no en un asistente genérico.",
+    pasos:[
+      {id:"f2p1", t:"Pasarle tus documentos de CRT, SMC e ICT (📎 en el chat)"},
+      {id:"f2p2", t:"Pasarle enlaces de clases, artículos o reglas de firmas"},
+      {id:"f2p3", t:"Discutir con él lo que te proponga que choque con tu forma de operar"},
+      {id:"f2p4", t:"Usar el chip 📸 Estudia mis capturas al menos una vez"}
+    ],
+    señal:"Le has pasado material y su memoria ya tiene 4 o más recuerdos de estrategia o visuales.",
+    auto:"nutrido", min:4
+  },
+  {
+    id:"f3", n:"03", t:"Operar en demo, con él al lado", cuando:"Semanas 2 y 3 · dinero de práctica",
+    idea:"Construir el hábito. La misma disciplina que en real, pero sin el miedo.",
+    pasos:[
+      {id:"f3p1", t:"Cada mañana: 🎯 HOY + checklist + parte del día"},
+      {id:"f3p2", t:"Pedir ✅ GO/NO-GO antes de CADA entrada, sin excepción"},
+      {id:"f3p3", t:"Registrar cada trade en el Diario al cerrarlo, con su captura"},
+      {id:"f3p4", t:"Pedir el 📆 Análisis del día al cerrar la jornada"},
+      {id:"f3p5", t:"Los domingos: leer su 🎓 informe y pedir el 🗓️ Análisis semanal"}
+    ],
+    señal:"14 días seguidos sin romper ni una regla (máx. 2 trades/día y nunca 2 SL seguidos en el mismo día), con al menos 10 trades registrados.",
+    auto:"disciplina", dias:14, minTrades:10
+  },
+  {
+    id:"f4", n:"04", t:"Dinero real, una sola cuenta", cuando:"Semana 4 en adelante",
+    idea:"Una cuenta. Nada más. Ahora el Guardián de Riesgo trabaja de verdad.",
+    pasos:[
+      {id:"f4p1", t:"Registrar la cuenta en 🏦 Cuentas con su drawdown diario y máximo reales"},
+      {id:"f4p2", t:"Mirar el bloque de riesgo en 🎯 HOY antes de cada sesión"},
+      {id:"f4p3", t:"Si Roberto te frena, pararte y discutirlo después en frío"},
+      {id:"f4p4", t:"Avisarle cuando cobres un payout para que lo registre"}
+    ],
+    señal:"Un mes natural completo operando en real con las reglas intactas.",
+    auto:"mesreal"
+  },
+  {
+    id:"f5", n:"05", t:"Escalar", cuando:"Mes 2 en adelante",
+    idea:"Ya no es aprender: es hacer crecer un negocio que funciona.",
+    pasos:[
+      {id:"f5p1", t:"Sacar el 📄 Informe mensual y guardarlo en el Drive"},
+      {id:"f5p2", t:"Comentar el informe con Roberto y comparar con el mes anterior"},
+      {id:"f5p3", t:"Añadir cuentas de una en una, nunca varias a la vez"},
+      {id:"f5p4", t:"Añadir pares de uno en uno, con sus alarmas del indicador"},
+      {id:"f5p5", t:"Hacer el respaldo a Drive cada vez que la app te lo recuerde"}
+    ],
+    señal:"Esta fase no se termina: se repite cada mes.",
+    auto:"ninguna"
+  }
 ];
