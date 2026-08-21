@@ -429,7 +429,7 @@ async function verMemoria(){
   if(typeof abrirIA==="function") abrirIA();
   iaTemaChat("🧠 Mi memoria");
   const c=iaConvAct();
-  let txt="";
+  let txt="", html="";
   try{
     const r=await fetch(nubeUrl()+"/mem",{cache:"no-store"});
     const d=await r.json();
@@ -441,20 +441,28 @@ async function verMemoria(){
       const grupos={};
       entries.forEach(e=>{ const k=MEM_TEMAS_APP[e.tema]?e.tema:"general"; (grupos[k]=grupos[k]||[]).push(e); });
       const orden=Object.keys(MEM_TEMAS_APP).filter(k=>grupos[k]);
-      txt="## 🧠 Lo que sé de ti ("+entries.length+" recuerdos)\n\n"+
-        orden.map(k=>"### "+MEM_TEMAS_APP[k]+" ("+grupos[k].length+")\n"+
-          grupos[k].slice(-12).reverse().map(e=>"- "+e.texto).join("\n")).join("\n\n")+
-        "\n\n_Si algo aquí ya no es cierto, dímelo y lo borro._";
+      /* 🗂️ CARPETAS PLEGABLES: cada tema es un <details> que Rey abre y cierra con un toque.
+         Así con 150 recuerdos sigue siendo legible: ve los títulos con su conteo y abre solo
+         el tema que quiere. txt queda como versión en texto plano (para 🔊 Escuchar y buscar). */
+      txt="🧠 Lo que sé de ti ("+entries.length+" recuerdos). "+
+        orden.map(k=>MEM_TEMAS_APP[k]+", "+grupos[k].length+" recuerdos: "+grupos[k].slice().reverse().map(e=>e.texto).join(". ")).join(". ")+
+        " Si algo aquí ya no es cierto, dímelo y lo borro.";
+      html='<div class="ia-md-h h2">🧠 Lo que sé de ti ('+entries.length+' recuerdos)</div>'+
+        '<div class="ia-mem-ayuda">Toca cada carpeta para abrirla o cerrarla.</div>'+
+        orden.map((k,ix)=>'<details class="ia-mem-fold"'+(ix===0?" open":"")+'><summary>'+esc(MEM_TEMAS_APP[k])+' <span class="ia-mem-n">'+grupos[k].length+'</span></summary><ul>'+
+          grupos[k].slice().reverse().map(e=>"<li>"+esc(e.texto)+"</li>").join("")+'</ul></details>').join("")+
+        '<div class="ia-mem-pie">Si algo aquí ya no es cierto, dímelo y lo borro.</div>';
     }
   }catch(_){ txt="⚠️ No pude leer mi memoria ahora mismo. Revisa tu internet."; }
-  c.msgs.push({role:"assistant",content:txt});
+  const msg={role:"assistant",content:txt}; if(html) msg.html=html;
+  c.msgs.push(msg);
   iaGuardarConvs(); pintarIAChat();
 }
 
 /* 🌅 PARTE MATUTINO HABLADO — al abrir la app por la mañana (1 vez al día), Roberto da el
    resumen del día EN VOZ: saludo, ventanas de hoy, noticias clave, plan semanal, estado de
    cuentas/disciplina y pendientes. Corto y accionable, como un briefing de mentor. */
-const PARTE_PROM = "Dale a Rey su PARTE MATUTINO del día, como un briefing corto de mentor (máx ~150 palabras, tono cálido y directo — se va a LEER EN VOZ ALTA, así que nada de tablas ni símbolos raros: frases habladas). Incluye solo lo que aplique HOY: saludo por la mañana; qué día es y las ventanas/killzones de hoy; las noticias de alto impacto del calendario que le afecten (con su hora NY); el estado de su plan semanal en una frase; el estado de sus cuentas y su disciplina en una frase (si están en recuperación/freno, recuérdaselo con firmeza); y si tiene cosas pendientes 🔍, menciónalo. Cierra con EL foco del día en una frase.";
+const PARTE_PROM = "Dale a Rey su PARTE MATUTINO del día: un briefing de mentor CON DATOS, no un cuento corrido. REGLAS DE FORMATO (obligatorias): números SIEMPRE en cifras (5:30, 1.3%, 1.3639), NUNCA escritos en letras; estructura en bloques cortos con mini-título en negrita — **⏰ Ahora**, **📰 Noticias**, **🗓️ Plan semanal**, **💼 Cuentas**, **🎯 Foco** — con 1-2 líneas por bloque; si hay noticias de alto impacto hoy, ponlas en una TABLA markdown con columnas Noticia | Hora NY | Hora Brasil | Bloqueo. Contenido (solo lo que aplique HOY): qué día es y la ventana/killzone actual y la SIGUIENTE, con horas NY y Brasil en cifras; noticias de alto impacto que afecten a sus pares; el plan semanal en 1 línea; sus cuentas con números reales (% hasta el DD, si están en recuperación) y su disciplina en 1 línea firme; pendientes 🔍 si los hay. Cierra con **🎯 Foco** en 1 frase. Máx ~180 palabras fuera de la tabla. Tono cálido y directo, de mentor.";
 function parteMatutino(){
   if(typeof abrirIA==="function") abrirIA();
   iaTemaChat("🌅 Parte del día");
@@ -5501,7 +5509,7 @@ function pintarIAChat(){
     return;
   }
   m.innerHTML=c.msgs.map((x,i)=>{
-    const cuerpo=x.role==="user"?esc(x.content):fmtIA(x.content);
+    const cuerpo=x.role==="user"?esc(x.content):(x.html?x.html:fmtIA(x.content)); /* x.html: vistas ricas propias (ej. memoria plegable) */
     const foto=x.img?`<img class="ia-msg-img" src="${x.img}" alt="gráfico">`:"";
     if(x.role==="user") return `<div class="ia-msg user">${foto}${cuerpo}</div>`;
     const habla = IA.hablandoIdx===i;
