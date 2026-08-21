@@ -322,7 +322,8 @@ async function iaEnviarBloques(bloques, resumenChat){
   const inj=iaReloj()+"\n"+calTxt+iaContexto()+"\n"+iaEstrategiaDef()+"\n"+iaPlan()+"\n"+iaAciertos()+"\n"+iaFugas()+"\n"+iaRacha()+"\n";
   const last=msgs[msgs.length-1];
   last.content=[{type:"text",text:inj}].concat(bloques);
-  await iaBgStart(msgs, c);
+  /* estudiar capturas / material adjunto = trabajo profundo: pregunta qué motor usar */
+  await iaBgStart(msgs, c, iaMotorPara("", true, false));
 }
 
 /* ============================================================
@@ -5087,6 +5088,12 @@ function iaInit(){
         </div>
         <div class="note" style="text-align:left;margin:0 0 8px">Si tu teléfono solo trae voz de mujer, baja el tono (Grave++). Para una voz de HOMBRE real hay que instalarla en Ajustes del teléfono → "Texto a voz" (no en el Asistente de Google).</div>
         <button class="btn" id="iaVozTest" style="margin-bottom:14px">▶️ Probar voz</button>
+        <div class="fl">🚀 Motor de Roberto (lo que gasta)</div>
+        <div class="seg c2" id="iaMotorSeg" style="margin-bottom:6px">
+          <button data-motor="sonnet">🏎️ Rendidor</button>
+          <button data-motor="opus">🧠 Máximo</button>
+        </div>
+        <div class="note" style="text-align:left;margin:0 0 14px">🏎️ <b>Rendidor</b> (Sonnet 5): rápido y gasta mucho menos — para el día a día, backtesting y charla. 🧠 <b>Máximo</b> (Opus 5): para un análisis profundo puntual. Y si estás en Rendidor y pides algo profundo (documentos, análisis semanal, mensajes largos), Roberto <b>te pregunta</b> si usar Máximo solo para esa consulta — tú siempre decides.</div>
         <div class="fl">🛡️ Roberto vigilante</div>
         <button class="btn" id="iaVigilaToggle" style="margin-bottom:6px">🛡️ Vigilante: activado</button>
         <button class="btn" id="iaHistRob" style="margin-bottom:6px">🗒️ Historial de Roberto (qué ha cambiado)</button>
@@ -5191,6 +5198,17 @@ function iaInit(){
       b.onclick=()=>{ IA.voz.pitch=parseFloat(b.dataset.pitch); iaGuardarVoz(); iaVozRefrescarUI();
         iaHablar("Así sueno con este tono, Rey.", -1); }; });
     $("#iaVozTest").onclick=()=>iaHablar("Hola Rey, soy Roberto, tu mentor de trading. Estoy listo para ayudarte a pasar tus fondeos y escalar tu capital.", -1);
+  }
+  /* 🚀 Selector de motor: guarda la elección y la manda el worker en cada mensaje */
+  { const seg=$("#iaMotorSeg");
+    if(seg){
+      const pintar=()=>{ seg.querySelectorAll("[data-motor]").forEach(b=>b.classList.toggle("on", b.dataset.motor===iaMotor())); };
+      seg.querySelectorAll("[data-motor]").forEach(b=>{
+        b.onclick=()=>{ try{ localStorage.setItem("crtelite_ia_motor", b.dataset.motor); }catch(_){}
+          pintar(); toast(b.dataset.motor==="opus"?"🧠 Máximo (Opus 5): más potencia, más gasto":"🏎️ Rendidor (Sonnet 5): rápido y económico ✓"); };
+      });
+      pintar();
+    }
   }
   $("#iaSaveUrl").onclick=()=>{ IA.url=$("#iaUrl").value.trim()||IA_URL_DEFAULT; save(K.iaurl,IA.url); $("#iaCfgBox").style.display="none"; toast("Puente guardado ✓"); };
   $("#iaClear").onclick=()=>{ if(confirm("¿Borrar la conversación actual?")){ const c=iaConvAct(); c.msgs=[]; c.t=""; iaGuardarConvs(); $("#iaCfgBox").style.display="none"; pintarIAChat(); } };
@@ -6360,25 +6378,44 @@ function resumenTradeVigila(t){
    ============================================================ */
 const IA_PEND_KEY = "crtelite_pendchat_v3";
 function iaBase(){ return (IA.url||IA_URL_DEFAULT).replace(/\/+$/,""); }
+/* 🚀 Motor elegido en ⚙️: "sonnet" (Rendidor, por defecto) u "opus" (Máximo). */
+function iaMotor(){ try{ return localStorage.getItem("crtelite_ia_motor")==="opus"?"opus":"sonnet"; }catch(_){ return "sonnet"; } }
+/* 🧠 MOTOR SINTOMÁTICO: detecta cuándo la consulta es trabajo PROFUNDO. */
+function iaTareaProfunda(texto, tieneDoc, tieneMarco){
+  if(tieneDoc || tieneMarco) return true;                       // documentos y análisis con marco = profundo
+  const t=String(texto||"");
+  if(t.length>600) return true;                                 // un mensaje largo merece el motor grande
+  return /backtest|an[aá]lisis (semanal|del d[ií]a|profundo|completo)|revisa (todo|mi semana|mi operativa)|comp[aá]rame|auditor[ií]a|informe|plan (de fondeo|semanal|mensual|completo)|inter[eé]s compuesto|escalado/i.test(t);
+}
+/* Decide el motor de ESTA consulta: si el ajuste es Máximo, va directo; si es Rendidor
+   pero la tarea parece profunda, PREGUNTA a Rey (solo vale para esta consulta, el
+   ajuste de ⚙️ no cambia). Así Roberto "detecta y avisa" pero Rey siempre decide. */
+function iaMotorPara(texto, tieneDoc, tieneMarco){
+  if(iaMotor()==="opus") return "opus";
+  if(!iaTareaProfunda(texto, tieneDoc, tieneMarco)) return "sonnet";
+  const ok=confirm("🧠 Esto parece trabajo PROFUNDO.\n\n¿Quieres que lo piense con el motor Máximo (Opus 5)? Razona más fino pero gasta más.\n\nAceptar = 🧠 Máximo (solo esta consulta)\nCancelar = 🏎️ Rendidor (económico)");
+  return ok?"opus":"sonnet";
+}
 function iaAbierto(){ const ov=$("#iaOv"); return !!(ov && ov.classList.contains("show")); }
 function iaPendCargar(){ try{ return JSON.parse(localStorage.getItem(IA_PEND_KEY)||"[]"); }catch(_){ return []; } }
 function iaPendGuardar(p){ const a=iaPendCargar().filter(x=>x.jobId!==p.jobId); a.push(p); try{ localStorage.setItem(IA_PEND_KEY, JSON.stringify(a)); }catch(_){} }
 function iaPendBorrar(jobId){ try{ localStorage.setItem(IA_PEND_KEY, JSON.stringify(iaPendCargar().filter(x=>x.jobId!==jobId))); }catch(_){} }
 const _iaPolling={};
 /* Arranca una consulta en segundo plano */
-async function iaBgStart(msgs, c){
+async function iaBgStart(msgs, c, motor){
+  const motorMsg = motor || iaMotor();   /* el motor de ESTA consulta viaja con su trabajo */
   IA.busy=true; pintarIAChat(); iaVigilarBusy();   /* 🛟 nunca se queda bloqueado */
   let jobId;
   try{
     const r=await fetch(iaBase()+"/chat/bg",{method:"POST",headers:{"content-type":"application/json"},
-      body:JSON.stringify({system:iaSystemFull(), messages:msgs, clientTools:IA_TOOLS})});
+      body:JSON.stringify({system:iaSystemFull(), messages:msgs, clientTools:IA_TOOLS, motor:motorMsg})});
     const d=await r.json().catch(()=>({}));
     jobId=d && d.jobId;
     if(!jobId) throw new Error("sin jobId");
   }catch(e){
     IA.busy=false; c.msgs.push({role:"assistant",content:"⚠️ No pude enviar tu mensaje. Revisa tu internet y reintenta."}); iaGuardarConvs(); pintarIAChat(); return;
   }
-  iaPendGuardar({ jobId, convId:c.id, msgs, ts:Date.now() });
+  iaPendGuardar({ jobId, convId:c.id, msgs, motor:motorMsg, ts:Date.now() });
   iaPollJob(jobId);
 }
 /* ============================================================
@@ -6466,15 +6503,58 @@ function iaMsgFallo(motivo, textoParcial){
    (2) si el worker guardó un AVANCE parcial, lo muestra en vez de perderlo todo;
    (3) al rendirse NO borra el pendiente y deja el mensaje listo para reenviar de un toque,
        así el texto que costó escribir nunca se pierde. */
+/* 🔁 REINTENTO AUTOMÁTICO: si el trabajo murió en Cloudflare o dio un error transitorio
+   (sobrecarga/timeout), la app lo reenvía SOLA con el mismo mensaje — hasta 2 veces.
+   Gracias al caché del cerebro (1 h), el reintento cuesta mucho menos que el original.
+   Solo si falla 3 veces seguidas sale la tarjeta de "Probar otra vez". */
+async function iaAutoReintento(jobId, parcial, motivo){
+  const pend=iaPendCargar().find(x=>x.jobId===jobId);
+  const c=(pend && IA.convs.find(x=>x.id===pend.convId)) || iaConvAct();
+  const n=(pend && pend.retries)||0;
+  const rendirse=()=>{
+    IA.busy=false;
+    c.msgs.push(iaMsgFallo(motivo||"", parcial||""));
+    if(parcial) iaPendBorrar(jobId); else iaGuardarUltimo(c);
+    iaGuardarConvs(); pintarIAChat();
+  };
+  if(!pend || !Array.isArray(pend.msgs) || !pend.msgs.length || n>=2){ rendirse(); return; }
+  iaPendBorrar(jobId);
+  toast("Se me cortó el pensamiento — lo reintento yo solo 🔁");
+  try{
+    const r=await fetch(iaBase()+"/chat/bg",{method:"POST",headers:{"content-type":"application/json"},
+      body:JSON.stringify({system:iaSystemFull(), messages:pend.msgs, clientTools:IA_TOOLS, motor:pend.motor||iaMotor()})});
+    const d=await r.json().catch(()=>({}));
+    if(d && d.jobId){
+      iaPendGuardar({jobId:d.jobId, convId:pend.convId, msgs:pend.msgs, motor:pend.motor, retries:n+1, ts:Date.now()});
+      IA.busy=true; iaVigilarBusy(); pintarIAChat();
+      iaPollJob(d.jobId);
+      return;
+    }
+  }catch(_){}
+  rendirse();
+}
 function iaPollJob(jobId){
   if(_iaPolling[jobId]) return;
-  let tries=0, parcial="";
+  let tries=0, parcial="", ultimoPulso="", pulsoDesde=Date.now();
   const tick=async()=>{
     tries++;
     let d=null;
     try{ const r=await fetch(iaBase()+"/chat/bg?job="+encodeURIComponent(jobId),{cache:"no-store"}); d=await r.json(); }catch(_){}
     if(d && d.parcial) parcial=d.parcial;            // el worker va guardando lo que escribe
     if(d && d.ready){ clearTimeout(_iaPolling[jobId]); delete _iaPolling[jobId]; iaBgResuelto(jobId, d); return; }
+    /* 💓 DETECTOR DE MUERTE (worker v5.65+): el trabajo deja un pulso "vivo" cada 20 s.
+       Se compara el VALOR del pulso (no el reloj del móvil, que puede estar desajustado):
+       si el pulso no CAMBIA en 75 s, la tarea murió en Cloudflare → se reintenta SOLO.
+       Antes Rey esperaba 5 minutos mirando un trabajo muerto y le salía la tarjeta de fallo. */
+    if(d && !d.ready && d.vivo){
+      const pulso=String(d.vivo)+"/"+String(d.ts||"");
+      if(pulso!==ultimoPulso){ ultimoPulso=pulso; pulsoDesde=Date.now(); }
+      else if(Date.now()-pulsoDesde>75000){
+        clearTimeout(_iaPolling[jobId]); delete _iaPolling[jobId];
+        iaAutoReintento(jobId, parcial, "");
+        return;
+      }
+    }
     if(tries>100){ // ~5 min sondeando: nunca dejar los puntitos colgados para siempre
       clearTimeout(_iaPolling[jobId]); delete _iaPolling[jobId];
       const pend=iaPendCargar().find(x=>x.jobId===jobId);
@@ -6507,6 +6587,9 @@ function iaGuardarUltimo(c){
 function iaEsCredito(m){ return /credit|balance|billing|saldo|insufficient|quota|payment|402/i.test(String(m||"")); }
 function iaErrMsg(m){ const s=String(m||"Error"); if(iaEsCredito(s)) return "💳 **Se agotaron los créditos de Roberto** (tu cuenta de Anthropic). Recárgalos y en 1 minuto vuelvo:\n"+IA_RECARGA_URL+"\n(También en ⚙️ → «💳 Saldo / recargar créditos».)"; return "⚠️ "+s; }
 async function iaBgResuelto(jobId, d){
+  /* 🔁 error transitorio marcado por el worker (v5.65): reintentar solo, sin molestar a Rey.
+     OJO: antes de iaPendBorrar, porque el reintento necesita el pendiente con sus mensajes. */
+  if(d && d.error && d.retry){ iaAutoReintento(jobId, "", d.error); return; }
   const pend=iaPendCargar().find(x=>x.jobId===jobId);
   const c = (pend && IA.convs.find(x=>x.id===pend.convId)) || iaConvAct();
   iaPendBorrar(jobId);
@@ -6526,13 +6609,19 @@ async function iaBgResuelto(jobId, d){
       else{ c.msgs.push({role:"assistant",content:"🚫 Cancelaste esta acción."}); iaGuardarConvs(); pintarIAChat(); results.push({type:"tool_result",tool_use_id:tu.id,content:"El usuario CANCELÓ esta acción; no la hagas."}); }
     }
     baseMsgs.push({role:"user", content:results});
-    IA.busy=true; pintarIAChat();
-    try{
-      const r=await fetch(iaBase()+"/chat/bg",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({system:iaSystemFull(),messages:baseMsgs,clientTools:IA_TOOLS})});
-      const dd=await r.json().catch(()=>({}));
-      if(dd&&dd.jobId){ iaPendGuardar({jobId:dd.jobId,convId:c.id,msgs:baseMsgs,ts:Date.now()}); iaPollJob(dd.jobId); }
-      else { IA.busy=false; pintarIAChat(); }
-    }catch(_){ IA.busy=false; pintarIAChat(); }
+    IA.busy=true; pintarIAChat(); iaVigilarBusy();
+    /* Antes, si este envío fallaba (red, worker), Roberto se quedaba MUDO tras aprobar
+       las tarjetas — sin mensaje, sin botones. Ahora: 2 intentos y, si aun así no sale,
+       tarjeta de fallo con sus botones de verdad. */
+    let enviado=false;
+    for(let i=0;i<2 && !enviado;i++){
+      try{
+        const r=await fetch(iaBase()+"/chat/bg",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({system:iaSystemFull(),messages:baseMsgs,clientTools:IA_TOOLS,motor:(pend&&pend.motor)||iaMotor()})});
+        const dd=await r.json().catch(()=>({}));
+        if(dd&&dd.jobId){ iaPendGuardar({jobId:dd.jobId,convId:c.id,msgs:baseMsgs,motor:(pend&&pend.motor)||iaMotor(),ts:Date.now()}); iaPollJob(dd.jobId); enviado=true; }
+      }catch(_){}
+    }
+    if(!enviado){ IA.busy=false; c.msgs.push(iaMsgFallo("")); iaGuardarUltimo(c); iaGuardarConvs(); pintarIAChat(); }
     return;
   }
   IA.busy=false;
@@ -6614,6 +6703,9 @@ async function iaEnviar(textoForzado, promptExtra){
   if(!texto && doc) texto="Te comparto este documento para que APRENDAS de él: analízalo a fondo, dime qué aporta a mi método, qué confirma, qué mejoraría o cambiaría, y propón guardar lo valioso en tu memoria o en mi estrategia.";
   /* 🧭 cuenta el material que Rey le comparte (documentos y enlaces): es la señal de la fase 02 */
   try{ if(doc || /https?:\/\//i.test(texto)){ PLAN_ARR.docs=(PLAN_ARR.docs||0)+1; guardarPlan(); } }catch(_){}
+  /* 🧠 motor sintomático: si la tarea parece profunda y el ajuste es Rendidor, pregunta.
+     Se decide AQUÍ (antes de vaciar la caja) y vale solo para esta consulta. */
+  const motorMsg = iaMotorPara(texto, !!doc, !!promptExtra);
   if(ta){ ta.value=""; ta.style.height="auto"; }
   IA.pendImg=null; IA.pendDoc=null; iaPintarAtt();
   const c=iaConvAct();
@@ -6622,7 +6714,14 @@ async function iaEnviar(textoForzado, promptExtra){
   IA.busy=true;
   if(!iaGuardarConvs()) toast("Imagen muy pesada: se envía pero quizá no se guarde en el historial");
   pintarIAChat();
-  let hist=c.msgs.slice(-14);
+  /* 💰 VENTANA ESTABLE DE HISTORIAL: antes se mandaban SIEMPRE "los últimos 14" y la
+     ventana se corría 1 con cada mensaje — el prefijo cambiaba y el caché del historial
+     fallaba justo en las charlas largas. Ahora la ventana crece hasta 26 mensajes y solo
+     entonces se re-ancla a los últimos 14: el prefijo se queda quieto ~12 mensajes
+     seguidos y el caché pega de verdad. */
+  if(typeof c.histIni!=="number" || c.histIni>c.msgs.length) c.histIni=Math.max(0,c.msgs.length-14);
+  if(c.msgs.length-c.histIni>26) c.histIni=c.msgs.length-14;
+  let hist=c.msgs.slice(c.histIni);
   while(hist.length && hist[0].role!=="user") hist.shift();
   // La foto solo viaja en el ÚLTIMO mensaje; los turnos anteriores van sin ella.
   let msgs=hist.map((x,i)=>iaMsgApi(x, i===hist.length-1));
@@ -6637,7 +6736,7 @@ async function iaEnviar(textoForzado, promptExtra){
   if(bloquesDoc){ last.content = bloquesDoc; }            // 📄 documento + contexto, en el último mensaje
   else if(Array.isArray(last.content)){ last.content[last.content.length-1]={type:"text",text:inj}; }
   else{ last.content=inj; }
-  await iaBgStart(msgs, c);
+  await iaBgStart(msgs, c, motorMsg);
 }
 
 /* ============================================================
