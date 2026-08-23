@@ -4810,8 +4810,8 @@ const PUENTE_DOSSIER =
    las temporalidades y marcó niveles/etiquetas). Van a la API, no se muestran. */
 const ANALISIS_SEMANAL_PROM =
 "Eres mi MENTOR y ANALISTA ELITE. Hazme el ANÁLISIS SEMANAL del/los par(es) que veo en el gráfico en vivo. FUENTE OBLIGATORIA: el bloque [👁️ GRÁFICO EN VIVO] que ya tienes (mi indicador CRT Elite YA calculó las temporalidades W/D/4H/1H y marcó niveles y etiquetas). NO inventes: si un dato no está en el bloque, dilo. Método SMC/CRT/liquidez. Si la PC no está conectada (no hay lectura viva), dímelo y pídeme encender el Puente.\n"+
-"⚡ SÉ CONCISO Y DIRECTO: completo pero BREVE, máximo ~700 palabras. Usa bullets y frases cortas, cero relleno (el chat se corta si te alargas demasiado).\n"+
-"MULTI-PAR: si en el bloque hay VARIOS pares, EMPIEZA diciéndome en cuál veo mejor oportunidad para la semana (o si en ambos) y por qué; luego haz el análisis completo de cada par que tenga contexto operable. Si te nombro un par concreto, analiza solo ese.\n"+
+"⚡ SÉ CONCISO Y DIRECTO: completo pero BREVE, máximo ~600 palabras POR PAR. Usa bullets y frases cortas, cero relleno (el chat se corta si te alargas demasiado).\n"+
+"MULTI-PAR OBLIGATORIO (v6.04 — Rey lo exige): en el bloque vivo vienen TODOS los pares que Rey tiene abiertos en el Puente. DEBES cubrirlos TODOS Y CADA UNO, sin excepción: (1) EMPIEZA con un RANKING — en cuál está la mejor oportunidad de la semana y por qué; (2) luego el análisis de CADA par, uno por uno — NINGUNO se omite en silencio: si un par no tiene datos frescos o no tiene oportunidad, dilo EXPLÍCITAMENTE en su propia sección ('GBPUSD: sin setup esta semana porque…') — eso también es información que Rey necesita. Solo si Rey te nombra un par concreto analizas únicamente ese.\n"+
 "ESCRÍBEME en este formato exacto:\n"+
 "🗓️ CONTEXTO GRANDE: zona del rango (Deep Discount/Discount/Equilibrio/Premium/Deep Premium) y estructura (alcista/bajista/rango) según el sesgo y la alineación TF del indicador.\n"+
 "📊 LIQUIDEZ PENDIENTE: niveles clave con precio (usa W H/W L, D H/D L, 4H, EQH/EQL, BSL/SSL del bloque), arriba y abajo del precio actual.\n"+
@@ -4826,8 +4826,8 @@ const ANALISIS_SEMANAL_PROM =
 "AL TERMINAR: usa la mano guardar_plan_semanal para GUARDAR el plan (bias, zona principal, zona secundaria, nivel de invalidación y mejor día), así lo recuerdas TODA la semana y podrás detectar si se invalida.";
 const ANALISIS_DIARIO_PROM =
 "Eres mi MENTOR y ANALISTA ELITE. Hazme el ANÁLISIS DEL DÍA del/los par(es) que veo en el gráfico en vivo. FUENTE OBLIGATORIA: el bloque [👁️ GRÁFICO EN VIVO] (mi indicador CRT Elite ya calculó D/H4/1H/15/5, zona premium/discount, alineación TF, CRT H4, SMT, Secuencia F3, killzone y nivel de invalidación) + etiquetas/niveles. NO inventes datos que no estén. Si la PC no está conectada, dímelo y pídeme encender el Puente.\n"+
-"⚡ SÉ CONCISO Y DIRECTO: completo pero BREVE, máximo ~700 palabras. Usa bullets y frases cortas, cero relleno (el chat se corta si te alargas demasiado).\n"+
-"MULTI-PAR: si en el bloque hay VARIOS pares, EMPIEZA diciéndome en cuál hay mejor oportunidad HOY (o si en ambos, o en ninguno) y por qué; luego haz el análisis completo de cada par con setup válido. Si te nombro un par concreto, analiza solo ese. Compara cuál tiene la confluencia más limpia (sweep + MSS + zona + killzone).\n"+
+"⚡ SÉ CONCISO Y DIRECTO: completo pero BREVE, máximo ~600 palabras POR PAR. Usa bullets y frases cortas, cero relleno (el chat se corta si te alargas demasiado).\n"+
+"MULTI-PAR OBLIGATORIO (v6.04 — Rey lo exige): en el bloque vivo vienen TODOS los pares que Rey tiene abiertos en el Puente. DEBES cubrirlos TODOS Y CADA UNO, sin excepción: (1) EMPIEZA con un RANKING — en cuál hay mejor oportunidad HOY (o en ninguno) comparando cuál tiene la confluencia más limpia (sweep + MSS + zona + killzone); (2) luego el análisis de CADA par, uno por uno — NINGUNO se omite en silencio: si un par no tiene setup hoy, dilo EXPLÍCITAMENTE en su propia sección con el porqué — eso también protege a Rey. Solo si Rey te nombra un par concreto analizas únicamente ese.\n"+
 "ESCRÍBEME en este formato exacto:\n"+
 "📅 DAILY — BIAS: alcista/bajista/rango + liquidez pendiente (precios).\n"+
 "📊 H4 — zona clave (precio), premium/discount, CRT H4, ¿válido para operar?\n"+
