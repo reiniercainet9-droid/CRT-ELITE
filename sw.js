@@ -1,4 +1,4 @@
-const CACHE = "crt-elite-v6-01";
+const CACHE = "crt-elite-v6-03";
 const FILES = ["./","./index.html","./data.js","./app.js","./manifest.json","./icon-192.png","./icon-512.png"];
 const WORKER = "https://elitepro-worker.reiniercainet9.workers.dev";
 /* Web Push: al llegar un aviso (con la app CERRADA), muestra la notificación.
@@ -23,7 +23,10 @@ self.addEventListener("push", e => {
          la siguiente la borraba y perdías los datos. Ahora cada aviso lleva un tag ÚNICO: se
          APILAN y se quedan en la bandeja hasta que TÚ las descartes. requireInteraction siempre
          true para que no se auto-descarten. */
-      body: msg.body, tag: (msg.tag || "apex") + "-" + Date.now(), renotify: true,
+      /* 🔁 v6.03: las REPETICIONES de una alarma insistente (repe) usan un tag FIJO — cada
+         repetición REEMPLAZA a la anterior (con sonido nuevo por renotify) en vez de apilar
+         20 copias. La alarma original conserva su tag único y se queda en la bandeja. */
+      body: msg.body, tag: msg.repe ? "apex-insist" : (msg.tag || "apex") + "-" + Date.now(), renotify: true,
       icon: "./icon-192.png", badge: "./icon-192.png",
       vibrate: vibra, silent: false,
       requireInteraction: true,
@@ -31,9 +34,14 @@ self.addEventListener("push", e => {
     });
   })());
 });
+/* 🔁 v6.03: cualquier toque o descarte de una notificación = "Rey ya está mirando el
+   teléfono" -> se apaga la alarma insistente en el worker (inofensivo si no hay ninguna). */
+function insistVisto(){ return fetch(WORKER+"/insist/visto",{method:"POST"}).catch(()=>{}); }
+self.addEventListener("notificationclose", e => { e.waitUntil(insistVisto()); });
 /* Al tocar una notificación de Roberto, abre/enfoca la app */
 self.addEventListener("notificationclick", e => {
   e.notification.close();
+  e.waitUntil(insistVisto());
   const tag=(e.notification.tag||"");
   const data=e.notification.data||{};
   /* 🎯 DESTINO DEL AVISO: si el aviso trae un "ir", abre Apex DIRECTAMENTE ahí —

@@ -315,13 +315,18 @@ async function iaEnviarBloques(bloques, resumenChat){
   if(!c.t) c.t=iaTit(c);
   try{ iaGuardarUltimo(c); }catch(_){}   /* 🔄 red de seguridad: el texto queda recuperable */
   IA.busy=true; iaGuardarConvs(); pintarIAChat();
-  let hist=c.msgs.slice(-14);
+  /* 💰 v6.02: misma ventana ESTABLE que iaEnviar (si aquí se usara "los últimos 14" rodante,
+     esta llamada rompería el prefijo y el caché fallaría justo al estudiar capturas). */
+  if(typeof c.histIni!=="number" || c.histIni>c.msgs.length) c.histIni=Math.max(0,c.msgs.length-14);
+  if(c.msgs.length-c.histIni>26) c.histIni=c.msgs.length-14;
+  let hist=c.msgs.slice(c.histIni);
   while(hist.length && hist[0].role!=="user") hist.shift();
   const msgs=hist.map(x=>iaMsgApi(x,false));
   let calTxt=""; try{ const ev=await cargarCalendarioCache(); calTxt=iaCalendarioContexto(ev)+"\n"; }catch(_){ calTxt=""; }
-  const inj=iaReloj()+"\n"+calTxt+iaContexto()+"\n"+iaEstrategiaDef()+"\n"+iaPlan()+"\n"+iaAciertos()+"\n"+iaFugas()+"\n"+iaRacha()+"\n";
+  /* 💰 v6.02: bloque ESTABLE (lo guardado) con la marca de caché + material + contexto vivo al final */
+  const inj="=== CONTEXTO VIVO DE LA APP (datos de AHORA MISMO) ===\n"+iaReloj()+"\n"+calTxt+iaContexto()+"\n"+iaEstrategiaDef()+"\n"+iaPlan()+"\n"+iaAciertos()+"\n"+iaFugas()+"\n"+iaRacha()+"\n=== FIN DEL CONTEXTO ===";
   const last=msgs[msgs.length-1];
-  last.content=[{type:"text",text:inj}].concat(bloques);
+  last.content=[{type:"text",text:c.msgs[c.msgs.length-1].content, cache_control:{type:"ephemeral",ttl:"1h"}}].concat(bloques).concat([{type:"text",text:inj}]);
   /* estudiar capturas / material adjunto = trabajo profundo: pregunta qué motor usar */
   await iaBgStart(msgs, c, iaMotorPara("", true, false));
 }
@@ -377,19 +382,30 @@ async function verGasto(){
   if(typeof abrirIA==="function") abrirIA();
   iaTemaChat("💰 Mi gasto");
   const c=iaConvAct();
-  let txt="";
+  let txt="", rec=null;
   try{
     const r=await fetch(nubeUrl()+"/gasto?dias=14",{cache:"no-store"});
     const d=await r.json();
     const dias=(d&&d.dias)||[];
+    /* 💳 v6.02 (Rey lo pidió): anota lo que recargaste y aquí ves LO QUE TE VA QUEDANDO,
+       descontado con cada gasto real. Sin quitar ninguno de los datos de siempre. */
+    rec=(d&&d.recarga)||null;
+    let saldoTxt="";
+    if(rec && isFinite(rec.resta)){
+      const media14=dias.length?(d.total||0)/dias.length:0;
+      saldoTxt="### 💳 Tu crédito\n**Te quedan ~$"+rec.resta.toFixed(2)+"** de los $"+Number(rec.monto).toFixed(0)+" que anotaste el "+rec.fecha+" (gastado desde entonces: $"+rec.gastado.toFixed(2)+")."+
+        (media14>0.05 && rec.resta>0 ? " A tu ritmo de estos días te alcanza para **~"+Math.floor(rec.resta/media14)+" días más**." : "")+
+        (rec.resta<=0 ? " ⚠️ **Se te acabó lo anotado** — recarga en console.anthropic.com y anota el nuevo total abajo." : "")+
+        "\n_Es mi cuenta interna (estimada): el número exacto está en console.anthropic.com._\n\n";
+    }
     if(!dias.length){
-      txt="## 💰 Mi gasto\n\nTodavía no hay datos. El contador empieza a apuntar desde la próxima vez que hablemos.";
+      txt="## 💰 Mi gasto\n\n"+saldoTxt+"Todavía no hay datos. El contador empieza a apuntar desde la próxima vez que hablemos.";
     }else{
       const NOM={chat:"💬 Conversaciones contigo", alarma:"🔔 Alarmas del indicador", consolidacion:"🧹 Ordenar mi memoria", informe:"🎓 Informe semanal"};
       const hoy=dias[0]||{};
       const total=d.total||0;
       const media=total/dias.length;
-      txt="## 💰 En qué se va tu crédito\n\n"+
+      txt="## 💰 En qué se va tu crédito\n\n"+saldoTxt+
         "**Hoy:** $"+(hoy.total||0).toFixed(2)+"  ·  **Últimos "+dias.length+" días:** $"+total.toFixed(2)+"\n\n"+
         "A este ritmo: **~$"+(media*30).toFixed(0)+" al mes**\n\n";
       /* por concepto, sumando todos los días */
@@ -417,6 +433,35 @@ async function verGasto(){
   }catch(_){ txt="⚠️ No pude leer el gasto ahora mismo. Revisa tu internet."; }
   c.msgs.push({role:"assistant",content:txt});
   iaGuardarConvs(); pintarIAChat();
+  tarjetaRecarga(rec);
+}
+
+/* 💳 Tarjeta para ANOTAR LA RECARGA (Rey: "pongo lo que recargué y que vaya bajando").
+   Sale debajo del informe 💰. Rey escribe el crédito que tiene AHORA en Anthropic y desde ese
+   momento el saldo se descuenta solo con cada gasto real. Anotar otra vez REEMPLAZA (se escribe
+   el total actual, no lo añadido). Necesita el worker v5.68 (POST /gasto/recarga). */
+function tarjetaRecarga(rec){
+  const cont=$("#iaMsgs"); if(!cont) return;
+  cont.querySelectorAll(".ia-recarga").forEach(n=>n.remove());
+  const card=el("div","ia-tool ia-recarga");
+  card.innerHTML=
+    '<div class="ia-tool-h">💳 '+(rec?"¿Recargaste? Anota tu nuevo total":"Anota tu crédito y te enseño el saldo")+'</div>'+
+    '<div class="ia-tool-d">Escribe cuánto crédito tienes AHORA en Anthropic (en $). Desde ese momento lo voy descontando con cada gasto. Si recargas de nuevo, anota aquí el nuevo total.</div>'+
+    '<div class="ia-tool-bar"><input type="number" inputmode="decimal" min="1" step="0.01" class="ia-recarga-in" placeholder="'+(rec?("ej: "+Number(rec.monto).toFixed(0)):"ej: 100")+'" style="flex:1;min-width:100px;padding:8px;border-radius:8px;border:1px solid #444;background:rgba(0,0,0,.35);color:inherit">'+
+    '<button class="btn gold ia-recarga-ok">✓ Anotar</button></div>';
+  cont.appendChild(card);
+  card.querySelector(".ia-recarga-ok").onclick=async ()=>{
+    const monto=parseFloat(card.querySelector(".ia-recarga-in").value);
+    if(!isFinite(monto)||monto<=0){ toast("Escribe la cantidad en $ (ej: 100)"); return; }
+    const bar=card.querySelector(".ia-tool-bar"); bar.innerHTML="<span class='ia-tool-done'>⏳ Anotando…</span>";
+    try{
+      const r=await fetch(nubeUrl()+"/gasto/recarga",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({monto})});
+      const d=await r.json().catch(()=>({}));
+      if(r.ok && d && d.ok){ toast("💳 Anotado: $"+monto.toFixed(2)+" — el saldo baja solo desde ahora"); card.remove(); verGasto(); }
+      else{ bar.innerHTML="<span class='ia-tool-cancel'>⚠️ No se pudo — ¿ya subiste el worker v5.68?</span>"; }
+    }catch(_){ bar.innerHTML="<span class='ia-tool-cancel'>⚠️ Sin internet — inténtalo otra vez</span>"; }
+  };
+  cont.scrollTop=cont.scrollHeight;
 }
 
 /* 🧭 MI PLAN — Roberto le dice por dónde va y qué le toca HOY. */
@@ -5690,7 +5735,13 @@ function iaMsgApi(x, conFoto){
     ]};
   }
   if(x.role==="user" && x.img){
-    return { role:"user", content:"(Te envié un gráfico antes) "+(x.content||"") };
+    return { role:"user", content:[{ type:"text", text:"(Te envié un gráfico antes) "+(x.content||"") }] };
+  }
+  /* 💰 v6.02: los mensajes de Rey van SIEMPRE como lista de bloques (igual que cuando fueron
+     "el último" con su marca de caché). Así el prefijo queda byte-idéntico entre llamadas y
+     el caché del historial pega de verdad. Los de Roberto siguen como texto plano (estables). */
+  if(x.role==="user"){
+    return { role:"user", content:[{ type:"text", text:x.content||"" }] };
   }
   return { role:x.role, content:x.content };
 }
@@ -6731,12 +6782,21 @@ async function iaEnviar(textoForzado, promptExtra){
   let grafTxt=""; try{ grafTxt=await iaGrafico()+"\n"; }catch(_){ grafTxt=""; }
   // promptExtra = framework de análisis (semanal/diario) que va a la API pero NO se muestra en el chat
   const marco = promptExtra ? ("\n\n=== INSTRUCCIONES DEL ANÁLISIS QUE PIDE REY ===\n"+promptExtra+"\n=== FIN INSTRUCCIONES ===") : "";
-  const inj=iaReloj()+"\n"+grafTxt+calTxt+iaContexto()+"\n"+iaEstrategiaDef()+"\n"+guardianRiesgo()+"\n"+iaPlan()+"\n"+iaAciertos()+"\n"+(estadoRecuperacionFreno().block||"")+iaFugas()+"\n"+iaRacha()+"\n"+iaPendientes()+"\n"+iaPlanSemanal()+"\n"+iaAvisos()+"\n"+iaEntradasAbiertas()+marco+"\n\nPregunta de Rey: "+texto;
+  /* 💰 v6.02 — EL AGUJERO GRANDE, con datos reales del 22/08 ($5.44 en un día): el contexto
+     vivo (reloj, gráfico, plan, rachas…) iba PEGADO DENTRO del mensaje de Rey. Como cambia en
+     cada llamada, el caché del historial NUNCA pegaba y esos ~25k tokens se pagaban encima al
+     DOBLE (precio de escritura de caché) para no reutilizarse jamás. AHORA: el mensaje de Rey
+     viaja en su bloque ESTABLE (idéntico byte a byte al que luego va en el historial) con la
+     marca de caché puesta AQUÍ MISMO, y el contexto vivo va DETRÁS de la marca, en su propio
+     bloque, a precio normal (1×). El worker v5.68 respeta esta marca y no la pisa. */
+  const inj="=== CONTEXTO VIVO DE LA APP (datos de AHORA MISMO; el mensaje de Rey es el bloque anterior) ===\n"+iaReloj()+"\n"+grafTxt+calTxt+iaContexto()+"\n"+iaEstrategiaDef()+"\n"+guardianRiesgo()+"\n"+iaPlan()+"\n"+iaAciertos()+"\n"+(estadoRecuperacionFreno().block||"")+iaFugas()+"\n"+iaRacha()+"\n"+iaPendientes()+"\n"+iaPlanSemanal()+"\n"+iaAvisos()+"\n"+iaEntradasAbiertas()+marco+"\n=== FIN DEL CONTEXTO — responde al mensaje de Rey del bloque anterior ===";
   const last=msgs[msgs.length-1];
-  const bloquesDoc = (typeof iaDocBloques==="function") ? iaDocBloques(doc, inj) : null;
-  if(bloquesDoc){ last.content = bloquesDoc; }            // 📄 documento + contexto, en el último mensaje
-  else if(Array.isArray(last.content)){ last.content[last.content.length-1]={type:"text",text:inj}; }
-  else{ last.content=inj; }
+  const textoMsg=c.msgs[c.msgs.length-1].content;   /* EXACTAMENTE lo guardado (texto + nota del doc) */
+  let bloquesMsg = Array.isArray(last.content) ? last.content.filter(b=>b.type==="image") : [];   /* la foto va delante */
+  bloquesMsg.push({ type:"text", text:textoMsg, cache_control:{ type:"ephemeral", ttl:"1h" } });
+  if(doc && typeof iaDocBloques==="function"){ const bd=iaDocBloques(doc, ""); if(bd&&bd.length) bloquesMsg.push(bd[0]); }   /* 📄 el documento, ya sin el contexto colgado */
+  bloquesMsg.push({ type:"text", text:inj });
+  last.content=bloquesMsg;
   await iaBgStart(msgs, c, motorMsg);
 }
 
@@ -6913,6 +6973,11 @@ function init(){
   setTimeout(syncAutoShots, 2200);     /* 📸 recoge capturas automáticas de entradas → Galería */
   document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible") syncAutoShots(); });
   setTimeout(parteMatutinoAuto, 3200); /* 🌅 parte del día EN VOZ (1 vez al día, si abres por la mañana) */
+  /* 🔁 v6.03: abrir la app o volver a ella = "ya estoy mirando" -> apaga la alarma insistente
+     del worker (la que repite el sonido cada 30 s). Inofensivo si no hay ninguna activa. */
+  const insistVistoApp=()=>{ try{ fetch(nubeUrl()+"/insist/visto",{method:"POST"}).catch(()=>{}); }catch(_){} };
+  setTimeout(insistVistoApp, 800);
+  document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible") insistVistoApp(); });
   try{ nubeRestaurar(true); }catch(_){}  /* ☁️ si la nube tiene datos más nuevos (otro teléfono), restaura solo */
   /* Al volver a la app (no cerrarla del todo), recupera lo que haya terminado */
   document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible") iaResumePend(); });
