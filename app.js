@@ -1109,7 +1109,22 @@ function diasLabel(v){
    Al programar un aviso eliges a dónde te lleva el toque: una sección de Apex
    o una acción de Roberto. Así una notificación de "revisar la memoria" abre
    la memoria, y una de "parte del día" abre el parte. Cero navegación.
+   v6.05 (Rey): TODOS los chips del chat de Roberto existen como destino — su
+   aviso de backtesting de las 17:30 ahora abre 🎬 Práctica Replay (backtesting
+   guiado), no un chat que no corresponde.
    ============================================================ */
+/* 💬 Preguntas fijas de los chips del chat — UNA sola fuente de verdad: se usan
+   en los chips del chat de Roberto Y como destino de aviso (rob:q:*), para que
+   la notificación abra EXACTAMENTE la misma consulta que su chip. */
+const IA_CHIP_QS = {
+  operativa:"Analiza mi operativa reciente con mis datos: dime con claridad qué estoy haciendo bien, qué estoy haciendo mal y cómo lo corrijo paso a paso.",
+  fuga:"Según mis datos, ¿cuál es mi mayor fuga ahora mismo y qué ejercicio concreto hago esta semana para corregirla?",
+  gatillar:"Explícame con un ejemplo claro cómo confirmar el gatillo (barrido + MSS 15M + FVG) sin entrar antes de tiempo.",
+  alarmas:"Recuérdame qué alarmas de mi indicador CRT Elite debo tener activas en cada par y por qué, y qué debo hacer cada vez que actualizo el indicador.",
+  fondeo:"Voy a comprar 5 cuentas de fondeo para hacer los exámenes. Dame un plan concreto para pasarlos sin romper mis reglas.",
+  firmas:"Compárame las principales empresas de fondeo (reglas, drawdown, precio aprox, payouts, reputación) con pros y contras, y dime cuáles me convienen y por qué, sin olvidar la diversificación. Avísame de lo que deba confirmar por ser un dato que cambia.",
+  compuesto:"Explícame cómo usar el interés compuesto para escalar mis cuentas de fondeo con riesgo 0.5%. Hazme los números paso a paso con un ejemplo realista."
+};
 const IR_DESTINOS = [
   { v:"",              t:"— La app, sin más —" },
   /* Secciones de Apex */
@@ -1139,6 +1154,18 @@ const IR_DESTINOS = [
   { v:"rob:semanal",   t:"🗓️ Roberto · Análisis semanal" },
   { v:"rob:progreso",  t:"📊 Roberto · Mi progreso" },
   { v:"rob:capturas",  t:"📸 Roberto · Estudia mis capturas" },
+  { v:"rob:checkemo",  t:"🧠 Roberto · Check antes de operar" },
+  { v:"rob:escalado",  t:"💰 Roberto · Escalado" },
+  { v:"rob:comparar",  t:"⚖️ Roberto · Comparar pares" },
+  { v:"rob:replay",    t:"🎬 Roberto · Práctica Replay (backtesting guiado)" },
+  /* Chips de pregunta directa — el aviso abre el chat y lanza esa misma consulta */
+  { v:"rob:q:operativa", t:"📊 Roberto · Analiza mi operativa" },
+  { v:"rob:q:fuga",      t:"🩸 Roberto · Mi mayor fuga" },
+  { v:"rob:q:gatillar",  t:"🎯 Roberto · Cómo gatillar" },
+  { v:"rob:q:alarmas",   t:"🔔 Roberto · Mis alarmas" },
+  { v:"rob:q:fondeo",    t:"🏦 Roberto · Plan de fondeo" },
+  { v:"rob:q:firmas",    t:"⚖️ Roberto · Comparar firmas" },
+  { v:"rob:q:compuesto", t:"📈 Roberto · Interés compuesto" },
   { v:"rob:avisos",    t:"📥 Roberto · Avisos recibidos" },
   { v:"rob:chat",      t:"💬 Roberto · Abrir el chat" },
 ];
@@ -1155,6 +1182,8 @@ function irDestino(v){
   if(s.indexOf("rob:")!==0) return;
   const acc=s.slice(4);
   if(typeof abrirIA==="function") abrirIA();
+  /* v6.05: chips de pregunta directa — abre el chat y lanza la misma consulta del chip */
+  if(acc.indexOf("q:")===0){ const q=IA_CHIP_QS[acc.slice(2)]; if(q) setTimeout(()=>iaEnviar(q), 260); return; }
   const F={
     memoria: ()=>verMemoria(),
     gasto:   ()=>verGasto(),
@@ -1166,6 +1195,10 @@ function irDestino(v){
     semanal: ()=>evalSemana(),
     progreso:()=>progresoRoberto(),
     capturas:()=>estudiarCapturas(),
+    checkemo:()=>checkEmocional(),
+    escalado:()=>escaladoRoberto(),
+    comparar:()=>compararPares(),
+    replay:  ()=>practicaReplay(),
     avisos:  ()=>verAvisos(),
     chat:    ()=>{}
   };
@@ -5185,13 +5218,13 @@ function iaInit(){
         <button class="ia-chip" data-act="capturas">📸 Estudia mis capturas</button>
         <button class="ia-chip" data-act="comparar">⚖️ Comparar pares</button>
         <button class="ia-chip" data-act="replay">🎬 Práctica Replay</button>
-        <button class="ia-chip" data-q="Analiza mi operativa reciente con mis datos: dime con claridad qué estoy haciendo bien, qué estoy haciendo mal y cómo lo corrijo paso a paso.">📊 Analiza mi operativa</button>
-        <button class="ia-chip" data-q="Según mis datos, ¿cuál es mi mayor fuga ahora mismo y qué ejercicio concreto hago esta semana para corregirla?">🩸 Mi mayor fuga</button>
-        <button class="ia-chip" data-q="Explícame con un ejemplo claro cómo confirmar el gatillo (barrido + MSS 15M + FVG) sin entrar antes de tiempo.">🎯 Cómo gatillar</button>
-        <button class="ia-chip" data-q="Recuérdame qué alarmas de mi indicador CRT Elite debo tener activas en cada par y por qué, y qué debo hacer cada vez que actualizo el indicador.">🔔 Mis alarmas</button>
-        <button class="ia-chip" data-q="Voy a comprar 5 cuentas de fondeo para hacer los exámenes. Dame un plan concreto para pasarlos sin romper mis reglas.">🏦 Plan de fondeo</button>
-        <button class="ia-chip" data-q="Compárame las principales empresas de fondeo (reglas, drawdown, precio aprox, payouts, reputación) con pros y contras, y dime cuáles me convienen y por qué, sin olvidar la diversificación. Avísame de lo que deba confirmar por ser un dato que cambia.">⚖️ Comparar firmas</button>
-        <button class="ia-chip" data-q="Explícame cómo usar el interés compuesto para escalar mis cuentas de fondeo con riesgo 0.5%. Hazme los números paso a paso con un ejemplo realista.">📈 Interés compuesto</button>
+        <button class="ia-chip" data-q="${IA_CHIP_QS.operativa}">📊 Analiza mi operativa</button>
+        <button class="ia-chip" data-q="${IA_CHIP_QS.fuga}">🩸 Mi mayor fuga</button>
+        <button class="ia-chip" data-q="${IA_CHIP_QS.gatillar}">🎯 Cómo gatillar</button>
+        <button class="ia-chip" data-q="${IA_CHIP_QS.alarmas}">🔔 Mis alarmas</button>
+        <button class="ia-chip" data-q="${IA_CHIP_QS.fondeo}">🏦 Plan de fondeo</button>
+        <button class="ia-chip" data-q="${IA_CHIP_QS.firmas}">⚖️ Comparar firmas</button>
+        <button class="ia-chip" data-q="${IA_CHIP_QS.compuesto}">📈 Interés compuesto</button>
       </div>
       <div class="ia-att" id="iaAtt" style="display:none"></div>
       <div class="ia-input">
@@ -5770,13 +5803,14 @@ const IA_TOOLS = [
       msg:{type:"string",description:"Texto del recordatorio"},
       dias:{type:"array",items:{type:"string",enum:["lun","mar","mie","jue","vie","sab","dom"]},description:"Días de la semana en que suena. Elige LOS QUE HAGAN FALTA (uno, varios o todos). Ej: ['lun'] solo lunes; ['lun','mie','vie']; ['sab','dom'] fin de semana; los 7 = todos los días."},
       tipo:{type:"string",enum:["normal","fuerte"],description:"fuerte = se queda en pantalla con vibración fuerte"},
-      destino:{type:"string", enum:["","tab:hoy","tab:arranque","tab:checklist","tab:gatillo","tab:riesgo","tab:diario","tab:analisis","tab:galeria","tab:cuentas","tab:noticias","tab:almanaque","tab:reglas","tab:conf","tab:rutina","tab:plan","rob:memoria","rob:plan","rob:parte","rob:gonogo","rob:diario","rob:semanal","rob:progreso","rob:capturas","rob:avisos","rob:chat"], description:"A DÓNDE lleva el toque de la notificación. Elige SIEMPRE el que corresponda al contenido del aviso: si el aviso es de revisar tu memoria usa 'rob:memoria', si es de registrar el trade usa 'tab:diario', si es de mirar el día usa 'tab:hoy'. Déjalo vacío solo si no encaja en ninguno."},
+      destino:{type:"string", enum:IR_DESTINOS.map(d=>d.v), description:"A DÓNDE lleva el toque de la notificación. TODOS los chips del chat existen como destino — elige SIEMPRE el que corresponda EXACTAMENTE al contenido del aviso: backtesting/práctica → 'rob:replay' (Práctica Replay = backtesting guiado); check emocional → 'rob:checkemo'; escalado → 'rob:escalado'; comparar pares → 'rob:comparar'; revisar memoria → 'rob:memoria'; registrar trade → 'tab:diario'; mirar el día → 'tab:hoy'; los 'rob:q:*' abren el chat lanzando esa consulta (operativa, fuga, gatillar, alarmas, fondeo, firmas, interés compuesto). NUNCA pongas un destino que no corresponda al aviso. Déjalo vacío solo si de verdad no encaja en ninguno."},
     }, required:["hora","tit","msg","dias"] } },
   { name:"editar_aviso", description:"Edita un aviso existente, identificándolo por su hora ACTUAL. Para APAGARLO (sin borrarlo) pasa on:false; para reactivarlo, on:true.",
     input_schema:{ type:"object", properties:{
       hora_actual:{type:"string",description:"Hora actual (HH:MM) del aviso a editar"},
       on:{type:"boolean",description:"true = activar el aviso; false = apagarlo (queda en la lista pero no suena)"},
-      hora:{type:"string"}, tit:{type:"string"}, msg:{type:"string"}, dias:{type:"array",items:{type:"string",enum:["lun","mar","mie","jue","vie","sab","dom"]},description:"Nuevos días (los que hagan falta)"}, tipo:{type:"string",enum:["normal","fuerte"]}
+      hora:{type:"string"}, tit:{type:"string"}, msg:{type:"string"}, dias:{type:"array",items:{type:"string",enum:["lun","mar","mie","jue","vie","sab","dom"]},description:"Nuevos días (los que hagan falta)"}, tipo:{type:"string",enum:["normal","fuerte"]},
+      destino:{type:"string",enum:IR_DESTINOS.map(d=>d.v),description:"Nuevo destino del toque de la notificación (mismos valores que en crear_aviso). Úsalo para CORREGIR un aviso que abría en el lugar equivocado."}
     }, required:["hora_actual"] } },
   { name:"borrar_aviso", description:"Borra un aviso por su hora (y opcionalmente parte del título).",
     input_schema:{ type:"object", properties:{ hora:{type:"string"}, tit:{type:"string"} }, required:["hora"] } },
@@ -5925,7 +5959,7 @@ function describeTool(name, i){
   i=i||{};
   if(name==="crear_aviso") return "⏰ Crear aviso — "+(i.hora||"?")+" · "+(i.tit||"")+"\n"+(i.msg||"")+"\n("+diasLabel(i.dias||"LV")+" · "+(i.tipo||"normal")+")"+(i.destino&&irDestinoLabel(i.destino)?("\nAl tocarla abre: "+irDestinoLabel(i.destino)):"");
   if(name==="editar_aviso"){ const onTxt = i.on===false?"→ APAGAR (no sonará)":i.on===true?"→ ACTIVAR":null;
-    return "✏️ Editar el aviso de las "+(i.hora_actual||"?")+"\n"+[onTxt,i.hora&&("→ hora "+i.hora),i.tit&&("→ título "+i.tit),i.msg&&("→ mensaje “"+i.msg+"”"),i.dias&&("→ días "+i.dias),i.tipo&&("→ tipo "+i.tipo)].filter(Boolean).join("\n"); }
+    return "✏️ Editar el aviso de las "+(i.hora_actual||"?")+"\n"+[onTxt,i.hora&&("→ hora "+i.hora),i.tit&&("→ título "+i.tit),i.msg&&("→ mensaje “"+i.msg+"”"),i.dias&&("→ días "+i.dias),i.tipo&&("→ tipo "+i.tipo),i.destino&&irDestinoLabel(i.destino)&&("→ al tocarla abre "+irDestinoLabel(i.destino))].filter(Boolean).join("\n"); }
   if(name==="borrar_aviso") return "🗑️ Borrar el aviso de las "+(i.hora||"?")+(i.tit?(" ("+i.tit+")"):"");
   if(name==="set_pares") return "🎯 Cambiar tus pares a: "+((i.pares||[]).join(", "));
   if(name==="registrar_trade") return "📒 Registrar trade — "+(i.par||"?")+" "+(i.dir||"")+" · "+(i.res||(parseFloat(i.r)>0?"Ganado":parseFloat(i.r)<0?"Perdido":"BE"))+" "+(i.r)+"R\nSetup "+(i.setup||"?")+" · ventana "+(i.ventana||"?")+" · entrada '"+(i.momento||"?")+"'"+(i.plan==="No"?" · PLAN ROTO":"")+(i.nota?("\nNota: "+i.nota):"");
@@ -5996,9 +6030,10 @@ async function ejecutarTool(name, i){
       if(i.on!=null && i.on!==""){ r.on = (i.on===true||i.on==="true"||i.on==="on"||i.on===1||i.on==="1"); }
       ["hora","tit","msg","tipo"].forEach(k=>{ if(i[k]!=null && i[k]!=="") r[k]=i[k]; });
       if(i.dias!=null && i.dias!=="") r.dias=parseDias(i.dias);
+      if(i.destino!=null && i.destino!=="" && IR_DESTINOS.some(d=>d.v===i.destino)) r.ir=i.destino;   /* v6.05: corregir el destino */
       guardarReminders(); syncReminders(); if(TAB==="avisos") renderAvisos();
       const estado = i.on===false||i.on==="false"?" (APAGADO)":i.on===true||i.on==="true"?" (ACTIVADO)":"";
-      return {ok:true,msg:"Aviso actualizado: "+r.hora+" · "+r.tit+estado};
+      return {ok:true,msg:"Aviso actualizado: "+r.hora+" · "+r.tit+estado+(i.destino&&irDestinoLabel(i.destino)?(" → abre "+irDestinoLabel(i.destino)):"")};
     }
     if(name==="borrar_aviso"){
       const normH=s=>{ s=String(s||"").trim(); const m=s.match(/^(\d{1,2}):(\d{2})$/); return m?(m[1].padStart(2,"0")+":"+m[2]):s; };
