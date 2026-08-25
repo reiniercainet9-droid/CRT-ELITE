@@ -29,7 +29,8 @@ const K = {
   shots:"crtelite_shots_v1",
   plansem:"crtelite_plansem_v1",
   plan:"crtelite_plan_v1",
-  vered:"crtelite_vered_v1"
+  vered:"crtelite_vered_v1",
+  ejec:"crtelite_ejectrades_v1"
 };
 const load = (k,d)=>{ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):d; }catch(e){ return d; } };
 const save = (k,v)=>{ try{ localStorage.setItem(k,JSON.stringify(v)); nubeMarcar(); }catch(e){ toast("No se pudo guardar"); } };
@@ -40,7 +41,7 @@ const save = (k,v)=>{ try{ localStorage.setItem(k,JSON.stringify(v)); nubeMarcar
    En otro móvil, con el mismo código, restaura todo intacto (nada se pierde).
    No usa claves del sistema (el repo es público): el código ES la llave.
    ============================================================ */
-const NUBE_KEYS = ["crtelite_trades_v2","crtelite_cuentas_v3","crtelite_reminders_v3","crtelite_chk_v2","crtelite_conf_v2","crtelite_reglas_v2","crtelite_balance_v2","crtelite_ctx_v3","crtelite_estrategias_v3","crtelite_estrdefs_v1","crtelite_pares_v3","crtelite_calpares_v3","crtelite_notif_v3","crtelite_vigila_v3","crtelite_fabpos_v3","crtelite_iavoz_v3","crtelite_shots_v1","crtelite_plansem_v1","crtelite_iaconvs_v3","crtelite_iaact_v3"];
+const NUBE_KEYS = ["crtelite_trades_v2","crtelite_cuentas_v3","crtelite_reminders_v3","crtelite_chk_v2","crtelite_conf_v2","crtelite_reglas_v2","crtelite_balance_v2","crtelite_ctx_v3","crtelite_estrategias_v3","crtelite_estrdefs_v1","crtelite_pares_v3","crtelite_calpares_v3","crtelite_notif_v3","crtelite_vigila_v3","crtelite_fabpos_v3","crtelite_iavoz_v3","crtelite_shots_v1","crtelite_plansem_v1","crtelite_iaconvs_v3","crtelite_iaact_v3","crtelite_ejectrades_v1"];
 const NUBE_CODE_KEY="crtelite_nubecode_v1", NUBE_TS_KEY="crtelite_datats_v1", NUBE_LAST_KEY="crtelite_nubelast_v1";
 let NUBE_RESTAURANDO=false, _nubeTimer=null;
 function nubeCode(){ try{ return (localStorage.getItem(NUBE_CODE_KEY)||"").trim(); }catch(_){ return ""; } }
@@ -543,6 +544,7 @@ async function verEjecutor(){
     if(!d || !d.ok) throw 0;
     const live=d.live||{};
     const lg=d.log||[];
+    ejecArchivar(lg);   /* 📚 el chip también archiva — mismo archivo que la sección */
     const cfgV=d.cfg||{};
     txt="## 🤖 Ejecutor — tu bot en MT5 (fase DEMO)\n\n"+
       "**Estado:** "+(d.on?"🟢 ENCENDIDO (vigilando — solo entra cuando TU indicador confirme una señal que pase tus reglas)":"🔴 APAGADO (solo observa)")+"\n"+
@@ -595,6 +597,55 @@ function tarjetaEjecutor(d){
   card.querySelector(".ia-ejec-save").onclick=async()=>{ const body=ejecLeerForm(card); if(body) await ejecGuardarCfg(body); };
   cont.scrollTop=cont.scrollHeight;
 }
+/* ── 📚 ARCHIVO PERMANENTE del Ejecutor (v6.10) — la nube solo guarda los últimos
+   ~40 eventos, así que la app ARCHIVA aquí cada operación para SIEMPRE (localStorage
+   + respaldo ☁️ con NUBE_KEYS). De este archivo salen el historial por semanas/días,
+   las capturas 📸 de cada entrada y la evaluación 🧠 con Roberto. Separado 100% del
+   Diario de Rey: sus estadísticas personales no se tocan. ── */
+function ejecArchivar(lg){
+  try{
+    const a=load(K.ejec,{trades:{}}); if(!a.trades) a.trades={};
+    let cambio=false;
+    (lg||[]).forEach(x=>{
+      if(x.ticket==null) return;
+      const k=String(x.ticket);
+      if(x.tipo==="entrada"){
+        const t=a.trades[k]||{};
+        if(!t.tsIn){ Object.assign(t,{ticket:x.ticket,sym:x.sym,dir:x.dir,lote:x.lote,entrada:(x.precio!=null?x.precio:x.entrada),sl:x.sl,tp:x.tp,riesgo:x.riesgo,grado:x.grado,tsIn:x.ts,shot:x.shot||("ejec"+k)}); a.trades[k]=t; cambio=true; }
+      }else if(x.tipo==="salida"){
+        const t=a.trades[k]||{ticket:x.ticket,shot:"ejec"+k};
+        if(!t.tsOut){ Object.assign(t,{sym:x.sym||t.sym,dir:x.dir||t.dir,lote:(x.lote!=null?x.lote:t.lote),entrada:(x.entrada!=null?x.entrada:t.entrada),sl:(x.sl!=null?x.sl:t.sl),tp:(x.tp!=null?x.tp:t.tp),salida:x.salida,pl:x.pl,r:x.r,motivo:x.motivo,riesgo:(x.riesgo!=null?x.riesgo:t.riesgo),grado:x.grado||t.grado,lectura:x.lectura||t.lectura,tsOut:x.ts}); a.trades[k]=t; cambio=true; }
+        else if(x.lectura && !t.lectura){ t.lectura=x.lectura; cambio=true; }
+      }
+    });
+    if(cambio) save(K.ejec,a);
+    return a;
+  }catch(_){ return {trades:{}}; }
+}
+function ejecCerradas(){
+  const a=load(K.ejec,{trades:{}});
+  return Object.values(a.trades||{}).filter(t=>t.tsOut).sort((x,y)=>(y.tsOut||0)-(x.tsOut||0));
+}
+/* 📸 abre la captura automática de una operación (la misma que está en la Galería) */
+async function ejecVerShot(id){
+  if(!id){ toast("Esa operación no tiene captura"); return; }
+  toast("📸 Cargando captura…");
+  try{
+    const r=await fetch(nubeUrl()+"/shot/get?id="+encodeURIComponent(id));
+    const d=await r.json();
+    if(d&&d.img) abrirModal('<img src="'+d.img+'" style="max-width:100%;border-radius:8px">',[{t:"Cerrar",cls:"gold",fn:cerrarModal}]);
+    else toast("No encontré la captura (quizá aún no se tomó o se limpió de la nube)");
+  }catch(_){ toast("⚠️ Sin internet"); }
+}
+/* 🧠 manda el historial del Ejecutor al chat para evaluarlo CON Roberto */
+function ejecEvaluarRoberto(){
+  const ts=ejecCerradas().slice(0,30);
+  if(!ts.length){ toast("Aún no hay operaciones cerradas del Ejecutor"); return; }
+  const lineas=ts.map(t=>ejecFmtTs(t.tsOut)+" · "+(t.dir==="buy"?"COMPRA":t.dir==="sell"?"VENTA":t.dir)+" "+(t.sym||"")+" lote "+t.lote+" → "+(t.motivo||"")+" $"+t.pl+(t.r!=null?" ("+t.r+"R)":"")+(t.grado?" · señal "+t.grado:"")).join("\n");
+  if(typeof abrirIA==="function") abrirIA();
+  iaTemaChat("🤖 Evaluación del Ejecutor");
+  setTimeout(()=>iaEnviar("Evalúa las operaciones de MI EJECUTOR (mi bot de MT5 en demo, que ejecuta las señales A+ de mi indicador CRT Elite con mis reglas — NO las mías manuales). Sus últimas operaciones cerradas:\n"+lineas+"\n\nDame tu evaluación de mentor: qué patrón ves, si las reglas están funcionando, qué ajustarías de su configuración (riesgo, horario, grado mínimo, pares) y qué observar la próxima semana. Si tienes mis datos manuales, compáranos."),300);
+}
 /* ── 🤖 LA SECCIÓN EJECUTOR (v6.09) — pestaña propia con TODO el control.
    Lee y guarda EXACTAMENTE en el mismo sitio que el chip del chat (la nube). ── */
 function viewEjecutor(){
@@ -613,8 +664,52 @@ async function renderEjecutor(){
   }
   const cfg=d.cfg||{}, live=d.live||{}, lg=d.log||[];
   const poss=live.posiciones||[];
-  const ops=lg.filter(x=>x.tipo==="salida");
+  ejecArchivar(lg);                       /* 📚 archiva lo nuevo ANTES de pintar */
+  const hist=ejecCerradas();
   const rech=lg.filter(x=>x.tipo==="rechazo").slice(0,6);
+  /* historial agrupado por SEMANAS y DÍAS, con totales */
+  const nWin=hist.filter(t=>(t.pl||0)>=0).length;
+  const sumPL=hist.reduce((s,t)=>s+(t.pl||0),0);
+  const conR=hist.filter(t=>t.r!=null);
+  const sumR=conR.reduce((s,t)=>s+t.r,0);
+  /* 📆 CALENDARIO COMPLETO (v6.11, Rey: "esto es a LARGO PLAZO"): AÑOS → MESES → SEMANAS
+     → DÍAS, con estadísticas en cada nivel. Nada caduca solo: se conserva TODO hasta que
+     Rey (o Roberto con su aprobación) borre lo antiguo. */
+  const semIni=(ts)=>{ const x=new Date(ts); const off=(x.getDay()+6)%7; return new Date(x.getFullYear(),x.getMonth(),x.getDate()-off).getTime(); };
+  const MESES_N=["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+  const stx=(ts)=>{ const w=ts.filter(t=>(t.pl||0)>=0).length, pl=ts.reduce((s,t)=>s+(t.pl||0),0); const rs=ts.filter(t=>t.r!=null); const r=rs.reduce((s,t)=>s+t.r,0);
+    return " — "+ts.length+" op · "+w+" ✓ ("+Math.round(w/ts.length*100)+"%) · "+(pl>=0?"🟢 +$":"🔴 −$")+Math.abs(pl).toFixed(2)+(rs.length?(" · "+(r>=0?"+":"")+r.toFixed(2)+"R"):""); };
+  const semanasHtml=(lista)=>{
+    const sems={};
+    lista.forEach(t=>{ const k=semIni(t.tsOut); (sems[k]=sems[k]||[]).push(t); });
+    return Object.keys(sems).map(Number).sort((a,b)=>b-a).map(sk=>{
+      const ts=sems[sk];
+      const dias={};
+      ts.forEach(t=>{ const dk=new Date(t.tsOut).toLocaleDateString("es",{weekday:"long",day:"2-digit",month:"2-digit"}); (dias[dk]=dias[dk]||[]).push(t); });
+      return '<div style="margin-top:10px;padding:8px;border-radius:10px;background:rgba(255,255,255,.04)">'+
+        '<div style="font-weight:700">🗓️ Semana del '+esc(new Date(sk).toLocaleDateString("es",{day:"2-digit",month:"2-digit"}))+esc(stx(ts))+'</div>'+
+        Object.keys(dias).map(dk=>'<div style="margin-top:6px"><div style="opacity:.85;font-size:.88em">📅 '+esc(dk)+'</div>'+
+          dias[dk].map(t=>'<div style="margin-top:5px;border-top:1px solid rgba(255,255,255,.07);padding-top:5px;font-size:.92em">'+
+            esc(new Date(t.tsOut).toTimeString().slice(0,5))+' · <b>'+esc((t.dir==="buy"?"COMPRA":t.dir==="sell"?"VENTA":String(t.dir||""))+" "+(t.sym||""))+'</b> lote '+t.lote+' → '+esc(t.motivo||"")+' '+((t.pl||0)>=0?"🟢 +$":"🔴 −$")+Math.abs(t.pl||0).toFixed(2)+(t.r!=null?" ("+t.r+"R)":"")+(t.grado?' · '+esc(String(t.grado)):"")+
+            ' <button class="btn ej-shot" data-id="'+esc(String(t.shot||""))+'" style="padding:2px 8px;font-size:.85em">📸</button>'+
+            (t.lectura?('<div style="opacity:.9;margin-top:4px">🎓 <i>'+esc(t.lectura)+'</i></div>'):"")+
+          '</div>').join("")+'</div>').join("")+
+      '</div>';
+    }).join("");
+  };
+  const porAno={};
+  hist.forEach(t=>{ const d0=new Date(t.tsOut); const y=d0.getFullYear(), m=d0.getMonth(); porAno[y]=porAno[y]||{}; (porAno[y][m]=porAno[y][m]||[]).push(t); });
+  const ahoraD=new Date();
+  const histHtml=Object.keys(porAno).map(Number).sort((a,b)=>b-a).map(y=>{
+    const meses=porAno[y];
+    const todasAno=Object.values(meses).flat();
+    return '<div style="margin-top:14px;font-weight:800;font-size:1.05em">📆 '+y+esc(stx(todasAno))+'</div>'+
+      Object.keys(meses).map(Number).sort((a,b)=>b-a).map(m=>{
+        const ts=meses[m];
+        const abierto=(y===ahoraD.getFullYear() && m===ahoraD.getMonth());
+        return '<details'+(abierto?" open":"")+' style="margin-top:8px"><summary style="cursor:pointer;font-weight:700">📂 '+esc(MESES_N[m])+' '+y+esc(stx(ts))+' <button class="btn ej-delmes" data-y="'+y+'" data-m="'+m+'" title="Borrar este mes del archivo" style="padding:1px 7px;font-size:.8em">🗑️</button></summary>'+semanasHtml(ts)+'</details>';
+      }).join("");
+  }).join("");
   cont.innerHTML=
     /* estado + botón grande */
     '<div class="card">'+
@@ -643,12 +738,13 @@ async function renderEjecutor(){
     '<div class="card"><b>⚙️ Tus reglas</b> <span style="opacity:.8;font-size:.85em">(las mismas del chip 🤖 del chat — un solo lugar en la nube)</span>'+
       '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px" id="ejForm">'+ejecFormHTML(cfg)+'</div>'+
       '<div style="margin-top:8px"><button class="btn gold" id="ejSave" style="width:100%">💾 Guardar mis reglas</button></div></div>'+
-    /* diario del ejecutor */
-    '<div class="card"><b>📓 Diario del Ejecutor</b>'+
-      (ops.length?ops.slice(0,10).map(x=>'<div style="margin-top:8px;border-top:1px solid rgba(255,255,255,.08);padding-top:6px;font-size:.92em">'+
-        esc(ejecFmtTs(x.ts))+' · <b>'+esc((x.dir==="buy"?"COMPRA":x.dir==="sell"?"VENTA":String(x.dir||""))+" "+(x.sym||""))+'</b> → '+esc(x.motivo||"")+' '+((x.pl||0)>=0?"🟢 +$":"🔴 −$")+Math.abs(x.pl||0).toFixed(2)+(x.r!=null?" ("+x.r+"R)":"")+
-        (x.lectura?('<div style="opacity:.9;margin-top:4px">🎓 <i>'+esc(x.lectura)+'</i></div>'):"")+'</div>').join("")
-      :'<div style="opacity:.8;margin-top:6px;font-size:.92em">Todavía no ha cerrado ninguna operación. Sus capturas de cada entrada van solas a la 🖼️ Galería.</div>')+'</div>'+
+    /* 📓 diario del ejecutor — archivo COMPLETO, por semanas y días, separado del de Rey */
+    '<div class="card"><b>📓 Diario del Ejecutor</b> <span style="opacity:.8;font-size:.85em">(archivo completo, separado de TU Diario — se respalda en tu nube ☁️)</span>'+
+      (hist.length?(
+        '<div style="margin-top:8px;font-size:.95em"><b>Total:</b> '+hist.length+' operación(es) · '+nWin+' ganada(s) ('+Math.round(nWin/hist.length*100)+'%) · '+(sumPL>=0?"🟢 +$":"🔴 −$")+Math.abs(sumPL).toFixed(2)+(conR.length?(' · '+(sumR>=0?"+":"")+sumR.toFixed(2)+'R acumulado'):"")+'</div>'+
+        '<div style="margin-top:8px"><button class="btn gold" id="ejEval" style="width:100%">🧠 Evaluar estas operaciones con Roberto</button></div>'+
+        histHtml)
+      :'<div style="opacity:.8;margin-top:6px;font-size:.92em">Todavía no ha cerrado ninguna operación. Cuando opere, aquí verás TODO su historial organizado por semanas y días, con su captura 📸 y la lección 🎓 de cada una — y el botón para evaluarlo con Roberto.</div>')+'</div>'+
     /* señales descartadas / vetadas */
     (rech.length?('<div class="card"><b>🚫 Señales que descartó o vetó</b>'+
       rech.map(x=>'<div style="margin-top:6px;font-size:.9em;opacity:.92">'+esc(ejecFmtTs(x.ts))+' · '+esc(x.sym||"")+': '+esc(x.motivo||"")+'</div>').join("")+'</div>'):"");
@@ -658,6 +754,21 @@ async function renderEjecutor(){
   $("#ejSave").onclick=async()=>{ const body=ejecLeerForm($("#ejForm")); if(body && await ejecGuardarCfg(body)) renderEjecutor(); };
   cont.querySelectorAll(".ej-cerrar").forEach(b=>{ b.onclick=()=>ejecCmdCerrar(b.dataset.tk); });
   const ctd=$("#ejCerrarTodo"); if(ctd) ctd.onclick=()=>ejecCmdCerrar(null);
+  const bev=$("#ejEval"); if(bev) bev.onclick=ejecEvaluarRoberto;
+  cont.querySelectorAll(".ej-shot").forEach(b=>{ b.onclick=()=>ejecVerShot(b.dataset.id); });
+  /* 🗑️ borrar un MES del archivo (decisión de Rey, con confirmación; Roberto también puede
+     con la herramienta limpiar_diario_ejecutor, que siempre pasa por la tarjeta de aprobación) */
+  cont.querySelectorAll(".ej-delmes").forEach(b=>{ b.onclick=(e)=>{
+    e.preventDefault(); e.stopPropagation();
+    const y=parseInt(b.dataset.y,10), m=parseInt(b.dataset.m,10);
+    const a=load(K.ejec,{trades:{}});
+    const keys=Object.keys(a.trades||{}).filter(k=>{ const t=a.trades[k]; const ts=t.tsOut||t.tsIn||0; const d0=new Date(ts); return t.tsOut && d0.getFullYear()===y && d0.getMonth()===m; });
+    if(!keys.length){ toast("Ese mes no tiene operaciones"); return; }
+    if(!confirm("🗑️ ¿Borrar del archivo del Ejecutor las "+keys.length+" operación(es) de "+["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"][m]+" "+y+"?\n\nEs definitivo (tu Diario personal NO se toca).")) return;
+    keys.forEach(k=>delete a.trades[k]); save(K.ejec,a);
+    toast("🗑️ Mes borrado del archivo del Ejecutor");
+    renderEjecutor();
+  }; });
 }
 
 /* 🧭 MI PLAN — Roberto le dice por dónde va y qué le toca HOY. */
@@ -6069,6 +6180,8 @@ const IA_TOOLS = [
     input_schema:{ type:"object", properties:{ par:{type:"string",description:"Par a capturar, ej. EUR/USD (di el que Rey esté operando)"} }, required:["par"] } },
   { name:"limpiar_capturas", description:"Borra capturas SUELTAS (las que no están dentro de un trade) para liberar espacio. Filtra por par y/o fecha; sin filtro borra TODAS las sueltas. Las capturas ligadas a un trade NO se tocan. Confírmalo siempre.",
     input_schema:{ type:"object", properties:{ par:{type:"string"}, fecha:{type:"string",description:"YYYY-MM-DD"} }, required:[] } },
+  { name:"limpiar_diario_ejecutor", description:"Borra del ARCHIVO del Ejecutor (el bot de MT5, pestaña 🤖) operaciones ANTIGUAS que Rey ya no quiera almacenadas. ÚSALO SOLO cuando Rey lo pida explícitamente: su archivo es de LARGO PLAZO (días/semanas/meses/años) y por defecto se conserva TODO. JAMÁS toca el Diario personal de Rey. Confírmalo siempre.",
+    input_schema:{ type:"object", properties:{ antes_de:{type:"string",description:"Borra todo lo ANTERIOR a esta fecha (YYYY-MM-DD)"}, mes:{type:"string",description:"O borra un mes completo (YYYY-MM)"} }, required:[] } },
   { name:"guardar_plan_semanal", description:"Guarda/actualiza el PLAN DE LA SEMANA de Rey para RECORDARLO toda la semana y detectar si se invalida. Úsalo al terminar el análisis semanal, o cuando el plan CAMBIE por una ruptura del nivel de invalidación o una noticia fuerte. Confírmalo siempre.",
     input_schema:{ type:"object", properties:{
       bias:{type:"string",description:"COMPRAS / VENTAS / RANGO-ESPERAR"},
@@ -6172,6 +6285,7 @@ function describeTool(name, i){
   if(name==="cerrar_entrada"){ const rr=(i.r!=null&&i.r!=="")?(i.r+"R"):(i.precio_cierre!=null?("cierre en "+i.precio_cierre+" → calculo el R"):"?"); return "🏁 Cerrar entrada "+(i.par||"(la más reciente)")+" → "+rr+(i.res?(" · "+i.res):"")+(i.nota?("\nNota: "+i.nota):""); }
   if(name==="capturar_grafico") return "📸 Capturar el gráfico de "+(i.par||"(par actual)");
   if(name==="limpiar_capturas") return "🧹 Limpiar capturas sueltas"+(i.par?(" de "+i.par):"")+(i.fecha?(" del "+i.fecha):" (todas las sueltas)");
+  if(name==="limpiar_diario_ejecutor") return "🗑️ Limpiar archivo del Ejecutor"+(i.mes?(" — mes "+i.mes):(i.antes_de?(" — todo lo anterior al "+i.antes_de):""));
   if(name==="guardar_plan_semanal") return "🗓️ Guardar PLAN de la semana"+(i.par?(" ("+i.par+")"):"")+"\nBias: "+(i.bias||"?")+(i.zona_principal?("\nZona: "+i.zona_principal):"")+(i.nivel_invalidacion?("\n⚠️ Invalida en: "+i.nivel_invalidacion):"")+(i.mejor_dia?("\nMejor día: "+i.mejor_dia):"");
   if(name==="borrar_trade") return "🗑️ Borrar del Diario el trade de "+(i.par||"?")+(i.fecha?(" del "+i.fecha):" (el más reciente)");
   if(name==="editar_trade"){ const c=["r","res","setup","momento","bias","ventana","nconf","zona","entrada","sl","tp","nota"].filter(k=>i[k]!=null&&i[k]!=="").map(k=>k+"→"+i[k]).join(", "); return "✏️ Editar el trade de "+(i.par||"?")+(i.fecha?(" del "+i.fecha):" (el más reciente)")+"\n"+(c||"(sin cambios)"); }
@@ -6466,6 +6580,22 @@ async function ejecutarTool(name, i){
       nubeShotDel(borrar.map(s=>s.id));
       if(TAB==="galeria") renderGaleria();
       return {ok:true,msg:"Borré "+borrar.length+" captura(s) suelta(s)"+(i.par?(" de "+i.par):"")+"."};
+    }
+    if(name==="limpiar_diario_ejecutor"){
+      const a=load(K.ejec,{trades:{}});
+      const lim=i.antes_de?Date.parse(i.antes_de):null;
+      const mes=/^\d{4}-\d{2}$/.test(String(i.mes||""))?String(i.mes):null;
+      if(!lim && !mes) return {ok:false,msg:"Dime qué borrar: antes_de (YYYY-MM-DD) o mes (YYYY-MM)"};
+      const keys=Object.keys(a.trades||{}).filter(k=>{
+        const t=a.trades[k]; const ts=t.tsOut||t.tsIn||0; if(!ts) return false;
+        if(lim) return ts<lim;
+        const d0=new Date(ts);
+        return (d0.getFullYear()+"-"+String(d0.getMonth()+1).padStart(2,"0"))===mes;
+      });
+      if(!keys.length) return {ok:false,msg:"No hay operaciones del Ejecutor en ese periodo"};
+      keys.forEach(k=>delete a.trades[k]); save(K.ejec,a);
+      if(TAB==="ejecutor") renderEjecutor();
+      return {ok:true,msg:"Borré "+keys.length+" operación(es) antigua(s) del archivo del Ejecutor"+(mes?(" ("+mes+")"):(" (anteriores al "+i.antes_de+")"))+". Tu Diario personal quedó intacto."};
     }
     if(name==="crear_cuenta"){
       if(!i.alias && !i.firma) return {ok:false,msg:"Falta el alias o la firma"};
