@@ -1430,7 +1430,8 @@ const IA_CHIP_QS = {
   alarmas:"Recuérdame qué alarmas de mi indicador CRT Elite debo tener activas en cada par y por qué, y qué debo hacer cada vez que actualizo el indicador.",
   fondeo:"Voy a comprar 5 cuentas de fondeo para hacer los exámenes. Dame un plan concreto para pasarlos sin romper mis reglas.",
   firmas:"Compárame las principales empresas de fondeo (reglas, drawdown, precio aprox, payouts, reputación) con pros y contras, y dime cuáles me convienen y por qué, sin olvidar la diversificación. Avísame de lo que deba confirmar por ser un dato que cambia.",
-  compuesto:"Explícame cómo usar el interés compuesto para escalar mis cuentas de fondeo con riesgo 0.5%. Hazme los números paso a paso con un ejemplo realista."
+  compuesto:"Explícame cómo usar el interés compuesto para escalar mis cuentas de fondeo con riesgo 0.5%. Hazme los números paso a paso con un ejemplo realista.",
+  mejoras:"Haz una REVISIÓN COMPLETA DEL SISTEMA con todos los datos que tienes: mis operaciones del Diario, las del Ejecutor (y sus señales vetadas o descartadas), tu memoria y lo que sabes del indicador CRT Elite. Dime con honestidad: (1) qué está funcionando BIEN y no hay que tocar; (2) qué está fallando o rindiendo poco; (3) tu lista de MEJORAS concretas, priorizada — de mi estrategia, del indicador, de las reglas del Ejecutor o de cualquier parte de Apex. Si alguna mejora necesita cambio de código (indicador o app), dímelo claro y separado para que yo lo pida."
 };
 const IR_DESTINOS = [
   { v:"",              t:"— La app, sin más —" },
@@ -1475,6 +1476,7 @@ const IR_DESTINOS = [
   { v:"rob:q:fondeo",    t:"🏦 Roberto · Plan de fondeo" },
   { v:"rob:q:firmas",    t:"⚖️ Roberto · Comparar firmas" },
   { v:"rob:q:compuesto", t:"📈 Roberto · Interés compuesto" },
+  { v:"rob:q:mejoras",   t:"💡 Roberto · Mejoras del sistema" },
   { v:"rob:avisos",    t:"📥 Roberto · Avisos recibidos" },
   { v:"rob:chat",      t:"💬 Roberto · Abrir el chat" },
 ];
@@ -5540,6 +5542,7 @@ function iaInit(){
         <button class="ia-chip" data-q="${IA_CHIP_QS.fondeo}">🏦 Plan de fondeo</button>
         <button class="ia-chip" data-q="${IA_CHIP_QS.firmas}">⚖️ Comparar firmas</button>
         <button class="ia-chip" data-q="${IA_CHIP_QS.compuesto}">📈 Interés compuesto</button>
+        <button class="ia-chip" data-q="${IA_CHIP_QS.mejoras}">💡 Mejoras del sistema</button>
       </div>
       <div class="ia-att" id="iaAtt" style="display:none"></div>
       <div class="ia-input">
