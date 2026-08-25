@@ -464,6 +464,120 @@ function tarjetaRecarga(rec){
   cont.scrollTop=cont.scrollHeight;
 }
 
+/* ============================================================
+   🤖 EJECUTOR APEX (v6.06) — el panel de control del bot de MT5
+   Rey manda SIEMPRE: botón 🟢 ENCENDER / 🔴 DETENER, toda la config
+   (pares, riesgo, límites, grado, horario con tz, lote máx), cierre de
+   posiciones desde el teléfono y el Diario del Ejecutor (sus operaciones
+   NO se mezclan con las de Rey: Roberto evalúa a REY con las de Rey).
+   Necesita el worker v5.75 y el programa "Arrancar Ejecutor Apex" en la PC.
+   ============================================================ */
+function ejecFmtTs(ts){ const d=new Date(ts||0); return d.toLocaleDateString("es",{day:"2-digit",month:"2-digit"})+" "+d.toTimeString().slice(0,5); }
+async function verEjecutor(){
+  if(typeof abrirIA==="function") abrirIA();
+  iaTemaChat("🤖 Ejecutor");
+  const c=iaConvAct();
+  let txt="", d=null;
+  try{
+    const r=await fetch(nubeUrl()+"/ejec/estado",{cache:"no-store"});
+    d=await r.json();
+    if(!d || !d.ok) throw 0;
+    const live=d.live||{};
+    const lg=d.log||[];
+    txt="## 🤖 Ejecutor — tu bot en MT5 (fase DEMO)\n\n"+
+      "**Estado:** "+(d.on?"🟢 ENCENDIDO (ejecuta tus señales A+)":"🔴 APAGADO (solo observa)")+"\n"+
+      "**Programa en la PC:** "+(d.vivo?"✅ conectado":"❌ sin conexión — abre 'Arrancar Ejecutor Apex' en la PC (con MT5 abierto)")+"\n"+
+      (live.cuenta?("**Cuenta MT5:** "+live.cuenta+" · "+(live.demo?"DEMO ✅":"⚠️ NO demo (no opera)")+" · balance "+(live.balance!=null?live.balance:"?")+" "+(live.moneda||"")+"\n"):"")+
+      (live.opsHoy!=null?("**Hoy:** "+live.opsHoy+" operación(es) · P&L $"+(live.plHoy!=null?live.plHoy:"0")+(live.enHorario===false?" · ⏸ fuera de tu horario":"")+"\n"):"");
+    const poss=(live.posiciones||[]);
+    if(poss.length){
+      txt+="\n### 📌 Posiciones abiertas del Ejecutor\n"+poss.map(p=>"- **"+p.dir+" "+p.sym+"** lote "+p.lote+" @ "+p.entrada+" · SL "+p.sl+" · TP "+p.tp+" · P&L $"+p.pl).join("\n")+"\n";
+    }
+    const ops=lg.filter(x=>x.tipo==="salida");
+    if(ops.length){
+      txt+="\n### 📓 Diario del Ejecutor (últimas operaciones)\n"+ops.slice(0,8).map(x=>"- "+ejecFmtTs(x.ts)+" · **"+(x.dir==="buy"?"COMPRA":x.dir==="sell"?"VENTA":x.dir)+" "+(x.sym||"")+"** → "+(x.motivo||"")+" "+((x.pl||0)>=0?"🟢 +$":"🔴 −$")+Math.abs(x.pl||0).toFixed(2)+(x.r!=null?" ("+x.r+"R)":"")+(x.lectura?("\n  - 🎓 _"+x.lectura+"_"):"")).join("\n")+"\n";
+    }
+    const rech=lg.filter(x=>x.tipo==="rechazo").slice(0,4);
+    if(rech.length){
+      txt+="\n### 🚫 Señales que descartó (tus reglas mandan)\n"+rech.map(x=>"- "+ejecFmtTs(x.ts)+" · "+(x.sym||"")+": "+(x.motivo||"")).join("\n")+"\n";
+    }
+    if(!poss.length && !ops.length) txt+="\nTodavía no ha operado. Cuando llegue una señal 🔔 A+ del indicador dentro de tus reglas, entrará él solo y te aviso al instante.\n";
+    txt+="\n_Abajo tienes el botón y todos los ajustes. Sus operaciones y capturas también entran a la 🖼️ Galería._";
+  }catch(_){ txt="⚠️ No pude leer el estado del Ejecutor. Revisa tu internet — y que el worker v5.75 esté subido."; }
+  c.msgs.push({role:"assistant",content:txt});
+  iaGuardarConvs(); pintarIAChat();
+  if(d && d.ok) tarjetaEjecutor(d);
+}
+function tarjetaEjecutor(d){
+  const cont=$("#iaMsgs"); if(!cont) return;
+  cont.querySelectorAll(".ia-ejec").forEach(n=>n.remove());
+  const cfg=d.cfg||{};
+  const card=el("div","ia-tool ia-ejec");
+  const poss=((d.live||{}).posiciones)||[];
+  card.innerHTML=
+    '<div class="ia-tool-h">🤖 Control del Ejecutor</div>'+
+    '<div class="ia-tool-d">'+(d.on?"Está ENCENDIDO: ejecuta tus señales dentro de tus reglas.":"Está APAGADO: no ejecuta nada hasta que tú lo enciendas.")+'</div>'+
+    '<div class="ia-tool-bar"><button class="btn '+(d.on?"":"gold")+' ia-ejec-sw" style="flex:1;font-weight:700">'+(d.on?"🔴 DETENER":"🟢 ENCENDER")+'</button></div>'+
+    (poss.length?('<div class="ia-tool-d" style="margin-top:8px">Posiciones abiertas:</div>'+
+      poss.map(p=>'<div class="ia-tool-bar"><span style="flex:1">'+esc(p.dir+" "+p.sym+" · $"+p.pl)+'</span><button class="btn ia-ejec-cerrar" data-tk="'+esc(String(p.ticket))+'">✖ Cerrar</button></div>').join("")+
+      '<div class="ia-tool-bar"><button class="btn ia-ejec-cerrartodo" style="flex:1">✖ Cerrar TODAS</button></div>'):"")+
+    '<div class="ia-tool-d" style="margin-top:10px">⚙️ <b>Tus reglas</b> (todas configurables):</div>'+
+    '<div class="ia-ejec-form" style="display:grid;grid-template-columns:1fr 1fr;gap:6px">'+
+      '<label style="grid-column:1/3;font-size:.85em">Pares (separados por coma)<input class="inp ia-ejec-pares" value="'+esc((cfg.pares||[]).join(", "))+'"></label>'+
+      '<label style="font-size:.85em">Riesgo % por operación<input class="inp ia-ejec-riesgo" type="number" step="0.1" min="0.1" max="5" value="'+esc(String(cfg.riesgoPct!=null?cfg.riesgoPct:0.5))+'"></label>'+
+      '<label style="font-size:.85em">Máx. operaciones/día<input class="inp ia-ejec-maxops" type="number" step="1" min="1" max="20" value="'+esc(String(cfg.maxOpsDia!=null?cfg.maxOpsDia:2))+'"></label>'+
+      '<label style="font-size:.85em">Pérdida máx. diaria % (se apaga solo)<input class="inp ia-ejec-maxdd" type="number" step="0.5" min="0.5" max="20" value="'+esc(String(cfg.maxPerdidaDiaPct!=null?cfg.maxPerdidaDiaPct:2))+'"></label>'+
+      '<label style="font-size:.85em">Señales que acepta<select class="inp ia-ejec-grado"><option value="A+"'+(cfg.grado!=="B"?" selected":"")+'>Solo A+</option><option value="B"'+(cfg.grado==="B"?" selected":"")+'>A+ y B</option></select></label>'+
+      '<label style="font-size:.85em">Opera desde<input class="inp ia-ejec-hini" type="time" value="'+esc(cfg.horaIni||"01:00")+'"></label>'+
+      '<label style="font-size:.85em">hasta<input class="inp ia-ejec-hfin" type="time" value="'+esc(cfg.horaFin||"13:00")+'"></label>'+
+      '<label style="font-size:.85em">Hora de<select class="inp ia-ejec-tz"><option value="America/New_York"'+(cfg.tz!=="America/Sao_Paulo"?" selected":"")+'>Nueva York (gráfico)</option><option value="America/Sao_Paulo"'+(cfg.tz==="America/Sao_Paulo"?" selected":"")+'>Brasil (tu reloj)</option></select></label>'+
+      '<label style="font-size:.85em">Lote máximo<input class="inp ia-ejec-maxlote" type="number" step="0.01" min="0.01" max="50" value="'+esc(String(cfg.maxLote!=null?cfg.maxLote:1))+'"></label>'+
+    '</div>'+
+    '<div class="ia-tool-bar" style="margin-top:8px"><button class="btn gold ia-ejec-save" style="flex:1">💾 Guardar mis reglas</button><button class="btn ia-ejec-ref">🔄</button></div>';
+  cont.appendChild(card);
+  card.querySelector(".ia-ejec-sw").onclick=async()=>{
+    const on=!d.on;
+    if(on && !confirm("🟢 ¿ENCENDER el Ejecutor?\n\nEjecutará tus señales 🔔 del indicador en tu cuenta DEMO de MT5, con las reglas de abajo. Puedes detenerlo cuando quieras con el botón rojo.")) return;
+    try{
+      const r=await fetch(nubeUrl()+"/ejec/switch",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({on})});
+      const x=await r.json().catch(()=>({}));
+      if(x&&x.ok){ toast(on?"🟢 Ejecutor ENCENDIDO":"🔴 Ejecutor DETENIDO"); verEjecutor(); }
+      else toast("⚠️ No se pudo — ¿worker v5.75 subido?");
+    }catch(_){ toast("⚠️ Sin internet"); }
+  };
+  card.querySelectorAll(".ia-ejec-cerrar").forEach(b=>{ b.onclick=async()=>{
+    if(!confirm("✖ ¿Cerrar esta posición ahora, al precio de mercado?")) return;
+    try{ await fetch(nubeUrl()+"/ejec/cmd",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({action:"cerrar",ticket:b.dataset.tk})}); toast("Orden de cierre enviada — te aviso al cerrar"); }catch(_){ toast("⚠️ Sin internet"); }
+  }; });
+  const ct=card.querySelector(".ia-ejec-cerrartodo");
+  if(ct) ct.onclick=async()=>{
+    if(!confirm("✖ ¿Cerrar TODAS las posiciones del Ejecutor ahora?")) return;
+    try{ await fetch(nubeUrl()+"/ejec/cmd",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({action:"cerrar_todo"})}); toast("Orden de cierre enviada — te aviso al cerrar"); }catch(_){ toast("⚠️ Sin internet"); }
+  };
+  card.querySelector(".ia-ejec-ref").onclick=()=>verEjecutor();
+  card.querySelector(".ia-ejec-save").onclick=async()=>{
+    const body={
+      pares:(card.querySelector(".ia-ejec-pares").value||"").split(",").map(x=>x.trim()).filter(Boolean),
+      riesgoPct:parseFloat(card.querySelector(".ia-ejec-riesgo").value),
+      maxOpsDia:parseInt(card.querySelector(".ia-ejec-maxops").value,10),
+      maxPerdidaDiaPct:parseFloat(card.querySelector(".ia-ejec-maxdd").value),
+      grado:card.querySelector(".ia-ejec-grado").value,
+      horaIni:card.querySelector(".ia-ejec-hini").value,
+      horaFin:card.querySelector(".ia-ejec-hfin").value,
+      tz:card.querySelector(".ia-ejec-tz").value,
+      maxLote:parseFloat(card.querySelector(".ia-ejec-maxlote").value),
+    };
+    if(!body.pares.length){ toast("Pon al menos un par (ej: EURUSD)"); return; }
+    try{
+      const r=await fetch(nubeUrl()+"/ejec/cfg",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(body)});
+      const x=await r.json().catch(()=>({}));
+      if(x&&x.ok){ toast("💾 Reglas guardadas — el Ejecutor las usa desde ya"); robertoVigila("Rey cambió las reglas de su Ejecutor de MT5 (demo): "+JSON.stringify(body)); }
+      else toast("⚠️ No se pudo guardar — ¿worker v5.75 subido?");
+    }catch(_){ toast("⚠️ Sin internet"); }
+  };
+  cont.scrollTop=cont.scrollHeight;
+}
+
 /* 🧭 MI PLAN — Roberto le dice por dónde va y qué le toca HOY. */
 function preguntarPlan(){
   if(typeof abrirIA==="function") abrirIA();
@@ -1158,6 +1272,7 @@ const IR_DESTINOS = [
   { v:"rob:escalado",  t:"💰 Roberto · Escalado" },
   { v:"rob:comparar",  t:"⚖️ Roberto · Comparar pares" },
   { v:"rob:replay",    t:"🎬 Roberto · Práctica Replay (backtesting guiado)" },
+  { v:"rob:ejecutor",  t:"🤖 Roberto · Ejecutor (mi bot en MT5)" },
   /* Chips de pregunta directa — el aviso abre el chat y lanza esa misma consulta */
   { v:"rob:q:operativa", t:"📊 Roberto · Analiza mi operativa" },
   { v:"rob:q:fuga",      t:"🩸 Roberto · Mi mayor fuga" },
@@ -1199,6 +1314,7 @@ function irDestino(v){
     escalado:()=>escaladoRoberto(),
     comparar:()=>compararPares(),
     replay:  ()=>practicaReplay(),
+    ejecutor:()=>verEjecutor(),
     avisos:  ()=>verAvisos(),
     chat:    ()=>{}
   };
@@ -5218,6 +5334,7 @@ function iaInit(){
         <button class="ia-chip" data-act="capturas">📸 Estudia mis capturas</button>
         <button class="ia-chip" data-act="comparar">⚖️ Comparar pares</button>
         <button class="ia-chip" data-act="replay">🎬 Práctica Replay</button>
+        <button class="ia-chip" data-act="ejecutor">🤖 Ejecutor</button>
         <button class="ia-chip" data-q="${IA_CHIP_QS.operativa}">📊 Analiza mi operativa</button>
         <button class="ia-chip" data-q="${IA_CHIP_QS.fuga}">🩸 Mi mayor fuga</button>
         <button class="ia-chip" data-q="${IA_CHIP_QS.gatillar}">🎯 Cómo gatillar</button>
@@ -5314,6 +5431,7 @@ function iaInit(){
     if(b.dataset.act==="escalado") return escaladoRoberto();
     if(b.dataset.act==="comparar") return compararPares();
     if(b.dataset.act==="replay")   return practicaReplay();
+    if(b.dataset.act==="ejecutor") return verEjecutor();
     iaEnviar(b.dataset.q);
   }; });
   // Adjuntar imagen (galería/archivos) y cámara en directo
