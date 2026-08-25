@@ -484,8 +484,10 @@ async function verEjecutor(){
     if(!d || !d.ok) throw 0;
     const live=d.live||{};
     const lg=d.log||[];
+    const cfgV=d.cfg||{};
     txt="## 🤖 Ejecutor — tu bot en MT5 (fase DEMO)\n\n"+
-      "**Estado:** "+(d.on?"🟢 ENCENDIDO (ejecuta tus señales A+)":"🔴 APAGADO (solo observa)")+"\n"+
+      "**Estado:** "+(d.on?"🟢 ENCENDIDO (vigilando — solo entra cuando TU indicador confirme una señal que pase tus reglas)":"🔴 APAGADO (solo observa)")+"\n"+
+      "**Revisión previa (veto):** "+(cfgV.veto!==false?("🛑 activada — antes de cada entrada: noticias ±"+(cfgV.vetoNoticiasMin||30)+" min + contexto de Roberto"):"apagada (ejecuta directo)")+"\n"+
       "**Programa en la PC:** "+(d.vivo?"✅ conectado":"❌ sin conexión — abre 'Arrancar Ejecutor Apex' en la PC (con MT5 abierto)")+"\n"+
       (live.cuenta?("**Cuenta MT5:** "+live.cuenta+" · "+(live.demo?"DEMO ✅":"⚠️ NO demo (no opera)")+" · balance "+(live.balance!=null?live.balance:"?")+" "+(live.moneda||"")+"\n"):"")+
       (live.opsHoy!=null?("**Hoy:** "+live.opsHoy+" operación(es) · P&L $"+(live.plHoy!=null?live.plHoy:"0")+(live.enHorario===false?" · ⏸ fuera de tu horario":"")+"\n"):"");
@@ -532,6 +534,8 @@ function tarjetaEjecutor(d){
       '<label style="font-size:.85em">hasta<input class="inp ia-ejec-hfin" type="time" value="'+esc(cfg.horaFin||"13:00")+'"></label>'+
       '<label style="font-size:.85em">Hora de<select class="inp ia-ejec-tz"><option value="America/New_York"'+(cfg.tz!=="America/Sao_Paulo"?" selected":"")+'>Nueva York (gráfico)</option><option value="America/Sao_Paulo"'+(cfg.tz==="America/Sao_Paulo"?" selected":"")+'>Brasil (tu reloj)</option></select></label>'+
       '<label style="font-size:.85em">Lote máximo<input class="inp ia-ejec-maxlote" type="number" step="0.01" min="0.01" max="50" value="'+esc(String(cfg.maxLote!=null?cfg.maxLote:1))+'"></label>'+
+      '<label style="grid-column:1/3;font-size:.85em">🛑 Veto (revisión ANTES de entrar)<select class="inp ia-ejec-veto"><option value="1"'+(cfg.veto!==false?" selected":"")+'>Activado — Roberto revisa noticias y contexto y puede frenar la entrada</option><option value="0"'+(cfg.veto===false?" selected":"")+'>Apagado — ejecuta directo con tus reglas</option></select></label>'+
+      '<label style="font-size:.85em">Sin noticias fuertes (± minutos)<input class="inp ia-ejec-vetomin" type="number" step="5" min="5" max="120" value="'+esc(String(cfg.vetoNoticiasMin!=null?cfg.vetoNoticiasMin:30))+'"></label>'+
     '</div>'+
     '<div class="ia-tool-bar" style="margin-top:8px"><button class="btn gold ia-ejec-save" style="flex:1">💾 Guardar mis reglas</button><button class="btn ia-ejec-ref">🔄</button></div>';
   cont.appendChild(card);
@@ -566,6 +570,8 @@ function tarjetaEjecutor(d){
       horaFin:card.querySelector(".ia-ejec-hfin").value,
       tz:card.querySelector(".ia-ejec-tz").value,
       maxLote:parseFloat(card.querySelector(".ia-ejec-maxlote").value),
+      veto:card.querySelector(".ia-ejec-veto").value==="1",
+      vetoNoticiasMin:parseInt(card.querySelector(".ia-ejec-vetomin").value,10),
     };
     if(!body.pares.length){ toast("Pon al menos un par (ej: EURUSD)"); return; }
     try{
