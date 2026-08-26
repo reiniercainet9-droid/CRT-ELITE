@@ -1219,7 +1219,7 @@ async function iaNoticiasHoy(){
   if(eventos){
     const {texto,n}=calendarioTexto(eventos);
     if(n){
-      q="Este es el CALENDARIO REAL de ForexFactory para mis pares ("+PARES.join(", ")+"), HOY y MAÑANA (hora NY):\n"+texto+"\n\nDime en lista breve cómo me afectan, en qué ventanas NO debo operar (30 min antes y después de cada roja/naranja), y prioriza las de ALTO impacto. Usa SOLO esta lista, no inventes otras.";
+      q="Este es el CALENDARIO REAL de ForexFactory para mis pares ("+PARES.join(", ")+"), HOY y MAÑANA (hora NY):\n"+texto+"\n\nDime en lista breve cómo me afectan, en qué ventanas NO debo operar (15 min antes y después de cada roja/naranja), y prioriza las de ALTO impacto. Usa SOLO esta lista, no inventes otras.";
     }else{
       q="Leí el calendario real de ForexFactory y NO hay noticias de alto/medio impacto para mis pares ("+PARES.join(", ")+") hoy ni mañana. Confírmame que no hay bloqueos por noticias y recuérdame operar solo dentro de mi ventana.";
     }
@@ -1260,10 +1260,10 @@ function verdictoOperar(rel){
   if(v) motivos.push({ic:"✅", t:"En ventana operativa: "+v.n});
   else { ok=false; const p=proximaVentana(); motivos.push({ic:"⛔", t:"Fuera de ventana"+(p?" · próxima "+p.n+" "+p.h.split("−")[0]+" NY":"")}); }
   const now=Date.now();
-  const cerca=(rel||[]).map(e=>({e,m:Math.round((Date.parse(e.date)-now)/60000)})).filter(x=>!isNaN(x.m)&&Math.abs(x.m)<=30);
+  const cerca=(rel||[]).map(e=>({e,m:Math.round((Date.parse(e.date)-now)/60000)})).filter(x=>!isNaN(x.m)&&Math.abs(x.m)<=15);
   if(cerca.length){ ok=false; const c=cerca.sort((a,b)=>Math.abs(a.m)-Math.abs(b.m))[0]; const imp=/High/i.test(c.e.impact)?"🔴":"🟠";
     motivos.push({ic:"⛔", t:"Noticia "+imp+" "+(c.m>=0?("en "+c.m+" min"):("hace "+(-c.m)+" min"))+": "+c.e.title+" (no operes)"}); }
-  else motivos.push({ic:"✅", t:"Sin noticias a menos de 30 min"});
+  else motivos.push({ic:"✅", t:"Sin noticias a menos de 15 min"});
   const res=cuentasResumen();
   if(res.peligro) motivos.push({ic:"⚠️", t:res.peligro+" cuenta(s) cerca del límite (DD) — extrema el cuidado"});
   return { ok, motivos };
@@ -1301,7 +1301,7 @@ function renderBrief(rel){
       <button class="btn" id="ntPuedoIA" style="margin-top:10px">🧠 Que Roberto lo confirme</button>
     </div>`;
     const bi=$("#ntPuedoIA");
-    if(bi) bi.onclick=()=>{ abrirIA(); setTimeout(()=>iaEnviar("¿Puedo operar AHORA mismo? Dame un veredicto corto y directo (SÍ/NO en la 1ª línea) cruzando: mi ventana operativa por el reloj, si hay noticia roja/naranja a menos de 30 min en mis pares (mira el bloque del calendario), y el estado de mis cuentas. Si es NO, dime por qué en una línea."),250); };
+    if(bi) bi.onclick=()=>{ abrirIA(); setTimeout(()=>iaEnviar("¿Puedo operar AHORA mismo? Dame un veredicto corto y directo (SÍ/NO en la 1ª línea) cruzando: mi ventana operativa por el reloj, si hay noticia roja/naranja a menos de 15 min en mis pares (mira el bloque del calendario), y el estado de mis cuentas. Si es NO, dime por qué en una línea."),250); };
   };
 }
 function viewNoticias(){
@@ -1385,7 +1385,7 @@ async function cargarNoticiasUI(){
   if(rb) rb.onclick=()=>{
     const texto=calTextoDe(rel);
     abrirIA();
-    setTimeout(()=>iaEnviar("Este es el CALENDARIO REAL de ForexFactory para los pares que estoy operando ("+CAL_FILTRO.join(", ")+"), HOY y MAÑANA (hora NY):\n"+texto+"\n\nDime en lista breve cómo me afectan, en qué ventanas NO debo operar (30 min antes y después de cada roja/naranja), y prioriza las de ALTO impacto. Usa SOLO esta lista, no inventes otras."),250);
+    setTimeout(()=>iaEnviar("Este es el CALENDARIO REAL de ForexFactory para los pares que estoy operando ("+CAL_FILTRO.join(", ")+"), HOY y MAÑANA (hora NY):\n"+texto+"\n\nDime en lista breve cómo me afectan, en qué ventanas NO debo operar (15 min antes y después de cada roja/naranja), y prioriza las de ALTO impacto. Usa SOLO esta lista, no inventes otras."),250);
   };
 }
 
@@ -1719,7 +1719,7 @@ function hacerArrastrable(fab){
    ============================================================ */
 const AYUDA = {
   noticias:{ t:"📰 Noticias (calendario económico)", h:`<p><b>Para qué sirve:</b> el calendario económico <b>real de ForexFactory</b> con las noticias de HOY y MAÑANA que mueven tus pares (🔴 alto / 🟠 medio impacto), con hora de Nueva York, pronóstico y dato previo.</p>
-    <p><b>Cómo usarlo:</b> arriba tienes un <b>filtro de pares</b> — viene con tus pares actuales, pero puedes borrarlo y escribir los que estés operando ahora (ej. <i>USD/JPY, XAU/USD</i>) y tocar <b>✓ Aceptar</b> para traer solo esas noticias. Regla de oro: <b>no operes 30 min antes ni después</b> de una roja. El botón <b>ForexFactory ↗</b> abre tu cuenta completa, y <b>🧠 Roberto</b> te explica cómo operar con lo que haya.</p>` },
+    <p><b>Cómo usarlo:</b> arriba tienes un <b>filtro de pares</b> — viene con tus pares actuales, pero puedes borrarlo y escribir los que estés operando ahora (ej. <i>USD/JPY, XAU/USD</i>) y tocar <b>✓ Aceptar</b> para traer solo esas noticias. Regla de oro: <b>no operes 15 min antes ni después</b> de una roja. El botón <b>ForexFactory ↗</b> abre tu cuenta completa, y <b>🧠 Roberto</b> te explica cómo operar con lo que haya.</p>` },
   avisos:{ t:"⏰ Mis avisos (rutina)", h:`<p><b>Para qué sirve:</b> tus recordatorios del día (reset de disciplina, apertura de killzones, cierre de sesión, viernes…). Te llegan al teléfono <b>aunque la app esté cerrada</b>, a la hora de Brasil.</p>
     <p><b>Cómo usarlo:</b> activa/pausa cada aviso con el interruptor, edítalos o crea nuevos con <b>＋ Nuevo</b> (o pídeselo a <b>Roberto</b>). Los de tipo <b>Fuerte</b> se quedan en pantalla hasta que los tocas, con vibración fuerte (tipo alarma).</p>` },
   checklist:{ t:"✅ Checklist", h:`<p><b>Para qué sirve:</b> tu lista de control ANTES de operar. Marca cada casilla del setup; las marcadas como <b>CLAVE</b> son obligatorias.</p>
@@ -1846,7 +1846,7 @@ function renderArranque(){
 /* 📰 LAS NOTICIAS DE HOY, DENTRO DE HOY.
    Rey no debería salir de esta pantalla para saber si puede operar. Aquí ve las
    noticias del día en hora de Nueva York Y de Brasil, y —lo que de verdad importa—
-   qué franjas quedan BLOQUEADAS (30 min antes y después de cada roja/naranja).
+   qué franjas quedan BLOQUEADAS (15 min antes y después de cada roja/naranja).
    El calendario completo sigue en 📰 Noticias para cuando quiera profundizar. */
 let HOY_EV=null;
 async function hoyCargarNoticias(){
@@ -1889,20 +1889,20 @@ function hoyBloqueNoticias(){
   const filas=HOY_EV.slice(0,8).map(e=>{
     const h=hoyHoraEvento(e.date);
     const alto=/High/i.test(e.impact);
-    /* ventana bloqueada: 30 min antes y 30 después */
-    const dentro = ny.dec>=(h.dec-0.5) && ny.dec<=(h.dec+0.5);
-    const pasada = ny.dec > h.dec+0.5;
+    /* ventana bloqueada: 15 min antes y 15 después (regla de Rey, actualizada 26-08: antes ±30) */
+    const dentro = ny.dec>=(h.dec-0.25) && ny.dec<=(h.dec+0.25);
+    const pasada = ny.dec > h.dec+0.25;
     return `<div class="hoy-row ${dentro?"bad":(alto?"warn":"")}"${pasada?' style="opacity:.5"':''}>
       <div class="hoy-row-t">${alto?"🔴":"🟠"} ${esc(e.title||"Evento")} <span style="font-weight:500;color:var(--txt3)">${esc(e.country||"")}</span></div>
       <div class="hoy-row-d">${esc(h.ny)} Nueva York · ${esc(h.br)} Brasil${pasada?" · ya pasó":""}</div>
-      ${dentro?`<div class="hoy-row-a">⛔ AHORA MISMO no operes — estás dentro de los 30 min de esta noticia</div>`
-        :(!pasada?`<div class="hoy-row-d" style="color:var(--orange)">No operes entre ${esc(hoyDec12(h.dec-0.5))} y ${esc(hoyDec12(h.dec+0.5))} hora de Nueva York</div>`:"")}
+      ${dentro?`<div class="hoy-row-a">⛔ AHORA MISMO no operes — estás dentro de los 15 min de esta noticia</div>`
+        :(!pasada?`<div class="hoy-row-d" style="color:var(--orange)">No operes entre ${esc(hoyDec12(h.dec-0.25))} y ${esc(hoyDec12(h.dec+0.25))} hora de Nueva York</div>`:"")}
     </div>`;
   }).join("");
   const altos=HOY_EV.filter(e=>/High/i.test(e.impact)).length;
   return `<div class="card${altos?" alert":""}">
     <div class="card-h"><span class="ic">📰</span><h2 class="${altos?"red":""}">Noticias de hoy</h2><span class="cnt">${HOY_EV.length}</span></div>
-    ${altos?`<div class="note bad" style="text-align:left">🔴 ${altos} noticia(s) de ALTO impacto hoy en tus pares. Respeta los 30 minutos antes y después de cada una.</div>`:""}
+    ${altos?`<div class="note bad" style="text-align:left">🔴 ${altos} noticia(s) de ALTO impacto hoy en tus pares. Respeta los 15 minutos antes y después de cada una.</div>`:""}
     ${filas}
     <button class="btn" id="hoyNews">Ver calendario completo →</button>
   </div>`;
@@ -5100,7 +5100,14 @@ const PERFIL_REY =
 
 /* Dossier del indicador CRT Elite que construimos juntos en TradingView */
 const INDICADOR_DOSSIER =
-"SU INDICADOR — 'CRT Elite v3' (Pine v5, en TradingView Desktop; versión de trabajo MEJORADO v11). Lo construimos juntos. Debes conocerlo como la palma de tu mano:\n"+
+"SU INDICADOR — 'CRT Elite v3' (Pine v5, en TradingView; versión de trabajo v3.6 'modelo continuación', 26-08-2026). Lo construimos juntos. Debes conocerlo como la palma de tu mano:\n"+
+"- 🆕 EVOLUCIÓN RECIENTE (26/27-08-2026) — cambios que DEBES tener presentes al analizar o vetar:\n"+
+"  · 🔓 CANDADO H4 VIVO (v3.3): el ⚠️H4≠ que capaba el grado en C ahora se LEVANTA cuando el H4 en curso ya barrió su liquidez y recuperó a favor (fila CRT H4 en ✅ o ▶️) — en reversiones en V la vela H4 cerrada llega tarde y ya no castiga. El panel muestra '🔓H4vivo'.\n"+
+"  · ⚡ P/D RANGO OPERATIVO VIVO (v3.4): si el período de referencia ya SALIÓ de su rango previo (barrido abajo, ruptura arriba o ambos) y su rango vivo mide ≥40% del previo, el Premium/Discount se mide sobre el rango VIVO del propio período (mín/máx en curso) — el panel marca ⚡. Además el rango de referencia puede ser 4H (sus 2 TF de contexto CRT: D y H4, mismas reglas).\n"+
+"  · 🪞 PANEL VERAZ (v3.5): las filas Secuencia F3 y CRT H4 comparan contra el sesgo OPERATIVO (no el diario) — en días de diario neutro con giro estructural ya no dicen 'sin sesgo'.\n"+
+"  · 🏃 MODELO DE CONTINUACIÓN (v3.6): el 🔔 tiene 2 caminos — REVERSIÓN (sweep+MSS+zona, el clásico) y CONTINUACIÓN (día virado + retroceso ≥30% del rango vivo + reacción FVG/OB + killzone + 15m a favor). La señal lleva la línea 'Modelo:' y el panel marca 🏃. En continuación, la zona P/D del rango viejo NO es objeción.\n"+
+"  · 🔕 UNA SOLA ALARMA por par ('Cualquier función alert()' con webhook) cubre AHORA TODO el indicador — ⏰ pinchazo y ⛔ invalidación incluidos (antes quedaban fuera).\n"+
+"  · 📅 VETO DE NOTICIAS del Ejecutor: ±15 minutos (Rey lo bajó de 30 el 26-08; configurable en el panel 🤖).\n"+
 "- UN SOLO SESGO EFECTIVO manda todo el indicador (htfBull/htfBear): de él cuelgan TODAS las señales, alarmas, objetivos, colores del rango CRT y filas del panel.\n"+
 "- BIAS DIARIO (CRT): se lee de la vela diaria de AYER ya cerrada y se sostiene todo el día por diseño CRT. Solo la liquidez de nivel DIARIO puede voltearlo (no un barrido de 4H ni de 15m). Si falta liquidez arriba → alcista; abajo → bajista; ambas intactas → rango (esperar).\n"+
 "- MOTOR DE GIRO (giro intradía): para voltear el día necesita 3 patas: (1) barrido+reclaim del extremo diario previo O cierre de cuerpo más allá de él; (2) CHoCH + displacement en 15m (el cambio de estructura con vela impulsiva); (3) que el precio siga más allá (si vuelve al rango, el giro se ANULA). Con 'giroSoloDiario' ON, solo un barrido de nivel diario dispara el giro del día.\n"+
@@ -5166,7 +5173,7 @@ const ANALISIS_SEMANAL_PROM =
 "📊 LIQUIDEZ PENDIENTE: niveles clave con precio (usa W H/W L, D H/D L, 4H, EQH/EQL, BSL/SSL del bloque), arriba y abajo del precio actual.\n"+
 "📅 BIAS CONFIRMADO EN DAILY: sí/no, según la alineación D y el sesgo del día.\n"+
 "🗺️ MAPA DE LA SEMANA: niveles de mayor a menor con el precio actual en el medio; hacia cuál irá primero y qué lo desviaría.\n"+
-"📰 NOTICIAS: usa el calendario real ya inyectado (días/horas NY de alto/medio impacto de mis monedas) + regla de no operar 30 min antes/después.\n"+
+"📰 NOTICIAS: usa el calendario real ya inyectado (días/horas NY de alto/medio impacto de mis monedas) + regla de no operar 15 min antes/después.\n"+
 "🔵 BIAS SEMANAL: COMPRAS / VENTAS / RANGO-ESPERAR.\n"+
 "🎯 PLAN DE LA SEMANA: qué busco, zona principal y secundaria (precio), nivel que INVALIDA el bias, mejor día para operar, días a evitar.\n"+
 "📝 NOTAS DEL MENTOR: 3-4 líneas con el consejo clave de esta semana.\n"+
@@ -5287,7 +5294,8 @@ function iaConocimiento(){
     APEX_MAPA+"\n\n"+
     PUENTE_DOSSIER+"\n\n"+
     "SU ESTRATEGIA CRT ELITE (SMC/ICT/CRT):\n"+
-    "REGLA DE ORO ABSOLUTA: SIN SWEEP = SIN SETUP. Si el precio no barrió liquidez con MECHA (no con cierre), NO hay operación, por muchas otras confluencias que haya.\n\n"+
+    "REGLA DE ORO (modelo de REVERSIÓN): SIN SWEEP = SIN SETUP. Si el precio no barrió liquidez con MECHA (no con cierre), NO hay operación de reversión, por muchas otras confluencias que haya.\n"+
+    "🏃 MODELO DE CONTINUACIÓN (2º camino, añadido el 26-08 tras el desplome del PCE/GDP): cuando el día YA SE VIRÓ (giro diario confirmado, giro estructural H4+15M, o Continuación H4 con cuerpo) la regla del sweep contrario NO aplica — la entrada válida es el RETROCESO: precio retrocede ≥30% del rango vivo del día, REACCIONA en una zona (FVG/OB), dentro de killzone, con el 15m a favor y el grado mínimo de confluencias. La señal 🔔 del indicador dice 'Modelo: REVERSIÓN' o 'Modelo: 🏃 CONTINUACIÓN' — razona SIEMPRE con el modelo que diga la señal (en continuación, el Premium/Discount del rango VIEJO no es objeción: se mide el retroceso del rango vivo). Perseguir velas sin retroceso sigue PROHIBIDO en ambos modelos.\n\n"+
     "Las 5 confluencias:\n"+C+"\n\n"+
     "Mínimos para entrar: ≥3 confluencias macro (Daily+H4) + 4 micro (M15+M5). Precio en 40−60% (tierra de nadie) = esperar SIEMPRE. Premium (50−100%) = ventas; Discount (0−50%) = compras.\n\n"+
     "Clasificación y riesgo por setup:\n"+cls+"\n"+
@@ -5295,7 +5303,7 @@ function iaConocimiento(){
     "Gestión de parciales:\n"+par+"\n"+
     "  SL a Break Even en 1:1. Trailing con estructura (detrás de cada nuevo OB/FVG a favor), nunca ATR fijo.\n\n"+
     "Ventanas válidas (hora NY): "+ven+".\n"+
-    "PROHIBIDO operar: "+noOp+"; y sesión asiática. No opera 30 min antes ni después de una noticia roja.\n\n"+
+    "PROHIBIDO operar: "+noOp+"; y sesión asiática. No opera 15 min antes ni después de una noticia roja (regla actualizada por Rey el 26-08: antes eran 30).\n\n"+
     "Mapa de temporalidades (cada una tiene UN objetivo):\n"+tf+"\n"+
     "  CLAVE: el MSS que VALIDA el setup es el de 1H/15M, NUNCA el de 5M. En M5 hay microrrupturas de ruido. El M5/M3 es solo el gatillo.\n\n"+
     "Gatillo fino (Fase 4, en M5/M3, dentro de la zona ya validada): 1) el precio toca el FVG u OB de entrada; 2) se forma vela de rechazo (pinbar o engulfing que arma order block); 3) la vela siguiente cierra más allá del 50% de la de rechazo; 4) ENTRA al cierre de esa vela de confirmación. SL detrás de la estructura de M5. NUNCA entrar en el toque sin confirmación (ese es su error).\n\n"+
@@ -6072,7 +6080,7 @@ function iaCalendarioContexto(eventos){
   }).sort((a,b)=>String(a.date||"").localeCompare(String(b.date||"")));
   const monTxt=[...mon].join("/");
   if(!rel.length) return "[CALENDARIO REAL de ForexFactory (YA lo tienes en la app — NO digas que no tienes acceso). HOY y MAÑANA NO hay noticias de alto/medio impacto para "+monTxt+". Vía libre por noticias.]";
-  return "[CALENDARIO REAL de ForexFactory que YA TIENES en la app — ÚSALO, nunca digas que no tienes datos ni acceso. Noticias de HOY/MAÑANA para sus monedas ("+monTxt+"), hora de Nueva York:\n"+calTextoDe(rel)+"\nRegla de oro: no operar 30 min antes ni después de cada roja/naranja.]";
+  return "[CALENDARIO REAL de ForexFactory que YA TIENES en la app — ÚSALO, nunca digas que no tienes datos ni acceso. Noticias de HOY/MAÑANA para sus monedas ("+monTxt+"), hora de Nueva York:\n"+calTextoDe(rel)+"\nRegla de oro: no operar 15 min antes ni después de cada roja/naranja.]";
 }
 /* Convierte un mensaje guardado al formato de la API.
    La imagen SOLO se envía en el mensaje ACTUAL (conFoto=true). En los turnos
