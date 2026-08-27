@@ -27,6 +27,7 @@ const K = {
   vigila:"crtelite_vigila_v3",
   robertolog:"crtelite_robertolog_v3",
   shots:"crtelite_shots_v1",
+  vents:"crtelite_ventanas_v1",
   plansem:"crtelite_plansem_v1",
   plan:"crtelite_plan_v1",
   vered:"crtelite_vered_v1",
@@ -41,7 +42,7 @@ const save = (k,v)=>{ try{ localStorage.setItem(k,JSON.stringify(v)); nubeMarcar
    En otro móvil, con el mismo código, restaura todo intacto (nada se pierde).
    No usa claves del sistema (el repo es público): el código ES la llave.
    ============================================================ */
-const NUBE_KEYS = ["crtelite_trades_v2","crtelite_cuentas_v3","crtelite_reminders_v3","crtelite_chk_v2","crtelite_conf_v2","crtelite_reglas_v2","crtelite_balance_v2","crtelite_ctx_v3","crtelite_estrategias_v3","crtelite_estrdefs_v1","crtelite_pares_v3","crtelite_calpares_v3","crtelite_notif_v3","crtelite_vigila_v3","crtelite_fabpos_v3","crtelite_iavoz_v3","crtelite_shots_v1","crtelite_plansem_v1","crtelite_iaconvs_v3","crtelite_iaact_v3","crtelite_ejectrades_v1"];
+const NUBE_KEYS = ["crtelite_trades_v2","crtelite_cuentas_v3","crtelite_reminders_v3","crtelite_chk_v2","crtelite_conf_v2","crtelite_reglas_v2","crtelite_balance_v2","crtelite_ctx_v3","crtelite_estrategias_v3","crtelite_estrdefs_v1","crtelite_pares_v3","crtelite_calpares_v3","crtelite_notif_v3","crtelite_vigila_v3","crtelite_fabpos_v3","crtelite_iavoz_v3","crtelite_shots_v1","crtelite_ventanas_v1","crtelite_plansem_v1","crtelite_iaconvs_v3","crtelite_iaact_v3","crtelite_ejectrades_v1"];
 const NUBE_CODE_KEY="crtelite_nubecode_v1", NUBE_TS_KEY="crtelite_datats_v1", NUBE_LAST_KEY="crtelite_nubelast_v1";
 let NUBE_RESTAURANDO=false, _nubeTimer=null;
 function nubeCode(){ try{ return (localStorage.getItem(NUBE_CODE_KEY)||"").trim(); }catch(_){ return ""; } }
@@ -962,6 +963,48 @@ function fxCerradoMotivo(ny){
   if(ny.wd===6 || (ny.wd===0 && ny.dec<17)) return "Fin de semana · Forex cerrado hasta el domingo 17:00 NY";
   if(ny.wd===5 && ny.dec>=17) return "Forex cerrado (viernes tarde) · abre el domingo 17:00 NY";
   return "Mercado cerrado";
+}
+/* ── ⏰ VENTANAS CONFIGURABLES (v6.16, pedido de Rey 27-08: "que sean configurables para
+   sincronizarlas con el indicador y el Ejecutor") ── Las horas de VENTANAS (data.js) son
+   solo los VALORES DE FÁBRICA; aquí se aplican los ajustes que Rey guarde (hora NY),
+   viven en su nube ☁️ (NUBE_KEYS) y el cartel/notificaciones los usan al instante. */
+function ventFmt(dec){ const h=Math.floor(dec), m=Math.round((dec-h)*60); return String(h).padStart(2,"0")+":"+String(m).padStart(2,"0"); }
+function ventAplicarOverrides(){
+  try{
+    const ov=load(K.vents,null); if(!Array.isArray(ov)) return;
+    ov.forEach(o=>{ const v=VENTANAS.find(x=>x.n===o.n); if(v && v.s!=null && typeof o.s==="number" && typeof o.e==="number" && o.s<o.e){ v.s=o.s; v.e=o.e; v.h=ventFmt(o.s)+"−"+ventFmt(o.e)+" NY"; } });
+  }catch(_){}
+}
+ventAplicarOverrides();
+function abrirVentanasCfg(){
+  const editables=VENTANAS.filter(v=>v.s!=null);
+  const filas=editables.map((v,i)=>'<div style="display:flex;align-items:center;gap:8px;margin-top:8px">'+
+    '<span style="flex:1">'+esc(v.n)+(v.bad?' <span style="opacity:.7;font-size:.85em">(no operar)</span>':'')+'</span>'+
+    '<input type="time" class="inp vc-ini" data-i="'+i+'" value="'+ventFmt(v.s)+'" style="width:auto">'+
+    '<span>→</span>'+
+    '<input type="time" class="inp vc-fin" data-i="'+i+'" value="'+ventFmt(v.e)+'" style="width:auto">'+
+  '</div>').join("");
+  abrirModal('<div class="modal-t">⏰ Ventanas del día (hora Nueva York)</div>'+
+    '<p class="desc">Las mismas horas que tus killzones del indicador. El Ejecutor tiene su propio horario en el panel 🤖 (Opera desde/hasta). Guardadas en tu nube ☁️.</p>'+filas,
+    [
+      { t:"De fábrica", fn:()=>{ save(K.vents,null); try{localStorage.removeItem(K.vents);}catch(_){} location.reload(); } },
+      { t:"Cancelar", fn:cerrarModal },
+      { t:"💾 Guardar", cls:"gold", fn:()=>{
+          const aDec=(s)=>{ const m=String(s||"").match(/^(\d{1,2}):(\d{2})$/); return m?(+m[1])+(+m[2])/60:null; };
+          const ov=[]; let mal=null;
+          document.querySelectorAll(".vc-ini").forEach(inp=>{
+            const i=+inp.dataset.i, v=editables[i];
+            const fin=document.querySelector('.vc-fin[data-i="'+i+'"]');
+            const s=aDec(inp.value), e=aDec(fin&&fin.value);
+            if(s==null||e==null||s>=e){ mal=v.n; return; }
+            ov.push({ n:v.n, s:s, e:e });
+          });
+          if(mal){ toast("⚠️ Revisa "+mal+": el inicio debe ser antes del fin"); return; }
+          save(K.vents,ov); ventAplicarOverrides(); cerrarModal(); tickRelojes();
+          try{ notifProgramarKillzones(); }catch(_){}
+          toast("⏰ Ventanas guardadas (hora NY) — cartel y avisos sincronizados");
+        } },
+    ]);
 }
 function tickRelojes(){
   const ny=horaNY();
@@ -7354,6 +7397,7 @@ function init(){
 
   refreshChecklist(); refreshConf(); refreshReglas(); renderDiario();
   const ba=$("#btnAyuda"); if(ba) ba.onclick=()=>abrirAyuda(TAB);
+  const bv=$("#ventEdit"); if(bv) bv.onclick=(e)=>{ e.stopPropagation(); abrirVentanasCfg(); };
   const bm=$("#btnMenu"); if(bm) bm.onclick=abrirMenu;
   iaInit();          /* inicializa el puente (IA.url) ANTES de mostrar Noticias, que lo necesita */
   iaResumePend();    /* recupera respuestas de Roberto que terminaron con la app cerrada */

@@ -3,7 +3,7 @@
    Todo el contenido del plan operativo de Rey.
    ============================================================ */
 
-const APP_VERSION = "6.14";
+const APP_VERSION = "6.16";
 
 /* --- CHECKLIST OPERATIVO (4 bloques) --- */
 const CHECKLIST = [
@@ -65,11 +65,14 @@ const REGLAS = [
 ];
 
 /* --- VENTANAS (hora NY) --- */
+/* v6.15 (27-08): ventanas ALINEADAS con la killzone REAL del indicador (NY 07:30−12:30,
+   la que Rey amplió) — antes el cartel decía "Fuera de ventana" a las 11:49 NY mientras
+   el indicador y el Ejecutor seguían activos. Una sola verdad de horarios. */
 const VENTANAS = [
   { n:"Londres",         sub:"",              h:"2:00−5:00 AM",   s:2,    e:5,    cls:"ok",  v:"Londres" },
   { n:"Pre-NY Kill Zone",sub:"mejor ventana", h:"7:30−9:30 AM",   s:7.5,  e:9.5,  cls:"hl",  v:"Pre-NY Kill Zone" },
-  { n:"NY Apertura",     sub:"",              h:"9:30−11:30 AM",  s:9.5,  e:11.5, cls:"ok",  v:"NY Apertura" },
-  { n:"NY Lunch",        sub:"trampas",       h:"11:30−1:30 PM",  s:11.5, e:13.5, cls:"bad", bad:true },
+  { n:"NY Apertura",     sub:"",              h:"9:30−12:30 PM",  s:9.5,  e:12.5, cls:"ok",  v:"NY Apertura" },
+  { n:"NY Lunch",        sub:"trampas",       h:"12:30−1:30 PM",  s:12.5, e:13.5, cls:"bad", bad:true },
   { n:"Asiática",        sub:"ruido",         h:"no operar",      s:null, e:null, cls:"bad", bad:true },
   { n:"Viernes tarde",   sub:"solo gestión",  h:"tras 12 PM",     s:null, e:null, cls:"bad", bad:true }
 ];
