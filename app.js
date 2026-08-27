@@ -558,7 +558,7 @@ async function verEjecutor(){
     }
     const ops=lg.filter(x=>x.tipo==="salida");
     if(ops.length){
-      txt+="\n### 📓 Diario del Ejecutor (últimas operaciones)\n"+ops.slice(0,8).map(x=>"- "+ejecFmtTs(x.ts)+" · **"+(x.dir==="buy"?"COMPRA":x.dir==="sell"?"VENTA":x.dir)+" "+(x.sym||"")+"** → "+(x.motivo||"")+" "+((x.pl||0)>=0?"🟢 +$":"🔴 −$")+Math.abs(x.pl||0).toFixed(2)+(x.r!=null?" ("+x.r+"R)":"")+(x.lectura?("\n  - 🎓 _"+x.lectura+"_"):"")).join("\n")+"\n";
+      txt+="\n### 📓 Diario del Ejecutor (últimas operaciones)\n"+ops.slice(0,8).map(x=>"- "+ejecFmtTs(x.ts)+" · **"+(x.dir==="buy"?"COMPRA":x.dir==="sell"?"VENTA":x.dir)+" "+(x.sym||"")+"** → "+(x.motivo||"")+" "+((x.pl||0)>=0?"🟢 +$":"🔴 −$")+Math.abs(x.pl||0).toFixed(2)+(x.r!=null?" ("+x.r+"R)":"")+(x.ficha?("\n  - "+x.ficha):"")+(x.lectura?("\n  - 🎓 _"+x.lectura+"_"):"")).join("\n")+"\n";
     }
     const rech=lg.filter(x=>x.tipo==="rechazo").slice(0,4);
     if(rech.length){
@@ -614,8 +614,12 @@ function ejecArchivar(lg){
         if(!t.tsIn){ Object.assign(t,{ticket:x.ticket,sym:x.sym,dir:x.dir,lote:x.lote,entrada:(x.precio!=null?x.precio:x.entrada),sl:x.sl,tp:x.tp,riesgo:x.riesgo,grado:x.grado,tsIn:x.ts,shot:x.shot||("ejec"+k)}); a.trades[k]=t; cambio=true; }
       }else if(x.tipo==="salida"){
         const t=a.trades[k]||{ticket:x.ticket,shot:"ejec"+k};
-        if(!t.tsOut){ Object.assign(t,{sym:x.sym||t.sym,dir:x.dir||t.dir,lote:(x.lote!=null?x.lote:t.lote),entrada:(x.entrada!=null?x.entrada:t.entrada),sl:(x.sl!=null?x.sl:t.sl),tp:(x.tp!=null?x.tp:t.tp),salida:x.salida,pl:x.pl,r:x.r,motivo:x.motivo,riesgo:(x.riesgo!=null?x.riesgo:t.riesgo),grado:x.grado||t.grado,lectura:x.lectura||t.lectura,tsOut:x.ts}); a.trades[k]=t; cambio=true; }
-        else if(x.lectura && !t.lectura){ t.lectura=x.lectura; cambio=true; }
+        if(!t.tsOut){ Object.assign(t,{sym:x.sym||t.sym,dir:x.dir||t.dir,lote:(x.lote!=null?x.lote:t.lote),entrada:(x.entrada!=null?x.entrada:t.entrada),sl:(x.sl!=null?x.sl:t.sl),tp:(x.tp!=null?x.tp:t.tp),salida:x.salida,pl:x.pl,r:x.r,motivo:x.motivo,riesgo:(x.riesgo!=null?x.riesgo:t.riesgo),grado:x.grado||t.grado,lectura:x.lectura||t.lectura,ficha:x.ficha||t.ficha,shotCierre:x.shotCierre||t.shotCierre,tsOut:x.ts}); a.trades[k]=t; cambio=true; }
+        else { /* v6.14: rellena lo que haya llegado tarde (lectura, ficha o la foto del cierre) */
+          if(x.lectura && !t.lectura){ t.lectura=x.lectura; cambio=true; }
+          if(x.ficha && !t.ficha){ t.ficha=x.ficha; cambio=true; }
+          if(x.shotCierre && !t.shotCierre){ t.shotCierre=x.shotCierre; cambio=true; }
+        }
       }
     });
     if(cambio) save(K.ejec,a);
@@ -691,7 +695,9 @@ async function renderEjecutor(){
         Object.keys(dias).map(dk=>'<div style="margin-top:6px"><div style="opacity:.85;font-size:.88em">📅 '+esc(dk)+'</div>'+
           dias[dk].map(t=>'<div style="margin-top:5px;border-top:1px solid rgba(255,255,255,.07);padding-top:5px;font-size:.92em">'+
             esc(new Date(t.tsOut).toTimeString().slice(0,5))+' · <b>'+esc((t.dir==="buy"?"COMPRA":t.dir==="sell"?"VENTA":String(t.dir||""))+" "+(t.sym||""))+'</b> lote '+t.lote+' → '+esc(t.motivo||"")+' '+((t.pl||0)>=0?"🟢 +$":"🔴 −$")+Math.abs(t.pl||0).toFixed(2)+(t.r!=null?" ("+t.r+"R)":"")+(t.grado?' · '+esc(String(t.grado)):"")+
-            ' <button class="btn ej-shot" data-id="'+esc(String(t.shot||""))+'" style="padding:2px 8px;font-size:.85em">📸</button>'+
+            ' <button class="btn ej-shot" data-id="'+esc(String(t.shot||""))+'" style="padding:2px 8px;font-size:.85em">📸 entrada</button>'+
+            ' <button class="btn ej-shot" data-id="'+esc(String(t.shotCierre||("ejecC"+t.ticket)))+'" style="padding:2px 8px;font-size:.85em">📸 cierre</button>'+
+            (t.ficha?('<div style="opacity:.95;margin-top:4px;font-size:.9em">'+esc(t.ficha)+'</div>'):"")+
             (t.lectura?('<div style="opacity:.9;margin-top:4px">🎓 <i>'+esc(t.lectura)+'</i></div>'):"")+
           '</div>').join("")+'</div>').join("")+
       '</div>';
