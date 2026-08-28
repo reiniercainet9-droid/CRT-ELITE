@@ -579,7 +579,7 @@ async function verEjecutor(){
     const cfgV=d.cfg||{};
     txt="## 🤖 Ejecutor — tu bot en MT5 (fase DEMO)\n\n"+
       "**Estado:** "+(d.on?"🟢 ENCENDIDO (vigilando — solo entra cuando TU indicador confirme una señal que pase tus reglas)":"🔴 APAGADO (solo observa)")+"\n"+
-      "**Revisión previa (veto):** "+(cfgV.veto!==false?("🛑 activada — antes de cada entrada: noticias ±"+(cfgV.vetoNoticiasMin||30)+" min + contexto de Roberto"):"apagada (ejecuta directo)")+"\n"+
+      "**Revisión previa (veto):** "+(cfgV.veto!==false?("🛑 activada — antes de cada entrada: noticias ±"+(cfgV.vetoNoticiasMin||15)+" min + contexto de Roberto"):"apagada (ejecuta directo)")+"\n"+
       "**Programa en la PC:** "+(d.vivo?"✅ conectado":"❌ sin conexión — abre 'Arrancar Ejecutor Apex' en la PC (con MT5 abierto)")+"\n"+
       (live.cuenta?("**Cuenta MT5:** "+live.cuenta+" · "+(live.demo?"DEMO ✅":"⚠️ NO demo (no opera)")+" · balance "+(live.balance!=null?live.balance:"?")+" "+(live.moneda||"")+"\n"):"")+
       (live.opsHoy!=null?("**Hoy:** "+live.opsHoy+" operación(es) · P&L $"+(live.plHoy!=null?live.plHoy:"0")+(live.enHorario===false?" · ⏸ fuera de tu horario":"")+"\n"):"");
@@ -589,13 +589,17 @@ async function verEjecutor(){
     }
     const ops=lg.filter(x=>x.tipo==="salida");
     if(ops.length){
-      txt+="\n### 📓 Diario del Ejecutor (últimas operaciones)\n"+ops.slice(0,8).map(x=>"- "+ejecFmtTs(x.ts)+" · **"+(x.dir==="buy"?"COMPRA":x.dir==="sell"?"VENTA":x.dir)+" "+(x.sym||"")+"** → "+(x.motivo||"")+" "+((x.pl||0)>=0?"🟢 +$":"🔴 −$")+Math.abs(x.pl||0).toFixed(2)+(x.r!=null?" ("+x.r+"R)":"")+(x.ficha?("\n  - "+x.ficha):"")+(x.lectura?("\n  - 🎓 _"+x.lectura+"_"):"")).join("\n")+"\n";
+      /* 📓 v6.21 (Rey): TODAS las operaciones con su FECHA — así Roberto puede evaluar el
+         período que Rey le pida (hoy / semana / todas) filtrando por fecha él mismo.
+         La ficha completa solo va en las 3 más recientes (las viejas, en 1 línea compacta). */
+      txt+="\n### 📓 Diario del Ejecutor ("+ops.length+" operación(es), con fecha para filtrar por período)\n"+ops.map((x,i)=>"- "+ejecFmtTs(x.ts)+" · **"+(x.dir==="buy"?"COMPRA":x.dir==="sell"?"VENTA":x.dir)+" "+(x.sym||"")+"** → "+(x.motivo||"")+" "+((x.pl||0)>=0?"🟢 +$":"🔴 −$")+Math.abs(x.pl||0).toFixed(2)+(x.r!=null?" ("+x.r+"R)":"")+(i<3&&x.ficha?("\n  - "+x.ficha):"")+(i<3&&x.lectura?("\n  - 🎓 _"+x.lectura+"_"):"")).join("\n")+"\n";
     }
     const rech=lg.filter(x=>x.tipo==="rechazo").slice(0,4);
     if(rech.length){
       txt+="\n### 🚫 Señales que descartó (tus reglas mandan)\n"+rech.map(x=>"- "+ejecFmtTs(x.ts)+" · "+(x.sym||"")+": "+(x.motivo||"")).join("\n")+"\n";
     }
     if(!poss.length && !ops.length) txt+="\nTodavía no ha operado. Cuando llegue una señal 🔔 A+ del indicador dentro de tus reglas, entrará él solo y te aviso al instante.\n";
+    if(ops.length) txt+="\n🎯 **¿Evalúo sus operaciones?** Dime el período y lo hago con esas fechas: **\"evalúa hoy\"**, **\"evalúa la semana\"** o **\"evalúa todas\"** — busco patrones (qué señal rinde, qué par, qué hora), qué enseñan y qué ajustar.\n";
     txt+="\n_Abajo tienes el botón y todos los ajustes. Sus operaciones y capturas también entran a la 🖼️ Galería._";
   }catch(_){ txt="⚠️ No pude leer el estado del Ejecutor. Revisa tu internet — y que el worker v5.75 esté subido."; }
   c.msgs.push({role:"assistant",content:txt});
@@ -759,7 +763,7 @@ async function renderEjecutor(){
         '<div>🖥️ Programa en la PC: '+(d.vivo?"✅ conectado":"❌ sin conexión — abre \'Arrancar Ejecutor Apex\' (con MT5 abierto)")+'</div>'+
         (live.cuenta?('<div>🏦 Cuenta MT5: '+esc(live.cuenta)+' · '+(live.demo?"DEMO ✅":"⚠️ NO demo (no opera)")+' · balance '+(live.balance!=null?live.balance:"?")+' '+esc(live.moneda||"")+'</div>'):"")+
         (live.opsHoy!=null?('<div>📊 Hoy: '+live.opsHoy+' operación(es) · P&L $'+(live.plHoy!=null?live.plHoy:"0")+(live.enHorario===false?" · ⏸ fuera de tu horario":"")+'</div>'):"")+
-        '<div>🛑 Veto previo: '+(cfg.veto!==false?("activado (noticias ±"+(cfg.vetoNoticiasMin||30)+" min + contexto de Roberto)"):"apagado")+'</div>'+
+        '<div>🛑 Veto previo: '+(cfg.veto!==false?("activado (noticias ±"+(cfg.vetoNoticiasMin||15)+" min + contexto de Roberto)"):"apagado")+'</div>'+
       '</div>'+
       '<div style="display:flex;gap:8px;margin-top:10px">'+
         '<button class="btn '+(d.on?"":"gold")+'" id="ejSw" style="flex:1;font-weight:700;font-size:1.05em">'+(d.on?"🔴 DETENER":"🟢 ENCENDER")+'</button>'+
@@ -1538,8 +1542,10 @@ const IR_DESTINOS = [
   { v:"rob:plan",      t:"🧭 Roberto · Por dónde voy en mi plan" },
   { v:"rob:parte",     t:"🌅 Roberto · Parte del día" },
   { v:"rob:gonogo",    t:"✅ Roberto · GO/NO-GO" },
-  { v:"rob:diario",    t:"📆 Roberto · Análisis del día" },
-  { v:"rob:semanal",   t:"🗓️ Roberto · Análisis semanal" },
+  { v:"rob:diario",    t:"📆 Roberto · Análisis del día (gráfico EN VIVO, pre-killzone)" },
+  { v:"rob:semanal",   t:"🗓️ Roberto · Análisis semanal (gráfico EN VIVO + plan)" },
+  { v:"rob:cierredia",    t:"🤖 Roberto · Cierre del día (evaluar MIS trades de hoy)" },
+  { v:"rob:cierresemana", t:"🤖 Roberto · Cierre de semana (evaluar MIS trades)" },
   { v:"rob:progreso",  t:"📊 Roberto · Mi progreso" },
   { v:"rob:capturas",  t:"📸 Roberto · Estudia mis capturas" },
   { v:"rob:checkemo",  t:"🧠 Roberto · Check antes de operar" },
@@ -1582,8 +1588,14 @@ function irDestino(v){
     plan:    ()=>preguntarPlan(),
     parte:   ()=>parteMatutino(),
     gonogo:  ()=>goNoGo(),
-    diario:  ()=>evalDia(),
-    semanal: ()=>evalSemana(),
+    /* 🔀 v6.21 (Rey, 28-08): estos destinos estaban CRUZADOS — "Análisis del día" llevaba al
+       cierre de TRADES (evalDia) y por eso Roberto decía "hoy no tienes operaciones" cuando
+       Rey quería el ANÁLISIS DEL GRÁFICO EN VIVO pre-killzone. Ahora: análisis = gráfico
+       vivo; el cierre de trades tiene sus destinos propios (cierredia / cierresemana). */
+    diario:  ()=>analisisDiario(),
+    semanal: ()=>analisisSemanal(),
+    cierredia:    ()=>evalDia(),
+    cierresemana: ()=>evalSemana(),
     progreso:()=>progresoRoberto(),
     capturas:()=>estudiarCapturas(),
     checkemo:()=>checkEmocional(),
