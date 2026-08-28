@@ -7093,7 +7093,9 @@ function iaPollJob(jobId){
     if(d && !d.ready && d.vivo){
       const pulso=String(d.vivo)+"/"+String(d.ts||"");
       if(pulso!==ultimoPulso){ ultimoPulso=pulso; pulsoDesde=Date.now(); }
-      else if(Date.now()-pulsoDesde>75000){
+      /* 📦 v6.24: umbral 75 s → 180 s — en 4G (otro colo) el estado puede tardar ~2 min en
+         propagarse y el detector mataba trabajos VIVOS o ya terminados (falla del 28-08). */
+      else if(Date.now()-pulsoDesde>180000){
         clearTimeout(_iaPolling[jobId]); delete _iaPolling[jobId];
         iaAutoReintento(jobId, parcial, "");
         return;
@@ -7477,7 +7479,7 @@ function init(){
   /* Al volver a la app (no cerrarla del todo), recupera lo que haya terminado */
   document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible") iaResumePend(); });
   /* Si abriste tocando el push de una respuesta de Roberto, abre el chat con ella */
-  try{ if(navigator.serviceWorker){ navigator.serviceWorker.addEventListener("message", ev=>{ if(ev.data && ev.data.type==="apex-open-chat"){ if(typeof abrirIA==="function") abrirIA(); if(ev.data.seed){ setTimeout(()=>iaProactivo(ev.data.seed),300); } else if(ev.data.jobId) iaMostrarJob(ev.data.jobId); else iaResumePend(); } }); } }catch(_){}
+  try{ if(navigator.serviceWorker){ navigator.serviceWorker.addEventListener("message", ev=>{ if(ev.data && ev.data.type==="apex-open-chat"){ if(typeof abrirIA==="function") abrirIA(); if(ev.data.seed){ setTimeout(()=>iaProactivo(ev.data.seed),300); } else if(ev.data.jobId){ /* 📦 v6.24: si la notificación traía la respuesta completa, pintar directo */ let pend=null; try{ pend=iaPendCargar().find(x=>x.jobId===ev.data.jobId); }catch(_){} if(ev.data.texto && pend){ if(_iaPolling[ev.data.jobId]){ clearTimeout(_iaPolling[ev.data.jobId]); delete _iaPolling[ev.data.jobId]; } iaBgResuelto(ev.data.jobId, { ready:true, text: ev.data.texto }); } else iaMostrarJob(ev.data.jobId); } else iaResumePend(); } }); } }catch(_){}
   try{ const sp=new URLSearchParams(location.search); const dst=sp.get("ir"); if(dst) setTimeout(()=>irDestino(dst), 600); }catch(_){}
   try{ if(navigator.serviceWorker){ navigator.serviceWorker.addEventListener("message", ev=>{ if(ev.data && ev.data.type==="apex-ir" && ev.data.ir) irDestino(ev.data.ir); }); } }catch(_){}
   /* 💬 v6.23 (Rey): respuesta de Roberto con Apex ABIERTA — sin notificación: si el chat
@@ -7487,6 +7489,16 @@ function init(){
     if(!(ev.data && ev.data.type==="apex-chat-live")) return;
     const jid=ev.data.jobId||"";
     let chatAbierto=false; try{ const ov=$("#iaOv"); chatAbierto=!!(ov && ov.classList.contains("show")); }catch(_){}
+    /* 📦 v6.24: si el aviso trae la respuesta COMPLETA (texto), se pinta AL INSTANTE —
+       sin depender del almacén de la nube (el fallo del 28-08 en 4G: trabajo terminado
+       pero estado sin propagar entre colos). Solo si hay un pendiente de ese job. */
+    const pendDe=(id)=>{ try{ return iaPendCargar().find(x=>x.jobId===id); }catch(_){ return null; } };
+    if(jid && ev.data.texto && !ev.data.toolUse && pendDe(jid)){
+      if(_iaPolling[jid]){ clearTimeout(_iaPolling[jid]); delete _iaPolling[jid]; }
+      iaBgResuelto(jid, { ready:true, text: ev.data.texto });
+      if(!chatAbierto) mostrarBannerRoberto("💬 Roberto te respondió — toca para leerlo");
+      return;
+    }
     if(chatAbierto){
       if(jid){ if(_iaPolling[jid]){ clearTimeout(_iaPolling[jid]); delete _iaPolling[jid]; } iaPollJob(jid); }
       else iaResumePend();
