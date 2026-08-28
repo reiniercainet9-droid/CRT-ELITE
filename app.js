@@ -651,6 +651,10 @@ function ejecArchivar(lg){
         const t=a.trades[k]||{ticket:x.ticket,shot:"ejec"+k};
         if(!t.tsOut){ Object.assign(t,{sym:x.sym||t.sym,dir:x.dir||t.dir,lote:(x.lote!=null?x.lote:t.lote),entrada:(x.entrada!=null?x.entrada:t.entrada),sl:(x.sl!=null?x.sl:t.sl),tp:(x.tp!=null?x.tp:t.tp),salida:x.salida,pl:x.pl,r:x.r,motivo:x.motivo,riesgo:(x.riesgo!=null?x.riesgo:t.riesgo),grado:x.grado||t.grado,lectura:x.lectura||t.lectura,ficha:x.ficha||t.ficha,shotCierre:x.shotCierre||t.shotCierre,tsOut:x.ts}); a.trades[k]=t; cambio=true; }
         else { /* v6.14: rellena lo que haya llegado tarde (lectura, ficha o la foto del cierre) */
+          /* 🩹 v6.27: si la nube CORRIGIÓ el P&L/R de un cierre ya archivado (p. ej. el
+             ticket con el P&L doblado por el bug v1.4 del Ejecutor), el archivo local
+             adopta el valor corregido — la nube es la fuente de la verdad. */
+          if(x.pl!=null && t.pl!==x.pl){ t.pl=x.pl; if(x.r!=null) t.r=x.r; if(x.motivo) t.motivo=x.motivo; cambio=true; }
           if(x.lectura && !t.lectura){ t.lectura=x.lectura; cambio=true; }
           if(x.ficha && !t.ficha){ t.ficha=x.ficha; cambio=true; }
           if(x.shotCierre && !t.shotCierre){ t.shotCierre=x.shotCierre; cambio=true; }
@@ -697,7 +701,7 @@ function ejecEvaluarRoberto(per){
   const lineas=ts.map(t=>ejecFmtTs(t.tsOut)+" · "+(t.dir==="buy"?"COMPRA":t.dir==="sell"?"VENTA":t.dir)+" "+(t.sym||"")+" lote "+t.lote+" → "+(t.motivo||"")+" $"+t.pl+(t.r!=null?" ("+t.r+"R)":"")+(t.grado?" · señal "+t.grado:"")).join("\n");
   if(typeof abrirIA==="function") abrirIA();
   iaTemaChat("🤖 Evaluación del Ejecutor");
-  setTimeout(()=>iaEnviar("🧮 Evalúa las operaciones "+nombrePer+" de mi Ejecutor.", "Evalúa las operaciones de MI EJECUTOR (mi bot de MT5 en demo, que ejecuta las señales A+ de mi indicador CRT Elite con mis reglas — NO las mías manuales). PERÍODO ELEGIDO POR REY: "+nombrePer+" — evalúa SOLO estas y di el período en tu primera línea.\nSus operaciones cerradas del período:\n"+lineas+"\n\nDame tu evaluación de mentor: números del período (ganadas/perdidas, R y $ acumulado), qué patrón ves (qué señal, par y horario rinden), si las reglas están funcionando, qué ajustarías de su configuración (riesgo, horario, grado mínimo, pares) y qué observar. Si el período tiene pocas operaciones, dilo con honestidad (muestra chica = conclusiones suaves). Si tienes mis datos manuales, compáranos."),300);
+  setTimeout(()=>iaEnviar("🧮 Evalúa las operaciones "+nombrePer+" de mi Ejecutor.", "Evalúa las operaciones de MI EJECUTOR (mi bot de MT5 en demo, que ejecuta las señales A+ de mi indicador CRT Elite con mis reglas — NO las mías manuales). PERÍODO ELEGIDO POR REY: "+nombrePer+" — evalúa SOLO estas y di el período en tu primera línea.\nOJO: las horas de la lista están en HORA DE BRASIL (el reloj de Rey), NO en hora de Nueva York — si hablas de horarios/killzones, convierte tú (NY = Brasil − 1h en esta época).\nSus operaciones cerradas del período:\n"+lineas+"\n\nDame tu evaluación de mentor: números del período (ganadas/perdidas, R y $ acumulado), qué patrón ves (qué señal, par y horario rinden), si las reglas están funcionando, qué ajustarías de su configuración (riesgo, horario, grado mínimo, pares) y qué observar. Si el período tiene pocas operaciones, dilo con honestidad (muestra chica = conclusiones suaves). Si tienes mis datos manuales, compáranos."),300);
 }
 /* ── 🤖 LA SECCIÓN EJECUTOR (v6.09) — pestaña propia con TODO el control.
    Lee y guarda EXACTAMENTE en el mismo sitio que el chip del chat (la nube). ── */
@@ -6946,20 +6950,51 @@ function iaPendGuardar(p){ const a=iaPendCargar().filter(x=>x.jobId!==p.jobId); 
 function iaPendBorrar(jobId){ try{ localStorage.setItem(IA_PEND_KEY, JSON.stringify(iaPendCargar().filter(x=>x.jobId!==jobId))); }catch(_){} }
 const _iaPolling={};
 /* Arranca una consulta en segundo plano */
+/* 📞 v6.27 — LA APP SOSTIENE SU PROPIA LLAMADA (el cierre definitivo del 28-08).
+   Antes: la app soltaba el trabajo, colgaba, y la respuesta tenía que volver por KV
+   (1-2 min entre colos en 4G) o por push (FCM la retiene con batería baja) — de ahí
+   los 2-3 minutos, los duplicados y las tarjetas de fallo. Ahora: la app manda
+   sostener:true y AGUANTA la conexión abierta; el trabajo corre en el MISMO colo de
+   su petición y la respuesta vuelve DIRECTA en el cuerpo — la espera es SOLO lo que
+   Roberto tarda en pensar, en cualquier red. La app GENERA el jobId ella misma: si
+   la conexión del móvil se corta a mitad, el worker sigue con waitUntil y la app
+   recupera EL MISMO trabajo por el camino clásico (sondeo + push) — jamás lo duplica. */
 async function iaBgStart(msgs, c, motor){
   const motorMsg = motor || iaMotor();   /* el motor de ESTA consulta viaja con su trabajo */
   IA.busy=true; pintarIAChat(); iaVigilarBusy();   /* 🛟 nunca se queda bloqueado */
-  let jobId;
-  try{
-    const r=await fetch(iaBase()+"/chat/bg",{method:"POST",headers:{"content-type":"application/json"},
-      body:JSON.stringify({system:iaSystemFull(), messages:msgs, clientTools:IA_TOOLS, motor:motorMsg})});
-    const d=await r.json().catch(()=>({}));
-    jobId=d && d.jobId;
-    if(!jobId) throw new Error("sin jobId");
-  }catch(e){
-    IA.busy=false; c.msgs.push({role:"assistant",content:"⚠️ No pude enviar tu mensaje. Revisa tu internet y reintenta."}); iaGuardarConvs(); pintarIAChat(); return;
-  }
+  const jobId = Date.now().toString(36)+Math.random().toString(36).slice(2,8);
   iaPendGuardar({ jobId, convId:c.id, msgs, motor:motorMsg, ts:Date.now() });
+  try{
+    const ctl = (typeof AbortController!=="undefined") ? new AbortController() : null;
+    const tmr = ctl ? setTimeout(()=>{ try{ ctl.abort(); }catch(_){} }, 150000) : null;
+    const r=await fetch(iaBase()+"/chat/bg",{method:"POST",headers:{"content-type":"application/json"},
+      body:JSON.stringify({jobId, sostener:true, system:iaSystemFull(), messages:msgs, clientTools:IA_TOOLS, motor:motorMsg}),
+      signal: ctl?ctl.signal:undefined});
+    if(tmr) clearTimeout(tmr);
+    const d=await r.json().catch(()=>({}));
+    if(d && d.done && d.resultado && (d.resultado.ready || d.resultado.error)){
+      iaBgResuelto(jobId, d.resultado);   /* 🎯 respuesta directa, cero almacenes, cero push */
+      return;
+    }
+  }catch(_){
+    /* La llamada sostenida se cortó. ¿Llegó a arrancar el trabajo en la nube?
+       Una sonda rápida lo dice: el worker escribe el estado del job ANTES de pensar. */
+    let sonda=null, redOk=false;
+    try{ const r2=await fetch(iaBase()+"/chat/bg?job="+encodeURIComponent(jobId),{cache:"no-store"}); sonda=await r2.json(); redOk=true; }catch(_2){}
+    if(!redOk){ /* sin internet de verdad: decirlo YA, no 5 min de puntitos */
+      IA.busy=false; iaPendBorrar(jobId);
+      iaBarrerFallos(c);
+      c.msgs.push({role:"assistant",content:"⚠️ No pude enviar tu mensaje. Revisa tu internet y reintenta.", fallo:true, acc:["reintentar","reenviar"]});
+      iaGuardarUltimo(c); iaGuardarConvs(); pintarIAChat(); return;
+    }
+    if(sonda && sonda.missing){
+      /* el trabajo NUNCA arrancó: un reintento clásico con el MISMO jobId (sin duplicar) */
+      try{ await fetch(iaBase()+"/chat/bg",{method:"POST",headers:{"content-type":"application/json"},
+        body:JSON.stringify({jobId, system:iaSystemFull(), messages:msgs, clientTools:IA_TOOLS, motor:motorMsg})}); }catch(_3){}
+    }
+    /* si el trabajo existe, sigue vivo en la nube (waitUntil): solo hay que esperarlo */
+  }
+  /* Camino clásico de respaldo con el MISMO jobId: sondeo cada 3 s + push si se cierra la app */
   iaPollJob(jobId);
 }
 /* ============================================================
@@ -7025,20 +7060,32 @@ function iaReintentar(){
 /* ¿El fallo fue por falta de créditos? */
 function iaEsCreditoMsg(m){ return /credit balance|credit|billing|saldo|insufficient|quota|payment|402/i.test(String(m||"")); }
 /* Construye el mensaje de error con SUS botones, según lo que pasó. */
+/* 🧹 v6.27: toda tarjeta de fallo va MARCADA (fallo:true). Cuando una respuesta de
+   verdad llega a esa conversación, las tarjetas de fallo se BARREN solas — eran ellas
+   las que Rey re-tocaba horas después y provocaban la tormenta de duplicados. */
 function iaMsgFallo(motivo, textoParcial){
   if(iaEsCreditoMsg(motivo)){
-    return { role:"assistant",
+    return { role:"assistant", fallo:true,
       content:"💳 **Te quedaste sin créditos.**\n\nNo es un fallo del sistema: mi clave de IA se quedó sin saldo y no puedo pensar hasta que recargues.\n\nRecarga abajo y vuelve — arranco solo, no hay que reiniciar nada. Tu mensaje sigue guardado.",
       acc:["recargar","reintentar"] };
   }
   if(textoParcial){
-    return { role:"assistant",
+    return { role:"assistant", fallo:true,
       content:textoParcial+"\n\n⚠️ _Aquí me quedé: la respuesta se cortó por el camino._",
       acc:["continuar","reenviar"] };
   }
-  return { role:"assistant",
+  return { role:"assistant", fallo:true,
     content:"⚠️ **La respuesta no llegó.**\n\nTu mensaje NO se ha perdido. Puedes reintentarlo tal cual, o recuperarlo en la caja para revisarlo antes de mandarlo.",
     acc:["reintentar","reenviar"] };
+}
+/* Barre las tarjetas de fallo de una conversación (las nuevas por su marca, las viejas
+   por su texto — retrocompatible con las que quedaron guardadas por versiones previas). */
+function iaBarrerFallos(c){
+  try{
+    const antes=c.msgs.length;
+    c.msgs=c.msgs.filter(m=>!(m && m.role==="assistant" && (m.fallo===true || (iaAccInferir(m)||[]).length)));
+    return antes!==c.msgs.length;
+  }catch(_){ return false; }
 }
 
 /* Sondea el resultado mientras la app está abierta (el push cubre lo demás).
@@ -7057,6 +7104,7 @@ async function iaAutoReintento(jobId, parcial, motivo){
   const n=(pend && pend.retries)||0;
   const rendirse=()=>{
     IA.busy=false;
+    iaBarrerFallos(c);   /* 🧹 nunca más de UNA tarjeta de fallo por conversación */
     c.msgs.push(iaMsgFallo(motivo||"", parcial||""));
     if(parcial) iaPendBorrar(jobId); else iaGuardarUltimo(c);
     iaGuardarConvs(); pintarIAChat();
@@ -7106,6 +7154,7 @@ function iaPollJob(jobId){
       const pend=iaPendCargar().find(x=>x.jobId===jobId);
       const c=(pend && IA.convs.find(x=>x.id===pend.convId)) || iaConvAct();
       IA.busy=false;
+      iaBarrerFallos(c);
       if(parcial){
         c.msgs.push(iaMsgFallo("", parcial));
         iaPendBorrar(jobId);
@@ -7144,7 +7193,7 @@ async function iaBgResuelto(jobId, d){
   const pend=iaPendCargar().find(x=>x.jobId===jobId);
   const c = (pend && IA.convs.find(x=>x.id===pend.convId)) || iaConvAct();
   iaPendBorrar(jobId);
-  /* 🧹 v6.26: al resolverse una respuesta, se APAGAN los otros sondeos y pendientes de la
+  /* 🧹 v6.27: al resolverse una respuesta, se APAGAN los otros sondeos y pendientes de la
      MISMA conversación (cadenas de reintento zombis) — antes un reintento paralelo seguía
      vivo tras pintar la respuesta y acababa soltando una tarjeta de fallo o un duplicado. */
   try{
@@ -7154,7 +7203,8 @@ async function iaBgResuelto(jobId, d){
     });
   }catch(_){}
   IA.actId=c.id;   // deja como activa la conversación de la respuesta, para que se vea al abrir el chat
-  if(d.error){ IA.busy=false; c.msgs.push(iaMsgFallo(d.error)); iaGuardarConvs(); pintarIAChat(); return; }
+  if(d.error){ IA.busy=false; iaBarrerFallos(c); c.msgs.push(iaMsgFallo(d.error)); iaGuardarConvs(); pintarIAChat(); return; }
+  iaBarrerFallos(c);   /* 🧹 v6.27: llegó respuesta real → fuera las tarjetas de fallo viejas */
   if(d.toolUse && Array.isArray(d.content)){
     const pre=d.content.filter(b=>b.type==="text").map(b=>b.text||"").join("").trim();
     if(pre) c.msgs.push({role:"assistant",content:pre});
@@ -7181,7 +7231,7 @@ async function iaBgResuelto(jobId, d){
         if(dd&&dd.jobId){ iaPendGuardar({jobId:dd.jobId,convId:c.id,msgs:baseMsgs,motor:(pend&&pend.motor)||iaMotor(),ts:Date.now()}); iaPollJob(dd.jobId); enviado=true; }
       }catch(_){}
     }
-    if(!enviado){ IA.busy=false; c.msgs.push(iaMsgFallo("")); iaGuardarUltimo(c); iaGuardarConvs(); pintarIAChat(); }
+    if(!enviado){ IA.busy=false; iaBarrerFallos(c); c.msgs.push(iaMsgFallo("")); iaGuardarUltimo(c); iaGuardarConvs(); pintarIAChat(); }
     return;
   }
   IA.busy=false;
@@ -7206,7 +7256,7 @@ async function iaMostrarJob(jobId, intentos){
   const txt=(d.error?iaErrMsg(d.error):(d.text||"")).trim();
   if(!txt) return;
   const ya=c.msgs.some(m=>m.role==="assistant" && m.content===txt);
-  if(!ya) c.msgs.push({role:"assistant",content:txt});
+  if(!ya){ iaBarrerFallos(c); c.msgs.push({role:"assistant",content:txt}); }
   IA.busy=false; iaGuardarConvs(); pintarIAChat();
   if((IA.voz.on || IA.autoHablarUna) && !ya && !/^⚠️|^💳|^🚫|^✅/.test(txt)){ iaHablar(txt, c.msgs.length-1); IA.autoHablarUna=false; }
 }
@@ -7493,7 +7543,7 @@ function init(){
      del worker (la que repite el sonido cada 30 s). Inofensivo si no hay ninguna activa. */
   const insistVistoApp=()=>{ try{ fetch(nubeUrl()+"/insist/visto",{method:"POST"}).catch(()=>{}); }catch(_){} };
   setTimeout(insistVistoApp, 800);
-  /* 📱 v6.26: la app REPORTA su versión a la nube al abrir y al volver al frente — así
+  /* 📱 v6.27: la app REPORTA su versión a la nube al abrir y al volver al frente — así
      Claude puede verificar desde fuera qué versión corre de verdad en el teléfono
      (el "ciclo sin fin" del 28-08 fue una app vieja ejecutándose sin que nadie lo viera). */
   const holaApp=()=>{ try{ fetch(nubeUrl()+"/app/hola",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({v:APP_VERSION})}).catch(()=>{}); }catch(_){} };
