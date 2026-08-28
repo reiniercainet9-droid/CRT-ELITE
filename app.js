@@ -7144,6 +7144,15 @@ async function iaBgResuelto(jobId, d){
   const pend=iaPendCargar().find(x=>x.jobId===jobId);
   const c = (pend && IA.convs.find(x=>x.id===pend.convId)) || iaConvAct();
   iaPendBorrar(jobId);
+  /* 🧹 v6.26: al resolverse una respuesta, se APAGAN los otros sondeos y pendientes de la
+     MISMA conversación (cadenas de reintento zombis) — antes un reintento paralelo seguía
+     vivo tras pintar la respuesta y acababa soltando una tarjeta de fallo o un duplicado. */
+  try{
+    iaPendCargar().filter(x=>x.convId===c.id && x.jobId!==jobId).forEach(x=>{
+      if(_iaPolling[x.jobId]){ clearTimeout(_iaPolling[x.jobId]); delete _iaPolling[x.jobId]; }
+      iaPendBorrar(x.jobId);
+    });
+  }catch(_){}
   IA.actId=c.id;   // deja como activa la conversación de la respuesta, para que se vea al abrir el chat
   if(d.error){ IA.busy=false; c.msgs.push(iaMsgFallo(d.error)); iaGuardarConvs(); pintarIAChat(); return; }
   if(d.toolUse && Array.isArray(d.content)){
@@ -7484,6 +7493,12 @@ function init(){
      del worker (la que repite el sonido cada 30 s). Inofensivo si no hay ninguna activa. */
   const insistVistoApp=()=>{ try{ fetch(nubeUrl()+"/insist/visto",{method:"POST"}).catch(()=>{}); }catch(_){} };
   setTimeout(insistVistoApp, 800);
+  /* 📱 v6.26: la app REPORTA su versión a la nube al abrir y al volver al frente — así
+     Claude puede verificar desde fuera qué versión corre de verdad en el teléfono
+     (el "ciclo sin fin" del 28-08 fue una app vieja ejecutándose sin que nadie lo viera). */
+  const holaApp=()=>{ try{ fetch(nubeUrl()+"/app/hola",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({v:APP_VERSION})}).catch(()=>{}); }catch(_){} };
+  setTimeout(holaApp, 1200);
+  document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible") holaApp(); });
   document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible") insistVistoApp(); });
   try{ nubeRestaurar(true); }catch(_){}  /* ☁️ si la nube tiene datos más nuevos (otro teléfono), restaura solo */
   /* Al volver a la app (no cerrarla del todo), recupera lo que haya terminado */
