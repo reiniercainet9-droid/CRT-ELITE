@@ -3,7 +3,7 @@
    Todo el contenido del plan operativo de Rey.
    ============================================================ */
 
-const APP_VERSION = "6.18";
+const APP_VERSION = "6.20";
 
 /* --- CHECKLIST OPERATIVO (4 bloques) --- */
 const CHECKLIST = [
@@ -52,13 +52,13 @@ const REGLAS = [
   "Mínimo 3 confluencias macro (Daily+H4) + 4 micro (M15+M5).",
   "Precio en 40−60% (tierra de nadie) = esperar siempre.",
   "Riesgo fijo 0.5% por trade. Nunca lo subo para recuperar.",
-  "Máximo 2 operaciones por día. Al llegar a 2, cierro plataforma.",
+  "El cupo de operaciones del día es el de MI CONFIG del panel 🤖 (config viva — ella manda, no un número en piedra). Al llegar al cupo, cierro plataforma.",
   "2 Stop Loss en el día = cierre total hasta mañana.",
   "Semana −3% = solo A+. Semana −5% = pausa hasta el lunes.",
   "Solo opero dentro de las ventanas horarias definidas.",
   "El SL va donde la estructura lo invalida, no donde aguanta el bolsillo.",
   "Entro en la confirmación, jamás en el toque sin confirmar.",
-  "No opero 30 min antes ni después de una noticia roja.",
+  "No opero en los minutos alrededor de una noticia roja que marca MI CONFIG del panel 🤖 (config viva; hoy ±15).",
   "El bias semanal manda sobre el diario.",
   "Registro cada trade en el diario al cerrarlo, sin excepción.",
   "Si dudo, no entro. La duda ya es una respuesta: NO."

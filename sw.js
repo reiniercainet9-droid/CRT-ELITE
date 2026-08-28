@@ -1,37 +1,67 @@
-const CACHE = "crt-elite-v6-18";
+const CACHE = "crt-elite-v6-20";
 const FILES = ["./","./index.html","./data.js","./app.js","./manifest.json","./icon-192.png","./icon-512.png"];
 const WORKER = "https://elitepro-worker.reiniercainet9.workers.dev";
 /* Web Push: al llegar un aviso (con la app CERRADA), muestra la notificación.
-   El push viaja sin datos; el texto real lo pide al puente (/push/latest). */
+   El push viaja sin datos; el texto real se pide a la nube.
+   📬 v6.19 (Rey, 28-08: el "🤖 ENTRÉ" del Ejecutor nunca se mostró): antes el texto salía
+   de UNA casilla única (/push/latest) — con 3 avisos en 26 segundos, la casilla ya tenía
+   otro y el aviso del medio se PERDÍA. Ahora el SW pide la COLA (/push/pending) y muestra
+   TODO lo que aún no enseñó (recuerda los ids ya mostrados en el almacén del SW); si un
+   despertar llega con la cola atrasada, el siguiente recoge lo pendiente. Ningún aviso se
+   pierde. /push/latest queda como paracaídas. */
+const META_CACHE = "apex-push-meta";
+async function idsMostrados(){ try{ const c=await caches.open(META_CACHE); const r=await c.match("./__mostrados"); return r ? await r.json() : []; }catch(_){ return []; } }
+async function guardarMostrados(ids){ try{ const c=await caches.open(META_CACHE); await c.put("./__mostrados", new Response(JSON.stringify(ids.slice(-40)))); }catch(_){} }
+async function pintarAviso(msg){
+  const esRutina = msg.kind==="rem";
+  const fuerte = !!msg.strong;
+  /* Vibración distinta para los avisos de rutina (⏰) vs las alarmas de trading */
+  const vibra = esRutina ? (fuerte ? [500,150,500,150,500,150,500] : [400,140,400]) : [220,90,220,90,320];
+  await self.registration.showNotification(msg.title || "Apex", {
+    /* PERMANENCIA (Rey): cada aviso con tag ÚNICO (su id de la cola) -> se APILAN y quedan
+       en la bandeja hasta que TÚ los descartes; si el mismo id llegara dos veces, se
+       REEMPLAZA a sí mismo (cero duplicados). Las repeticiones 🔁 de una insistente usan
+       el tag FIJO "apex-insist" (cada una reemplaza a la anterior con sonido nuevo). */
+    body: msg.body, tag: msg.repe ? "apex-insist" : (msg.id ? "apex-" + msg.id : (msg.tag || "apex") + "-" + Date.now()), renotify: true,
+    icon: "./icon-192.png", badge: "./icon-192.png",
+    vibrate: vibra, silent: false,
+    requireInteraction: true,
+    timestamp: msg.ts || Date.now(), data: { url: "./index.html", jobId: msg.jobId || "", kind: msg.kind || "", sym: msg.sym || "", tvint: msg.tvint || "", seed: msg.seed || "", ir: msg.ir || "" }
+  });
+}
 self.addEventListener("push", e => {
   e.waitUntil((async () => {
-    let msg = { title: "Apex · Roberto", body: "Tienes un aviso." };
-    try{ if(e.data){ const d=e.data.json(); if(d && d.body) msg=d; } }catch(_){}
-    if(msg.body==="Tienes un aviso."){
-      try{
-        const r=await fetch(WORKER+"/push/latest",{cache:"no-store"});
-        if(r.ok){ const d=await r.json(); if(d && d.body) msg=d; }
-      }catch(_){}
+    const vistos = await idsMostrados();
+    let porMostrar = [];
+    try{
+      const r = await fetch(WORKER+"/push/pending",{cache:"no-store"});
+      if(r.ok){
+        const d = await r.json();
+        porMostrar = ((d && d.avisos) || []).filter(m => m && m.id && m.body && !vistos.includes(m.id));
+        /* de las repeticiones 🔁 pendientes solo SUENA la última (las viejas se dan por vistas) */
+        const repes = porMostrar.filter(m => m.repe);
+        if(repes.length > 1){
+          const ult = repes[repes.length-1];
+          porMostrar.filter(m => m.repe && m !== ult).forEach(m => vistos.push(m.id));
+          porMostrar = porMostrar.filter(m => !m.repe || m === ult);
+        }
+      }
+    }catch(_){}
+    if(!porMostrar.length){
+      /* paracaídas: worker viejo o cola atrasada — el camino de siempre */
+      let msg = { title: "Apex · Roberto", body: "Tienes un aviso." };
+      try{ if(e.data){ const d=e.data.json(); if(d && d.body) msg=d; } }catch(_){}
+      if(msg.body==="Tienes un aviso."){
+        try{ const r=await fetch(WORKER+"/push/latest",{cache:"no-store"}); if(r.ok){ const d=await r.json(); if(d && d.body) msg=d; } }catch(_){}
+      }
+      if(msg.id && vistos.includes(msg.id)){ await guardarMostrados(vistos); return; }   /* ya mostrado: no resucitar */
+      porMostrar = [msg];
     }
-    const esRutina = msg.kind==="rem";
-    const fuerte = !!msg.strong;
-    /* Vibración distinta para los avisos de rutina (⏰) vs las alarmas de trading */
-    const vibra = esRutina ? (fuerte ? [500,150,500,150,500,150,500] : [400,140,400]) : [220,90,220,90,320];
-    await self.registration.showNotification(msg.title || "Apex", {
-      /* PERMANENCIA (Rey): antes TODAS las alarmas usaban el mismo tag ("apex-tv"), y en Android
-         una notificación con el mismo tag REEMPLAZA a la anterior -> si no la mirabas al momento,
-         la siguiente la borraba y perdías los datos. Ahora cada aviso lleva un tag ÚNICO: se
-         APILAN y se quedan en la bandeja hasta que TÚ las descartes. requireInteraction siempre
-         true para que no se auto-descarten. */
-      /* 🔁 v6.03: las REPETICIONES de una alarma insistente (repe) usan un tag FIJO — cada
-         repetición REEMPLAZA a la anterior (con sonido nuevo por renotify) en vez de apilar
-         20 copias. La alarma original conserva su tag único y se queda en la bandeja. */
-      body: msg.body, tag: msg.repe ? "apex-insist" : (msg.tag || "apex") + "-" + Date.now(), renotify: true,
-      icon: "./icon-192.png", badge: "./icon-192.png",
-      vibrate: vibra, silent: false,
-      requireInteraction: true,
-      timestamp: Date.now(), data: { url: "./index.html", jobId: msg.jobId || "", kind: msg.kind || "", sym: msg.sym || "", tvint: msg.tvint || "", seed: msg.seed || "", ir: msg.ir || "" }
-    });
+    for(const msg of porMostrar){
+      await pintarAviso(msg);
+      if(msg.id) vistos.push(msg.id);
+    }
+    await guardarMostrados(vistos);
   })());
 });
 /* 🔁 v6.03: cualquier toque o descarte de una notificación = "Rey ya está mirando el
@@ -100,8 +130,10 @@ self.addEventListener("install", e => {
   })());
 });
 self.addEventListener("activate", e => {
+  /* 📬 v6.19: META_CACHE (los ids de avisos ya mostrados) SOBREVIVE a las actualizaciones —
+     si se borrara, tras cada versión nueva el teléfono podría re-mostrar avisos viejos. */
   e.waitUntil(caches.keys().then(ks =>
-    Promise.all(ks.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));
+    Promise.all(ks.filter(k=>k!==CACHE && k!==META_CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));
 });
 self.addEventListener("fetch", e => {
   if(e.request.method!=="GET") return;

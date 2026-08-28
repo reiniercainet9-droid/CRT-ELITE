@@ -889,7 +889,7 @@ if(!Array.isArray(CAL_FILTRO) || !CAL_FILTRO.length) CAL_FILTRO = PARES.slice();
 /* ⏰ AVISOS / RUTINA — recordatorios por hora (Brasil), en segundo plano vía Web Push.
    dias: "LV"=lun-vie, "V"=viernes, "D"=todos. tipo: "normal" | "fuerte" (persistente+vibración fuerte). */
 const AVISOS_DEFAULT = [
-  { id:"r1", hora:"07:55", tit:"🧭 Reset de disciplina", dias:"LV", tipo:"normal", on:true, msg:"RESET DE DISCIPLINA antes de Pre-NY. Máx 2 trades hoy. Riesgo 0.5%. Solo setups A+ y B. Si 2 SL, cierro plataforma." },
+  { id:"r1", hora:"07:55", tit:"🧭 Reset de disciplina", dias:"LV", tipo:"normal", on:true, msg:"RESET DE DISCIPLINA antes de Pre-NY. El cupo de hoy es el de mi config del panel 🤖. Riesgo 0.5%. Solo setups A+ y B. Si 2 SL, cierro plataforma." },
   { id:"r2", hora:"08:00", tit:"🧠 Correr prompt diario", dias:"LV", tipo:"fuerte", on:true, msg:"Correr prompt DIARIO en Claude. Pre-NY Kill Zone en 30 min. Revisar setup A+ o B en el indicador." },
   { id:"r3", hora:"08:30", tit:"⚡ Pre-NY Kill Zone abierta", dias:"LV", tipo:"fuerte", on:true, msg:"Pre-NY Kill Zone abierta (08:30–10:30 Brasil). MEJOR ventana del día. Espera señal de entrada del indicador en M5/M3." },
   { id:"r4", hora:"10:15", tit:"🔔 NY Open en 15 min", dias:"LV", tipo:"normal", on:true, msg:"NY Open en 15 min. Confirma zona de reacción." },
@@ -4805,7 +4805,7 @@ async function verAciertos(){
    Basado en los trades REGISTRADOS (R × riesgo%); es aprox pero suficiente para disciplina. */
 function guardianRiesgo(){
   const cuentas=(Array.isArray(CUENTAS)?CUENTAS:[]).filter(c=>c.fase!=="Cerrada");
-  if(!cuentas.length) return "[🛡️ GUARDIÁN DE RIESGO: Rey aún no tiene cuentas registradas. Aun así, recuérdale SIEMPRE sus reglas de riesgo si va a operar: 0.5% por trade, máx 2 trades/día, 2 SL = cerrar plataforma.]";
+  if(!cuentas.length) return "[🛡️ GUARDIÁN DE RIESGO: Rey aún no tiene cuentas registradas. Aun así, recuérdale SIEMPRE sus reglas de riesgo si va a operar — las VIGENTES son las de su config del panel 🤖 (riesgo por operación, cupo del día, tope de pérdida diaria): cítalas de ahí, no de memoria.]";
   const hoy=hoyISO();
   const sem=(usado,limite)=>{ if(!(limite>0)) return "🟢"; const fl=(limite-usado)/limite; if(fl<=0) return "🔴"; if(fl<=0.3) return "🔔"; if(fl<=0.5) return "🟡"; return "🟢"; };
   let s="[🛡️ GUARDIÁN DE RIESGO (hoy "+hoy+") — datos EN VIVO de sus cuentas. Úsalo para FRENARLO ANTES de que rompa una regla, con firmeza:\n";
@@ -6855,7 +6855,8 @@ async function robertoVigila(evento){
   if(!VIGILA.on || !IA.url || !evento) return;
   try{
     const sys="Eres ROBERTO, mentor de trading de Rey (CRT/SMC/ICT) y su GUARDIÁN. "+reglasClaveTxt()+
-      "\nVigilas cada acción que Rey hace en su app Apex. Si la acción está MAL, es riesgosa, rompe una de sus reglas, contradice su plan o es claramente mejorable (p.ej. entrar en el toque en vez de esperar confirmación, operar fuera de ventana o con noticia cerca, superar el límite de trades, un setup C, un aviso a mala hora, un par que no encaja), responde SOLO una corrección/sugerencia BREVE y accionable (máx 2 frases, empieza con un emoji, tono directo y cercano de mentor-hermano). Si la acción está BIEN, responde EXACTAMENTE 'OK' y nada más.";
+      "\nVigilas cada acción que Rey hace en su app Apex. Si la acción está MAL, es riesgosa, rompe una de sus reglas, contradice su plan o es claramente mejorable (p.ej. entrar en el toque en vez de esperar confirmación, operar fuera de ventana o con noticia cerca, un setup C, un aviso a mala hora, un par que no encaja), responde SOLO una corrección/sugerencia BREVE y accionable (máx 2 frases, empieza con un emoji, tono directo y cercano de mentor-hermano). Si la acción está BIEN, responde EXACTAMENTE 'OK' y nada más."+
+      "\n⚙️ v6.20 LA CONFIG VIVA MANDA (Rey, 28-08): cuando la acción es GUARDAR una configuración (reglas del Ejecutor, ventanas, ajustes), los números que Rey acaba de guardar SON su regla vigente desde ese momento — tu cerebro o memoria pueden tener números VIEJOS (2 ops/día, ±30 min de noticias: YA NO son la regla; hoy el cupo y los minutos de noticias son LOS DE LA CONFIG). PROHIBIDO regañarlo por diferir de una regla vieja. Solo avisa si el cambio es un PELIGRO OBJETIVO (riesgo por operación >1%, lote máximo desproporcionado, pérdida diaria >2%, horario absurdo) y di el porqué en palabras simples.";
     const evTxt = iaReloj()+"\n"+iaContexto()+"\n\nACCIÓN de Rey ahora mismo:\n"+evento;
     const r=await fetch(IA.url.replace(/\/+$/,"")+"/vigila",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({system:sys, evento:evTxt})});
     const d=await r.json().catch(()=>({}));
