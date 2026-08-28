@@ -306,6 +306,36 @@ async function verAvisos(){
   c.msgs.push({role:"assistant",content:txt});
   iaGuardarConvs(); pintarIAChat();
 }
+/* 📥 v6.17 EL HILO DEL DÍA — Rey: "tocar la notificación y que me lleve al chat del MISMO día
+   con todas las notificaciones, no un chat nuevo cada vez — y a Apex, no a la web de TradingView".
+   UNA conversación por día: cada visita añade solo los avisos NUEVOS de hoy (hora Brasil) como
+   burbujas con su hora, sin borrar lo que Rey haya conversado en medio. Al aterrizar desde una
+   notificación, Roberto LEE el último aviso en voz alta si su voz está encendida (⚙️ del chat);
+   cada burbuja conserva su ▶️ para reescucharla. */
+async function abrirHiloDia(){
+  if(typeof abrirIA==="function") abrirIA();
+  const diaDe=(ts)=>new Intl.DateTimeFormat("es",{timeZone:"America/Sao_Paulo",day:"2-digit",month:"2-digit"}).format(new Date(ts||Date.now()));
+  const hoyKey=diaDe(Date.now());
+  iaTemaChat("📥 Avisos de hoy · "+hoyKey);
+  const c=iaConvAct();
+  let avHoy=[];
+  try{
+    const r=await fetch(nubeUrl()+"/notif/log",{cache:"no-store"});
+    const d=await r.json();
+    avHoy=(((d&&d.avisos)||[]).filter(a=>diaDe(a.ts)===hoyKey)).reverse();   /* ascendente: la mañana arriba */
+  }catch(_){}
+  const nuevos=avHoy.filter(a=>(a.ts||0)>(c.hiloUltTs||0));
+  nuevos.forEach(a=>{
+    const hBR=new Intl.DateTimeFormat("es",{timeZone:"America/Sao_Paulo",hour:"2-digit",minute:"2-digit",hour12:false}).format(new Date(a.ts||Date.now()));
+    c.msgs.push({role:"assistant",content:"**"+(a.t||"Aviso")+"** · 🕐 "+hBR+"\n\n"+(a.b||"")});
+  });
+  if(avHoy.length) c.hiloUltTs=avHoy[avHoy.length-1].ts||Date.now();
+  if(!c.msgs.length) c.msgs.push({role:"assistant",content:"## 📥 Avisos de hoy\n\nTodavía no ha llegado ningún aviso hoy. Cuando llegue uno, tócalo en el teléfono y aterrizas AQUÍ, con el día completo en orden — y si mi voz está encendida (⚙️), te lo leo."});
+  iaGuardarConvs(); pintarIAChat();
+  /* 🔊 leer el último aviso del día al aterrizar (voz opcional de Roberto) */
+  try{ if(avHoy.length && IA.voz && IA.voz.on){ const u=avHoy[avHoy.length-1]; iaHablar((u.t||"Aviso")+". "+(u.b||""), -1); } }catch(_){}
+  try{ const m=$("#iaMsgs"); if(m) m.scrollTop=m.scrollHeight; }catch(_){}
+}
 /* Envía a Roberto un mensaje con BLOQUES arbitrarios (varias imágenes, documentos…)
    sin pasar por la caja de texto. Las imágenes NO se guardan en el historial del chat
    (solo el resumen), para no reventar el almacenamiento del teléfono. */
@@ -1527,6 +1557,7 @@ const IR_DESTINOS = [
   { v:"rob:q:compuesto", t:"📈 Roberto · Interés compuesto" },
   { v:"rob:q:mejoras",   t:"💡 Roberto · Mejoras del sistema" },
   { v:"rob:avisos",    t:"📥 Roberto · Avisos recibidos" },
+  { v:"rob:hilo",      t:"📥 Roberto · El hilo del día (avisos de hoy)" },
   { v:"rob:chat",      t:"💬 Roberto · Abrir el chat" },
 ];
 function irDestinoLabel(v){ const d=IR_DESTINOS.find(x=>x.v===v); return d?d.t:""; }
@@ -1561,6 +1592,7 @@ function irDestino(v){
     replay:  ()=>practicaReplay(),
     ejecutor:()=>verEjecutor(),
     avisos:  ()=>verAvisos(),
+    hilo:    ()=>abrirHiloDia(),
     chat:    ()=>{}
   };
   const fn=F[acc];

@@ -1,4 +1,4 @@
-const CACHE = "crt-elite-v6-16";
+const CACHE = "crt-elite-v6-17";
 const FILES = ["./","./index.html","./data.js","./app.js","./manifest.json","./icon-192.png","./icon-512.png"];
 const WORKER = "https://elitepro-worker.reiniercainet9.workers.dev";
 /* Web Push: al llegar un aviso (con la app CERRADA), muestra la notificación.
@@ -55,16 +55,18 @@ self.addEventListener("notificationclick", e => {
     }));
     return;
   }
-  /* ALARMA de trading con par (y temporalidad): abre TradingView en ESE par y ESA TF
-     para revisar la señal al instante. Si el móvil tiene la app de TradingView y
-     los enlaces verificados, abre la app; si no, abre el gráfico web (mismo par+TF). */
+  /* 🔔 v6.17 (Rey): la alarma de trading abre APEX en el HILO DEL DÍA — ya NO la web de
+     TradingView. Abrir el gráfico web desde el teléfono ROBABA la única conexión del layout
+     y congelaba el gráfico de la PC ("si está desconectado no se debe leer nada"). Si Rey
+     quiere ver el gráfico, abre él mismo la app de TradingView del teléfono. En el hilo
+     están todos los avisos de hoy en orden y Roberto lee el último en voz alta (si su voz
+     está encendida en ⚙️ del chat). */
   if(data.sym){
-    /* Alarma de trading: abre DIRECTO el gráfico web de TradingView en ese par y
-       esa temporalidad (con el layout/indicador del usuario). En Android una app
-       web no puede abrir la app nativa, así que vamos directo al web, sin rodeos. */
-    const intv = data.tvint ? ("&interval="+encodeURIComponent(data.tvint)) : "";
-    const tvUrl = "https://www.tradingview.com/chart/?symbol="+encodeURIComponent(data.sym)+intv;
-    e.waitUntil(clients.openWindow(tvUrl));
+    const destino = "./index.html?ir="+encodeURIComponent("rob:hilo");
+    e.waitUntil(clients.matchAll({type:"window",includeUncontrolled:true}).then(cs => {
+      for(const c of cs){ if("focus" in c){ if(c.postMessage) c.postMessage({type:"apex-ir", ir:"rob:hilo"}); return c.focus(); } }
+      if(clients.openWindow) return clients.openWindow(destino);
+    }));
     return;
   }
   const esChat = tag.indexOf("apex-chat")===0 || data.kind==="chat";   // respuesta de Roberto → abrir el chat
