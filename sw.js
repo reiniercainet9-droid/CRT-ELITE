@@ -1,4 +1,4 @@
-const CACHE = "crt-elite-v6-17";
+const CACHE = "crt-elite-v6-18";
 const FILES = ["./","./index.html","./data.js","./app.js","./manifest.json","./icon-192.png","./icon-512.png"];
 const WORKER = "https://elitepro-worker.reiniercainet9.workers.dev";
 /* Web Push: al llegar un aviso (con la app CERRADA), muestra la notificación.
@@ -35,8 +35,17 @@ self.addEventListener("push", e => {
   })());
 });
 /* 🔁 v6.03: cualquier toque o descarte de una notificación = "Rey ya está mirando el
-   teléfono" -> se apaga la alarma insistente en el worker (inofensivo si no hay ninguna). */
-function insistVisto(){ return fetch(WORKER+"/insist/visto",{method:"POST"}).catch(()=>{}); }
+   teléfono" -> se apaga la alarma insistente en el worker (inofensivo si no hay ninguna).
+   🔇 v6.18 (Rey: "cuando lo toco o descarto, que NO suene más"): antes el aviso al worker
+   viajaba UNA sola vez — si esa petición fallaba (red del móvil, llamada en curso), el
+   "ya la vi" se perdía y la alarma seguía insistiendo. Ahora reintenta hasta 3 veces. */
+function insistVisto(){
+  const post=()=>fetch(WORKER+"/insist/visto",{method:"POST"});
+  return post()
+    .catch(()=>new Promise(r=>setTimeout(r,1500)).then(post))
+    .catch(()=>new Promise(r=>setTimeout(r,4000)).then(post))
+    .catch(()=>{});
+}
 self.addEventListener("notificationclose", e => { e.waitUntil(insistVisto()); });
 /* Al tocar una notificación de Roberto, abre/enfoca la app */
 self.addEventListener("notificationclick", e => {
