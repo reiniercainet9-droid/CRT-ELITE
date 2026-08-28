@@ -7011,7 +7011,7 @@ function iaReintentarEnvio(){
   let u=null; try{ u=JSON.parse(localStorage.getItem("crtelite_ultimo_msg")||"null"); }catch(_){}
   if(!u || !u.txt){ toast("No hay mensaje que reintentar"); return; }
   if(IA.busy){ toast("Espera a que termine lo de ahora"); return; }
-  iaEnviar(u.txt);
+  iaEnviar(u.txt, u.oculto||undefined);   /* 📎 v6.25: el reintento lleva el marco oculto completo */
 }
 /* 🔄 Devuelve el texto a la caja para que Rey lo revise antes de mandarlo. */
 function iaReintentar(){
@@ -7125,7 +7125,12 @@ function iaPollJob(jobId){
 function iaGuardarUltimo(c){
   try{
     const ultimo=(c.msgs||[]).slice().reverse().find(m=>m.role==="user");
-    if(ultimo) localStorage.setItem("crtelite_ultimo_msg", JSON.stringify({txt:String(ultimo.content||""), conv:c.id, ts:Date.now()}));
+    if(ultimo){
+      /* 📎 v6.25: conserva el marco oculto ya guardado si el texto es el mismo mensaje */
+      let prev=null; try{ prev=JSON.parse(localStorage.getItem("crtelite_ultimo_msg")||"null"); }catch(_){}
+      const oculto=(prev && prev.txt && String(ultimo.content||"").indexOf(prev.txt)===0) ? (prev.oculto||"") : "";
+      localStorage.setItem("crtelite_ultimo_msg", JSON.stringify({txt:String(ultimo.content||""), oculto, conv:c.id, ts:Date.now()}));
+    }
   }catch(_){}
 }
 /* Procesa la respuesta ya lista (texto, error, o manos que pedir confirmación) */
@@ -7252,6 +7257,11 @@ async function iaEnviar(textoForzado, promptExtra){
   /* 🧠 motor sintomático: si la tarea parece profunda y el ajuste es Rendidor, pregunta.
      Se decide AQUÍ (antes de vaciar la caja) y vale solo para esta consulta. */
   const motorMsg = iaMotorPara(texto, !!doc, !!promptExtra);
+  /* 📎 v6.25 (Rey, 28-08): el reintento/reenvío PERDÍA el marco oculto (promptExtra) — al
+     reenviar "Evalúa HOY de mi Ejecutor", Roberto recibía solo la frase visible SIN la lista
+     de operaciones y contestaba "0 trades hoy" con 2 operaciones hechas. Ahora el último
+     mensaje se guarda CON su marco oculto y el reintento lo lleva completo. */
+  try{ localStorage.setItem("crtelite_ultimo_msg", JSON.stringify({txt:texto, oculto:promptExtra||"", conv:(IA.actId||""), ts:Date.now()})); }catch(_){}
   if(ta){ ta.value=""; ta.style.height="auto"; }
   IA.pendImg=null; IA.pendDoc=null; iaPintarAtt();
   const c=iaConvAct();
