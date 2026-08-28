@@ -677,13 +677,27 @@ async function ejecVerShot(id){
   }catch(_){ toast("⚠️ Sin internet"); }
 }
 /* 🧠 manda el historial del Ejecutor al chat para evaluarlo CON Roberto */
-function ejecEvaluarRoberto(){
-  const ts=ejecCerradas().slice(0,30);
-  if(!ts.length){ toast("Aún no hay operaciones cerradas del Ejecutor"); return; }
+/* 🧮 v6.23 (Rey): la evaluación del Ejecutor ahora tiene FILTRO DE PERÍODO — "hoy",
+   "semana" o "todas" — con botones reales. Roberto recibe SOLO las operaciones del
+   período elegido (con fecha) y lo dice en su evaluación. */
+function ejecEvaluarRoberto(per){
+  per = per==="hoy"||per==="semana"||per==="todas" ? per : "todas";
+  let ts=ejecCerradas();
+  const ahora=Date.now();
+  if(per==="hoy"){
+    const hoyBR=new Intl.DateTimeFormat("en-CA",{timeZone:"America/Sao_Paulo"}).format(new Date());
+    ts=ts.filter(t=>new Intl.DateTimeFormat("en-CA",{timeZone:"America/Sao_Paulo"}).format(new Date(t.tsOut||0))===hoyBR);
+  }else if(per==="semana"){
+    ts=ts.filter(t=>(t.tsOut||0)>=ahora-7*86400*1000);
+  }else{
+    ts=ts.slice(0,60);
+  }
+  const nombrePer=per==="hoy"?"de HOY":per==="semana"?"de los ÚLTIMOS 7 DÍAS":"COMPLETO (todas)";
+  if(!ts.length){ toast(per==="hoy"?"El Ejecutor no tiene operaciones cerradas hoy":"Aún no hay operaciones cerradas del Ejecutor en ese período"); return; }
   const lineas=ts.map(t=>ejecFmtTs(t.tsOut)+" · "+(t.dir==="buy"?"COMPRA":t.dir==="sell"?"VENTA":t.dir)+" "+(t.sym||"")+" lote "+t.lote+" → "+(t.motivo||"")+" $"+t.pl+(t.r!=null?" ("+t.r+"R)":"")+(t.grado?" · señal "+t.grado:"")).join("\n");
   if(typeof abrirIA==="function") abrirIA();
   iaTemaChat("🤖 Evaluación del Ejecutor");
-  setTimeout(()=>iaEnviar("Evalúa las operaciones de MI EJECUTOR (mi bot de MT5 en demo, que ejecuta las señales A+ de mi indicador CRT Elite con mis reglas — NO las mías manuales). Sus últimas operaciones cerradas:\n"+lineas+"\n\nDame tu evaluación de mentor: qué patrón ves, si las reglas están funcionando, qué ajustarías de su configuración (riesgo, horario, grado mínimo, pares) y qué observar la próxima semana. Si tienes mis datos manuales, compáranos."),300);
+  setTimeout(()=>iaEnviar("🧮 Evalúa las operaciones "+nombrePer+" de mi Ejecutor.", "Evalúa las operaciones de MI EJECUTOR (mi bot de MT5 en demo, que ejecuta las señales A+ de mi indicador CRT Elite con mis reglas — NO las mías manuales). PERÍODO ELEGIDO POR REY: "+nombrePer+" — evalúa SOLO estas y di el período en tu primera línea.\nSus operaciones cerradas del período:\n"+lineas+"\n\nDame tu evaluación de mentor: números del período (ganadas/perdidas, R y $ acumulado), qué patrón ves (qué señal, par y horario rinden), si las reglas están funcionando, qué ajustarías de su configuración (riesgo, horario, grado mínimo, pares) y qué observar. Si el período tiene pocas operaciones, dilo con honestidad (muestra chica = conclusiones suaves). Si tienes mis datos manuales, compáranos."),300);
 }
 /* ── 🤖 LA SECCIÓN EJECUTOR (v6.09) — pestaña propia con TODO el control.
    Lee y guarda EXACTAMENTE en el mismo sitio que el chip del chat (la nube). ── */
@@ -783,7 +797,8 @@ async function renderEjecutor(){
     '<div class="card"><b>📓 Diario del Ejecutor</b> <span style="opacity:.8;font-size:.85em">(archivo completo, separado de TU Diario — se respalda en tu nube ☁️)</span>'+
       (hist.length?(
         '<div style="margin-top:8px;font-size:.95em"><b>Total:</b> '+hist.length+' operación(es) · '+nWin+' ganada(s) ('+Math.round(nWin/hist.length*100)+'%) · '+(sumPL>=0?"🟢 +$":"🔴 −$")+Math.abs(sumPL).toFixed(2)+(conR.length?(' · '+(sumR>=0?"+":"")+sumR.toFixed(2)+'R acumulado'):"")+'</div>'+
-        '<div style="margin-top:8px"><button class="btn gold" id="ejEval" style="width:100%">🧠 Evaluar estas operaciones con Roberto</button></div>'+
+        '<div style="margin-top:8px;font-size:.92em"><b>🧠 Evaluar con Roberto:</b></div>'+
+        '<div style="display:flex;gap:6px;margin-top:6px"><button class="btn gold" id="ejEvalHoy" style="flex:1">📅 Hoy</button><button class="btn gold" id="ejEvalSem" style="flex:1">🗓️ Semana</button><button class="btn gold" id="ejEvalTodo" style="flex:1">📚 Todas</button></div>'+
         histHtml)
       :'<div style="opacity:.8;margin-top:6px;font-size:.92em">Todavía no ha cerrado ninguna operación. Cuando opere, aquí verás TODO su historial organizado por semanas y días, con su captura 📸 y la lección 🎓 de cada una — y el botón para evaluarlo con Roberto.</div>')+'</div>'+
     /* señales descartadas / vetadas */
@@ -795,7 +810,9 @@ async function renderEjecutor(){
   $("#ejSave").onclick=async()=>{ const body=ejecLeerForm($("#ejForm")); if(body && await ejecGuardarCfg(body)) renderEjecutor(); };
   cont.querySelectorAll(".ej-cerrar").forEach(b=>{ b.onclick=()=>ejecCmdCerrar(b.dataset.tk); });
   const ctd=$("#ejCerrarTodo"); if(ctd) ctd.onclick=()=>ejecCmdCerrar(null);
-  const bev=$("#ejEval"); if(bev) bev.onclick=ejecEvaluarRoberto;
+  const bevH=$("#ejEvalHoy"); if(bevH) bevH.onclick=()=>ejecEvaluarRoberto("hoy");
+  const bevS=$("#ejEvalSem"); if(bevS) bevS.onclick=()=>ejecEvaluarRoberto("semana");
+  const bevT=$("#ejEvalTodo"); if(bevT) bevT.onclick=()=>ejecEvaluarRoberto("todas");
   cont.querySelectorAll(".ej-shot").forEach(b=>{ b.onclick=()=>ejecVerShot(b.dataset.id); });
   /* 🗑️ borrar un MES del archivo (decisión de Rey, con confirmación; Roberto también puede
      con la herramienta limpiar_diario_ejecutor, que siempre pasa por la tarjeta de aprobación) */
@@ -7463,6 +7480,21 @@ function init(){
   try{ if(navigator.serviceWorker){ navigator.serviceWorker.addEventListener("message", ev=>{ if(ev.data && ev.data.type==="apex-open-chat"){ if(typeof abrirIA==="function") abrirIA(); if(ev.data.seed){ setTimeout(()=>iaProactivo(ev.data.seed),300); } else if(ev.data.jobId) iaMostrarJob(ev.data.jobId); else iaResumePend(); } }); } }catch(_){}
   try{ const sp=new URLSearchParams(location.search); const dst=sp.get("ir"); if(dst) setTimeout(()=>irDestino(dst), 600); }catch(_){}
   try{ if(navigator.serviceWorker){ navigator.serviceWorker.addEventListener("message", ev=>{ if(ev.data && ev.data.type==="apex-ir" && ev.data.ir) irDestino(ev.data.ir); }); } }catch(_){}
+  /* 💬 v6.23 (Rey): respuesta de Roberto con Apex ABIERTA — sin notificación: si el chat
+     está abierto, el mensaje aterriza AHÍ al instante; si estás en otra sección, sale el
+     banner 🛡️ de Roberto (tocarlo abre el chat de ESA conversación). */
+  try{ if(navigator.serviceWorker){ navigator.serviceWorker.addEventListener("message", ev=>{
+    if(!(ev.data && ev.data.type==="apex-chat-live")) return;
+    const jid=ev.data.jobId||"";
+    let chatAbierto=false; try{ const ov=$("#iaOv"); chatAbierto=!!(ov && ov.classList.contains("show")); }catch(_){}
+    if(chatAbierto){
+      if(jid){ if(_iaPolling[jid]){ clearTimeout(_iaPolling[jid]); delete _iaPolling[jid]; } iaPollJob(jid); }
+      else iaResumePend();
+    }else{
+      mostrarBannerRoberto("💬 Roberto te respondió — toca para leerlo");
+      if(jid) iaMostrarJob(jid);   /* deja la respuesta lista en el chat para cuando lo abras */
+    }
+  }); } }catch(_){}
   try{ const sp=new URLSearchParams(location.search); if(sp.get("open")==="chat"){ const jb=sp.get("job"); const seed=sp.get("seed"); setTimeout(()=>{ if(typeof abrirIA==="function") abrirIA(); if(seed) setTimeout(()=>iaProactivo(seed),350); else if(jb) iaMostrarJob(jb); else iaResumePend(); }, 500); } }catch(_){}
   setTimeout(syncReminders, 1800);   /* sube los avisos al vigilante (cron) */
   setTimeout(hoyCargarNoticias, 2000);  /* 📰 noticias del día dentro de la vista HOY */

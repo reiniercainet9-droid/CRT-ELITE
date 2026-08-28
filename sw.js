@@ -1,4 +1,4 @@
-const CACHE = "crt-elite-v6-21";
+const CACHE = "crt-elite-v6-23";
 const FILES = ["./","./index.html","./data.js","./app.js","./manifest.json","./icon-192.png","./icon-512.png"];
 const WORKER = "https://elitepro-worker.reiniercainet9.workers.dev";
 /* Web Push: al llegar un aviso (con la app CERRADA), muestra la notificación.
@@ -12,6 +12,19 @@ const WORKER = "https://elitepro-worker.reiniercainet9.workers.dev";
 const META_CACHE = "apex-push-meta";
 async function idsMostrados(){ try{ const c=await caches.open(META_CACHE); const r=await c.match("./__mostrados"); return r ? await r.json() : []; }catch(_){ return []; } }
 async function guardarMostrados(ids){ try{ const c=await caches.open(META_CACHE); await c.put("./__mostrados", new Response(JSON.stringify(ids.slice(-40)))); }catch(_){} }
+/* 🔕 v6.22 DETECTOR DE DESCARTE (Rey: "lo descarto y sigue sonando"): en muchos Android,
+   descartar desde la pantalla de bloqueo NO entrega el evento de descarte al sistema
+   (batería restringida se lo traga) y el "ya la vi" jamás sale del teléfono. El PUSH sí
+   llega SIEMPRE — así que lo usamos de detector: si mostramos una repetición 🔁 y al llegar
+   la siguiente YA NO está en la bandeja, es que Rey la quitó → mandamos "ya la vi" y NO
+   volvemos a sonar. A lo sumo suena UNA repetición de más, nunca seis. */
+async function repeViva(){ try{ const c=await caches.open(META_CACHE); const r=await c.match("./__repeviva"); return r ? await r.json() : null; }catch(_){ return null; } }
+async function marcarRepeViva(v){ try{ const c=await caches.open(META_CACHE); await c.put("./__repeviva", new Response(JSON.stringify(v))); }catch(_){} }
+/* ventana de silencio: {hasta, firma} — 15 min sin sonar las repes de ESA insistencia
+   (por su firma de texto); una alarma NUEVA con texto distinto insiste normal. */
+async function silencioLeer(){ try{ const c=await caches.open(META_CACHE); const r=await c.match("./__silencio"); return r ? await r.json() : null; }catch(_){ return null; } }
+async function silencioPoner(firma){ try{ const c=await caches.open(META_CACHE); await c.put("./__silencio", new Response(JSON.stringify({ hasta: Date.now() + 15*60000, firma: String(firma||"").slice(0,40) }))); }catch(_){} }
+function firmaDe(body){ return String(body||"").slice(0,40); }
 async function pintarAviso(msg){
   const esRutina = msg.kind==="rem";
   const fuerte = !!msg.strong;
@@ -32,12 +45,29 @@ async function pintarAviso(msg){
 self.addEventListener("push", e => {
   e.waitUntil((async () => {
     const vistos = await idsMostrados();
+    /* 🔕 v6.22: ¿mostramos una repetición 🔁 y ya no está en la bandeja? Rey la descartó
+       (aunque su teléfono nunca nos avisara) → "ya la vi" al worker + 15 min de silencio
+       para las repes de ESA insistencia (por su firma de texto). */
+    try{
+      const rv = await repeViva();
+      if(rv && rv.viva){
+        const enBandeja = await self.registration.getNotifications({ tag: "apex-insist" });
+        if(!enBandeja.length){ await silencioPoner(rv.firma); await marcarRepeViva(null); insistVisto(); }
+      }
+    }catch(_){}
+    let silencio = null;
+    try{ silencio = await silencioLeer(); if(silencio && Date.now() > (silencio.hasta||0)) silencio = null; }catch(_){}
     let porMostrar = [];
     try{
       const r = await fetch(WORKER+"/push/pending",{cache:"no-store"});
       if(r.ok){
         const d = await r.json();
         porMostrar = ((d && d.avisos) || []).filter(m => m && m.id && m.body && !vistos.includes(m.id));
+        /* repes bajo ventana de silencio (misma firma que la descartada): vistas y mudas */
+        if(silencio){
+          porMostrar.filter(m => m.repe && firmaDe(m.body) === silencio.firma).forEach(m => vistos.push(m.id));
+          porMostrar = porMostrar.filter(m => !(m.repe && firmaDe(m.body) === silencio.firma));
+        }
         /* de las repeticiones 🔁 pendientes solo SUENA la última (las viejas se dan por vistas) */
         const repes = porMostrar.filter(m => m.repe);
         if(repes.length > 1){
@@ -47,7 +77,25 @@ self.addEventListener("push", e => {
         }
       }
     }catch(_){}
+    /* 💬 v6.23 (Rey): si Apex está ABIERTA EN PANTALLA, las respuestas del chat NO suenan
+       como notificación — van DIRECTO a la app (al chat si está abierto, o al banner 🛡️ de
+       Roberto si está en otra sección). La notificación clásica queda para app cerrada o
+       de fondo — y esa, al tocarla, abre EL MISMO chat de esa conversación (jobId). */
+    let entregadoEnApp = 0;
+    try{
+      const cs = await clients.matchAll({ type: "window", includeUncontrolled: true });
+      const visible = cs.find(c => c.visibilityState === "visible") || null;
+      if(visible){
+        const chats = porMostrar.filter(m => m.kind === "chat");
+        chats.forEach(m => {
+          try{ visible.postMessage({ type: "apex-chat-live", jobId: m.jobId || "", title: m.title || "", body: m.body || "", seed: m.seed || "" }); entregadoEnApp++; }catch(_){}
+          if(m.id) vistos.push(m.id);
+        });
+        if(chats.length) porMostrar = porMostrar.filter(m => m.kind !== "chat");
+      }
+    }catch(_){}
     if(!porMostrar.length){
+      if(entregadoEnApp){ await guardarMostrados(vistos); return; }   /* ya entregado dentro de la app */
       /* paracaídas: worker viejo o cola atrasada — el camino de siempre */
       let msg = { title: "Apex · Roberto", body: "Tienes un aviso." };
       try{ if(e.data){ const d=e.data.json(); if(d && d.body) msg=d; } }catch(_){}
@@ -60,6 +108,7 @@ self.addEventListener("push", e => {
     for(const msg of porMostrar){
       await pintarAviso(msg);
       if(msg.id) vistos.push(msg.id);
+      if(msg.repe) await marcarRepeViva({ viva: true, firma: firmaDe(msg.body) });   /* 🔕 v6.22 */
     }
     await guardarMostrados(vistos);
   })());
@@ -76,11 +125,11 @@ function insistVisto(){
     .catch(()=>new Promise(r=>setTimeout(r,4000)).then(post))
     .catch(()=>{});
 }
-self.addEventListener("notificationclose", e => { e.waitUntil(insistVisto()); });
+self.addEventListener("notificationclose", e => { e.waitUntil((async()=>{ try{ if((e.notification&&e.notification.tag)==="apex-insist") await silencioPoner(firmaDe(e.notification.body)); }catch(_){} await marcarRepeViva(null); await insistVisto(); })()); });
 /* Al tocar una notificación de Roberto, abre/enfoca la app */
 self.addEventListener("notificationclick", e => {
   e.notification.close();
-  e.waitUntil(insistVisto());
+  e.waitUntil((async()=>{ try{ if((e.notification&&e.notification.tag)==="apex-insist") await silencioPoner(firmaDe(e.notification.body)); }catch(_){} await marcarRepeViva(null); await insistVisto(); })());
   const tag=(e.notification.tag||"");
   const data=e.notification.data||{};
   /* 🎯 DESTINO DEL AVISO: si el aviso trae un "ir", abre Apex DIRECTAMENTE ahí —
