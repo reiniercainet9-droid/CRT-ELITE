@@ -651,7 +651,7 @@ function ejecArchivar(lg){
         const t=a.trades[k]||{ticket:x.ticket,shot:"ejec"+k};
         if(!t.tsOut){ Object.assign(t,{sym:x.sym||t.sym,dir:x.dir||t.dir,lote:(x.lote!=null?x.lote:t.lote),entrada:(x.entrada!=null?x.entrada:t.entrada),sl:(x.sl!=null?x.sl:t.sl),tp:(x.tp!=null?x.tp:t.tp),salida:x.salida,pl:x.pl,r:x.r,motivo:x.motivo,riesgo:(x.riesgo!=null?x.riesgo:t.riesgo),grado:x.grado||t.grado,lectura:x.lectura||t.lectura,ficha:x.ficha||t.ficha,shotCierre:x.shotCierre||t.shotCierre,tsOut:x.ts}); a.trades[k]=t; cambio=true; }
         else { /* v6.14: rellena lo que haya llegado tarde (lectura, ficha o la foto del cierre) */
-          /* 🩹 v6.27: si la nube CORRIGIÓ el P&L/R de un cierre ya archivado (p. ej. el
+          /* 🩹 v6.28: si la nube CORRIGIÓ el P&L/R de un cierre ya archivado (p. ej. el
              ticket con el P&L doblado por el bug v1.4 del Ejecutor), el archivo local
              adopta el valor corregido — la nube es la fuente de la verdad. */
           if(x.pl!=null && t.pl!==x.pl){ t.pl=x.pl; if(x.r!=null) t.r=x.r; if(x.motivo) t.motivo=x.motivo; cambio=true; }
@@ -5914,6 +5914,16 @@ function iaVozEspanol(){
 function iaTextoParaVoz(s){
   return String(s||"")
     .replace(/https?:\/\/[^\s]+/g,"el enlace que te dejé")
+    /* 🔇 v6.28 — TABLAS: la voz leía "pleca guión pleca guión..." (los símbolos | y ---
+       de los recuadros). Las filas separadoras desaparecen y cada fila de tabla se lee
+       como frase natural con comas. */
+    .replace(/→/g," a ")                                                          /* 03:29→02:29 = "a" */
+    .replace(/^[\s|:\-]{3,}$/gm,"")                                              /* |---|---| fuera */
+    .replace(/^\s*\|(.+)\|\s*$/gm,(m,inner)=>inner.split("|").map(x=>x.trim()).filter(Boolean).join(", ")+".")
+    .replace(/\|/g,", ")                                                          /* plecas sueltas */
+    .replace(/[—–]/g,", ")                                                        /* rayas largas */
+    .replace(/(^|[\s(])-(\d)/g,"$1menos $2")                                      /* -1.09 → menos 1.09 */
+    .replace(/(^|[\s(])\+(\d|\$)/g,"$1más $2")                                    /* +$44 → más $44 */
     .replace(/\*\*(.+?)\*\*/g,"$1")
     .replace(/[*#_`>]/g,"")
     .replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2190}-\u{21FF}\u{2B00}-\u{2BFF}]/gu,"")
@@ -6950,7 +6960,7 @@ function iaPendGuardar(p){ const a=iaPendCargar().filter(x=>x.jobId!==p.jobId); 
 function iaPendBorrar(jobId){ try{ localStorage.setItem(IA_PEND_KEY, JSON.stringify(iaPendCargar().filter(x=>x.jobId!==jobId))); }catch(_){} }
 const _iaPolling={};
 /* Arranca una consulta en segundo plano */
-/* 📞 v6.27 — LA APP SOSTIENE SU PROPIA LLAMADA (el cierre definitivo del 28-08).
+/* 📞 v6.28 — LA APP SOSTIENE SU PROPIA LLAMADA (el cierre definitivo del 28-08).
    Antes: la app soltaba el trabajo, colgaba, y la respuesta tenía que volver por KV
    (1-2 min entre colos en 4G) o por push (FCM la retiene con batería baja) — de ahí
    los 2-3 minutos, los duplicados y las tarjetas de fallo. Ahora: la app manda
@@ -7060,7 +7070,7 @@ function iaReintentar(){
 /* ¿El fallo fue por falta de créditos? */
 function iaEsCreditoMsg(m){ return /credit balance|credit|billing|saldo|insufficient|quota|payment|402/i.test(String(m||"")); }
 /* Construye el mensaje de error con SUS botones, según lo que pasó. */
-/* 🧹 v6.27: toda tarjeta de fallo va MARCADA (fallo:true). Cuando una respuesta de
+/* 🧹 v6.28: toda tarjeta de fallo va MARCADA (fallo:true). Cuando una respuesta de
    verdad llega a esa conversación, las tarjetas de fallo se BARREN solas — eran ellas
    las que Rey re-tocaba horas después y provocaban la tormenta de duplicados. */
 function iaMsgFallo(motivo, textoParcial){
@@ -7186,14 +7196,22 @@ function iaGuardarUltimo(c){
 /* Detecta si el error del chat es por CRÉDITOS de Anthropic y añade el aviso de recarga */
 function iaEsCredito(m){ return /credit|balance|billing|saldo|insufficient|quota|payment|402/i.test(String(m||"")); }
 function iaErrMsg(m){ const s=String(m||"Error"); if(iaEsCredito(s)) return "💳 **Se agotaron los créditos de Roberto** (tu cuenta de Anthropic). Recárgalos y en 1 minuto vuelvo:\n"+IA_RECARGA_URL+"\n(También en ⚙️ → «💳 Saldo / recargar créditos».)"; return "⚠️ "+s; }
+/* 🔒 v6.28 — CANDADO ANTI-DOBLE: un trabajo pintado queda MARCADO (últimos 30 jobIds en
+   el teléfono). El 28-08 la respuesta llegaba DOS VECES: la pintaba la llamada sostenida y
+   luego el aviso de respaldo la hacía consultar y pintar OTRA VEZ. Con el candado, el mismo
+   jobId jamás se pinta dos veces, llegue por el camino que llegue. */
+function iaJobOkVisto(id){ try{ return JSON.parse(localStorage.getItem("crtelite_jobs_ok")||"[]").indexOf(id)>=0; }catch(_){ return false; } }
+function iaJobOkMarcar(id){ try{ const a=JSON.parse(localStorage.getItem("crtelite_jobs_ok")||"[]"); if(a.indexOf(id)<0){ a.push(id); localStorage.setItem("crtelite_jobs_ok", JSON.stringify(a.slice(-30))); } }catch(_){} }
 async function iaBgResuelto(jobId, d){
   /* 🔁 error transitorio marcado por el worker (v5.65): reintentar solo, sin molestar a Rey.
      OJO: antes de iaPendBorrar, porque el reintento necesita el pendiente con sus mensajes. */
   if(d && d.error && d.retry){ iaAutoReintento(jobId, "", d.error); return; }
+  if(iaJobOkVisto(jobId)){ IA.busy=false; return; }   /* 🔒 ya se pintó: ni un píxel más */
+  iaJobOkMarcar(jobId);
   const pend=iaPendCargar().find(x=>x.jobId===jobId);
   const c = (pend && IA.convs.find(x=>x.id===pend.convId)) || iaConvAct();
   iaPendBorrar(jobId);
-  /* 🧹 v6.27: al resolverse una respuesta, se APAGAN los otros sondeos y pendientes de la
+  /* 🧹 v6.28: al resolverse una respuesta, se APAGAN los otros sondeos y pendientes de la
      MISMA conversación (cadenas de reintento zombis) — antes un reintento paralelo seguía
      vivo tras pintar la respuesta y acababa soltando una tarjeta de fallo o un duplicado. */
   try{
@@ -7204,7 +7222,7 @@ async function iaBgResuelto(jobId, d){
   }catch(_){}
   IA.actId=c.id;   // deja como activa la conversación de la respuesta, para que se vea al abrir el chat
   if(d.error){ IA.busy=false; iaBarrerFallos(c); c.msgs.push(iaMsgFallo(d.error)); iaGuardarConvs(); pintarIAChat(); return; }
-  iaBarrerFallos(c);   /* 🧹 v6.27: llegó respuesta real → fuera las tarjetas de fallo viejas */
+  iaBarrerFallos(c);   /* 🧹 v6.28: llegó respuesta real → fuera las tarjetas de fallo viejas */
   if(d.toolUse && Array.isArray(d.content)){
     const pre=d.content.filter(b=>b.type==="text").map(b=>b.text||"").join("").trim();
     if(pre) c.msgs.push({role:"assistant",content:pre});
@@ -7236,6 +7254,9 @@ async function iaBgResuelto(jobId, d){
   }
   IA.busy=false;
   const txt=(d.text||"").trim();
+  /* 🔒 v6.28 cinturón extra: si ESTE texto ya está pintado en la conversación (trabajos de
+     antes de estrenar el candado), no se repite. */
+  if(txt && c.msgs.some(m=>m.role==="assistant" && m.content===txt)){ iaGuardarConvs(); pintarIAChat(); return; }
   c.msgs.push({role:"assistant",content: txt || "⚠️ No me llegó respuesta, reintenta."});
   iaGuardarConvs();
   pintarIAChat();
@@ -7543,7 +7564,7 @@ function init(){
      del worker (la que repite el sonido cada 30 s). Inofensivo si no hay ninguna activa. */
   const insistVistoApp=()=>{ try{ fetch(nubeUrl()+"/insist/visto",{method:"POST"}).catch(()=>{}); }catch(_){} };
   setTimeout(insistVistoApp, 800);
-  /* 📱 v6.27: la app REPORTA su versión a la nube al abrir y al volver al frente — así
+  /* 📱 v6.28: la app REPORTA su versión a la nube al abrir y al volver al frente — así
      Claude puede verificar desde fuera qué versión corre de verdad en el teléfono
      (el "ciclo sin fin" del 28-08 fue una app vieja ejecutándose sin que nadie lo viera). */
   const holaApp=()=>{ try{ fetch(nubeUrl()+"/app/hola",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({v:APP_VERSION})}).catch(()=>{}); }catch(_){} };
@@ -7574,6 +7595,10 @@ function init(){
       if(!chatAbierto) mostrarBannerRoberto("💬 Roberto te respondió — toca para leerlo");
       return;
     }
+    /* 🔒 v6.28: si el trabajo del aviso YA no está pendiente (lo entregó la llamada
+       sostenida), NO hay nada que hacer — antes este camino re-consultaba la nube y
+       pintaba la MISMA respuesta otra vez (el doble del 28-08). */
+    if(jid && !pendDe(jid)) return;
     if(chatAbierto){
       if(jid){ if(_iaPolling[jid]){ clearTimeout(_iaPolling[jid]); delete _iaPolling[jid]; } iaPollJob(jid); }
       else iaResumePend();
