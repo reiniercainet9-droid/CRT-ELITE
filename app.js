@@ -149,6 +149,28 @@ let CONF   = load(K.conf, {});
 let RLEIDAS= load(K.reglas, {});
 let BAL    = load(K.bal, {bal:6000, pct:0.5, pips:10});
 
+/* ============================================================
+   🌗 v6.38 — TEMA CLARO/OSCURO (pedido de Rey: ver Apex y Roberto igual de bien
+   bajo el sol que en la noche). El oscuro de siempre es el estándar; el claro es
+   una paleta espejo calibrada para contraste (index.html). Se aplica a TODO
+   (Apex + chat), se recuerda, y Roberto también puede cambiarlo (mano tema_apex).
+   ============================================================ */
+function temaActual(){ try{ return localStorage.getItem("crtelite_tema")==="claro"?"claro":"oscuro"; }catch(_){ return "oscuro"; } }
+function temaAplicar(t){
+  const v=(t==="claro")?"claro":"oscuro";
+  try{ localStorage.setItem("crtelite_tema", v); }catch(_){}
+  if(v==="claro") document.documentElement.setAttribute("data-tema","claro");
+  else document.documentElement.removeAttribute("data-tema");
+  try{ const m=document.querySelector('meta[name="theme-color"]'); if(m) m.setAttribute("content", v==="claro"?"#EEF1F8":"#0C1024"); }catch(_){}
+  return v;
+}
+function temaAlternar(){
+  const v=temaAplicar(temaActual()==="claro"?"oscuro":"claro");
+  try{ toast(v==="claro"?"☀️ Modo claro":"🌙 Modo oscuro"); }catch(_){}
+}
+try{ temaAplicar(temaActual()); }catch(_){}
+document.addEventListener("DOMContentLoaded", ()=>{ try{ const b=document.getElementById("btnTema"); if(b) b.onclick=temaAlternar; }catch(_){} });
+
 /* Lista de estrategias registradas (nombres). Siempre existe "CRT Elite". */
 let ESTRATEGIAS = load(K.estr, ["CRT Elite"]);
 if(!ESTRATEGIAS.length) ESTRATEGIAS = ["CRT Elite"];
@@ -5525,6 +5547,7 @@ const APEX_MAPA =
 "18. 🎓 Simulacro de examen (chip en 💰, v6.34) — ANTES de que Rey compre un examen de fondeo, la app pasa sus trades por las reglas exactas de cada cuenta (DD, pérdida diaria, target, días mínimos) tal como operó Y barajados 200 veces, y tú interpretas el veredicto: comprar ya / esperar / qué corregir. Los números vienen calculados — NUNCA los inventes.\n"+
 "19. 🧬 Gemelo disciplinado (chip en 🧠, v6.35) — el espejo de su fuga de timing: su curva real vs la del Rey paralelo que solo entró 'En confirmación', con la diferencia en R y en DÓLARES y el desglose por momento de entrada. Números calculados por la app: tú interpretas y le das UNA acción para acercarse a su gemelo.\n"+
 "20. 🚨 Freno anti-tilt EN CALIENTE (v6.36, automático) — al registrarse la 2ª pérdida seguida del día, la app le pone un ALTO en pantalla con su propia estadística de revancha y 3 salidas: cerrar el día (apaga el Ejecutor), hablar contigo (llegas en modo emergencia emocional — protégelo), o seguir bajo su responsabilidad. Si te llega esa conversación 🚨, es EL momento más importante de tu trabajo.\n"+
+"21. 🌗 Tema claro/oscuro (v6.38) — Apex y tu chat se ven perfectos bajo el sol (☀️ claro) o de noche (🌙 oscuro, el clásico). Rey cambia con el botón 🌗 (encabezado de Apex o de tu chat) o TÚ con tu mano tema_apex si te lo pide de palabra ('ponme el modo claro') — es automática, sin tarjeta, instantánea y recordada.\n"+
 "TUS MANOS ya tocan: avisos, pares, trades y cuentas (SIEMPRE con confirmación de Rey y registro en el 🗒️ Historial).\n"+
 "🖐️ TUS MANOS DE SISTEMA (v6.31 — Rey te quiere SIN LÍMITES para tareas, con su tarjeta como única llave): también ENCIENDES/DETIENES su 🤖 Ejecutor de MT5 (ejecutor_switch — si te dice 'enciende el ejecutor', esa es la mano; y propónlo TÚ si es domingo por la tarde y sigue apagado del finde), CAMBIAS sus reglas (ejecutor_config — solo los campos pedidos, el resto intacto) y AJUSTAS las horas de tus rituales 🌅/🌙 del mentor de vida (mentor_horas). Todo pasa por su tarjeta de confirmación — nada se aplica sin su ✓. Si una tarea que te pida aún no tiene mano, dilo honesto y sugiérele pedírsela a Claude en la próxima tanda.\n"+
 "TU SISTEMA COMPLETO: no vives solo en Apex; estás integrado a TODO el sistema de trading de Rey — su TradingView, su indicador CRT Elite, sus ALARMAS (te llegan por webhook y tú las interpretas) y Apex. Estás pendiente de lo que pasa en el conjunto para darle un servicio sin límites, apoyándote además en tu conexión a internet.\n"+
@@ -5978,6 +6001,7 @@ function iaInit(){
       <div class="ia-head">
         <div class="ia-title"><span class="ia-dot"></span> Roberto</div>
         <div class="ia-head-btns">
+          <button class="ia-ic" id="iaTema" aria-label="Cambiar tema claro/oscuro">🌗</button>
           <button class="ia-ic" id="iaNew" aria-label="Nueva conversación">✚</button>
           <button class="ia-ic" id="iaConvs" aria-label="Conversaciones">🗂️</button>
           <button class="ia-ic" id="iaCfg" aria-label="Ajustes">⚙️</button>
@@ -6055,6 +6079,7 @@ function iaInit(){
   document.body.appendChild(ov);
 
   $("#iaClose").onclick=cerrarIA;
+  { const bt=$("#iaTema"); if(bt) bt.onclick=temaAlternar; }   /* 🌗 v6.38 */
   ov.onclick=(e)=>{ if(e.target===ov) cerrarIA(); };
   $("#iaNew").onclick=iaNuevaConv;
   $("#iaNew2").onclick=iaNuevaConv;
@@ -6789,6 +6814,8 @@ const IA_TOOLS = [
     input_schema:{ type:"object", properties:{ nombre:{type:"string",description:"Nombre corto y único, ej. 'Oro Asia Sweep'"}, instrumento:{type:"string",description:"(opcional) instrumento(s), ej. 'XAU/USD'"}, ajustes:{type:"string",description:"(opcional) primeras reglas/ideas, en texto"} }, required:["nombre"] } },
   { name:"estado_estrategia", description:"Mueve una estrategia de ESTADO en el laboratorio: 💡 borrador → 🧪 laboratorio (definida y en pruebas/backtest) → ✅ aprobada (pasó el laboratorio — SOLO cuando REY diga explícitamente que la aprueba) → 📦 archivada (descartada o en pausa). También hacia atrás si algo se invalida. La ⭐ vigente se elige aparte con estrategia_vigente. SIEMPRE con tarjeta.",
     input_schema:{ type:"object", properties:{ nombre:{type:"string",description:"(opcional) estrategia a mover; por defecto la activa"}, estado:{type:"string",enum:["borrador","laboratorio","aprobada","archivada"]}, motivo:{type:"string",description:"por qué cambia de estado, 1 frase"} }, required:["estado"] } },
+  { name:"tema_apex", description:"Cambia el TEMA VISUAL de Apex y del chat: 'claro' (☀️ para ver bien a plena luz del sol) u 'oscuro' (🌙 el clásico de la app). Úsalo cuando Rey te lo pida de palabra ('ponme el modo claro'). Es cosmético, instantáneo y reversible: se aplica SIN tarjeta.",
+    input_schema:{ type:"object", properties:{ tema:{type:"string",enum:["claro","oscuro"]} }, required:["tema"] } },
   { name:"estrategia_vigente", description:"Marca una estrategia como ⭐ VIGENTE: la que MANDA en el 🤖 Ejecutor y en los análisis de señales (solo puede haber una). REGLA DURA: solo estrategias en estado ✅ Aprobada (pasaron el laboratorio con backtest y Rey las aprobó). OJO honestidad: hoy el Ejecutor solo sabe ejecutar señales de CRT Elite — si Rey pone vigente otra estrategia, adviértele que ejecutarla de verdad requiere que Claude le construya sus señales/reglas en una tanda de código. SIEMPRE con tarjeta.",
     input_schema:{ type:"object", properties:{ nombre:{type:"string",description:"Estrategia (✅ aprobada) que pasa a ser la ⭐ vigente"} }, required:["nombre"] } }
 ];
@@ -6835,6 +6862,7 @@ function describeTool(name, i){
   if(name==="crear_estrategia") return "📚 Crear la estrategia \""+(i.nombre||"?")+"\" en el laboratorio (nace 💡 Borrador)"+(i.instrumento?("\n→ instrumento: "+i.instrumento):"")+(i.ajustes?("\n→ primeras reglas: "+String(i.ajustes).slice(0,200)):"");
   if(name==="estado_estrategia") return "📚 Mover \""+(i.nombre||CTX.estrategia)+"\" a estado "+(({borrador:"💡 Borrador",laboratorio:"🧪 En laboratorio",aprobada:"✅ Aprobada",archivada:"📦 Archivada"})[i.estado]||i.estado)+(i.motivo?("\nPorque: "+i.motivo):"");
   if(name==="estrategia_vigente") return "⭐ Poner VIGENTE la estrategia \""+(i.nombre||"?")+"\" — desde ya es la que manda en el 🤖 Ejecutor y en los análisis de señales";
+  if(name==="tema_apex") return "🌗 Cambiar el tema de Apex a modo "+(i.tema==="claro"?"☀️ CLARO":"🌙 OSCURO");
   return name+" "+JSON.stringify(i);
 }
 /* Envía un comando al Puente (por la nube) y ESPERA su resultado real (hasta ~60s:
@@ -7133,6 +7161,11 @@ async function ejecutarTool(name, i){
       const extra=(i.estado!=="aprobada" && estrVigente()===nom)?" ⚠️ OJO: era la ⭐ vigente y dejó de estar aprobada — elige una vigente válida con estrategia_vigente.":"";
       return {ok:true,msg:"📚 \""+nom+"\" ahora está en "+ESTR_ESTADOS[i.estado]+(i.motivo?(" ("+i.motivo+")"):"")+extra};
     }
+    if(name==="tema_apex"){   /* 🌗 v6.38 — automática (cosmética y reversible) */
+      if(i.tema!=="claro" && i.tema!=="oscuro") return {ok:false,msg:"Tema inválido: usa 'claro' u 'oscuro'"};
+      temaAplicar(i.tema);
+      return {ok:true,msg:(i.tema==="claro"?"☀️ Apex en modo CLARO":"🌙 Apex en modo OSCURO")+" — listo, y queda recordado."};
+    }
     if(name==="estrategia_vigente"){
       const nom=String(i.nombre||"").trim();
       if(!ESTRATEGIAS.includes(nom)) return {ok:false,msg:"No existe la estrategia \""+nom+"\""};
@@ -7270,7 +7303,7 @@ function histRobertoModal(){
 const IA_TOOL_PEND=[];
 function confirmarTool(tu){
   // 🗂️ Organizar chats, 🧠 buscar en memoria, 🧭 marcar paso, 🎯 veredicto: automáticos, SIN tarjeta.
-  if(tu.name==="organizar_chat" || tu.name==="buscar_memoria" || tu.name==="marcar_paso_plan" || tu.name==="registrar_veredicto"){
+  if(tu.name==="organizar_chat" || tu.name==="buscar_memoria" || tu.name==="marcar_paso_plan" || tu.name==="registrar_veredicto" || tu.name==="tema_apex"){
     return (async()=>{ let res; try{ res=await ejecutarTool(tu.name, tu.input); }catch(e){ res={ok:false,msg:"Error: "+e}; } if(res&&res.ok&&(tu.name==="organizar_chat"||tu.name==="marcar_paso_plan")) toast(res.msg); return {confirmed:true, res}; })();
   }
   return new Promise(resolve=>{

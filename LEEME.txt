@@ -1,5 +1,18 @@
-APEX v6.37 — TRADING DESK
+APEX v6.38 — TRADING DESK
 =========================
+
+NOVEDADES v6.38  (🌗 MODO CLARO / OSCURO)
+==========================================
+- Botón 🌗 en el encabezado de Apex Y en el del chat de Roberto: alterna
+  entre ☀️ modo claro (para ver perfecto a plena luz del sol) y 🌙 oscuro
+  (el clásico de siempre, que queda INTACTO). Se recuerda tu elección.
+- Paleta clara calibrada con contraste medido (WCAG): ninguna letra, color
+  ni botón pierde legibilidad — verificado en navegador real con capturas.
+- También de palabra: 'Roberto, ponme el modo claro' (mano tema_apex,
+  instantánea y sin tarjeta por ser cosmética y reversible).
+- PARA SUBIR: SOLO este zip a GitHub (el worker v5.102 ya está subido).
+  Ritual de oro: cerrar y reabrir la app.
+
 
 NOVEDADES v6.37 + worker v5.101  (🧠 MEMORIA RAG — memoria infinita por significado)
 =====================================================================================

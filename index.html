@@ -10,6 +10,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Apex">
+<script>/* 🌗 v6.38: aplica el tema guardado ANTES de pintar (sin destello) */try{if(localStorage.getItem("crtelite_tema")==="claro")document.documentElement.setAttribute("data-tema","claro");}catch(e){}</script>
 <style>
 :root{
   --bg:#0C1024;
@@ -35,6 +36,39 @@
   --safe-b:env(safe-area-inset-bottom,0px);
   --safe-t:env(safe-area-inset-top,0px);
 }
+/* ===== 🌗 v6.38 — MODO CLARO (Rey elige ☀️/🌙; el oscuro de siempre sigue siendo el estándar).
+   Paleta espejo calibrada para CONTRASTE: dorado oscurecido para leerse sobre blanco,
+   textos azul-noche, superficies claras. Todo lo que usa var(--) cambia solo; abajo van
+   las reglas espejo de los pocos colores fijos (degradados, burbujas doradas, insignias). */
+html[data-tema="claro"]{
+  --bg:#EEF1F8; --bg2:#E4E8F3;
+  --card:#FFFFFF; --card2:#F0F3FB; --card3:#E2E7F5;
+  --line:#C5CCE2;
+  --gold:#8A660E; --gold-soft:#75560C; --gold-dim:#B6923C;
+  --txt:#171C33; --txt2:#454F73; --txt3:#6E7796;
+  --green:#0C8F58; --green-dim:#2E7D54;
+  --red:#D3364B; --red-dim:#B05560;
+  --blue:#3557D6; --orange:#B96E0E; --purple:#7452E8;
+}
+html[data-tema="claro"] body{background:radial-gradient(1100px 620px at 50% -8%, rgba(53,87,214,.07), transparent 60%),radial-gradient(820px 520px at 100% 2%, rgba(156,117,20,.05), transparent 55%),var(--bg)}
+html[data-tema="claro"] .hdr{background:linear-gradient(150deg,#FFFFFF,#ECF0FA)}
+html[data-tema="claro"] .hdr-logo{background:radial-gradient(120% 120% at 30% 20%,#FFFFFF,#DEE4F2 72%)}
+html[data-tema="claro"] .card{background:linear-gradient(165deg,var(--card),#F4F6FC)}
+html[data-tema="claro"] .fab{background:radial-gradient(130% 130% at 30% 20%,#FFFFFF,#E2E8F5 72%)}
+html[data-tema="claro"] .menu-sheet{background:linear-gradient(165deg,#FFFFFF,#EFF2FA)}
+html[data-tema="claro"] .menu-item{background:rgba(23,28,51,.04);border:1px solid var(--line)}
+html[data-tema="claro"] .rob-banner{background:linear-gradient(180deg,#FFFFFF,#F0EDFA)}
+html[data-tema="claro"] .cta-badge{background:rgba(23,28,51,.03)}
+html[data-tema="claro"] .ia-mem-fold{border:1px solid var(--line);background:rgba(23,28,51,.03)}
+html[data-tema="claro"] .ia-mem-fold[open] summary{border-bottom:1px solid var(--line)}
+html[data-tema="claro"] .ia-mem-n{background:var(--card3);color:var(--txt)}
+html[data-tema="claro"] .ia-md tbody tr:nth-child(even) td{background:rgba(23,28,51,.04)}
+/* sobre DORADO oscuro, el texto pasa a blanco para máximo contraste (en oscuro sigue negro sobre dorado claro) */
+html[data-tema="claro"] .btn.gold, html[data-tema="claro"] .ia-msg.user, html[data-tema="claro"] .ia-send,
+html[data-tema="claro"] .dia-chip.on, html[data-tema="claro"] .arr-dot.now, html[data-tema="claro"] .arr-badge.activa,
+html[data-tema="claro"] .ia-acc-b.gold{color:#FFFFFF}
+html[data-tema="claro"] .arr-paso.on .box::after{color:#FFFFFF}
+html[data-tema="claro"] .chk .box{color:#FFFFFF}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;padding:0}
 body{
@@ -753,7 +787,10 @@ select.inp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns
         <div class="hdr-s">Trading desk · Rey</div>
       </div>
     </div>
-    <button class="hdr-ic hdr-help" id="btnAyuda" aria-label="¿Para qué sirve esta pantalla?">?</button>
+    <div style="display:flex;gap:6px;align-items:center">
+      <button class="hdr-ic" id="btnTema" aria-label="Cambiar tema claro/oscuro">🌗</button>
+      <button class="hdr-ic hdr-help" id="btnAyuda" aria-label="¿Para qué sirve esta pantalla?">?</button>
+    </div>
   </div>
 
   <div class="clocks">
