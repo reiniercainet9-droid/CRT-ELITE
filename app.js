@@ -7067,10 +7067,27 @@ async function ejecutarTool(name, i){
           const t=String(e.texto||"").toLowerCase();
           return palabras.length?palabras.some(w=>t.includes(w)):t.includes(q);
         }).slice(-20);
+        /* 🧠 v6.37 — MEMORIA PROFUNDA (RAG): además de las palabras exactas, pregunta a la
+           nube por SIGNIFICADO (worker v5.101, /rag/buscar). Si el RAG no está o falla,
+           esto se salta en silencio y la búsqueda clásica sigue intacta (fail-open). */
+        let sem=[];
+        try{
+          if(q){
+            const rr=await fetch(nubeUrl()+"/rag/buscar?q="+encodeURIComponent(i.consulta)+(tema?("&tema="+encodeURIComponent(tema)):""),{cache:"no-store"});
+            const dd=await rr.json();
+            if(dd && dd.ok && Array.isArray(dd.hits)){
+              const vistos=new Set(hits.map(e=>e.id));
+              sem=dd.hits.filter(h=>!vistos.has(h.id));
+            }
+          }
+        }catch(_){}
         const nom=tema?(MEM_TEMAS_APP[tema]||tema):"";
         const crit=[q?("“"+i.consulta+"”"):"", nom?("tema "+nom):""].filter(Boolean).join(" · ");
-        if(!hits.length) return {ok:true,msg:"No encontré recuerdos con "+crit+" (busqué entre "+entries.length+" recuerdos)."};
-        return {ok:true,msg:"Encontré "+hits.length+" recuerdo(s) — "+crit+":\n"+hits.map(e=>"• ["+(MEM_TEMAS_APP[e.tema||"general"]||"🗂️ General")+"] "+e.texto).join("\n")};
+        if(!hits.length && !sem.length) return {ok:true,msg:"No encontré recuerdos con "+crit+" — ni por palabras ni por significado (busqué entre "+entries.length+" recuerdos)."};
+        let msg="";
+        if(hits.length) msg+="Encontré "+hits.length+" recuerdo(s) — "+crit+":\n"+hits.map(e=>"• ["+(MEM_TEMAS_APP[e.tema||"general"]||"🗂️ General")+"] "+e.texto).join("\n");
+        if(sem.length) msg+=(msg?"\n":"")+"🧠 Relacionados POR SIGNIFICADO (memoria profunda):\n"+sem.map(h=>"• ["+(MEM_TEMAS_APP[h.tema||"general"]||"🗂️ General")+" · afinidad "+h.score+"] "+h.texto).join("\n");
+        return {ok:true,msg};
       }catch(_){ return {ok:false,msg:"No pude leer la memoria en este momento."}; }
     }
     if(name==="registrar_retiro"){

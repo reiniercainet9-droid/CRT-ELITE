@@ -1,5 +1,22 @@
-APEX v6.36 — TRADING DESK
+APEX v6.37 — TRADING DESK
 =========================
+
+NOVEDADES v6.37 + worker v5.101  (🧠 MEMORIA RAG — memoria infinita por significado)
+=====================================================================================
+- El cerebro vectorial que creamos juntos en Cloudflare (índice roberto-memoria
+  + Workers AI) ya está conectado: cada recuerdo de Roberto se indexa SOLO al
+  guardarse, y Roberto lo encuentra POR SIGNIFICADO ('revancha' encuentra el
+  recuerdo que dice 'venganza', aunque no compartan ni una palabra).
+- EN CADA CHAT: tu mensaje trae automáticamente a Roberto sus recuerdos más
+  afines (memoria profunda) — clave cuando su memoria crezca a cientos.
+- Su mano buscar_memoria ahora combina palabras exactas + significado.
+- SEGURIDAD TOTAL (fail-open): si el índice fallara algún día, TODO sigue
+  funcionando exactamente como hasta hoy. Nada roto jamás.
+- Costo: capa gratuita de Cloudflare (~$0).
+- PARA SUBIR: 1º worker v5.101 a Cloudflare, 2º este zip a GitHub. Ritual de
+  oro: cerrar y reabrir la app. Tras subir, Claude reindexa los recuerdos
+  existentes y verifica la memoria profunda en vivo.
+
 
 NOVEDADES v6.34-v6.36  (🎓 SIMULACRO + 🧬 GEMELO + 🚨 ANTI-TILT — ideas de Claude)
 ===================================================================================
