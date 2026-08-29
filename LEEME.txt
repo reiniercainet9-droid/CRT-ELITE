@@ -1,3 +1,126 @@
+APEX v6.36 — TRADING DESK
+=========================
+
+NOVEDADES v6.34-v6.36  (🎓 SIMULACRO + 🧬 GEMELO + 🚨 ANTI-TILT — ideas de Claude)
+===================================================================================
+⚠️ ENTREGA ÚNICA Y FINAL DEL MARATÓN 29-08 (8 tandas): se sube SOLO worker
+v5.100 + este zip v6.36 — contienen TODO el día: 🌅 mentor de vida, 🗂️ chips
+por categorías, 🖐️ manos de sistema, 📚 laboratorio de estrategias,
+📋 registro total y estas tres joyas:
+
+- 🎓 SIMULACRO DE EXAMEN (chip en 💰): antes de comprar un examen de fondeo,
+  tus trades pasan por las reglas EXACTAS de cada cuenta (DD estático o
+  trailing, pérdida diaria, target, días mínimos) tal como operaste y
+  barajados 200 veces → probabilidad honesta de pasar POR FIRMA. Sabrás qué
+  comprar y cuándo, ANTES de pagar.
+- 🧬 MI GEMELO DISCIPLINADO (chip en 🧠): tu curva real contra la del Rey
+  paralelo que SOLO entró en confirmación — la diferencia en R y en DÓLARES.
+  El espejo de tu fuga de timing, con tus propios datos.
+- 🚨 FRENO ANTI-TILT EN CALIENTE (automático): a la 2ª pérdida seguida del
+  día, un ALTO en pantalla con TU estadística de revancha y 3 salidas:
+  cerrar el día (apaga el Ejecutor de un toque), hablar con Roberto (modo
+  emergencia emocional) o seguir bajo tu responsabilidad. Una vez al día.
+- 31 chips en 6 categorías · 41 manos de Roberto · todo con regresión total.
+- PARA SUBIR: 1º worker v5.100 a Cloudflare, 2º este zip a GitHub. Ritual
+  de oro: cerrar y reabrir la app. Alarmas: NO se tocan.
+
+
+NOVEDADES v6.33  (📋 REGISTRO TOTAL — cero datos sueltos)
+==========================================================
+⚠️ ENTREGA ÚNICA DEL MARATÓN 29-08 (5 tandas): se sube SOLO worker v5.100 +
+este zip v6.33 — contienen TODO (mentor de vida, chips, manos de sistema,
+laboratorio de estrategias y registro total).
+
+- 📋 REGISTRO DE UN TOQUE: cuando Roberto vea tu entrada en el gráfico, él
+  rellena TODOS los campos solo (precios, setup, ventana, bias, zona…) y a
+  ti solo te pregunta: ¿REAL o BACKTEST? (y el 'momento' si no es obvio).
+  La tarjeta muestra el libro en grande: 💵 REAL / 🎬 BACKTEST — y cae en el
+  libro correcto aunque la app esté en el otro contexto.
+- 📋 VIGILANTE DE DATOS SUELTOS: Roberto ve en cada mensaje qué trades
+  tienen campos vacíos y te ofrece completarlos — cero datos sueltos, todos
+  los análisis del futuro con datos completos.
+- 📊 EXAMEN DEL EJECUTOR: su panel ahora muestra el expediente completo
+  (operaciones, ganadas/perdidas, R, profit factor, por par) y su examen de
+  confiabilidad: ≥30 operaciones y PF ≥1.3 en demo ANTES de hablar de
+  dinero real. Números, no sensaciones.
+- PARA SUBIR: 1º worker v5.100 a Cloudflare, 2º este zip a GitHub. Ritual
+  de oro: cerrar y reabrir la app. Alarmas: NO se tocan.
+
+
+NOVEDADES v6.32 + worker v5.100  (📚 LABORATORIO DE MULTI-ESTRATEGIAS)
+=======================================================================
+⚠️ ENTREGA ÚNICA DEL MARATÓN 29-08: este zip + worker v5.100 contienen las
+CUATRO tandas del día (v6.29 mentor de vida · v6.30 chips por categorías ·
+v6.31 manos de sistema · v6.32 laboratorio). Se sube SOLO esto.
+
+- 📚 Nuevo chip 'Mis estrategias (laboratorio)' (en 🧠 Mi aprendizaje):
+  desarrolla estrategias NUEVAS con Roberto — él las desafía y pule, Claude
+  corre los backtests reales, y SOLO tú apruebas.
+- Estados por estrategia: 💡 Borrador → 🧪 En laboratorio → ✅ Aprobada →
+  📦 Archivada. CRT Elite nace ✅ Aprobada.
+- ⭐ VIGENTE: la estrategia que MANDA en el Ejecutor (solo puede haber una y
+  solo aprobadas). Se ve en el Diario, en el panel 🤖, y Roberto la conoce
+  en cada mensaje. Distinta de la ACTIVA del Diario (la que estás mirando).
+- Manos nuevas de Roberto: crear_estrategia, estado_estrategia,
+  estrategia_vigente (con tu tarjeta, como todo).
+- Honestidad: el Ejecutor hoy solo ejecuta señales de CRT Elite; cuando una
+  estrategia nueva pase el laboratorio, Claude le construye sus señales.
+- PARA SUBIR: 1º worker v5.100 a Cloudflare, 2º este zip a GitHub.
+  Ritual de oro: cerrar y reabrir la app del todo. Alarmas: NO se tocan.
+
+
+NOVEDADES v6.31 + worker v5.99  (🖐️ MANOS DE SISTEMA DE ROBERTO)
+=================================================================
+- Roberto ya gobierna el SISTEMA con tu tarjeta ✓ como única llave:
+  · 'Roberto, enciende el Ejecutor' → tarjeta → ✓ → 🟢 en guardia (y 🔴 para
+    detenerlo). Él mismo te lo propondrá si es domingo y sigue apagado.
+  · 'Bájale el riesgo a 0.25' / 'solo señales A+' / 'quita GBPUSD' →
+    cambia SOLO ese campo de las reglas del Ejecutor, el resto intacto.
+  · 'Mejor salúdame a las 7' → cambia las horas de sus rituales 🌅/🌙.
+- NADA se aplica sin tu ✓, todo queda en el 🗒️ Historial de Roberto, y si
+  no hay internet te dice honesto que NO se aplicó.
+- 38 manos en total (las 35 de siempre intactas + 3 de sistema).
+- Incluye v6.29 (🌅 mentor de vida) y v6.30 (🗂️ chips por categorías).
+- PARA SUBIR: 1º worker v5.99 a Cloudflare, 2º este zip a GitHub. Ritual
+  de oro: cerrar y reabrir la app del todo.
+
+
+NOVEDADES v6.30  (🗂️ CHIPS DEL CHAT ORGANIZADOS POR CATEGORÍAS)
+================================================================
+- Adiós a la tira interminable de 26 chips: ahora hay una fila de 6 CATEGORÍAS
+  y debajo los chips de la elegida. La app recuerda tu última categoría.
+  🔥 Mi día · 📊 Análisis y mercado · 🤖 Ejecutor y cierres · 🧠 Mi aprendizaje
+  · 💰 Cuentas y negocio · ⚙️ Roberto y utilidades.
+- Los DOS análisis (📆 del día y 🗓️ semanal) van JUNTOS y primeros en 📊.
+- 🆕 2 chips nuevos: 🤖 Cierre del día y 🤖 Cierre de semana (antes solo
+  existían como avisos; ahora también con botón).
+- NINGÚN chip se quitó ni cambió por dentro: los 26 de siempre disparan
+  exactamente la misma función (probado con clic real en los 28, uno a uno,
+  + 21 bancos de regresión verdes).
+- Esta versión INCLUYE la v6.29 (🌅 mentor de vida) — se sube SOLO este zip.
+- PARA SUBIR: 1º worker v5.98 a Cloudflare (si aún no lo subiste), 2º este
+  zip a GitHub. Ritual de oro: cerrar y reabrir la app del todo.
+
+
+NOVEDADES v6.29 + worker v5.98  (🌅 ROBERTO MENTOR DE VIDA — Fase 1 de la super-IA)
+===================================================================================
+- Nuevo espacio '🌅 Mi día' en el chat de Roberto (chip nuevo): ahí Roberto NO
+  analiza gráficos — es tu MENTOR DE VIDA: superación personal, hábitos, dudas
+  de cualquier tema, decisiones, crecer cada día en todos los ámbitos.
+- 🌅 Buenos días (6:30 Brasil) y 🌙 Reflexión de la noche (21:30 Brasil): dos
+  avisos suaves TODOS los días (también el finde). Al tocarlos, Roberto arranca
+  el ritual solo: tu prioridad del día + una idea para crecer / gratitud + foco.
+  Sin insistencia jamás, máximo uno por toque y por día. Las horas se pueden
+  cambiar (pídemelo y las ajusto).
+- Roberto guarda lo que aprende de tu vida en su memoria (tema 🧍 personal):
+  cada día te conoce mejor y su acompañamiento mejora solo.
+- También puedes ponerle tus propios ⏰ Avisos con destino '🌅 Mi día'.
+- NADA del trading cambió: chat, análisis, alarmas, Ejecutor, guardianes —
+  todo intacto (19 bancos de pruebas de regresión verdes + 18 pruebas nuevas).
+- PARA SUBIR: 1º el worker v5.98 a Cloudflare, 2º este zip a GitHub. Luego el
+  ritual de oro: cerrar y reabrir la app del todo.
+
+
 APEX v5.19 — TRADING DESK  (antes CRT Elite)
 ============================================
 NOTA v5.19: se QUITÓ el "acceso rápido / notificación fija" (no enrutaba bien

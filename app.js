@@ -158,11 +158,38 @@ if(!ESTRATEGIAS.length) ESTRATEGIAS = ["CRT Elite"];
 let ESTR_DEFS = load(K.estrdef, {});
 if(!ESTR_DEFS || typeof ESTR_DEFS!=="object") ESTR_DEFS={};
 function guardarEstrDefs(){ save(K.estrdef, ESTR_DEFS); }
+/* 📚 v6.32 — LABORATORIO DE ESTRATEGIAS: cada estrategia tiene un ESTADO de madurez y UNA
+   sola puede ser la ⭐ VIGENTE (la que manda en el Ejecutor). El estado vive en su def
+   (def.estado); la vigente en la clave reservada ESTR_DEFS.__vigente (persistida y
+   respaldada con las defs). CRT Elite nace ✅ aprobada (años de trabajo la avalan);
+   toda estrategia nueva nace 💡 borrador y sube de estado SOLO con la aprobación de Rey. */
+const ESTR_ESTADOS = { borrador:"💡 Borrador", laboratorio:"🧪 En laboratorio", aprobada:"✅ Aprobada", archivada:"📦 Archivada" };
+function estrEstado(nom){ const d=ESTR_DEFS[nom]||{}; if(d.estado && ESTR_ESTADOS[d.estado]) return d.estado; return /CRT/i.test(nom)?"aprobada":"borrador"; }
+function estrVigente(){ const v=ESTR_DEFS.__vigente; return (typeof v==="string" && ESTRATEGIAS.includes(v)) ? v : (ESTRATEGIAS.find(e=>/CRT/i.test(e))||ESTRATEGIAS[0]); }
+function estrBadge(nom){ return ESTR_ESTADOS[estrEstado(nom)] + (estrVigente()===nom?" · ⭐ VIGENTE":""); }
 /* Bloque de la ESTRATEGIA ACTIVA para Roberto: su instrumento y las reglas/ajustes
    editables. Así Roberto sigue la estrategia correcta (CRT u otra que Rey añada). */
 /* 🔍 PENDIENTES / COSAS A MEDIAS — Roberto recuerda lo inconcluso (los chats que él o Rey
    marcan con 🔍 "Por revisar"). Se inyecta en su contexto para que no se pierda nada y pueda
    recordárselo. Al TERMINAR algo, se le quita el 🔍 con organizar_chat(revisar:false). */
+/* 📋 v6.33 — VIGILANTE DE DATOS SUELTOS: la regla de Rey es "ningún dato suelto — todo
+   registrado claramente para todos los análisis del futuro". Este bloque le enseña a
+   Roberto qué trades del Diario tienen HUECOS (campos vacíos que degradan los análisis)
+   para que ofrezca completarlos con editar_trade en el momento natural de la charla. */
+function iaDatosSueltos(){
+  try{
+    const CAMPOS=[["setup","setup"],["ventana","ventana"],["momento","momento"],["zona","zona"],["bias","bias"],["cuenta","cuenta"]];
+    const lista=(Array.isArray(TRADES)?TRADES:[]).filter(t=>!t.abierta).slice(-40);
+    const huecos=[];
+    lista.forEach(t=>{
+      const f=CAMPOS.filter(([k])=>t[k]==null||t[k]==="").map(([,n])=>n);
+      if(t.r==null||t.r==="") f.unshift("resultado R");
+      if(f.length) huecos.push("• "+(t.fecha||"?")+" "+(t.par||"?")+" ("+(t.modo==="backtest"?"backtest":"real")+"): falta "+f.join(", "));
+    });
+    if(!huecos.length) return "[📋 CALIDAD DEL DIARIO: los últimos trades están COMPLETOS — cada dato registrado. Así se construye el futuro.]";
+    return "[📋 DATOS SUELTOS EN EL DIARIO ("+huecos.length+" trade(s) con huecos — la regla de Rey es CERO datos sueltos):\n"+huecos.slice(0,6).join("\n")+(huecos.length>6?("\n…y "+(huecos.length-6)+" más"):"")+"\nCuando encaje en la charla (sobre todo en el cierre del día), ofrécele completarlos tú con editar_trade preguntándole solo lo que falte. Datos completos = análisis del futuro confiables.]";
+  }catch(_){ return ""; }
+}
 function iaPendientes(){
   const p=(IA.convs||[]).filter(c=>c.revisar && c.msgs && c.msgs.length);
   if(!p.length) return "[🔍 PENDIENTES / A MEDIAS: ahora no hay nada marcado por revisar.]";
@@ -212,7 +239,8 @@ function iaEstrategiaDef(){
   const nom=CTX.estrategia||"";
   const def=ESTR_DEFS[nom]||{};
   const otras=(ESTRATEGIAS||[]).filter(e=>e!==nom);
-  let s="[🎯 ESTRATEGIA ACTIVA: \""+nom+"\""+(def.instrumento?(" · instrumento: "+def.instrumento):"")+"\n";
+  let s="[🎯 ESTRATEGIA ACTIVA (la que Rey MIRA/analiza en su Diario): \""+nom+"\" — estado "+estrBadge(nom)+(def.instrumento?(" · instrumento: "+def.instrumento):"")+"\n";
+  s+="⭐ VIGENTE PARA EL EJECUTOR: \""+estrVigente()+"\" — ESTA es la que ejecuta el bot y la que mandan tus análisis de señales. Si la activa del Diario es otra, es porque Rey está desarrollándola/estudiándola: NO la confundas con la vigente.\n";
   if(def.ajustes) s+="Reglas/ajustes propios (Rey los edita para adaptarse — RESPÉTALOS y ayúdalo a mejorarlos): "+def.ajustes+"\n";
   else if(/CRT/i.test(nom)) s+="(Base: tu dossier completo de CRT Elite. Si Rey añade ajustes propios, aparecerán aquí.)\n";
   else s+="(Esta estrategia AÚN no tiene definición. Si Rey opera con ella, proponle con tu mano editar_estrategia definir su instrumento y reglas; mientras, guíate por lo que él diga y tu conocimiento del instrumento — NO le apliques las reglas de CRT si no corresponden.)\n";
@@ -222,6 +250,192 @@ function iaEstrategiaDef(){
 /* Interés compuesto: Roberto arma un plan de crecimiento realista con los números reales. */
 const PLAN_COMPUESTO_PROM = "Rey quiere un PLAN DE INTERÉS COMPUESTO realista para crecer su capital. Usa sus CUENTAS y estadísticas REALES del contexto (capital, win rate, R por trade/expectancy, riesgo %/trade). (1) En 2-3 frases, el poder del compuesto en trading (reinvertir, proteger, crecer sostenido). (2) Una PROYECCIÓN realista en TABLA Markdown: partiendo de su capital y su expectancy/win-rate reales, con riesgo FIJO y un nº PRUDENTE de trades, cuánto podría crecer mes a mes durante 3-6 meses (conservador, rango realista, no promesas). (3) Reglas para que funcione: riesgo fijo %, subir riesgo SOLO cuando la cuenta crece (nunca en drawdown ni por revancha), retirar parciales, respetar la disciplina y el límite diario. (4) 1-2 focos concretos. Honesto y realista; recuérdale que proteger el capital y la disciplina son la BASE del compuesto. Si le faltan datos (pocas operaciones para una expectancy fiable), díselo y da un plan por escenarios.";
 function planCompuesto(){ if(typeof abrirIA==="function") abrirIA(); iaTemaChat("📈 Interés compuesto"); setTimeout(()=>iaEnviar("📈 Hazme mi plan de interés compuesto con mis números reales.", PLAN_COMPUESTO_PROM),250); }
+/* ============================================================
+   🎓 v6.34 — SIMULACRO DE EXAMEN DE FONDEO (idea de Claude, aprobada por Rey)
+   Antes de comprar un examen: toma los trades REALES/backtest de Rey y los pasa
+   por las reglas EXACTAS de cada cuenta registrada (capital, DD máx estático o
+   trailing, pérdida diaria, target, días mínimos, riesgo fijo). Además, baraja
+   el ORDEN de esos mismos trades 200 veces (semilla fija = resultado repetible)
+   para estimar una probabilidad honesta de pasar: el orden de las pérdidas
+   importa tanto como su suma. TODO determinista y con SUS datos — sin humo.
+   ============================================================ */
+function simExamenUno(cuenta, trades){
+  const cap=parseFloat(cuenta.capital)||10000;
+  const riesgo=(parseFloat(cuenta.riesgoPct)||0.5)/100;
+  const targetPct=parseFloat(cuenta.targetPct)||0;
+  if(!(targetPct>0)) return null;                      // sin target no hay examen que simular
+  const target=cap*(1+targetPct/100);
+  const ddMax=(parseFloat(cuenta.ddMaxPct)||10)/100;
+  const ddDaily=(parseFloat(cuenta.ddDailyPct)||5)/100;
+  const trailing=/trail/i.test(cuenta.ddTipo||"");
+  const diasMin=parseInt(cuenta.diasMin,10)||0;
+  let bal=cap, peak=cap, inicioDia=cap, fechaAct=null;
+  const dias=new Set();
+  for(const t of trades){
+    const r=parseFloat(t.r); if(isNaN(r)) continue;
+    if(t.fecha!==fechaAct){ fechaAct=t.fecha; inicioDia=bal; }
+    dias.add(t.fecha||"?");
+    bal+=r*riesgo*cap;                                  // riesgo fijo % del capital inicial (regla de Rey)
+    if(trailing && bal>peak) peak=bal;
+    const suelo=trailing ? peak*(1-ddMax) : cap*(1-ddMax);
+    if(bal<=suelo) return {res:"REPRUEBA", motivo:"DD máximo "+(trailing?"trailing":"estático")+" ("+(ddMax*100)+"%)", fecha:t.fecha, dias:dias.size, bal};
+    if(inicioDia-bal>=cap*ddDaily) return {res:"REPRUEBA", motivo:"pérdida diaria ("+(ddDaily*100)+"%)", fecha:t.fecha, dias:dias.size, bal};
+    if(bal>=target && dias.size>=diasMin) return {res:"PASA", dias:dias.size, fecha:t.fecha, bal};
+  }
+  return {res:"SIN TERMINAR", dias:dias.size, bal, avance: target>cap ? Math.round((bal-cap)/(target-cap)*100) : 0};
+}
+function simRng(seed){ let a=seed>>>0; return function(){ a|=0; a=(a+0x6D2B79F5)|0; let t=Math.imul(a^(a>>>15),1|a); t=(t+Math.imul(t^(t>>>7),61|t))^t; return ((t^(t>>>14))>>>0)/4294967296; }; }
+function simExamenProb(cuenta, trades, runs){
+  const rng=simRng(20260829);                          // semilla fija: el simulacro es repetible
+  let pasa=0, reprueba=0, sinFin=0;
+  const base=trades.slice();
+  for(let k=0;k<(runs||200);k++){
+    const arr=base.slice();
+    for(let j=arr.length-1;j>0;j--){ const x=Math.floor(rng()*(j+1)); const tmp=arr[j]; arr[j]=arr[x]; arr[x]=tmp; }
+    const r=simExamenUno(cuenta, arr);
+    if(!r) return null;
+    if(r.res==="PASA") pasa++; else if(r.res==="REPRUEBA") reprueba++; else sinFin++;
+  }
+  const tot=pasa+reprueba+sinFin;
+  return { pasaPct:Math.round(pasa/tot*100), repruebaPct:Math.round(reprueba/tot*100), sinFinPct:Math.round(sinFin/tot*100) };
+}
+function simExamenDigest(){
+  const cerr=(Array.isArray(TRADES)?TRADES:[]).filter(t=>!t.abierta && !isNaN(parseFloat(t.r)))
+    .sort((a,b)=>((a.fecha||"")+(a.hora||""))<((b.fecha||"")+(b.hora||""))?-1:1);
+  const libros=[["real","💵 REALES"],["backtest","🎬 BACKTEST"]];
+  const cuentas=(Array.isArray(CUENTAS)?CUENTAS:[]).filter(c=>parseFloat(c.targetPct)>0);
+  if(!cuentas.length) return "(No hay cuentas con target de examen registradas en 🏦 Cuentas — que Rey registre la cuenta/examen que piensa comprar, con sus reglas, y repetimos el simulacro.)";
+  let out="";
+  for(const [modo,etq] of libros){
+    const lst=cerr.filter(t=>t.modo===modo);
+    if(lst.length<10){ out+="\n— Con trades "+etq+": solo "+lst.length+" cerrados (mínimo 10 para un simulacro serio) — sin veredicto en este libro.\n"; continue; }
+    out+="\n— SIMULACRO con sus "+lst.length+" trades "+etq+" (en su orden real y barajados 200 veces):\n";
+    for(const c of cuentas){
+      const secuencial=simExamenUno(c, lst);
+      const prob=simExamenProb(c, lst, 200);
+      const nom=(c.alias||c.firma||"?")+" ($"+(c.capital||"?")+(c.fase?(" · "+c.fase):"")+")";
+      out+="  · "+nom+": tal como operó → "+(secuencial.res==="PASA"?("✅ PASA en "+secuencial.dias+" día(s) operados"):secuencial.res==="REPRUEBA"?("❌ REPRUEBA por "+secuencial.motivo+" (día "+secuencial.dias+")"):("⏳ SIN TERMINAR ("+secuencial.avance+"% del target, sin violar reglas)"))
+        +" · barajado 200×: ✅ "+prob.pasaPct+"% · ❌ "+prob.repruebaPct+"% · ⏳ "+prob.sinFinPct+"%\n";
+    }
+  }
+  return out.trim();
+}
+const SIMULACRO_PROM =
+"Rey quiere su 🎓 SIMULACRO DE EXAMEN DE FONDEO — la decisión es REAL: está por comprar varios exámenes con su dinero. Abajo tienes los resultados EXACTOS del simulador determinista de la app (sus trades reales/backtest pasados por las reglas de cada cuenta: DD máximo estático/trailing, pérdida diaria, target, días mínimos, riesgo fijo; y barajados 200 veces para estimar probabilidad — el orden de las pérdidas importa). NO recalcules ni inventes números: interpreta ESTOS. Dale: (1) el VEREDICTO directo por cuenta/firma: ¿comprarla YA, esperar, o descartarla? con el porqué en 1-2 líneas; (2) QUÉ regla lo reprueba más (DD diario, DD máximo, target lejos) y qué cambio concreto de su operativa sube más la probabilidad; (3) el orden de compra recomendado si hay varias; (4) honestidad total: si los datos son pocos o el simulacro usa backtest en vez de real, DILO y modera la confianza (el simulador aproxima la pérdida diaria sobre el balance de cierre, sin flotante). Termina con UNA frase de mentor: comprar exámenes sin pasar el simulacro es pagar por reprobar.";
+function simulacroExamen(){
+  if(typeof abrirIA==="function") abrirIA();
+  iaTemaChat("🎓 Simulacro de examen");
+  const dig=simExamenDigest();
+  setTimeout(()=>iaEnviar("🎓 Hazme el simulacro: ¿estoy listo para comprar mis exámenes de fondeo?", SIMULACRO_PROM+"\n\nRESULTADOS DEL SIMULADOR (calculados por la app con sus datos y las reglas de sus cuentas):\n"+dig),250);
+}
+/* ============================================================
+   🧬 v6.35 — EL GEMELO DISCIPLINADO (idea de Claude, aprobada por Rey)
+   El espejo de su fuga de TIMING: la curva REAL de sus trades contra la curva
+   de un "Rey paralelo" que SOLO tomó las entradas 'En confirmación' (su regla
+   de oro). El campo 'momento' del Diario lo hace posible. Todo calculado por
+   la app — Roberto interpreta, jamás inventa números.
+   ============================================================ */
+function gemeloDigest(){
+  const cron=(a,b)=>(((a.fecha||"")+(a.hora||""))<((b.fecha||"")+(b.hora||""))?-1:1);
+  const cerr=(Array.isArray(TRADES)?TRADES:[]).filter(t=>!t.abierta && !isNaN(parseFloat(t.r))).sort(cron);
+  if(cerr.length<5) return "(Menos de 5 trades cerrados con resultado — el gemelo necesita historia. A registrar se ha dicho.)";
+  const cta=(Array.isArray(CUENTAS)?CUENTAS:[])[0]||{};
+  const cap=parseFloat(cta.capital)||10000;
+  const riesgo=(parseFloat(cta.riesgoPct)||0.5)/100;
+  let out="";
+  for(const [modo,etq] of [["real","💵 REAL"],["backtest","🎬 BACKTEST"]]){
+    const lst=cerr.filter(t=>t.modo===modo);
+    if(lst.length<5){ out+="\n— Libro "+etq+": solo "+lst.length+" trade(s) — sin gemelo aquí todavía.\n"; continue; }
+    let rReal=0, rGem=0, sinDato=0;
+    const curvaR=[], curvaG=[], porM={};
+    lst.forEach(t=>{
+      const r=parseFloat(t.r);
+      rReal+=r;
+      const m=t.momento||"(sin dato)";
+      if(!t.momento) sinDato++;
+      porM[m]=porM[m]||{n:0,r:0,g:0}; porM[m].n++; porM[m].r+=r; if(r>0.05) porM[m].g++;
+      if(t.momento==="En confirmación") rGem+=r;
+      curvaR.push(Math.round(rReal*100)/100); curvaG.push(Math.round(rGem*100)/100);
+    });
+    const dif=rGem-rReal;
+    const dif$=Math.round(dif*riesgo*cap*100)/100;
+    out+="\n— GEMELO en el libro "+etq+" ("+lst.length+" trades):\n";
+    out+="  TÚ (todas tus entradas): "+(rReal>=0?"+":"")+(Math.round(rReal*100)/100)+"R acumulado\n";
+    out+="  TU GEMELO (solo 'En confirmación', el resto NO las toma): "+(rGem>=0?"+":"")+(Math.round(rGem*100)/100)+"R\n";
+    out+="  DIFERENCIA: "+(dif>=0?"+":"")+(Math.round(dif*100)/100)+"R = "+(dif$>=0?"+$":"-$")+Math.abs(dif$)+" con "+(riesgo*100)+"% de riesgo sobre $"+cap+"\n";
+    out+="  Por momento de entrada (n · R total · ganadas):\n";
+    Object.keys(porM).forEach(m=>{ const x=porM[m]; out+="    · "+m+": "+x.n+" trades · "+(x.r>=0?"+":"")+(Math.round(x.r*100)/100)+"R · "+x.g+" ganadas ("+Math.round(x.g/x.n*100)+"%)\n"; });
+    out+="  Curvas (últimos 12 puntos) — TÚ: "+curvaR.slice(-12).join(", ")+" · GEMELO: "+curvaG.slice(-12).join(", ")+"\n";
+    if(sinDato) out+="  ⚠️ "+sinDato+" trade(s) sin el campo 'momento' (cuentan solo en TU curva): complétalos para un gemelo exacto.\n";
+  }
+  return out.trim();
+}
+const GEMELO_PROM =
+"Rey quiere mirar a su 🧬 GEMELO DISCIPLINADO — el Rey paralelo que respetó SIEMPRE su regla de oro (entrar SOLO con la vela de confirmación cerrada; su fuga histórica es el timing prematuro). Abajo van los números EXACTOS calculados por la app: su curva real vs la del gemelo (que omite las entradas 'En el toque' y 'Anticipé'), la diferencia en R y en DÓLARES, y el desglose por momento de entrada. NO recalcules ni inventes: interpreta ESTOS números. Dale: (1) el espejo directo y honesto — ¿cuánto le está costando (o no) su fuga, en R y en $?; (2) qué dice el desglose por momento: ¿sus entradas anticipadas pierden de verdad o hay sorpresa? (si la muestra es chica, dilo); (3) UNA acción concreta para la próxima semana que acerque su curva a la del gemelo; (4) si hay trades sin 'momento', pídele completarlos (editar_trade) para que el espejo sea exacto. Cariñoso pero SIN suavizar el número — el gemelo existe para doler lo justo y corregir.";
+function gemeloDisciplinado(){
+  if(typeof abrirIA==="function") abrirIA();
+  iaTemaChat("🧬 Mi gemelo disciplinado");
+  const dig=gemeloDigest();
+  setTimeout(()=>iaEnviar("🧬 Muéstrame a mi gemelo disciplinado: ¿cuánto me cuesta mi fuga de timing?", GEMELO_PROM+"\n\nNÚMEROS DEL GEMELO (calculados por la app con su Diario):\n"+dig),250);
+}
+/* ============================================================
+   🚨 v6.36 — FRENO ANTI-TILT EN CALIENTE (idea de Claude, aprobada por Rey)
+   El freno de recuperación actúa "en frío"; ESTO actúa en el SEGUNDO exacto:
+   al registrarse la 2ª pérdida seguida del día (por cualquier puerta: mano de
+   Roberto o formulario del Diario), salta un alto en pantalla con SU propia
+   estadística de revancha y tres salidas: cerrar el día (apaga el Ejecutor),
+   hablar con Roberto, o seguir bajo su responsabilidad. Una vez por día y por
+   libro. Sin costo de IA salvo que él elija hablar.
+   ============================================================ */
+function antiTiltStats(){
+  const cron=(a,b)=>(((a.fecha||"")+(a.hora||""))<((b.fecha||"")+(b.hora||""))?-1:1);
+  const cerr=(Array.isArray(TRADES)?TRADES:[]).filter(t=>!t.abierta && !isNaN(parseFloat(t.r))).sort(cron);
+  const porDia={}; cerr.forEach(t=>{ (porDia[(t.fecha||"?")+"|"+(t.modo||"")]=porDia[(t.fecha||"?")+"|"+(t.modo||"")]||[]).push(t); });
+  let n=0, g=0, r=0;
+  Object.values(porDia).forEach(arr=>{
+    for(let i=2;i<arr.length;i++){
+      if(parseFloat(arr[i-1].r)<0 && parseFloat(arr[i-2].r)<0){
+        const rv=parseFloat(arr[i].r); n++; r+=rv; if(rv>0.05) g++;
+      }
+    }
+  });
+  return {n,g,r};
+}
+function antiTiltCheck(t){
+  try{
+    if(!t || t.abierta || !(parseFloat(t.r)<0)) return;
+    const hoy=t.fecha||hoyISO();
+    const cron=(a,b)=>(((a.fecha||"")+(a.hora||""))<((b.fecha||"")+(b.hora||""))?-1:1);
+    const deHoy=(Array.isArray(TRADES)?TRADES:[]).filter(x=>!x.abierta && x.fecha===hoy && x.modo===t.modo && !isNaN(parseFloat(x.r))).sort(cron);
+    if(deHoy.length<2) return;
+    const u=deHoy.slice(-2);
+    if(!(parseFloat(u[0].r)<0 && parseFloat(u[1].r)<0)) return;
+    const key="crtelite_antitilt_"+hoy+"_"+(t.modo||"");
+    try{ if(localStorage.getItem(key)) return; localStorage.setItem(key,"1"); }catch(_){}
+    const st=antiTiltStats();
+    const statTxt = st.n>=3
+      ? "Tu propio historial habla: tras 2 pérdidas seguidas, tu SIGUIENTE trade del día ganó solo el "+Math.round(st.g/st.n*100)+"% de las veces ("+st.g+" de "+st.n+", "+(st.r>=0?"+":"")+(Math.round(st.r*10)/10)+"R en total)."
+      : "Tu historial aún tiene pocos casos, pero la estadística del tilt es universal: el tercer tiro después de dos golpes casi nunca es el bueno.";
+    try{ if(navigator.vibrate) navigator.vibrate([200,80,200,80,200]); }catch(_){}
+    abrirModal(
+      `<div class="modal-t">🚨 Freno anti-tilt</div>
+       <p class="desc">Dos pérdidas seguidas HOY, Rey. Este es el momento EXACTO donde la revancha toca la puerta.</p>
+       <p class="desc">${esc(statTxt)}</p>
+       <p class="desc"><b>Respira. La cuenta se defiende hoy y se ataca mañana.</b></p>`,
+      [
+        {t:"🔴 Cerrar mi día", cls:"danger", fn:async()=>{ cerrarModal(); try{ await ejecSwitchSet(false); }catch(_){} toast("Día cerrado. Mañana, con la mente limpia 💪🏾"); }},
+        {t:"💬 Hablar con Roberto", cls:"gold", fn:()=>{ cerrarModal(); antiTiltRoberto(statTxt); }},
+        {t:"Sigo (mi responsabilidad)", fn:()=>{ cerrarModal(); toast("⚠️ Queda dicho: sin revancha. Solo A+ y con confirmación cerrada."); }}
+      ]);
+  }catch(_){}
+}
+const ANTITILT_PROM =
+"🚨 EMERGENCIA EMOCIONAL: Rey acaba de encajar DOS pérdidas seguidas HOY y su freno anti-tilt saltó — él eligió hablar contigo ANTES de hacer una tontería (eso ya es una victoria: reconóceselo). Este es tu momento más importante como mentor: (1) primero la persona — 2 preguntas cortas: ¿cómo está?, ¿qué siente ganas de hacer ahora mismo?; (2) usa el dato real de su historial que va abajo, sin suavizarlo; (3) revisa con él las 2 pérdidas en frío: ¿fueron trades válidos que tocaron SL (parte del juego, el sistema sigue sano) o hubo fuga (anticipado, fuera de ventana, plan roto)? — la respuesta cambia TODO el consejo; (4) tu recomendación clara: en la mayoría de los casos, CERRAR el día (y ofrécele apagar el Ejecutor tú con ejecutor_switch si sigue encendido); solo si las pérdidas fueron limpias, el día tiene ventana válida y él está sereno, puede valorarse UNA última oportunidad SOLO A+ con confirmación; (5) cierra con calma: dos SL con 0.5% son -1% — un rasguño, no una herida. Protegerlo HOY vale más que cualquier trade.";
+function antiTiltRoberto(statTxt){
+  if(typeof abrirIA==="function") abrirIA();
+  iaTemaChat("🚨 Freno anti-tilt");
+  setTimeout(()=>iaEnviar("🚨 Acabo de perder dos seguidas. Háblame antes de que haga una tontería.", ANTITILT_PROM+"\n\nDATO REAL DE SU HISTORIAL: "+statTxt),250);
+}
 /* 📊 PROGRESO + MEJOR CONTEXTO — arma un digest con las estadísticas reales por dimensión
    (setup, ventana, día, par…) y Roberto le dice a Rey dónde mejora, dónde no, y en qué
    contexto concentrarse (y cuál evitar). */
@@ -577,8 +791,35 @@ async function verEjecutor(){
     const lg=d.log||[];
     ejecArchivar(lg);   /* 📚 el chip también archiva — mismo archivo que la sección */
     const cfgV=d.cfg||{};
+    /* 📊 v6.33 — MEDIDOR DE CONFIABILIDAD: el examen que el Ejecutor debe pasar en demo
+       ANTES de hablar de dinero real (la regla de Rey: "va a manejar mi dinero también").
+       Hito: ≥30 operaciones cerradas Y profit factor ≥1.3 sostenido. Con los datos del
+       archivo permanente — nada de sensaciones, números. */
+    let confTxt="";
+    try{
+      const cerr=ejecCerradas();
+      const nOps=cerr.length;
+      if(nOps){
+        const rs=cerr.map(t=>parseFloat(t.r)).filter(v=>!isNaN(v));
+        const gan=rs.filter(v=>v>0.05).length, per=rs.filter(v=>v<-0.05).length;
+        const sumaG=rs.filter(v=>v>0).reduce((a,b)=>a+b,0), sumaP=Math.abs(rs.filter(v=>v<0).reduce((a,b)=>a+b,0));
+        const pf=sumaP>0?(sumaG/sumaP):Infinity;
+        const rNeto=rs.reduce((a,b)=>a+b,0);
+        const pls=cerr.map(t=>parseFloat(t.pl)).filter(v=>!isNaN(v));
+        const plTot=pls.reduce((a,b)=>a+b,0);
+        const porPar={}; cerr.forEach(t=>{ const s=t.sym||"?"; const r=parseFloat(t.r); if(!isNaN(r)){ porPar[s]=porPar[s]||{n:0,r:0}; porPar[s].n++; porPar[s].r+=r; } });
+        const paresTxt=Object.keys(porPar).map(s=>s+" "+porPar[s].n+" ops "+(porPar[s].r>=0?"+":"")+(Math.round(porPar[s].r*100)/100)+"R").join(" · ");
+        const listo=nOps>=30 && isFinite(pf) && pf>=1.3;
+        confTxt="**📊 Su expediente (archivo permanente):** "+nOps+" operaciones cerradas · "+gan+" ganadas / "+per+" perdidas · "
+          +(rNeto>=0?"+":"")+(Math.round(rNeto*100)/100)+"R · PF "+(isFinite(pf)?(Math.round(pf*100)/100):"∞")
+          +(pls.length?(" · P&L $"+(Math.round(plTot*100)/100)):"")+(paresTxt?("\n**Por par:** "+paresTxt):"")+"\n"+
+          "**🎯 Examen de confiabilidad (antes de dinero real):** "+(listo?"✅ HITO ALCANZADO (≥30 ops y PF ≥1.3) — hablemos con Claude del siguiente paso":("⏳ en curso: "+nOps+"/30 operaciones · PF "+(isFinite(pf)?(Math.round(pf*100)/100):"∞")+" (meta ≥1.3). Sigue en DEMO hasta pasar el examen."))+"\n";
+      } else confTxt="**📊 Su expediente:** aún sin operaciones cerradas archivadas.\n**🎯 Examen de confiabilidad:** 0/30 operaciones — fase demo, recién empezando.\n";
+    }catch(_){ confTxt=""; }
     txt="## 🤖 Ejecutor — tu bot en MT5 (fase DEMO)\n\n"+
       "**Estado:** "+(d.on?"🟢 ENCENDIDO (vigilando — solo entra cuando TU indicador confirme una señal que pase tus reglas)":"🔴 APAGADO (solo observa)")+"\n"+
+      "**Estrategia ⭐ vigente:** "+((d.cfg&&d.cfg.estrategiaVigente)||"CRT Elite")+"\n"+
+      confTxt+
       "**Revisión previa (veto):** "+(cfgV.veto!==false?("🛑 activada — antes de cada entrada: noticias ±"+(cfgV.vetoNoticiasMin||15)+" min + contexto de Roberto"):"apagada (ejecuta directo)")+"\n"+
       "**Programa en la PC:** "+(d.vivo?"✅ conectado":"❌ sin conexión — abre 'Arrancar Ejecutor Apex' en la PC (con MT5 abierto)")+"\n"+
       (live.cuenta?("**Cuenta MT5:** "+live.cuenta+" · "+(live.demo?"DEMO ✅":"⚠️ NO demo (no opera)")+" · balance "+(live.balance!=null?live.balance:"?")+" "+(live.moneda||"")+"\n"):"")+
@@ -1570,6 +1811,12 @@ const IR_DESTINOS = [
   { v:"rob:progreso",  t:"📊 Roberto · Mi progreso" },
   { v:"rob:capturas",  t:"📸 Roberto · Estudia mis capturas" },
   { v:"rob:checkemo",  t:"🧠 Roberto · Check antes de operar" },
+  { v:"rob:midia",        t:"🌅 Roberto · Mi día (mentor de vida)" },
+  { v:"rob:estrategias",  t:"📚 Roberto · Mis estrategias (laboratorio)" },
+  { v:"rob:simulacro",    t:"🎓 Roberto · Simulacro de examen de fondeo" },
+  { v:"rob:gemelo",       t:"🧬 Roberto · Mi gemelo disciplinado" },
+  { v:"rob:mentormanana", t:"🌅 Roberto · Buenos días (ritual de la mañana)" },
+  { v:"rob:mentornoche",  t:"🌙 Roberto · Reflexión de la noche" },
   { v:"rob:escalado",  t:"💰 Roberto · Escalado" },
   { v:"rob:comparar",  t:"⚖️ Roberto · Comparar pares" },
   { v:"rob:replay",    t:"🎬 Roberto · Práctica Replay (backtesting guiado)" },
@@ -1620,6 +1867,12 @@ function irDestino(v){
     progreso:()=>progresoRoberto(),
     capturas:()=>estudiarCapturas(),
     checkemo:()=>checkEmocional(),
+    midia:       ()=>mentorVida(),
+    mentormanana:()=>mentorManana(),
+    mentornoche: ()=>mentorNoche(),
+    estrategias: ()=>estrategiasLab(),
+    simulacro:   ()=>simulacroExamen(),
+    gemelo:      ()=>gemeloDisciplinado(),
     escalado:()=>escaladoRoberto(),
     comparar:()=>compararPares(),
     replay:  ()=>practicaReplay(),
@@ -2663,7 +2916,7 @@ function barraContexto(onChange){
     </div>
     <div class="fl">Estrategia</div>
     <div style="display:flex;gap:8px">
-      <select class="inp ctx-estr" style="flex:1">${ESTRATEGIAS.map(e=>`<option ${e===CTX.estrategia?'selected':''}>${esc(e)}</option>`).join("")}</select>
+      <select class="inp ctx-estr" style="flex:1">${ESTRATEGIAS.map(e=>`<option value="${esc(e)}"${e===CTX.estrategia?' selected':''}>${esc(e)} — ${estrBadge(e)}</option>`).join("")}</select>
       <button class="btn ctx-menu" style="width:52px;flex-shrink:0;padding:0;font-size:22px">⋯</button>
     </div>
     <div class="ctxpill ctx-pill"></div>`;
@@ -2685,14 +2938,14 @@ function definirEstrategia(nombre){
   if(inst===null) return; // canceló
   const aj=prompt("Reglas / ajustes / aprendizajes de \""+nombre+"\" (lo que Roberto debe respetar y adaptar en esta estrategia — escribe libre, se puede editar cuando quieras):", def.ajustes||"");
   if(aj===null) return;
-  ESTR_DEFS[nombre]={ instrumento:inst.trim(), ajustes:aj.trim() };
+  ESTR_DEFS[nombre]={ ...(ESTR_DEFS[nombre]||{}), instrumento:inst.trim(), ajustes:aj.trim() };   /* v6.32: conserva el estado del laboratorio */
   guardarEstrDefs();
   toast("Definición guardada ✓");
 }
 function menuEstrategias(){
   const acc=prompt(
-    "GESTIÓN DE ESTRATEGIAS\n\nEstrategias actuales:\n· "+ESTRATEGIAS.join("\n· ")+
-    "\n\nEscribe:\n  N = nueva estrategia\n  D = definir/editar la actual ("+CTX.estrategia+")\n  R = renombrar la actual\n  X = borrar la actual (y sus trades)\n\nDeja vacío para cancelar."
+    "GESTIÓN DE ESTRATEGIAS\n\nEstrategias actuales:\n· "+ESTRATEGIAS.map(e=>e+" — "+estrBadge(e)).join("\n· ")+
+    "\n\nEscribe:\n  N = nueva estrategia\n  D = definir/editar la actual ("+CTX.estrategia+")\n  R = renombrar la actual\n  X = borrar la actual (y sus trades)\n\n(Los ESTADOS del laboratorio y la ⭐ VIGENTE se trabajan con Roberto: chip 📚 Mis estrategias.)\nDeja vacío para cancelar."
   );
   if(!acc) return;
   const a=acc.trim().toUpperCase();
@@ -2715,7 +2968,9 @@ function menuEstrategias(){
       if(ESTRATEGIAS.includes(nn)){ toast("Ya existe ese nombre"); return; }
       ESTRATEGIAS=ESTRATEGIAS.map(e=>e===viejo?nn:e); guardarEstrategias();
       TRADES.forEach(t=>{ if(t.estrategia===viejo) t.estrategia=nn; }); save(K.trades,TRADES);
-      if(ESTR_DEFS[viejo]){ ESTR_DEFS[nn]=ESTR_DEFS[viejo]; delete ESTR_DEFS[viejo]; guardarEstrDefs(); }
+      if(ESTR_DEFS[viejo]){ ESTR_DEFS[nn]=ESTR_DEFS[viejo]; delete ESTR_DEFS[viejo]; }
+      if(ESTR_DEFS.__vigente===viejo) ESTR_DEFS.__vigente=nn;   /* v6.32: la ⭐ sigue a su estrategia */
+      guardarEstrDefs();
       CTX.estrategia=nn; guardarCtx();
       refrescarDiarioCtx(); toast("Estrategia renombrada ✓");
     }
@@ -3061,6 +3316,7 @@ function guardarTrade(){
   if(nuevoTrade) mostrarCriterio(nuevoTrade);
   notifChequearCuentasDD();
   if(nuevoTrade) robertoVigila(resumenTradeVigila(nuevoTrade));
+  if(nuevoTrade) try{ antiTiltCheck(nuevoTrade); }catch(_){}   /* 🚨 v6.36: el freno también vigila el formulario */
 }
 
 function editarTrade(id){
@@ -5264,7 +5520,13 @@ const APEX_MAPA =
 "13. 🧠 Mentor — análisis automático.\n"+
 "14. 📋 Plan — su plan operativo completo.\n"+
 "15. ⏰ Avisos — recordatorios de rutina con push (días configurables).\n"+
+"16. 🌅 Mi día (chip en tu chat, v6.29) — tu espacio de MENTOR DE VIDA: ahí acompañas a Rey en su día a día y su SUPERACIÓN PERSONAL (crecer en todos los ámbitos, tema que le apasiona), con ritual de buenos días (6:30 BR) y reflexión de la noche (21:30 BR) que llegan solos por push TODOS los días. Si Rey te habla de su vida, hábitos o crecimiento personal en el chat normal, atiéndelo igual con todo el cariño y sugiérele el espacio 🌅 Mi día para darle seguimiento diario.\n"+
+"17. 📚 Laboratorio de estrategias (chip 📚 Mis estrategias, v6.32) — donde Rey desarrolla estrategias NUEVAS: tú las desafías y pules, CLAUDE corre los backtests reales, y SOLO Rey aprueba. Estados 💡🧪✅📦 y UNA ⭐ VIGENTE que manda en el Ejecutor (distinta de la ACTIVA del Diario, que es solo la que Rey mira). Manos: crear_estrategia, editar_estrategia, estado_estrategia, estrategia_vigente.\n"+
+"18. 🎓 Simulacro de examen (chip en 💰, v6.34) — ANTES de que Rey compre un examen de fondeo, la app pasa sus trades por las reglas exactas de cada cuenta (DD, pérdida diaria, target, días mínimos) tal como operó Y barajados 200 veces, y tú interpretas el veredicto: comprar ya / esperar / qué corregir. Los números vienen calculados — NUNCA los inventes.\n"+
+"19. 🧬 Gemelo disciplinado (chip en 🧠, v6.35) — el espejo de su fuga de timing: su curva real vs la del Rey paralelo que solo entró 'En confirmación', con la diferencia en R y en DÓLARES y el desglose por momento de entrada. Números calculados por la app: tú interpretas y le das UNA acción para acercarse a su gemelo.\n"+
+"20. 🚨 Freno anti-tilt EN CALIENTE (v6.36, automático) — al registrarse la 2ª pérdida seguida del día, la app le pone un ALTO en pantalla con su propia estadística de revancha y 3 salidas: cerrar el día (apaga el Ejecutor), hablar contigo (llegas en modo emergencia emocional — protégelo), o seguir bajo su responsabilidad. Si te llega esa conversación 🚨, es EL momento más importante de tu trabajo.\n"+
 "TUS MANOS ya tocan: avisos, pares, trades y cuentas (SIEMPRE con confirmación de Rey y registro en el 🗒️ Historial).\n"+
+"🖐️ TUS MANOS DE SISTEMA (v6.31 — Rey te quiere SIN LÍMITES para tareas, con su tarjeta como única llave): también ENCIENDES/DETIENES su 🤖 Ejecutor de MT5 (ejecutor_switch — si te dice 'enciende el ejecutor', esa es la mano; y propónlo TÚ si es domingo por la tarde y sigue apagado del finde), CAMBIAS sus reglas (ejecutor_config — solo los campos pedidos, el resto intacto) y AJUSTAS las horas de tus rituales 🌅/🌙 del mentor de vida (mentor_horas). Todo pasa por su tarjeta de confirmación — nada se aplica sin su ✓. Si una tarea que te pida aún no tiene mano, dilo honesto y sugiérele pedírsela a Claude en la próxima tanda.\n"+
 "TU SISTEMA COMPLETO: no vives solo en Apex; estás integrado a TODO el sistema de trading de Rey — su TradingView, su indicador CRT Elite, sus ALARMAS (te llegan por webhook y tú las interpretas) y Apex. Estás pendiente de lo que pasa en el conjunto para darle un servicio sin límites, apoyándote además en tu conexión a internet.\n"+
 "TU ROL DE GUARDIÁN (avisos): Hay un GUARDIÁN DE VENTANAS en el servidor que ya avisa a Rey —con la app CERRADA y en hora NY exacta, correcto todo el año— cuando abre cada killzone (Londres 2:00, ⭐Pre-NY 7:30, NY 9:30, aviso NY-Lunch 11:30 NY). Por eso, los recordatorios MANUALES de killzone que Rey tenía en ⏰ Avisos con hora fija de Brasil (Pre-NY, NY apertura, NY-lunch) ahora SOBRAN y lo DUPLICAN: si Rey te lo pide (o si lo detectas), desactívalos tú con tus manos (editar_aviso con on:false) para no saturarlo, y confírmaselo. La sección ⏰ Avisos SIGUE siendo de Rey para sus recordatorios PERSONALES, totalmente configurables (día/hora/tono): esos no los toques salvo que él lo pida.\n"+
 "TU MISIÓN DE VIGILANTE (estar pendiente de TODO): tu trabajo es estar atento y avisarle de TODO lo importante que ocurra en su sistema: apertura de killzones, noticias rojas/naranjas cerca, alarmas de su indicador, y cuentas cerca del límite (DD). Y cuando estén CONECTADOS al gráfico en vivo (puente de lectura de TradingView), tu papel es AÚN MAYOR: irle cantando las CONFLUENCIAS que se van cumpliendo según el gráfico, el indicador y las alarmas —barrido de liquidez ✅, MSS de 15m ✅, zona premium/discount tocada, Secuencia F3 completa, killzone activa— para acompañarlo paso a paso mientras operan juntos, recordándole SIEMPRE su regla de oro: esperar la vela de confirmación cerrada, no entrar en el toque.";
@@ -5273,7 +5535,7 @@ const PUENTE_DOSSIER =
 "👁️ TU VISTA EN VIVO DEL GRÁFICO (PUENTE APEX): Ya tienes OJOS sobre el gráfico real de Rey en TradingView. Cuando su PC está encendida con el 'Puente Apex' corriendo, en CADA mensaje recibes un bloque [👁️ GRÁFICO EN VIVO ...] con el símbolo, timeframe, precio, el dashboard COMPLETO del indicador CRT Elite (killzone, sesgo, estado del día, zona premium/discount, alineación de temporalidades, SMT, secuencia F3…), los niveles clave y las herramientas de posición (Long/Short) que Rey haya puesto con entrada/SL/TP/RR/riesgo. ESO ES REAL Y ACTUAL — úsalo como tu fuente de verdad del gráfico; no inventes ni contradigas esos números. "+
 "Si el bloque dice que la PC NO está conectada (no hay lectura fresca), NO afirmes que ves el gráfico: dile con cariño que encienda la PC y abra el 'Puente Apex' (doble clic en 'Arrancar Puente Apex') para que puedas verlo en vivo. "+
 "Cuando SÍ estés conectado y estén operando juntos, ve CANTÁNDOLE las confluencias que se cumplen según ese bloque (barrido de liquidez, MSS de 15m, zona tocada, Secuencia F3, killzone activa) y recuérdale SIEMPRE esperar la vela de confirmación cerrada, nunca entrar en el toque.\n"+
-"✍️ CAPTURA DE ENTRADAS: cuando en el gráfico en vivo veas una herramienta de posición (Long/Short) que Rey acaba de poner y que NO aparezca en la lista de '[📒 ENTRADAS ABIERTAS ya registradas]', OFRÉCELE registrarla tú con la mano registrar_entrada (rellenas par, dirección, entrada, SL, TP, RR y riesgo leídos del gráfico + setup/ventana/momento/bias/zona según tu análisis), SIEMPRE con tu tarjeta de confirmación. Antes de registrar, valida/rectifica la entrada según sus reglas (¿hubo sweep? ¿zona correcta premium/discount? ¿killzone? ¿a favor del sesgo? ¿RR sano?) y adviértele si algo no cuadra. CIERRE: el gráfico NO te dice cómo cerró de verdad (puede ser BE, ganancia, pérdida o salida antes). Si una entrada que estaba como ABIERTA en el Diario YA NO aparece como posición en el gráfico en vivo, probablemente Rey la cerró: pregúntale a qué PRECIO cerró (o si tocó TP/SL/BE o salió antes) y ciérrala con cerrar_entrada pasando precio_cierre — el sistema calcula el R exacto con su entrada y SL. Nunca inventes el resultado. MAE/MFE: mientras la posición está en el gráfico, el puente calcula solo el MAE (máximo en contra) y MFE (máximo a favor) en R y aparecen en el bloque en vivo junto a la posición; al cerrar, PÁSALOS a cerrar_entrada (mae y mfe) para guardarlos y luego analizar juntos si el SL estuvo bien puesto y si cerraste muy pronto/tarde. El único dato que SOLO Rey sabe es el 'momento' (si entró en confirmación, en el toque o se anticipó): pregúntaselo al registrar la entrada. 📸 CAPTURAS: al registrar y al cerrar una entrada, la app pide sola una foto del gráfico (se guardan con el trade en el Diario); si Rey te dice 'saca captura' o quieres guardar una imagen para analizar, usa capturar_grafico con el par. Detección en CUALQUIER par que tenga abierto, nada fijo.";
+"✍️ CAPTURA DE ENTRADAS: cuando en el gráfico en vivo veas una herramienta de posición (Long/Short) que Rey acaba de poner y que NO aparezca en la lista de '[📒 ENTRADAS ABIERTAS ya registradas]', OFRÉCELE registrarla tú con la mano registrar_entrada (rellenas par, dirección, entrada, SL, TP, RR y riesgo leídos del gráfico + setup/ventana/momento/bias/zona según tu análisis), SIEMPRE con tu tarjeta de confirmación. Antes de registrar, valida/rectifica la entrada según sus reglas (¿hubo sweep? ¿zona correcta premium/discount? ¿killzone? ¿a favor del sesgo? ¿RR sano?) y adviértele si algo no cuadra. CIERRE: el gráfico NO te dice cómo cerró de verdad (puede ser BE, ganancia, pérdida o salida antes). Si una entrada que estaba como ABIERTA en el Diario YA NO aparece como posición en el gráfico en vivo, probablemente Rey la cerró: pregúntale a qué PRECIO cerró (o si tocó TP/SL/BE o salió antes) y ciérrala con cerrar_entrada pasando precio_cierre — el sistema calcula el R exacto con su entrada y SL. Nunca inventes el resultado. MAE/MFE: mientras la posición está en el gráfico, el puente calcula solo el MAE (máximo en contra) y MFE (máximo a favor) en R y aparecen en el bloque en vivo junto a la posición; al cerrar, PÁSALOS a cerrar_entrada (mae y mfe) para guardarlos y luego analizar juntos si el SL estuvo bien puesto y si cerraste muy pronto/tarde. Los ÚNICOS datos que SOLO Rey sabe son: (1) si la operación es 💵 REAL o 🎬 BACKTEST/entrenamiento (campo modo de registrar_entrada — pregúntaselo SIEMPRE, es su única confirmación necesaria) y (2) el 'momento' (si entró en confirmación, en el toque o se anticipó). TODO lo demás lo rellenas TÚ del gráfico y el panel — REGLA DE REY (v6.33): CERO datos sueltos; cada operación queda registrada COMPLETA para que todos los análisis del futuro sean confiables (el bloque [📋 DATOS SUELTOS] te avisa si algún trade quedó con huecos — ofrécele completarlos con editar_trade). 📸 CAPTURAS: al registrar y al cerrar una entrada, la app pide sola una foto del gráfico (se guardan con el trade en el Diario); si Rey te dice 'saca captura' o quieres guardar una imagen para analizar, usa capturar_grafico con el par. Detección en CUALQUIER par que tenga abierto, nada fijo.";
 
 /* Frameworks de los DOS análisis de Rey (semanal + diario), adaptados para que
    Roberto los ejecute con el gráfico EN VIVO (su indicador CRT Elite ya calculó
@@ -5320,6 +5582,47 @@ function compararPares(){ if(typeof abrirIA==="function") abrirIA(); iaTemaChat(
 /* 🎬 PRÁCTICA GUIADA CON REPLAY — Roberto dirige un ejercicio de backtest para entrenar el gatillo. */
 const REPLAY_PROM = "Rey quiere una PRÁCTICA GUIADA con el modo Replay de TradingView (backtest sin arriesgar, ideal en su demo Pepperstone). Guíalo paso a paso: (1) cómo activar Replay y elegir una fecha antes de una killzone; (2) que avance vela a vela buscando el modelo CRT (sweep de liquidez → MSS 15M → zona premium/discount → gatillo M5); (3) por cada intento pídele que te diga qué ve y confírmale si es válido o por qué no (sobre todo cazando su fuga de entrar ANTES de confirmar); (4) que registre el resultado como backtest en su Diario. Que sea un ejercicio corto y concreto (1-2 escenarios), no una clase teórica. Empieza proponiéndole un drill.";
 function practicaReplay(){ if(typeof abrirIA==="function") abrirIA(); iaTemaChat("🎬 Backtesting (gimnasio)"); setTimeout(()=>iaEnviar("🎬 Dirígeme una práctica con Replay para entrenar mi gatillo.", REPLAY_PROM),250); }
+/* ============================================================
+   🌅 MENTOR DE VIDA (v6.29 — Fase 1 de la visión "super IA" de Rey, 29-08-2026)
+   Roberto sale del gráfico: un espacio propio "🌅 Mi día" (una conversación POR DÍA,
+   separada del trading) donde es amigo, mentor y guía de SUPERACIÓN PERSONAL en el
+   día a día de Rey. Tres puertas: conversación libre, ritual de la mañana y reflexión
+   de la noche (las dos últimas también llegan solas por push del worker v5.98 y al
+   tocarlas se abren aquí directo). Roberto guarda lo valioso en su memoria tema
+   "personal" (🧍 Rey — rutina, vida, objetivos), que ya existía.
+   ============================================================ */
+const MENTOR_VIDA_PROM =
+"Rey te abre su espacio '🌅 Mi día'. AQUÍ NO VIENES A ANALIZAR GRÁFICOS: aquí eres su MENTOR DE VIDA, su amigo y su guía en el día a día — la SUPERACIÓN PERSONAL es un tema que a Rey le apasiona de verdad (crecer cada día en TODOS los ámbitos: mente, hábitos, disciplina, salud, relaciones, aprendizaje, propósito, finanzas personales). "+
+"Tu papel: escucharlo de verdad, hacerle buenas preguntas, sacarle las dudas de CUALQUIER tema (conceptos, decisiones, algo que vio o leyó, la vida misma), aconsejarle concreto y accionable, y retarlo con cariño a mejorar — pasos pequeños y reales, no sermones ni frases de póster. "+
+"Usa lo que ya sabes de él (tu memoria, sobre todo el tema 'personal') y GUARDA con guardar_memoria (tema personal) lo valioso que te cuente de su vida: metas, hábitos que quiere construir, personas importantes, fechas, luchas, victorias — así lo conoces más cada día y tu acompañamiento mejora solo. "+
+"El TRADING solo entra si ÉL lo saca (y aun así, aquí mira más a la persona que al gráfico: disciplina, emociones, descanso). Si detectas algo importante para su operativa, díselo en una línea y sugiérele seguirlo en el chat normal. "+
+"Eres cercano, humano, directo y honesto — como el amigo sabio que todos quisieran tener. Y tu regla de siempre sigue: puedes sugerir e impulsar todo lo que quieras, pero cualquier cambio en su sistema pasa por su aprobación.";
+function mentorVida(){ if(typeof abrirIA==="function") abrirIA(); iaTemaChat("🌅 Mi día"); setTimeout(()=>iaEnviar("🌅 Acompáñame en mi día, Roberto.", MENTOR_VIDA_PROM),250); }
+const MENTOR_MANANA_PROM = MENTOR_VIDA_PROM+"\n\nAHORA ES SU RITUAL DE LA MAÑANA. Salúdalo de buenos días como su amigo-mentor y dale, breve (~150 palabras) y con buena energía: (1) UNA mirada de arranque a su día usando el contexto vivo — día de la semana y, en UNA sola línea, si hoy hay ventanas/noticias que le toquen (el detalle de trading vive en 'Parte del día', no lo dupliques); (2) UNA idea de superación personal para HOY — mentalidad, hábito, disciplina, salud, aprendizaje — concreta y aplicable hoy mismo, distinta cada día (apóyate en lo que sabes de él para que le toque de cerca); (3) pregúntale cómo amaneció y cuál es SU prioridad de hoy — y cuando te responda, ayúdalo a aterrizarla en algo pequeño y realizable. Si te contó una prioridad ayer, pregúntale cómo le fue.";
+function mentorManana(){ if(typeof abrirIA==="function") abrirIA(); iaTemaChat("🌅 Mi día"); setTimeout(()=>iaEnviar("🌅 Buenos días, Roberto. Arranquemos el día.", MENTOR_MANANA_PROM),250); }
+const MENTOR_NOCHE_PROM = MENTOR_VIDA_PROM+"\n\nAHORA ES SU REFLEXIÓN DE LA NOCHE — cierra el día con él, sereno y breve (es para descansar, no para ponerle tarea): (1) pregúntale cómo estuvo su día MÁS ALLÁ del trading — qué hizo bien, qué haría mejor; (2) si esta conversación de hoy tiene una prioridad de la mañana, pregúntale cómo le fue con ella; (3) guíalo en una mini-reflexión: UNA gratitud del día, UNA lección y UN foco para mañana; (4) guarda con guardar_memoria (tema personal) lo valioso que aprendas de él esta noche. Despídelo con calma y buen descanso.";
+function mentorNoche(){ if(typeof abrirIA==="function") abrirIA(); iaTemaChat("🌅 Mi día"); setTimeout(()=>iaEnviar("🌙 Roberto, cerremos el día juntos.", MENTOR_NOCHE_PROM),250); }
+/* ============================================================
+   📚 v6.32 — LABORATORIO DE ESTRATEGIAS (chip "Mis estrategias")
+   El taller donde Rey desarrolla estrategias NUEVAS con Roberto y Claude:
+   Roberto desafía/pule/estructura las reglas; Claude corre los backtests de
+   verdad; y SOLO Rey aprueba. Estados: 💡→🧪→✅→(⭐ vigente)→📦.
+   ============================================================ */
+const LAB_PROM =
+"Rey abre su 📚 LABORATORIO DE ESTRATEGIAS. Abajo tienes su lista real (nombre, estado, instrumento, reglas y nº de trades). Tu papel de SOCIO DE LABORATORIO: (1) preséntale la foto del laboratorio en 2-3 líneas; (2) si está desarrollando una nueva, DESAFÍALA con preguntas duras (¿dónde está la ventaja? ¿qué la invalida? ¿en qué sesión/instrumento? ¿cómo se define la entrada EXACTA y el SL?) y ayúdalo a escribir reglas CLARAS y comprobables con editar_estrategia; (3) recuérdale el CAMINO: 💡 Borrador → 🧪 En laboratorio (reglas definidas, a prueba) → backtest DE VERDAD (eso lo corre CLAUDE con datos reales — tú no inventes resultados de backtest JAMÁS) → ✅ Aprobada (SOLO cuando Rey la apruebe explícitamente) → ⭐ vigente si Rey la elige para el Ejecutor (mano estrategia_vigente, solo aprobadas). "+
+"REGLAS DE ORO: la ⭐ VIGENTE es la que manda en el Ejecutor; la ACTIVA del Diario es solo la que Rey está mirando — no las confundas. Nunca propongas aprobar ni poner vigente nada sin backtest real y sin el visto bueno de Rey. Y honestidad técnica: el Ejecutor hoy solo sabe ejecutar señales de CRT Elite — ejecutar una estrategia nueva requiere que Claude le construya sus señales (dilo cuando toque). Tus manos aquí: crear_estrategia, editar_estrategia, estado_estrategia, estrategia_vigente (todas con tarjeta de Rey).";
+function estrategiasLab(){
+  if(typeof abrirIA==="function") abrirIA();
+  iaTemaChat("📚 Mis estrategias");
+  const lineas=(ESTRATEGIAS||[]).map(e=>{
+    const d=ESTR_DEFS[e]||{};
+    const tr=(Array.isArray(TRADES)?TRADES:[]).filter(t=>t.estrategia===e && !t.abierta);
+    const nR=tr.filter(t=>t.modo==="real").length, nB=tr.length-nR;
+    let rNeto=0; tr.forEach(t=>{ rNeto+=parseFloat(t.r)||0; });
+    return "• \""+e+"\" — "+estrBadge(e)+(d.instrumento?(" · "+d.instrumento):"")+" · "+nR+" trades reales + "+nB+" backtest ("+(rNeto>=0?"+":"")+(Math.round(rNeto*10)/10)+"R en total)"+(d.ajustes?("\n   reglas: "+String(d.ajustes).slice(0,220)):"");
+  }).join("\n");
+  setTimeout(()=>iaEnviar("📚 Repasemos mi laboratorio de estrategias.", LAB_PROM+"\n\nSUS ESTRATEGIAS AHORA MISMO (activa en el Diario: \""+CTX.estrategia+"\" · ⭐ vigente del Ejecutor: \""+estrVigente()+"\"):\n"+lineas),250);
+}
 /* 🧠 DETECTOR DE FUGAS PSICOLÓGICAS — lee los trades recientes y marca patrones (revancha,
    prisa, overtrading, fuera de ventana, plan roto) para que Roberto avise ANTES de repetirlos. */
 function iaFugas(){
@@ -5386,7 +5689,7 @@ function evalSemana(){
   const data=ts.length?tradesTexto(ts):"(No hay trades cerrados en los últimos 7 días.)";
   iaEnviar("🤖 Hazme el CIERRE de mi semana.", EVAL_SEMANA_PROM+"\n\nSUS TRADES DE LA SEMANA (desde "+cut+"):\n"+data);
 }
-function iaProactivo(seed){ if(seed==="informe_aprendizaje") return verMemoria(); if(seed==="eval_dia") return evalDia(); if(seed==="eval_semana") return evalSemana(); if(seed==="revisar_pendientes") return revisarPendientes(); if(seed==="revisar_riesgo") return revisarRiesgo(); if(seed==="practica_replay") return practicaReplay(); }
+function iaProactivo(seed){ if(seed==="informe_aprendizaje") return verMemoria(); if(seed==="eval_dia") return evalDia(); if(seed==="eval_semana") return evalSemana(); if(seed==="revisar_pendientes") return revisarPendientes(); if(seed==="revisar_riesgo") return revisarRiesgo(); if(seed==="practica_replay") return practicaReplay(); if(seed==="mentor_manana") return mentorManana(); if(seed==="mentor_noche") return mentorNoche(); }
 
 let _iaConoc = null;
 /* Arma el bloque de conocimiento (estrategia + indicador + perfil) desde los
@@ -5457,6 +5760,103 @@ function iaTit(c){
    notificación de Roberto o se toca un botón de tema (evaluación, pendientes, riesgo, backtest,
    análisis…), se abre EL CHAT QUE CORRESPONDE: si HOY ya existe un chat de ese tema, se continúa
    ahí; si no, se abre uno NUEVO con su título. Así Roberto organiza cada cosa en su lugar. */
+/* ============================================================
+   🗂️ v6.30 — CHIPS ORGANIZADOS POR CATEGORÍAS (pedido de Rey, 29-08-2026)
+   Eran 26 chips en UNA tira interminable. Ahora: fila 1 = categorías (se
+   recuerda la última elegida); fila 2 = los chips de esa categoría. Los DOS
+   análisis van JUNTOS en 📊 (Rey: "son hermanos — el del día antes de cada
+   killzone, el semanal los domingos"). NINGÚN chip se quitó ni se mezcló:
+   los 26 de siempre disparan EXACTAMENTE la misma función que antes — solo
+   cambió el mueble. Nuevos (🆕): 🤖 Cierre del día y 🤖 Cierre de semana
+   (evalDia/evalSemana ya existían como destinos de aviso; ahora con botón).
+   ============================================================ */
+const IA_CHIP_CATS = [
+  { id:"dia", n:"🔥 Mi día", chips:[
+    { act:"parte",    t:"🌅 Parte del día" },
+    { act:"gonogo",   t:"✅ GO/NO-GO" },
+    { act:"checkemo", t:"🧠 Check antes de operar" },
+    { act:"midia",    t:"🌅 Mi día (mentor de vida)" },
+  ]},
+  { id:"analisis", n:"📊 Análisis y mercado", chips:[
+    { act:"diario",   t:"📆 Análisis del día" },
+    { act:"semanal",  t:"🗓️ Análisis semanal" },
+    { act:"comparar", t:"⚖️ Comparar pares" },
+    { act:"aciertos", t:"🎯 Cómo lees el mercado" },
+    { q:"alarmas",    t:"🔔 Mis alarmas" },
+    { q:"gatillar",   t:"🎯 Cómo gatillar" },
+  ]},
+  { id:"ejecutor", n:"🤖 Ejecutor y cierres", chips:[
+    { act:"ejecutor",     t:"🤖 Ejecutor" },
+    { act:"cierredia",    t:"🤖 Cierre del día" },
+    { act:"cierresemana", t:"🤖 Cierre de semana" },
+  ]},
+  { id:"aprendizaje", n:"🧠 Mi aprendizaje", chips:[
+    { act:"estrategias", t:"📚 Mis estrategias (laboratorio)" },
+    { act:"gemelo",      t:"🧬 Mi gemelo disciplinado" },
+    { q:"operativa",  t:"📊 Analiza mi operativa" },
+    { q:"fuga",       t:"🩸 Mi mayor fuga" },
+    { act:"replay",   t:"🎬 Práctica Replay" },
+    { act:"capturas", t:"📸 Estudia mis capturas" },
+    { act:"progreso", t:"📊 Mi progreso" },
+  ]},
+  { id:"negocio", n:"💰 Cuentas y negocio", chips:[
+    { act:"simulacro", t:"🎓 Simulacro de examen" },
+    { q:"fondeo",     t:"🏦 Plan de fondeo" },
+    { q:"firmas",     t:"⚖️ Comparar firmas" },
+    { act:"escalado", t:"💰 Escalado" },
+    { q:"compuesto",  t:"📈 Interés compuesto" },
+    { act:"plan",     t:"🧭 Mi plan" },
+    { act:"gasto",    t:"💰 Mi gasto" },
+  ]},
+  { id:"utilidades", n:"⚙️ Roberto y utilidades", chips:[
+    { act:"memoria",    t:"🧠 Mi memoria" },
+    { act:"avisos",     t:"📥 Avisos recibidos" },
+    { act:"reintentar", t:"🔄 Reenviar mi último mensaje" },
+    { q:"mejoras",      t:"💡 Mejoras del sistema" },
+  ]},
+];
+function iaPintarChips(){
+  const catsBox=$("#iaCats"), box=$("#iaQuick");
+  if(!catsBox||!box) return;
+  let sel=""; try{ sel=localStorage.getItem("crtelite_chipcat")||""; }catch(_){}
+  if(!IA_CHIP_CATS.some(c=>c.id===sel)) sel=IA_CHIP_CATS[0].id;   // por defecto: 🔥 Mi día
+  catsBox.innerHTML=IA_CHIP_CATS.map(c=>`<button type="button" class="ia-cat${c.id===sel?" on":""}" data-cat="${c.id}">${c.n}</button>`).join("");
+  const cat=IA_CHIP_CATS.find(c=>c.id===sel);
+  box.innerHTML=cat.chips.map(ch=> ch.q!=null
+    ? `<button class="ia-chip" data-q="${String(IA_CHIP_QS[ch.q]||"").replace(/"/g,"&quot;")}">${ch.t}</button>`
+    : `<button class="ia-chip" data-act="${ch.act}">${ch.t}</button>`).join("");
+  catsBox.querySelectorAll(".ia-cat").forEach(b=>{ b.onclick=()=>{ try{ localStorage.setItem("crtelite_chipcat", b.dataset.cat); }catch(_){} iaPintarChips(); }; });
+  iaCablearChips();
+}
+/* El MISMO despacho de siempre, chip por chip (ni una función cambió) + los 2 cierres nuevos */
+function iaCablearChips(){
+  document.querySelectorAll("#iaQuick .ia-chip").forEach(b=>{ b.onclick=()=>{
+    if(b.dataset.act==="semanal") return analisisSemanal();
+    if(b.dataset.act==="diario")  return analisisDiario();
+    if(b.dataset.act==="checkemo") return checkEmocional();
+    if(b.dataset.act==="midia")    return mentorVida();
+    if(b.dataset.act==="parte")    return parteMatutino();
+    if(b.dataset.act==="avisos")   return verAvisos();
+    if(b.dataset.act==="reintentar") return iaReintentar();
+    if(b.dataset.act==="plan")     return preguntarPlan();
+    if(b.dataset.act==="aciertos") return verAciertos();
+    if(b.dataset.act==="gasto")    return verGasto();
+    if(b.dataset.act==="memoria")  return verMemoria();
+    if(b.dataset.act==="capturas") return estudiarCapturas();
+    if(b.dataset.act==="gonogo")   return goNoGo();
+    if(b.dataset.act==="progreso") return progresoRoberto();
+    if(b.dataset.act==="escalado") return escaladoRoberto();
+    if(b.dataset.act==="comparar") return compararPares();
+    if(b.dataset.act==="replay")   return practicaReplay();
+    if(b.dataset.act==="ejecutor") return verEjecutor();
+    if(b.dataset.act==="cierredia")    return evalDia();      /* 🆕 v6.30 */
+    if(b.dataset.act==="cierresemana") return evalSemana();   /* 🆕 v6.30 */
+    if(b.dataset.act==="estrategias")  return estrategiasLab(); /* 🆕 v6.32 */
+    if(b.dataset.act==="simulacro")    return simulacroExamen(); /* 🆕 v6.34 */
+    if(b.dataset.act==="gemelo")       return gemeloDisciplinado(); /* 🆕 v6.35 */
+    iaEnviar(b.dataset.q);
+  }; });
+}
 function iaTemaChat(titulo){
   try{
     const hoy=new Date().toDateString();
@@ -5639,33 +6039,8 @@ function iaInit(){
         </div>
       </div>
       <div class="ia-msgs" id="iaMsgs"></div>
-      <div class="ia-quick" id="iaQuick">
-        <button class="ia-chip" data-act="semanal">🗓️ Análisis semanal</button>
-        <button class="ia-chip" data-act="diario">📆 Análisis del día</button>
-        <button class="ia-chip" data-act="checkemo">🧠 Check antes de operar</button>
-        <button class="ia-chip" data-act="gonogo">✅ GO/NO-GO</button>
-        <button class="ia-chip" data-act="progreso">📊 Mi progreso</button>
-        <button class="ia-chip" data-act="escalado">💰 Escalado</button>
-        <button class="ia-chip" data-act="parte">🌅 Parte del día</button>
-        <button class="ia-chip" data-act="avisos">📥 Avisos recibidos</button>
-        <button class="ia-chip" data-act="reintentar">🔄 Reenviar mi último mensaje</button>
-        <button class="ia-chip" data-act="plan">🧭 Mi plan</button>
-        <button class="ia-chip" data-act="aciertos">🎯 Cómo lees el mercado</button>
-        <button class="ia-chip" data-act="gasto">💰 Mi gasto</button>
-        <button class="ia-chip" data-act="memoria">🧠 Mi memoria</button>
-        <button class="ia-chip" data-act="capturas">📸 Estudia mis capturas</button>
-        <button class="ia-chip" data-act="comparar">⚖️ Comparar pares</button>
-        <button class="ia-chip" data-act="replay">🎬 Práctica Replay</button>
-        <button class="ia-chip" data-act="ejecutor">🤖 Ejecutor</button>
-        <button class="ia-chip" data-q="${IA_CHIP_QS.operativa}">📊 Analiza mi operativa</button>
-        <button class="ia-chip" data-q="${IA_CHIP_QS.fuga}">🩸 Mi mayor fuga</button>
-        <button class="ia-chip" data-q="${IA_CHIP_QS.gatillar}">🎯 Cómo gatillar</button>
-        <button class="ia-chip" data-q="${IA_CHIP_QS.alarmas}">🔔 Mis alarmas</button>
-        <button class="ia-chip" data-q="${IA_CHIP_QS.fondeo}">🏦 Plan de fondeo</button>
-        <button class="ia-chip" data-q="${IA_CHIP_QS.firmas}">⚖️ Comparar firmas</button>
-        <button class="ia-chip" data-q="${IA_CHIP_QS.compuesto}">📈 Interés compuesto</button>
-        <button class="ia-chip" data-q="${IA_CHIP_QS.mejoras}">💡 Mejoras del sistema</button>
-      </div>
+      <div class="ia-cats" id="iaCats"></div>
+      <div class="ia-quick" id="iaQuick"></div>
       <div class="ia-att" id="iaAtt" style="display:none"></div>
       <div class="ia-input">
         <button class="ia-attbtn" id="iaClip" aria-label="Adjuntar imagen">📎</button>
@@ -5737,26 +6112,7 @@ function iaInit(){
   const ta=$("#iaText");
   ta.addEventListener("keydown",e=>{ if(e.key==="Enter" && !e.shiftKey){ e.preventDefault(); iaEnviar(); } });
   ta.addEventListener("input",()=>{ ta.style.height="auto"; ta.style.height=Math.min(ta.scrollHeight,120)+"px"; });
-  document.querySelectorAll("#iaQuick .ia-chip").forEach(b=>{ b.onclick=()=>{
-    if(b.dataset.act==="semanal") return analisisSemanal();
-    if(b.dataset.act==="diario")  return analisisDiario();
-    if(b.dataset.act==="checkemo") return checkEmocional();
-    if(b.dataset.act==="parte")    return parteMatutino();
-    if(b.dataset.act==="avisos")   return verAvisos();
-    if(b.dataset.act==="reintentar") return iaReintentar();
-    if(b.dataset.act==="plan")     return preguntarPlan();
-    if(b.dataset.act==="aciertos") return verAciertos();
-    if(b.dataset.act==="gasto")    return verGasto();
-    if(b.dataset.act==="memoria")  return verMemoria();
-    if(b.dataset.act==="capturas") return estudiarCapturas();
-    if(b.dataset.act==="gonogo")   return goNoGo();
-    if(b.dataset.act==="progreso") return progresoRoberto();
-    if(b.dataset.act==="escalado") return escaladoRoberto();
-    if(b.dataset.act==="comparar") return compararPares();
-    if(b.dataset.act==="replay")   return practicaReplay();
-    if(b.dataset.act==="ejecutor") return verEjecutor();
-    iaEnviar(b.dataset.q);
-  }; });
+  iaPintarChips();   /* 🗂️ v6.30: pinta categorías + chips de la elegida y los cablea (mismas funciones de siempre) */
   // Adjuntar imagen (galería/archivos) y cámara en directo
   $("#iaClip").onclick=()=>$("#iaFile").click();
   $("#iaCamBtn").onclick=()=>$("#iaCam").click();
@@ -6267,8 +6623,9 @@ const IA_TOOLS = [
     input_schema:{ type:"object", properties:{ hora:{type:"string"}, tit:{type:"string"} }, required:["hora"] } },
   { name:"set_pares", description:"Cambia los pares que Rey sigue (afecta notificaciones, calendario de noticias y el vigilante).",
     input_schema:{ type:"object", properties:{ pares:{type:"array",items:{type:"string"},description:"Ej. ['EUR/USD','XAU/USD']"} }, required:["pares"] } },
-  { name:"registrar_trade", description:"Registra una operación en el Diario de Rey a partir de lo que él te cuente. Afecta sus estadísticas, así que confírmalo siempre.",
+  { name:"registrar_trade", description:"Registra una operación en el Diario de Rey a partir de lo que él te cuente. Afecta sus estadísticas, así que confírmalo siempre. 📋 REGISTRO TOTAL (v6.33): rellena TÚ todos los campos que puedas deducir del contexto y de lo que Rey cuente — a Rey solo pregúntale lo que de verdad falte, empezando por si es REAL o BACKTEST (campo modo — cae en el libro correcto aunque la app esté en el otro contexto).",
     input_schema:{ type:"object", properties:{
+      modo:{type:"string",enum:["real","backtest"],description:"OBLIGATORIO confirmarlo con Rey: 'real' = operación real · 'backtest' = entrenamiento/backtesting. Sin esto cae en el contexto que la app tenga abierto."},
       par:{type:"string",description:"Par, ej. EUR/USD"},
       dir:{type:"string",enum:["Compra","Venta"]},
       res:{type:"string",enum:["Ganado","Perdido","BE"],description:"Resultado (si no lo dice, dedúcelo del R)"},
@@ -6281,8 +6638,9 @@ const IA_TOOLS = [
       plan:{type:"string",enum:["Sí","No"],description:"¿Siguió el plan?"},
       nota:{type:"string"}
     }, required:["par","r"] } },
-  { name:"registrar_entrada", description:"Registra en el 📒 Diario una ENTRADA que Rey ACABA de poner (posición ABIERTA, aún sin resultado) con sus datos de precio. Úsalo cuando VEAS una herramienta de posición nueva en el gráfico en vivo (léela: entrada/SL/TP/RR/riesgo) o cuando Rey lo pida. NO afecta las estadísticas hasta que se cierre. SIEMPRE con confirmación.",
+  { name:"registrar_entrada", description:"Registra en el 📒 Diario una ENTRADA que Rey ACABA de poner (posición ABIERTA, aún sin resultado) con sus datos de precio. Úsalo cuando VEAS una herramienta de posición nueva en el gráfico en vivo (léela: entrada/SL/TP/RR/riesgo) o cuando Rey lo pida. NO afecta las estadísticas hasta que se cierre. SIEMPRE con confirmación. 📋 REGISTRO TOTAL (v6.33): rellena TÚ TODOS los campos leyendo el gráfico en vivo y el panel del indicador (setup por las confluencias, ventana/killzone, bias, zona P/D, nconf, cuenta según el contexto) — NINGUNO se queda vacío. A Rey pregúntale SOLO: (1) ¿REAL o BACKTEST? (campo modo) y (2) el 'momento' si no es obvio. Un toque suyo y el registro queda completo.",
     input_schema:{ type:"object", properties:{
+      modo:{type:"string",enum:["real","backtest"],description:"OBLIGATORIO confirmarlo con Rey: 'real' u operación de 'backtest'/entrenamiento. Cae en el libro correcto aunque la app esté en el otro contexto."},
       par:{type:"string",description:"Par, ej. EUR/USD"},
       dir:{type:"string",enum:["Compra","Venta"]},
       entrada:{type:"number",description:"Precio de entrada leído del gráfico"},
@@ -6405,7 +6763,34 @@ const IA_TOOLS = [
   { name:"registrar_retiro", description:"Registra un RETIRO/PAYOUT que Rey cobró de una de sus cuentas (dinero real ganado). Suma al total retirado de esa cuenta (y ajusta su balance si lo lleva manual). Úsalo cuando Rey te diga que cobró/retiró dinero. Rey lo aprueba con tarjeta.",
     input_schema:{ type:"object", properties:{ cuenta:{type:"string",description:"Alias o firma de la cuenta (ej. 'FundedNext fondeada')"}, monto:{type:"number",description:"Monto retirado en USD"}, nota:{type:"string",description:"(opcional) nota"} }, required:["monto"] } },
   { name:"revisar_indicador", description:"LEE los ajustes ACTUALES del indicador CRT Elite de Rey en su gráfico (pivotes por temporalidad y sus tolerancias, killzones/sesiones, sesgo/giro, entradas, gestión y riesgo) para AUDITARLOS. Es SOLO LECTURA. Úsalo cuando Rey te pida revisar/auditar su indicador, o cuando quieras comprobar que su configuración es coherente antes de sugerir algo. Cuando tengas los ajustes, dile en claro qué está BIEN y qué conviene AJUSTAR y por qué, y ofrécete a cambiarlo con ajustar_indicador. Requiere PC con Puente.",
-    input_schema:{ type:"object", properties:{ target:{type:"string",description:"Par del gráfico a leer, ej. 'EURUSD'. Ponlo SIEMPRE: cada gráfico tiene SU copia del indicador con sus propios ajustes."} }, required:["target"] } }
+    input_schema:{ type:"object", properties:{ target:{type:"string",description:"Par del gráfico a leer, ej. 'EURUSD'. Ponlo SIEMPRE: cada gráfico tiene SU copia del indicador con sus propios ajustes."} }, required:["target"] } },
+  /* 🖐️ v6.31 — MANOS DE SISTEMA: Roberto también gobierna el sistema (siempre con tarjeta) */
+  { name:"ejecutor_switch", description:"ENCIENDE (on:true) o DETIENE (on:false) el 🤖 Ejecutor de MT5 de Rey (su bot, fase demo). Encendido queda EN GUARDIA: solo entra cuando el indicador dispare una señal 🔔 que pase sus reglas y el veto. Úsalo cuando Rey te lo pida ('enciende el ejecutor') o propónlo tú cuando detectes que su estado no cuadra (ej. domingo antes de abrir el mercado y sigue apagado del finde). SIEMPRE con la tarjeta de Rey.",
+    input_schema:{ type:"object", properties:{ on:{type:"boolean",description:"true = encender (en guardia) · false = detener"}, motivo:{type:"string",description:"(opcional) por qué, en una frase"} }, required:["on"] } },
+  { name:"ejecutor_config", description:"Cambia UNA o varias reglas del 🤖 Ejecutor de Rey. Pasa SOLO los campos a cambiar — el resto queda intacto (la nube fusiona). Úsalo cuando Rey te pida un ajuste ('bájale el riesgo a 0.25', 'solo señales A+', 'quita GBPUSD') o propón tú una mejora justificada. La config vigente la tienes en tu memoria (⚙️ CONFIG VIGENTE). SIEMPRE con la tarjeta de Rey.",
+    input_schema:{ type:"object", properties:{
+      pares:{type:"array",items:{type:"string"},description:"Lista COMPLETA de pares que operará, ej. ['EURUSD','GBPUSD'] (reemplaza la actual)"},
+      riesgoPct:{type:"number",description:"Riesgo % por operación (0-5, hoy 0.5)"},
+      maxOpsDia:{type:"number",description:"Máx. operaciones al día (1-20)"},
+      maxPerdidaDiaPct:{type:"number",description:"Freno de pérdida diaria en % (para el día al llegar)"},
+      grado:{type:"string",enum:["A+","B"],description:"Señales que ejecuta: 'A+' solo las premium · 'B' = A+ y B"},
+      horaIni:{type:"string",description:"Inicio del horario operativo HH:MM"},
+      horaFin:{type:"string",description:"Fin del horario operativo HH:MM"},
+      tz:{type:"string",enum:["America/New_York","America/Sao_Paulo"],description:"Zona del horario"},
+      maxLote:{type:"number",description:"Lote máximo por operación"},
+      unaPorPar:{type:"boolean",description:"true = máximo una posición abierta por par"},
+      veto:{type:"boolean",description:"true = revisión previa (noticias + tu contexto) antes de cada entrada"},
+      vetoNoticiasMin:{type:"number",description:"Minutos de veto alrededor de noticias rojas (5-120)"}
+    }, required:[] } },
+  { name:"mentor_horas", description:"Cambia las horas de tus dos rituales del MENTOR DE VIDA (🌅 buenos días y 🌙 reflexión, en HORA DE BRASIL), o los apaga/enciende del todo con on. Úsalo cuando Rey te diga 'mejor salúdame a las 7' o 'para los saludos unos días'. SIEMPRE con su tarjeta.",
+    input_schema:{ type:"object", properties:{ manana:{type:"string",description:"Hora del 🌅 buenos días, HH:MM (Brasil). Hoy 06:30."}, noche:{type:"string",description:"Hora de la 🌙 reflexión, HH:MM (Brasil). Hoy 21:30."}, on:{type:"boolean",description:"false = apagar ambos rituales · true = reactivarlos"} }, required:[] } },
+  /* 📚 v6.32 — LABORATORIO DE ESTRATEGIAS */
+  { name:"crear_estrategia", description:"Crea una estrategia NUEVA en el 📚 laboratorio de Rey (nace en estado 💡 Borrador). Úsalo cuando Rey quiera desarrollar/probar una estrategia nueva contigo. Define instrumento y las primeras reglas si ya las tienen habladas. SIEMPRE con tarjeta.",
+    input_schema:{ type:"object", properties:{ nombre:{type:"string",description:"Nombre corto y único, ej. 'Oro Asia Sweep'"}, instrumento:{type:"string",description:"(opcional) instrumento(s), ej. 'XAU/USD'"}, ajustes:{type:"string",description:"(opcional) primeras reglas/ideas, en texto"} }, required:["nombre"] } },
+  { name:"estado_estrategia", description:"Mueve una estrategia de ESTADO en el laboratorio: 💡 borrador → 🧪 laboratorio (definida y en pruebas/backtest) → ✅ aprobada (pasó el laboratorio — SOLO cuando REY diga explícitamente que la aprueba) → 📦 archivada (descartada o en pausa). También hacia atrás si algo se invalida. La ⭐ vigente se elige aparte con estrategia_vigente. SIEMPRE con tarjeta.",
+    input_schema:{ type:"object", properties:{ nombre:{type:"string",description:"(opcional) estrategia a mover; por defecto la activa"}, estado:{type:"string",enum:["borrador","laboratorio","aprobada","archivada"]}, motivo:{type:"string",description:"por qué cambia de estado, 1 frase"} }, required:["estado"] } },
+  { name:"estrategia_vigente", description:"Marca una estrategia como ⭐ VIGENTE: la que MANDA en el 🤖 Ejecutor y en los análisis de señales (solo puede haber una). REGLA DURA: solo estrategias en estado ✅ Aprobada (pasaron el laboratorio con backtest y Rey las aprobó). OJO honestidad: hoy el Ejecutor solo sabe ejecutar señales de CRT Elite — si Rey pone vigente otra estrategia, adviértele que ejecutarla de verdad requiere que Claude le construya sus señales/reglas en una tanda de código. SIEMPRE con tarjeta.",
+    input_schema:{ type:"object", properties:{ nombre:{type:"string",description:"Estrategia (✅ aprobada) que pasa a ser la ⭐ vigente"} }, required:["nombre"] } }
 ];
 /* Texto humano para la tarjeta de confirmación */
 function describeTool(name, i){
@@ -6415,8 +6800,8 @@ function describeTool(name, i){
     return "✏️ Editar el aviso de las "+(i.hora_actual||"?")+"\n"+[onTxt,i.hora&&("→ hora "+i.hora),i.tit&&("→ título "+i.tit),i.msg&&("→ mensaje “"+i.msg+"”"),i.dias&&("→ días "+i.dias),i.tipo&&("→ tipo "+i.tipo),i.destino&&irDestinoLabel(i.destino)&&("→ al tocarla abre "+irDestinoLabel(i.destino))].filter(Boolean).join("\n"); }
   if(name==="borrar_aviso") return "🗑️ Borrar el aviso de las "+(i.hora||"?")+(i.tit?(" ("+i.tit+")"):"");
   if(name==="set_pares") return "🎯 Cambiar tus pares a: "+((i.pares||[]).join(", "));
-  if(name==="registrar_trade") return "📒 Registrar trade — "+(i.par||"?")+" "+(i.dir||"")+" · "+(i.res||(parseFloat(i.r)>0?"Ganado":parseFloat(i.r)<0?"Perdido":"BE"))+" "+(i.r)+"R\nSetup "+(i.setup||"?")+" · ventana "+(i.ventana||"?")+" · entrada '"+(i.momento||"?")+"'"+(i.plan==="No"?" · PLAN ROTO":"")+(i.nota?("\nNota: "+i.nota):"");
-  if(name==="registrar_entrada") return "✍️ Registrar ENTRADA (abierta) — "+(i.par||"?")+" "+(i.dir||"")+"\nEntrada "+(i.entrada!=null?i.entrada:"?")+" · SL "+(i.sl!=null?i.sl:"?")+" · TP "+(i.tp!=null?i.tp:"?")+(i.rr?(" · RR 1:"+i.rr):"")+(i.riesgoPct?(" · riesgo "+i.riesgoPct+"%"):"")+"\nSetup "+(i.setup||"?")+" · "+(i.ventana||"?")+" · '"+(i.momento||"En confirmación")+"'"+(i.zona?(" · "+i.zona):"")+(i.poi?(" · "+i.poi):"")+(i.gtf?(" · gatillo "+i.gtf):"")+(i.nota?("\nNota: "+i.nota):"");
+  if(name==="registrar_trade") return "📒 Registrar trade ["+(i.modo==="backtest"?"🎬 BACKTEST":i.modo==="real"?"💵 REAL":"libro actual")+"] — "+(i.par||"?")+" "+(i.dir||"")+" · "+(i.res||(parseFloat(i.r)>0?"Ganado":parseFloat(i.r)<0?"Perdido":"BE"))+" "+(i.r)+"R\nSetup "+(i.setup||"?")+" · ventana "+(i.ventana||"?")+" · entrada '"+(i.momento||"?")+"'"+(i.plan==="No"?" · PLAN ROTO":"")+(i.nota?("\nNota: "+i.nota):"");
+  if(name==="registrar_entrada") return "✍️ Registrar ENTRADA (abierta) ["+(i.modo==="backtest"?"🎬 BACKTEST":i.modo==="real"?"💵 REAL":"libro actual")+"] — "+(i.par||"?")+" "+(i.dir||"")+"\nEntrada "+(i.entrada!=null?i.entrada:"?")+" · SL "+(i.sl!=null?i.sl:"?")+" · TP "+(i.tp!=null?i.tp:"?")+(i.rr?(" · RR 1:"+i.rr):"")+(i.riesgoPct?(" · riesgo "+i.riesgoPct+"%"):"")+"\nSetup "+(i.setup||"?")+" · "+(i.ventana||"?")+" · '"+(i.momento||"En confirmación")+"'"+(i.zona?(" · "+i.zona):"")+(i.poi?(" · "+i.poi):"")+(i.gtf?(" · gatillo "+i.gtf):"")+(i.nota?("\nNota: "+i.nota):"");
   if(name==="cerrar_entrada"){ const rr=(i.r!=null&&i.r!=="")?(i.r+"R"):(i.precio_cierre!=null?("cierre en "+i.precio_cierre+" → calculo el R"):"?"); return "🏁 Cerrar entrada "+(i.par||"(la más reciente)")+" → "+rr+(i.res?(" · "+i.res):"")+(i.nota?("\nNota: "+i.nota):""); }
   if(name==="capturar_grafico") return "📸 Capturar el gráfico de "+(i.par||"(par actual)");
   if(name==="limpiar_capturas") return "🧹 Limpiar capturas sueltas"+(i.par?(" de "+i.par):"")+(i.fecha?(" del "+i.fecha):" (todas las sueltas)");
@@ -6444,6 +6829,12 @@ function describeTool(name, i){
   if(name==="buscar_memoria") return "🧠 Buscar en toda su memoria: “"+(i.consulta||"?")+"”";
   if(name==="guardar_memoria"){ const et={perfil:"🧍 Perfil",aprendizaje:"💡 Aprendizaje",preferencia:"⭐ Preferencia",patron:"📊 Patrón",resultado:"📓 Resultado"}; return "🧠 Roberto quiere RECORDAR esto en su memoria:\n"+(et[i.tipo]||"💡 Aprendizaje")+"\n“"+(i.texto||"")+"”"; }
   if(name==="borrar_memoria") return "🗑️ Roberto quiere BORRAR de su memoria el dato "+(i.id||"?");
+  if(name==="ejecutor_switch") return (i.on?"🟢 ENCENDER el Ejecutor (queda en guardia: solo entra con señal 🔔 que pase tus reglas y el veto)":"🔴 DETENER el Ejecutor (deja de operar; solo observa)")+(i.motivo?("\nPorque: "+i.motivo):"");
+  if(name==="ejecutor_config"){ const c=["pares","riesgoPct","maxOpsDia","maxPerdidaDiaPct","grado","horaIni","horaFin","tz","maxLote","unaPorPar","veto","vetoNoticiasMin"].filter(k=>i[k]!=null&&i[k]!=="").map(k=>"→ "+k+": "+(Array.isArray(i[k])?i[k].join("+"):i[k])).join("\n"); return "⚙️ Cambiar reglas del Ejecutor:\n"+(c||"(sin cambios)")+"\n(lo demás queda como está)"; }
+  if(name==="mentor_horas"){ const c=[i.manana&&("🌅 buenos días → "+i.manana),i.noche&&("🌙 reflexión → "+i.noche),i.on===false&&"⏸️ APAGAR los dos rituales",i.on===true&&"▶️ reactivar los rituales"].filter(Boolean).join("\n"); return "🌅 Cambiar tus rituales del mentor de vida (hora de Brasil):\n"+(c||"(sin cambios)"); }
+  if(name==="crear_estrategia") return "📚 Crear la estrategia \""+(i.nombre||"?")+"\" en el laboratorio (nace 💡 Borrador)"+(i.instrumento?("\n→ instrumento: "+i.instrumento):"")+(i.ajustes?("\n→ primeras reglas: "+String(i.ajustes).slice(0,200)):"");
+  if(name==="estado_estrategia") return "📚 Mover \""+(i.nombre||CTX.estrategia)+"\" a estado "+(({borrador:"💡 Borrador",laboratorio:"🧪 En laboratorio",aprobada:"✅ Aprobada",archivada:"📦 Archivada"})[i.estado]||i.estado)+(i.motivo?("\nPorque: "+i.motivo):"");
+  if(name==="estrategia_vigente") return "⭐ Poner VIGENTE la estrategia \""+(i.nombre||"?")+"\" — desde ya es la que manda en el 🤖 Ejecutor y en los análisis de señales";
   return name+" "+JSON.stringify(i);
 }
 /* Envía un comando al Puente (por la nube) y ESPERA su resultado real (hasta ~60s:
@@ -6503,23 +6894,62 @@ async function ejecutarTool(name, i){
       PARES=v; guardarPares(); CAL_FILTRO=v.slice(); save(K.calpares,CAL_FILTRO); pushConfigPares(); if(TAB==="noticias") renderNoticias();
       return {ok:true,msg:"Pares actualizados: "+v.join(", ")};
     }
+    /* 🖐️ v6.31 — MANOS DE SISTEMA (tras la tarjeta ✓ de Rey; la nube ya acepta estas llamadas de la app) */
+    if(name==="ejecutor_switch"){
+      try{
+        const r=await fetch(nubeUrl()+"/ejec/switch",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({on:!!i.on})});
+        const x=await r.json().catch(()=>({}));
+        if(x&&x.ok) return {ok:true,msg:(i.on?"🟢 Ejecutor ENCENDIDO — en guardia":"🔴 Ejecutor DETENIDO — solo observa")+(i.motivo?(" ("+i.motivo+")"):"")};
+        return {ok:false,msg:"La nube no aceptó la orden del interruptor"};
+      }catch(_){ return {ok:false,msg:"Sin conexión con la nube — el interruptor NO cambió"}; }
+    }
+    if(name==="ejecutor_config"){
+      const body={};
+      if(Array.isArray(i.pares)&&i.pares.length) body.pares=i.pares.map(x=>String(x).toUpperCase().replace(/[^A-Z0-9]/g,"")).filter(Boolean);
+      ["riesgoPct","maxOpsDia","maxPerdidaDiaPct","maxLote","vetoNoticiasMin"].forEach(k=>{ if(i[k]!=null && isFinite(+i[k])) body[k]=+i[k]; });
+      ["grado","horaIni","horaFin","tz"].forEach(k=>{ if(i[k]!=null && i[k]!=="") body[k]=i[k]; });
+      ["unaPorPar","veto"].forEach(k=>{ if(typeof i[k]==="boolean") body[k]=i[k]; });
+      if(!Object.keys(body).length) return {ok:false,msg:"No me pasaste ningún cambio"};
+      try{
+        const r=await fetch(nubeUrl()+"/ejec/cfg",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(body)});
+        const x=await r.json().catch(()=>({}));
+        if(x&&x.ok) return {ok:true,msg:"⚙️ Reglas del Ejecutor actualizadas: "+Object.keys(body).map(k=>k+"→"+(Array.isArray(body[k])?body[k].join("+"):body[k])).join(", ")+" (el resto intacto; el Ejecutor las usa desde ya)"};
+        return {ok:false,msg:"La nube no aceptó el cambio de reglas"};
+      }catch(_){ return {ok:false,msg:"Sin conexión con la nube — las reglas NO cambiaron"}; }
+    }
+    if(name==="mentor_horas"){
+      const body={};
+      if(/^\d{1,2}:\d{2}$/.test(String(i.manana||""))) body.manana=i.manana;
+      if(/^\d{1,2}:\d{2}$/.test(String(i.noche||""))) body.noche=i.noche;
+      if(typeof i.on==="boolean") body.on=i.on;
+      if(!Object.keys(body).length) return {ok:false,msg:"Dame una hora válida (HH:MM) o on true/false"};
+      try{
+        const r=await fetch(nubeUrl()+"/mentor/cfg",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(body)});
+        const x=await r.json().catch(()=>({}));
+        if(x&&x.ok){ const c=x.cfg||{}; return {ok:true,msg:"🌅 Rituales del mentor: buenos días "+(c.manana||"06:30")+" · reflexión "+(c.noche||"21:30")+" (Brasil)"+(c.on===false?" · ⏸️ APAGADOS":"")+" ✓"}; }
+        return {ok:false,msg:"La nube no aceptó el cambio (¿worker v5.99 subido?)"};
+      }catch(_){ return {ok:false,msg:"Sin conexión con la nube — las horas NO cambiaron"}; }
+    }
     if(name==="registrar_trade"){
       const R=parseFloat(i.r);
       if(isNaN(R)) return {ok:false,msg:"Falta el resultado en R (número)"};
       const f=hoyISO();
-      const t={ id:Date.now(), modo:CTX.modo, estrategia:CTX.estrategia, fecha:f, dia:diaSemana(f), hora:new Date().toTimeString().slice(0,5),
+      const modoOp=(i.modo==="real"||i.modo==="backtest")?i.modo:CTX.modo;   /* 📋 v6.33: Rey confirma el libro */
+      const t={ id:Date.now(), modo:modoOp, estrategia:CTX.estrategia, fecha:f, dia:diaSemana(f), hora:new Date().toTimeString().slice(0,5),
         par:i.par||"?", dir:i.dir||"", setup:i.setup||"", res:i.res||(R>0?"Ganado":(R<0?"Perdido":"BE")), r:R,
         ventana:i.ventana||"", momento:i.momento||"", bias:i.bias||"", nconf:parseInt(i.nconf)||0,
         plan:i.plan||"Sí", emo:"", nota:i.nota||"", cuenta:i.cuenta||"", fueraLimite:false, confs:[] };
       TRADES.push(t); save(K.trades,TRADES); try{ veredEnlazar(t); veredActualizar(t); }catch(_){}
       if(typeof refrescarDiarioCtx==="function") refrescarDiarioCtx(); notifChequearCuentasDD(); syncRiesgo();
+      try{ antiTiltCheck(t); }catch(_){}   /* 🚨 v6.36 */
       return {ok:true,msg:"Trade registrado: "+t.par+" "+(t.dir||"")+" "+(t.res||"")+" "+t.r+"R ("+(t.setup||"?")+", "+(t.momento||"?")+")"};
     }
     if(name==="registrar_entrada"){
       if(i.entrada==null || isNaN(parseFloat(i.entrada))) return {ok:false,msg:"Falta el precio de entrada"};
       const f=hoyISO();
       const num=v=>(v!=null && !isNaN(parseFloat(v)))?parseFloat(v):null;
-      const t={ id:Date.now(), modo:CTX.modo, estrategia:CTX.estrategia, fecha:f, dia:diaSemana(f), hora:new Date().toTimeString().slice(0,5),
+      const modoOp=(i.modo==="real"||i.modo==="backtest")?i.modo:CTX.modo;   /* 📋 v6.33: Rey confirma el libro */
+      const t={ id:Date.now(), modo:modoOp, estrategia:CTX.estrategia, fecha:f, dia:diaSemana(f), hora:new Date().toTimeString().slice(0,5),
         par:i.par||"?", dir:i.dir||"", setup:i.setup||"", res:"Abierta", r:0, abierta:true,
         entrada:num(i.entrada), sl:num(i.sl), tp:num(i.tp), rr:num(i.rr), riesgoPct:i.riesgoPct||"",
         ventana:i.ventana||"", momento:i.momento||"En confirmación", bias:i.bias||"", nconf:parseInt(i.nconf)||0,
@@ -6535,8 +6965,14 @@ async function ejecutarTool(name, i){
     }
     if(name==="cerrar_entrada"){
       const q=String(i.par||"").toLowerCase();
-      const abiertas=TRADES.filter(t=>t.abierta && t.modo===CTX.modo && t.estrategia===CTX.estrategia);
-      const t = q ? abiertas.filter(x=>String(x.par||"").toLowerCase().includes(q)).slice(-1)[0] : abiertas.slice(-1)[0];
+      let abiertas=TRADES.filter(t=>t.abierta && t.modo===CTX.modo && t.estrategia===CTX.estrategia);
+      let t = q ? abiertas.filter(x=>String(x.par||"").toLowerCase().includes(q)).slice(-1)[0] : abiertas.slice(-1)[0];
+      /* 📋 v6.33: si el contexto de la app está en el OTRO libro (real↔backtest), la entrada
+         igual se encuentra — ningún cierre se pierde por el interruptor del Diario. */
+      if(!t){
+        abiertas=TRADES.filter(x=>x.abierta);
+        t = q ? abiertas.filter(x=>String(x.par||"").toLowerCase().includes(q)).slice(-1)[0] : abiertas.slice(-1)[0];
+      }
       if(!t) return {ok:false,msg:"No encontré una entrada abierta"+(i.par?(" en "+i.par):"")};
       let R=parseFloat(i.r);
       if(isNaN(R) && i.precio_cierre!=null && t.entrada!=null && t.sl!=null){
@@ -6552,6 +6988,7 @@ async function ejecutarTool(name, i){
       if(i.nota) t.nota=(t.nota?t.nota+" · ":"")+i.nota;
       t.shotClose=t.id+"_close"; nubeShotReq(t.par, t.shotClose); // 📸 captura de cierre
       save(K.trades,TRADES); if(typeof refrescarDiarioCtx==="function") refrescarDiarioCtx(); notifChequearCuentasDD();
+      try{ antiTiltCheck(t); }catch(_){}   /* 🚨 v6.36 */
       return {ok:true,msg:"Entrada cerrada: "+t.par+" "+t.res+" "+r1(t.r)+"R"+(t.precioCierre!=null?(" (cierre "+t.precioCierre+")"):"")+" · 📸 pedí captura del cierre"};
     }
     if(name==="borrar_trade" || name==="editar_trade"){
@@ -6657,6 +7094,42 @@ async function ejecutarTool(name, i){
       if(i.ajustes!=null && i.ajustes!=="") def.ajustes=String(i.ajustes);
       ESTR_DEFS[nom]=def; guardarEstrDefs();
       return {ok:true,msg:"Actualicé la estrategia “"+nom+"”: "+[def.instrumento&&("instrumento "+def.instrumento), def.ajustes&&"reglas/ajustes actualizados"].filter(Boolean).join(", ")+". La tendré en cuenta."};
+    }
+    /* 📚 v6.32 — LABORATORIO DE ESTRATEGIAS */
+    if(name==="crear_estrategia"){
+      const nn=String(i.nombre||"").trim();
+      if(!nn) return {ok:false,msg:"Falta el nombre de la estrategia"};
+      if(nn==="__vigente") return {ok:false,msg:"Ese nombre está reservado"};
+      if(ESTRATEGIAS.includes(nn)) return {ok:false,msg:"Ya existe la estrategia \""+nn+"\""};
+      ESTRATEGIAS.push(nn); guardarEstrategias();
+      ESTR_DEFS[nn]={ instrumento:String(i.instrumento||"").trim(), ajustes:String(i.ajustes||"").trim(), estado:"borrador" };
+      guardarEstrDefs();
+      try{ if(typeof refrescarDiarioCtx==="function") refrescarDiarioCtx(); }catch(_){}
+      return {ok:true,msg:"📚 Estrategia \""+nn+"\" creada en el laboratorio (💡 Borrador)"+(i.instrumento?(" · "+i.instrumento):"")+". El camino: definir reglas → 🧪 laboratorio → backtest con Claude → ✅ aprobada por Rey → ⭐ vigente si él la elige."};
+    }
+    if(name==="estado_estrategia"){
+      const nom=(i.nombre && ESTRATEGIAS.includes(i.nombre))?i.nombre:CTX.estrategia;
+      if(!nom || !ESTRATEGIAS.includes(nom)) return {ok:false,msg:"No encontré la estrategia "+(i.nombre||"")};
+      if(!ESTR_ESTADOS[i.estado]) return {ok:false,msg:"Estado inválido: "+i.estado};
+      const def=ESTR_DEFS[nom]||{}; def.estado=i.estado; ESTR_DEFS[nom]=def; guardarEstrDefs();
+      try{ if(typeof refrescarDiarioCtx==="function") refrescarDiarioCtx(); }catch(_){}
+      const extra=(i.estado!=="aprobada" && estrVigente()===nom)?" ⚠️ OJO: era la ⭐ vigente y dejó de estar aprobada — elige una vigente válida con estrategia_vigente.":"";
+      return {ok:true,msg:"📚 \""+nom+"\" ahora está en "+ESTR_ESTADOS[i.estado]+(i.motivo?(" ("+i.motivo+")"):"")+extra};
+    }
+    if(name==="estrategia_vigente"){
+      const nom=String(i.nombre||"").trim();
+      if(!ESTRATEGIAS.includes(nom)) return {ok:false,msg:"No existe la estrategia \""+nom+"\""};
+      if(estrEstado(nom)!=="aprobada") return {ok:false,msg:"⛔ \""+nom+"\" está en "+ESTR_ESTADOS[estrEstado(nom)]+" — solo una estrategia ✅ APROBADA (laboratorio pasado y visto bueno de Rey) puede ser la ⭐ vigente"};
+      ESTR_DEFS.__vigente=nom; guardarEstrDefs();
+      try{ if(typeof refrescarDiarioCtx==="function") refrescarDiarioCtx(); }catch(_){}
+      let nube="";
+      try{
+        const r=await fetch(nubeUrl()+"/ejec/cfg",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({estrategiaVigente:nom})});
+        const x=await r.json().catch(()=>({}));
+        nube=(x&&x.ok)?" · la nube y el Ejecutor ya lo saben (y quedó en tu ficha ⚙️ de memoria)":" · ⚠️ no pude avisar a la nube: reintenta luego";
+      }catch(_){ nube=" · ⚠️ sin internet: la nube aún no lo sabe, reintenta luego"; }
+      const aviso=/CRT/i.test(nom)?"":" ⚠️ RECUERDA advertir a Rey: el Ejecutor hoy solo ejecuta señales de CRT Elite — para que ejecute esta de verdad, Claude debe construirle sus señales en una tanda.";
+      return {ok:true,msg:"⭐ \""+nom+"\" es ahora la estrategia VIGENTE"+nube+aviso};
     }
     if(name==="registrar_veredicto"){
       const v=veredAdd({par:i.par, veredicto:i.veredicto, razon:i.razon, setup:i.setup, confianza:i.confianza});
@@ -7373,7 +7846,7 @@ async function iaEnviar(textoForzado, promptExtra){
      viaja en su bloque ESTABLE (idéntico byte a byte al que luego va en el historial) con la
      marca de caché puesta AQUÍ MISMO, y el contexto vivo va DETRÁS de la marca, en su propio
      bloque, a precio normal (1×). El worker v5.68 respeta esta marca y no la pisa. */
-  const inj="=== CONTEXTO VIVO DE LA APP (datos de AHORA MISMO; el mensaje de Rey es el bloque anterior) ===\n"+iaReloj()+"\n"+grafTxt+calTxt+iaContexto()+"\n"+iaEstrategiaDef()+"\n"+guardianRiesgo()+"\n"+iaPlan()+"\n"+iaAciertos()+"\n"+(estadoRecuperacionFreno().block||"")+iaFugas()+"\n"+iaRacha()+"\n"+iaPendientes()+"\n"+iaPlanSemanal()+"\n"+iaAvisos()+"\n"+iaEntradasAbiertas()+marco+"\n=== FIN DEL CONTEXTO — responde al mensaje de Rey del bloque anterior ===";
+  const inj="=== CONTEXTO VIVO DE LA APP (datos de AHORA MISMO; el mensaje de Rey es el bloque anterior) ===\n"+iaReloj()+"\n"+grafTxt+calTxt+iaContexto()+"\n"+iaEstrategiaDef()+"\n"+guardianRiesgo()+"\n"+iaPlan()+"\n"+iaAciertos()+"\n"+(estadoRecuperacionFreno().block||"")+iaFugas()+"\n"+iaRacha()+"\n"+iaDatosSueltos()+"\n"+iaPendientes()+"\n"+iaPlanSemanal()+"\n"+iaAvisos()+"\n"+iaEntradasAbiertas()+marco+"\n=== FIN DEL CONTEXTO — responde al mensaje de Rey del bloque anterior ===";
   const last=msgs[msgs.length-1];
   const textoMsg=c.msgs[c.msgs.length-1].content;   /* EXACTAMENTE lo guardado (texto + nota del doc) */
   let bloquesMsg = Array.isArray(last.content) ? last.content.filter(b=>b.type==="image") : [];   /* la foto va delante */
