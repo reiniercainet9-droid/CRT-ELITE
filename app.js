@@ -1837,6 +1837,7 @@ const IR_DESTINOS = [
   { v:"rob:estrategias",  t:"📚 Roberto · Mis estrategias (laboratorio)" },
   { v:"rob:simulacro",    t:"🎓 Roberto · Simulacro de examen de fondeo" },
   { v:"rob:gemelo",       t:"🧬 Roberto · Mi gemelo disciplinado" },
+  { v:"rob:repaso",       t:"📚 Roberto · Repaso de lecciones (espaciado)" },
   { v:"rob:mentormanana", t:"🌅 Roberto · Buenos días (ritual de la mañana)" },
   { v:"rob:mentornoche",  t:"🌙 Roberto · Reflexión de la noche" },
   { v:"rob:escalado",  t:"💰 Roberto · Escalado" },
@@ -1895,6 +1896,7 @@ function irDestino(v){
     estrategias: ()=>estrategiasLab(),
     simulacro:   ()=>simulacroExamen(),
     gemelo:      ()=>gemeloDisciplinado(),
+    repaso:      ()=>repasoLecciones(),
     escalado:()=>escaladoRoberto(),
     comparar:()=>compararPares(),
     replay:  ()=>practicaReplay(),
@@ -5548,6 +5550,7 @@ const APEX_MAPA =
 "19. 🧬 Gemelo disciplinado (chip en 🧠, v6.35) — el espejo de su fuga de timing: su curva real vs la del Rey paralelo que solo entró 'En confirmación', con la diferencia en R y en DÓLARES y el desglose por momento de entrada. Números calculados por la app: tú interpretas y le das UNA acción para acercarse a su gemelo.\n"+
 "20. 🚨 Freno anti-tilt EN CALIENTE (v6.36, automático) — al registrarse la 2ª pérdida seguida del día, la app le pone un ALTO en pantalla con su propia estadística de revancha y 3 salidas: cerrar el día (apaga el Ejecutor), hablar contigo (llegas en modo emergencia emocional — protégelo), o seguir bajo su responsabilidad. Si te llega esa conversación 🚨, es EL momento más importante de tu trabajo.\n"+
 "21. 🌗 Tema claro/oscuro (v6.38) — Apex y tu chat se ven perfectos bajo el sol (☀️ claro) o de noche (🌙 oscuro, el clásico). Rey cambia con el botón 🌗 (encabezado de Apex o de tu chat) o TÚ con tu mano tema_apex si te lo pide de palabra ('ponme el modo claro') — es automática, sin tarjeta, instantánea y recordada.\n"+
+"22. 🌙 Dossier del amanecer (v6.39, automático) — cada madrugada (5:45 BR) TÚ preparas solo el informe del día (noche/Asia, plan semanal, noticias en hora de Brasil, cuentas, ventanas) y tu ritual 🌅 de las 6:30 lo presenta hecho. 📚 Repaso espaciado: tus lecciones vuelven solas a los 3/7/30 días con un aviso al mediodía (chip 📚 Repaso de lecciones). 📖 guardar_saber: al estudiar documentos de Rey, guardas lo valioso en tu biblioteca para siempre. 🎓 Y los domingos 20:00 destilas solo lecciones de la semana del Ejecutor.\n"+
 "TUS MANOS ya tocan: avisos, pares, trades y cuentas (SIEMPRE con confirmación de Rey y registro en el 🗒️ Historial).\n"+
 "🖐️ TUS MANOS DE SISTEMA (v6.31 — Rey te quiere SIN LÍMITES para tareas, con su tarjeta como única llave): también ENCIENDES/DETIENES su 🤖 Ejecutor de MT5 (ejecutor_switch — si te dice 'enciende el ejecutor', esa es la mano; y propónlo TÚ si es domingo por la tarde y sigue apagado del finde), CAMBIAS sus reglas (ejecutor_config — solo los campos pedidos, el resto intacto) y AJUSTAS las horas de tus rituales 🌅/🌙 del mentor de vida (mentor_horas). Todo pasa por su tarjeta de confirmación — nada se aplica sin su ✓. Si una tarea que te pida aún no tiene mano, dilo honesto y sugiérele pedírsela a Claude en la próxima tanda.\n"+
 "TU SISTEMA COMPLETO: no vives solo en Apex; estás integrado a TODO el sistema de trading de Rey — su TradingView, su indicador CRT Elite, sus ALARMAS (te llegan por webhook y tú las interpretas) y Apex. Estás pendiente de lo que pasa en el conjunto para darle un servicio sin límites, apoyándote además en tu conexión a internet.\n"+
@@ -5621,8 +5624,41 @@ const MENTOR_VIDA_PROM =
 "El TRADING solo entra si ÉL lo saca (y aun así, aquí mira más a la persona que al gráfico: disciplina, emociones, descanso). Si detectas algo importante para su operativa, díselo en una línea y sugiérele seguirlo en el chat normal. "+
 "Eres cercano, humano, directo y honesto — como el amigo sabio que todos quisieran tener. Y tu regla de siempre sigue: puedes sugerir e impulsar todo lo que quieras, pero cualquier cambio en su sistema pasa por su aprobación.";
 function mentorVida(){ if(typeof abrirIA==="function") abrirIA(); iaTemaChat("🌅 Mi día"); setTimeout(()=>iaEnviar("🌅 Acompáñame en mi día, Roberto.", MENTOR_VIDA_PROM),250); }
-const MENTOR_MANANA_PROM = MENTOR_VIDA_PROM+"\n\nAHORA ES SU RITUAL DE LA MAÑANA. Salúdalo de buenos días como su amigo-mentor y dale, breve (~150 palabras) y con buena energía: (1) UNA mirada de arranque a su día usando el contexto vivo — día de la semana y, en UNA sola línea, si hoy hay ventanas/noticias que le toquen (el detalle de trading vive en 'Parte del día', no lo dupliques); (2) UNA idea de superación personal para HOY — mentalidad, hábito, disciplina, salud, aprendizaje — concreta y aplicable hoy mismo, distinta cada día (apóyate en lo que sabes de él para que le toque de cerca); (3) pregúntale cómo amaneció y cuál es SU prioridad de hoy — y cuando te responda, ayúdalo a aterrizarla en algo pequeño y realizable. Si te contó una prioridad ayer, pregúntale cómo le fue.";
-function mentorManana(){ if(typeof abrirIA==="function") abrirIA(); iaTemaChat("🌅 Mi día"); setTimeout(()=>iaEnviar("🌅 Buenos días, Roberto. Arranquemos el día.", MENTOR_MANANA_PROM),250); }
+const MENTOR_MANANA_PROM = MENTOR_VIDA_PROM+"\n\nAHORA ES SU RITUAL DE LA MAÑANA (Rey se levanta a las 5:00 y TÚ eres LO PRIMERO que ve — pesa esa responsabilidad). ORDEN OBLIGATORIO: (0) 🔥 ARRANQUE DE FUEGO, ANTES DE TODO: recíbelo con 3-5 líneas que lo enciendan — UNA afirmación de riqueza y abundancia en presente y primera persona (bebe de tu biblioteca: Hill, Murphy, Eker, Babilonia — cítalos a veces por nombre), UNA frase de convicción sobre SU visión (vivir del trading, su imperio de cuentas, su crecimiento) y UNA frase-motor para HOY. Fuego CON verdad, nunca cursilería vacía: que se levante sintiéndose imparable y con la mente sembrada en abundancia. VARÍA cada día — jamás la misma afirmación dos mañanas seguidas. Después, breve y con buena energía: (1) UNA mirada de arranque a su día usando el contexto vivo — día de la semana y, en UNA sola línea, si hoy hay ventanas/noticias que le toquen (el detalle de trading vive en 'Parte del día', no lo dupliques); (2) UNA idea de superación personal para HOY — mentalidad, hábito, disciplina, salud, aprendizaje — concreta y aplicable hoy mismo, distinta cada día (apóyate en lo que sabes de él para que le toque de cerca); (3) pregúntale cómo amaneció y cuál es SU prioridad de hoy — y cuando te responda, ayúdalo a aterrizarla en algo pequeño y realizable. Si te contó una prioridad ayer, pregúntale cómo le fue.";
+function mentorManana(){
+  if(typeof abrirIA==="function") abrirIA();
+  iaTemaChat("🌅 Mi día");
+  /* 🌙 v6.39 — DOSSIER DEL AMANECER: si el worker lo preparó de madrugada, el ritual lo presenta.
+     Con la nube caída o sin dossier, el ritual sale igual que siempre (fail-open). */
+  setTimeout(async()=>{
+    let extra="";
+    try{
+      const ctl=new AbortController(); const tt=setTimeout(()=>ctl.abort(),2500);
+      const r=await fetch(nubeUrl()+"/dossier",{cache:"no-store",signal:ctl.signal}); clearTimeout(tt);
+      const d=await r.json();
+      const hoy=new Intl.DateTimeFormat("en-CA",{timeZone:"America/Sao_Paulo"}).format(new Date());
+      if(d && d.dossier && d.dossier.texto && d.dossier.fecha===hoy){
+        extra="\n\n🌙 SU DOSSIER DEL AMANECER (LO PREPARASTE TÚ esta madrugada mientras dormía — preséntaselo con orgullo y natural, ANTES de la idea de crecimiento; no lo repitas literal si prefieres resumir, pero no inventes nada fuera de él):\n"+d.dossier.texto;
+      }
+    }catch(_){}
+    iaEnviar("🌅 Buenos días, Roberto. Arranquemos el día.", MENTOR_MANANA_PROM+extra);
+  },250);
+}
+/* 📚 v6.39 — REPASO ESPACIADO: las lecciones vuelven a los 3/7/30 días (aviso del worker). */
+const REPASO_LECC_PROM =
+"Rey abrió el 📚 REPASO ESPACIADO de sus lecciones (el método de repetición espaciada: lo aprendido vuelve a los 3, 7 y 30 días para que jamás se olvide). Abajo van la(s) lección(es) que tocan HOY. Por CADA una: (1) recuérdasela con sus palabras; (2) pregúntale directo: ¿la aplicaste estos días? ¿dónde sí y dónde no?; (3) con su respuesta, refuérzala con UN ejemplo concreto de su operativa o su vida; (4) si él dice que ya la tiene integrada de verdad, celébralo — y si una lección quedó obsoleta, ofrécele borrarla (borrar_memoria). Breve, cálido y al grano: es un repaso de 2 minutos, no una clase.";
+async function repasoLecciones(){
+  if(typeof abrirIA==="function") abrirIA();
+  iaTemaChat("📚 Repaso de lecciones");
+  let lista="(no pude leer las lecciones de hoy — pídele a Rey reintentar)";
+  try{
+    const r=await fetch(nubeUrl()+"/repaso",{cache:"no-store"});
+    const d=await r.json();
+    if(d && Array.isArray(d.lecciones) && d.lecciones.length) lista=d.lecciones.map(l=>"• (hace "+l.etapa+" días, tema "+(l.tema||"general")+") «"+l.texto+"»").join("\n");
+    else lista="(hoy no hay lecciones en etapa de repaso — dile que su memoria está al día y aprovecha para preguntarle qué aprendió HOY que valga guardar)";
+  }catch(_){}
+  setTimeout(()=>iaEnviar("📚 Repasemos mis lecciones de hoy.", REPASO_LECC_PROM+"\n\nLECCIONES QUE TOCAN HOY:\n"+lista),250);
+}
 const MENTOR_NOCHE_PROM = MENTOR_VIDA_PROM+"\n\nAHORA ES SU REFLEXIÓN DE LA NOCHE — cierra el día con él, sereno y breve (es para descansar, no para ponerle tarea): (1) pregúntale cómo estuvo su día MÁS ALLÁ del trading — qué hizo bien, qué haría mejor; (2) si esta conversación de hoy tiene una prioridad de la mañana, pregúntale cómo le fue con ella; (3) guíalo en una mini-reflexión: UNA gratitud del día, UNA lección y UN foco para mañana; (4) guarda con guardar_memoria (tema personal) lo valioso que aprendas de él esta noche. Despídelo con calma y buen descanso.";
 function mentorNoche(){ if(typeof abrirIA==="function") abrirIA(); iaTemaChat("🌅 Mi día"); setTimeout(()=>iaEnviar("🌙 Roberto, cerremos el día juntos.", MENTOR_NOCHE_PROM),250); }
 /* ============================================================
@@ -5712,7 +5748,7 @@ function evalSemana(){
   const data=ts.length?tradesTexto(ts):"(No hay trades cerrados en los últimos 7 días.)";
   iaEnviar("🤖 Hazme el CIERRE de mi semana.", EVAL_SEMANA_PROM+"\n\nSUS TRADES DE LA SEMANA (desde "+cut+"):\n"+data);
 }
-function iaProactivo(seed){ if(seed==="informe_aprendizaje") return verMemoria(); if(seed==="eval_dia") return evalDia(); if(seed==="eval_semana") return evalSemana(); if(seed==="revisar_pendientes") return revisarPendientes(); if(seed==="revisar_riesgo") return revisarRiesgo(); if(seed==="practica_replay") return practicaReplay(); if(seed==="mentor_manana") return mentorManana(); if(seed==="mentor_noche") return mentorNoche(); }
+function iaProactivo(seed){ if(seed==="informe_aprendizaje") return verMemoria(); if(seed==="eval_dia") return evalDia(); if(seed==="eval_semana") return evalSemana(); if(seed==="revisar_pendientes") return revisarPendientes(); if(seed==="revisar_riesgo") return revisarRiesgo(); if(seed==="practica_replay") return practicaReplay(); if(seed==="mentor_manana") return mentorManana(); if(seed==="mentor_noche") return mentorNoche(); if(seed==="repaso") return repasoLecciones(); }
 
 let _iaConoc = null;
 /* Arma el bloque de conocimiento (estrategia + indicador + perfil) desde los
@@ -5816,6 +5852,7 @@ const IA_CHIP_CATS = [
   { id:"aprendizaje", n:"🧠 Mi aprendizaje", chips:[
     { act:"estrategias", t:"📚 Mis estrategias (laboratorio)" },
     { act:"gemelo",      t:"🧬 Mi gemelo disciplinado" },
+    { act:"repaso",      t:"📚 Repaso de lecciones" },
     { q:"operativa",  t:"📊 Analiza mi operativa" },
     { q:"fuga",       t:"🩸 Mi mayor fuga" },
     { act:"replay",   t:"🎬 Práctica Replay" },
@@ -5877,6 +5914,7 @@ function iaCablearChips(){
     if(b.dataset.act==="estrategias")  return estrategiasLab(); /* 🆕 v6.32 */
     if(b.dataset.act==="simulacro")    return simulacroExamen(); /* 🆕 v6.34 */
     if(b.dataset.act==="gemelo")       return gemeloDisciplinado(); /* 🆕 v6.35 */
+    if(b.dataset.act==="repaso")       return repasoLecciones(); /* 🆕 v6.39 */
     iaEnviar(b.dataset.q);
   }; });
 }
@@ -6814,6 +6852,8 @@ const IA_TOOLS = [
     input_schema:{ type:"object", properties:{ nombre:{type:"string",description:"Nombre corto y único, ej. 'Oro Asia Sweep'"}, instrumento:{type:"string",description:"(opcional) instrumento(s), ej. 'XAU/USD'"}, ajustes:{type:"string",description:"(opcional) primeras reglas/ideas, en texto"} }, required:["nombre"] } },
   { name:"estado_estrategia", description:"Mueve una estrategia de ESTADO en el laboratorio: 💡 borrador → 🧪 laboratorio (definida y en pruebas/backtest) → ✅ aprobada (pasó el laboratorio — SOLO cuando REY diga explícitamente que la aprueba) → 📦 archivada (descartada o en pausa). También hacia atrás si algo se invalida. La ⭐ vigente se elige aparte con estrategia_vigente. SIEMPRE con tarjeta.",
     input_schema:{ type:"object", properties:{ nombre:{type:"string",description:"(opcional) estrategia a mover; por defecto la activa"}, estado:{type:"string",enum:["borrador","laboratorio","aprobada","archivada"]}, motivo:{type:"string",description:"por qué cambia de estado, 1 frase"} }, required:["estado"] } },
+  { name:"guardar_saber", description:"📖 Guarda un SABER en tu BIBLIOTECA de conocimiento permanente (tu cerebro vectorial — separado de tu memoria de Rey). Úsalo al ESTUDIAR un documento, clase, artículo o enlace que Rey te comparta: destila sus 3-8 ideas más valiosas y guárdalas UNA POR UNA (cada saber = 1 principio claro en 2-4 frases, ≤450 caracteres, que se entienda solo sin el documento). Así lo estudiado queda TUYO para siempre y te vuelve por significado cuando una charla lo toque. Automático (sin tarjeta). NO lo uses para datos de Rey (eso es guardar_memoria).",
+    input_schema:{ type:"object", properties:{ texto:{type:"string",description:"El saber destilado, claro y auto-contenido (≤450 caracteres)"}, tema:{type:"string",enum:["estrategia","gestion","psicologia","mercado","pares","indicador","general"],description:"Área del saber"}, fuente:{type:"string",description:"(opcional) de dónde salió, corto: 'PDF Liquidez ICT', 'clase de fondos'"} }, required:["texto"] } },
   { name:"tema_apex", description:"Cambia el TEMA VISUAL de Apex y del chat: 'claro' (☀️ para ver bien a plena luz del sol) u 'oscuro' (🌙 el clásico de la app). Úsalo cuando Rey te lo pida de palabra ('ponme el modo claro'). Es cosmético, instantáneo y reversible: se aplica SIN tarjeta.",
     input_schema:{ type:"object", properties:{ tema:{type:"string",enum:["claro","oscuro"]} }, required:["tema"] } },
   { name:"estrategia_vigente", description:"Marca una estrategia como ⭐ VIGENTE: la que MANDA en el 🤖 Ejecutor y en los análisis de señales (solo puede haber una). REGLA DURA: solo estrategias en estado ✅ Aprobada (pasaron el laboratorio con backtest y Rey las aprobó). OJO honestidad: hoy el Ejecutor solo sabe ejecutar señales de CRT Elite — si Rey pone vigente otra estrategia, adviértele que ejecutarla de verdad requiere que Claude le construya sus señales/reglas en una tanda de código. SIEMPRE con tarjeta.",
@@ -6863,6 +6903,7 @@ function describeTool(name, i){
   if(name==="estado_estrategia") return "📚 Mover \""+(i.nombre||CTX.estrategia)+"\" a estado "+(({borrador:"💡 Borrador",laboratorio:"🧪 En laboratorio",aprobada:"✅ Aprobada",archivada:"📦 Archivada"})[i.estado]||i.estado)+(i.motivo?("\nPorque: "+i.motivo):"");
   if(name==="estrategia_vigente") return "⭐ Poner VIGENTE la estrategia \""+(i.nombre||"?")+"\" — desde ya es la que manda en el 🤖 Ejecutor y en los análisis de señales";
   if(name==="tema_apex") return "🌗 Cambiar el tema de Apex a modo "+(i.tema==="claro"?"☀️ CLARO":"🌙 OSCURO");
+  if(name==="guardar_saber") return "📖 Guardar en su biblioteca: “"+String(i.texto||"").slice(0,140)+"”"+(i.fuente?(" (de: "+i.fuente+")"):"");
   return name+" "+JSON.stringify(i);
 }
 /* Envía un comando al Puente (por la nube) y ESPERA su resultado real (hasta ~60s:
@@ -7050,6 +7091,8 @@ async function ejecutarTool(name, i){
     if(name==="guardar_plan_semanal"){
       PLANSEM={ bias:i.bias||"", par:i.par||"", zonaP:i.zona_principal||"", zonaS:i.zona_secundaria||"", invalid:i.nivel_invalidacion||"", mejorDia:i.mejor_dia||"", evitar:i.dias_evitar||"", notas:i.notas||"", fecha:hoyISO() };
       save(K.plansem, PLANSEM);
+      /* 🌙 v6.39: el plan viaja a la nube para que el dossier nocturno lo conozca */
+      try{ fetch(nubeUrl()+"/plansem",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(PLANSEM)}).catch(()=>{}); }catch(_){}
       return {ok:true,msg:"Plan semanal guardado: "+PLANSEM.bias+(PLANSEM.par?(" en "+PLANSEM.par):"")+(PLANSEM.invalid?(" · invalida en "+PLANSEM.invalid):"")+". Lo recordaré toda la semana."};
     }
     if(name==="ajustar_indicador"){
@@ -7160,6 +7203,16 @@ async function ejecutarTool(name, i){
       try{ if(typeof refrescarDiarioCtx==="function") refrescarDiarioCtx(); }catch(_){}
       const extra=(i.estado!=="aprobada" && estrVigente()===nom)?" ⚠️ OJO: era la ⭐ vigente y dejó de estar aprobada — elige una vigente válida con estrategia_vigente.":"";
       return {ok:true,msg:"📚 \""+nom+"\" ahora está en "+ESTR_ESTADOS[i.estado]+(i.motivo?(" ("+i.motivo+")"):"")+extra};
+    }
+    if(name==="guardar_saber"){   /* 📖 v6.39 — Roberto estudia y su biblioteca crece sola */
+      const texto=String(i.texto||"").trim().slice(0,450);
+      if(!texto) return {ok:false,msg:"El saber venía vacío"};
+      try{
+        const r=await fetch(nubeUrl()+"/rag/saber",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({texto,tema:i.tema||"general",fuente:i.fuente||""})});
+        const x=await r.json().catch(()=>({}));
+        if(x&&x.ok){ try{ toast("📖 Saber guardado en la biblioteca"); }catch(_){} return {ok:true,msg:"📖 Guardado en tu biblioteca: “"+texto.slice(0,100)+"…”. Te volverá por significado cuando haga falta."}; }
+        return {ok:false,msg:"La biblioteca no lo aceptó ("+(x&&x.error||"¿worker v5.103?")+")"};
+      }catch(_){ return {ok:false,msg:"Sin conexión — el saber NO se guardó, reintenta"}; }
     }
     if(name==="tema_apex"){   /* 🌗 v6.38 — automática (cosmética y reversible) */
       if(i.tema!=="claro" && i.tema!=="oscuro") return {ok:false,msg:"Tema inválido: usa 'claro' u 'oscuro'"};
@@ -7303,7 +7356,7 @@ function histRobertoModal(){
 const IA_TOOL_PEND=[];
 function confirmarTool(tu){
   // 🗂️ Organizar chats, 🧠 buscar en memoria, 🧭 marcar paso, 🎯 veredicto: automáticos, SIN tarjeta.
-  if(tu.name==="organizar_chat" || tu.name==="buscar_memoria" || tu.name==="marcar_paso_plan" || tu.name==="registrar_veredicto" || tu.name==="tema_apex"){
+  if(tu.name==="organizar_chat" || tu.name==="buscar_memoria" || tu.name==="marcar_paso_plan" || tu.name==="registrar_veredicto" || tu.name==="tema_apex" || tu.name==="guardar_saber"){
     return (async()=>{ let res; try{ res=await ejecutarTool(tu.name, tu.input); }catch(e){ res={ok:false,msg:"Error: "+e}; } if(res&&res.ok&&(tu.name==="organizar_chat"||tu.name==="marcar_paso_plan")) toast(res.msg); return {confirmed:true, res}; })();
   }
   return new Promise(resolve=>{
@@ -7854,7 +7907,7 @@ async function iaEnviar(textoForzado, promptExtra){
   if((!texto && !img && !doc) || IA.busy) return;
   if(!IA.url){ toast("Configura el puente (⚙️)"); $("#iaCfg").click(); return; }
   if(!texto && img) texto="Analiza este gráfico según mi estrategia CRT: par/temporalidad, bias, sweep, MSS y zona. Dime si hay un setup válido (A+/B/C) y qué harías.";
-  if(!texto && doc) texto="Te comparto este documento para que APRENDAS de él: analízalo a fondo, dime qué aporta a mi método, qué confirma, qué mejoraría o cambiaría, y propón guardar lo valioso en tu memoria o en mi estrategia.";
+  if(!texto && doc) texto="Te comparto este documento para que APRENDAS de él: analízalo a fondo, dime qué aporta a mi método, qué confirma, qué mejoraría o cambiaría — y GUARDA sus 3-8 ideas más valiosas en tu biblioteca con guardar_saber (una por una, con su fuente), para que lo estudiado quede tuyo PARA SIEMPRE.";
   /* 🧭 cuenta el material que Rey le comparte (documentos y enlaces): es la señal de la fase 02 */
   try{ if(doc || /https?:\/\//i.test(texto)){ PLAN_ARR.docs=(PLAN_ARR.docs||0)+1; guardarPlan(); } }catch(_){}
   /* 🧠 motor sintomático: si la tarea parece profunda y el ajuste es Rendidor, pregunta.

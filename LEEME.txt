@@ -1,5 +1,41 @@
-APEX v6.38 — TRADING DESK
+APEX v6.40 — TRADING DESK
 =========================
+
+NOVEDADES v6.40 + worker v5.104  (🔥 AMANECER 5:00 + SABIDURÍA AL EJECUTOR)
+============================================================================
+⚠️ Esta entrega INCLUYE la v6.39/v5.103 (dossier, repaso, estudiar, auto-
+aprendizaje). Se sube SOLO worker v5.104 + este zip.
+
+- 🔥 TU AMANECER A LAS 5:00: el ritual 🌅 ya suena a las 5:00 (cambiado en la
+  nube) y ahora ABRE CON FUEGO: afirmaciones de riqueza y abundancia (de tus
+  libros: Hill, Murphy, Eker, Babilonia), convicción sobre tu visión y la
+  frase-motor del día — LO PRIMERO al despertar, antes que nada. Y tu 🌙
+  dossier se prepara solo a las ~4:15 para estar listo cuando abras los ojos
+  (si algún día cambias la hora del ritual, el dossier la sigue solo).
+- 🧠📖 ROBERTO LE REGALA SU SABIDURÍA AL EJECUTOR: el VETO de cada señal y la
+  LECCIÓN de cada cierre ahora llevan los recuerdos y saberes afines de su
+  memoria profunda y su biblioteca (lecciones del par, principios de gestión)
+  — decide y enseña con TODO lo que sabe. Comportamiento del veto intacto:
+  solo un motivo CONCRETO veta, jamás la teoría.
+- PARA SUBIR: 1º worker v5.104 a Cloudflare, 2º este zip a GitHub. Ritual
+  de oro: cerrar y reabrir la app.
+
+
+NOVEDADES v6.39 + worker v5.103  (🌙 LA NOCHE PRODUCTIVA — 4 poderes nuevos)
+=============================================================================
+- 🌙 DOSSIER DEL AMANECER: cada madrugada (5:45 Brasil) Roberto prepara SOLO
+  el informe del día — noche/Asia, tu plan semanal, noticias en TU hora,
+  cuentas y ventanas. Tu 🌅 de las 6:30 llega con el trabajo YA HECHO.
+- 📚 REPASO ESPACIADO: tus lecciones vuelven solas a los 3, 7 y 30 días
+  (aviso al mediodía: '¿la aplicaste?'). También chip 📚 en 🧠 Mi aprendizaje.
+- 📖 ROBERTO ESTUDIA DE VERDAD: comparte un PDF/clase y él guarda sus mejores
+  ideas en su biblioteca PARA SIEMPRE (guardar_saber, automático).
+- 🎓 AUTO-APRENDIZAJE: los domingos 8:00 PM destila solo lecciones nuevas de
+  las operaciones del Ejecutor y te avisa: 'aprendí esto por mi cuenta'.
+- El plan semanal ahora viaja a la nube (el dossier lo usa cada noche).
+- PARA SUBIR: 1º worker v5.103 a Cloudflare, 2º este zip a GitHub. Ritual
+  de oro: cerrar y reabrir la app.
+
 
 NOVEDADES v6.38  (🌗 MODO CLARO / OSCURO)
 ==========================================
