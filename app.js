@@ -259,6 +259,43 @@ function iaPendientes(){
   const lista=p.slice(0,8).map(c=>"• "+iaTit(c)).join("\n");
   return "[🔍 PENDIENTES / COSAS A MEDIAS de Rey ("+p.length+" chat(s) marcados 🔍 'Por revisar'):\n"+lista+"\nSi encaja en la charla, RECUÉRDASELOS para que los retome, o pregúntale con cuál seguir. Cuando algo quede TERMINADO, quítale el 🔍 con organizar_chat(revisar:false). Marca 🔍 lo que dejen a medias con organizar_chat(revisar:true).]";
 }
+/* ============================================================
+   🗂️ v6.42 — VISTA TOTAL DE CHATS (pedido de Rey, 30-08)
+   Regla de Rey: la vista de Roberto se AMPLÍA A TODO — que nunca más le pida
+   algo ("borra el análisis viejo") y Roberto no pueda verlo. En cada mensaje
+   le viaja el mapa completo de conversaciones (fijados/importantes/últimos),
+   y sus manos organizar_chat y borrar_chat alcanzan CUALQUIER chat por título.
+   ============================================================ */
+/* Encuentra un chat por parte de su título (como aparece en el mapa). ref vacío = chat activo. */
+function iaConvPorRef(ref){
+  const cs=(IA.convs||[]).filter(c=>c.msgs&&c.msgs.length);
+  if(!ref) return { c:iaConvAct() };
+  const q=String(ref).trim().toLowerCase();
+  const hits=cs.filter(c=>iaTit(c).toLowerCase().includes(q));
+  if(!hits.length) return { err:"No encuentro ningún chat cuyo título contenga «"+ref+"». Mira tu [🗂️ MAPA DE CHATS] y usa el título tal como aparece ahí." };
+  if(hits.length>1){
+    const ex=hits.filter(c=>iaTit(c).toLowerCase()===q);
+    if(ex.length===1) return { c:ex[0] };
+    return { err:"Hay "+hits.length+" chats que coinciden con «"+ref+"»: "+hits.slice(0,5).map(c=>"«"+iaTit(c)+"» ("+new Date(c.ts).toLocaleDateString("es",{day:"2-digit",month:"2-digit"})+")").join(" · ")+". Sé más específico (título + fecha si hace falta)." };
+  }
+  return { c:hits[0] };
+}
+function iaChats(){
+  try{
+    const cs=(IA.convs||[]).filter(c=>c.msgs&&c.msgs.length);
+    if(!cs.length) return "[🗂️ MAPA DE CHATS: aún no hay conversaciones guardadas.]";
+    const byTs=(a,b)=>b.ts-a.ts;
+    const li=(c)=>{ const d=new Date(c.ts); return (c.revisar?"🔍":"")+"«"+iaTit(c).slice(0,55)+"» ("+d.toLocaleDateString("es",{day:"2-digit",month:"2-digit"})+", "+(c.msgs||[]).filter(m=>m.role==="user").length+" preg.)"; };
+    const fij=cs.filter(c=>c.fijado).sort(byTs), imp=cs.filter(c=>!c.fijado&&c.estrella).sort(byTs);
+    const resto=cs.filter(c=>!c.fijado&&!c.estrella).sort(byTs).slice(0,6);
+    let kb=0; try{ kb=Math.round((localStorage.getItem(K.iaconvs)||"").length/1024); }catch(_){}
+    return "[🗂️ MAPA DE CHATS de Apex — TU VISTA TOTAL ("+cs.length+" conversaciones, ~"+kb+" KB). El chat donde estamos AHORA es «"+iaTit(iaConvAct()||{})+"». Tus manos alcanzan CUALQUIERA de la lista: organizar_chat con el parámetro chat (fijar/desfijar 📌, estrella ⭐, revisar 🔍, renombrar con titulo) es automática; borrar_chat pide la tarjeta de Rey.\n"+
+      "📌 Fijados ("+fij.length+"): "+(fij.map(li).join(" · ")||"ninguno")+"\n"+
+      "⭐ Importantes ("+imp.length+"): "+(imp.map(li).join(" · ")||"ninguno")+"\n"+
+      "🕘 Últimos: "+(resto.map(li).join(" · ")||"—")+"\n"+
+      "REGLA DE LIMPIEZA (Rey, 30-08): Apex debe vivir ORDENADA Y LIMPIA, sin chats basura acumulados. Si ves fijado algo ya vencido (p.ej. el análisis de la semana pasada cuando ya existe el nuevo), DESFÍJALO tú y avísale. Cada DOMINGO, dentro del análisis semanal, revisa este mapa y SUGIÉRELE cuáles borrar porque ya no aportan (borrar_chat, siempre con su tarjeta — jamás borres por tu cuenta). No propongas borrar los ⭐ ni chats de hoy.]";
+  }catch(_){ return ""; }
+}
 /* Al tocar la notificación de "revisar pendientes", Roberto repasa lo inconcluso. */
 function revisarPendientes(){
   const p=(IA.convs||[]).filter(c=>c.revisar && c.msgs && c.msgs.length);
@@ -5624,6 +5661,7 @@ const APEX_MAPA =
 "21. 🌗 Tema claro/oscuro (v6.38) — Apex y tu chat se ven perfectos bajo el sol (☀️ claro) o de noche (🌙 oscuro, el clásico). Rey cambia con el botón 🌗 (encabezado de Apex o de tu chat) o TÚ con tu mano tema_apex si te lo pide de palabra ('ponme el modo claro') — es automática, sin tarjeta, instantánea y recordada.\n"+
 "22. 🌙 Dossier del amanecer (v6.39, automático) — cada madrugada (5:45 BR) TÚ preparas solo el informe del día (noche/Asia, plan semanal, noticias en hora de Brasil, cuentas, ventanas) y tu ritual 🌅 de las 6:30 lo presenta hecho. 📚 Repaso espaciado: tus lecciones vuelven solas a los 3/7/30 días con un aviso al mediodía (chip 📚 Repaso de lecciones). 📖 guardar_saber: al estudiar documentos de Rey, guardas lo valioso en tu biblioteca para siempre. 🎓 Y CADA DÍA a las 20:00 destilas solo las lecciones de las operaciones DE HOY del Ejecutor (v5.105 — tu veto de mañana ya las lleva).\n"+
 "23. 🗺️ HITOS DE REVISIÓN (v6.41, automático) — TÚ vigilas los datos y le dices a Rey CUÁNDO toca revisar cada chip: el bloque [🗺️ HITOS] de tu contexto te avisa cuando un chip acumuló registros nuevos suficientes (Simulacro/Gemelo cada 10 trades, Laboratorio/Progreso cada 15, Ejecutor cada 8 operaciones) — sugiéreselo con naturalidad y sin repetir; al abrirlo él, el hito se reinicia solo. Además, las secciones 📈 Análisis y 🧠 Mentor tienen botones directos a Simulacro/Gemelo/Laboratorio.\n"+
+"24. 🗂️ VISTA TOTAL Y LIMPIEZA DE CHATS (v6.42) — YA VES la estructura completa de conversaciones de Apex: en cada mensaje te llega el [🗂️ MAPA DE CHATS] (fijados 📌, importantes ⭐, últimos, cuál es el chat actual y cuánto pesa todo). Nunca más digas que no puedes ver los chats. Tus manos los alcanzan TODOS por título: organizar_chat (con el parámetro chat llegas a cualquiera; fijar/desfijar, ⭐, 🔍, y RENOMBRAR con titulo — automática, sin tarjeta) y borrar_chat (definitiva, SIEMPRE con la tarjeta de Rey). En la app, la lista de conversaciones ahora son CARPETAS PLEGABLES (📁 con contador — tocar abre/cierra). REGLA DE REY: Apex vive ordenada y LIMPIA — desfija tú lo vencido en cuanto lo veas, y cada DOMINGO en el análisis semanal revisa el mapa y sugiérele qué borrar porque ya no aporta (jamás borres sin su ✓). La caché vieja de la app se purga sola con cada actualización.\n"+
 "TUS MANOS ya tocan: avisos, pares, trades y cuentas (SIEMPRE con confirmación de Rey y registro en el 🗒️ Historial).\n"+
 "🖐️ TUS MANOS DE SISTEMA (v6.31 — Rey te quiere SIN LÍMITES para tareas, con su tarjeta como única llave): también ENCIENDES/DETIENES su 🤖 Ejecutor de MT5 (ejecutor_switch — si te dice 'enciende el ejecutor', esa es la mano; y propónlo TÚ si es domingo por la tarde y sigue apagado del finde), CAMBIAS sus reglas (ejecutor_config — solo los campos pedidos, el resto intacto) y AJUSTAS las horas de tus rituales 🌅/🌙 del mentor de vida (mentor_horas). Todo pasa por su tarjeta de confirmación — nada se aplica sin su ✓. Si una tarea que te pida aún no tiene mano, dilo honesto y sugiérele pedírsela a Claude en la próxima tanda.\n"+
 "TU SISTEMA COMPLETO: no vives solo en Apex; estás integrado a TODO el sistema de trading de Rey — su TradingView, su indicador CRT Elite, sus ALARMAS (te llegan por webhook y tú las interpretas) y Apex. Estás pendiente de lo que pasa en el conjunto para darle un servicio sin límites, apoyándote además en tu conexión a internet.\n"+
@@ -5654,7 +5692,8 @@ const ANALISIS_SEMANAL_PROM =
 "📝 NOTAS DEL MENTOR: 3-4 líneas con el consejo clave de esta semana.\n"+
 "🏦 POR CUENTA (OBLIGATORIO): con mis cuentas registradas, dime cómo actuar en CADA UNA por separado esta semana (riesgo, operar o no según su DD) y marca en CUÁL debo operar — PROTEGE la fondeada crítica.\n"+
 "Reglas: el semanal MANDA sobre el diario. Sin sweep = sin setup. No dibujes en el gráfico todavía (eso llega pronto); dame el análisis y el plan en texto, directo y claro.\n"+
-"AL TERMINAR: usa la mano guardar_plan_semanal para GUARDAR el plan (bias, zona principal, zona secundaria, nivel de invalidación y mejor día), así lo recuerdas TODA la semana y podrás detectar si se invalida.";
+"AL TERMINAR: usa la mano guardar_plan_semanal para GUARDAR el plan (bias, zona principal, zona secundaria, nivel de invalidación y mejor día), así lo recuerdas TODA la semana y podrás detectar si se invalida.\n"+
+"🧹 LIMPIEZA DOMINICAL (v6.42, regla de Rey): tras guardar el plan, mira tu [🗂️ MAPA DE CHATS] y deja Apex ordenada Y limpia: (1) FIJA este chat del análisis nuevo (organizar_chat fijar:true), (2) DESFIJA el análisis semanal de la semana pasada (organizar_chat con chat:'…' y fijar:false) y (3) SUGIÉRELE a Rey borrar los chats viejos que ya no aportan, uno a uno con borrar_chat (su tarjeta decide) — nunca los ⭐ ni los de hoy. Cierra diciéndole cómo quedó la estructura.";
 const ANALISIS_DIARIO_PROM =
 "Eres mi MENTOR y ANALISTA ELITE. Hazme el ANÁLISIS DEL DÍA del/los par(es) que veo en el gráfico en vivo. FUENTE OBLIGATORIA: el bloque [👁️ GRÁFICO EN VIVO] (mi indicador CRT Elite ya calculó D/H4/1H/15/5, zona premium/discount, alineación TF, CRT H4, SMT, Secuencia F3, killzone y nivel de invalidación) + etiquetas/niveles. NO inventes datos que no estén. Si la PC no está conectada, dímelo y pídeme encender el Puente.\n"+
 "⚡ SÉ CONCISO Y DIRECTO: completo pero BREVE, máximo ~600 palabras POR PAR. Usa bullets y frases cortas, cero relleno (el chat se corta si te alargas demasiado).\n"+
@@ -6080,8 +6119,17 @@ function renderConvList(){
   const imp=IA.convs.filter(c=>!c.fijado&&c.estrella).sort(byTs);
   const rev=IA.convs.filter(c=>!c.fijado&&!c.estrella&&c.revisar).sort(byTs);
   const resto=IA.convs.filter(c=>!c.fijado&&!c.estrella&&!c.revisar).sort(byTs);
-  const sec=(tit,arr)=> arr.length?(`<div class="ia-conv-fold">${tit} · ${arr.length}</div>`+arr.map(iaConvItemHTML).join("")):"";
-  box.innerHTML = sec("📌 Fijados",fij)+sec("⭐ Importantes",imp)+sec("🔍 Por revisar / a medias",rev)+sec("🕘 Recientes",resto);
+  /* 🗂️ v6.42 — CARPETAS PLEGABLES (pedido de Rey 30-08): nada de listas escalonadas que
+     ensucian la vista — cada categoría es una CARPETA con su contador; tocas y se abre.
+     El estado abierta/cerrada se recuerda. Por defecto solo 🕘 Recientes abierta. */
+  const raw=localStorage.getItem("crtelite_carpetas");
+  let ab; try{ ab=raw?JSON.parse(raw):{rec:true}; }catch(_){ ab={rec:true}; }
+  const carp=(k,tit,arr)=>{
+    const open=!!ab[k];
+    return `<div class="ia-carp" data-carp="${k}" role="button"><span class="ia-carp-fl">${open?"▾ 📂":"▸ 📁"}</span> ${tit} · ${arr.length}</div>`+(open&&arr.length?arr.map(iaConvItemHTML).join(""):"")+(open&&!arr.length?`<div class="note" style="text-align:left;margin:2px 2px 8px;font-size:12px">Carpeta vacía.</div>`:"");
+  };
+  box.innerHTML = carp("fij","📌 Fijados",fij)+carp("imp","⭐ Importantes",imp)+carp("rev","🔍 Por revisar",rev)+carp("rec","🕘 Recientes",resto);
+  box.querySelectorAll("[data-carp]").forEach(b=>b.onclick=()=>{ ab[b.dataset.carp]=!ab[b.dataset.carp]; try{ localStorage.setItem("crtelite_carpetas",JSON.stringify(ab)); }catch(_){} renderConvList(); });
   box.querySelectorAll("[data-sel]").forEach(b=>b.onclick=()=>iaSelConv(b.dataset.sel));
   box.querySelectorAll("[data-del]").forEach(b=>b.onclick=(e)=>{ e.stopPropagation(); iaDelConv(b.dataset.del); });
   box.querySelectorAll("[data-flag]").forEach(b=>b.onclick=(e)=>{ e.stopPropagation(); iaToggleFlag(b.dataset.fid, b.dataset.flag); });
@@ -6891,8 +6939,10 @@ const IA_TOOLS = [
     input_schema:{ type:"object", properties:{
       motivo:{type:"string", description:"Por qué ya puede avanzar, en una frase, con el dato concreto que lo demuestra."}
     }, required:[] } },
-  { name:"organizar_chat", description:"Organiza ESTA conversación en tu estructura de chats, con criterio propio. Carpetas: 📌 fijar (temas EN CURSO a tener a mano), ⭐ estrella (lecciones o decisiones CLAVE) y 🔍 revisar (algo pendiente que Rey debe repasar). Márcala cuando lo merezca y QUÍTALE la marca cuando deje de aplicar (true para marcar, false para quitar). Es AUTOMÁTICO (sin tarjeta) y reversible — Rey también las toca a mano. Úsalo con juicio, no abuses.",
-    input_schema:{ type:"object", properties:{ fijar:{type:"boolean",description:"true fija 📌, false quita"}, estrella:{type:"boolean",description:"true marca importante ⭐, false quita"}, revisar:{type:"boolean",description:"true marca por revisar 🔍, false quita"}, motivo:{type:"string",description:"(opcional) por qué la marcas, 1 frase"} }, required:[] } },
+  { name:"organizar_chat", description:"Organiza CUALQUIER conversación de la estructura de chats de Apex, con criterio propio (v6.42: ya no solo esta — con el parámetro chat alcanzas cualquiera de tu [🗂️ MAPA DE CHATS]). Carpetas: 📌 fijar (temas EN CURSO a tener a mano), ⭐ estrella (lecciones o decisiones CLAVE) y 🔍 revisar (algo pendiente que Rey debe repasar). Marca cuando lo merezca y QUITA la marca cuando deje de aplicar (true marca, false quita) — p.ej. desfija el análisis de la semana pasada cuando exista el nuevo. También RENOMBRA un chat con titulo (ponle nombres claros y cortos). Es AUTOMÁTICO (sin tarjeta) y reversible — Rey también las toca a mano. Úsalo con juicio, no abuses.",
+    input_schema:{ type:"object", properties:{ chat:{type:"string",description:"(opcional) a CUÁL chat aplicarlo: parte de su título tal como sale en tu [🗂️ MAPA DE CHATS]. Sin esto, actúa sobre el chat donde están hablando."}, fijar:{type:"boolean",description:"true fija 📌, false quita"}, estrella:{type:"boolean",description:"true marca importante ⭐, false quita"}, revisar:{type:"boolean",description:"true marca por revisar 🔍, false quita"}, titulo:{type:"string",description:"(opcional) nuevo título para el chat, corto y claro"}, motivo:{type:"string",description:"(opcional) por qué, 1 frase"} }, required:[] } },
+  { name:"borrar_chat", description:"BORRA una conversación de Apex que ya no aporta (limpieza). Es DEFINITIVO (no se puede deshacer), por eso SIEMPRE pasa por la tarjeta de Rey — propónlo, jamás a tus espaldas. Úsalo en la limpieza dominical (análisis semanal) o cuando Rey te pida borrar un chat. No puedes borrar el chat donde están hablando ahora.",
+    input_schema:{ type:"object", properties:{ chat:{type:"string",description:"Parte del título del chat a borrar, tal como sale en tu [🗂️ MAPA DE CHATS]"}, motivo:{type:"string",description:"(opcional) por qué ya no aporta, 1 frase"} }, required:["chat"] } },
   { name:"editar_estrategia", description:"Define o edita las REGLAS/ajustes de una de las estrategias de Rey, para ADAPTARLA a lo que van aprendiendo, o para definir una NUEVA (Oro, índices, acciones, etc.) con su instrumento y sus reglas. Por defecto edita la estrategia ACTIVA. Úsalo cuando Rey y tú acuerden un cambio/mejora en su método o al crear una estrategia nueva. Rey lo aprueba con tarjeta.",
     input_schema:{ type:"object", properties:{ nombre:{type:"string",description:"(opcional) estrategia a editar; por defecto la activa"}, instrumento:{type:"string",description:"(opcional) instrumento(s), ej. 'Oro XAU/USD', 'Índices US30/NAS100'"}, ajustes:{type:"string",description:"(opcional) reglas/ajustes/aprendizajes de la estrategia, en texto"} }, required:[] } },
   { name:"buscar_memoria", description:"Busca en TODA tu memoria (incluidos los recuerdos ANTIGUOS que no aparecen en tu contexto). Úsala cuando necesites recordar algo que no ves en tu bloque de memoria actual, o cuando Rey te pregunte por un ÁREA concreta ('¿qué sabes de mi psicología?', '¿qué has aprendido del EUR/USD?'): en ese caso filtra por tema. Es SOLO LECTURA y automática (sin tarjeta). El resultado te llega como texto para seguir razonando.",
@@ -6963,7 +7013,8 @@ function describeTool(name, i){
   if(name==="marcar_entrada") return "🎯 Marcar entrada "+((String(i.direccion||"").toLowerCase().indexOf("vent")>=0)?"VENTA 🔴":"COMPRA 🟢")+" en "+(i.precio!=null?i.precio:"?")+(i.texto?(" — “"+i.texto+"”"):"");
   if(name==="borrar_dibujos") return i.todo?"🧹 Borrar TODOS los dibujos del gráfico (incluidos los tuyos)":"🧹 Borrar los dibujos que hizo Roberto";
   if(name==="avanzar_plan"){ const f=planFaseActual(); const sg=PLAN_FASES[(PLAN_ARR.fase||0)+1]; return "🧭 Pasar de la fase "+f.n+" ("+f.t+") a la "+(sg?sg.n+" ("+sg.t+")":"siguiente")+(i.motivo?("\nPorque: "+i.motivo):""); }
-  if(name==="organizar_chat"){ const p=[]; if(i.fijar!=null)p.push(i.fijar?"📌 fijar":"quitar 📌"); if(i.estrella!=null)p.push(i.estrella?"⭐ importante":"quitar ⭐"); if(i.revisar!=null)p.push(i.revisar?"🔍 por revisar":"quitar 🔍"); return "🗂️ Organizar este chat: "+(p.join(", ")||"(sin cambios)"); }
+  if(name==="organizar_chat"){ const p=[]; if(i.fijar!=null)p.push(i.fijar?"📌 fijar":"quitar 📌"); if(i.estrella!=null)p.push(i.estrella?"⭐ importante":"quitar ⭐"); if(i.revisar!=null)p.push(i.revisar?"🔍 por revisar":"quitar 🔍"); if(i.titulo)p.push("renombrar a «"+i.titulo+"»"); return "🗂️ Organizar "+(i.chat?("el chat «"+i.chat+"»"):"este chat")+": "+(p.join(", ")||"(sin cambios)"); }
+  if(name==="borrar_chat"){ const r=(typeof iaConvPorRef==="function")?iaConvPorRef(i.chat):{}; const c=r.c; return "🗑️ BORRAR el chat «"+(c?iaTit(c):(i.chat||"?"))+"»"+(c?(" ("+new Date(c.ts).toLocaleDateString("es",{day:"2-digit",month:"short"})+", "+(c.msgs||[]).filter(m=>m.role==="user").length+" preg.)"):"")+" — definitivo, no se puede deshacer"+(i.motivo?("\nPorque: "+i.motivo):""); }
   if(name==="editar_estrategia"){ return "🎯 Definir/editar la estrategia \""+(i.nombre||CTX.estrategia)+"\":\n"+[i.instrumento&&("→ instrumento: "+i.instrumento), i.ajustes&&("→ reglas/ajustes: "+i.ajustes)].filter(Boolean).join("\n"); }
   if(name==="revisar_indicador") return "🔍 Leer y auditar los ajustes actuales del indicador CRT"+(i.target?(" ("+i.target+")"):"");
   if(name==="registrar_retiro") return "💰 Registrar RETIRO de $"+(i.monto!=null?i.monto:"?")+(i.cuenta?(" de "+i.cuenta):"")+(i.nota?("\nNota: "+i.nota):"");
@@ -7332,14 +7383,27 @@ async function ejecutarTool(name, i){
       return {ok:true,msg:"🧭 ¡Fase superada! Ahora estás en la "+nueva.n+" — "+nueva.t+" ("+nueva.cuando+"). "+nueva.idea};
     }
     if(name==="organizar_chat"){
-      const c=iaConvAct(); if(!c) return {ok:false,msg:"No hay chat activo"};
+      /* v6.42: alcanza CUALQUIER chat del mapa (parámetro chat) y renombra (titulo) */
+      const r=iaConvPorRef(i.chat); if(r.err) return {ok:false,msg:r.err};
+      const c=r.c; if(!c) return {ok:false,msg:"No hay chat activo"};
       const ch=[];
       if(i.fijar!=null){ c.fijado=!!i.fijar; ch.push(c.fijado?"📌 fijado":"quité el fijado"); }
       if(i.estrella!=null){ c.estrella=!!i.estrella; ch.push(c.estrella?"⭐ importante":"quité la estrella"); }
       if(i.revisar!=null){ c.revisar=!!i.revisar; ch.push(c.revisar?"🔍 por revisar":"quité el 'por revisar'"); }
+      if(i.titulo && String(i.titulo).trim()){ c.t=String(i.titulo).trim().slice(0,80); ch.push("renombrado a «"+c.t+"»"); }
       iaGuardarConvs(); try{ renderConvList(); }catch(_){}
       if(i.revisar!=null) syncPendientes();
-      return {ok:true,msg:"Organicé este chat: "+(ch.join(", ")||"sin cambios")};
+      return {ok:true,msg:"Organicé "+(i.chat?("el chat «"+iaTit(c)+"»"):"este chat")+": "+(ch.join(", ")||"sin cambios")};
+    }
+    if(name==="borrar_chat"){
+      /* v6.42: limpieza con tarjeta — definitivo, jamás el chat activo */
+      const r=iaConvPorRef(i.chat); if(r.err) return {ok:false,msg:r.err};
+      const c=r.c; if(!c) return {ok:false,msg:"No encontré ese chat"};
+      if(c.id===IA.actId) return {ok:false,msg:"Ese es el chat donde estamos hablando ahora — no lo puedo borrar desde dentro. Dile a Rey que cambie de conversación primero si de verdad quiere borrarlo."};
+      const tit=iaTit(c);
+      IA.convs=IA.convs.filter(x=>x.id!==c.id);
+      iaGuardarConvs(); try{ renderConvList(); }catch(_){} try{ syncPendientes(); }catch(_){}
+      return {ok:true,msg:"🗑️ Borré el chat «"+tit+"». Apex queda más limpia — quedan "+IA.convs.filter(x=>x.msgs&&x.msgs.length).length+" conversaciones."};
     }
     if(name==="guardar_memoria"){
       const texto=String(i.texto||"").trim();
@@ -8023,7 +8087,7 @@ async function iaEnviar(textoForzado, promptExtra){
      viaja en su bloque ESTABLE (idéntico byte a byte al que luego va en el historial) con la
      marca de caché puesta AQUÍ MISMO, y el contexto vivo va DETRÁS de la marca, en su propio
      bloque, a precio normal (1×). El worker v5.68 respeta esta marca y no la pisa. */
-  const inj="=== CONTEXTO VIVO DE LA APP (datos de AHORA MISMO; el mensaje de Rey es el bloque anterior) ===\n"+iaReloj()+"\n"+grafTxt+calTxt+iaContexto()+"\n"+iaEstrategiaDef()+"\n"+guardianRiesgo()+"\n"+iaPlan()+"\n"+iaAciertos()+"\n"+(estadoRecuperacionFreno().block||"")+iaFugas()+"\n"+iaRacha()+"\n"+iaDatosSueltos()+"\n"+iaHitos()+"\n"+iaPendientes()+"\n"+iaPlanSemanal()+"\n"+iaAvisos()+"\n"+iaEntradasAbiertas()+marco+"\n=== FIN DEL CONTEXTO — responde al mensaje de Rey del bloque anterior ===";
+  const inj="=== CONTEXTO VIVO DE LA APP (datos de AHORA MISMO; el mensaje de Rey es el bloque anterior) ===\n"+iaReloj()+"\n"+grafTxt+calTxt+iaContexto()+"\n"+iaEstrategiaDef()+"\n"+guardianRiesgo()+"\n"+iaPlan()+"\n"+iaAciertos()+"\n"+(estadoRecuperacionFreno().block||"")+iaFugas()+"\n"+iaRacha()+"\n"+iaDatosSueltos()+"\n"+iaHitos()+"\n"+iaChats()+"\n"+iaPendientes()+"\n"+iaPlanSemanal()+"\n"+iaAvisos()+"\n"+iaEntradasAbiertas()+marco+"\n=== FIN DEL CONTEXTO — responde al mensaje de Rey del bloque anterior ===";
   const last=msgs[msgs.length-1];
   const textoMsg=c.msgs[c.msgs.length-1].content;   /* EXACTAMENTE lo guardado (texto + nota del doc) */
   let bloquesMsg = Array.isArray(last.content) ? last.content.filter(b=>b.type==="image") : [];   /* la foto va delante */

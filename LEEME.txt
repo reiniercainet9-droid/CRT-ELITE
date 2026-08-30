@@ -1,5 +1,23 @@
-APEX v6.41 — TRADING DESK
+APEX v6.42 — TRADING DESK
 =========================
+
+NOVEDADES v6.42  (🗂️ VISTA TOTAL DE CHATS + CARPETAS + LIMPIEZA)
+=================================================================
+- 🗂️ Roberto AHORA VE tus conversaciones: en cada mensaje le viaja el mapa
+  completo (fijados 📌, importantes ⭐, últimos, cuánto pesa todo). Nunca más
+  un 'no puedo ver los chats'.
+- 🤲 Sus manos alcanzan CUALQUIER chat por título: organizar_chat (fijar,
+  desfijar, ⭐, 🔍 y RENOMBRAR — automática) y la nueva borrar_chat
+  (definitiva, SIEMPRE con tu tarjeta; jamás borra por su cuenta).
+- 📁 CARPETAS PLEGABLES: la lista de conversaciones ya no es una pila —
+  cada categoría es una carpeta con contador (📌/⭐/🔍/🕘); tocas y se abre,
+  y recuerda cuáles dejaste abiertas. Vista limpia de un vistazo.
+- 🧹 LIMPIEZA DOMINICAL: cada domingo, al cerrar el análisis semanal,
+  Roberto fija el análisis nuevo, desfija el viejo y te SUGIERE qué chats
+  borrar porque ya no aportan — Apex ordenada Y limpia, siempre.
+- PARA SUBIR: SOLO este zip a GitHub (worker v5.105 ya está vivo).
+  Ritual de oro: cerrar y reabrir la app.
+
 
 NOVEDADES v6.41  (🗺️ HITOS DE REVISIÓN + VÍAS DIRECTAS)
 =========================================================
