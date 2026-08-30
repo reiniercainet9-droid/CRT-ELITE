@@ -1,5 +1,18 @@
-APEX v6.40 — TRADING DESK
+APEX v6.41 — TRADING DESK
 =========================
+
+NOVEDADES v6.41  (🗺️ HITOS DE REVISIÓN + VÍAS DIRECTAS)
+=========================================================
+- 🗺️ HITOS: Roberto ahora VIGILA tus datos y te dice CUÁNDO toca revisar
+  cada chip: '+10 trades nuevos → ya toca el 🎓 Simulacro y el 🧬 Gemelo',
+  '+15 backtest → pasa por el 📚 Laboratorio', '+8 operaciones del bot →
+  revisa su examen de confiabilidad'. Te lo sugiere con naturalidad en la
+  conversación, y al abrir tú el chip su contador se reinicia solo.
+- 🔗 Las secciones 📈 Análisis y 🧠 Mentor ganan botones directos a
+  🎓 Simulacro · 🧬 Gemelo · 📚 Laboratorio (mismos datos, la lupa de Roberto).
+- PARA SUBIR: SOLO este zip a GitHub (worker v5.105 ya está vivo).
+  Ritual de oro: cerrar y reabrir la app.
+
 
 NOVEDADES v6.40 + worker v5.104  (🔥 AMANECER 5:00 + SABIDURÍA AL EJECUTOR)
 ============================================================================

@@ -194,6 +194,47 @@ function estrBadge(nom){ return ESTR_ESTADOS[estrEstado(nom)] + (estrVigente()==
 /* 🔍 PENDIENTES / COSAS A MEDIAS — Roberto recuerda lo inconcluso (los chats que él o Rey
    marcan con 🔍 "Por revisar"). Se inyecta en su contexto para que no se pierda nada y pueda
    recordárselo. Al TERMINAR algo, se le quita el 🔍 con organizar_chat(revisar:false). */
+/* ============================================================
+   🗺️ v6.41 — HITOS DE REVISIÓN (pedido de Rey, 29-08 noche)
+   Roberto VIGILA los datos registrados y sabe CUÁNDO toca revisar cada chip:
+   cada X registros nuevos desde la última revisión, se lo sugiere a Rey con
+   naturalidad en la conversación. Abrir el chip correspondiente REINICIA su
+   hito solo (la revisión cuenta como hecha). Cero costo: puro conteo local.
+   ============================================================ */
+const HITOS_REGLAS=[
+  { chip:"simulacro",   cada:10, n:"🎓 Simulacro de examen",            porque:"con operaciones nuevas la probabilidad de pasar cada examen cambia" },
+  { chip:"gemelo",      cada:10, n:"🧬 Mi gemelo disciplinado",         porque:"el espejo del timing se actualiza con cada tanda de trades" },
+  { chip:"estrategias", cada:15, n:"📚 Mis estrategias (laboratorio)",  porque:"con más backtest registrado toca revisar cómo van las del taller" },
+  { chip:"progreso",    cada:15, n:"📊 Mi progreso",                    porque:"ya hay muestra nueva suficiente para leer tendencias" },
+  { chip:"ejecutor",    cada:8,  n:"🤖 Ejecutor",                       porque:"su expediente sumó operaciones — toca mirar su examen de confiabilidad" },
+];
+function hitosLeer(){ try{ return JSON.parse(localStorage.getItem("crtelite_hitos")||"{}"); }catch(_){ return {}; } }
+function hitosContar(chip){
+  try{
+    const cerr=(Array.isArray(TRADES)?TRADES:[]).filter(t=>!t.abierta);
+    if(chip==="simulacro"||chip==="progreso") return cerr.length;
+    if(chip==="gemelo") return cerr.filter(t=>t.momento).length;
+    if(chip==="estrategias") return cerr.filter(t=>t.modo==="backtest").length;
+    if(chip==="ejecutor"){ try{ return (typeof ejecCerradas==="function")?ejecCerradas().length:0; }catch(_){ return 0; } }
+  }catch(_){}
+  return 0;
+}
+function hitosMarcar(chip){ try{ const h=hitosLeer(); h[chip]={ n:hitosContar(chip), ts:Date.now() }; localStorage.setItem("crtelite_hitos", JSON.stringify(h)); }catch(_){} }
+function iaHitos(){
+  try{
+    const h=hitosLeer();
+    const due=[];
+    HITOS_REGLAS.forEach(r=>{
+      const ahora=hitosContar(r.chip);
+      const base=(h[r.chip]&&h[r.chip].n)||0;
+      const nuevos=ahora-base;
+      if(nuevos>=r.cada) due.push("• "+r.n+": "+nuevos+" registro(s) nuevos desde la última revisión — "+r.porque+".");
+    });
+    if(!due.length) return "[🗺️ HITOS DE REVISIÓN: ningún chip pide revisión todavía — los datos aún no acumulan lo suficiente desde la última vez.]";
+    return "[🗺️ HITOS DE REVISIÓN (tu deber de vigía de los datos: TÚ le dices a Rey CUÁNDO toca revisar cada chip): YA ES HORA de:\n"+due.join("\n")+"\nSUGIÉRESELO con naturalidad en un momento oportuno de la charla ('Rey, ya toca pasar por el 🎓 Simulacro: llevas 12 operaciones nuevas…') — sin interrumpir algo urgente y sin repetirlo en cada mensaje. Al abrir él ese chip, su hito se reinicia solo.]";
+  }catch(_){ return ""; }
+}
+
 /* 📋 v6.33 — VIGILANTE DE DATOS SUELTOS: la regla de Rey es "ningún dato suelto — todo
    registrado claramente para todos los análisis del futuro". Este bloque le enseña a
    Roberto qué trades del Diario tienen HUECOS (campos vacíos que degradan los análisis)
@@ -345,6 +386,7 @@ function simExamenDigest(){
 const SIMULACRO_PROM =
 "Rey quiere su 🎓 SIMULACRO DE EXAMEN DE FONDEO — la decisión es REAL: está por comprar varios exámenes con su dinero. Abajo tienes los resultados EXACTOS del simulador determinista de la app (sus trades reales/backtest pasados por las reglas de cada cuenta: DD máximo estático/trailing, pérdida diaria, target, días mínimos, riesgo fijo; y barajados 200 veces para estimar probabilidad — el orden de las pérdidas importa). NO recalcules ni inventes números: interpreta ESTOS. Dale: (1) el VEREDICTO directo por cuenta/firma: ¿comprarla YA, esperar, o descartarla? con el porqué en 1-2 líneas; (2) QUÉ regla lo reprueba más (DD diario, DD máximo, target lejos) y qué cambio concreto de su operativa sube más la probabilidad; (3) el orden de compra recomendado si hay varias; (4) honestidad total: si los datos son pocos o el simulacro usa backtest en vez de real, DILO y modera la confianza (el simulador aproxima la pérdida diaria sobre el balance de cierre, sin flotante). Termina con UNA frase de mentor: comprar exámenes sin pasar el simulacro es pagar por reprobar.";
 function simulacroExamen(){
+  try{ hitosMarcar("simulacro"); }catch(_){}
   if(typeof abrirIA==="function") abrirIA();
   iaTemaChat("🎓 Simulacro de examen");
   const dig=simExamenDigest();
@@ -395,6 +437,7 @@ function gemeloDigest(){
 const GEMELO_PROM =
 "Rey quiere mirar a su 🧬 GEMELO DISCIPLINADO — el Rey paralelo que respetó SIEMPRE su regla de oro (entrar SOLO con la vela de confirmación cerrada; su fuga histórica es el timing prematuro). Abajo van los números EXACTOS calculados por la app: su curva real vs la del gemelo (que omite las entradas 'En el toque' y 'Anticipé'), la diferencia en R y en DÓLARES, y el desglose por momento de entrada. NO recalcules ni inventes: interpreta ESTOS números. Dale: (1) el espejo directo y honesto — ¿cuánto le está costando (o no) su fuga, en R y en $?; (2) qué dice el desglose por momento: ¿sus entradas anticipadas pierden de verdad o hay sorpresa? (si la muestra es chica, dilo); (3) UNA acción concreta para la próxima semana que acerque su curva a la del gemelo; (4) si hay trades sin 'momento', pídele completarlos (editar_trade) para que el espejo sea exacto. Cariñoso pero SIN suavizar el número — el gemelo existe para doler lo justo y corregir.";
 function gemeloDisciplinado(){
+  try{ hitosMarcar("gemelo"); }catch(_){}
   if(typeof abrirIA==="function") abrirIA();
   iaTemaChat("🧬 Mi gemelo disciplinado");
   const dig=gemeloDigest();
@@ -477,6 +520,7 @@ function progresoDigest(){
   return s;
 }
 function progresoRoberto(){
+  try{ hitosMarcar("progreso"); }catch(_){}
   const dig=progresoDigest();
   if(typeof abrirIA==="function") abrirIA();
   iaTemaChat("📊 Mi progreso");
@@ -801,6 +845,7 @@ async function ejecCmdCerrar(ticket){
   }catch(_){ toast("⚠️ Sin internet"); return false; }
 }
 async function verEjecutor(){
+  try{ hitosMarcar("ejecutor"); }catch(_){}
   if(typeof abrirIA==="function") abrirIA();
   iaTemaChat("🤖 Ejecutor");
   const c=iaConvAct();
@@ -3741,6 +3786,20 @@ function viewAnalisis(){
     <p class="desc">Se calcula con los trades del contexto de arriba (modo + estrategia). Con menos de 20 trades los números son orientativos; a partir de 50 empiezan a ser fiables.</p>
     <div class="seg c4" id="sgPeriodo"></div>`;
   v.appendChild(head);
+  /* 🔗 v6.41 — vías directas a los análisis de Roberto que beben de estos MISMOS datos */
+  const atajos=el("div","card");
+  atajos.innerHTML=`<div class="card-h"><span class="ic">🤖</span><h2>Análisis con Roberto</h2></div>
+    <p class="desc">Los mismos datos de arriba, analizados por tu mentor:</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn" id="anSimulacro">🎓 Simulacro de examen</button>
+      <button class="btn" id="anGemelo">🧬 Mi gemelo</button>
+      <button class="btn" id="anLab">📚 Laboratorio</button>
+    </div>`;
+  v.appendChild(atajos);
+  setTimeout(()=>{ try{
+    const w=(id,fn)=>{ const b=v.querySelector("#"+id); if(b) b.onclick=fn; };
+    w("anSimulacro",()=>simulacroExamen()); w("anGemelo",()=>gemeloDisciplinado()); w("anLab",()=>estrategiasLab());
+  }catch(_){} },0);
   const body=el("div"); body.id="analisisBody";
   v.appendChild(body);
   return v;
@@ -4527,6 +4586,19 @@ function viewMentor(){
     <p class="desc">Tu operativa en palabras: qué hiciste bien, qué corregir y un plan para el próximo periodo. Se calcula con el contexto de arriba (Real/Backtest + estrategia).</p>
     <div class="seg c3" id="sgMPer"></div>`;
   v.appendChild(head);
+  /* 🔗 v6.41 — vías directas a los análisis profundos de Roberto (mismos datos, otra lupa) */
+  const atajosM=el("div","card");
+  atajosM.innerHTML=`<div class="card-h"><span class="ic">🤖</span><h2>Profundiza con Roberto</h2></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn" id="meSimulacro">🎓 Simulacro de examen</button>
+      <button class="btn" id="meGemelo">🧬 Mi gemelo</button>
+      <button class="btn" id="meLab">📚 Laboratorio</button>
+    </div>`;
+  v.appendChild(atajosM);
+  setTimeout(()=>{ try{
+    const w=(id,fn)=>{ const b=v.querySelector("#"+id); if(b) b.onclick=fn; };
+    w("meSimulacro",()=>simulacroExamen()); w("meGemelo",()=>gemeloDisciplinado()); w("meLab",()=>estrategiasLab());
+  }catch(_){} },0);
   const body=el("div"); body.id="mentorBody"; v.appendChild(body);
   return v;
 }
@@ -5550,7 +5622,8 @@ const APEX_MAPA =
 "19. 🧬 Gemelo disciplinado (chip en 🧠, v6.35) — el espejo de su fuga de timing: su curva real vs la del Rey paralelo que solo entró 'En confirmación', con la diferencia en R y en DÓLARES y el desglose por momento de entrada. Números calculados por la app: tú interpretas y le das UNA acción para acercarse a su gemelo.\n"+
 "20. 🚨 Freno anti-tilt EN CALIENTE (v6.36, automático) — al registrarse la 2ª pérdida seguida del día, la app le pone un ALTO en pantalla con su propia estadística de revancha y 3 salidas: cerrar el día (apaga el Ejecutor), hablar contigo (llegas en modo emergencia emocional — protégelo), o seguir bajo su responsabilidad. Si te llega esa conversación 🚨, es EL momento más importante de tu trabajo.\n"+
 "21. 🌗 Tema claro/oscuro (v6.38) — Apex y tu chat se ven perfectos bajo el sol (☀️ claro) o de noche (🌙 oscuro, el clásico). Rey cambia con el botón 🌗 (encabezado de Apex o de tu chat) o TÚ con tu mano tema_apex si te lo pide de palabra ('ponme el modo claro') — es automática, sin tarjeta, instantánea y recordada.\n"+
-"22. 🌙 Dossier del amanecer (v6.39, automático) — cada madrugada (5:45 BR) TÚ preparas solo el informe del día (noche/Asia, plan semanal, noticias en hora de Brasil, cuentas, ventanas) y tu ritual 🌅 de las 6:30 lo presenta hecho. 📚 Repaso espaciado: tus lecciones vuelven solas a los 3/7/30 días con un aviso al mediodía (chip 📚 Repaso de lecciones). 📖 guardar_saber: al estudiar documentos de Rey, guardas lo valioso en tu biblioteca para siempre. 🎓 Y los domingos 20:00 destilas solo lecciones de la semana del Ejecutor.\n"+
+"22. 🌙 Dossier del amanecer (v6.39, automático) — cada madrugada (5:45 BR) TÚ preparas solo el informe del día (noche/Asia, plan semanal, noticias en hora de Brasil, cuentas, ventanas) y tu ritual 🌅 de las 6:30 lo presenta hecho. 📚 Repaso espaciado: tus lecciones vuelven solas a los 3/7/30 días con un aviso al mediodía (chip 📚 Repaso de lecciones). 📖 guardar_saber: al estudiar documentos de Rey, guardas lo valioso en tu biblioteca para siempre. 🎓 Y CADA DÍA a las 20:00 destilas solo las lecciones de las operaciones DE HOY del Ejecutor (v5.105 — tu veto de mañana ya las lleva).\n"+
+"23. 🗺️ HITOS DE REVISIÓN (v6.41, automático) — TÚ vigilas los datos y le dices a Rey CUÁNDO toca revisar cada chip: el bloque [🗺️ HITOS] de tu contexto te avisa cuando un chip acumuló registros nuevos suficientes (Simulacro/Gemelo cada 10 trades, Laboratorio/Progreso cada 15, Ejecutor cada 8 operaciones) — sugiéreselo con naturalidad y sin repetir; al abrirlo él, el hito se reinicia solo. Además, las secciones 📈 Análisis y 🧠 Mentor tienen botones directos a Simulacro/Gemelo/Laboratorio.\n"+
 "TUS MANOS ya tocan: avisos, pares, trades y cuentas (SIEMPRE con confirmación de Rey y registro en el 🗒️ Historial).\n"+
 "🖐️ TUS MANOS DE SISTEMA (v6.31 — Rey te quiere SIN LÍMITES para tareas, con su tarjeta como única llave): también ENCIENDES/DETIENES su 🤖 Ejecutor de MT5 (ejecutor_switch — si te dice 'enciende el ejecutor', esa es la mano; y propónlo TÚ si es domingo por la tarde y sigue apagado del finde), CAMBIAS sus reglas (ejecutor_config — solo los campos pedidos, el resto intacto) y AJUSTAS las horas de tus rituales 🌅/🌙 del mentor de vida (mentor_horas). Todo pasa por su tarjeta de confirmación — nada se aplica sin su ✓. Si una tarea que te pida aún no tiene mano, dilo honesto y sugiérele pedírsela a Claude en la próxima tanda.\n"+
 "TU SISTEMA COMPLETO: no vives solo en Apex; estás integrado a TODO el sistema de trading de Rey — su TradingView, su indicador CRT Elite, sus ALARMAS (te llegan por webhook y tú las interpretas) y Apex. Estás pendiente de lo que pasa en el conjunto para darle un servicio sin límites, apoyándote además en tu conexión a internet.\n"+
@@ -5671,6 +5744,7 @@ const LAB_PROM =
 "Rey abre su 📚 LABORATORIO DE ESTRATEGIAS. Abajo tienes su lista real (nombre, estado, instrumento, reglas y nº de trades). Tu papel de SOCIO DE LABORATORIO: (1) preséntale la foto del laboratorio en 2-3 líneas; (2) si está desarrollando una nueva, DESAFÍALA con preguntas duras (¿dónde está la ventaja? ¿qué la invalida? ¿en qué sesión/instrumento? ¿cómo se define la entrada EXACTA y el SL?) y ayúdalo a escribir reglas CLARAS y comprobables con editar_estrategia; (3) recuérdale el CAMINO: 💡 Borrador → 🧪 En laboratorio (reglas definidas, a prueba) → backtest DE VERDAD (eso lo corre CLAUDE con datos reales — tú no inventes resultados de backtest JAMÁS) → ✅ Aprobada (SOLO cuando Rey la apruebe explícitamente) → ⭐ vigente si Rey la elige para el Ejecutor (mano estrategia_vigente, solo aprobadas). "+
 "REGLAS DE ORO: la ⭐ VIGENTE es la que manda en el Ejecutor; la ACTIVA del Diario es solo la que Rey está mirando — no las confundas. Nunca propongas aprobar ni poner vigente nada sin backtest real y sin el visto bueno de Rey. Y honestidad técnica: el Ejecutor hoy solo sabe ejecutar señales de CRT Elite — ejecutar una estrategia nueva requiere que Claude le construya sus señales (dilo cuando toque). Tus manos aquí: crear_estrategia, editar_estrategia, estado_estrategia, estrategia_vigente (todas con tarjeta de Rey).";
 function estrategiasLab(){
+  try{ hitosMarcar("estrategias"); }catch(_){}
   if(typeof abrirIA==="function") abrirIA();
   iaTemaChat("📚 Mis estrategias");
   const lineas=(ESTRATEGIAS||[]).map(e=>{
@@ -7949,7 +8023,7 @@ async function iaEnviar(textoForzado, promptExtra){
      viaja en su bloque ESTABLE (idéntico byte a byte al que luego va en el historial) con la
      marca de caché puesta AQUÍ MISMO, y el contexto vivo va DETRÁS de la marca, en su propio
      bloque, a precio normal (1×). El worker v5.68 respeta esta marca y no la pisa. */
-  const inj="=== CONTEXTO VIVO DE LA APP (datos de AHORA MISMO; el mensaje de Rey es el bloque anterior) ===\n"+iaReloj()+"\n"+grafTxt+calTxt+iaContexto()+"\n"+iaEstrategiaDef()+"\n"+guardianRiesgo()+"\n"+iaPlan()+"\n"+iaAciertos()+"\n"+(estadoRecuperacionFreno().block||"")+iaFugas()+"\n"+iaRacha()+"\n"+iaDatosSueltos()+"\n"+iaPendientes()+"\n"+iaPlanSemanal()+"\n"+iaAvisos()+"\n"+iaEntradasAbiertas()+marco+"\n=== FIN DEL CONTEXTO — responde al mensaje de Rey del bloque anterior ===";
+  const inj="=== CONTEXTO VIVO DE LA APP (datos de AHORA MISMO; el mensaje de Rey es el bloque anterior) ===\n"+iaReloj()+"\n"+grafTxt+calTxt+iaContexto()+"\n"+iaEstrategiaDef()+"\n"+guardianRiesgo()+"\n"+iaPlan()+"\n"+iaAciertos()+"\n"+(estadoRecuperacionFreno().block||"")+iaFugas()+"\n"+iaRacha()+"\n"+iaDatosSueltos()+"\n"+iaHitos()+"\n"+iaPendientes()+"\n"+iaPlanSemanal()+"\n"+iaAvisos()+"\n"+iaEntradasAbiertas()+marco+"\n=== FIN DEL CONTEXTO — responde al mensaje de Rey del bloque anterior ===";
   const last=msgs[msgs.length-1];
   const textoMsg=c.msgs[c.msgs.length-1].content;   /* EXACTAMENTE lo guardado (texto + nota del doc) */
   let bloquesMsg = Array.isArray(last.content) ? last.content.filter(b=>b.type==="image") : [];   /* la foto va delante */
