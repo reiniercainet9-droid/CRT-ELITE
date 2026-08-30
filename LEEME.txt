@@ -1,5 +1,61 @@
-APEX v6.42 — TRADING DESK
+APEX v6.44 — TRADING DESK
 =========================
+
+NOVEDADES v6.44  (🚫 CERO BACHES + 📁 CARPETAS ARREGLADAS + 😄 CARISMA)
+========================================================================
+- 🚫 CERO BACHES: Roberto ya NO te devuelve las dudas — si hay 2 chats con
+  el mismo título, ÉL elige solo (por fecha del mapa o 'el más viejo' /
+  'el más reciente'). Regla de oro nueva: lo que esté en su vista, lo
+  resuelve él; solo pide ayuda cuando de verdad no tiene la mano.
+- 📁 CARPETAS ARREGLADAS: los títulos ya no salen cortados (las filas no se
+  encogen) y cada carpeta abierta muestra su contenido indentado con borde —
+  se ve claro qué vive dentro de qué.
+- 😄 CARISMA: Roberto con chispa — bromas cuando toca, emojis de sentimiento,
+  celebra contigo. Carisma en el tono, rigor en los números.
+- PARA SUBIR (EN ORDEN): 1º worker-elitepro-v5.107.js a Cloudflare, 2º este
+  zip a GitHub + ritual de oro.
+
+
+NOVEDADES v6.43  (🔭 ROBERTO UN PASO DELANTE DE TI)
+====================================================
+- 🔭 EL PENSADERO: cada madrugada (antes del dossier) Roberto PIENSA SOLO
+  en la nube — cruza tus patrones, el Ejecutor, tu plan y sus lecciones y
+  produce ideas ORIGINALES que tú no pediste. El dossier te las presenta
+  con '💡 HOY TE PROPONGO'. Su cuaderno vive en el chip 💡 Ideas de Roberto
+  (una descartada JAMÁS se re-propone).
+- 🔬 PATRONES OCULTOS (chip): motor determinista que cruza tus registros por
+  día de la semana, par, momento, ventana, setup y rachas — y te dice dónde
+  ganas y dónde sangras, con números que nadie lleva en la cabeza.
+- 🥊 EL TORNEO DE LOS TRES (chip): tú vs tu Ejecutor vs tu gemelo, a 30 días.
+  Roberto es el juez: podio, porqué, y qué copiarle cada uno al otro.
+- 😈 ABOGADO DEL DIABLO: todo análisis cierra con '❓ LA PREGUNTA QUE NO ME
+  HICISTE' — el ataque a tu propia idea, a tiempo y con dato.
+- PARA SUBIR (EN ORDEN): 1º worker-elitepro-v5.107.js a Cloudflare,
+  2º este zip a GitHub + ritual de oro. (Incluyen v5.106/v6.42: chats,
+  carpetas, freno de recuperación — todo lo del día viaja aquí.)
+
+
+APEX v6.43 — TRADING DESK
+=========================
+
+NOVEDADES v6.43  (🔭 ROBERTO UN PASO DELANTE DE TI)
+====================================================
+- 🔭 EL PENSADERO: cada madrugada (antes del dossier) Roberto PIENSA SOLO
+  en la nube — cruza tus patrones, el Ejecutor, tu plan y sus lecciones y
+  produce ideas ORIGINALES que tú no pediste. El dossier te las presenta
+  con '💡 HOY TE PROPONGO'. Su cuaderno vive en el chip 💡 Ideas de Roberto
+  (una descartada JAMÁS se re-propone).
+- 🔬 PATRONES OCULTOS (chip): motor determinista que cruza tus registros por
+  día de la semana, par, momento, ventana, setup y rachas — y te dice dónde
+  ganas y dónde sangras, con números que nadie lleva en la cabeza.
+- 🥊 EL TORNEO DE LOS TRES (chip): tú vs tu Ejecutor vs tu gemelo, a 30 días.
+  Roberto es el juez: podio, porqué, y qué copiarle cada uno al otro.
+- 😈 ABOGADO DEL DIABLO: todo análisis cierra con '❓ LA PREGUNTA QUE NO ME
+  HICISTE' — el ataque a tu propia idea, a tiempo y con dato.
+- PARA SUBIR (EN ORDEN): 1º worker-elitepro-v5.107.js a Cloudflare,
+  2º este zip a GitHub + ritual de oro. (Incluyen v5.106/v6.42: chats,
+  carpetas, freno de recuperación — todo lo del día viaja aquí.)
+
 
 NOVEDADES v6.42  (🗂️ VISTA TOTAL DE CHATS + CARPETAS + LIMPIEZA)
 =================================================================
