@@ -30,15 +30,19 @@
   .rob-todo{transform-origin:180px 300px}
   .rob-svg{--rj:#22305f;--rj2:#16204a;--rmad:#f4ac3c;--rmad2:#d3841c;--roro:#f0c95c;--roro2:#b8933a;
            --rcam:#fbf7ec;--rgu:#fdfcf7;--rgu2:#c9c2ac;--rtz:#3a2a10;--rcor:#ff6f61;--rteal:#4fe0c0}
-  [data-cuerpo="flota"]   .rob-todo{animation:robFlota 3.6s ease-in-out infinite}
-  [data-cuerpo="lento"]   .rob-todo{animation:robFlota 6s ease-in-out infinite}
-  [data-cuerpo="brinca"]  .rob-todo{animation:robBrinca .55s ease-in-out infinite}
-  [data-cuerpo="tiembla"] .rob-todo{animation:robTiembla .12s linear infinite}
-  [data-cuerpo="inclina"] .rob-todo{animation:robInclina 3.4s ease-in-out infinite}
-  [data-cuerpo="rie"]     .rob-todo{animation:robRie .38s ease-in-out infinite}
-  [data-cuerpo="chulo"]   .rob-todo{animation:robChulo 2.6s ease-in-out infinite}
-  [data-cuerpo="firme"]   .rob-todo{animation:none}
-  [data-cuerpo="salto"]   .rob-todo{animation:robSalto .5s ease-out}
+  /* ⚠️ TODAS sus animaciones llevan !important A PROPÓSITO (31-08): Apex tiene una regla
+     global *{animation:none!important} para "menos movimiento", y sin esto Roberto se
+     quedaba de ESTATUA en cuanto el teléfono pedía reducir animaciones. Sus gestos son
+     su IDIOMA, no un adorno decorativo: tienen que moverse. */
+  [data-cuerpo="flota"]   .rob-todo{animation:robFlota 3.6s ease-in-out infinite!important}
+  [data-cuerpo="lento"]   .rob-todo{animation:robFlota 6s ease-in-out infinite!important}
+  [data-cuerpo="brinca"]  .rob-todo{animation:robBrinca .55s ease-in-out infinite!important}
+  [data-cuerpo="tiembla"] .rob-todo{animation:robTiembla .12s linear infinite!important}
+  [data-cuerpo="inclina"] .rob-todo{animation:robInclina 3.4s ease-in-out infinite!important}
+  [data-cuerpo="rie"]     .rob-todo{animation:robRie .38s ease-in-out infinite!important}
+  [data-cuerpo="chulo"]   .rob-todo{animation:robChulo 2.6s ease-in-out infinite!important}
+  [data-cuerpo="firme"]   .rob-todo{animation:none!important}
+  [data-cuerpo="salto"]   .rob-todo{animation:robSalto .5s ease-out!important}
   @keyframes robFlota{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
   @keyframes robBrinca{0%,100%{transform:translateY(0) rotate(-2.5deg)}50%{transform:translateY(-18px) rotate(2.5deg)}}
   @keyframes robTiembla{0%,100%{transform:translate(-2px,0)}50%{transform:translate(2px,-1px)}}
@@ -64,7 +68,7 @@
   [data-ojos="guino"] .rob-oj-gui{display:block}
   [data-ojos="gafas"] .rob-oj-gaf{display:block}
   .rob-pup{transition:transform .3s} .rob-globos{transition:transform .25s}
-  [data-ojos="normales"] .rob-globos,[data-ojos="lado"] .rob-globos{animation:robPest 4.8s infinite}
+  [data-ojos="normales"] .rob-globos,[data-ojos="lado"] .rob-globos{animation:robPest 4.8s infinite!important}
   @keyframes robPest{0%,92%,100%{transform:scaleY(1)}95%{transform:scaleY(.08)}}
 
   /* cejas */
@@ -107,17 +111,17 @@
 
   /* poses */
   .rob-pose{display:none}
-  .rob-agita{transform-box:fill-box; transform-origin:70% 90%; animation:robAgita .62s ease-in-out infinite}
+  .rob-agita{transform-box:fill-box; transform-origin:70% 90%; animation:robAgita .62s ease-in-out infinite!important}
   @keyframes robAgita{0%,100%{transform:rotate(-3deg)}50%{transform:rotate(-26deg)}}
-  [data-pose="arriba"] .rob-p-arriba,[data-pose="aplaude"] .rob-p-aplaude{animation:robVibra .3s ease-in-out infinite}
+  [data-pose="arriba"] .rob-p-arriba,[data-pose="aplaude"] .rob-p-aplaude{animation:robVibra .3s ease-in-out infinite!important}
   @keyframes robVibra{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
-  .rob-lupa{transform-box:fill-box; transform-origin:center; animation:robBusca 2.4s ease-in-out infinite}
+  .rob-lupa{transform-box:fill-box; transform-origin:center; animation:robBusca 2.4s ease-in-out infinite!important}
   @keyframes robBusca{0%,100%{transform:translate(0,0)}50%{transform:translate(-7px,8px)}}
-  .rob-indice{animation:robVibra .8s ease-in-out infinite}
-  .rob-escribe{transform-box:fill-box; transform-origin:20% 50%; animation:robApunta .7s ease-in-out infinite}
+  .rob-indice{animation:robVibra .8s ease-in-out infinite!important}
+  .rob-escribe{transform-box:fill-box; transform-origin:20% 50%; animation:robApunta .7s ease-in-out infinite!important}
   @keyframes robApunta{0%,100%{transform:translate(0,0)}50%{transform:translate(5px,3px)}}
   /* 👉 lo que va HACIA REY se acerca y se aleja: vende que sale de la pantalla */
-  .rob-empuja{transform-box:fill-box; transform-origin:center; animation:robEmpuja 1.5s ease-in-out infinite}
+  .rob-empuja{transform-box:fill-box; transform-origin:center; animation:robEmpuja 1.5s ease-in-out infinite!important}
   @keyframes robEmpuja{0%,100%{transform:scale(1)}50%{transform:scale(1.16) translate(-6px,2px)}}
 
   /* efectos */
@@ -128,15 +132,26 @@
   [data-fx="sudor"] .rob-fx-sud{display:block}
   [data-fx="risa"] .rob-fx-risa{display:block}
   [data-fx="corazones"] .rob-fx-cor{display:block}
-  .rob-conf{position:absolute; top:-14px; width:8px; height:13px; border-radius:2px; animation:robCae 1.7s linear infinite}
+  .rob-conf{position:absolute; top:-14px; width:8px; height:13px; border-radius:2px; animation:robCae 1.7s linear infinite!important}
   @keyframes robCae{0%{transform:translateY(-10px) rotate(0)}100%{transform:translateY(420px) rotate(560deg); opacity:.1}}
-  .rob-flota-ico{position:absolute; animation:robSube 2.6s ease-in infinite; opacity:0}
+  .rob-flota-ico{position:absolute; animation:robSube 2.6s ease-in infinite!important; opacity:0}
   @keyframes robSube{0%{transform:translateY(0) scale(.8)}22%{opacity:.95}100%{transform:translateY(-70px) scale(1.1); opacity:0}}
-  .rob-chispa{position:absolute; animation:robCentella 1.4s ease-in-out infinite}
+  .rob-chispa{position:absolute; animation:robCentella 1.4s ease-in-out infinite!important}
   @keyframes robCentella{0%,100%{opacity:.15; transform:scale(.7)}50%{opacity:1; transform:scale(1.15)}}
-  .rob-sudor{position:absolute; animation:robGotea 1.6s ease-in infinite}
+  .rob-sudor{position:absolute; animation:robGotea 1.6s ease-in infinite!important}
   @keyframes robGotea{0%{transform:translateY(0); opacity:.9}100%{transform:translateY(34px); opacity:0}}
-  @media (prefers-reduced-motion:reduce){.rob-svg *,.rob-fx *{animation:none!important}}
+  /* 🎬 MENOS MOVIMIENTO (el teléfono lo pide, o Rey lo eligió): Roberto NO se congela —
+     sigue respirando, parpadeando y moviendo la boca, porque eso es cómo te habla. Lo que
+     se calma son los brincos, las sacudidas y los confetis. Rey puede forzar la animación
+     completa (.rob-anim-on) o apagarla del todo (.rob-anim-min) desde los ajustes. */
+  @media (prefers-reduced-motion:reduce){
+    html:not(.rob-anim-on) [data-cuerpo] .rob-todo{animation:robFlota 4.6s ease-in-out infinite!important}
+    html:not(.rob-anim-on) .rob-fx *{animation:none!important}
+    html:not(.rob-anim-on) .rob-agita,html:not(.rob-anim-on) .rob-lupa,
+    html:not(.rob-anim-on) .rob-indice,html:not(.rob-anim-on) .rob-escribe,
+    html:not(.rob-anim-on) .rob-empuja{animation:none!important}
+  }
+  html.rob-anim-min .rob-svg .rob-todo,html.rob-anim-min .rob-svg *,html.rob-anim-min .rob-fx *{animation:none!important}
   `;
 
   /* ── una mano = un guante blanco de mayordomo (4 formas) ── */

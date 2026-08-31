@@ -6404,6 +6404,13 @@ function iaInit(){
         </div>
         <div class="note" style="text-align:left;margin:0 0 8px">Si tu teléfono solo trae voz de mujer, baja el tono (Grave++). Para una voz de HOMBRE real hay que instalarla en Ajustes del teléfono → "Texto a voz" (no en el Asistente de Google).</div>
         <button class="btn" id="iaVozTest" style="margin-bottom:14px">▶️ Probar voz</button>
+        <div class="fl">🎬 Movimiento de Roberto</div>
+        <div class="seg c3" id="iaRobAnimSeg" style="margin-bottom:6px">
+          <button data-anim="auto">📱 Como el teléfono</button>
+          <button data-anim="on">✨ Siempre animado</button>
+          <button data-anim="min">🧊 Quieto</button>
+        </div>
+        <div class="note" style="text-align:left;margin:0 0 14px">Sus gestos son su forma de hablarte. Si tienes las <b>animaciones del teléfono apagadas</b>, Android le pide a Apex que se mueva menos: con <b>✨ Siempre animado</b> Roberto se mueve igual, sin tocar los ajustes de tu teléfono.</div>
         <div class="fl">🚀 Motor de Roberto (lo que gasta)</div>
         <div class="seg c2" id="iaMotorSeg" style="margin-bottom:6px">
           <button data-motor="sonnet">🏎️ Rendidor</button>
@@ -6461,7 +6468,7 @@ function iaInit(){
   $("#iaNew2").onclick=iaNuevaConv;
   $("#iaConvs").onclick=()=>{ const b=$("#iaConvsBox"); const show=b.style.display==="none"; $("#iaCfgBox").style.display="none"; b.style.display=show?"block":"none"; if(show){ _iaMemCache=null; renderConvList(); } };
   const bq=$("#iaBuscar"); if(bq){ let _bqT=null; bq.addEventListener("input",()=>{ clearTimeout(_bqT); _bqT=setTimeout(renderConvList,250); }); }
-  $("#iaCfg").onclick=()=>{ const b=$("#iaCfgBox"); const show=b.style.display==="none"; $("#iaConvsBox").style.display="none"; b.style.display=show?"block":"none"; if(show){ $("#iaUrl").value=IA.url; iaVozRefrescarUI(); notifRefrescarUI(); } };
+  $("#iaCfg").onclick=()=>{ const b=$("#iaCfgBox"); const show=b.style.display==="none"; $("#iaConvsBox").style.display="none"; b.style.display=show?"block":"none"; if(show){ $("#iaUrl").value=IA.url; iaVozRefrescarUI(); notifRefrescarUI(); robAnimUI(); } };
   /* Controles de notificaciones */
   const nt=$("#iaNotifToggle");
   if(!notifSoportado()){ if(nt){ nt.disabled=true; nt.innerHTML="🔕 Tu teléfono no permite notificaciones"; } }
@@ -6855,10 +6862,40 @@ function robCara(emo,txt){
      · NUBECITA: dice en 2 líneas qué pasa; tocarla abre el chat en ese tema
    ═══════════════════════════════════════════════════════════════════════════ */
 let ROB_CUERPO=false, _robEvTs=0, _robGloboT=null;
+/* 🎬 v6.47 — MOVIMIENTO DE ROBERTO (Rey, 31-08: "yo ahora mismo no tengo las animaciones
+   del teléfono, ¿Apex tiene las mismas animaciones?"). SÍ las tiene: al apagar las
+   animaciones de Android, Chrome le pide a toda página web "menos movimiento" — y Apex
+   obedecía tan a rajatabla que Roberto se quedaba de ESTATUA. Ahora sus gestos NO se
+   congelan nunca (son su idioma), y Rey manda con este ajuste:
+     auto = lo que diga el teléfono (calma brincos, mantiene respiración y parpadeo)
+     on   = animado SIEMPRE, aunque el teléfono pida menos movimiento
+     min  = totalmente quieto (solo cambia de gesto) */
+/* Por defecto ✨ SIEMPRE ANIMADO: Rey lo pidió expreso y tiene las animaciones del
+   teléfono apagadas — sin esto abriría Apex y vería a Roberto casi quieto. */
+function robAnimLeer(){ try{ return localStorage.getItem("crtelite_robanim")||"on"; }catch(_){ return "on"; } }
+function robAnimPoner(v){
+  try{
+    if(!["auto","on","min"].includes(v)) v="auto";
+    localStorage.setItem("crtelite_robanim",v);
+    const h=document.documentElement;
+    h.classList.toggle("rob-anim-on", v==="on");
+    h.classList.toggle("rob-anim-min", v==="min");
+    document.querySelectorAll("#iaRobAnimSeg button").forEach(b=>b.classList.toggle("on", b.dataset.anim===v));
+  }catch(_){}
+}
+function robAnimUI(){
+  try{
+    const seg=$("#iaRobAnimSeg"); if(!seg) return;
+    seg.querySelectorAll("button").forEach(b=>{ b.onclick=()=>{ robAnimPoner(b.dataset.anim);
+      robCara(b.dataset.anim==="min"?"presenta":"saluda","movimiento: "+(b.dataset.anim==="on"?"siempre":b.dataset.anim==="min"?"quieto":"como el teléfono")); }; });
+    robAnimPoner(robAnimLeer());
+  }catch(_){}
+}
 function robCuerpoMontar(){
   try{
     if(ROB_CUERPO || typeof Roberto==="undefined") return;
     const yo=$("#robYo"); if(!yo) return;
+    robAnimPoner(robAnimLeer());          /* 🎬 su movimiento, antes de aparecer */
     Roberto.montar(yo,{tam:"cuerpo",emo:"presenta"});
     ROB_CUERPO=true;
     robVigilante();
