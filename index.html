@@ -453,6 +453,24 @@ select.inp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns
 .fab.dragging{transform:scale(1.06);box-shadow:0 16px 36px -6px rgba(240,200,104,.6)}
 .fab .fab-badge{position:absolute;top:-3px;right:-3px;background:var(--blue);color:#061034;
   font-size:9px;font-weight:800;padding:2px 5px;border-radius:9px;border:2px solid var(--bg);letter-spacing:.4px}
+/* ✏️ v6.47 — EL CUERPO DE ROBERTO ES EL BOTÓN FLOTANTE (Rey: "no es un cuerpo vacío, es
+   Roberto vivo, alerta y expresándose en todo el sistema aunque yo no esté en el chat").
+   Ensayo directo de la burbuja de la futura APK. */
+.fab.rob-cuerpo{width:72px;height:72px;font-size:0;padding:0;overflow:visible;
+  background:radial-gradient(circle at 50% 26%,#26346b,#0c1230 74%)}
+.fab.rob-cuerpo .rob-yo{position:absolute;inset:2px;border-radius:50%;overflow:hidden}
+.fab.rob-cuerpo.alerta{border-color:var(--red);animation:robLatirFab .8s ease-in-out infinite;
+  box-shadow:0 0 0 3px rgba(255,90,90,.35),0 10px 26px -6px rgba(255,90,90,.55)}
+@keyframes robLatirFab{0%,100%{transform:scale(1)}50%{transform:scale(1.09)}}
+/* 🫧 su nubecita: aparece a su lado y se va sola */
+.rob-globo{position:fixed;z-index:61;max-width:min(62vw,250px);background:var(--card);color:var(--fg);
+  border:1.5px solid var(--gold);border-radius:14px;padding:9px 12px;font-size:13.5px;line-height:1.35;
+  box-shadow:0 10px 30px rgba(0,0,0,.55);opacity:0;transform:translateY(6px) scale(.94);
+  transition:opacity .22s,transform .22s;pointer-events:auto;cursor:pointer}
+.rob-globo.ver{opacity:1;transform:none}
+.rob-globo b{color:var(--gold);display:block;font-size:12px;letter-spacing:.3px;margin-bottom:2px}
+.rob-globo.urge{border-color:var(--red);box-shadow:0 0 0 2px rgba(255,90,90,.3),0 10px 30px rgba(0,0,0,.55)}
+@media (prefers-reduced-motion:reduce){.fab.rob-cuerpo.alerta{animation:none}}
 
 /* ===== MENÚ DESPLEGABLE DE SECCIONES ===== */
 .menu-ov{position:fixed;inset:0;z-index:180;background:rgba(6,9,20,.72);backdrop-filter:blur(4px);

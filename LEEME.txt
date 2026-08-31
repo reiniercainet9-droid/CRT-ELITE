@@ -1,5 +1,25 @@
-APEX v6.46 — TRADING DESK
+APEX v6.47 — TRADING DESK
 =========================
+
+NOVEDADES v6.47  (✏️ ROBERTO VIVO EN TODA LA APP)
+==================================================
+- EL BOTÓN FLOTANTE YA ES EL CUERPO DE ROBERTO: se acabó el símbolo
+  genérico. Ahora es él, de medio cuerpo, con sus brazos y sus gestos.
+- VIVO AUNQUE NO ESTÉS EN EL CHAT: cada 45 segundos mira tu sistema y
+  pone la cara que toca — killzone abierta (🤫 concéntrate), faltan
+  minutos para tu ventana (⏰ señala su reloj), posición abierta (👁️
+  modo vigía), modo recuperación (🛡️ serio), Ejecutor caído (😬),
+  fuera de horario (😴 siesta).
+- REACCIONA AL INSTANTE a cualquier alarma del indicador, evento del
+  Ejecutor o aviso programado: cambia de gesto y te lo cuenta en su
+  nubecita. Tocas la nubecita y te lleva justo a donde toca.
+- ES UN SOLO ROBERTO: su carita del chat y su cuerpo flotante sienten
+  lo mismo a la vez. Cuando habla, se le mueve la boca en los dos.
+- Puedes seguir arrastrándolo donde quieras: su nubecita se coloca sola
+  al lado correcto para no salirse de la pantalla.
+- PARA SUBIR: solo este zip a GitHub + ritual de oro (el worker 5.109 ya
+  está arriba). El indicador NO se toca.
+
 
 NOVEDADES v6.46  (✏️ ROBERTO YA TIENE CARA)
 ===========================================

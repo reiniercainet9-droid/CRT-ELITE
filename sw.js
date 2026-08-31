@@ -1,4 +1,4 @@
-const CACHE = "crt-elite-v6-46";
+const CACHE = "crt-elite-v6-47";
 const FILES = ["./","./index.html","./data.js","./app.js","./roberto.js","./manifest.json","./icon-192.png","./icon-512.png"];
 const WORKER = "https://elitepro-worker.reiniercainet9.workers.dev";
 /* Web Push: al llegar un aviso (con la app CERRADA), muestra la notificación.
@@ -65,6 +65,12 @@ async function pintarAviso(msg){
     requireInteraction: true,
     timestamp: msg.ts || Date.now(), data: { url: "./index.html", jobId: msg.jobId || "", kind: msg.kind || "", sym: msg.sym || "", tvint: msg.tvint || "", seed: msg.seed || "", ir: msg.ir || "", texto: (msg.texto || "").slice(0, 4000) }
   });
+  /* ✏️ v6.47 — y si Apex está ABIERTA, que el CUERPO de Roberto lo exprese al instante:
+     cambia de gesto y lo cuenta en su nubecita, sin que Rey tenga que entrar al chat. */
+  try {
+    const cs = await clients.matchAll({ type: "window", includeUncontrolled: true });
+    cs.forEach(c => { try { c.postMessage({ type: "apex-roberto", title: msg.title || "", body: msg.body || "", ir: msg.ir || "", strong: !!msg.strong }); } catch (_) {} });
+  } catch (_) {}
 }
 self.addEventListener("push", e => {
   e.waitUntil((async () => {

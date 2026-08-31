@@ -417,8 +417,13 @@
     [/vía libre|go |puedes operar|👍/i, "aprueba"],
   ];
 
-  /* ── API ── */
-  var estado = { el: null, svg: null, emo: "saluda", boca: null, timer: null };
+  /* ── API ──
+     v2 (31-08, Rey: "ese botón flotante debe ser el CUERPO de Roberto, vivo y señalando
+     lo que pasa en todo el sistema aunque yo no esté en el chat"): Roberto puede estar
+     MONTADO EN VARIOS SITIOS A LA VEZ (su carita en el chat + su cuerpo flotante), y es
+     UN SOLO SER: al cambiar de gesto, cambian TODOS sus cuerpos a la vez. */
+  var instancias = [], estado = { emo: "saluda", timer: null };
+  function vivas() { return (instancias = instancias.filter(function (i) { return i.el && i.el.isConnected; })); }
 
   function css() {
     if (document.getElementById("rob-css")) return;
@@ -441,12 +446,14 @@
       '<div class="rob-fx rob-fx-cor"><span class="rob-flota-ico" style="left:68%;top:26%;font-size:20px">💗</span>' +
         '<span class="rob-flota-ico" style="left:18%;top:32%;font-size:16px;animation-delay:1.2s">💗</span></div>';
     if (getComputedStyle(el).position === "static") el.style.position = "relative";
-    estado.el = el;
-    estado.svg = el.querySelector(".rob-svg");
-    estado.boca = el.querySelector(".rob-boca-viva");
+    var inst = { el: el, svg: el.querySelector(".rob-svg"), boca: el.querySelector(".rob-boca-viva"), tam: op.tam || "grande" };
     /* recorte CUADRADO de la cara (si no es cuadrado, el círculo del avatar la deforma):
        entra el anillo dorado, cejas, ojos y boca — y las manos que suben hasta la cara */
-    if (op.tam === "mini") { estado.svg.setAttribute("viewBox", "90 88 180 180"); estado.svg.classList.add("rob-solo-cara"); }
+    if (op.tam === "mini") { inst.svg.setAttribute("viewBox", "90 88 180 180"); inst.svg.classList.add("rob-solo-cara"); }
+    /* 🫧 BUSTO: medio cuerpo CON BRAZOS — el tamaño del cuerpo flotante de Apex (y, mañana,
+       el de la burbuja de la APK): se le ve la cara Y el gesto de las manos. */
+    if (op.tam === "busto") inst.svg.setAttribute("viewBox", "56 54 248 248");
+    vivas().push(inst);
     /* confeti */
     var cf = el.querySelector(".rob-fx-conf"), col = ["#f0c95c", "#ff6f61", "#4fe0c0", "#fbf7ec"];
     for (var i = 0; i < 13; i++) {
@@ -454,17 +461,23 @@
       d.style.left = (5 + i * 7.4) + "%"; d.style.background = col[i % 4]; d.style.animationDelay = (i * 0.14) + "s";
       cf.appendChild(d);
     }
-    poner(op.emo || "saluda");
-    return estado.svg;
+    ponerEn(inst, op.emo || estado.emo || "saluda");
+    return inst;
   }
-  function poner(k) {
-    var e = ROB_EMO[k]; if (!e || !estado.svg) return null;
-    estado.emo = k;
-    estado.svg.classList.remove("rob-hablando");
-    var s = estado.svg;
+  function ponerEn(inst, k) {
+    var e = ROB_EMO[k], s = inst && inst.svg;
+    if (!e || !s) return null;
+    s.classList.remove("rob-hablando");
     s.dataset.ojos = e.ojos; s.dataset.cejas = e.cejas || "neutral"; s.dataset.boca = e.boca;
     s.dataset.pose = e.pose; s.dataset.fx = e.fx || "";
     s.dataset.cuerpo = ""; void s.offsetWidth; s.dataset.cuerpo = e.cuerpo;   // reinicia la animación
+    return e;
+  }
+  /* Un solo Roberto: el gesto cambia en TODOS sus cuerpos a la vez */
+  function poner(k) {
+    var e = ROB_EMO[k]; if (!e) return null;
+    estado.emo = k;
+    vivas().forEach(function (i) { ponerEn(i, k); });
     return e;
   }
   function gestoDe(txt) {
@@ -474,11 +487,12 @@
   }
   function hablar(texto, op) {
     op = op || {};
-    if (!estado.svg) return;
+    if (!vivas().length) return;
     callar();
-    estado.svg.classList.add("rob-hablando");
-    if (estado.boca) estado.timer = setInterval(function () {
-      estado.boca.setAttribute("ry", 3 + Math.random() * 12);
+    vivas().forEach(function (i) { i.svg.classList.add("rob-hablando"); });
+    estado.timer = setInterval(function () {
+      var ry = 3 + Math.random() * 12;
+      vivas().forEach(function (i) { if (i.boca) i.boca.setAttribute("ry", ry); });
     }, 105);
     if (op.mudo) return;                       // Apex ya tiene su propia voz: solo la boca
     try {
@@ -493,7 +507,7 @@
   }
   function callar() {
     if (estado.timer) { clearInterval(estado.timer); estado.timer = null; }
-    if (estado.svg) estado.svg.classList.remove("rob-hablando");
+    vivas().forEach(function (i) { i.svg.classList.remove("rob-hablando"); });
   }
 
   raiz.Roberto = {

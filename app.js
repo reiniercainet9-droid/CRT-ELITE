@@ -6361,10 +6361,12 @@ function iaInit(){
     iaGuardarConvs();
   }
 
-  const fab=el("button","fab",'✨<span class="fab-badge">IA</span>');
+  /* ✏️ v6.47 — el botón flotante YA NO es un símbolo: es EL CUERPO DE ROBERTO */
+  const fab=el("button","fab rob-cuerpo",'<div class="rob-yo" id="robYo"></div><span class="fab-badge">IA</span>');
   fab.id="fab"; fab.setAttribute("aria-label","Roberto, tu mentor");
   document.body.appendChild(fab);
   hacerArrastrable(fab);
+  setTimeout(robCuerpoMontar,60);
 
   const ov=el("div","ia-ov"); ov.id="iaOv";
   ov.innerHTML=`
@@ -6836,11 +6838,110 @@ function robMontar(){
 }
 function robCara(emo,txt){
   try{
-    if(!ROB_LISTO || typeof Roberto==="undefined") return;
+    if(typeof Roberto==="undefined") return;
     if(_robTimer){ clearTimeout(_robTimer); _robTimer=null; }
     const e=Roberto.poner(emo);
     const s=$("#iaRobEstado"); if(s&&e) s.textContent=(txt||e.lbl||"").slice(0,34);
+    const f=$("#fab"); if(f&&e) f.classList.toggle("alerta", !!e.urgente);
   }catch(_){}
+}
+/* ══ ✏️ v6.47 — ROBERTO VIVO EN TODO APEX ═══════════════════════════════════
+   Rey: "no es un cuerpo vacío, es Roberto CON cuerpo, expresándose, señalando y
+   avisando de todo lo del indicador, el Ejecutor y los avisos programados —
+   aunque yo no esté dentro del chat. Vivo, alerta y vigilante en todo momento".
+   Su cuerpo vive en el botón flotante (el ensayo de la burbuja de la APK):
+     · GESTO DE FONDO: el vigilante lee el estado real del sistema cada 45 s
+     · GESTO DE EVENTO: cualquier alarma/aviso/respuesta le cambia la cara AL VUELO
+     · NUBECITA: dice en 2 líneas qué pasa; tocarla abre el chat en ese tema
+   ═══════════════════════════════════════════════════════════════════════════ */
+let ROB_CUERPO=false, _robEvTs=0, _robGloboT=null;
+function robCuerpoMontar(){
+  try{
+    if(ROB_CUERPO || typeof Roberto==="undefined") return;
+    const yo=$("#robYo"); if(!yo) return;
+    Roberto.montar(yo,{tam:"busto",emo:"presenta"});
+    ROB_CUERPO=true;
+    robVigilante();
+    setInterval(robVigilante,45000);
+    document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible") robVigilante(); });
+  }catch(_){}
+}
+/* 🫧 Su nubecita al lado del cuerpo (se coloca sola según dónde arrastraste el botón) */
+function robDecir(titulo,texto,op){
+  op=op||{};
+  try{
+    const fab=$("#fab"); if(!fab) return;
+    let g=$("#robGlobo");
+    if(!g){ g=el("div","rob-globo"); g.id="robGlobo"; document.body.appendChild(g);
+      g.onclick=()=>{ const d=g.dataset.ir||""; robGloboFuera(); if(d) irDestino(d); else if(typeof abrirIA==="function") abrirIA(); }; }
+    g.className="rob-globo"+(op.urge?" urge":"");
+    g.dataset.ir=op.ir||"";
+    g.innerHTML="<b>"+esc(titulo||"Roberto")+"</b>"+esc(String(texto||"").slice(0,150));
+    const r=fab.getBoundingClientRect();
+    g.style.visibility="hidden"; g.style.display="block"; g.style.left="0px"; g.style.top="0px";
+    const gw=g.offsetWidth||220, gh=g.offsetHeight||60;
+    const izq=r.left<window.innerWidth/2;
+    g.style.left=Math.max(8,Math.min(window.innerWidth-gw-8, izq? r.right+10 : r.left-gw-10))+"px";
+    g.style.top =Math.max(8,Math.min(window.innerHeight-gh-8, r.top+r.height/2-gh/2))+"px";
+    g.style.visibility="visible";
+    requestAnimationFrame(()=>g.classList.add("ver"));
+    if(_robGloboT) clearTimeout(_robGloboT);
+    _robGloboT=setTimeout(robGloboFuera, op.urge?14000:7000);
+  }catch(_){}
+}
+function robGloboFuera(){ try{ const g=$("#robGlobo"); if(g){ g.classList.remove("ver"); setTimeout(()=>{ if(g&&!g.classList.contains("ver")) g.style.display="none"; },260); } }catch(_){} }
+/* ⚡ Un evento del sistema: le cambia el gesto AL VUELO y lo cuenta en su nubecita.
+   Manda sobre el gesto de fondo durante 25 s (para que a Rey le dé tiempo de verlo). */
+function robEvento(titulo,cuerpo,op){
+  op=op||{};
+  try{
+    if(typeof Roberto==="undefined") return;
+    const emo=op.emo||Roberto.gestoDe(String(titulo||"")+" "+String(cuerpo||""));
+    _robEvTs=Date.now();
+    robCara(emo);
+    robDecir(titulo,cuerpo,{urge:!!op.urge||!!(Roberto.emociones[emo]||{}).urgente, ir:op.ir});
+  }catch(_){}
+}
+/* 👁️ EL VIGILANTE: lee el estado REAL del sistema y le pone la cara que toca.
+   Sin coste (una llamada a /ejec/estado) y sin ruido: solo cambia si cambió algo. */
+let _robFondo="";
+async function robVigilante(){
+  try{
+    if(typeof Roberto==="undefined" || document.visibilityState!=="visible") return;
+    if(Date.now()-_robEvTs < 25000) return;            /* un evento reciente manda */
+    let emo="presenta", txt="";
+    /* 1) ¿ventana operativa abierta? (sus killzones, hora de Nueva York) */
+    const kz=robKillzoneAhora();
+    if(kz.dentro){ emo="shhh"; txt=kz.nombre+" abierta — concéntrate"; }
+    else if(kz.faltan!=null && kz.faltan<=15){ emo="tiempo"; txt=kz.nombre+" abre en "+kz.faltan+" min"; }
+    /* 2) el Ejecutor manda sobre lo demás: si tiene posición abierta, la está cuidando */
+    try{
+      const r=await fetch(nubeUrl()+"/ejec/estado",{cache:"no-store"});
+      const d=await r.json();
+      if(d&&d.ok){
+        const live=d.live||{}, poss=live.posiciones||[];
+        if(poss.length){ emo="vigila"; txt="cuidando tu "+(poss[0].dir||"")+" en "+(poss[0].sym||"")+" ($"+(poss[0].pl!=null?poss[0].pl:"?")+")"; }
+        else if(live.recup){ emo="serio"; txt="modo recuperación: riesgo a la mitad"; }
+        else if(d.on && !d.vivo){ emo="preocupa"; txt="el Ejecutor no responde en la PC"; }
+        else if(d.on && live.enHorario===false && !kz.dentro){ emo="siesta"; txt="fuera de horario — descansando"; }
+        else if(d.on && !kz.dentro && !txt){ emo="vigila"; txt="en guardia, sin señales"; }
+      }
+    }catch(_){}
+    if(emo!==_robFondo){ _robFondo=emo; robCara(emo,txt); }
+  }catch(_){}
+}
+/* Sus killzones, en hora de Nueva York (las mismas del indicador y del guardián) */
+function robKillzoneAhora(){
+  try{
+    const p=new Intl.DateTimeFormat("en-GB",{timeZone:"America/New_York",hour:"2-digit",minute:"2-digit",hour12:false}).formatToParts(new Date());
+    let H=0,M=0; p.forEach(x=>{ if(x.type==="hour")H=parseInt(x.value,10); if(x.type==="minute")M=parseInt(x.value,10); });
+    const m=H*60+M;
+    const KZ=[{n:"Londres",i:2*60,f:5*60},{n:"Pre-NY",i:7*60+30,f:9*60+30},{n:"Nueva York",i:9*60+30,f:11*60+30}];
+    for(const k of KZ) if(m>=k.i && m<k.f) return {dentro:true,nombre:k.n,faltan:null};
+    let mejor=null;
+    for(const k of KZ){ const d=(k.i-m+1440)%1440; if(mejor===null||d<mejor.faltan) mejor={nombre:k.n,faltan:d}; }
+    return {dentro:false,nombre:mejor.nombre,faltan:mejor.faltan};
+  }catch(_){ return {dentro:false,faltan:null,nombre:""}; }
 }
 /* Deja el gesto un rato y vuelve a su cara de guardia */
 function robCaraRato(emo,ms,txt){
@@ -8576,6 +8677,13 @@ function init(){
   document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible") iaResumePend(); });
   /* Si abriste tocando el push de una respuesta de Roberto, abre el chat con ella */
   try{ if(navigator.serviceWorker){ navigator.serviceWorker.addEventListener("message", ev=>{ if(ev.data && ev.data.type==="apex-open-chat"){ if(typeof abrirIA==="function") abrirIA(); if(ev.data.seed){ setTimeout(()=>iaProactivo(ev.data.seed),300); } else if(ev.data.jobId){ /* 📦 v6.24: si la notificación traía la respuesta completa, pintar directo */ let pend=null; try{ pend=iaPendCargar().find(x=>x.jobId===ev.data.jobId); }catch(_){} if(ev.data.texto && pend){ if(_iaPolling[ev.data.jobId]){ clearTimeout(_iaPolling[ev.data.jobId]); delete _iaPolling[ev.data.jobId]; } iaBgResuelto(ev.data.jobId, { ready:true, text: ev.data.texto }); } else iaMostrarJob(ev.data.jobId); } else iaResumePend(); } }); } }catch(_){}
+  /* ✏️ v6.47 — CUALQUIER aviso del sistema (alarma del indicador, Ejecutor, killzone,
+     recordatorio programado…) le mueve el cuerpo a Roberto AL INSTANTE, esté Rey donde
+     esté dentro de Apex. Su nubecita lo cuenta y, al tocarla, va al sitio del aviso. */
+  try{ if(navigator.serviceWorker){ navigator.serviceWorker.addEventListener("message", ev=>{
+    if(!(ev.data && ev.data.type==="apex-roberto")) return;
+    robEvento(ev.data.title||"Roberto", ev.data.body||"", { urge:!!ev.data.strong, ir:ev.data.ir||"" });
+  }); } }catch(_){}
   try{ const sp=new URLSearchParams(location.search); const dst=sp.get("ir"); if(dst) setTimeout(()=>irDestino(dst), 600); }catch(_){}
   try{ if(navigator.serviceWorker){ navigator.serviceWorker.addEventListener("message", ev=>{ if(ev.data && ev.data.type==="apex-ir" && ev.data.ir) irDestino(ev.data.ir); }); } }catch(_){}
   /* 💬 v6.23 (Rey): respuesta de Roberto con Apex ABIERTA — sin notificación: si el chat
