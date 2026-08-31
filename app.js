@@ -6362,7 +6362,7 @@ function iaInit(){
   }
 
   /* ✏️ v6.47 — el botón flotante YA NO es un símbolo: es EL CUERPO DE ROBERTO */
-  const fab=el("button","fab rob-cuerpo",'<div class="rob-yo" id="robYo"></div><span class="fab-badge">IA</span>');
+  const fab=el("button","fab rob-cuerpo",'<div class="rob-yo" id="robYo"></div>');
   fab.id="fab"; fab.setAttribute("aria-label","Roberto, tu mentor");
   document.body.appendChild(fab);
   hacerArrastrable(fab);
@@ -6859,7 +6859,7 @@ function robCuerpoMontar(){
   try{
     if(ROB_CUERPO || typeof Roberto==="undefined") return;
     const yo=$("#robYo"); if(!yo) return;
-    Roberto.montar(yo,{tam:"busto",emo:"presenta"});
+    Roberto.montar(yo,{tam:"cuerpo",emo:"presenta"});
     ROB_CUERPO=true;
     robVigilante();
     setInterval(robVigilante,45000);

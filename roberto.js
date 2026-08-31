@@ -450,9 +450,13 @@
     /* recorte CUADRADO de la cara (si no es cuadrado, el círculo del avatar la deforma):
        entra el anillo dorado, cejas, ojos y boca — y las manos que suben hasta la cara */
     if (op.tam === "mini") { inst.svg.setAttribute("viewBox", "90 88 180 180"); inst.svg.classList.add("rob-solo-cara"); }
-    /* 🫧 BUSTO: medio cuerpo CON BRAZOS — el tamaño del cuerpo flotante de Apex (y, mañana,
-       el de la burbuja de la APK): se le ve la cara Y el gesto de las manos. */
+    /* 🫧 BUSTO: medio cuerpo CON BRAZOS (para cuando haga falta un recorte cuadrado) */
     if (op.tam === "busto") inst.svg.setAttribute("viewBox", "56 54 248 248");
+    /* 🧍 CUERPO ENTERO — Rey (31-08): "lo quiero A CUERPO COMPLETO, suelto en la pantalla,
+       NO encerrado en un círculo". De la goma a la punta del lápiz, con los brazos más
+       abiertos dentro del cuadro. Es el Roberto que flota en Apex y el que flotará sobre
+       cualquier aplicación cuando hagamos la APK. */
+    if (op.tam === "cuerpo") inst.svg.setAttribute("viewBox", "48 28 264 462");
     vivas().push(inst);
     /* confeti */
     var cf = el.querySelector(".rob-fx-conf"), col = ["#f0c95c", "#ff6f61", "#4fe0c0", "#fbf7ec"];
