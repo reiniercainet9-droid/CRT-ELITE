@@ -1,5 +1,22 @@
-APEX v6.44 — TRADING DESK
+APEX v6.45 — TRADING DESK
 =========================
+
+NOVEDADES v6.45  (🕵️ AUDITORÍA DEL EJECUTOR — ninguna señal muere en silencio)
+===============================================================================
+- 🕵️ AUDITORÍA DEL EJECUTOR (chip nuevo en 🤖): Roberto te da el PARTE DEL
+  AUDITOR — cada decisión del bot juzgada contra tus reglas y tu plan, su
+  QUIETUD evaluada (¿disciplina u oportunidad perdida?), sus cegueras 👁️
+  (ventanas sin internet, con hora exacta) y veredicto de confiabilidad.
+- ⚰️ SEÑAL MUERTA (worker): si una señal 🔔 se encola y el Ejecutor está
+  desconectado más de 10 min, ya NO muere en silencio — aviso FUERTE
+  '⚠️ Señal PERDIDA' + registro en su expediente.
+- 👁️ EJECUTOR v1.7 (ya instalado en tu PC por Claude): cada ceguera real
+  (worker no respondió ≥60 s) queda anotada al recuperarse — desde/hasta/
+  duración. Los micro-cortes no hacen ruido.
+- PARA SUBIR (EN ORDEN): 1º worker-elitepro-v5.108.js a Cloudflare, 2º este
+  zip a GitHub + ritual de oro. (El indicador NO se toca: ni código ni
+  alarmas — quedó intacto tal como lo tienes.)
+
 
 NOVEDADES v6.44  (🚫 CERO BACHES + 📁 CARPETAS ARREGLADAS + 😄 CARISMA)
 ========================================================================

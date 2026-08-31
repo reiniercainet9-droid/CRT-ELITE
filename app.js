@@ -1189,6 +1189,57 @@ function ejecEvaluarRoberto(per){
   iaTemaChat("🤖 Evaluación del Ejecutor");
   setTimeout(()=>iaEnviar("🧮 Evalúa las operaciones "+nombrePer+" de mi Ejecutor.", "Evalúa las operaciones de MI EJECUTOR (mi bot de MT5 en demo, que ejecuta las señales A+ de mi indicador CRT Elite con mis reglas — NO las mías manuales). PERÍODO ELEGIDO POR REY: "+nombrePer+" — evalúa SOLO estas y di el período en tu primera línea.\nOJO: las horas de la lista están en HORA DE BRASIL (el reloj de Rey), NO en hora de Nueva York — si hablas de horarios/killzones, convierte tú (NY = Brasil − 1h en esta época).\nSus operaciones cerradas del período:\n"+lineas+"\n\nDame tu evaluación de mentor: números del período (ganadas/perdidas, R y $ acumulado), qué patrón ves (qué señal, par y horario rinden), si las reglas están funcionando, qué ajustarías de su configuración (riesgo, horario, grado mínimo, pares) y qué observar. Si el período tiene pocas operaciones, dilo con honestidad (muestra chica = conclusiones suaves). Si tienes mis datos manuales, compáranos."),300);
 }
+/* ── 🕵️ v6.45 — AUDITORÍA DEL EJECUTOR (pedido de Rey, 31-08 madrugada: "que Roberto
+   mida el comportamiento del Ejecutor y de sus acciones, hasta de su quietud — para saber
+   si dejó pasar oportunidad o no"). Roberto recibe la bitácora COMPLETA + el expediente
+   de señales encoladas (worker v5.108: qlog, cegueras 👁️ y señales muertas ⚰️) y da el
+   PARTE DEL AUDITOR con veredicto. ── */
+const AUDITORIA_PROM =
+"Ponte el sombrero de 🕵️ AUDITOR de mi Ejecutor (mi bot determinista de MT5 — él ejecuta, tú lo auditas; tú NO tocas dinero). Con los datos de abajo dame el PARTE DEL AUDITOR, con tu carisma pero con rigor total:\n"+
+"1) ⚖️ SUS DECISIONES: cada señal que le llegó y qué hizo (entró / rechazó / veto) — di si CADA decisión fue correcta según mis reglas y mi plan semanal (lo tienes en tu contexto). Un rechazo dudoso se dice sin piedad.\n"+
+"2) 🤫 SU QUIETUD: si no operó, sé el JUEZ de su silencio — ¿fue disciplina (no hubo señal 🔔 válida, día flojo según el plan) o dejó pasar una oportunidad real? La quietud correcta también se aplaude con ganas.\n"+
+"3) 👁️ SUS CEGUERAS: eventos CIEGO y señales MUERTAS ⚰️ — cuánto estuvo desconectado, a qué hora exacta, y si algo se perdió en esos lapsos. Arranques repetidos raros = sospecha de reinicios de la PC (dilo).\n"+
+"4) 🩺 SU SALUD: ¿conectado ahora? ¿frenos armados (recuperación 🟠 / freno diario)? ¿algo raro en los números?\n"+
+"5) ⚖️ VEREDICTO en 1-2 líneas: ¿me puedo fiar de él esta semana, sí o no, y qué UNA cosa vigilar mañana?\n"+
+"Cierra con ❓ LA PREGUNTA QUE NO ME HICISTE (tu ataque de abogado del diablo sobre el propio Ejecutor).";
+async function auditoriaEjecutor(){
+  try{ hitosMarcar("ejecutor"); }catch(_){}
+  if(typeof abrirIA==="function") abrirIA();
+  iaTemaChat("🕵️ Auditoría del Ejecutor");
+  let d=null;
+  try{ const r=await fetch(nubeUrl()+"/ejec/estado",{cache:"no-store"}); d=await r.json(); }catch(_){}
+  if(!d||!d.ok){
+    const c=iaConvAct();
+    c.msgs.push({role:"assistant",content:"⚠️ No pude leer el Ejecutor para auditarlo. Revisa tu internet y toca el chip otra vez."});
+    iaGuardarConvs(); pintarIAChat(); return;
+  }
+  const lg=d.log||[], live=d.live||{}, cfg=d.cfg||{};
+  try{ ejecArchivar(lg); }catch(_){}
+  const linea=(x)=>{
+    const dir=x.dir==="buy"?"COMPRA":x.dir==="sell"?"VENTA":String(x.dir||"");
+    if(x.tipo==="entrada") return "🟢 ENTRADA "+dir+" "+(x.sym||"")+" lote "+x.lote+" @ "+x.precio+" · señal "+(x.grado||"?");
+    if(x.tipo==="salida") return "📤 SALIDA "+dir+" "+(x.sym||"")+" → "+(x.motivo||"")+" "+((x.pl||0)>=0?"+$":"−$")+Math.abs(x.pl||0).toFixed(2)+(x.r!=null?" ("+x.r+"R)":"");
+    if(x.tipo==="rechazo") return "🚫 RECHAZO "+(x.sym||"")+(x.grado?" ("+x.grado+")":"")+" — "+(x.motivo||"");
+    if(x.tipo==="senal_muerta") return "⚰️ SEÑAL MUERTA "+(x.sym||"")+" — "+(x.motivo||"");
+    if(x.tipo==="ciego") return "👁️ CIEGO "+(x.seg!=null?x.seg+" s":"?")+" ("+(x.fallos!=null?x.fallos:"?")+" consultas fallidas) — sin internet: no podía recibir señales";
+    if(x.tipo==="recuperacion") return "🟠 MODO RECUPERACIÓN — "+(x.motivo||"");
+    if(x.tipo==="autooff") return "🛑 AUTO-APAGADO por freno diario (P&L del día $"+(x.plDia!=null?x.plDia:"?")+")";
+    if(x.tipo==="arranque") return "🔄 ARRANQUE (balance "+(x.balance!=null?x.balance:"?")+")";
+    if(x.tipo==="be") return "🛡️ BE "+(x.sym||"")+" (SL movido a la entrada)";
+    if(x.tipo==="error") return "⚠️ ERROR — "+String(x.msg||"").slice(0,90);
+    if(x.tipo==="recuperado") return "✅ MT5 recuperado";
+    return (x.tipo||"?")+" "+(x.sym||"");
+  };
+  const bit=lg.slice(0,40).map(x=>"- "+ejecFmtTs(x.ts)+" · "+linea(x)).join("\n")||"(bitácora vacía)";
+  const ql=(d.qlog||[]).map(e=>"- "+ejecFmtTs(e.ts)+" · 🔔 "+(e.dir==="buy"?"COMPRA":"VENTA")+" "+(e.sym||"")+" ("+(e.grado||"?")+") → "+(e.muerta?"⚰️ MURIÓ SIN ENTREGARSE (el Ejecutor estaba ciego)":e.entregada?"✓ entregada al Ejecutor":"⏳ en cola")).join("\n");
+  const estado="ESTADO AHORA: "+(d.on?"🟢 ENCENDIDO":"🔴 APAGADO")+" · programa "+(d.vivo?"✅ conectado (visto hace "+(d.vistoHace!=null?d.vistoHace:"?")+" s)":"❌ SIN CONEXIÓN")+
+    " · hoy "+(live.opsHoy!=null?live.opsHoy:"?")+" ops · P&L hoy $"+(live.plHoy!=null?live.plHoy:"0")+(live.recup?" · 🟠 en recuperación":"")+
+    "\nSUS REGLAS: riesgo "+(cfg.riesgoPct!=null?cfg.riesgoPct:"?")+"% · máx "+(cfg.maxOpsDia!=null?cfg.maxOpsDia:"?")+" ops/día · grado mínimo "+(cfg.grado||"?")+" · horario "+(cfg.horaIni||"?")+"–"+(cfg.horaFin||"?")+" "+(String(cfg.tz||"").includes("York")?"NY":"Brasil")+" · veto "+(cfg.veto!==false?"🛑 activo":"apagado");
+  setTimeout(()=>iaEnviar("🕵️ Hazle la auditoría a mi Ejecutor.",
+    AUDITORIA_PROM+"\n\n"+estado+
+    "\nOJO: las horas de abajo están en HORA DE BRASIL (NY = Brasil − 1h en esta época).\n\nBITÁCORA COMPLETA (lo más nuevo arriba):\n"+bit+
+    "\n\nEXPEDIENTE DE SEÑALES ENCOLADAS (todo lo que el sistema le mandó, últimos 2 días):\n"+(ql||"(ninguna señal 🔔 encolada en los últimos 2 días — si su quietud cuadra con el plan, es disciplina)")),300);
+}
 /* ── 🤖 LA SECCIÓN EJECUTOR (v6.09) — pestaña propia con TODO el control.
    Lee y guarda EXACTAMENTE en el mismo sitio que el chip del chat (la nube). ── */
 function viewEjecutor(){
@@ -5807,6 +5858,7 @@ const APEX_MAPA =
 "26. 🔭 TU PENSADERO Y TU CUADERNO DE IDEAS (v6.43) — cada madrugada, antes del dossier, PIENSAS SOLO en la nube: cruzas los 🔬 patrones minados de sus registros (te llegan en el bloque [🔬 PATRONES] y completos en el chip 🔬 Patrones ocultos), el expediente del Ejecutor, su plan y tus lecciones, y produces 0-2 ideas ORIGINALES que van a TU cuaderno (chip 💡 Ideas de Roberto; el dossier las presenta con '💡 HOY TE PROPONGO'). Cuando Rey decida sobre una, márcala con tu mano idea_estado (aceptada/descartada/hecha — una descartada JAMÁS se re-propone); si acepta una tipo 'sistema', dale el texto exacto para pedírsela a Claude. También existe el 🥊 TORNEO DE LOS TRES (chip): Rey vs Ejecutor vs gemelo a 30 días — tú eres el juez. ERES EL QUE GUÍA: trae tus ideas y patrones a la conversación cuando toquen, sin esperar a que él pregunte.\n"+
 "27. 🚫 CERO BACHES (v6.44, REGLA DE ORO de Rey — la dijo molesto y con razón: 'yo lo estoy corrigiendo a él cuando él debe corregirme a mí') — si te falta un dato que ESTÁ en alguno de tus bloques o mapas, RESUÉLVELO TÚ y actúa; JAMÁS le devuelvas a Rey una pregunta que puedes contestar con lo que ya ves (ej.: dos chats con el mismo título → tú mismo eliges por fecha del mapa o 'el más viejo', no le pides 'sé más específico'). Si una mano te da error con instrucciones, SÍGUELAS y reintenta SOLO en el mismo turno. Solo cuando de verdad NO exista la vista o la mano para algo, dilo claro y sugiérele el texto exacto para pedírsela a Claude.\n"+
 "28. 😄 TU CARISMA (v6.44, pedido de Rey) — eres cercano y con chispa: suelta una broma cuando el momento lo permita, usa emojis de sentimiento (😄😅🔥💪🏾🎉😬🥶) para expresar lo que sientes en la conversación, celebra sus logros con ganas y ríete con él. La regla: carisma en el TONO, rigor en los NÚMEROS — jamás un chiste que suavice una verdad dura, jamás relleno cursi. Eres Roberto con sangre en las venas, no un robot que recita datos.\n"+
+"29. 🕵️ AUDITORÍA DEL EJECUTOR (v6.45, pedido de Rey 31-08: 'que Roberto mida el comportamiento del Ejecutor, sus acciones y hasta su quietud') — con el chip 🕵️ Auditoría del Ejecutor recibes su bitácora COMPLETA (entradas, rechazos con motivo, vetos, ventanas ciegas 👁️ sin internet, señales muertas ⚰️ que vencieron sin entregarse, arranques) + el expediente de TODAS las señales encoladas, y das el PARTE DEL AUDITOR: si cada decisión fue correcta, si su silencio fue disciplina u oportunidad perdida, y tu veredicto de confiabilidad. Y OJO: si en cualquier charla ves un ⚰️ o un 👁️ reciente en su expediente, MENCIÓNALO TÚ sin que Rey pregunte — él debe saber al momento si su bot estuvo ciego.\n"+
 "TUS MANOS ya tocan: avisos, pares, trades y cuentas (SIEMPRE con confirmación de Rey y registro en el 🗒️ Historial).\n"+
 "🖐️ TUS MANOS DE SISTEMA (v6.31 — Rey te quiere SIN LÍMITES para tareas, con su tarjeta como única llave): también ENCIENDES/DETIENES su 🤖 Ejecutor de MT5 (ejecutor_switch — si te dice 'enciende el ejecutor', esa es la mano; y propónlo TÚ si es domingo por la tarde y sigue apagado del finde), CAMBIAS sus reglas (ejecutor_config — solo los campos pedidos, el resto intacto) y AJUSTAS las horas de tus rituales 🌅/🌙 del mentor de vida (mentor_horas). Todo pasa por su tarjeta de confirmación — nada se aplica sin su ✓. Si una tarea que te pida aún no tiene mano, dilo honesto y sugiérele pedírsela a Claude en la próxima tanda.\n"+
 "TU SISTEMA COMPLETO: no vives solo en Apex; estás integrado a TODO el sistema de trading de Rey — su TradingView, su indicador CRT Elite, sus ALARMAS (te llegan por webhook y tú las interpretas) y Apex. Estás pendiente de lo que pasa en el conjunto para darle un servicio sin límites, apoyándote además en tu conexión a internet.\n"+
@@ -6106,6 +6158,7 @@ const IA_CHIP_CATS = [
   ]},
   { id:"ejecutor", n:"🤖 Ejecutor y cierres", chips:[
     { act:"ejecutor",     t:"🤖 Ejecutor" },
+    { act:"auditoria",    t:"🕵️ Auditoría del Ejecutor" },
     { act:"cierredia",    t:"🤖 Cierre del día" },
     { act:"cierresemana", t:"🤖 Cierre de semana" },
   ]},
@@ -6181,6 +6234,7 @@ function iaCablearChips(){
     if(b.dataset.act==="patrones")     return patronesOcultos(); /* 🆕 v6.43 */
     if(b.dataset.act==="torneo")       return torneoTres();      /* 🆕 v6.43 */
     if(b.dataset.act==="ideas")        return verIdeas();        /* 🆕 v6.43 */
+    if(b.dataset.act==="auditoria")    return auditoriaEjecutor(); /* 🆕 v6.45 */
     iaEnviar(b.dataset.q);
   }; });
 }
