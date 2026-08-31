@@ -1,5 +1,23 @@
-APEX v6.45 — TRADING DESK
+APEX v6.46 — TRADING DESK
 =========================
+
+NOVEDADES v6.46  (✏️ ROBERTO YA TIENE CARA)
+===========================================
+- ✏️ ROBERTO EN PERSONA: un lapicito animado con traje de mayordomo,
+  corbata dorada y guantes blancos. Su carita sustituye al circulito
+  generico del chat: te SALUDA al entrar, pone cara de pensar mientras
+  responde, y reacciona sola a lo que te dice (senal, TP, freno, siesta).
+- 33 GESTOS, cada uno con su pose propia: cejas, ojos, boca, brazos y manos
+  se mueven juntos. Con solo mirarlo ya sabes lo que te quiere decir.
+- 🗣️ LA BOCA SE MUEVE con su voz de siempre cuando le das a Escuchar.
+- 😂 TOCA SU CARITA y te suelta un gesto de guasa (guino, carcajada,
+  chocalas, chuleria...). Ahora tambien te sigue las bromas cuando tu se
+  las haces a el (pero con dinero de por medio, el chiste se apaga).
+- 📲 SU CARA EN LOS AVISOS del telefono: cada notificacion llega con su
+  gesto correspondiente (alerta, celebracion, freno, siesta...).
+- PARA SUBIR: solo este zip a GitHub + ritual de oro (el worker 5.109 ya
+  esta arriba, no hay que tocarlo). El indicador NO se toca.
+
 
 NOVEDADES v6.45  (🕵️ AUDITORÍA DEL EJECUTOR — ninguna señal muere en silencio)
 ===============================================================================
@@ -13,7 +31,10 @@ NOVEDADES v6.45  (🕵️ AUDITORÍA DEL EJECUTOR — ninguna señal muere en si
 - 👁️ EJECUTOR v1.7 (ya instalado en tu PC por Claude): cada ceguera real
   (worker no respondió ≥60 s) queda anotada al recuperarse — desde/hasta/
   duración. Los micro-cortes no hacen ruido.
-- PARA SUBIR (EN ORDEN): 1º worker-elitepro-v5.108.js a Cloudflare, 2º este
+- 😌 REGLA DE CALMA (worker): Roberto ya NO te asusta — condiciones del mercado
+  que discrepan las describe como «señal débil», JAMÁS como «el panel se
+  contradice» o «la alarma se adelantó». Solo un fallo técnico REAL se nombra.
+- PARA SUBIR (EN ORDEN): 1º worker-elitepro-v5.109.js a Cloudflare, 2º este
   zip a GitHub + ritual de oro. (El indicador NO se toca: ni código ni
   alarmas — quedó intacto tal como lo tienes.)
 

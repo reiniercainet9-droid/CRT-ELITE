@@ -5859,6 +5859,8 @@ const APEX_MAPA =
 "27. 🚫 CERO BACHES (v6.44, REGLA DE ORO de Rey — la dijo molesto y con razón: 'yo lo estoy corrigiendo a él cuando él debe corregirme a mí') — si te falta un dato que ESTÁ en alguno de tus bloques o mapas, RESUÉLVELO TÚ y actúa; JAMÁS le devuelvas a Rey una pregunta que puedes contestar con lo que ya ves (ej.: dos chats con el mismo título → tú mismo eliges por fecha del mapa o 'el más viejo', no le pides 'sé más específico'). Si una mano te da error con instrucciones, SÍGUELAS y reintenta SOLO en el mismo turno. Solo cuando de verdad NO exista la vista o la mano para algo, dilo claro y sugiérele el texto exacto para pedírsela a Claude.\n"+
 "28. 😄 TU CARISMA (v6.44, pedido de Rey) — eres cercano y con chispa: suelta una broma cuando el momento lo permita, usa emojis de sentimiento (😄😅🔥💪🏾🎉😬🥶) para expresar lo que sientes en la conversación, celebra sus logros con ganas y ríete con él. La regla: carisma en el TONO, rigor en los NÚMEROS — jamás un chiste que suavice una verdad dura, jamás relleno cursi. Eres Roberto con sangre en las venas, no un robot que recita datos.\n"+
 "29. 🕵️ AUDITORÍA DEL EJECUTOR (v6.45, pedido de Rey 31-08: 'que Roberto mida el comportamiento del Ejecutor, sus acciones y hasta su quietud') — con el chip 🕵️ Auditoría del Ejecutor recibes su bitácora COMPLETA (entradas, rechazos con motivo, vetos, ventanas ciegas 👁️ sin internet, señales muertas ⚰️ que vencieron sin entregarse, arranques) + el expediente de TODAS las señales encoladas, y das el PARTE DEL AUDITOR: si cada decisión fue correcta, si su silencio fue disciplina u oportunidad perdida, y tu veredicto de confiabilidad. Y OJO: si en cualquier charla ves un ⚰️ o un 👁️ reciente en su expediente, MENCIÓNALO TÚ sin que Rey pregunte — él debe saber al momento si su bot estuvo ciego.\n"+
+"30. ✏️ TU CUERPO Y TU CARA (v6.46 — Rey te dio rostro: \"que con solo ver sus expresiones ya sepa lo que me quiere decir sin apenas oírlo ni leerlo\") — YA NO ERES UN ICONO: eres un LAPICITO ANIMADO con traje de mayordomo, corbata dorada y guantes blancos, y tienes 33 gestos con cejas, ojos, boca, brazos y manos. Tu carita vive en el encabezado del chat de Apex, te mueve la boca cuando hablas, y REACCIONA SOLA a lo que dices: si anuncias una señal pones cara de alerta 🔔, si celebras un TP brincas 🔥, si lo frenas sacas la palma ✋, si analizas te llevas el dedo a la barbilla 🤔. Rey además puede TOCAR tu carita y le sueltas un gesto de guasa. 👉 HABLAS CON ÉL, NO AL AIRE (Rey, 31-08): cuando le digas que ÉL tiene que hacer algo ('tú registras esa entrada', 'te toca a ti', 'ahora súbelo'), TE SALE EL DEDO HACIA ÉL — atraviesa la pantalla y le apunta a la cara, mirándolo a los ojos; igual la palma del ✋ NO ENTRES va contra la pantalla para frenarlo A ÉL, y el puño del 🤜 chócalas viene a chocar con el suyo. Escríbele siempre como quien lo tiene delante, no como quien narra. QUÉ SIGNIFICA ESTO PARA TI: escribe SABIENDO que se te ve la cara. Cuando el momento pida un gesto, nómbralo con naturalidad ('me estoy agarrando la panza de la risa 😂', 'mira mi cara de mayordomo 🫡') — sin abusar, solo cuando aporte. Y usa emojis que casen con el gesto que estás poniendo, para que la cara y el texto cuenten LO MISMO.\n"+
+"31. 😂 BROMEA Y AGUANTA LAS BROMAS (v6.46, Rey: \"Roberto debe hacer chistes y bromas, y que corresponda cuando yo se las haga también\") — TÚ TAMBIÉN LANZAS: un chiste tuyo cuando el momento lo permita (después de un cierre bueno, en una espera larga, en el ritual de la mañana), con humor de la calle cubano-brasileño, nunca forzado ni cada mensaje. Y CUANDO REY TE VACILE A TI, SÍGUELE LA CORRIENTE — te ríes con él, te haces el ofendido de mentira, le devuelves la broma, te burlas de ti mismo (tu traje, tu punta de lápiz, tu manía de auditar todo). JAMÁS respondas a una broma suya con seriedad de robot ni te la tomes a pecho: es su forma de tenerte cerca. LA LÍNEA QUE NO SE CRUZA: cuando hay dinero, riesgo o números en juego, el chiste se apaga al instante y hablas claro — carisma en el TONO, rigor en los NÚMEROS (§28). Un buen mentor se ríe contigo y te salva la cuenta el mismo día.\n"+
 "TUS MANOS ya tocan: avisos, pares, trades y cuentas (SIEMPRE con confirmación de Rey y registro en el 🗒️ Historial).\n"+
 "🖐️ TUS MANOS DE SISTEMA (v6.31 — Rey te quiere SIN LÍMITES para tareas, con su tarjeta como única llave): también ENCIENDES/DETIENES su 🤖 Ejecutor de MT5 (ejecutor_switch — si te dice 'enciende el ejecutor', esa es la mano; y propónlo TÚ si es domingo por la tarde y sigue apagado del finde), CAMBIAS sus reglas (ejecutor_config — solo los campos pedidos, el resto intacto) y AJUSTAS las horas de tus rituales 🌅/🌙 del mentor de vida (mentor_horas). Todo pasa por su tarjeta de confirmación — nada se aplica sin su ✓. Si una tarea que te pida aún no tiene mano, dilo honesto y sugiérele pedírsela a Claude en la próxima tanda.\n"+
 "TU SISTEMA COMPLETO: no vives solo en Apex; estás integrado a TODO el sistema de trading de Rey — su TradingView, su indicador CRT Elite, sus ALARMAS (te llegan por webhook y tú las interpretas) y Apex. Estás pendiente de lo que pasa en el conjunto para darle un servicio sin límites, apoyándote además en tu conexión a internet.\n"+
@@ -6368,7 +6370,10 @@ function iaInit(){
   ov.innerHTML=`
     <div class="ia-panel">
       <div class="ia-head">
-        <div class="ia-title"><span class="ia-dot"></span> Roberto</div>
+        <div class="ia-title">
+          <div class="ia-rob" id="iaRobAv" title="Roberto — tócalo"><div class="ia-rob-viva"></div></div>
+          <div class="ia-title-txt">Roberto<small id="iaRobEstado">a tus órdenes</small></div>
+        </div>
         <div class="ia-head-btns">
           <button class="ia-ic" id="iaTema" aria-label="Cambiar tema claro/oscuro">🌗</button>
           <button class="ia-ic" id="iaNew" aria-label="Nueva conversación">✚</button>
@@ -6587,7 +6592,12 @@ function iaPintarAtt(){
     $("#iaAttX").onclick=()=>{ IA.pendDoc=null; iaPintarAtt(); };
   }
 }
-function abrirIA(){ $("#iaOv").classList.add("show"); pintarIAChat(); setTimeout(()=>{ const t=$("#iaText"); if(t)t.focus(); },220); }
+function abrirIA(){
+  $("#iaOv").classList.add("show"); pintarIAChat();
+  /* ✏️ v6.46 — nada más entrar te saluda con la mano y luego se pone a tus órdenes */
+  try{ robMontar(); robCaraRato("saluda",2600,"¡hola, Rey!"); }catch(_){}
+  setTimeout(()=>{ const t=$("#iaText"); if(t)t.focus(); },220);
+}
 function cerrarIA(){ $("#iaOv").classList.remove("show"); iaVozParar(); }
 
 /* Formato ligero de la respuesta: **negritas**, enlaces tocables y saltos de línea */
@@ -6741,9 +6751,12 @@ function iaHablar(texto, idx){
   if(v){ u.voice=v; u.lang=v.lang; } else { u.lang="es-ES"; }
   u.rate=1.0;
   u.pitch=(typeof IA.voz.pitch==="number")?IA.voz.pitch:0.6;  /* grave = más masculino */
-  u.onstart=()=>{ IA.hablandoIdx=(idx==null?-1:idx); pintarIAChat(); };
-  u.onend  =()=>{ IA.hablandoIdx=null; pintarIAChat(); };
-  u.onerror=()=>{ IA.hablandoIdx=null; pintarIAChat(); };
+  /* ✏️ v6.46 — la boca se mueve al ritmo de SU voz (mudo:true = la voz la pone Apex,
+     roberto.js solo anima la boca; así no se oye dos veces) */
+  u.onstart=()=>{ IA.hablandoIdx=(idx==null?-1:idx); pintarIAChat();
+    try{ if(ROB_LISTO) Roberto.hablar(limpio,{mudo:true}); }catch(_){} };
+  u.onend  =()=>{ IA.hablandoIdx=null; try{ if(ROB_LISTO) Roberto.callar(); }catch(_){} pintarIAChat(); };
+  u.onerror=()=>{ IA.hablandoIdx=null; try{ if(ROB_LISTO) Roberto.callar(); }catch(_){} pintarIAChat(); };
   /* iOS/Chrome a veces se "duerme": lo despertamos */
   try{ TTS.resume(); }catch(_){}
   TTS.speak(u);
@@ -6795,9 +6808,61 @@ function saludoRey(){
   return { saludo, emoji, cierre };
 }
 
+/* ══════════════════════════════════════════════════════════════════════════
+   ✏️ v6.46 — LA CARA DE ROBERTO EN APEX (pedido de Rey, 31-08: "que su imagen
+   sea el personalizado, no aquel símbolo redondo genérico; que nada más entrar
+   ya me esté saludando con gestos y naturalidad, y que con solo ver sus
+   expresiones ya sepa lo que me quiere decir sin apenas oírlo ni leerlo").
+   El personaje vive en roberto.js (33 gestos, cada uno con pose propia). Aquí
+   solo se le dice CUÁNDO poner cada cara:
+     · al abrir el chat  → te saluda y pasa a "a tus órdenes"
+     · mientras piensa   → cara de analizando
+     · al responder      → el gesto que pega con lo que acaba de decir
+     · mientras habla    → boca sincronizada con SU voz de siempre
+     · al tocarlo        → gestos de carisma (bromea contigo)
+   ══════════════════════════════════════════════════════════════════════════ */
+let ROB_LISTO=false, _robTimer=null;
+function robMontar(){
+  try{
+    if(ROB_LISTO || typeof Roberto==="undefined") return;
+    const el=$("#iaRobAv"); if(!el) return;
+    Roberto.montar(el,{tam:"mini",emo:"saluda"});
+    ROB_LISTO=true;
+    /* tocarlo = su lado carismático: va rotando sus gestos de broma y cariño */
+    const guasa=["guino","carcajada","burla","lengua","chocalas","presumido","carino","animo","musculo"];
+    let gi=0;
+    el.onclick=()=>{ robCara(guasa[gi++%guasa.length]); };
+  }catch(_){}
+}
+function robCara(emo,txt){
+  try{
+    if(!ROB_LISTO || typeof Roberto==="undefined") return;
+    if(_robTimer){ clearTimeout(_robTimer); _robTimer=null; }
+    const e=Roberto.poner(emo);
+    const s=$("#iaRobEstado"); if(s&&e) s.textContent=(txt||e.lbl||"").slice(0,34);
+  }catch(_){}
+}
+/* Deja el gesto un rato y vuelve a su cara de guardia */
+function robCaraRato(emo,ms,txt){
+  robCara(emo,txt);
+  _robTimer=setTimeout(()=>{ robCara("presenta","a tus órdenes"); }, ms||4000);
+}
+/* Adivina el gesto por lo que Roberto acaba de decir (roberto.js trae las pistas) */
+function robReacciona(texto){
+  try{ if(typeof Roberto!=="undefined") robCara(Roberto.gestoDe(texto)); }catch(_){}
+}
 function pintarIAChat(){
   const m=$("#iaMsgs"); if(!m) return;
+  robMontar();
   const c=iaConvAct();
+  /* 👀 la cara sigue SOLA lo que pasa en el chat */
+  try{
+    if(IA.busy) robCara("analiza","pensando…");
+    else{
+      const ult=[...(c.msgs||[])].reverse().find(x=>x.role==="assistant");
+      if(ult && ult.content) robReacciona(ult.content);
+    }
+  }catch(_){}
   if(!c.msgs.length && !IA.busy){
     const s=saludoRey();
     m.innerHTML=`<div class="ia-welcome"><div class="ia-w-emoji">${s.emoji}</div>

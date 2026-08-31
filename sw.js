@@ -1,5 +1,5 @@
-const CACHE = "crt-elite-v6-45";
-const FILES = ["./","./index.html","./data.js","./app.js","./manifest.json","./icon-192.png","./icon-512.png"];
+const CACHE = "crt-elite-v6-46";
+const FILES = ["./","./index.html","./data.js","./app.js","./roberto.js","./manifest.json","./icon-192.png","./icon-512.png"];
 const WORKER = "https://elitepro-worker.reiniercainet9.workers.dev";
 /* Web Push: al llegar un aviso (con la app CERRADA), muestra la notificación.
    El push viaja sin datos; el texto real se pide a la nube.
@@ -25,6 +25,30 @@ async function marcarRepeViva(v){ try{ const c=await caches.open(META_CACHE); aw
 async function silencioLeer(){ try{ const c=await caches.open(META_CACHE); const r=await c.match("./__silencio"); return r ? await r.json() : null; }catch(_){ return null; } }
 async function silencioPoner(firma){ try{ const c=await caches.open(META_CACHE); await c.put("./__silencio", new Response(JSON.stringify({ hasta: Date.now() + 15*60000, firma: String(firma||"").slice(0,40) }))); }catch(_){} }
 function firmaDe(body){ return String(body||"").slice(0,40); }
+/* ✏️ v6.46 — LA CARA DE ROBERTO EN CADA AVISO (Rey: "que él salga en los avisos que envía,
+   solo su cara con el gesto y la señal correspondiente al aviso"). Las caritas son PNG
+   generadas del MISMO personaje de roberto.js y viven en ./caras/. Si alguna faltara,
+   cae al icono de siempre — un aviso jamás se pierde por una imagen. */
+const CARAS = [
+  [/no entres|no entré|🛑|vet[oó]|frenó|rechaz/i, "frena"],
+  [/señal perdida|⚰️|ejecutor caído|problema|error/i, "apenado"],
+  [/🔔|señal|alarma|entrada confirmada|pinchazo/i, "alerta"],
+  [/cerré|tp|🟢|\+\$|ganad|cazad/i, "celebra"],
+  [/🔴|−\$|-\$|pérdida|stop|sl\b/i, "preocupa"],
+  [/apagado|freno diario|tope|recuperación|🟠|riesgo/i, "serio"],
+  [/siesta|😴|suspend/i, "siesta"],
+  [/killzone|ventana|abre|⏰|pre-ny|londres/i, "tiempo"],
+  [/dossier|amanecer|buenos días|🌅|te propongo|💡/i, "idea"],
+  [/vigil|👁|posición/i, "vigila"],
+  [/felicidades|bien hecho|👏|lección|aprendí/i, "felicita"],
+  [/entré|🤖|ejecutor|auditor/i, "audita"],
+  [/noticia|📰|calendario/i, "analiza"],
+];
+function caraDe(msg){
+  const t = String((msg && msg.title) || "") + " " + String((msg && msg.body) || "");
+  for (const [re, cara] of CARAS) if (re.test(t)) return "./caras/rob-" + cara + ".png";
+  return "./caras/rob-presenta.png";
+}
 async function pintarAviso(msg){
   const esRutina = msg.kind==="rem";
   const fuerte = !!msg.strong;
@@ -36,7 +60,7 @@ async function pintarAviso(msg){
        REEMPLAZA a sí mismo (cero duplicados). Las repeticiones 🔁 de una insistente usan
        el tag FIJO "apex-insist" (cada una reemplaza a la anterior con sonido nuevo). */
     body: msg.body, tag: msg.repe ? "apex-insist" : (msg.id ? "apex-" + msg.id : (msg.tag || "apex") + "-" + Date.now()), renotify: true,
-    icon: "./icon-192.png", badge: "./icon-192.png",
+    icon: caraDe(msg), badge: "./icon-192.png",   /* ✏️ v6.46: su carita con el gesto del aviso */
     vibrate: vibra, silent: false,
     requireInteraction: true,
     timestamp: msg.ts || Date.now(), data: { url: "./index.html", jobId: msg.jobId || "", kind: msg.kind || "", sym: msg.sym || "", tvint: msg.tvint || "", seed: msg.seed || "", ir: msg.ir || "", texto: (msg.texto || "").slice(0, 4000) }
