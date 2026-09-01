@@ -75,6 +75,15 @@
      la vez una transición y una animación sobre lo mismo, y peleaban entre sí — por eso el
      parpadeo va ahora en su propio grupo. Ritmo real: cierre y apertura en ~190 ms, y un
      parpadeo cada ~4,5 s (una persona parpadea cada 3-6 s). */
+  /* 👃 RESPIRACIÓN — la nariz se ensancha y se encoge sin parar, como el pecho.
+     Es el movimiento pequeño y CONSTANTE que hace que Roberto parezca vivo incluso
+     cuando no está haciendo ningún gesto. Lleva !important como el resto de sus
+     animaciones, para ganarle al 'sin animaciones' del teléfono de Rey. */
+  .rob-nariz{transform-origin:180px 218px; animation:robRespira 3.4s ease-in-out infinite!important}
+  @keyframes robRespira{0%,100%{transform:scaleX(1) scaleY(1)}50%{transform:scaleX(1.09) scaleY(.97)}}
+  /* olfateando: respira más rápido y más marcado */
+  [data-fx="olor"] .rob-nariz{animation:robOlfatea .7s ease-in-out infinite!important}
+  @keyframes robOlfatea{0%,100%{transform:scaleX(1) translateY(0)}50%{transform:scaleX(1.22) translateY(-1.5px)}}
   .rob-parpadeo{transform-origin:180px 190px}
   [data-ojos="normales"] .rob-parpadeo,[data-ojos="lado"] .rob-parpadeo,
   [data-ojos="grandes"] .rob-parpadeo,[data-ojos="tristes"] .rob-parpadeo{animation:robPest 4.5s infinite!important}
@@ -280,6 +289,12 @@
               brazo("M215 298 Q230 296 238 294") +
               '<g class="rob-empuja">' + mano("rgPunoTi", "translate(234,292)") +
               '<text x="252" y="268" font-size="20">💥</text></g>',
+    /* 👃 01-09 — poses propias para oler (Rey pidió la nariz y con ella estos gestos).
+       Cada una es ÚNICA: la regla sellada es que ningún gesto repita pose. */
+    olisquea: brazo("M145 296 Q120 280 158 238") + mano("rgPalma", "translate(162,234) rotate(-58)") +
+              brazo("M215 296 Q246 306 240 344") + mano("rgMano", "translate(241,348) rotate(-10)"),
+    tapanariz: brazo("M215 296 Q214 262 192 226") + mano("rgMano", "translate(188,220) rotate(-24) scale(.86)") +
+              brazo("M145 296 Q112 306 108 342") + mano("rgMano", "translate(107,346) rotate(12)"),
     corazon:  brazo("M145 294 Q116 288 156 268") + mano("rgMano", "translate(160,266) rotate(-42)") +
               brazo("M215 294 Q244 288 204 268") + mano("rgMano", "translate(200,266) rotate(42)") +
               '<path d="M180 250 Q168 236 158 248 Q150 258 180 280 Q210 258 202 248 Q192 236 180 250 Z" fill="var(--rcor)" opacity=".95"/>',
@@ -372,6 +387,12 @@
         '<path d="M152 234 Q180 244 208 234 L208 230 L152 230 Z" fill="#fff"/>' +
         '<path d="M164 231 L164 240 M180 231 L180 242 M196 231 L196 240" stroke="var(--rgu2)" stroke-width="1.6"/></g>' +
       '<g class="rob-bo rob-bo-zzz"><ellipse cx="180" cy="244" rx="11" ry="9" fill="#5e2a1d"/></g>' +
+      /* 👃 la nariz (01-09, pedida por Rey): pequeña, entre los ojos y la boca.
+         Respira siempre — ese movimiento diminuto y constante es lo que hace que
+         un dibujo deje de parecer un dibujo. */
+      '<g class="rob-nariz"><path d="M180 202 Q192 218 180 227 Q168 218 180 202 Z" fill="var(--rgu2)"/>' +
+        '<ellipse class="rob-fosa" cx="175" cy="224" rx="3.1" ry="2" fill="var(--rtz)" opacity=".75"/>' +
+        '<ellipse class="rob-fosa" cx="185" cy="224" rx="3.1" ry="2" fill="var(--rtz)" opacity=".75"/></g>' +
       '<g class="rob-bo rob-bo-viva"><ellipse class="rob-boca-viva" cx="180" cy="244" rx="17" ry="7" fill="#5e2a1d"/></g>' +
       /* traje de mayordomo */
       '<path d="M140 270 L220 270 L215 376 L145 376 Z" fill="var(--rj)"/>' +
@@ -429,6 +450,10 @@
     ojala:    {c:3, chip:"🙏🏾 Ojalá",         ojos:"dormidos", cejas:"tristes", boca:"hmm",       pose:"reza",    cuerpo:"lento",  ico:"🙏🏾", lbl:"Cruzo los dedos",     frase:"Cuando el trade está en el aire y solo queda esperar."},
     /* descanso */
     siesta:   {c:4, chip:"😴 Siesta",         ojos:"dormidos", cejas:"bajas",   boca:"zzz",       pose:"almohada",cuerpo:"lento",  fx:"zzz", piensa:1, ico:"😴", lbl:"Zzz… vuelvo 8:25", frase:"Cuando la PC se echa la siesta de Londres, él también."},
+    /* 👃 01-09 — Rey, medio en broma pero con razón: "que pueda hacer un gesto que
+       diga me gusta este olor". Ahora que tiene nariz, puede. */
+    huele: { ojos: "felices", cejas: "alegres", boca: "sonrisa", pose: "olisquea", cuerpo: "flota", fx: "olor", lbl: "mmm, qué bien huele esto" },
+    olfatea: { ojos: "lado", cejas: "duda", boca: "mueca", pose: "tapanariz", cuerpo: "flota", fx: "olor", lbl: "aquí huele raro" },
   };
 
   var CATS = { 1: "Cuando te guía", 2: "Cuando algo pasa en el mercado", 3: "Su carisma y sus bromas", 4: "Descanso" };
@@ -481,6 +506,7 @@
       '<div class="rob-fx rob-fx-sud"><span class="rob-sudor" style="left:64%;top:26%;font-size:19px">💧</span></div>' +
       '<div class="rob-fx rob-fx-risa"><span class="rob-flota-ico" style="left:70%;top:24%;font-size:20px">😂</span>' +
         '<span class="rob-flota-ico" style="left:16%;top:28%;font-size:17px;animation-delay:1.1s">🤣</span></div>' +
+      '<div class="rob-fx rob-fx-olor"><span class="rob-flota-ico" style="left:62%;top:20%;font-size:18px">〰️</span><span class="rob-flota-ico" style="left:24%;top:26%;font-size:15px;animation-delay:.9s">〰️</span></div>' +
       '<div class="rob-fx rob-fx-cor"><span class="rob-flota-ico" style="left:68%;top:26%;font-size:20px">💗</span>' +
         '<span class="rob-flota-ico" style="left:18%;top:32%;font-size:16px;animation-delay:1.2s">💗</span></div>';
     if (getComputedStyle(el).position === "static") el.style.position = "relative";

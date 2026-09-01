@@ -1,5 +1,25 @@
-APEX v6.76 — TRADING DESK
+APEX v6.77 — TRADING DESK
 =========================
+
+NOVEDADES v6.77  (ROBERTO YA RESPIRA · Y SE MUEVE DE VERDAD)
+=============================================================
+SOLO EL ZIP. El worker 5.112 sigue vivo. También hay APK nueva.
+
+- 🐛 POR QUÉ ESTABA CASI PARADO: su vida propia solo se encendía si estaba
+  montada la carita DEL CHAT. Con el chat cerrado — o sea casi siempre —
+  se saltaba todas las vueltas. Por eso veías un gesto cada dos minutos.
+  Ya vale también su cuerpo del botón flotante: es el mismo Roberto.
+  Ahora sí: un gesto cada 12-28 segundos, y encadenados de dos en dos.
+
+- 👃 Y TIENE NARIZ. Tenías razón: cara con ojos, cejas y boca… y nada en
+  medio. Ahora respira — la nariz se ensancha y se encoge sin parar, que
+  es el movimiento pequeño y constante que hace que deje de parecer un
+  dibujo.
+- 👃 Y con la nariz, dos gestos nuevos que pediste medio en broma:
+    · 'me gusta este olor' — se lleva la mano a la nariz y sonríe
+    · 'aquí huele raro' — se tapa la nariz cuando algo no le cuadra
+  Cada uno con su POSE PROPIA: tu regla de que ningún gesto repita pose
+  se mantiene. Ya son 36 gestos.
 
 NOVEDADES v6.76  (ROBERTO, MUCHO MÁS VIVO)
 ===========================================

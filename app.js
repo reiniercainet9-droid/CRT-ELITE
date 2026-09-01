@@ -7396,30 +7396,45 @@ let _vidaT = null, _vidaUlt = "", _vidaFrase = 0;
    que ocurre, que es la regla que Rey selló ("el cuerpo y la mente son uno solo") */
 const ROB_VIDA = {
   killzone: {
-    gestos: ["shhh", "vigila", "apunta", "tiempo", "animo", "serio"],
+    gestos: ["shhh", "vigila", "apunta", "tiempo", "animo", "serio", "analiza", "ensena", "tetoca", "aprueba", "idea", "olfatea"],
     frases: ["Ventana abierta. Ojo al gráfico.", "Aquí es donde se gana. Paciencia.",
-             "Nada de forzar: que venga ella.", "Estoy mirando contigo."],
+             "Nada de forzar: que venga ella.", "Estoy mirando contigo.",
+             "Sweep, MSS, zona. En ese orden.", "Si dudas, no entras. Así de simple."],
   },
   cerca: {
-    gestos: ["tiempo", "animo", "apunta", "presumido", "ensena"],
+    gestos: ["tiempo", "animo", "apunta", "presumido", "ensena", "idea", "saluda", "aprueba", "analiza", "tetoca"],
     frases: ["Ya casi. Prepara el checklist.", "Se acerca la buena.",
-             "Repasa tu riesgo antes de que abra.", "Calienta motores."],
+             "Repasa tu riesgo antes de que abra.", "Calienta motores.",
+             "Mira tus niveles ahora, no después.", "Yo ya estoy listo. ¿Y tú?"],
   },
   posicion: {
-    gestos: ["vigila", "serio", "tiempo", "ojala"],
-    frases: ["No la toques. Déjala trabajar.", "La estoy vigilando yo.", "Respira. Va sola."],
+    gestos: ["vigila", "serio", "tiempo", "ojala", "shhh", "animo", "aprueba"],
+    frases: ["No la toques. Déjala trabajar.", "La estoy vigilando yo.", "Respira. Va sola.",
+             "Ni la mires cada minuto, que se te hace larga."],
   },
   espera: {
-    gestos: ["espera", "confundido", "guino", "orgulloso", "carino", "ojala", "burla", "presumido", "animo"],
+    gestos: ["espera", "confundido", "guino", "orgulloso", "carino", "ojala", "burla", "presumido",
+             "animo", "sorprende", "idea", "analiza", "presenta", "tetoca", "ensena", "lengua", "aprueba", "huele", "olfatea"],
     frases: ["Aquí sigo, sin señales todavía.", "Aburrido pero despierto. 😌",
              "Con ganas de que abra la próxima.", "Ni una señal… así se ganan las cuentas.",
-             "Descansa tú, que yo vigilo.", "Esto está más quieto que un lunes de agosto."],
+             "Descansa tú, que yo vigilo.", "Esto está más quieto que un lunes de agosto.",
+             "¿Hacemos backtesting mientras esperamos?", "Si aparece algo, te aviso yo. Tranquilo.",
+             "Llevo un rato sin trabajo. Me aburro. 🙄", "Paciencia hoy, dinero mañana."],
   },
   finde: {
-    gestos: ["carino", "guino", "orgulloso", "carcajada", "lengua", "presumido", "chocalas"],
+    gestos: ["carino", "guino", "orgulloso", "carcajada", "lengua", "presumido", "chocalas",
+             "saluda", "presenta", "felicita", "animo", "idea", "huele"],
     frases: ["Fin de semana: el mercado descansa, tú también.",
              "Buen momento para backtesting… o para no hacer nada. 😄",
-             "Aquí estaré el lunes, fresquito."],
+             "Aquí estaré el lunes, fresquito.",
+             "Revísate el diario, que ahí está el oro.",
+             "Yo descansando, pero con un ojo abierto. 😉"],
+  },
+  madrugada: {
+    gestos: ["ojala", "espera", "animo", "tiempo", "carino", "orgulloso", "idea", "aprueba"],
+    frases: ["De madrugada y aquí estás. Eso es oficio.",
+             "Londres se acerca. Café y cabeza fría.",
+             "Yo no me duermo, tranquilo.", "A esta hora el spread muerde. Ojo."],
   },
 };
 
@@ -7430,6 +7445,8 @@ function robVidaSituacion(){
     const kz = robKillzoneAhora();
     if(kz.dentro) return "killzone";
     if(kz.faltan != null && kz.faltan <= 30) return "cerca";
+    /* 🌙 antes de Londres Rey suele estar levantado: ahí Roberto acompaña, no bromea */
+    { const h = new Date().getHours(); if(h >= 0 && h < 7) return "madrugada"; }
     if(_robFondo === "vigila" && /cuidando/.test(($("#iaRobEstado")||{}).textContent||"")) return "posicion";
     return "espera";
   }catch(_){ return "espera"; }
@@ -7437,7 +7454,12 @@ function robVidaSituacion(){
 
 function robVidaUnGesto(){
   try{
-    if(typeof Roberto === "undefined" || !ROB_LISTO) return;
+    /* ⚠️ 01-09 — ANTES pedía solo ROB_LISTO, que es la carita DEL CHAT. Con el chat
+       cerrado (o sea, casi siempre) salía por aquí en cada vuelta y Roberto se quedaba
+       clavado: Rey lo describió como 'un gesto cada dos minutos'. Su CUERPO del botón
+       flotante vale igual — es el mismo Roberto. */
+    if(typeof Roberto === "undefined") return;
+    if(!ROB_LISTO && !ROB_CUERPO) return;
     if(document.visibilityState !== "visible") return;
     /* 🤐 se calla cuando hay algo importante: un aviso reciente, Roberto pensando,
        o Rey escribiéndole. Su vida propia nunca pisa el trabajo de verdad. */
@@ -7463,7 +7485,15 @@ function robVidaUnGesto(){
       try{ robDecir("Roberto", f, {}); }catch(_){}
     }
     /* y vuelve a su cara de guardia, la de verdad */
-    setTimeout(()=>{ try{ if(_robFondo) robCara(_robFondo); }catch(_){} }, 4200 + Math.random()*1800);
+    /* 🎬 la mitad de las veces encadena un SEGUNDO gesto: eso es lo que se lee como
+       movimiento de verdad. Un solo gesto es una foto que cambia; dos, un ademán. */
+    const segundo = (Math.random() < 0.5) ? (posibles.filter(x => x !== emo)[Math.floor(Math.random() * Math.max(1, posibles.length - 1))] || null) : null;
+    if(segundo){
+      setTimeout(()=>{ try{ robCara(segundo); _vidaUlt = segundo; }catch(_){} }, 2100 + Math.random()*900);
+      setTimeout(()=>{ try{ if(_robFondo) robCara(_robFondo); }catch(_){} }, 6200 + Math.random()*1600);
+    } else {
+      setTimeout(()=>{ try{ if(_robFondo) robCara(_robFondo); }catch(_){} }, 4200 + Math.random()*1800);
+    }
   }catch(_){}
 }
 
@@ -7472,7 +7502,9 @@ function robVidaUnGesto(){
 function robVida(){
   try{
     clearTimeout(_vidaT);
-    const espera = 20000 + Math.random() * 25000;
+    /* 🎭 v6.76 — más vivo: de 12 a 28 s en vez de 20 a 45. Sigue siendo irregular a
+       propósito: un intervalo fijo se lee como un reloj, no como una persona. */
+    const espera = 12000 + Math.random() * 16000;
     _vidaT = setTimeout(()=>{ robVidaUnGesto(); robVida(); }, espera);
   }catch(_){}
 }
