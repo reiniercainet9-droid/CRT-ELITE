@@ -6925,7 +6925,37 @@ function iaTextoParaVoz(s){
     .replace(/\s{2,}/g," ")
     .trim();
 }
+/* 🔊 v6.69 — trozos pendientes de la respuesta que Roberto está leyendo en voz alta */
+let _vozCola = [];
+/* Parte un texto largo en trozos que Chrome sí acepta, cortando por frases para que no
+   suene troceado. Tope 180 letras: por encima de eso Chrome empieza a tragarse frases. */
+function iaTrocearVoz(t){
+  const TOPE = 180;
+  const texto = String(t||"").trim();
+  if(texto.length <= TOPE) return [texto];
+  const frases = texto.split(/(?<=[.!?…:;\n])\s+/);
+  const out = []; let actual = "";
+  for(let f of frases){
+    /* una frase suelta más larga que el tope se parte por comas, y si no, a lo bruto */
+    while(f.length > TOPE){
+      /* la coma se queda CON el trozo de la izquierda: si se cortara justo antes, al
+         volver a juntar el texto aparecería un espacio suelto delante de la coma */
+      let corte = f.lastIndexOf(", ", TOPE);
+      if(corte >= TOPE*0.4) corte = corte + 1;
+      else corte = f.lastIndexOf(" ", TOPE);
+      if(corte < 1) corte = TOPE;
+      if(actual){ out.push(actual.trim()); actual=""; }
+      out.push(f.slice(0, corte).trim());
+      f = f.slice(corte).trim();
+    }
+    if((actual + " " + f).trim().length > TOPE){ out.push(actual.trim()); actual = f; }
+    else actual = (actual ? actual + " " : "") + f;
+  }
+  if(actual.trim()) out.push(actual.trim());
+  return out.filter(Boolean);
+}
 function iaVozParar(){
+  _vozCola = [];              /* lo que quedaba por leer se descarta */
   if(TTS) try{ TTS.cancel(); }catch(_){}
   IA.hablandoIdx=null;
   pintarIAChat();
@@ -7024,6 +7054,26 @@ function iaHablar(texto, idx){
     try{ if(ROB_LISTO) Roberto.hablar(limpio,{mudo:true}); }catch(_){} };
   u.onend  =()=>{ IA.hablandoIdx=null; try{ if(ROB_LISTO) Roberto.callar(); }catch(_){} pintarIAChat(); };
   u.onerror=()=>{ IA.hablandoIdx=null; try{ if(ROB_LISTO) Roberto.callar(); }catch(_){} pintarIAChat(); };
+  /* 🔊 v6.69 — POR TROZOS, O CHROME NO ARRANCA (Rey, 01-09: "el botón del chat sigue sin
+     funcionar, los demás sí"). Ahí estaba la clave: los demás botones dicen frases CORTAS
+     ("Hola Rey, soy Roberto…") y ese lee la respuesta ENTERA de Roberto, que son miles de
+     letras. Chrome tiene un límite conocido: un texto largo se queda EN COLA y no suena
+     nunca — ni error, ni aviso, nada. Por eso parecía un botón muerto.
+     Se parte en trozos por frases y se encadenan: cada uno arranca al terminar el anterior,
+     así suena entero y se puede parar en cualquier momento. */
+  const trozos = iaTrocearVoz(limpio);
+  _vozCola = trozos.slice(1);
+  u.text = trozos[0];
+  const finTrozo = u.onend;
+  u.onend = ()=>{
+    const sig = _vozCola.shift();
+    if(sig==null){ finTrozo(); return; }
+    const w = new SpeechSynthesisUtterance(sig);
+    if(v){ w.voice=v; w.lang=v.lang; } else { w.lang="es-ES"; }
+    w.rate=u.rate; w.pitch=u.pitch;
+    w.onend = u.onend; w.onerror = u.onend;   /* si uno falla, se sigue con el siguiente */
+    try{ TTS.speak(w); }catch(_){ finTrozo(); }
+  };
   /* iOS/Chrome a veces se "duerme": lo despertamos */
   try{ TTS.resume(); }catch(_){}
   TTS.speak(u);
@@ -7036,7 +7086,9 @@ function iaHablar(texto, idx){
     let sonando=false; try{ sonando = !!(TTS.speaking || TTS.pending); }catch(_){}
     if(sonando || IA.hablandoIdx!=null) return;
     try{ _iaVoces=[]; iaCargarVoces(); }catch(_){}
-    const u2=new SpeechSynthesisUtterance(limpio);
+    /* el reintento también va POR TROZOS: repetir el texto entero volvería a atascarlo */
+    _vozCola = trozos.slice(1);
+    const u2=new SpeechSynthesisUtterance(trozos[0]);
     const v2=iaVozEspanol();
     if(v2){ u2.voice=v2; u2.lang=v2.lang; } else { u2.lang="es-ES"; }
     u2.rate=1.0; u2.pitch=(typeof IA.voz.pitch==="number")?IA.voz.pitch:0.6;

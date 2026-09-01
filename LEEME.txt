@@ -1,5 +1,29 @@
-APEX v6.68 — TRADING DESK
+APEX v6.69 — TRADING DESK
 =========================
+
+NOVEDADES v6.69  (🔊 EL BOTÓN ESCUCHAR DEL CHAT, DE VERDAD)
+============================================================
+SOLO EL ZIP. El worker 5.112 ya está vivo y comprobado.
+
+- 🔊 ERA EL LARGO DEL TEXTO, y lo dijo la pista de Rey: 'los demás sí
+  funcionan pero ese no'. Los otros botones de voz dicen frases CORTAS;
+  el del chat lee la respuesta ENTERA de Roberto, que son miles de letras.
+  Chrome tiene un límite conocido: con un texto largo se lo queda en cola
+  y NO SUENA NUNCA, ni error ni aviso. Por eso parecía un botón muerto.
+  Ahora la respuesta se parte en trozos por frases y se encadenan solos:
+  suena entera, se oye natural, y ⏹ Parar la corta cuando quieras.
+  Comprobado con la auditoría de verdad: 1.132 letras en 8 trozos, y al
+  juntarlos sale EXACTAMENTE el mismo texto, sin perder una palabra.
+- 🔊 Antes (v6.68) también se arregló de dónde saca el texto: los mensajes
+  con vista propia lo guardan en otro sitio y llegaba vacío.
+- 🔝 LA FRANJA DE LA HORA: el arreglo está aquí dentro (la clase que tapa
+  el fogonazo blanco al abrir se quedaba puesta PARA SIEMPRE, con su azul
+  noche fijo mandando sobre el tema). PERO la APK lleva su propia copia de
+  estos archivos, así que en la APK solo cambiará con un APK nuevo.
+- 🔇 Y si el navegador no arranca la voz (manía conocida de Chrome cuando
+  las voces del sistema no están cargadas), Apex lo reintenta una vez y
+  te lo dice, en vez de dejarte tocando un botón muerto.
+
 
 NOVEDADES v6.68  (🔊 EL BOTÓN ESCUCHAR DEL CHAT · 🔝 LA FRANJA DEL NOTCH)
 =========================================================================
