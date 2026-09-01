@@ -1809,10 +1809,35 @@ function sonarAlerta(){
     });
   }catch(_){}
 }
+/* ✏️ v6.67 — LA CARA DE ROBERTO TAMBIÉN EN LOS AVISOS QUE PINTA LA PROPIA APEX.
+   Rey (01-09, con foto): "mira, el ícono no es Roberto". Tenía razón y era incoherente:
+   los avisos que pinta el vigilante en segundo plano (sw.js) SÍ salían con su carita, pero
+   los que lanza la app —cuenta cerca del límite, ventana operativa, "Roberto activado"—
+   salían con la A de Apex. Mismas reglas que en sw.js: un solo Roberto en todas partes. */
+const CARAS_AVISO = [
+  [/no entres|no entré|🛑|vet[oó]|frenó|rechaz/i, "frena"],
+  [/señal perdida|⚰️|ejecutor caído|problema|error/i, "apenado"],
+  [/🔔|señal|alarma|entrada confirmada|pinchazo/i, "alerta"],
+  [/cerré|tp|🟢|\+\$|ganad|cazad/i, "celebra"],
+  [/🔴|−\$|-\$|pérdida|stop|peligro|límite|dd\b/i, "preocupa"],
+  [/apagado|freno diario|tope|recuperación|🟠|riesgo/i, "serio"],
+  [/siesta|😴|suspend/i, "siesta"],
+  [/killzone|ventana|abre|⏰|pre-ny|londres/i, "tiempo"],
+  [/dossier|amanecer|buenos días|🌅|te propongo|💡/i, "idea"],
+  [/vigil|👁|posición/i, "vigila"],
+  [/felicidades|bien hecho|👏|lección|aprendí/i, "felicita"],
+  [/entré|🤖|ejecutor|auditor/i, "audita"],
+  [/noticia|📰|calendario/i, "analiza"],
+];
+function caraAviso(titulo, cuerpo){
+  const t = String(titulo||"") + " " + String(cuerpo||"");
+  for(const [re, cara] of CARAS_AVISO) if(re.test(t)) return "caras/rob-"+cara+".png";
+  return "caras/rob-presenta.png";
+}
 function notifLanzar(titulo, cuerpo, tag){
   if(!notifSoportado() || Notification.permission!=="granted") return;
   /* vibración distintiva (Android): patrón propio de Apex */
-  const opts={ body:cuerpo, icon:"icon-192.png", badge:"icon-192.png", tag:tag||"apex", lang:"es",
+  const opts={ body:cuerpo, icon:caraAviso(titulo,cuerpo), badge:"icon-192.png", tag:tag||"apex", lang:"es",
     vibrate:[120,60,120,60,220], renotify:true };
   try{
     if(navigator.serviceWorker && navigator.serviceWorker.ready){
@@ -1859,7 +1884,7 @@ function notifProgramarKillzones(){
         const when=now+deltaH*3600000, wd=new Date(when).getDay();
         if(wd===0||wd===6) return;
         try{ reg.showNotification("⏰ "+z.n, { body:"Entraste en ventana operativa. Repasa el checklist antes de operar.",
-          tag:"kzp"+d+"-"+z.h, icon:"icon-192.png", badge:"icon-192.png",
+          tag:"kzp"+d+"-"+z.h, icon:"caras/rob-tiempo.png", badge:"icon-192.png",
           showTrigger:new window.TimestampTrigger(when) }); }catch(_){}
       });
     }
@@ -6996,6 +7021,27 @@ function iaHablar(texto, idx){
   /* iOS/Chrome a veces se "duerme": lo despertamos */
   try{ TTS.resume(); }catch(_){}
   TTS.speak(u);
+  /* 🔇 v6.67 — SI NO SUENA, QUE AL MENOS LO DIGA (Rey, 01-09: "toco el botón de Roberto y
+     no me habla"). Chrome tiene una manía conocida: si las voces del sistema aún no se han
+     cargado, speak() se traga la orden EN SILENCIO y no avisa de nada. Aquí se comprueba a
+     los 0,9 s si arrancó; si no, se recargan las voces y se reintenta UNA vez, y si sigue
+     mudo se le dice a Rey con palabras en vez de dejarlo tocando un botón muerto. */
+  setTimeout(()=>{
+    let sonando=false; try{ sonando = !!(TTS.speaking || TTS.pending); }catch(_){}
+    if(sonando || IA.hablandoIdx!=null) return;
+    try{ _iaVoces=[]; iaCargarVoces(); }catch(_){}
+    const u2=new SpeechSynthesisUtterance(limpio);
+    const v2=iaVozEspanol();
+    if(v2){ u2.voice=v2; u2.lang=v2.lang; } else { u2.lang="es-ES"; }
+    u2.rate=1.0; u2.pitch=(typeof IA.voz.pitch==="number")?IA.voz.pitch:0.6;
+    u2.onstart=u.onstart; u2.onend=u.onend; u2.onerror=u.onerror;
+    try{ TTS.cancel(); TTS.resume(); TTS.speak(u2); }catch(_){}
+    setTimeout(()=>{
+      let s2=false; try{ s2 = !!(TTS.speaking || TTS.pending); }catch(_){}
+      if(s2 || IA.hablandoIdx!=null) return;
+      toast("🔇 Tu navegador no arrancó la voz. Prueba a cerrar y abrir Apex, o mira que el teléfono no esté en silencio.");
+    }, 1200);
+  }, 900);
 }
 /* Rellena el <select> de voces en ajustes */
 function iaPintarVoces(){

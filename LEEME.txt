@@ -1,5 +1,90 @@
-APEX v6.66 — TRADING DESK
+APEX v6.67 — TRADING DESK
 =========================
+
+NOVEDADES v6.67  (🌐 LA WEB PRIMERO: AVISOS, CARA E ICONO)
+===========================================================
+ESTA TANDA ES PARA LA WEB. No hace falta tocar la APK.
+
+- 📬 LOS AVISOS VOLVÍAN A NO LLEGAR, Y ERA CULPA DE UN CONSEJO MÍO.
+  Apex te decía 'ya puedes quitar las notificaciones del navegador' al
+  encender el vigía de la APK. Al quitarlas quedaron CERO suscripciones, y
+  con cero suscripciones el puente salía ANTES de guardar la cola de
+  avisos. Un solo fallo con tres caras: no llegaban alarmas, no llegaba tu
+  buenos días, y el chat se quedaba colgado (usa esa misma cola).
+  Arreglado en worker-elitepro-v5.112.js: la cola se guarda SIEMPRE.
+- 🖼️ EL ICONO DE LOS AVISOS YA ES ROBERTO. Los avisos que pinta la propia
+  Apex (cuenta cerca del límite, ventana operativa, 'Roberto activado')
+  salían con la A de Apex mientras los del vigilante salían con su cara.
+  Ahora todos llevan su carita con el gesto que toca.
+- 🔇 SI LA VOZ NO ARRANCA, TE LO DICE. Chrome tiene una manía conocida: si
+  las voces del sistema no están cargadas, se traga la orden EN SILENCIO.
+  Ahora Apex comprueba si arrancó, lo reintenta una vez, y si sigue muda te
+  lo dice con palabras en vez de dejarte tocando un botón muerto.
+
+LO DE ANTES (la APK) sigue aquí abajo, pero NO hace falta tocarla:
+==================================================================
+- 🫧 PASO 2 DEL PLAN: Roberto puede quedarse FLOTANDO encima de
+  cualquier aplicación. Arrástralo donde quieras (se pega solo al borde)
+  y tócalo para abrir su chat. Cuando entre una alarma te lo dice CON EL
+  CUERPO y una nubecita, sin sonar encima de lo que estés haciendo.
+- Es EL MISMO Roberto: mismos 34 gestos, misma cara, a cuerpo completo.
+  No hay una copia distinta flotando — es él.
+- CÓMO SE ENCIENDE (solo en la APK): chat de Roberto → ⚙️ →
+  '🫧 Roberto en tu pantalla'. Android pide un permiso especial
+  ('Mostrar sobre otras aplicaciones'): el botón te lleva a esa pantalla,
+  activas Apex, vuelves y lo enciendes.
+- No se come los toques de tus otras apps: solo ocupa su sitio, y se
+  ensancha un momento cuando tiene algo que decir.
+- Cuelga del mismo 🔔 vigía: un solo Roberto, un solo aviso fijo.
+
+- 🎯 LO NUEVO DE LA v6.67 — RESUELTO CON LOS NÚMEROS DEL PROPIO TELÉFONO.
+  La burbuja mandó su parte y lo cantó todo: Roberto SÍ se estaba
+  dibujando (84x150), pero 152 píxeles POR ENCIMA del borde de su ventana.
+  Motivo: la página no tenía altura, así que 'pegado abajo' lo lanzaba
+  hacia arriba, fuera de la vista. Por eso siempre salía la foto.
+  Arreglado con dos seguros: la página ya tiene altura de verdad, y todo
+  se coloca contra LA VENTANA (no contra la página), en medidas
+  proporcionales. De paso, Roberto ya sale a su tamaño: en el moto g54
+  salía a un tercio porque las medidas iban en píxeles fijos.
+  El banco de pruebas ahora abre la burbuja EN LA VENTANA EXACTA de tu
+  teléfono y exige que Roberto caiga dentro.
+
+- 🎯 LO DE LA v6.65 — otro fallo de orden. La página de
+  Roberto se estaba cargando ANTES de que su ventana estuviera puesta en la
+  pantalla. Es decir: se dibujaba en un lienzo de tamaño CERO, y por eso
+  quedaba fuera de todo y solo se veía la foto de respaldo. Ahora la ventana
+  se pone primero, con su tamaño de verdad, y la página se carga después.
+- 📮 Y para no depender de que Rey mande pantallas: si la burbuja no consigue
+  verse, manda ella sola su parte TÉCNICO al puente (medidas, modelo de
+  teléfono, versión de Android). Ni un dato personal, y con un código aparte
+  que no se cruza con el respaldo de Rey.
+
+- 🧍 LO DE LA v6.64: Rey vio a Roberto EN FOTO, quieto. Eso significa
+  que el respaldo hizo su trabajo, pero que el navegador interno seguía sin
+  dibujarlo. Sospecha nº1: en una página de dentro de la app, ese navegador
+  no llegaba a cargar el archivo del cuerpo de Roberto. AHORA VA INCRUSTADO
+  DENTRO de la propia página al compilar: ya no hay ningún archivo aparte
+  que cargar, así que esa causa desaparece del todo. Y antes de rendirse y
+  poner la foto, se le da una SEGUNDA oportunidad a los 4 segundos.
+
+- 🔎 LO DE LA v6.63 — 'NADA AÚN'. En la v6.62 la ventana YA se
+  creaba (Apex decía 'flotando' y era verdad), pero dentro no se dibujaba
+  nada. Dos cosas:
+  · 🧍 RESPALDO: la burbuja se mira a sí misma a los 1,6 s y, si Roberto
+    no se está viendo, pone su FOTO a cuerpo completo dibujada por
+    Android. Prefiero un Roberto quieto pero PRESENTE (que se arrastra y
+    se toca igual) que un hueco invisible.
+  · 🔎 PARTE: botón nuevo '🔎 No lo veo — ¿por qué?' que te enseña qué
+    está pasando de verdad (sitio y tamaño de la ventana, tu pantalla, tu
+    teléfono, y qué contesta la burbuja por dentro). Mándame esa pantalla
+    y lo dejo animado sin más vueltas.
+  Antes, en la v6.62, ya se habían tapado los 4 motivos clásicos:
+  permiso de archivos, capa de dibujo, quedar fuera de la pantalla y
+  arrancar desde el hilo equivocado.
+- PARA SUBIR: solo este zip a GitHub + ritual de oro.
+  El worker 5.111 YA ESTÁ VIVO. El indicador NO se toca.
+  Y el APK nuevo (Apex-Roberto-v6.67.apk) está en tu Escritorio.
+
 
 NOVEDADES v6.66  (🫧 ROBERTO EN TU PANTALLA — Y SI FALLA, TE LO DICE)
 ==================================================================
