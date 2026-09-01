@@ -7065,12 +7065,21 @@ function iaHablar(texto, idx){
   _vozCola = trozos.slice(1);
   u.text = trozos[0];
   const finTrozo = u.onend;
+  /* 🎙️ v6.70 — LA VOZ SE VUELVE A PEDIR EN CADA TROZO (Rey, 01-09: "empieza
+     Roberto y continúa un robot mujer"). Tenía razón y el motivo es feo: yo guardaba el
+     objeto de la voz UNA vez y lo reutilizaba en las frases siguientes. Android rehace esa
+     lista de voces entre frases, y con el objeto viejo Chrome lo IGNORA y cae en su voz por
+     defecto — que suele ser de mujer. Por eso Roberto empezaba y terminaba otra.
+     Ahora cada trozo pide su voz de nuevo POR NOMBRE, y toma el tono del ajuste de Rey:
+     es el mismo Roberto de la primera palabra a la última. */
   u.onend = ()=>{
     const sig = _vozCola.shift();
     if(sig==null){ finTrozo(); return; }
     const w = new SpeechSynthesisUtterance(sig);
-    if(v){ w.voice=v; w.lang=v.lang; } else { w.lang="es-ES"; }
-    w.rate=u.rate; w.pitch=u.pitch;
+    const vv = iaVozEspanol();                     /* fresca, no la de hace 20 segundos */
+    if(vv){ w.voice=vv; w.lang=vv.lang; } else { w.lang="es-ES"; }
+    w.rate = 1.0;
+    w.pitch = (typeof IA.voz.pitch==="number") ? IA.voz.pitch : 0.6;
     w.onend = u.onend; w.onerror = u.onend;   /* si uno falla, se sigue con el siguiente */
     try{ TTS.speak(w); }catch(_){ finTrozo(); }
   };
