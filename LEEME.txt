@@ -1,5 +1,48 @@
-APEX v6.80 — TRADING DESK
+APEX v6.81 — TRADING DESK
 =========================
+
+NOVEDADES v6.81  (ROBERTO Y EL SISTEMA, UNA SOLA PIEZA)
+=================================================================
+SOLO EL ZIP. El worker 5.112 sigue vivo. También hay APK nueva.
+
+Preguntaste si Roberto, su cuerpo, las alertas del indicador y los
+avisos programados son UNO SOLO engranado. Fui a comprobarlo en vez de
+responderte de memoria, y la respuesta honesta era NO. Ahora SÍ.
+
+- 🧩 LO QUE ESTABA MAL: había TRES listas sueltas decidiendo por su
+  cuenta sobre el MISMO aviso — la cara que sale en la notificación del
+  teléfono, el gesto que pone su cuerpo, y la frase de su nubecita. En 5
+  de 12 avisos reales NO coincidían. El peor de todos: "🤖 CERRÉ · GBPUSD
+  ❌ SL" (una PÉRDIDA) sacaba en tu teléfono la cara de CELEBRAR mientras
+  su cuerpo se preocupaba. Roberto no puede estar contento y preocupado
+  por lo mismo: eso no es un ser, son tres trozos sueltos.
+
+- ✅ AHORA HAY UNA SOLA TABLA con 20 situaciones (veto, cuenta cerca del
+  límite, señal perdida, Ejecutor caído, cierre en pérdida, cierre en
+  ganancia, zona confirmada, liquidez, zona de reacción, killzone,
+  noticia, posición viva, dossier...). Cada una tiene SU gesto y SU
+  frase, y de ahí beben las tres cosas a la vez. Ya no se contradicen.
+
+- 🔔 Y LOS AVISOS QUE PINTA LA PROPIA APP ya le mueven el cuerpo. La
+  killzone abriéndose y la cuenta cerca del límite salían en el teléfono
+  con su cara... mientras Roberto seguía en pantalla haciendo gestos de
+  aburrido, como si no se hubiera enterado. Ahora reacciona.
+
+- 🎈 LA NUBECITA VA PEGADA A ÉL (lo que viste al moverlo). Se colocaba
+  UNA sola vez, al salir, y ahí se quedaba clavada: si lo arrastrabas, la
+  nubecita se quedaba huérfana. Ahora se recoloca en CADA movimiento del
+  arrastre, siempre a la misma distancia de su boca (12 px del rabito).
+  Cambia de lado sola al cruzar la mitad de la pantalla, y si lo pones
+  arriba del todo se pone DEBAJO con el rabito del revés. También se
+  recoloca al girar el teléfono.
+
+- 🧠 Y ÉL LO SABE. En su manual están ahora sus 20 situaciones con el
+  gesto de cada una, la regla dura de que el COLOR del emoji no decide
+  nada (mandan las palabras), y el encargo ampliado: además de gestos
+  nuevos, puede proponerte SITUACIONES nuevas que aún no sepa reconocer.
+
+COMPROBADO: 96 de 96 pruebas en verde, con la APK v6.81 incluida.
+
 
 NOVEDADES v6.80  (ROBERTO YA SABE MANEJAR SU PROPIO CUERPO)
 =================================================================

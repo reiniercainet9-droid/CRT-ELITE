@@ -573,6 +573,10 @@ html.rob-anim-min .fab.rob-cuerpo.alerta{animation:none!important}
 .rob-globo::before{width:8px;height:8px;bottom:-5px}
 .rob-globo::after{width:5px;height:5px;bottom:-12px}
 .rob-globo.der::before{right:12px} .rob-globo.der::after{right:5px}
+/* 🎈 v6.81 — si Roberto está arriba del todo, la nubecita va DEBAJO de él y el rabito
+   se da la vuelta para seguir saliendo de su boca (antes apuntaba al techo). */
+.rob-globo.abajo::before{bottom:auto;top:-5px}
+.rob-globo.abajo::after{bottom:auto;top:-12px}
 .rob-globo.izq::before{left:12px}  .rob-globo.izq::after{left:5px}
 /* al salir, un rebotito de cómic */
 .rob-globo.ver{animation:robGloboPop .34s cubic-bezier(.34,1.56,.64,1) both}

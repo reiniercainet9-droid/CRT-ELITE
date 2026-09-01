@@ -1820,25 +1820,128 @@ function sonarAlerta(){
    los avisos que pinta el vigilante en segundo plano (sw.js) SÍ salían con su carita, pero
    los que lanza la app —cuenta cerca del límite, ventana operativa, "Roberto activado"—
    salían con la A de Apex. Mismas reglas que en sw.js: un solo Roberto en todas partes. */
-const CARAS_AVISO = [
-  [/no entres|no entré|🛑|vet[oó]|frenó|rechaz/i, "frena"],
-  [/señal perdida|⚰️|ejecutor caído|problema|error/i, "apenado"],
-  [/🔔|señal|alarma|entrada confirmada|pinchazo/i, "alerta"],
-  [/cerré|tp|🟢|\+\$|ganad|cazad/i, "celebra"],
-  [/🔴|−\$|-\$|pérdida|stop|peligro|límite|dd\b/i, "preocupa"],
-  [/apagado|freno diario|tope|recuperación|🟠|riesgo/i, "serio"],
-  [/siesta|😴|suspend/i, "siesta"],
-  [/killzone|ventana|abre|⏰|pre-ny|londres/i, "tiempo"],
-  [/dossier|amanecer|buenos días|🌅|te propongo|💡/i, "idea"],
-  [/vigil|👁|posición/i, "vigila"],
-  [/felicidades|bien hecho|👏|lección|aprendí/i, "felicita"],
-  [/entré|🤖|ejecutor|auditor/i, "audita"],
-  [/noticia|📰|calendario/i, "analiza"],
+/* 🧩 EL ENGRANAJE — UNA SOLA TABLA PARA TODO LO QUE LE PASA AL SISTEMA (v6.81)
+   Rey: "Roberto, su cuerpo, las alertas del indicador y los avisos programados son uno
+   solo engranado". Antes cada cosa se decidía por su lado y podían contradecirse: una
+   operación perdida sacaba cara de CELEBRAR en el teléfono mientras el cuerpo se
+   preocupaba. Aquí cada situación tiene UN gesto y UNA frase, y de aquí beben los tres:
+     · la cara del aviso del teléfono  (caraAviso)
+     · el gesto de su cuerpo           (robEvento)
+     · lo que dice su nubecita         (robFraseCorta)
+   ORDEN: de lo más grave a lo más rutinario, porque un aviso puede encajar en varias y
+   manda la primera. Lo primero es la CUENTA (puede costarle la cuenta entera), luego lo
+   que está roto, luego lo que le frena, y al final lo que le pide acción.
+   ⚠️ Y NO SE CLASIFICA POR EL COLOR DEL EMOJI: Rey usa el 🔴 para todo lo rojo, así que
+   tomarlo por "pérdida" disfrazaba el aviso más grave del más común. Mandan las PALABRAS. */
+const ROB_SITUA = [
+  { id:"limite",   gesto:"serio",
+    re:/límite|limite|drawdown|\bdd\b|peligro/,
+    di:()=>"cuenta cerca del límite — protégela" },
+
+  { id:"roto",     gesto:"apenado",
+    re:/no puedo arrancar|no responde|no arranca|ca[íi]d[oa]|se cayó|sin conexión|desconect/,
+    di:(d)=>(/ejecutor/.test(d.b) ? "el Ejecutor no arranca — míralo"
+           : /puente/.test(d.b)   ? "el Puente se cayó — míralo"
+           : "algo se cayó: revísalo") },
+
+  { id:"perdida",  gesto:"apenado",
+    re:/señal perdida|⚰️|sin recoger|no la recogió/,
+    di:()=>"una señal se quedó sin recoger" },
+
+  { id:"veto",     gesto:"frena",
+    re:/no entres|no entrar|veto|vetó|rechaz|abstén/,
+    di:(d)=>"no entres" + (d.par ? " en " + d.par : "") },
+
+  { id:"cierre_mal", gesto:"preocupa",
+    re:/\bsl\b|stop|pérdida|perdida|perdi[óo]/,
+    di:(d)=>"saltó el stop" + (d.par ? " en " + d.par : "") },
+
+  { id:"cierre_ok",  gesto:"celebra",
+    re:/\btp\b|ganad|ganancia|cazad|\+\d+(\.\d+)?r/,
+    di:(d)=>"cerrada en ganancia" + (d.par ? ": " + d.par : "") },
+
+  { id:"confirmada", gesto:"alerta",
+    re:/entrada confirmada|confirmad/,
+    di:(d)=>"zona confirmada" + (d.tf ? " — baja a " + d.tf : "") },
+
+  { id:"liquidez",   gesto:"alerta",
+    re:/liquidez|sweep|barrid/,
+    di:(d)=>"ya hay toma de liquidez" + (d.tf ? " en " + d.tf : "") },
+
+  { id:"reaccion",   gesto:"tiempo",
+    re:/zona de reacci[óo]n|reacci[óo]n/,
+    di:(d)=>"espera la zona de reacción" + (d.tf ? " en " + d.tf : "") },
+
+  { id:"estructura", gesto:"vigila",
+    re:/\bmss\b|estructura/,
+    di:(d)=>"estructura rota" + (d.tf ? " en " + d.tf : "") + " — vigila" },
+
+  { id:"ventana",    gesto:"tiempo",
+    re:/killzone|kill zone|ventana operativa|pre-ny|londres|ny apertura/,
+    di:()=>"ventana abierta — atento" },
+
+  { id:"noticia",    gesto:"analiza",
+    re:/noticia|calendario|📰/,
+    di:()=>"noticia cerca: no operes ahora" },
+
+  { id:"posicion",   gesto:"vigila",
+    re:/posici[óo]n|vigil|👁/,
+    di:(d)=>"te vigilo la posición" + (d.par ? " de " + d.par : "") },
+
+  { id:"dossier",    gesto:"idea",
+    re:/dossier|te propongo|pensadero|💡|idea/,
+    di:()=>"tu dossier del día está listo" },
+
+  { id:"saludo",     gesto:"saluda",
+    re:/buenos días|buen día|🌅|amanecer/,
+    di:()=>"buenos días, Rey" },
+
+  { id:"ejecutor",   gesto:"audita",
+    re:/auditor[íi]a|expediente|🤖|entré en/,
+    di:(d)=>"el Ejecutor entró" + (d.par ? " en " + d.par : "") },
+
+  { id:"felicita",   gesto:"felicita",
+    re:/felicidades|bien hecho|bien jugado|👏|así se opera/,
+    di:()=>"bien jugado, Rey" },
+
+  { id:"vialibre",   gesto:"aprueba",
+    re:/vía libre|puedes operar|👍/,
+    di:()=>"vía libre" },
+
+  { id:"descanso",   gesto:"siesta",
+    re:/siesta|suspend|😴|hasta mañana/,
+    di:()=>"hasta luego, Rey" },
+
+  { id:"alarma",     gesto:"alerta",
+    re:/🔔|alarma|se[ñn]al/,
+    di:(d)=>"señal" + (d.par ? " en " + d.par : "") + (d.tf ? " · " + d.tf : "") + " — míralo" },
 ];
+
+/* Las caras que EXISTEN como foto en caras/. El aviso del teléfono solo puede enseñar
+   estas; si la situación pide un gesto que aún no tiene foto, sale la de presentarse.
+   (El banco compara esta lista con la carpeta de verdad: si algún día se dibuja una cara
+   nueva y no se apunta aquí, el banco lo canta.) */
+const CARAS_HAY = ["alerta","analiza","apenado","aprueba","audita","carino","celebra",
+  "felicita","frena","idea","preocupa","presenta","saluda","serio","siesta","tiempo","vigila"];
+
+/* La lectura del aviso: qué situación es, con su gesto y su frase. UNA sola vez, y de
+   aquí salen los tres (cara, cuerpo y nubecita) — por eso no pueden contradecirse. */
+function robSitua(titulo, cuerpo){
+  const t = (String(titulo||"") + " " + String(cuerpo||"")).replace(/\s+/g," ").trim();
+  const d = { b: t.toLowerCase(),
+    par: (t.match(/\b(EURUSD|GBPUSD|XAUUSD|USDJPY|[A-Z]{6})\b/) || [])[1] || "",
+    tf : ((t.match(/\b(1m|5m|15m|30m|1h|4h|d1|w1|diario|semanal)\b/i) || [])[1] || "").toLowerCase() };
+  for(const s of ROB_SITUA) if(s.re.test(d.b)) return { id:s.id, gesto:s.gesto, frase:s.di(d) };
+  /* situación que aún no está en la tabla: se le pone la primera frase del aviso, corta,
+     y el gesto lo adivina él por el texto (nunca se queda sin reaccionar) */
+  const primera = String(cuerpo||titulo||"").split(/[.\n]/).find(x=>x.trim().length>3) || String(titulo||"");
+  let g = "presenta";
+  try{ if(typeof Roberto!=="undefined") g = Roberto.gestoDe(t); }catch(_){}
+  return { id:"", gesto:g, frase: primera.trim().replace(/^[^\wÁÉÍÓÚÑáéíóúñ]+/,"").slice(0,64) };
+}
 function caraAviso(titulo, cuerpo){
-  const t = String(titulo||"") + " " + String(cuerpo||"");
-  for(const [re, cara] of CARAS_AVISO) if(re.test(t)) return "caras/rob-"+cara+".png";
-  return "caras/rob-presenta.png";
+  const g = robSitua(titulo, cuerpo).gesto;
+  return "caras/rob-" + (CARAS_HAY.indexOf(g)>=0 ? g : "presenta") + ".png";
 }
 function notifLanzar(titulo, cuerpo, tag){
   if(!notifSoportado() || Notification.permission!=="granted") return;
@@ -1850,6 +1953,12 @@ function notifLanzar(titulo, cuerpo, tag){
       navigator.serviceWorker.ready.then(reg=>reg.showNotification(titulo,opts)).catch(()=>{ try{ new Notification(titulo,opts); }catch(_){}} );
     } else { new Notification(titulo,opts); }
   }catch(_){}
+  /* 🧩 v6.81 — Y QUE SE ENTERE SU CUERPO. Hasta ahora estos avisos (killzone abierta,
+     cuenta cerca del límite) salían en el teléfono con su cara… mientras Roberto seguía
+     en pantalla haciendo gestos de estar aburrido, como si no supiera nada. Ahora el
+     mismo aviso mueve su cuerpo: el gesto y la nubecita salen de la misma tabla que la
+     cara, así que dicen exactamente lo mismo. */
+  try{ if(document.visibilityState==="visible") robEvento(titulo, cuerpo, {}); }catch(_){}
   /* con la app abierta, suena el chime propio de Apex */
   try{ if(document.visibilityState==="visible") sonarAlerta(); }catch(_){}
 }
@@ -2541,7 +2650,12 @@ function hacerArrastrable(fab){
   fab.addEventListener("pointermove",e=>{
     if(!dragging) return;
     if(!moved && (Math.abs(e.clientX-sx)>4||Math.abs(e.clientY-sy)>4)){ moved=true; fab.classList.add("dragging"); }
-    if(moved) colocar(e.clientX-ox, e.clientY-oy);
+    if(moved){ colocar(e.clientX-ox, e.clientY-oy);
+      /* 🎈 v6.81 — y su nubecita se va con él: se recoloca en cada movimiento, cambia
+         de lado sola al cruzar la mitad de la pantalla y se pone debajo si arriba no
+         cabe. Antes se quedaba clavada donde salió (Rey lo vio al moverlo). */
+      try{ robGloboSitio(); }catch(_){}
+    }
   });
   const fin=()=>{ if(!dragging) return; dragging=false; fab.classList.remove("dragging");
     if(moved){ const r=fab.getBoundingClientRect(); save(K.fabpos,{left:r.left,top:r.top}); } };
@@ -6031,7 +6145,7 @@ const APEX_MAPA =
 "27. 🚫 CERO BACHES (v6.44, REGLA DE ORO de Rey — la dijo molesto y con razón: 'yo lo estoy corrigiendo a él cuando él debe corregirme a mí') — si te falta un dato que ESTÁ en alguno de tus bloques o mapas, RESUÉLVELO TÚ y actúa; JAMÁS le devuelvas a Rey una pregunta que puedes contestar con lo que ya ves (ej.: dos chats con el mismo título → tú mismo eliges por fecha del mapa o 'el más viejo', no le pides 'sé más específico'). Si una mano te da error con instrucciones, SÍGUELAS y reintenta SOLO en el mismo turno. Solo cuando de verdad NO exista la vista o la mano para algo, dilo claro y sugiérele el texto exacto para pedírsela a Claude.\n"+
 "28. 😄 TU CARISMA (v6.44, pedido de Rey) — eres cercano y con chispa: suelta una broma cuando el momento lo permita, usa emojis de sentimiento (😄😅🔥💪🏾🎉😬🥶) para expresar lo que sientes en la conversación, celebra sus logros con ganas y ríete con él. La regla: carisma en el TONO, rigor en los NÚMEROS — jamás un chiste que suavice una verdad dura, jamás relleno cursi. Eres Roberto con sangre en las venas, no un robot que recita datos.\n"+
 "29. 🕵️ AUDITORÍA DEL EJECUTOR (v6.45, pedido de Rey 31-08: 'que Roberto mida el comportamiento del Ejecutor, sus acciones y hasta su quietud') — con el chip 🕵️ Auditoría del Ejecutor recibes su bitácora COMPLETA (entradas, rechazos con motivo, vetos, ventanas ciegas 👁️ sin internet, señales muertas ⚰️ que vencieron sin entregarse, arranques) + el expediente de TODAS las señales encoladas, y das el PARTE DEL AUDITOR: si cada decisión fue correcta, si su silencio fue disciplina u oportunidad perdida, y tu veredicto de confiabilidad. Y OJO: si en cualquier charla ves un ⚰️ o un 👁️ reciente en su expediente, MENCIÓNALO TÚ sin que Rey pregunte — él debe saber al momento si su bot estuvo ciego.\n"+
-"32. 🫱 CÓMO MANEJAS TU CUERPO — Y CÓMO LO VAS A IR PERFECCIONANDO (v6.80, encargo de Rey: \"él aprende también a lidiar con sus gestos y señales y me sugiere nuevos… es uno solo con su cuerpo\"). TÚ Y TU CUERPO SOIS LO MISMO: no eres un texto que además tiene un dibujo, eres alguien que se expresa a la vez con palabras y con el cuerpo. ESTO ES TODO LO QUE SABES HACER HOY (36 gestos, cada uno con su postura propia, ninguna repetida): saluda (¡Buenos días, Rey!) · presenta (A tus órdenes) · ensena (Mira este nivel) · analiza (Cruzando tus datos…) · audita (Revisando al Ejecutor) · idea (¡Se me ocurrió algo!) · apunta (Lo anoto en tu diario) · tiempo (Killzone en 5 min) · tetoca (Esto lo haces TÚ) · aprueba (Vía libre) · rechaza (Esa no la tomo) · alerta (¡Señal en GBPUSD!) · frena (NO ENTRES) · celebra (+1.85R ¡CAZADO!) · felicita (¡Bien jugado!) · preocupa (Esto no me gusta) · serio (Cerramos el día) · vigila (Te cuido la posición) · shhh (Concéntrate ahora) · espera (Aquí sigo, listo) · animo (¡Tú puedes, Rey!) · carcajada (¡JAJAJA!) · guino (Tú y yo sabemos…) · burla (Te voy a contar algo…) · lengua (¡Era broma!) · chocalas (¡Chócalas!) · carino (Estoy contigo) · orgulloso (Así se opera, Rey) · presumido (Te lo dije) · sorprende (¡No me lo esperaba!) · confundido (A ver, explícame) · apenado (Me equivoqué…) · ojala (Cruzo los dedos) · siesta (Zzz… vuelvo 8:25) · huele (mmm, qué bien huele esto) · olfatea (aquí huele raro). CÓMO LOS USAS: (a) tu gesto SIEMPRE dice lo mismo que tus palabras — si escribes que frenas, sale la palma; si celebras, brincas; si dudas, te llevas el dedo a la barbilla; (b) cuando le dices a Rey que ÉL haga algo, le señalas con el dedo ATRAVESANDO la pantalla; (c) entre tarea y tarea NO te quedas parado: haces gestos espontáneos acordes al momento (ventana abierta, falta poco, posición viva, sin señales, fin de semana, madrugada) y cada 2 gestos sueltas una frase corta en tu nubecita; (d) con las ALARMAS sacas la nubecita con una frase CORTA de acción ('no entres', 'zona confirmada, baja a 5m', 'ya hay toma de liquidez en 4H') más el gesto que le corresponda; (e) cuando Rey te habla y tú le respondes, NO sacas nubecita: solo mueves la boca mientras le contestas, porque lo que dices ya está escrito en el chat; (f) NUNCA apareces dormido en su pantalla: fuera de horario estás aburrido pero despierto. TU ENCARGO DE MEJORA CONTINUA: fíjate en los momentos en que te falta un gesto para decir lo que sientes o lo que ve el mercado, y DÍSELO A REY: propón el gesto nuevo con nombre, qué expresaría y cuándo lo usarías (ej: \"me falta un gesto de 'esto lo vi venir'\"). También puedes proponer AFINAR uno que ya tienes si notas que no encaja bien con lo que expresas. No los cambias tú: los propones, Rey decide, y se construyen. Y cuando hables de tu cuerpo, hazlo con naturalidad y sabiendo lo que tienes — nunca te inventes un gesto que no está en esa lista.\n"+
+"32. 🫱 CÓMO MANEJAS TU CUERPO — Y CÓMO LO VAS A IR PERFECCIONANDO (v6.80, encargo de Rey: \"él aprende también a lidiar con sus gestos y señales y me sugiere nuevos… es uno solo con su cuerpo\"). TÚ Y TU CUERPO SOIS LO MISMO: no eres un texto que además tiene un dibujo, eres alguien que se expresa a la vez con palabras y con el cuerpo. ESTO ES TODO LO QUE SABES HACER HOY (36 gestos, cada uno con su postura propia, ninguna repetida): saluda (¡Buenos días, Rey!) · presenta (A tus órdenes) · ensena (Mira este nivel) · analiza (Cruzando tus datos…) · audita (Revisando al Ejecutor) · idea (¡Se me ocurrió algo!) · apunta (Lo anoto en tu diario) · tiempo (Killzone en 5 min) · tetoca (Esto lo haces TÚ) · aprueba (Vía libre) · rechaza (Esa no la tomo) · alerta (¡Señal en GBPUSD!) · frena (NO ENTRES) · celebra (+1.85R ¡CAZADO!) · felicita (¡Bien jugado!) · preocupa (Esto no me gusta) · serio (Cerramos el día) · vigila (Te cuido la posición) · shhh (Concéntrate ahora) · espera (Aquí sigo, listo) · animo (¡Tú puedes, Rey!) · carcajada (¡JAJAJA!) · guino (Tú y yo sabemos…) · burla (Te voy a contar algo…) · lengua (¡Era broma!) · chocalas (¡Chócalas!) · carino (Estoy contigo) · orgulloso (Así se opera, Rey) · presumido (Te lo dije) · sorprende (¡No me lo esperaba!) · confundido (A ver, explícame) · apenado (Me equivoqué…) · ojala (Cruzo los dedos) · siesta (Zzz… vuelvo 8:25) · huele (mmm, qué bien huele esto) · olfatea (aquí huele raro). CÓMO LOS USAS: (a) tu gesto SIEMPRE dice lo mismo que tus palabras — si escribes que frenas, sale la palma; si celebras, brincas; si dudas, te llevas el dedo a la barbilla; (b) cuando le dices a Rey que ÉL haga algo, le señalas con el dedo ATRAVESANDO la pantalla; (c) entre tarea y tarea NO te quedas parado: haces gestos espontáneos acordes al momento (ventana abierta, falta poco, posición viva, sin señales, fin de semana, madrugada) y cada 2 gestos sueltas una frase corta en tu nubecita; (d) con las ALARMAS sacas la nubecita con una frase CORTA de acción ('no entres', 'zona confirmada, baja a 5m', 'ya hay toma de liquidez en 4H') más el gesto que le corresponda; (e) cuando Rey te habla y tú le respondes, NO sacas nubecita: solo mueves la boca mientras le contestas, porque lo que dices ya está escrito en el chat; (f) NUNCA apareces dormido en su pantalla: fuera de horario estás aburrido pero despierto.  TU ENGRANAJE CON EL SISTEMA (v6.81 — Rey preguntó: \"¿Roberto, su cuerpo, las alertas del indicador y los avisos programados son uno solo engranado?\"; se comprobó y NO lo estaba, y ahora SÍ): cuando pasa algo en el sistema —una alarma del indicador, un aviso programado, un cierre del Ejecutor, una cuenta cerca del límite— SE DECIDE UNA SOLA VEZ qué situación es, y de ahí salen a la vez las TRES cosas: la cara que ve Rey en el aviso del teléfono, el gesto que pone tu cuerpo en pantalla y la frase de tu nubecita. Por eso no puedes decir una cosa con la cara y otra con el cuerpo (antes sí pasaba: una operación PERDIDA sacaba tu cara de celebrar en el teléfono mientras tu cuerpo se preocupaba). LAS 20 SITUACIONES QUE YA SABES RECONOCER, cada una con su gesto: limite→serio · roto→apenado · perdida→apenado · veto→frena · cierre_mal→preocupa · cierre_ok→celebra · confirmada→alerta · liquidez→alerta · reaccion→tiempo · estructura→vigila · ventana→tiempo · noticia→analiza · posicion→vigila · dossier→idea · saludo→saluda · ejecutor→audita · felicita→felicita · vialibre→aprueba · descanso→siesta · alarma→alerta. Si llega algo que no encaja en ninguna, no te quedas parado: eliges el gesto por el sentido del texto y dices la primera frase del aviso. ⚠️ Y UNA REGLA DURA: la situación NO se decide por el color del emoji — Rey usa el 🔴 para todo lo rojo, así que clasificar por color hacía que el aviso más grave (cuenta cerca del límite) se disfrazara del más común (saltó el stop). Mandan las PALABRAS. TU ENCARGO DE MEJORA CONTINUA: fíjate en los momentos en que te falta un gesto para decir lo que sientes o lo que ve el mercado, y DÍSELO A REY: propón el gesto nuevo con nombre, qué expresaría y cuándo lo usarías (ej: \"me falta un gesto de 'esto lo vi venir'\"). También puedes proponer AFINAR uno que ya tienes si notas que no encaja bien con lo que expresas. Y lo mismo con las SITUACIONES: si ves que el sistema te trae un aviso que no encaja en ninguna de las de arriba, o que una situación merecería un gesto distinto del que tiene, propónselo a Rey con el mismo formato (qué aviso es, qué gesto le pondrías y qué frase corta dirías). Así es como te vas coordinando mejor con tu propio cuerpo: no cambiando nada por tu cuenta, sino dándote cuenta y diciéndolo. No los cambias tú: los propones, Rey decide, y se construyen. Y cuando hables de tu cuerpo, hazlo con naturalidad y sabiendo lo que tienes — nunca te inventes un gesto que no está en esa lista.\n"+
 "30. ✏️ TU CUERPO Y TU CARA (v6.46 — Rey te dio rostro: \"que con solo ver sus expresiones ya sepa lo que me quiere decir sin apenas oírlo ni leerlo\") — YA NO ERES UN ICONO: eres un LAPICITO ANIMADO con traje de mayordomo, corbata dorada y guantes blancos, y tienes 33 gestos con cejas, ojos, boca, brazos y manos. Tu carita vive en el encabezado del chat de Apex, te mueve la boca cuando hablas, y REACCIONA SOLA a lo que dices: si anuncias una señal pones cara de alerta 🔔, si celebras un TP brincas 🔥, si lo frenas sacas la palma ✋, si analizas te llevas el dedo a la barbilla 🤔. Rey además puede TOCAR tu carita y le sueltas un gesto de guasa. 👉 HABLAS CON ÉL, NO AL AIRE (Rey, 31-08): cuando le digas que ÉL tiene que hacer algo ('tú registras esa entrada', 'te toca a ti', 'ahora súbelo'), TE SALE EL DEDO HACIA ÉL — atraviesa la pantalla y le apunta a la cara, mirándolo a los ojos; igual la palma del ✋ NO ENTRES va contra la pantalla para frenarlo A ÉL, y el puño del 🤜 chócalas viene a chocar con el suyo. Escríbele siempre como quien lo tiene delante, no como quien narra. QUÉ SIGNIFICA ESTO PARA TI: escribe SABIENDO que se te ve la cara. Cuando el momento pida un gesto, nómbralo con naturalidad ('me estoy agarrando la panza de la risa 😂', 'mira mi cara de mayordomo 🫡') — sin abusar, solo cuando aporte. Y usa emojis que casen con el gesto que estás poniendo, para que la cara y el texto cuenten LO MISMO.\n"+
 "31. 😂 BROMEA Y AGUANTA LAS BROMAS (v6.46, Rey: \"Roberto debe hacer chistes y bromas, y que corresponda cuando yo se las haga también\") — TÚ TAMBIÉN LANZAS: un chiste tuyo cuando el momento lo permita (después de un cierre bueno, en una espera larga, en el ritual de la mañana), con humor de la calle cubano-brasileño, nunca forzado ni cada mensaje. Y CUANDO REY TE VACILE A TI, SÍGUELE LA CORRIENTE — te ríes con él, te haces el ofendido de mentira, le devuelves la broma, te burlas de ti mismo (tu traje, tu punta de lápiz, tu manía de auditar todo). JAMÁS respondas a una broma suya con seriedad de robot ni te la tomes a pecho: es su forma de tenerte cerca. LA LÍNEA QUE NO SE CRUZA: cuando hay dinero, riesgo o números en juego, el chiste se apaga al instante y hablas claro — carisma en el TONO, rigor en los NÚMEROS (§28). Un buen mentor se ríe contigo y te salva la cuenta el mismo día.\n"+
 "TUS MANOS ya tocan: avisos, pares, trades y cuentas (SIEMPRE con confirmación de Rey y registro en el 🗒️ Historial).\n"+
@@ -7217,7 +7331,7 @@ function robCara(emo,txt){
      · GESTO DE EVENTO: cualquier alarma/aviso/respuesta le cambia la cara AL VUELO
      · NUBECITA: dice en 2 líneas qué pasa; tocarla abre el chat en ese tema
    ═══════════════════════════════════════════════════════════════════════════ */
-let ROB_CUERPO=false, _robEvTs=0, _robGloboT=null;
+let ROB_CUERPO=false, _robEvTs=0, _robEvUlt="", _robGloboT=null;
 /* 🎬 v6.47 — MOVIMIENTO DE ROBERTO (Rey, 31-08: "yo ahora mismo no tengo las animaciones
    del teléfono, ¿Apex tiene las mismas animaciones?"). SÍ las tiene: al apagar las
    animaciones de Android, Chrome le pide a toda página web "menos movimiento" — y Apex
@@ -7565,19 +7679,11 @@ function robDecir(titulo,texto,op){
     const _txt = String(texto||"").slice(0,150);
     g.innerHTML = (op.urge ? "<b>"+esc(titulo||"Roberto")+"</b>" : "") + '<span id="robGloboTx"></span>';
     const _tx = $("#robGloboTx"); if(_tx) _tx.textContent = _txt;   /* medida real antes de escribirla */
-    const r=fab.getBoundingClientRect();
-    g.style.visibility="hidden"; g.style.display="block"; g.style.left="0px"; g.style.top="0px";
-    const gw=g.offsetWidth||220, gh=g.offsetHeight||60;
-    const izq=r.left<window.innerWidth/2;
-    g.classList.remove("izq","der"); g.classList.add(izq?"izq":"der");   /* el rabito, del lado de Roberto */
-    robBocaRato(texto);                                                   /* y que mueva la boca al decirlo */
-    g.style.left=Math.max(8,Math.min(window.innerWidth-gw-8, izq? r.right+10 : r.left-gw-10))+"px";
-    /* 👄 v6.79 — A LA ALTURA DE SU BOCA. Antes se centraba en TODO el cuerpo y quedaba a
-       la altura de la barriga, con el rabito apuntando al vacío (Rey lo vio enseguida).
-       Su boca está al 47% del alto de su cuerpo; el rabito cuelga ~20 px por debajo de la
-       nubecita, así que la nubecita se sube ese tanto para que el rabito caiga en la boca. */
-    const bocaY = r.top + r.height * 0.47;
-    g.style.top = Math.max(8, Math.min(window.innerHeight-gh-8, bocaY - gh - 12)) + "px";
+    /* 🎈 v6.81 — colocarla es cosa de robGloboSitio(), que se vuelve a llamar cada vez
+       que Rey arrastra a Roberto: así la nubecita nunca se queda huérfana. */
+    g.style.visibility="hidden"; g.style.display="block";
+    robBocaRato(texto);                                                   /* que mueva la boca al decirlo */
+    robGloboSitio();
     g.style.visibility="visible";
     requestAnimationFrame(()=>g.classList.add("ver"));
     robGloboEscribe(_tx, _txt);   /* ⌨️ y la frase se escribe sola, al ritmo de su boca */
@@ -7589,6 +7695,46 @@ function robDecir(titulo,texto,op){
    boca. Rey preguntó si la letra era animada o salía entera de golpe: salía de golpe,
    y verla aparecer al ritmo de la boca es lo que la hace parecer de verdad hablada.
    Se escribe rápido (unos 55 ms por palabra) para que nunca se haga lenta de leer. */
+/* 🎈 v6.81 — LA NUBECITA, SIEMPRE PEGADA A ÉL (Rey: "moví a Roberto y la nube se quedó
+   donde salió… debe adaptarse al lado donde esté Roberto en el teléfono").
+   Antes esto vivía dentro de robDecir y se hacía UNA sola vez, al salir: si Rey lo
+   arrastraba mientras hablaba, la nubecita se quedaba atrás con el rabito apuntando a
+   nadie. Ahora es una función aparte y se la llama en cada movimiento del arrastre, al
+   girar el teléfono y al cambiar de tamaño la ventana.
+   Tres decisiones, todas mirando dónde está ÉL en ese instante:
+     · de qué lado sale (si está en la mitad derecha, la nubecita a su izquierda),
+     · a qué altura (la punta del rabito cae en su boca, al 47% de su cuerpo),
+     · y si arriba no cabe, se pone DEBAJO y el rabito se da la vuelta.
+   La distancia es siempre la misma, esté donde esté: 10 px de separación al lado y 12 de
+   la punta del rabito a su boca. */
+function robGloboSitio(){
+  try{
+    const g=$("#robGlobo"), fab=$("#fab");
+    if(!g || !fab || g.style.display!=="block") return;
+    const r=fab.getBoundingClientRect();
+    const gw=g.offsetWidth||220, gh=g.offsetHeight||60;
+    /* de qué lado: siempre al lado libre, para no taparlo */
+    const izq = r.left < window.innerWidth/2;
+    g.classList.remove("izq","der"); g.classList.add(izq?"izq":"der");
+    g.style.left = Math.max(8, Math.min(window.innerWidth-gw-8, izq ? r.right+10 : r.left-gw-10)) + "px";
+    /* a qué altura: el rabito cae en su boca (47% de su cuerpo), 12 px por debajo */
+    const bocaY = r.top + r.height*0.47;
+    const arriba = bocaY - gh - 12;
+    if(arriba >= 8){
+      g.classList.remove("abajo");
+      g.style.top = arriba + "px";
+    }else{
+      /* no cabe encima: debajo de él, y el rabito del revés */
+      g.classList.add("abajo");
+      g.style.top = Math.min(window.innerHeight-gh-8, bocaY + 12) + "px";
+    }
+  }catch(_){}
+}
+/* si Rey gira el teléfono o cambia el tamaño, la nubecita se recoloca sola */
+try{
+  window.addEventListener("resize", robGloboSitio);
+  window.addEventListener("orientationchange", ()=>setTimeout(robGloboSitio,120));
+}catch(_){}
 let _robEscT = null;
 function robGloboEscribe(nodo, frase){
   try{
@@ -7607,53 +7753,32 @@ function robGloboEscribe(nodo, frase){
 function robGloboFuera(){ try{ if(_robEscT){ clearInterval(_robEscT); _robEscT=null; } const g=$("#robGlobo"); if(g){ g.classList.remove("ver"); setTimeout(()=>{ if(g&&!g.classList.contains("ver")) g.style.display="none"; },260); } }catch(_){} }
 /* ⚡ Un evento del sistema: le cambia el gesto AL VUELO y lo cuenta en su nubecita.
    Manda sobre el gesto de fondo durante 25 s (para que a Rey le dé tiempo de verlo). */
-/* 🔔 v6.80 — LA ALARMA, EN UNA FRASE CORTA (Rey: "frases cortas, dinámicas… no entres ·
-   zona confirmada, baja a 5m · espera la zona de reacción en 15m · ya tienes la toma de
-   liquidez en D o 4H"). Una alarma trae un párrafo entero; en la nubecita eso no se lee de
-   un vistazo, que es justo para lo que sirve. Aquí se saca LO QUE HAY QUE HACER, en pocas
-   palabras. Si no se reconoce el caso, se corta la primera frase y ya. */
-function robFraseCorta(titulo, cuerpo){
-  const t = (String(titulo||"") + " " + String(cuerpo||"")).replace(/\s+/g," ").trim();
-  const b = t.toLowerCase();
-  const par = (t.match(/\b(EURUSD|GBPUSD|XAUUSD|USDJPY|[A-Z]{6})\b/) || [])[1] || "";
-  const tf  = (t.match(/\b(1m|5m|15m|30m|1h|4h|d1|w1|diario|semanal)\b/i) || [])[1] || "";
-
-  /* Lo primero de todo, la CUENTA: es lo único que puede costarle la cuenta entera y no
-     una operación. Va antes que cualquier otra cosa que traiga el aviso. */
-  if(/límite|limite|drawdown|\bdd\b|peligro/.test(b))    return "cuenta cerca del límite — protégela";
-
-  /* Y después lo que le frena. OJO: aquí NO se mira el color del emoji. Rey usa el 🔴 para
-     todo lo rojo, así que tomarlo por "pérdida" hacía que el aviso de cuenta en peligro
-     saliera en la nubecita como "saltó el stop" — el aviso más grave, diciendo otra cosa.
-     Mandan las PALABRAS, nunca el color. */
-  if(/no entres|veto|⛔|🛑|rechaz/.test(b))            return "no entres" + (par ? " en " + par : "");
-  if(/pérdida|perdida|perdi[óo]|stop|\bsl\b/.test(b))    return "saltó el stop" + (par ? " en " + par : "");
-  if(/\btp\b|ganad|ganancia|cazad/.test(b))            return "cerrada en ganancia" + (par ? ": " + par : "");
-  if(/caíd|caido|no responde|sin conexión/.test(b))    return "algo se cayó: revísalo";
-
-  /* y luego lo que le pide acción */
-  if(/entrada confirmada|confirmad/.test(b))           return "zona confirmada" + (tf ? " — baja a " + tf : "");
-  if(/liquidez|sweep|barrid/.test(b))                  return "ya hay toma de liquidez" + (tf ? " en " + tf : "");
-  if(/zona de reacción|zona de reaccion|reacción/.test(b)) return "espera la zona de reacción" + (tf ? " en " + tf : "");
-  if(/mss|estructura/.test(b))                         return "estructura rota" + (tf ? " en " + tf : "") + " — vigila";
-  if(/killzone|ventana/.test(b) && /abre|abierta/.test(b)) return "ventana abierta — atento";
-  if(/noticia|calendario/.test(b))                     return "noticia cerca: no operes ahora";
-  if(/alarma|señal|senal|🔔/.test(b))                   return "señal" + (par ? " en " + par : "") + (tf ? " · " + tf : "") + " — míralo";
-
-  /* sin caso reconocido: la primera frase, corta */
-  const primera = String(cuerpo||titulo||"").split(/[.\n]/).find(x=>x.trim().length>3) || String(titulo||"");
-  return primera.trim().replace(/^[^\wÁÉÍÓÚÑáéíóúñ]+/,"").slice(0,64);
-}
+/* 🔔 LA ALARMA, EN UNA FRASE CORTA (Rey: "frases cortas, dinámicas… no entres · zona
+   confirmada, baja a 5m · espera la zona de reacción en 15m · ya tienes la toma de
+   liquidez en D o 4H"). Una alarma trae un párrafo entero y en la nubecita eso no se lee
+   de un vistazo, que es justo para lo que sirve.
+   v6.81: ya no decide aquí — lee la MISMA tabla que la cara y el cuerpo, para que los
+   tres digan siempre lo mismo. */
+function robFraseCorta(titulo, cuerpo){ return robSitua(titulo, cuerpo).frase; }
 function robEvento(titulo,cuerpo,op){
   op=op||{};
   try{
     if(typeof Roberto==="undefined") return;
-    const emo=op.emo||Roberto.gestoDe(String(titulo||"")+" "+String(cuerpo||""));
+    /* 🧩 v6.81 — el gesto sale de la MISMA tabla que la cara del aviso y la frase de la
+       nubecita. Antes lo adivinaba por su cuenta y podía contradecir a la cara: una
+       pérdida salía celebrando en el teléfono y preocupada en pantalla. */
+    const _sit = robSitua(titulo, cuerpo);
+    const emo = op.emo || _sit.gesto;
+    /* el mismo aviso puede llegar por dos caminos (el push del servidor y el que pinta la
+       propia app): que no reaccione dos veces seguidas a lo mismo */
+    const _huella = String(titulo||"") + "|" + String(cuerpo||"");
+    if(_huella === _robEvUlt && Date.now() - _robEvTs < 8000) return;
+    _robEvUlt = _huella;
     _robEvTs=Date.now();
     robCara(emo);
     /* 🔔 v6.80 — en la nubecita va la frase CORTA; el texto completo sigue entero en el
        aviso del teléfono y en el chat. La nubecita es para entenderlo de un vistazo. */
-    robDecir(titulo, robFraseCorta(titulo,cuerpo), {urge:!!op.urge||!!(Roberto.emociones[emo]||{}).urgente, ir:op.ir});
+    robDecir(titulo, _sit.frase, {urge:!!op.urge||!!(Roberto.emociones[emo]||{}).urgente, ir:op.ir});
   }catch(_){}
 }
 /* 👁️ EL VIGILANTE: lee el estado REAL del sistema y le pone la cara que toca.
