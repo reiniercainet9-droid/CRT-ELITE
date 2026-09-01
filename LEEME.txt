@@ -1,5 +1,20 @@
-APEX v6.72 — TRADING DESK
+APEX v6.73 — TRADING DESK
 =========================
+
+NOVEDADES v6.73  (LA FRANJA DE LA HORA, POR FIN)
+=================================================
+SOLO EL ZIP. El worker 5.112 sigue vivo.
+
+- 🔝 LA CAUSA REAL, tras dos intentos fallidos míos: cuando Apex está
+  INSTALADA como app, Android NO usa el color de la página — usa el del
+  MANIFIESTO de la app, que era un valor FIJO oscuro. Mientras estuviera
+  ahí, daba igual lo que hiciera la página: en tema claro la franja se
+  quedaba negra igual.
+  Ya no está. Sin él, Android usa el color de la página, que SÍ cambia
+  contigo: azul noche en oscuro, claro en claro.
+  ⚠️ Si tras recargar sigue oscura, quita el acceso directo de Apex de tu
+  pantalla de inicio y vuelve a añadirlo: Android guarda el manifiesto de
+  cuando la instalaste y a veces tarda en releerlo.
 
 NOVEDADES v6.72  (APEX SE PONE AL DÍA SOLA)
 ============================================
