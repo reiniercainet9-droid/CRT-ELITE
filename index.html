@@ -560,10 +560,23 @@ html.rob-anim-min .fab.rob-cuerpo.alerta{animation:none!important}
 .fab.rob-cuerpo::after{content:"";position:absolute;left:18%;right:18%;bottom:2px;height:9px;
   border-radius:50%;background:radial-gradient(closest-side,rgba(0,0,0,.5),transparent 72%);pointer-events:none}
 /* 🫧 su nubecita: aparece a su lado y se va sola */
-.rob-globo{position:fixed;z-index:61;max-width:min(62vw,250px);background:var(--card);color:var(--fg);
-  border:1.5px solid var(--gold);border-radius:14px;padding:9px 12px;font-size:13.5px;line-height:1.35;
-  box-shadow:0 10px 30px rgba(0,0,0,.55);opacity:0;transform:translateY(6px) scale(.94);
-  transition:opacity .22s,transform .22s;pointer-events:auto;cursor:pointer}
+/* 💬 v6.78 — NUBECITA DE CÓMIC, no un rectángulo (Rey, 01-09, con imágenes de
+   referencia). Más pequeña (190 px en vez de 250), más redonda, y con el RABITO y su
+   bolita apuntando hacia él, como en un tebeo. Ocupa mucha menos pantalla. */
+.rob-globo{position:fixed;z-index:61;max-width:min(52vw,190px);background:var(--card);color:var(--fg);
+  border:1.5px solid var(--gold);border-radius:16px 16px 16px 6px;padding:7px 10px;font-size:12.5px;line-height:1.3;
+  box-shadow:0 8px 24px rgba(0,0,0,.5);opacity:0;transform:translateY(6px) scale(.9);
+  transition:opacity .2s,transform .2s;pointer-events:auto;cursor:pointer}
+/* el rabito y su bolita: se colocan solos del lado por el que esté Roberto */
+.rob-globo::before,.rob-globo::after{content:"";position:absolute;background:var(--card);
+  border:1.5px solid var(--gold);border-radius:50%;pointer-events:none}
+.rob-globo::before{width:9px;height:9px;bottom:-6px}
+.rob-globo::after{width:5px;height:5px;bottom:-14px}
+.rob-globo.der::before{right:16px} .rob-globo.der::after{right:11px}
+.rob-globo.izq::before{left:16px}  .rob-globo.izq::after{left:11px}
+/* al salir, un rebotito de cómic */
+.rob-globo.ver{animation:robGloboPop .34s cubic-bezier(.34,1.56,.64,1) both}
+@keyframes robGloboPop{0%{opacity:0;transform:translateY(8px) scale(.8)}60%{transform:translateY(0) scale(1.06)}100%{opacity:1;transform:none}}
 .rob-globo.ver{opacity:1;transform:none}
 .rob-globo b{color:var(--gold);display:block;font-size:12px;letter-spacing:.3px;margin-bottom:2px}
 .rob-globo.urge{border-color:var(--red);box-shadow:0 0 0 2px rgba(255,90,90,.3),0 10px 30px rgba(0,0,0,.55)}

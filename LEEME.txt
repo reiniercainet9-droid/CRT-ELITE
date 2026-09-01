@@ -1,5 +1,22 @@
-APEX v6.77 — TRADING DESK
+APEX v6.78 — TRADING DESK
 =========================
+
+NOVEDADES v6.78  (LA NUBECITA, DE CÓMIC Y MÁS HABLADORA)
+=========================================================
+SOLO EL ZIP. El worker 5.112 sigue vivo. También hay APK nueva.
+
+- 💬 YA NO ES UN RECTÁNGULO. Es una nubecita de cómic: más redonda, con su
+  rabito y su bolita apuntando hacia Roberto, y con un rebotito al salir.
+- 📏 Y OCUPA MUCHO MENOS: de 250 px de ancho baja a 190, con la letra más
+  ajustada. Te tapa mucha menos pantalla.
+- 👄 Y AHORA MUEVE LA BOCA mientras te habla. La boca se anima el tiempo
+  que dura la frase; la voz solo suena si tú se la pediste.
+- 🗣️ Habla el DOBLE de a menudo: de una vez cada cuatro gestos a una de
+  cada dos. Y no solo del mercado — también te dice que bebas agua, que te
+  estires, o suelta alguna suya.
+
+  Nada de lo que ya funcionaba se ha tocado: se coloca sola a su lado,
+  se va sola, y al tocarla sigue llevándote donde corresponda.
 
 NOVEDADES v6.77  (ROBERTO YA RESPIRA · Y SE MUEVE DE VERDAD)
 =============================================================

@@ -7419,7 +7419,13 @@ const ROB_VIDA = {
              "Con ganas de que abra la próxima.", "Ni una señal… así se ganan las cuentas.",
              "Descansa tú, que yo vigilo.", "Esto está más quieto que un lunes de agosto.",
              "¿Hacemos backtesting mientras esperamos?", "Si aparece algo, te aviso yo. Tranquilo.",
-             "Llevo un rato sin trabajo. Me aburro. 🙄", "Paciencia hoy, dinero mañana."],
+             "Llevo un rato sin trabajo. Me aburro. 🙄", "Paciencia hoy, dinero mañana.",
+             "¿Has comido algo? Yo aquí, a base de gráficos. 😄",
+             "Estírate un poco, que llevas rato sentado.",
+             "Bebe agua, jefe. El cerebro opera mejor hidratado.",
+             "Si te agobias, cierra la pantalla diez minutos. Yo vigilo.",
+             "Un día tranquilo también es un buen día.",
+             "Oye… ¿me estás mirando? 👀", "Aquí, oliendo el mercado. 👃"],
   },
   finde: {
     gestos: ["carino", "guino", "orgulloso", "carcajada", "lengua", "presumido", "chocalas",
@@ -7480,7 +7486,8 @@ function robVidaUnGesto(){
     robCara(emo);
     /* 1 de cada 4 veces, además, dice algo corto */
     _vidaFrase++;
-    if(_vidaFrase % 4 === 0 && pack.frases.length){
+    /* 💬 v6.78 — Rey pidió que salga MÁS a menudo: de 1 de cada 4 gestos a 1 de cada 2 */
+    if(_vidaFrase % 2 === 0 && pack.frases.length){
       const f = pack.frases[Math.floor(Math.random() * pack.frases.length)];
       try{ robDecir("Roberto", f, {}); }catch(_){}
     }
@@ -7531,6 +7538,18 @@ function robCuerpoMontar(){
   }catch(_){}
 }
 /* 🫧 Su nubecita al lado del cuerpo (se coloca sola según dónde arrastraste el botón) */
+/* 👄 v6.78 — que MUEVA LA BOCA mientras sale su nubecita (Rey: "más a menudo Roberto
+   moviendo la boca"). Va en mudo: la boca se anima, pero la voz solo suena si Rey la
+   pidió — la nubecita no puede ponerse a hablar sola en voz alta. */
+function robBocaRato(texto){
+  try{
+    if(typeof Roberto==="undefined") return;
+    Roberto.hablar(String(texto||""),{mudo:true});
+    clearTimeout(window._robBocaT);
+    const ms = Math.min(6000, 1400 + String(texto||"").length * 45);
+    window._robBocaT = setTimeout(()=>{ try{ Roberto.callar(); }catch(_){} }, ms);
+  }catch(_){}
+}
 function robDecir(titulo,texto,op){
   op=op||{};
   try{
@@ -7545,6 +7564,8 @@ function robDecir(titulo,texto,op){
     g.style.visibility="hidden"; g.style.display="block"; g.style.left="0px"; g.style.top="0px";
     const gw=g.offsetWidth||220, gh=g.offsetHeight||60;
     const izq=r.left<window.innerWidth/2;
+    g.classList.remove("izq","der"); g.classList.add(izq?"izq":"der");   /* el rabito, del lado de Roberto */
+    robBocaRato(texto);                                                   /* y que mueva la boca al decirlo */
     g.style.left=Math.max(8,Math.min(window.innerWidth-gw-8, izq? r.right+10 : r.left-gw-10))+"px";
     g.style.top =Math.max(8,Math.min(window.innerHeight-gh-8, r.top+r.height/2-gh/2))+"px";
     g.style.visibility="visible";
