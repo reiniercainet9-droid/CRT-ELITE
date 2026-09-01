@@ -1,5 +1,64 @@
-APEX v6.90 — TRADING DESK
+APEX v6.91 — TRADING DESK
 =========================
+
+NOVEDADES v6.91 + WORKER 5.113  (📱 FASE 1 DE LA APK: UN SOLO AVISO Y RÁPIDO)
+=================================================================
+⚠️ ESTA ENTREGA LLEVA WORKER. Sube PRIMERO el worker 5.113 a Cloudflare
+   y después el zip. También hay APK nueva, con TU icono.
+
+Antes de tocar nada dejé un PUNTO SEGURO en el Escritorio:
+"🛟 PUNTOS SEGUROS / Apex-v6.90-2026-09-01", con la web, el worker y las
+piezas de Android del día que todo funcionaba, y dentro un archivo
+"CÓMO VOLVER ATRÁS.txt" con los pasos explicados sin tecnicismos.
+
+- 🔴 EL PROBLEMA QUE TÚ ANTICIPASTE ERA REAL. La APK y la web leen la
+  MISMA cola de avisos y cada una llevaba su propia lista de "ya vistos",
+  sin ningún interruptor entre ellas. Con las dos activas, cada aviso te
+  habría llegado DOS VECES.
+
+  ARREGLADO: manda la APK, como elegiste. Su vigía deja un latido en la
+  nube cada vez que mira, y la web, antes de pintar un aviso, lo consulta
+  en la MISMA respuesta que ya pedía (ni una consulta de más). Si la APK
+  dio señales hace poco, la web no pinta nada.
+
+  Y NO ES UN INTERRUPTOR QUE HAYA QUE ACORDARSE DE TOCAR: si desinstalas
+  la APK, se te acaba la batería o Android la mata, el latido envejece
+  solo y la web vuelve a avisarte en minutos. Además, ante CUALQUIER duda
+  o fallo (worker viejo, consulta caída, dato raro), la web avisa igual.
+  Entre verlo dos veces y no verlo, no hay duda posible.
+
+- ⏱️ LA LENTITUD: MEDIDA Y RESUELTA. Cronometré el camino entero antes de
+  tocar nada:
+      alarma → worker ............. instantáneo
+      worker → encolar el aviso ... 0,9 s
+      nube → visible desde fuera .. 0,0 s
+      nube → tu APK ............... HASTA 60 s  ← todo el retraso
+  El vigía miraba la cola cada 60 segundos fijos. De media te llegaba 30
+  segundos tarde, y hasta 60 en el peor caso: con una alarma de 5m, media
+  vela perdida.
+
+  AHORA EL RITMO SE ADAPTA, y lo manda el worker (así lo afino sin
+  recompilarte la APK):
+      ventana operativa o posición abierta ....  cada 5 s
+      mercado abierto sin ventana ............. cada 15 s
+      fuera de mercado ........................ cada 60 s
+      madrugada y fin de semana ............... cada 120 s
+  Rápido cuando importa, tranquilo cuando no toca. Con una posición
+  abierta mira cada 5 s aunque sea de noche: hay dinero corriendo.
+
+- 👑 TU ICONO. Primero intenté dibujarlo yo y no daba la talla; tenías
+  razón. La APK lleva ahora TU imagen tal cual, sin retocar, llevada a
+  los cinco tamaños que pide Android (48, 72, 96, 144 y 192 px) para que
+  se vea nítida en cualquier pantalla.
+
+- 🧹 Y LAS APK YA NO SE AMONTONAN. El Escritorio tenía cinco. Ahora el
+  constructor las deja en la carpeta "📱 APK PARA INSTALAR" y borra las
+  viejas al terminar: dentro siempre hay UNA sola, la última.
+
+COMPROBADO: 99 de 99 pruebas en verde. El banco nuevo ejecuta el worker
+de verdad con horas fingidas y exige las dos cosas: que la web se calle
+con la APK viva Y que vuelva a avisar si la APK deja de dar señales.
+
 
 NOVEDADES v6.90  (👔 ROBERTO YA TIENE ARMARIO)
 =================================================================

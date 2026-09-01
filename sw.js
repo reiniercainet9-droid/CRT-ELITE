@@ -1,4 +1,4 @@
-const CACHE = "crt-elite-v6-90";
+const CACHE = "crt-elite-v6-91";
 const FILES = ["./","./index.html","./data.js","./app.js","./roberto.js","./situaciones.js","./manifest.json","./icon-192.png","./icon-512.png"];
 const WORKER = "https://elitepro-worker.reiniercainet9.workers.dev";
 /* Web Push: al llegar un aviso (con la app CERRADA), muestra la notificación.
@@ -78,11 +78,19 @@ self.addEventListener("push", e => {
     }catch(_){}
     let silencio = null;
     try{ silencio = await silencioLeer(); if(silencio && Date.now() > (silencio.hasta||0)) silencio = null; }catch(_){}
-    let porMostrar = [];
+    let porMostrar = [], mandaApk = false;
     try{
       const r = await fetch(WORKER+"/push/pending",{cache:"no-store"});
       if(r.ok){
         const d = await r.json();
+        /* 📱 v6.91 — ¿MANDA LA APK? Rey eligió que sí. Si su vigía dio señales de vida hace
+           menos de 12 minutos, ya está él avisando y esta web NO pinta nada (los avisos se
+           dan por vistos para que no se amontonen y salgan de golpe más tarde).
+           El dato viene en esta misma respuesta: ni una consulta de más. */
+        try{
+          const v = d && d.apkViva;
+          mandaApk = !!(v && v.vivo && typeof v.haceSeg === "number" && v.haceSeg >= 0 && v.haceSeg < 720);
+        }catch(_){ mandaApk = false; }   /* ante la duda, avisa la web: mejor doble que ninguno */
         porMostrar = ((d && d.avisos) || []).filter(m => m && m.id && m.body && !vistos.includes(m.id));
         /* repes bajo ventana de silencio (misma firma que la descartada): vistas y mudas */
         if(silencio){
@@ -117,6 +125,14 @@ self.addEventListener("push", e => {
         if(chats.length) porMostrar = porMostrar.filter(m => m.kind !== "chat");
       }
     }catch(_){}
+    /* 📱 v6.91 — MANDA LA APK: aquí se calla. Lo que va DENTRO de la app (las respuestas
+       del chat, arriba) ya se entregó y eso sigue igual — lo que no se hace es sacar la
+       notificación al teléfono, que es lo que llegaría por duplicado. */
+    if(mandaApk && porMostrar.length){
+      porMostrar.forEach(m => { if(m.id) vistos.push(m.id); });
+      await guardarMostrados(vistos);
+      return;
+    }
     if(!porMostrar.length){
       if(entregadoEnApp){ await guardarMostrados(vistos); return; }   /* ya entregado dentro de la app */
       /* paracaídas: worker viejo o cola atrasada — el camino de siempre */
