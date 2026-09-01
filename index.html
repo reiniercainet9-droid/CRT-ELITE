@@ -468,7 +468,15 @@ select.inp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns
 #apexIntro{display:none}
 /* 🖤 dentro de la APK la página NACE oscura: si no, se ve un fogonazo blanco antes de la
    entrada (el blanco de fábrica del navegador interno). En la web esta clase no existe. */
-html.apk-intro,html.apk-intro body{background-color:#0A1130}
+/* ⚠️ 01-09 — ESTA REGLA DEJABA EL NOTCH OSCURO PARA SIEMPRE (Rey: "no se resolvió lo del
+   notch"). La clase apk-intro se pone al arrancar para tapar el fogonazo blanco… y NUNCA
+   se quitaba, así que este azul noche fijo seguía pintando el <html> y el <body> aunque
+   Rey estuviera en tema CLARO: la franja de la hora y la señal se quedaba negra.
+   Ahora el fondo sale del TEMA (var --bg), que ya está puesto por la cabecera antes del
+   primer píxel: sigue tapando el fogonazo, pero del color que toque. Y app.js retira la
+   clase al terminar la entrada, para no dejar nada mandando de más. */
+html.apk-intro,html.apk-intro body{background-color:var(--bg,#0A1130)}
+html.apk-intro #apexIntro{background:#0A1130}
 html.apk-intro #apexIntro{position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;
   align-items:center;justify-content:center;gap:18px;
   background:radial-gradient(80% 60% at 50% 42%,#152350,#0A1130 55%,#04060F);
@@ -500,6 +508,12 @@ html.apk-intro #apexIntro{position:fixed;inset:0;z-index:9999;display:flex;flex-
    La medida exacta la manda Android; env() queda de respaldo por si acaso.
    ⚠️ La clase .es-apk SOLO la pone la APK: en el navegador esto no existe y la Apex web
    no cambia ni un píxel (regla de Rey: no romper nada de lo que ya funciona). */
+/* 🔝 01-09 — LA FRANJA DEL NOTCH, DEL COLOR DEL TEMA Y PARA SIEMPRE.
+   El hueco de la hora/señal/batería enseña el fondo del <html>, y el <html> de Apex no
+   tenía color propio: por eso hacía falta pintarlo. Antes lo tapaba (mal) la clase de
+   arranque con un azul fijo. Ahora lo pinta el TEMA, así que la franja acompaña a Apex en
+   claro y en oscuro sola, sin que Android tenga que hacer nada. */
+html.es-apk{background-color:var(--bg)}
 html.es-apk body{
   padding-top:max(var(--apk-top,0px), env(safe-area-inset-top,0px));
   padding-bottom:max(var(--apk-bot,0px), env(safe-area-inset-bottom,0px));

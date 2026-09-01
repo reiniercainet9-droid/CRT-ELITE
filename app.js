@@ -280,7 +280,13 @@ function introApex(){
        cabecera decidió si se muestra. Aquí solo se retira cuando termina; y si no
        estamos en la APK, se borra del todo para no dejar nada de más en la web. */
     if(!document.documentElement.classList.contains("apk-intro")){ d.remove(); return; }
-    setTimeout(()=>{ try{ d.remove(); }catch(_){} }, 1750);
+    setTimeout(()=>{
+      try{ d.remove(); }catch(_){}
+      /* 🔝 01-09 — y se RETIRA la clase de arranque: mientras seguía puesta, su fondo
+         mandaba sobre el del tema y la franja del notch se quedaba oscura en modo claro. */
+      try{ document.documentElement.classList.remove("apk-intro"); }catch(_){}
+      try{ barraSistema(); }catch(_){}
+    }, 1750);
   }catch(_){}
 }
 try{ introApex(); }catch(_){}
@@ -7447,8 +7453,36 @@ function pintarIAChat(){
   });
   m.querySelectorAll("[data-speak]").forEach(b=>{
     b.onclick=()=>{ const i=+b.dataset.speak;
-      if(IA.hablandoIdx===i){ iaVozParar(); } else { iaHablar(c.msgs[i].content, i); } };
+      if(IA.hablandoIdx===i){ iaVozParar(); return; }
+      const texto = iaTextoDeMsg(c.msgs[i]);
+      if(!texto){ toast("En este mensaje no hay texto que leer"); return; }
+      iaHablar(texto, i); };
   });
+}
+/* 🔊 v6.68 — EL BOTÓN "ESCUCHAR" DEL CHAT NO HABLABA (Rey, 01-09: "los demás sí funcionan
+   pero ese no"). Y tenía toda la razón: era el ÚNICO que sacaba el texto de otro sitio.
+   Los mensajes con vista propia (la memoria plegable, las tablas, los informes) se pintan
+   desde x.html y guardan su versión hablada en x.txt — pero el botón leía x.content, que
+   en esos casos viene VACÍO. Resultado: iaHablar recibía "" y se volvía sin decir nada ni
+   avisar. Aquí se coge el texto de donde de verdad esté, y si no hay ninguno se dice. */
+function iaTextoDeMsg(x){
+  if(!x) return "";
+  if(typeof x.txt === "string" && x.txt.trim()) return x.txt;
+  if(typeof x.content === "string" && x.content.trim()) return x.content;
+  /* por si el contenido llega en bloques (formato de la IA) en vez de en texto plano */
+  if(Array.isArray(x.content)){
+    const t = x.content.map(b=>(b && typeof b.text==="string")?b.text:"").filter(Boolean).join("\n").trim();
+    if(t) return t;
+  }
+  /* último recurso: leer lo que se está VIENDO, quitando las etiquetas */
+  if(typeof x.html === "string" && x.html.trim()){
+    try{
+      const d=document.createElement("div"); d.innerHTML=x.html;
+      const t=(d.textContent||"").replace(/\s+/g," ").trim();
+      if(t) return t;
+    }catch(_){}
+  }
+  return "";
 }
 
 /* Reloj real desde el teléfono: hora Brasil + Nueva York + ventana operativa.

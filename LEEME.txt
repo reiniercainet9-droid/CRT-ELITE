@@ -1,5 +1,25 @@
-APEX v6.67 — TRADING DESK
+APEX v6.68 — TRADING DESK
 =========================
+
+NOVEDADES v6.68  (🔊 EL BOTÓN ESCUCHAR DEL CHAT · 🔝 LA FRANJA DEL NOTCH)
+=========================================================================
+SOLO EL ZIP. El worker 5.112 ya está vivo y comprobado.
+
+- 🔊 EL 🔊 ESCUCHAR DEL CHAT YA HABLA. Era el ÚNICO botón de voz que
+  fallaba, y por eso: sacaba el texto de un sitio donde, en los mensajes
+  con vista propia (informes, tablas, la memoria plegable), no hay nada.
+  Le llegaba vacío y se volvía sin decir palabra ni avisar. Ahora coge el
+  texto de donde de verdad esté, y si un mensaje no tiene nada que leer
+  te lo dice en vez de quedarse mudo.
+- 🔝 LA FRANJA DE LA HORA YA SIGUE TU TEMA. La clase que tapa el fogonazo
+  blanco al abrir la app se quedaba puesta PARA SIEMPRE, con su azul noche
+  fijo mandando sobre el tema: por eso en modo claro la franja seguía
+  oscura. Ahora ese fondo sale del tema, se retira al terminar la entrada,
+  y queda un fondo permanente que acompaña a Apex en claro y en oscuro.
+- 🔇 Y si el navegador no arranca la voz (manía conocida de Chrome cuando
+  las voces del sistema no están cargadas), Apex lo reintenta una vez y
+  te lo dice, en vez de dejarte tocando un botón muerto.
+
 
 NOVEDADES v6.67  (🌐 LA WEB PRIMERO: AVISOS, CARA E ICONO)
 ===========================================================
