@@ -1,5 +1,5 @@
-const CACHE = "crt-elite-v6-81";
-const FILES = ["./","./index.html","./data.js","./app.js","./roberto.js","./manifest.json","./icon-192.png","./icon-512.png"];
+const CACHE = "crt-elite-v6-82";
+const FILES = ["./","./index.html","./data.js","./app.js","./roberto.js","./situaciones.js","./manifest.json","./icon-192.png","./icon-512.png"];
 const WORKER = "https://elitepro-worker.reiniercainet9.workers.dev";
 /* Web Push: al llegar un aviso (con la app CERRADA), muestra la notificación.
    El push viaja sin datos; el texto real se pide a la nube.
@@ -25,30 +25,21 @@ async function marcarRepeViva(v){ try{ const c=await caches.open(META_CACHE); aw
 async function silencioLeer(){ try{ const c=await caches.open(META_CACHE); const r=await c.match("./__silencio"); return r ? await r.json() : null; }catch(_){ return null; } }
 async function silencioPoner(firma){ try{ const c=await caches.open(META_CACHE); await c.put("./__silencio", new Response(JSON.stringify({ hasta: Date.now() + 15*60000, firma: String(firma||"").slice(0,40) }))); }catch(_){} }
 function firmaDe(body){ return String(body||"").slice(0,40); }
-/* ✏️ v6.46 — LA CARA DE ROBERTO EN CADA AVISO (Rey: "que él salga en los avisos que envía,
-   solo su cara con el gesto y la señal correspondiente al aviso"). Las caritas son PNG
-   generadas del MISMO personaje de roberto.js y viven en ./caras/. Si alguna faltara,
-   cae al icono de siempre — un aviso jamás se pierde por una imagen. */
-const CARAS = [
-  [/no entres|no entré|🛑|vet[oó]|frenó|rechaz/i, "frena"],
-  [/señal perdida|⚰️|ejecutor caído|problema|error/i, "apenado"],
-  [/🔔|señal|alarma|entrada confirmada|pinchazo/i, "alerta"],
-  [/cerré|tp|🟢|\+\$|ganad|cazad/i, "celebra"],
-  [/🔴|−\$|-\$|pérdida|stop|sl\b/i, "preocupa"],
-  [/apagado|freno diario|tope|recuperación|🟠|riesgo/i, "serio"],
-  [/siesta|😴|suspend/i, "siesta"],
-  [/killzone|ventana|abre|⏰|pre-ny|londres/i, "tiempo"],
-  [/dossier|amanecer|buenos días|🌅|te propongo|💡/i, "idea"],
-  [/vigil|👁|posición/i, "vigila"],
-  [/felicidades|bien hecho|👏|lección|aprendí/i, "felicita"],
-  [/entré|🤖|ejecutor|auditor/i, "audita"],
-  [/noticia|📰|calendario/i, "analiza"],
-];
+/* ✏️ LA CARA DE ROBERTO EN CADA AVISO (Rey: "que él salga en los avisos que envía, solo su
+   cara con el gesto y la señal correspondiente al aviso"). Las caritas son PNG generadas
+   del MISMO personaje de roberto.js y viven en ./caras/.
+   🧩 v6.82 — EL GESTO YA NO SE DECIDE AQUÍ. Este archivo tenía su propia lista y se había
+   quedado atrás: una operación PERDIDA ("CERRÉ · GBPUSD ❌ SL") salía en el teléfono con la
+   cara de CELEBRAR, y el "Reset de disciplina" de Rey con cara de preocupado. Ahora se lee
+   la MISMA tabla que usa su cuerpo en pantalla, así que el aviso del teléfono y Roberto
+   dicen siempre lo mismo. Si el archivo no cargara, cae al icono de siempre: un aviso
+   jamás se pierde por una imagen. */
+importScripts("./situaciones.js");
 function caraDe(msg){
-  const t = String((msg && msg.title) || "") + " " + String((msg && msg.body) || "");
-  for (const [re, cara] of CARAS) if (re.test(t)) return "./caras/rob-" + cara + ".png";
-  return "./caras/rob-presenta.png";
+  try{ return "./" + robCaraDe((msg&&msg.title)||"", (msg&&msg.body)||"", (msg&&msg.kind)||""); }
+  catch(_){ return "./icon-192.png"; }
 }
+
 async function pintarAviso(msg){
   const esRutina = msg.kind==="rem";
   const fuerte = !!msg.strong;
@@ -69,7 +60,7 @@ async function pintarAviso(msg){
      cambia de gesto y lo cuenta en su nubecita, sin que Rey tenga que entrar al chat. */
   try {
     const cs = await clients.matchAll({ type: "window", includeUncontrolled: true });
-    cs.forEach(c => { try { c.postMessage({ type: "apex-roberto", title: msg.title || "", body: msg.body || "", ir: msg.ir || "", strong: !!msg.strong }); } catch (_) {} });
+    cs.forEach(c => { try { c.postMessage({ type: "apex-roberto", title: msg.title || "", body: msg.body || "", ir: msg.ir || "", strong: !!msg.strong, kind: msg.kind || "" }); } catch (_) {} });
   } catch (_) {}
 }
 self.addEventListener("push", e => {

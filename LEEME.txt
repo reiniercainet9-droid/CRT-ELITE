@@ -1,5 +1,51 @@
-APEX v6.81 — TRADING DESK
+APEX v6.82 — TRADING DESK
 =========================
+
+NOVEDADES v6.82  (TUS AVISOS SON TU RUTINA, NO EL MERCADO)
+=================================================================
+SOLO EL ZIP. El worker 5.112 sigue vivo. También hay APK nueva.
+
+Me preguntaste si los gestos funcionan igual con los avisos que TÚ te
+programas en Apex. Fui a comprobarlo con tus 8 avisos reales, uno por
+uno, y salieron DOS fallos — el segundo bastante peor que el primero.
+
+- ⏰ TUS AVISOS LLEGABAN A SU CUERPO, PERO SE LEÍAN COMO MERCADO. Tu
+  aviso de las 07:55 "🧭 Reset de disciplina" acaba con "Si 2 SL, cierro
+  plataforma" — y ese "SL" hacía que Roberto se preocupara y te dijera
+  "SALTÓ EL STOP" a primera hora de la mañana, sin haber pasado nada.
+  Justo el tipo de susto que ya me dijiste que no querías.
+  Tu "🚫 Sesión cerrada" salía como "te vigilo la posición" (lo
+  contrario), y "🧠 Correr prompt diario" como "ventana abierta".
+
+  ARREGLADO: un aviso tuyo NO es un hecho del mercado, es tu rutina, y
+  ahora se lee como tal. En la nubecita va TU PROPIO TÍTULO — tú ya lo
+  escribiste corto y claro ("Reset de disciplina", "Sesión cerrada"), así
+  que Roberto nunca te pone en la boca algo que tú no pusiste. Y el gesto
+  sale de lo que el aviso te pide: si te manda hacer algo TE SEÑALA con
+  el dedo, si algo se cierra se pone serio, si algo se abre saca el
+  reloj. Tus 8 avisos, comprobados uno a uno.
+
+- 🔴 Y EL GORDO: LA CARA QUE VES EN EL TELÉFONO NO LA ELEGÍA LA APP. La
+  elige el vigilante que pinta el aviso con Apex cerrada (sw.js), y ese
+  tenía su PROPIA lista, la cuarta, sin tocar. O sea: ayer arreglé la
+  coherencia dentro de la app, pero en la notificación —que es lo que tú
+  ves de verdad casi siempre— una operación PERDIDA seguía saliendo con
+  la cara de CELEBRAR, y tu "Reset de disciplina" con cara de preocupado.
+
+  ARREGLADO DE RAÍZ, sin copiar la tabla otra vez (eso era la
+  enfermedad): la tabla se sacó a un archivo propio, situaciones.js, que
+  cargan LOS DOS — la página y el vigilante. Una sola fuente. Ya no
+  pueden separarse nunca más, y hay una prueba que lo impide.
+
+- 🙂 Cara nueva: rob-tetoca.png, la de señalarte con el dedo, dibujada
+  del mismo Roberto. Es la que sale cuando el aviso te manda hacer algo
+  a TI. Con ella queda un generador (hacer-caras.cjs) para las que
+  falten en el futuro.
+
+RESPUESTA CORTA A TU PREGUNTA: no, no funcionaban igual — y ahora sí.
+
+COMPROBADO: 97 de 97 pruebas en verde, con la APK v6.82 incluida.
+
 
 NOVEDADES v6.81  (ROBERTO Y EL SISTEMA, UNA SOLA PIEZA)
 =================================================================
