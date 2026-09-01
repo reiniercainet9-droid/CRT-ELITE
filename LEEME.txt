@@ -1,5 +1,37 @@
-APEX v6.79 — TRADING DESK
+APEX v6.80 — TRADING DESK
 =========================
+
+NOVEDADES v6.80  (ROBERTO YA SABE MANEJAR SU PROPIO CUERPO)
+=================================================================
+SOLO EL ZIP. El worker 5.112 sigue vivo. También hay APK nueva.
+
+- 💬 CUANDO TE RESPONDE, YA NO SACA LA NUBECITA. Lo pediste tal cual: le
+  hablas, y él solo MUEVE LA BOCA mientras te contesta. Lo que dice ya
+  está escrito en el chat; repetirlo en la nubecita era ruido.
+
+- 🔔 Y CON LAS ALARMAS SÍ, PERO EN FRASE CORTA. Antes la alarma salía
+  entera en la nubecita y no se leía de un vistazo. Ahora sale lo que hay
+  QUE HACER: 'no entres en GBPUSD' · 'zona confirmada — baja a 5m' · 'ya
+  hay toma de liquidez en 15m' · 'espera la zona de reacción en 4H'... y
+  con el gesto que le toca. El texto completo sigue entero en el aviso
+  del teléfono y en el chat: no se pierde nada.
+
+- 🔴 UN FALLO GORDO QUE CAZÓ LA PRUEBA: el aviso de 'cuenta cerca del
+  límite' salía en la nubecita diciendo 'saltó el stop'. Yo tomaba el 🔴
+  como prueba de pérdida, y tú usas el 🔴 para todo lo rojo. Justo el
+  aviso más grave del sistema decía otra cosa. Arreglado: la cuenta manda
+  antes que nada, y ahora deciden las PALABRAS, nunca el color.
+
+- 🫱 Y LO MÁS IMPORTANTE: ROBERTO YA SABE CÓMO MANEJA SU CUERPO. En su
+  manual tiene ahora la lista de sus 36 gestos — leída de su propio dibujo,
+  así que no puede inventarse ninguno — con las reglas de cuándo usa cada
+  uno, cuándo saca la nubecita y cuándo no, y por qué nunca aparece dormido.
+  Con un encargo tuyo firmado: cuando note que le FALTA un gesto para
+  decirte algo, TE LO PROPONE (nombre, qué expresaría, cuándo lo usaría).
+  No los cambia él: los propone, tú decides, y se construyen. Es uno solo
+  con su cuerpo, y a partir de ahora aprende a manejarlo mejor.
+
+COMPROBADO: 95 de 95 pruebas en verde, con la APK v6.80 incluida.
 
 NOVEDADES v6.79  (LA NUBECITA SALE DE SU BOCA Y SE ESCRIBE SOLA)
 =================================================================
