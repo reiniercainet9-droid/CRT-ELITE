@@ -7380,6 +7380,103 @@ async function burbujaUI(){
     };
   }catch(_){}
 }
+/* ══ 🎭 v6.75 — ROBERTO CON VIDA PROPIA ══════════════════════════════════════
+   Rey (01-09): "que se anime, que me señale, que muestre que está aburrido, que
+   quiere trabajar… un mayordomo dispuesto y dinámico, no ahí parado como una
+   estatua". Tenía 34 gestos y usaba cinco: entre tarea y tarea se quedaba clavado.
+   Ahora, cada 20-45 s, hace un gesto espontáneo ELEGIDO SEGÚN LO QUE PASA DE VERDAD
+   y a veces suelta una frase. Luego vuelve solo a su cara de guardia.
+   · nunca aparece dormido (regla sellada de Rey)
+   · el gesto siempre dice la verdad del momento, jamás uno al azar sin sentido
+   · se calla si hay algo importante en marcha o si Rey está escribiéndole
+   ═══════════════════════════════════════════════════════════════════════════ */
+let _vidaT = null, _vidaUlt = "", _vidaFrase = 0;
+
+/* cada situación tiene SUS gestos y SUS frases: así lo que hace concuerda con lo
+   que ocurre, que es la regla que Rey selló ("el cuerpo y la mente son uno solo") */
+const ROB_VIDA = {
+  killzone: {
+    gestos: ["shhh", "vigila", "apunta", "tiempo", "animo", "serio"],
+    frases: ["Ventana abierta. Ojo al gráfico.", "Aquí es donde se gana. Paciencia.",
+             "Nada de forzar: que venga ella.", "Estoy mirando contigo."],
+  },
+  cerca: {
+    gestos: ["tiempo", "animo", "apunta", "presumido", "ensena"],
+    frases: ["Ya casi. Prepara el checklist.", "Se acerca la buena.",
+             "Repasa tu riesgo antes de que abra.", "Calienta motores."],
+  },
+  posicion: {
+    gestos: ["vigila", "serio", "tiempo", "ojala"],
+    frases: ["No la toques. Déjala trabajar.", "La estoy vigilando yo.", "Respira. Va sola."],
+  },
+  espera: {
+    gestos: ["espera", "confundido", "guino", "orgulloso", "carino", "ojala", "burla", "presumido", "animo"],
+    frases: ["Aquí sigo, sin señales todavía.", "Aburrido pero despierto. 😌",
+             "Con ganas de que abra la próxima.", "Ni una señal… así se ganan las cuentas.",
+             "Descansa tú, que yo vigilo.", "Esto está más quieto que un lunes de agosto."],
+  },
+  finde: {
+    gestos: ["carino", "guino", "orgulloso", "carcajada", "lengua", "presumido", "chocalas"],
+    frases: ["Fin de semana: el mercado descansa, tú también.",
+             "Buen momento para backtesting… o para no hacer nada. 😄",
+             "Aquí estaré el lunes, fresquito."],
+  },
+};
+
+function robVidaSituacion(){
+  try{
+    const d = new Date().getUTCDay();
+    if(d === 6 || d === 0) return "finde";
+    const kz = robKillzoneAhora();
+    if(kz.dentro) return "killzone";
+    if(kz.faltan != null && kz.faltan <= 30) return "cerca";
+    if(_robFondo === "vigila" && /cuidando/.test(($("#iaRobEstado")||{}).textContent||"")) return "posicion";
+    return "espera";
+  }catch(_){ return "espera"; }
+}
+
+function robVidaUnGesto(){
+  try{
+    if(typeof Roberto === "undefined" || !ROB_LISTO) return;
+    if(document.visibilityState !== "visible") return;
+    /* 🤐 se calla cuando hay algo importante: un aviso reciente, Roberto pensando,
+       o Rey escribiéndole. Su vida propia nunca pisa el trabajo de verdad. */
+    if(Date.now() - _robEvTs < 30000) return;
+    if(typeof IA !== "undefined" && IA.busy) return;
+    const caja = $("#iaText");   /* si Rey está escribiéndole, Roberto no le distrae */
+    if(caja && (caja.value||"").trim()) return;
+    const g = $("#robGlobo");
+    if(g && g.style.display === "block") return;      /* ya hay una nubecita puesta */
+
+    const sit = robVidaSituacion();
+    const pack = ROB_VIDA[sit] || ROB_VIDA.espera;
+    /* no repetir el gesto anterior: si no, parece que se quedó colgado */
+    const posibles = pack.gestos.filter(x => x !== _vidaUlt);
+    const emo = posibles[Math.floor(Math.random() * posibles.length)] || pack.gestos[0];
+    _vidaUlt = emo;
+
+    robCara(emo);
+    /* 1 de cada 4 veces, además, dice algo corto */
+    _vidaFrase++;
+    if(_vidaFrase % 4 === 0 && pack.frases.length){
+      const f = pack.frases[Math.floor(Math.random() * pack.frases.length)];
+      try{ robDecir("Roberto", f, {}); }catch(_){}
+    }
+    /* y vuelve a su cara de guardia, la de verdad */
+    setTimeout(()=>{ try{ if(_robFondo) robCara(_robFondo); }catch(_){} }, 4200 + Math.random()*1800);
+  }catch(_){}
+}
+
+/* ritmo irregular a propósito: un gesto cada 20-45 s parece vida; cada 30 exactos,
+   un reloj. Se reprograma solo tras cada gesto. */
+function robVida(){
+  try{
+    clearTimeout(_vidaT);
+    const espera = 20000 + Math.random() * 25000;
+    _vidaT = setTimeout(()=>{ robVidaUnGesto(); robVida(); }, espera);
+  }catch(_){}
+}
+
 function robAnimUI(){
   try{
     const seg=$("#iaRobAnimSeg"); if(!seg) return;
@@ -7397,6 +7494,7 @@ function robCuerpoMontar(){
     ROB_CUERPO=true;
     robVigilante();
     setInterval(robVigilante,45000);
+    robVida();                       /* 🎭 y su vida propia entre tarea y tarea */
     document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible") robVigilante(); });
   }catch(_){}
 }

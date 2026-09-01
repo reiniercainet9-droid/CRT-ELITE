@@ -1,5 +1,27 @@
-APEX v6.74 — TRADING DESK
+APEX v6.75 — TRADING DESK
 =========================
+
+NOVEDADES v6.75  (ROBERTO CON VIDA PROPIA)
+===========================================
+SOLO EL ZIP. El worker 5.112 sigue vivo. También hay APK nueva.
+
+- 🎭 ROBERTO YA NO ES UNA ESTATUA. Tenía 34 gestos y usaba cinco: entre
+  tarea y tarea se quedaba clavado horas con la misma cara.
+  Ahora, cada 20-45 segundos, hace un gesto espontáneo — y NO al azar:
+  elegido según lo que está pasando de verdad.
+    · ventana operativa abierta → concentrado, te señala el gráfico
+    · falta poco para la killzone → impaciente, calentando motores
+    · con una posición viva → serio, vigilándola
+    · sin señales → aburrido pero despierto, con ganas de trabajar
+    · fin de semana → relajado, bromea
+  Y de cada cuatro gestos, uno lo acompaña de una frase corta.
+
+- 🤐 PERO SABE CALLARSE. No juguetea si está pensando una respuesta, si
+  acaba de llegar un aviso importante, si estás escribiéndole, o si Apex
+  no está a la vista (ahí ni gasta batería).
+
+- 🚫 Y NUNCA aparece dormido: tu regla se respeta también en su vida
+  propia. Fuera de horario está aburrido, no durmiendo.
 
 NOVEDADES v6.74  (LA NUBECITA DE ROBERTO, POR FIN VISIBLE)
 ===========================================================
