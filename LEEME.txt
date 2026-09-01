@@ -1,5 +1,24 @@
-APEX v6.71 — TRADING DESK
+APEX v6.72 — TRADING DESK
 =========================
+
+NOVEDADES v6.72  (APEX SE PONE AL DÍA SOLA)
+============================================
+SOLO EL ZIP. El worker 5.112 sigue vivo.
+
+- ♻️ HASTA HOY IBAS SIEMPRE UNA VISITA POR DETRÁS. Al subir una versión, tu
+  teléfono ya había cargado la anterior desde su copia guardada: veías
+  fallos YA ARREGLADOS y me decías 'sigue igual'. Los dos perdíamos horas
+  persiguiendo algo que ya estaba resuelto. Hoy pasó con la voz, la
+  nubecita y la franja: los tres estaban vivos en la web y tu pantalla
+  seguía enseñando lo viejo.
+  Ahora Apex pregunta si hay versión nueva al abrir y al volver a ella, y
+  en cuanto la nueva toma el mando SE RECARGA SOLA, una vez, avisándote.
+
+- ⛔ Y UN FALLO MÍO QUE TE COSTÓ LA TARDE: mi corredor de pruebas cerraba
+  TODOS los Edge del equipo para limpiar los suyos… incluido el que tiene
+  tu TradingView. Por eso el Puente 'se caía solo y cerraba el navegador'
+  cada vez que yo lanzaba las pruebas. Ya solo cierra los suyos; tu
+  navegador de trabajo no se toca jamás.
 
 NOVEDADES v6.71  (LA VOZ · LA NUBECITA · EL PUENTE · LA FRANJA)
 ===============================================================

@@ -9305,7 +9305,27 @@ function init(){
   tickRelojes(); setInterval(tickRelojes,10000);
 
   if("serviceWorker" in navigator){
-    navigator.serviceWorker.register("sw.js").catch(()=>{});
+    /* ♻️ v6.72 — APEX SE PONE AL DÍA SOLA (Rey, 01-09).
+       Hasta ahora Rey iba SIEMPRE UNA VISITA POR DETRÁS: al subir una versión, la página
+       ya se había cargado con lo guardado, así que veía los fallos ya arreglados y me decía
+       "sigue igual" — y los dos perdíamos horas persiguiendo algo que ya estaba resuelto.
+       Ahora: se pregunta por una versión nueva al abrir y al volver a la app, y en cuanto
+       la nueva toma el mando, Apex se recarga UNA vez sola. */
+    navigator.serviceWorker.register("sw.js").then(function(reg){
+      try{
+        reg.update();
+        document.addEventListener("visibilitychange", function(){
+          if(document.visibilityState==="visible"){ try{ reg.update(); }catch(_){} }
+        });
+      }catch(_){}
+    }).catch(()=>{});
+    let _yaRecargue = false;
+    navigator.serviceWorker.addEventListener("controllerchange", function(){
+      if(_yaRecargue) return;                 /* una sola vez: nunca un bucle de recargas */
+      _yaRecargue = true;
+      try{ toast("✨ Apex se actualizó — recargando…"); }catch(_){}
+      setTimeout(function(){ location.reload(); }, 600);
+    });
   }
   /* Reprograma avisos si Roberto los tenía activados */
   if(NOTIF.on && notifSoportado() && Notification.permission==="granted"){
