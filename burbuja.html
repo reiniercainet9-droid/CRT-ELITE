@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="es" data-tema="oscuro">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Roberto flotando</title>
+<!--
+  🫧 ROBERTO SOBRE LAS DEMÁS APLICACIONES  (paso 2 del plan de Rey)
+  ---------------------------------------------------------------------------
+  Esta página NO es una pantalla de Apex: es lo que Android dibuja ENCIMA de
+  cualquier otra aplicación, dentro de una ventana flotante. Por eso el fondo
+  es transparente y no hay nada más que Roberto.
+
+  LO IMPORTANTE: usa EL MISMO roberto.js que Apex. No hay un "Roberto de la
+  burbuja" distinto — es el mismo ser, los mismos 34 gestos, la misma cara.
+  Regla sellada por Rey: "Roberto y su cuerpo son UNO SOLO".
+
+  Android le habla llamando a estas funciones:
+     burbujaGesto("celebra")            → cambia de gesto
+     burbujaDecir("texto", "gesto")     → saca la nubecita y mueve la boca
+     burbujaCallar()                    → cierra la nubecita
+     burbujaLado("izq" | "der")         → se coloca según el borde donde esté
+  Y ella le contesta por la consola (Android lee esos mensajes).
+-->
+<style>
+  /* ⚠️ EL FALLO DEL 31-08 ESTABA AQUÍ (Rey: "sigue siendo una foto", tres veces).
+     El parte que mandó la burbuja lo cantó: vivo:true, cy:-152 = -(150+2).
+     Roberto SÍ se dibujaba… 152 px por encima del borde. ¿Por qué? El body llevaba
+     height:100% pero el <html> NO tenía altura, así que el body medía CERO de alto y
+     un "bottom:2px" lanzaba a Roberto hacia arriba, fuera de la ventana.
+     Dos seguros para que no vuelva a pasar:
+       1) html y body con altura de verdad;
+       2) todo colocado con position:FIXED y en unidades de la ventana (vh), que se
+          miden contra la ventana misma y no contra el body. Así da igual lo que le
+          pase al body: Roberto siempre cae donde se ve. */
+  html,body{margin:0;padding:0;height:100%;background:transparent;overflow:hidden;
+            -webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+  body{width:100%;min-height:100%;position:relative;font:14px/1.35 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+
+  /* Medidas en vh: la ventana solo se ensancha para la nubecita, nunca cambia de alto,
+     así que Roberto conserva su tamaño y no depende de píxeles ni de la densidad del
+     teléfono (en el moto g54 un píxel de la página era un píxel de pantalla y Roberto
+     salía a un tercio de su tamaño). 0.571 es su proporción real (264/462). */
+  :root{ --rob-alto:94vh; --rob-ancho:calc(94vh * 0.571); }
+
+  /* 🧍 el cuerpo: pegado al borde donde Rey lo haya dejado */
+  #robCuerpo{position:fixed;bottom:1vh;width:var(--rob-ancho);height:var(--rob-alto);transition:none}
+  body[data-lado="der"] #robCuerpo{right:1.5vh}
+  body[data-lado="izq"] #robCuerpo{left:1.5vh}
+  /* que se despegue del fondo de cualquier app, clara u oscura */
+  #robCuerpo .rob-svg{filter:drop-shadow(0 2px 5px rgba(0,0,0,.55)) drop-shadow(0 0 14px rgba(240,201,92,.28))}
+
+  /* 💬 la nubecita: SIEMPRE al lado contrario del cuerpo, para no taparlo */
+  #globo{position:fixed;bottom:16vh;max-width:52vw;display:none;
+         background:linear-gradient(180deg,#1b2340,#141a30);color:#f4efe2;
+         border:1px solid rgba(240,201,92,.55);border-radius:3vh;
+         padding:2vh 2.4vh;font-size:7.2vh;line-height:1.3;font-weight:600;
+         box-shadow:0 6px 22px rgba(0,0,0,.55);
+         animation:globoEntra .28s ease-out both}
+  body[data-lado="der"] #globo{right:calc(var(--rob-ancho) + 3vh)}
+  body[data-lado="izq"] #globo{left:calc(var(--rob-ancho) + 3vh)}
+  #globo.hay{display:block}
+  #globo b{color:#f0c95c}
+  /* el piquito que apunta al cuerpo */
+  #globo::after{content:"";position:absolute;bottom:3vh;width:0;height:0;
+                border-top:1.6vh solid transparent;border-bottom:1.6vh solid transparent}
+  body[data-lado="der"] #globo::after{right:-1.8vh;border-left:1.8vh solid rgba(240,201,92,.55)}
+  body[data-lado="izq"] #globo::after{left:-1.8vh;border-right:1.8vh solid rgba(240,201,92,.55)}
+  @keyframes globoEntra{from{opacity:0;transform:translateY(6px) scale(.94)}to{opacity:1;transform:none}}
+
+  /* un punto discreto que indica que está de guardia (nunca dormido) */
+  #pulso{position:fixed;bottom:2vh;width:1.6vh;height:1.6vh;border-radius:50%;
+         background:#4fe0c0;box-shadow:0 0 1.8vh #4fe0c0;opacity:.85;
+         animation:latido 2.8s ease-in-out infinite}
+  body[data-lado="der"] #pulso{right:calc(var(--rob-ancho) + 1vh)}
+  body[data-lado="izq"] #pulso{left:calc(var(--rob-ancho) + 1vh)}
+  @keyframes latido{0%,100%{transform:scale(1);opacity:.5}50%{transform:scale(1.5);opacity:1}}
+</style>
+</head>
+<body data-lado="der">
+  <div id="globo"></div>
+  <div id="pulso"></div>
+  <div id="robCuerpo"></div>
+
+<script src="roberto.js"></script>
+<script>
+(function(){
+  "use strict";
+  var GESTO_FONDO = "espera";   /* 🚫 REGLA DE REY: Roberto NUNCA aparece durmiendo */
+  var cuerpo = document.getElementById("robCuerpo");
+  var globo  = document.getElementById("globo");
+  var tVuelta = null;
+
+  /* Si roberto.js no cargara, esta página sería un cuadro TRANSPARENTE: Rey no vería
+     nada y parecería que la burbuja no arrancó. Por eso se dice en voz alta — Android
+     lee estos mensajes y Apex se los enseña a Rey en el panel. */
+  try {
+    if (typeof Roberto === "undefined") throw new Error("no cargó roberto.js (el cuerpo de Roberto)");
+    Roberto.montar(cuerpo, { tam: "cuerpo", emo: GESTO_FONDO });
+    document.documentElement.classList.add("rob-anim-on");  /* siempre animado */
+    if (!document.querySelector("#robCuerpo .rob-svg")) throw new Error("Roberto no llegó a dibujarse");
+  } catch (e) { console.log("BURBUJA-ERROR " + e.message); }
+
+  function gesto(g){
+    try { if (Roberto.emociones[g]) Roberto.poner(g); } catch(_){}
+  }
+
+  window.burbujaGesto = function(g){ gesto(g); };
+
+  window.burbujaLado = function(lado){
+    document.body.dataset.lado = (lado === "izq") ? "izq" : "der";
+  };
+
+  window.burbujaDecir = function(texto, g){
+    texto = String(texto || "").trim();
+    if (!texto) return;
+    globo.textContent = texto;
+    globo.classList.add("hay");
+    gesto(g || Roberto.gestoDe(texto));
+    try { Roberto.hablar(texto, { mudo: true }); } catch(_){}   /* solo la boca: sin audio encima de otras apps */
+    clearTimeout(tVuelta);
+    /* vuelve solo a estar de guardia: no se queda con cara de nada */
+    tVuelta = setTimeout(window.burbujaCallar, 9000);
+  };
+
+  window.burbujaCallar = function(){
+    clearTimeout(tVuelta);
+    globo.classList.remove("hay");
+    try { Roberto.callar(); } catch(_){}
+    gesto(GESTO_FONDO);
+  };
+
+  /* Android comprueba con esto que la página cargó de verdad */
+  window.burbujaViva = function(){ return !!document.querySelector("#robCuerpo .rob-svg"); };
+
+  /* 🔎 EL PARTE MÉDICO DE LA BURBUJA (31-08). Rey vio la ventana creada — Apex decía
+     "flotando" y era verdad — pero DENTRO no se dibujaba nada. Con esto Android puede
+     preguntar qué está pasando de verdad ahí dentro, en vez de que yo adivine:
+     si Roberto existe, cuánto mide la ventana por dentro, y si su cuerpo cae DENTRO
+     de lo que se ve o se quedó fuera del recorte. */
+  window.burbujaInforme = function(){
+    try{
+      var r = cuerpo.getBoundingClientRect();
+      var svg = document.querySelector("#robCuerpo .rob-svg");
+      var rs = svg ? svg.getBoundingClientRect() : {left:0,top:0,width:0,height:0,right:0,bottom:0};
+      return JSON.stringify({
+        vivo: !!svg,
+        vw: Math.round(innerWidth), vh: Math.round(innerHeight),
+        cx: Math.round(r.left), cy: Math.round(r.top),
+        cw: Math.round(r.width), ch: Math.round(r.height),
+        sw: Math.round(rs.width), sh: Math.round(rs.height),
+        dentro: !!(svg && rs.width > 4 && rs.height > 4 &&
+                   rs.right > 0 && rs.left < innerWidth && rs.bottom > 0 && rs.top < innerHeight),
+        lado: document.body.dataset.lado || ""
+      });
+    }catch(e){ return JSON.stringify({ vivo:false, error:String(e && e.message) }); }
+  };
+  console.log("BURBUJA-LISTA " + (window.burbujaViva() ? "1" : "0"));
+})();
+</script>
+</body>
+</html>

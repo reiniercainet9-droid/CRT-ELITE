@@ -6551,6 +6551,12 @@ function iaInit(){
           <button class="btn" id="vigiaProbar" style="margin:0 0 6px;display:none">📲 Probar un aviso AHORA</button>
           <div class="note" style="text-align:left" id="vigiaNota"></div>
         </div>
+        <div class="fl" id="burbCaja" style="display:none">🫧 Roberto en tu pantalla (sobre otras apps)</div>
+        <div id="burbBox" style="display:none;margin-bottom:14px">
+          <button class="btn" id="burbBtn" style="margin:0 0 6px">⏳ …</button>
+          <button class="btn" id="burbPorque" style="margin:0 0 6px;display:none">🔎 No lo veo — ¿por qué?</button>
+          <div class="note" style="text-align:left" id="burbNota"></div>
+        </div>
         <div class="fl">🎬 Movimiento de Roberto</div>
         <div class="seg c3" id="iaRobAnimSeg" style="margin-bottom:6px">
           <button data-anim="auto">📱 Como el teléfono</button>
@@ -7152,6 +7158,98 @@ async function vigiaUI(){
       }catch(e){ toast("No pude cambiarlo: " + (e && e.message ? e.message : e)); }
       btn.disabled = false;
       vigiaUI();
+    };
+    burbujaUI();
+  }catch(_){}
+}
+/* ══════════════════════════════════════════════════════════════════════════
+   🫧 ROBERTO SOBRE LAS DEMÁS APLICACIONES — paso 2 del plan de Rey
+   "que Roberto esté presente en mi pantalla, superpuesto, cuando lo necesite;
+    vivo, alerta, avisando CON EL CUERPO aunque yo esté en otra aplicación".
+   Flota el MISMO Roberto (mismo roberto.js, mismos 34 gestos): no hay una
+   copia distinta. Se arrastra, se pega al borde y al tocarlo abre su chat.
+   Android exige que el permiso "mostrar encima" lo dé Rey a mano, así que
+   esto va en DOS pasos y el botón dice en cuál está.
+   Solo existe dentro de la APK: en la web ni aparece.
+   ══════════════════════════════════════════════════════════════════════════ */
+async function burbujaUI(){
+  try{
+    const P = vigiaPuente();
+    const caja=$("#burbCaja"), box=$("#burbBox"), btn=$("#burbBtn"), nota=$("#burbNota");
+    if(!caja||!box||!btn) return;
+    if(!P || typeof P.burbujaEstado!=="function"){ caja.style.display="none"; box.style.display="none"; return; }
+    caja.style.display=""; box.style.display="";
+    const st = await P.burbujaEstado();
+    const permiso = !!(st && st.permiso), on = !!(st && st.encendida);
+    /* 🔎 v6.62 — el estado REAL. Rey (31-08): "permisos dados pero no se ve Roberto
+       por ningún lado". Apex le decía "flotando" porque solo miraba el interruptor
+       guardado. Si está encendido pero la ventana NO existe, hay que DECIRLO. */
+    const enPantalla = (st && typeof st.enPantalla === "boolean") ? st.enPantalla : on;
+    if(!permiso){
+      btn.className="btn gold";
+      btn.textContent="🔓 Dar permiso para que Roberto salga";
+      nota.innerHTML="Android no deja que ninguna app se dibuje encima de otras sin tu permiso expreso. Toca el botón, busca <b>Apex</b> en la lista y actívalo; después vuelve aquí y enciéndelo.";
+      btn.onclick=async()=>{ try{ await P.burbujaPermiso(); toast("Activa Apex en la lista y vuelve"); }
+        catch(e){ toast("No pude abrir los permisos: "+(e&&e.message?e.message:e)); } };
+      return;
+    }
+    btn.className="btn"+(on?"":" gold");
+    btn.textContent = on ? "🚪 Retirar a Roberto de la pantalla" : "🫧 Sacar a Roberto a la pantalla";
+    if(on && !enPantalla){
+      /* encendido pero NO está: eso es un fallo, y se dice claro y con el motivo */
+      btn.textContent = "🔄 Volver a intentarlo";
+      btn.className = "btn gold";
+      nota.innerHTML = "⚠️ <b>Está encendido pero Roberto NO llegó a salir a la pantalla.</b>"
+        + (st.error ? " Motivo: <b>" + String(st.error).slice(0,140) + "</b>." : "")
+        + " Prueba a tocar <b>🔄 Volver a intentarlo</b>; si sigue igual, dímelo con esta frase y lo arreglo.";
+      btn.onclick = async ()=>{
+        btn.disabled=true;
+        try{ await P.burbujaApagar(); await P.burbujaEncender(); }catch(_){}
+        btn.disabled=false;
+        setTimeout(burbujaUI, 900);
+      };
+      return;
+    }
+    /* 🔎 mientras esté sacado, el botón del parte está a mano: si Rey no lo ve, un
+       toque me dice exactamente por qué en vez de pasarnos vueltas adivinando */
+    const pq=$("#burbPorque");
+    if(pq){
+      pq.style.display = on ? "" : "none";
+      pq.onclick = async ()=>{
+        try{
+          const d = (typeof P.burbujaDiagnostico==="function") ? await P.burbujaDiagnostico() : st;
+          alert("🔎 PARTE DE LA BURBUJA\n\n"+
+            "Permiso: "+(d.permiso?"sí":"NO")+"\n"+
+            "Encendida: "+(d.encendida?"sí":"no")+"\n"+
+            "Ventana creada: "+(d.enPantalla?"sí":"NO")+"\n"+
+            "Enseñando su foto: "+(d.respaldo?"sí":"no")+"\n"+
+            "Sitio: "+(d.ventana||"—")+"\n"+
+            "Pantalla: "+(d.pantalla||"—")+"\n"+
+            "Teléfono: "+(d.telefono||"—")+" · Android "+(d.android||"—")+"\n\n"+
+            "Dentro de la burbuja:\n"+(d.informe||"(no contestó)")+"\n\n"+
+            "Fallo: "+(d.error||"ninguno")+"\n\n"+
+            "Mándame esta pantalla y lo arreglo con esto, sin adivinar.");
+        }catch(e){ alert("No pude sacar el parte: "+(e&&e.message?e.message:e)); }
+      };
+    }
+    const enFoto = !!(st && st.respaldo);
+    nota.innerHTML = on
+      ? (enFoto
+        ? "Roberto está en tu pantalla, pero <b>en foto</b>: el navegador interno de tu teléfono no llegó a dibujarlo animado, así que puse su imagen para que al menos esté, se pueda arrastrar y tocar. Dale a <b>🔎 No lo veo — ¿por qué?</b> y mándame esa pantalla: con eso lo dejo animado."
+        : "Roberto está flotando sobre tus aplicaciones. <b>Arrástralo</b> donde quieras (se pega al borde) y <b>tócalo</b> para abrir su chat. Cuando entre una alarma te lo dirá con el cuerpo, sin sonar. Para probarlo, sal de Apex y usa <b>📲 Probar un aviso AHORA</b>.")
+      : "Sácalo y Roberto se queda flotando encima de cualquier aplicación: te avisa con gestos aunque no estés en Apex. Se arrastra, se pega al borde y se quita cuando quieras.";
+    btn.onclick=async()=>{
+      btn.disabled=true;
+      try{
+        if(on){ await P.burbujaApagar(); toast("Roberto se retiró de la pantalla"); }
+        else{
+          const r = await P.burbujaEncender();
+          if(r && r.permiso===false) toast("Falta el permiso — actívalo primero");
+          else toast("🫧 Roberto ya está en tu pantalla");
+        }
+      }catch(e){ toast("No pude cambiarlo: "+(e&&e.message?e.message:e)); }
+      btn.disabled=false;
+      burbujaUI();
     };
   }catch(_){}
 }
