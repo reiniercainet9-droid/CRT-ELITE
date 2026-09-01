@@ -7473,11 +7473,18 @@ async function robVigilante(){
        cuidando, Ejecutor sin responder, modo recuperación… Solo al cambiar, para que
        no sea un cartel cada 45 segundos. */
     if(emo!==_robFondo){
-      const primeraVez = !_robFondo;   /* al abrir Apex no suelta un cartel de golpe */
+      /* 💬 01-09 — REY: "no está sacando la nubecita diciéndome qué sucede".
+         Antes solo hablaba al CAMBIAR algo, y como Rey pasa horas en el mismo estado
+         ("fuera de ventana"), no llegaba a verla nunca: correcta por dentro, invisible
+         por fuera. Ahora también da el parte AL ABRIR Apex — una sola vez, con un
+         respiro para que la pantalla termine de pintarse. */
+      const primeraVez = !_robFondo;
       _robFondo=emo; robCara(emo,txt);
-      if(txt && !primeraVez){
+      if(txt){
         const urgente = (emo==="preocupa" || emo==="serio" || emo==="alerta");
-        try{ robDecir("Roberto", txt, { urge:urgente, ir: (emo==="vigila"||emo==="preocupa")?"ejec":"" }); }catch(_){}
+        const soltar = ()=>{ try{ robDecir("Roberto", txt, { urge:urgente, ir: (emo==="vigila"||emo==="preocupa")?"ejec":"" }); }catch(_){} };
+        if(primeraVez) setTimeout(soltar, 3500);   /* al abrir: deja que Apex termine de pintar */
+        else soltar();
       }
     }
   }catch(_){}

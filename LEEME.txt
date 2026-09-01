@@ -1,5 +1,23 @@
-APEX v6.73 — TRADING DESK
+APEX v6.74 — TRADING DESK
 =========================
+
+NOVEDADES v6.74  (LA NUBECITA DE ROBERTO, POR FIN VISIBLE)
+===========================================================
+SOLO EL ZIP. El worker 5.112 sigue vivo.
+
+- 💬 ROBERTO YA TE DA EL PARTE AL ABRIR APEX. La nubecita estaba bien hecha
+  pero era invisible para ti: solo salía cuando algo CAMBIABA, y tú pasas
+  horas en el mismo estado ('fuera de ventana'), así que no llegabas a
+  verla nunca. Correcta por dentro, inútil por fuera.
+  Ahora, al abrir Apex, Roberto saca su nubecita y te dice en qué estado
+  está todo — y luego sigue avisando cada vez que algo cambie de verdad:
+  se abre una killzone, el Ejecutor coge una posición, deja de responder,
+  o entra en modo recuperación. Sin repetirse.
+
+- 🔝 La franja de la hora en la web se queda azul noche a propósito:
+  cuando Apex está instalada como app, Android fija ese color desde el
+  manifiesto y no deja que cambie con el tema. En la APK sí se puede, y
+  ahí lo dejaremos bien.
 
 NOVEDADES v6.73  (LA FRANJA DE LA HORA, POR FIN)
 =================================================
