@@ -1,5 +1,21 @@
-APEX v6.75 — TRADING DESK
+APEX v6.76 — TRADING DESK
 =========================
+
+NOVEDADES v6.76  (ROBERTO, MUCHO MÁS VIVO)
+===========================================
+SOLO EL ZIP. El worker 5.112 sigue vivo. También hay APK nueva.
+
+- 🎭 MÁS GESTOS Y MÁS MOVIMIENTO. De 18 gestos pasa a 26, y de 5
+  situaciones a 6 (nueva: madrugada, que es cuando tú sueles estar
+  levantado antes de Londres — ahí te acompaña, no bromea).
+- 🎬 Y ahora ENCADENA DOS GESTOS seguidos la mitad de las veces. Un gesto
+  suelto es una foto que cambia; dos seguidos es un ademán. Se lee como
+  movimiento de verdad.
+- ⏱️ Ritmo más vivo: cada 12-28 segundos en vez de 20-45. Sigue siendo
+  irregular a propósito: un intervalo fijo se nota como un reloj.
+- 🤐 Y todo lo anterior sigue igual: se calla si está pensando, si acaba de
+  llegar un aviso, si le escribes o si Apex no está a la vista. Y nunca
+  aparece dormido.
 
 NOVEDADES v6.75  (ROBERTO CON VIDA PROPIA)
 ===========================================
