@@ -68,8 +68,17 @@
   [data-ojos="guino"] .rob-oj-gui{display:block}
   [data-ojos="gafas"] .rob-oj-gaf{display:block}
   .rob-pup{transition:transform .3s} .rob-globos{transition:transform .25s}
-  [data-ojos="normales"] .rob-globos,[data-ojos="lado"] .rob-globos{animation:robPest 4.8s infinite!important}
-  @keyframes robPest{0%,92%,100%{transform:scaleY(1)}95%{transform:scaleY(.08)}}
+  /* 👁️ PARPADEO DE VERDAD (arreglado el 31-08 — Rey: "los ojos saltan o desaparecen, no es
+     un pestañeo normal"). Dos fallos: (1) en SVG el origen de la escala es la esquina del
+     lienzo, no el centro del ojo, así que al encogerlos SALÍAN DISPARADOS hacia arriba —
+     ahora el origen está clavado en el centro de los ojos (180,190); (2) el grupo tenía a
+     la vez una transición y una animación sobre lo mismo, y peleaban entre sí — por eso el
+     parpadeo va ahora en su propio grupo. Ritmo real: cierre y apertura en ~190 ms, y un
+     parpadeo cada ~4,5 s (una persona parpadea cada 3-6 s). */
+  .rob-parpadeo{transform-origin:180px 190px}
+  [data-ojos="normales"] .rob-parpadeo,[data-ojos="lado"] .rob-parpadeo,
+  [data-ojos="grandes"] .rob-parpadeo,[data-ojos="tristes"] .rob-parpadeo{animation:robPest 4.5s infinite!important}
+  @keyframes robPest{0%,92%,96%,100%{transform:scaleY(1)}94%{transform:scaleY(.05)}}
 
   /* cejas */
   .rob-ci,.rob-cd{transform-box:fill-box; transform-origin:center; transition:transform .25s}
@@ -105,16 +114,26 @@
   [data-boca="zzz"] .rob-bo-zzz{display:block}
   .rob-hablando .rob-bo{display:none!important}
   .rob-hablando .rob-bo-viva{display:block!important}
+  /* 🗣️ BOCA AL HABLAR: antes se le sacudía a saltos aleatorios (parecía un tic, no habla).
+     Ahora abre y cierra con ritmo continuo, como una boca de verdad al vocalizar. */
+  .rob-hablando .rob-boca-viva{transform-box:fill-box; transform-origin:center;
+    animation:robHabla .26s ease-in-out infinite alternate!important}
+  @keyframes robHabla{from{transform:scaleY(.28)}to{transform:scaleY(1.35)}}
   /* 🖼️ SOLO LA CARA (avatar del chat y caritas de los avisos): a ese tamaño los brazos
      entran cortados por el borde y ensucian; el gesto se lee en cejas, ojos y boca. */
   .rob-solo-cara .rob-pose{display:none!important}
 
   /* poses */
   .rob-pose{display:none}
-  .rob-agita{transform-box:fill-box; transform-origin:70% 90%; animation:robAgita .62s ease-in-out infinite!important}
-  @keyframes robAgita{0%,100%{transform:rotate(-3deg)}50%{transform:rotate(-26deg)}}
-  [data-pose="arriba"] .rob-p-arriba,[data-pose="aplaude"] .rob-p-aplaude{animation:robVibra .3s ease-in-out infinite!important}
+  /* 👋 SALUDO: el brazo pivota en el HOMBRO (antes giraba por el codo y quedaba raro) */
+  .rob-agita{transform-box:fill-box; transform-origin:2% 96%; animation:robAgita .62s ease-in-out infinite!important}
+  @keyframes robAgita{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(-24deg)}}
+  [data-pose="arriba"] .rob-p-arriba{animation:robVibra .3s ease-in-out infinite!important}
   @keyframes robVibra{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+  /* 👏 APLAUSO: las manos se JUNTAN y se separan (antes solo subían y bajaban: no era aplaudir) */
+  [data-pose="aplaude"] .rob-p-aplaude{transform-box:fill-box; transform-origin:center;
+    animation:robAplauso .26s ease-in-out infinite!important}
+  @keyframes robAplauso{0%,100%{transform:scaleX(1)}50%{transform:scaleX(.82) translateY(-2px)}}
   .rob-lupa{transform-box:fill-box; transform-origin:center; animation:robBusca 2.4s ease-in-out infinite!important}
   @keyframes robBusca{0%,100%{transform:translate(0,0)}50%{transform:translate(-7px,8px)}}
   .rob-indice{animation:robVibra .8s ease-in-out infinite!important}
@@ -308,11 +327,13 @@
       '<g class="rob-ci"><path d="M130 152 Q150 139 169 149" stroke="var(--rtz)" stroke-width="7.5" fill="none" stroke-linecap="round"/></g>' +
       '<g class="rob-cd"><path d="M191 149 Q210 139 230 152" stroke="var(--rtz)" stroke-width="7.5" fill="none" stroke-linecap="round"/></g>' +
       /* ojos */
-      '<g class="rob-oj rob-oj-ab"><g class="rob-globos">' +
+      /* el PARPADEO va en su propio grupo: si comparte grupo con el tamaño de los ojos,
+         la transición del tamaño pelea con la animación y los ojos dan un salto raro */
+      '<g class="rob-oj rob-oj-ab"><g class="rob-globos"><g class="rob-parpadeo">' +
         '<ellipse cx="152" cy="190" rx="22" ry="27" fill="#fff" stroke="var(--rtz)" stroke-width="3"/>' +
         '<ellipse cx="208" cy="190" rx="22" ry="27" fill="#fff" stroke="var(--rtz)" stroke-width="3"/>' +
         '<g class="rob-pup"><circle cx="156" cy="194" r="9" fill="#1f1a0c"/><circle cx="212" cy="194" r="9" fill="#1f1a0c"/>' +
-        '<circle cx="159.5" cy="190" r="3" fill="#fff"/><circle cx="215.5" cy="190" r="3" fill="#fff"/></g></g></g>' +
+        '<circle cx="159.5" cy="190" r="3" fill="#fff"/><circle cx="215.5" cy="190" r="3" fill="#fff"/></g></g></g></g>' +
       '<g class="rob-oj rob-oj-parp">' +
         '<path d="M130 178 Q152 170 174 178 L174 170 L130 170 Z" fill="var(--rmad)"/><path d="M186 178 Q208 170 230 178 L230 170 L186 170 Z" fill="var(--rmad)"/>' +
         '<path d="M130 180 Q152 172 174 180" stroke="var(--rtz)" stroke-width="4" fill="none" stroke-linecap="round"/>' +
@@ -389,7 +410,9 @@
     serio:    {c:2, chip:"🛡️ Se acabó",      ojos:"entrecerrados",cejas:"serias",boca:"recta",   pose:"jarras",  cuerpo:"firme",  ico:"🛡️", lbl:"Cerramos el día",      frase:"El guardián de riesgo diciendo basta."},
     vigila:   {c:2, chip:"👁️ Vigilando",     ojos:"lado",     cejas:"duda",    boca:"recta",     pose:"visor",   cuerpo:"lento",  piensa:1, ico:"👁️", lbl:"Te cuido la posición", frase:"Mano de visera mientras tienes un trade abierto."},
     shhh:     {c:2, chip:"🤫 Silencio",       ojos:"grandes",  cejas:"altas",   boca:"o",         pose:"shh",     cuerpo:"firme",  ico:"🤫", lbl:"Concéntrate ahora",     frase:"Killzone abierta: dedo en los labios, a operar."},
-    espera:   {c:2, chip:"⏳ Paciencia",      ojos:"entrecerrados",cejas:"neutral",boca:"recta",  pose:"cruzados",cuerpo:"lento",  ico:"⏳", lbl:"Todavía no",            frase:"Brazos cruzados: hoy toca esperar, no forzar."},
+    /* ⏳ Rey (31-08): "él NO puede estar durmiendo en mi pantalla" — este es su reposo
+       de guardia: brazos cruzados pero OJOS ABIERTOS, mirándote, listo. */
+    espera:   {c:2, chip:"⏳ En guardia",     ojos:"normales", cejas:"neutral", boca:"recta",     pose:"cruzados",cuerpo:"lento",  ico:"⏳", lbl:"Aquí sigo, listo",      frase:"Brazos cruzados y ojos bien abiertos: el mercado descansa, él no."},
     animo:    {c:2, chip:"💪🏾 ¡Vamos!",       ojos:"felices",  cejas:"alegres", boca:"dientes",   pose:"musculo", cuerpo:"brinca", ico:"💪🏾", lbl:"¡Tú puedes, Rey!",   frase:"Cuando necesitas que alguien crea en ti."},
     /* carisma, bromas y sentimiento */
     carcajada:{c:3, chip:"😂 Carcajada",      ojos:"felices",  cejas:"alegres", boca:"carcajada", pose:"panza",   cuerpo:"rie",    fx:"risa", ico:"😂", lbl:"¡JAJAJA!",           frase:"Se agarra la panza de la risa cuando le sale un chiste bueno."},
@@ -508,11 +531,9 @@
     op = op || {};
     if (!vivas().length) return;
     callar();
+    /* la boca la mueve la animación robHabla (ritmo continuo de vocalización); antes se
+       sacudía con valores al azar cada 105 ms y parecía un tic, no que estuviera hablando */
     vivas().forEach(function (i) { i.svg.classList.add("rob-hablando"); });
-    estado.timer = setInterval(function () {
-      var ry = 3 + Math.random() * 12;
-      vivas().forEach(function (i) { if (i.boca) i.boca.setAttribute("ry", ry); });
-    }, 105);
     if (op.mudo) return;                       // Apex ya tiene su propia voz: solo la boca
     try {
       speechSynthesis.cancel();

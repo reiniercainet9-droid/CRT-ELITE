@@ -1,5 +1,195 @@
-APEX v6.47 — TRADING DESK
+APEX v6.60 — TRADING DESK
 =========================
+
+NOVEDADES v6.60  (🔎 EL RESPALDO SE PUEDE MIRAR, Y YA NO MIENTE)
+================================================================
+- 🔎 BOTÓN NUEVO 'Ver qué hay en la nube': te enseña la fecha y CUÁNTAS
+  operaciones, cuentas y chats hay guardados, SIN tocar nada. Empieza
+  siempre por aquí: es la forma de comprobar con tus ojos que estás a salvo.
+- 📛 EL BOTÓN DE SUBIR YA NO MIENTE: antes decía 'Respaldo guardado ✓'
+  pasara lo que pasara, incluso sin internet. Ahora dice si subió (con los
+  números) o si NO pudo — y te recuerda que lo de la nube sigue intacto.
+- 🪤 TRAMPA CERRADA: al escribir el código marcaba la fecha ANTES de subir;
+  si la subida se frenaba, luego al pulsar TRAER salía 'tu teléfono tiene
+  datos más nuevos' y parecía todo roto. Ya no: la fecha solo se marca si
+  la subida se hizo de verdad.
+- 🤫 El guardado automático nunca te saca un cartel de la nada: si se frena,
+  lo deja escrito en el panel de respaldo y sigue.
+
+- 🔌 Y LO MÁS GORDO (worker v5.111): DENTRO DE LA APK NO FUNCIONABA NADA QUE
+  ENVIARA DATOS — ni el respaldo, ni el chat de Roberto, ni guardar ajustes.
+  No era tu teléfono ni tu internet: el puente solo daba permiso a la página
+  web de GitHub, y la APK vive en otra dirección (localhost), así que el
+  teléfono bloqueaba cada envío ANTES de que saliera. Por eso la APK "no se
+  acercaba a la web". Ya está abierto para la app — y solo para ella.
+
+- PARA SUBIR (EN ORDEN, esta vez SÍ hay worker nuevo):
+  1º worker-elitepro-v5.111.js a Cloudflare  ← sin esto la APK sigue muda
+  2º este zip a GitHub + ritual de oro.
+  El indicador NO se toca.
+
+
+NOVEDADES v6.59  (🛟 TU RESPALDO NO SE PUEDE PISAR)
+====================================================
+- 🛟 EL FRENO QUE FALTABA: si intentas SUBIR a la nube desde una app casi
+  vacía (como la APK recién instalada) cuando en la nube tienes mucho más,
+  ahora se FRENA y te enseña los números: cuánto hay guardado y cuánto ibas
+  a subir. Tú decides. Antes se pisaba en silencio.
+- 🛟 COPIA ANTERIOR: cada subida guarda la copia que había (90 días), y hay
+  un botón nuevo '🛟 Recuperar la copia ANTERIOR' por si algo se pisó.
+- 📛 LOS BOTONES YA DICEN CLARO QUÉ HACEN: 'SUBIR lo de esta app a la nube'
+  y 'TRAER mis datos desde la nube' (antes ponía 'respaldar' y 'restaurar',
+  y era fácil confundirse justo cuando más duele).
+- PARA SUBIR (EN ORDEN, esta vez SÍ hay worker nuevo):
+  1º worker-elitepro-v5.110.js a Cloudflare
+  2º este zip a GitHub + ritual de oro. El indicador NO se toca.
+
+
+NOVEDADES v6.58  (🖲️ BOTONES DE VOZ Y AVISOS, VIVOS)
+=======================================================
+- 🏔️ ICONO NUEVO: la A de Apex en relieve, ámbar encendido con filo de luz
+  turquesa sobre azul noche. Colores vivos y contraste fuerte: se ve desde
+  lejos y salta de la pantalla. El mismo icono en la web y en la APK.
+- 🎬 LA ENTRADA (solo en la APK): al tocar el icono, la A crece con su
+  resplandor, una hoja de luz la recorre como metal pulido, aparece APEX y
+  todo se abre revelando la app. Ya no abre 'a secas'.
+- Todo lo anterior sigue: Roberto en guardia (no duerme), su cuerpo suelto,
+  su vigilante, su nubecita y la barra del teléfono fundida con el tema.
+- PARA SUBIR: solo este zip a GitHub + ritual de oro (el worker 5.109 ya
+  está arriba). El indicador NO se toca.
+
+
+NOVEDADES v6.57  (🗣️ LA VOZ DE ROBERTO EN LA APK)
+=======================================================
+- 🏔️ ICONO NUEVO: la A de Apex en relieve, ámbar encendido con filo de luz
+  turquesa sobre azul noche. Colores vivos y contraste fuerte: se ve desde
+  lejos y salta de la pantalla. El mismo icono en la web y en la APK.
+- 🎬 LA ENTRADA (solo en la APK): al tocar el icono, la A crece con su
+  resplandor, una hoja de luz la recorre como metal pulido, aparece APEX y
+  todo se abre revelando la app. Ya no abre 'a secas'.
+- Todo lo anterior sigue: Roberto en guardia (no duerme), su cuerpo suelto,
+  su vigilante, su nubecita y la barra del teléfono fundida con el tema.
+- PARA SUBIR: solo este zip a GitHub + ritual de oro (el worker 5.109 ya
+  está arriba). El indicador NO se toca.
+
+
+NOVEDADES v6.56  (🩹 CHAT ARREGLADO EN LA APK)
+=======================================================
+- 🏔️ ICONO NUEVO: la A de Apex en relieve, ámbar encendido con filo de luz
+  turquesa sobre azul noche. Colores vivos y contraste fuerte: se ve desde
+  lejos y salta de la pantalla. El mismo icono en la web y en la APK.
+- 🎬 LA ENTRADA (solo en la APK): al tocar el icono, la A crece con su
+  resplandor, una hoja de luz la recorre como metal pulido, aparece APEX y
+  todo se abre revelando la app. Ya no abre 'a secas'.
+- Todo lo anterior sigue: Roberto en guardia (no duerme), su cuerpo suelto,
+  su vigilante, su nubecita y la barra del teléfono fundida con el tema.
+- PARA SUBIR: solo este zip a GitHub + ritual de oro (el worker 5.109 ya
+  está arriba). El indicador NO se toca.
+
+
+NOVEDADES v6.55  (🔔 AVISOS SIN NAVEGADOR)
+=======================================================
+- 🏔️ ICONO NUEVO: la A de Apex en relieve, ámbar encendido con filo de luz
+  turquesa sobre azul noche. Colores vivos y contraste fuerte: se ve desde
+  lejos y salta de la pantalla. El mismo icono en la web y en la APK.
+- 🎬 LA ENTRADA (solo en la APK): al tocar el icono, la A crece con su
+  resplandor, una hoja de luz la recorre como metal pulido, aparece APEX y
+  todo se abre revelando la app. Ya no abre 'a secas'.
+- Todo lo anterior sigue: Roberto en guardia (no duerme), su cuerpo suelto,
+  su vigilante, su nubecita y la barra del teléfono fundida con el tema.
+- PARA SUBIR: solo este zip a GitHub + ritual de oro (el worker 5.109 ya
+  está arriba). El indicador NO se toca.
+
+
+NOVEDADES v6.54  (🖤 SIN FOGONAZO BLANCO)
+=======================================================
+- 🏔️ ICONO NUEVO: la A de Apex en relieve, ámbar encendido con filo de luz
+  turquesa sobre azul noche. Colores vivos y contraste fuerte: se ve desde
+  lejos y salta de la pantalla. El mismo icono en la web y en la APK.
+- 🎬 LA ENTRADA (solo en la APK): al tocar el icono, la A crece con su
+  resplandor, una hoja de luz la recorre como metal pulido, aparece APEX y
+  todo se abre revelando la app. Ya no abre 'a secas'.
+- Todo lo anterior sigue: Roberto en guardia (no duerme), su cuerpo suelto,
+  su vigilante, su nubecita y la barra del teléfono fundida con el tema.
+- PARA SUBIR: solo este zip a GitHub + ritual de oro (el worker 5.109 ya
+  está arriba). El indicador NO se toca.
+
+
+NOVEDADES v6.53  (🎬 LA ENTRADA, EN SU SITIO)
+=======================================================
+- 🏔️ ICONO NUEVO: la A de Apex en relieve, ámbar encendido con filo de luz
+  turquesa sobre azul noche. Colores vivos y contraste fuerte: se ve desde
+  lejos y salta de la pantalla. El mismo icono en la web y en la APK.
+- 🎬 LA ENTRADA (solo en la APK): al tocar el icono, la A crece con su
+  resplandor, una hoja de luz la recorre como metal pulido, aparece APEX y
+  todo se abre revelando la app. Ya no abre 'a secas'.
+- Todo lo anterior sigue: Roberto en guardia (no duerme), su cuerpo suelto,
+  su vigilante, su nubecita y la barra del teléfono fundida con el tema.
+- PARA SUBIR: solo este zip a GitHub + ritual de oro (el worker 5.109 ya
+  está arriba). El indicador NO se toca.
+
+
+NOVEDADES v6.52  (🏔️ ICONO NUEVO + 🎬 ENTRADA DE APEX)
+=======================================================
+- 🏔️ ICONO NUEVO: la A de Apex en relieve, ámbar encendido con filo de luz
+  turquesa sobre azul noche. Colores vivos y contraste fuerte: se ve desde
+  lejos y salta de la pantalla. El mismo icono en la web y en la APK.
+- 🎬 LA ENTRADA (solo en la APK): al tocar el icono, la A crece con su
+  resplandor, una hoja de luz la recorre como metal pulido, aparece APEX y
+  todo se abre revelando la app. Ya no abre 'a secas'.
+- Todo lo anterior sigue: Roberto en guardia (no duerme), su cuerpo suelto,
+  su vigilante, su nubecita y la barra del teléfono fundida con el tema.
+- PARA SUBIR: solo este zip a GitHub + ritual de oro (el worker 5.109 ya
+  está arriba). El indicador NO se toca.
+
+
+NOVEDADES v6.51  (⏳ ROBERTO NO DUERME EN TU PANTALLA)
+======================================================
+- ⏳ EN GUARDIA: con el mercado cerrado ya NO se duerme. Se queda con los
+  brazos cruzados y los OJOS ABIERTOS — "aquí sigo, listo". El 😴 queda
+  solo para el aviso puntual de la siesta de la PC, nunca como su cara fija.
+- Todo lo de la v6.50 sigue: parpadeo real, boca que vocaliza, aplauso que
+  junta las manos, saludo desde el hombro, cuerpo completo suelto.
+- PARA SUBIR: solo este zip a GitHub + ritual de oro (el worker 5.109 ya
+  está arriba). El indicador NO se toca.
+
+
+NOVEDADES v6.50  (⏳ ROBERTO NO DUERME EN TU PANTALLA)
+======================================================
+- ⏳ EN GUARDIA: con el mercado cerrado ya NO se duerme. Se queda con los
+  brazos cruzados y los OJOS ABIERTOS — "aquí sigo, listo". El 😴 queda
+  solo para el aviso puntual de la siesta de la PC, nunca como su cara fija.
+- Todo lo de la v6.49 sigue: parpadeo real, boca que vocaliza, aplauso que
+  junta las manos, saludo desde el hombro, cuerpo completo suelto.
+- PARA SUBIR: solo este zip a GitHub + ritual de oro (el worker 5.109 ya
+  está arriba). El indicador NO se toca.
+
+
+NOVEDADES v6.49  (⏳ ROBERTO NO DUERME EN TU PANTALLA)
+======================================================
+- ⏳ EN GUARDIA: con el mercado cerrado ya NO se duerme. Se queda con los
+  brazos cruzados y los OJOS ABIERTOS — "aquí sigo, listo". El 😴 queda
+  solo para el aviso puntual de la siesta de la PC, nunca como su cara fija.
+- Todo lo de la v6.48 sigue: parpadeo real, boca que vocaliza, aplauso que
+  junta las manos, saludo desde el hombro, cuerpo completo suelto.
+- PARA SUBIR: solo este zip a GitHub + ritual de oro (el worker 5.109 ya
+  está arriba). El indicador NO se toca.
+
+
+NOVEDADES v6.48  (👁️ SUS GESTOS, DE VERDAD)
+============================================
+- 👁️ EL PARPADEO ARREGLADO: antes los ojos saltaban y desaparecían (en el
+  dibujo no estaba fijado el centro y salían disparados hacia arriba).
+  Ahora cierran y abren EN SU SITIO, con el ritmo de un parpadeo real.
+- 🗣️ LA BOCA AL HABLAR vocaliza con ritmo continuo; antes se sacudía con
+  saltos al azar y parecía un tic, no que estuviera hablando.
+- 👏 EL APLAUSO junta las manos de verdad (antes solo subían y bajaban).
+- 👋 EL SALUDO pivota en el HOMBRO, como un brazo de verdad.
+- Todo lo de la v6.47 sigue igual: su cuerpo completo suelto en la pantalla,
+  su vigilante, su nubecita y su reacción a los avisos.
+- PARA SUBIR: solo este zip a GitHub + ritual de oro (el worker 5.109 ya
+  está arriba). El indicador NO se toca.
+
 
 NOVEDADES v6.47  (✏️ ROBERTO VIVO EN TODA LA APP)
 ==================================================

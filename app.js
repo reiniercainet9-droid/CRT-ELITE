@@ -43,7 +43,7 @@ const save = (k,v)=>{ try{ localStorage.setItem(k,JSON.stringify(v)); nubeMarcar
    No usa claves del sistema (el repo es público): el código ES la llave.
    ============================================================ */
 const NUBE_KEYS = ["crtelite_trades_v2","crtelite_cuentas_v3","crtelite_reminders_v3","crtelite_chk_v2","crtelite_conf_v2","crtelite_reglas_v2","crtelite_balance_v2","crtelite_ctx_v3","crtelite_estrategias_v3","crtelite_estrdefs_v1","crtelite_pares_v3","crtelite_calpares_v3","crtelite_notif_v3","crtelite_vigila_v3","crtelite_fabpos_v3","crtelite_iavoz_v3","crtelite_shots_v1","crtelite_ventanas_v1","crtelite_plansem_v1","crtelite_iaconvs_v3","crtelite_iaact_v3","crtelite_ejectrades_v1"];
-const NUBE_CODE_KEY="crtelite_nubecode_v1", NUBE_TS_KEY="crtelite_datats_v1", NUBE_LAST_KEY="crtelite_nubelast_v1";
+const NUBE_CODE_KEY="crtelite_nubecode_v1", NUBE_TS_KEY="crtelite_datats_v1", NUBE_LAST_KEY="crtelite_nubelast_v1", NUBE_FRENO_KEY="crtelite_nubefreno_v1";
 let NUBE_RESTAURANDO=false, _nubeTimer=null;
 function nubeCode(){ try{ return (localStorage.getItem(NUBE_CODE_KEY)||"").trim(); }catch(_){ return ""; } }
 function nubeTs(){ return parseInt(localStorage.getItem(NUBE_TS_KEY)||"0",10)||0; }
@@ -52,10 +52,45 @@ function nubeMarcar(){
   if(NUBE_RESTAURANDO) return;
   try{ localStorage.setItem(NUBE_TS_KEY,String(Date.now())); }catch(_){}
   if(!nubeCode()) return;
-  clearTimeout(_nubeTimer); _nubeTimer=setTimeout(()=>{ nubeSubir(); }, 4000);
+  /* 🤫 v6.60 — la subida AUTOMÁTICA va en silencio: si el puente la frena, NO puede
+     saltarle a Rey un cartel de golpe sin que él haya tocado nada. Se anota y ya. */
+  clearTimeout(_nubeTimer); _nubeTimer=setTimeout(()=>{ nubeSubir(true); }, 4000);
 }
-async function nubeSubir(){
-  const code=nubeCode(); if(!code) return;
+/* 🔎 v6.60 — MIRAR la nube SIN TOCAR NADA. Rey (31-08): "no sé cómo puedes comprobarlo,
+   pero no está funcionando el respaldo, como si el botón no funcionara". El botón SÍ subía
+   (213 KB y 18 apartados, comprobado en el puente) — lo que fallaba es que NO SE VE NADA.
+   Un respaldo que funciona pero no se puede mirar es, para quien lo usa, un respaldo roto. */
+async function nubeMirar(){
+  const code=nubeCode(); if(!code) return {ok:false, err:"sin código"};
+  try{
+    const r=await fetch(nubeUrl()+"/backup/get",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({code})});
+    if(!r.ok) return {ok:false, err:"sin conexión"};
+    const d=await r.json(); const bk=d && d.backup;
+    if(!bk || !bk.data) return {ok:false, err:"vacío"};
+    let bytes=0; try{ bytes=JSON.stringify(bk.data).length; }catch(_){}
+    const cuenta=(k)=>{ try{ const v=JSON.parse(bk.data[k]||"[]"); return Array.isArray(v)?v.length:Object.keys(v||{}).length; }catch(_){ return 0; } };
+    return { ok:true, ts:bk.ts||0, bytes, claves:Object.keys(bk.data).length,
+             trades:cuenta(K.trades), cuentas:cuenta(K.cuentas), chats:cuenta(K.iaconvs),
+             plan:cuenta("crtelite_plansem_v1"), ejec:cuenta("crtelite_ejectrades_v1") };
+  }catch(_){ return {ok:false, err:"error"}; }
+}
+async function nubeVerInforme(){
+  toast("Mirando la nube…");
+  const n=await nubeMirar();
+  if(!n.ok){ alert(n.err==="vacío" ? "☁️ Con ese código NO hay ningún respaldo en la nube todavía."
+    : n.err==="sin código" ? "Primero pon tu código de respaldo." : "No pude conectar con la nube. Mira tu internet e inténtalo otra vez."); return; }
+  alert("☁️ ESTO ES LO QUE HAY GUARDADO EN LA NUBE AHORA MISMO\n\n"+
+    "Fecha: "+(n.ts?new Date(n.ts).toLocaleString("es"):"—")+"\n"+
+    "Tamaño: "+Math.round(n.bytes/1024)+" KB · "+n.claves+" apartados\n\n"+
+    "📓 Operaciones del diario: "+n.trades+"\n"+
+    "🏦 Cuentas: "+n.cuentas+"\n"+
+    "💬 Chats de Roberto: "+n.chats+"\n"+
+    "🗓️ Plan semanal: "+n.plan+"\n"+
+    "🤖 Operaciones del Ejecutor: "+n.ejec+"\n\n"+
+    "Si estos números son los tuyos, tu respaldo está BIEN y no has perdido nada.");
+}
+async function nubeSubir(callado){
+  const code=nubeCode(); if(!code) return {ok:false, err:"sin código"};
   try{
     const data={};
     NUBE_KEYS.forEach(k=>{ let v=localStorage.getItem(k); if(v==null) return;
@@ -65,8 +100,54 @@ async function nubeSubir(){
       data[k]=v; });
     const ts=nubeTs()||Date.now();
     const r=await fetch(nubeUrl()+"/backup/set",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({code,ts,data})});
-    if(r.ok){ const d=await r.json(); if(d && d.ok){ localStorage.setItem(NUBE_LAST_KEY,String(Date.now())); nubePintarEstado(); } }
-  }catch(_){}
+    if(r.ok){
+      const d=await r.json();
+      /* 🛟 v6.59 — EL FRENO QUE FALTABA (31-08, casi le cuesta a Rey todo su historial):
+         instaló la APK, que nace vacía, y pulsó "Guardar y respaldar" en vez de "Restaurar".
+         Ahora el puente RECHAZA una subida mucho más pequeña que la guardada y aquí se le
+         cuenta a Rey con números, para que decida él — nunca se pisa a la callada. */
+      if(d && d.ok===false && d.motivo==="menor"){
+        const g=d.guardado||{}, n=d.subiendo||{};
+        const cuando=g.ts?new Date(g.ts).toLocaleString("es"):"antes";
+        /* si esto viene del guardado automático, NI SE PREGUNTA: se deja intacta la nube.
+           Preguntar sin que Rey haya tocado nada sería asustarlo por la espalda. */
+        if(callado){ try{ localStorage.setItem(NUBE_FRENO_KEY,String(Date.now())); }catch(_){} nubePintarEstado(); return {ok:false, err:"frenado"}; }
+        const seguro = confirm(
+          "⚠️ CUIDADO: en la nube tienes un respaldo MUCHO más grande que lo que hay en esta app.\n\n"+
+          "En la nube: "+(g.claves||0)+" apartados ("+Math.round((g.bytes||0)/1024)+" KB), guardado "+cuando+"\n"+
+          "En esta app: "+(n.claves||0)+" apartados ("+Math.round((n.bytes||0)/1024)+" KB)\n\n"+
+          "Si sigues, REEMPLAZAS lo grande por lo pequeño.\n"+
+          "¿Es esto lo que quieres? (Si lo que buscabas era TRAER tus datos, cancela y usa \"☁️ TRAER mis datos desde la nube\")");
+        if(!seguro){ toast("Respaldo cancelado — tus datos de la nube siguen intactos ✓"); return {ok:false, err:"cancelado"}; }
+        const r2=await fetch(nubeUrl()+"/backup/set",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({code,ts,data,forzar:true})});
+        if(r2.ok){ const d2=await r2.json(); if(d2 && d2.ok){ localStorage.setItem(NUBE_LAST_KEY,String(Date.now())); nubePintarEstado(); return {ok:true, claves:d2.claves||Object.keys(data).length, bytes:d2.bytes||0}; } }
+        return {ok:false, err:"no se pudo forzar"};
+      }
+      if(d && d.ok){ localStorage.setItem(NUBE_LAST_KEY,String(Date.now())); nubePintarEstado();
+        return {ok:true, claves:d.claves||Object.keys(data).length, bytes:d.bytes||0}; }
+      return {ok:false, err:"el puente no lo aceptó"};
+    }
+    return {ok:false, err:"el puente respondió "+r.status};
+  }catch(_){ return {ok:false, err:"sin conexión"}; }
+}
+/* 🛟 v6.59 — RESCATE: recupera la copia ANTERIOR del respaldo (la que había justo antes
+   de la última subida). El puente la guarda 90 días. Es la red por si algo se pisó. */
+async function nubeRescatar(){
+  const code=nubeCode(); if(!code){ toast("Primero pon tu código de respaldo"); return; }
+  try{
+    const r=await fetch(nubeUrl()+"/backup/get",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({code,anterior:true})});
+    if(!r.ok){ toast("No pude conectar con la nube"); return; }
+    const d=await r.json(); const bk=d && d.backup;
+    if(!bk || !bk.data || !bk.ts){ toast("No hay copia anterior guardada con ese código"); return; }
+    const claves=Object.keys(bk.data).length;
+    if(!confirm("Copia ANTERIOR encontrada: "+claves+" apartados, del "+new Date(bk.ts).toLocaleString("es")+".\n\n¿La traigo a esta app? (reemplaza lo que hay aquí ahora)")) return;
+    NUBE_RESTAURANDO=true;
+    Object.keys(bk.data).forEach(k=>{ if(k.indexOf("crtelite_")===0){ try{ localStorage.setItem(k, bk.data[k]); }catch(_){}} });
+    localStorage.setItem(NUBE_TS_KEY,String(bk.ts));
+    NUBE_RESTAURANDO=false;
+    toast("🛟 Copia anterior recuperada — recargando…");
+    setTimeout(()=>location.reload(), 900);
+  }catch(_){ toast("Error recuperando la copia anterior"); }
 }
 async function nubeRestaurar(auto){
   const code=nubeCode(); if(!code){ if(!auto) toast("Primero pon tu código de respaldo"); return; }
@@ -77,7 +158,22 @@ async function nubeRestaurar(auto){
     if(!bk || !bk.data || !bk.ts){ if(!auto) toast("No hay respaldo en la nube con ese código"); return; }
     const localTs=nubeTs();
     if(auto && localTs && localTs>=bk.ts) return; // lo local es igual o más nuevo: no toco nada
-    if(!auto && localTs>bk.ts){ if(!confirm("Tu teléfono tiene datos MÁS nuevos que la nube. ¿Restaurar igualmente y reemplazarlos?")) return; }
+    /* 🛟 v6.60 — LA PREGUNTA DEL MIEDO, CON NÚMEROS. Antes decía a secas "tu teléfono tiene
+       datos MÁS nuevos": en una app recién instalada eso es MENTIRA útil (la fecha es de hoy
+       porque acabas de escribir el código, pero dentro no hay nada) y asusta justo a quien
+       viene a rescatar sus datos. Ahora se comparan los TAMAÑOS: si la nube trae claramente
+       más, ni se pregunta — que es exactamente lo que Rey quiere que pase. */
+    if(!auto && localTs>bk.ts){
+      let aquiBytes=0, aquiClaves=0;
+      NUBE_KEYS.forEach(k=>{ const v=localStorage.getItem(k); if(v!=null){ aquiClaves++; aquiBytes+=v.length; } });
+      let nubeBytes=0; try{ nubeBytes=JSON.stringify(bk.data).length; }catch(_){}
+      const nubeManda = nubeBytes > aquiBytes*1.5 || Object.keys(bk.data).length > aquiClaves;
+      if(!nubeManda && !confirm(
+        "Aquí tienes cambios más recientes que en la nube.\n\n"+
+        "En esta app: "+aquiClaves+" apartados ("+Math.round(aquiBytes/1024)+" KB)\n"+
+        "En la nube: "+Object.keys(bk.data).length+" apartados ("+Math.round(nubeBytes/1024)+" KB), del "+new Date(bk.ts).toLocaleString("es")+"\n\n"+
+        "Si sigues, lo de aquí se reemplaza por lo de la nube. ¿Sigo?")) return;
+    }
     NUBE_RESTAURANDO=true;
     Object.keys(bk.data).forEach(k=>{ if(k.indexOf("crtelite_")===0){ try{ localStorage.setItem(k, bk.data[k]); }catch(_){}} });
     localStorage.setItem(NUBE_TS_KEY,String(bk.ts));
@@ -90,6 +186,14 @@ function nubePintarEstado(){
   const e=document.getElementById("nubeEstado"); if(!e) return;
   const code=nubeCode(); const last=parseInt(localStorage.getItem(NUBE_LAST_KEY)||"0",10);
   if(!code){ e.textContent="Sin código: el respaldo en la nube está apagado."; return; }
+  /* 🛟 v6.60 — si el puente frenó una subida automática, Rey tiene que ENTERARSE aquí,
+     no descubrirlo el día que necesite los datos. */
+  const freno=parseInt(localStorage.getItem(NUBE_FRENO_KEY)||"0",10);
+  if(freno && (!last || freno>last)){
+    e.innerHTML="⚠️ <b>Aquí hay menos datos que en la nube</b>, así que NO se subió nada (tu respaldo sigue entero). "+
+      "Si esta app es nueva, usa <b>☁️ TRAER mis datos desde la nube</b>. Mira antes con 🔎.";
+    return;
+  }
   e.textContent = last? ("✅ Último respaldo: "+new Date(last).toLocaleString()) : "Código puesto. Se respaldará al primer cambio.";
 }
 /* 📸 Capturas del gráfico: la app PIDE la foto (el Puente la saca y la sube). */
@@ -162,7 +266,44 @@ function temaAplicar(t){
   if(v==="claro") document.documentElement.setAttribute("data-tema","claro");
   else document.documentElement.removeAttribute("data-tema");
   try{ const m=document.querySelector('meta[name="theme-color"]'); if(m) m.setAttribute("content", v==="claro"?"#EEF1F8":"#0C1024"); }catch(_){}
+  barraSistema(v);
   return v;
+}
+/* 🎬 v6.52 — LA ENTRADA DE APEX (solo dentro de la APK). Rey: "abre seco, sin presentación
+   del ícono ni animación". Se pinta ANTES que nada y se quita sola en 1,7 s. En el
+   navegador no se monta: la Apex web abre exactamente igual que siempre. */
+function introApex(){
+  try{
+    const d = document.getElementById("apexIntro");
+    if(!d) return;
+    /* la entrada YA está pintada desde la primera línea del cuerpo (index.html) y la
+       cabecera decidió si se muestra. Aquí solo se retira cuando termina; y si no
+       estamos en la APK, se borra del todo para no dejar nada de más en la web. */
+    if(!document.documentElement.classList.contains("apk-intro")){ d.remove(); return; }
+    setTimeout(()=>{ try{ d.remove(); }catch(_){} }, 1750);
+  }catch(_){}
+}
+try{ introApex(); }catch(_){}
+
+/* 🔝 v6.50 — LA BARRA DEL TELÉFONO SE FUNDE CON APEX (Rey, 31-08: "¿por qué no usas el
+   mismo sistema de Android para contrastar los colores? es solo una línea pequeña arriba
+   bordeando el notch — mira cómo se ve en mi pantalla"). Tenía razón: la dejé azul noche
+   fija y en modo claro cantaba. Ahora la franja de la hora/señal/batería toma el color del
+   tema de Apex y Android pone sus iconos oscuros o claros según toque, como cualquier app.
+   SOLO actúa dentro de la APK: en el navegador no existe ese complemento y no hace nada,
+   así que la Apex web no cambia ni un píxel. */
+function barraSistema(tema){
+  try{
+    const C = window.Capacitor;
+    if(!C || typeof C.isNativePlatform !== "function" || !C.isNativePlatform()) return;
+    const SB = C.Plugins && C.Plugins.StatusBar; if(!SB) return;
+    const claro = (tema||temaActual()) === "claro";
+    const fondo = claro ? "#EEF1F8" : "#0C1024";
+    SB.setBackgroundColor({ color: fondo });
+    SB.setNavigationBarColor && SB.setNavigationBarColor({ color: fondo });
+    /* "Light" = fondo claro con iconos OSCUROS · "Dark" = fondo oscuro con iconos CLAROS */
+    SB.setStyle({ style: claro ? "LIGHT" : "DARK" });
+  }catch(_){}
 }
 function temaAlternar(){
   const v=temaAplicar(temaActual()==="claro"?"oscuro":"claro");
@@ -6404,6 +6545,12 @@ function iaInit(){
         </div>
         <div class="note" style="text-align:left;margin:0 0 8px">Si tu teléfono solo trae voz de mujer, baja el tono (Grave++). Para una voz de HOMBRE real hay que instalarla en Ajustes del teléfono → "Texto a voz" (no en el Asistente de Google).</div>
         <button class="btn" id="iaVozTest" style="margin-bottom:14px">▶️ Probar voz</button>
+        <div class="fl" id="vigiaCaja" style="display:none">🔔 Avisos de la app (sin navegador)</div>
+        <div id="vigiaBox" style="display:none;margin-bottom:14px">
+          <button class="btn" id="vigiaBtn" style="margin:0 0 6px">⏳ …</button>
+          <button class="btn" id="vigiaProbar" style="margin:0 0 6px;display:none">📲 Probar un aviso AHORA</button>
+          <div class="note" style="text-align:left" id="vigiaNota"></div>
+        </div>
         <div class="fl">🎬 Movimiento de Roberto</div>
         <div class="seg c3" id="iaRobAnimSeg" style="margin-bottom:6px">
           <button data-anim="auto">📱 Como el teléfono</button>
@@ -6440,8 +6587,14 @@ function iaInit(){
         <div style="margin-top:12px;border-top:1px solid rgba(255,255,255,.12);padding-top:10px">
           <div class="note" style="text-align:left"><b>☁️ Respaldo en la nube</b> — para no perder NADA y recuperar Apex en otro teléfono. Elige un código secreto y recuérdalo (con él restauras todo).</div>
           <input class="inp" id="nubeCodeInp" placeholder="Tu código de respaldo (mín. 4 letras/números)" style="margin-top:6px">
-          <button class="btn gold" id="nubeSave" style="margin-top:8px">💾 Guardar código y respaldar ahora</button>
-          <button class="btn" id="nubeRestore" style="margin-top:8px">☁️ Restaurar todo desde la nube</button>
+          <button class="btn" id="nubeVer" style="margin-top:8px">🔎 Ver qué hay en la nube</button>
+          <div class="note" style="text-align:left;margin:2px 0 0">No toca nada: solo te enseña la fecha y cuántas operaciones, cuentas y chats hay guardados. <b>Empieza siempre por aquí.</b></div>
+          <button class="btn gold" id="nubeSave" style="margin-top:8px">💾 SUBIR lo de esta app a la nube</button>
+          <div class="note" style="text-align:left;margin:2px 0 0">Manda a la nube lo que hay AQUÍ. Úsalo en el sitio donde tengas tus datos buenos.</div>
+          <button class="btn" id="nubeRestore" style="margin-top:8px">☁️ TRAER mis datos desde la nube</button>
+          <div class="note" style="text-align:left;margin:2px 0 0">Trae a esta app lo que hay en la nube. <b>Este es el que necesitas en un teléfono o una app nueva.</b></div>
+          <button class="btn" id="nubeRescate" style="margin-top:8px">🛟 Recuperar la copia ANTERIOR</button>
+          <div class="note" style="text-align:left;margin:2px 0 0">Por si una subida pisó algo: trae la copia que había justo antes (se guarda 90 días).</div>
           <div class="note" id="nubeEstado" style="text-align:left;margin-top:6px"></div>
         </div>
       </div>
@@ -6468,10 +6621,13 @@ function iaInit(){
   $("#iaNew2").onclick=iaNuevaConv;
   $("#iaConvs").onclick=()=>{ const b=$("#iaConvsBox"); const show=b.style.display==="none"; $("#iaCfgBox").style.display="none"; b.style.display=show?"block":"none"; if(show){ _iaMemCache=null; renderConvList(); } };
   const bq=$("#iaBuscar"); if(bq){ let _bqT=null; bq.addEventListener("input",()=>{ clearTimeout(_bqT); _bqT=setTimeout(renderConvList,250); }); }
-  $("#iaCfg").onclick=()=>{ const b=$("#iaCfgBox"); const show=b.style.display==="none"; $("#iaConvsBox").style.display="none"; b.style.display=show?"block":"none"; if(show){ $("#iaUrl").value=IA.url; iaVozRefrescarUI(); notifRefrescarUI(); robAnimUI(); } };
+  $("#iaCfg").onclick=()=>{ const b=$("#iaCfgBox"); const show=b.style.display==="none"; $("#iaConvsBox").style.display="none"; b.style.display=show?"block":"none"; if(show){ $("#iaUrl").value=IA.url; iaVozRefrescarUI(); notifRefrescarUI(); robAnimUI(); vigiaUI(); } };
   /* Controles de notificaciones */
   const nt=$("#iaNotifToggle");
-  if(!notifSoportado()){ if(nt){ nt.disabled=true; nt.innerHTML="🔕 Tu teléfono no permite notificaciones"; } }
+  /* 📱 en la APK los avisos NO los lleva el navegador: los lleva el 🔔 vigía de arriba.
+     El cartel de "tu teléfono no permite" era falso y asustaba (Rey, 31-08). */
+  if(vigiaPuente()){ if(nt){ nt.disabled=true; nt.innerHTML="🔔 Aquí los avisos los lleva la app (arriba)"; } }
+  else if(!notifSoportado()){ if(nt){ nt.disabled=true; nt.innerHTML="🔕 Tu teléfono no permite notificaciones"; } }
   else if(nt){
     nt.onclick=async()=>{ if(NOTIF.on){ await notifActivar(false); toast("Notificaciones apagadas"); }
       else { const ok=await notifActivar(true); if(ok) toast("Notificaciones activadas 🔔"); } notifRefrescarUI(); };
@@ -6481,24 +6637,42 @@ function iaInit(){
   const ps=$("#iaParesSave"); if(ps) ps.onclick=()=>{ const v=($("#iaPares").value||"").split(",").map(x=>x.trim()).filter(Boolean); if(!v.length){ toast("Escribe al menos un par"); return; } PARES=v; guardarPares(); pushConfigPares(); toast("Pares guardados ✓"); robertoVigila("Cambió sus pares seguidos a: "+v.join(", ")+"."); };
   const nn=$("#iaNotifNews"); if(nn) nn.onclick=iaNoticiasHoy;
   const pt=$("#iaPushTest");
-  if(pt){ if(!pushSoportado()){ pt.disabled=true; pt.textContent="📲 Tu teléfono no soporta Web Push"; } else { pt.onclick=pushProbar; } }
+  if(pt){
+    if(vigiaPuente()){ pt.disabled=true; pt.textContent="📲 En la app no hace falta: lo lleva el 🔔 vigía"; }
+    else if(!pushSoportado()){ pt.disabled=true; pt.textContent="📲 Tu teléfono no soporta Web Push"; }
+    else { pt.onclick=pushProbar; }
+  }
   const vg=$("#iaVigilaToggle");
   if(vg){ const pinta=()=>{ vg.innerHTML=VIGILA.on?"🛡️ Vigilante: activado":"💤 Vigilante: apagado"; vg.classList.toggle("gold",!!VIGILA.on); }; pinta();
     vg.onclick=()=>{ VIGILA.on=!VIGILA.on; guardarVigila(); pinta(); toast(VIGILA.on?"Roberto te vigila 🛡️":"Vigilante apagado"); }; }
   const hr=$("#iaHistRob"); if(hr) hr.onclick=histRobertoModal;
   /* Controles de voz */
+  /* 🗣️ v6.58 — CONTROLES DE VOZ: el mismo cableado sirva la voz del navegador o la de
+     Android. FALLO QUE CAZÓ REY (31-08): "toco el botón de Roberto y no me habla, no puedo
+     decir la gravedad de la voz" — yo había metido TODO el cableado en la rama del
+     navegador, así que dentro de la APK los botones existían pero no hacían nada. */
   const vt=$("#iaVozToggle");
-  if(!TTS){ if(vt){ vt.disabled=true; vt.innerHTML="🔇 Tu teléfono no permite voz"; } const vs=$("#iaVozSel"), vp=$("#iaVozTest"); if(vs)vs.style.display="none"; if(vp)vp.style.display="none"; }
-  else{
-    vt.onclick=()=>{ IA.voz.on=!IA.voz.on; iaGuardarVoz(); iaVozRefrescarUI();
-      if(IA.voz.on) iaHablar("Listo, Rey. A partir de ahora te hablo yo, Roberto. Vamos a por esas cuentas.", -1);
-      else iaVozParar();
-      toast(IA.voz.on?"Roberto te hablará 🔊":"Voz apagada"); };
-    $("#iaVozSel").onchange=function(){ IA.voz.name=this.value||null; iaGuardarVoz(); iaHablar("Esta es mi voz. ¿Te gusta?", -1); };
-    $("#iaVozTono").querySelectorAll("[data-pitch]").forEach(b=>{
+  const enApk = !!vigiaPuente();
+  const hayVoz = !!(TTS || enApk);
+  const vs=$("#iaVozSel"), vp=$("#iaVozTest"), tn=$("#iaVozTono");
+  if(!hayVoz){
+    if(vt){ vt.disabled=true; vt.innerHTML="🔇 Tu teléfono no permite voz"; }
+    if(vs) vs.style.display="none";
+    if(vp) vp.style.display="none";
+  }else{
+    /* en la APK la voz la pone Android: no hay lista de voces del navegador que elegir */
+    if(vs){ vs.style.display = enApk ? "none" : "";
+      if(!enApk) vs.onchange=function(){ IA.voz.name=this.value||null; iaGuardarVoz(); iaHablar("Esta es mi voz. ¿Te gusta?", -1); }; }
+    if(vt){ vt.disabled=false;
+      vt.onclick=()=>{ IA.voz.on=!IA.voz.on; iaGuardarVoz(); iaVozRefrescarUI();
+        if(IA.voz.on) iaHablar("Listo, Rey. A partir de ahora te hablo yo, Roberto. Vamos a por esas cuentas.", -1);
+        else iaVozParar();
+        toast(IA.voz.on?"Roberto te hablará 🔊":"Voz apagada"); }; }
+    if(tn) tn.querySelectorAll("[data-pitch]").forEach(b=>{
       b.onclick=()=>{ IA.voz.pitch=parseFloat(b.dataset.pitch); iaGuardarVoz(); iaVozRefrescarUI();
         iaHablar("Así sueno con este tono, Rey.", -1); }; });
-    $("#iaVozTest").onclick=()=>iaHablar("Hola Rey, soy Roberto, tu mentor de trading. Estoy listo para ayudarte a pasar tus fondeos y escalar tu capital.", -1);
+    if(vp){ vp.style.display=""; vp.disabled=false;
+      vp.onclick=()=>iaHablar("Hola Rey, soy Roberto, tu mentor de trading. Estoy listo para ayudarte a pasar tus fondeos y escalar tu capital.", -1); }
   }
   /* 🚀 Selector de motor: guarda la elección y la manda el worker en cada mensaje */
   { const seg=$("#iaMotorSeg");
@@ -6514,8 +6688,21 @@ function iaInit(){
   $("#iaSaveUrl").onclick=()=>{ IA.url=$("#iaUrl").value.trim()||IA_URL_DEFAULT; save(K.iaurl,IA.url); $("#iaCfgBox").style.display="none"; toast("Puente guardado ✓"); };
   $("#iaClear").onclick=()=>{ if(confirm("¿Borrar la conversación actual?")){ const c=iaConvAct(); c.msgs=[]; c.t=""; iaGuardarConvs(); $("#iaCfgBox").style.display="none"; pintarIAChat(); } };
   { const ci=$("#nubeCodeInp"); if(ci) ci.value=nubeCode(); nubePintarEstado(); }
-  { const bs=$("#nubeSave"); if(bs) bs.onclick=async()=>{ const c=($("#nubeCodeInp").value||"").trim(); if(c.length<4){ toast("El código debe tener al menos 4"); return; } localStorage.setItem(NUBE_CODE_KEY,c); localStorage.setItem(NUBE_TS_KEY,String(Date.now())); toast("Subiendo a la nube…"); await nubeSubir(); nubePintarEstado(); toast("☁️ Respaldo guardado ✓"); }; }
+  /* 🛟 v6.60 — este botón MENTÍA: decía "☁️ Respaldo guardado ✓" pasara lo que pasara, porque
+     nubeSubir() se tragaba los errores en silencio. Y peor: marcaba la fecha local como NUEVA
+     ANTES de subir, así que si la subida se frenaba, al pulsar luego "TRAER" salía "tu teléfono
+     tiene datos más nuevos" y todo parecía roto. Ahora dice la verdad, con números, y la fecha
+     solo se marca si la subida se hizo de verdad. */
+  { const bs=$("#nubeSave"); if(bs) bs.onclick=async()=>{ const c=($("#nubeCodeInp").value||"").trim(); if(c.length<4){ toast("El código debe tener al menos 4"); return; }
+      localStorage.setItem(NUBE_CODE_KEY,c); toast("Subiendo a la nube…");
+      const res=await nubeSubir(); nubePintarEstado();
+      if(res && res.ok){ try{ localStorage.setItem(NUBE_TS_KEY,String(Date.now())); }catch(_){}
+        alert("☁️ SUBIDO ✓\n\n"+(res.claves||0)+" apartados · "+Math.round((res.bytes||0)/1024)+" KB\n\nTus datos están guardados en la nube. Puedes comprobarlo cuando quieras con \"🔎 Ver qué hay en la nube\"."); }
+      else if(res && res.err==="cancelado"){ /* ya avisado */ }
+      else alert("⚠️ NO se pudo subir ("+((res&&res.err)||"desconocido")+").\n\nLo que ya tenías en la nube sigue INTACTO. Vuelve a intentarlo."); }; }
+  { const bv=$("#nubeVer"); if(bv) bv.onclick=async()=>{ const c=($("#nubeCodeInp").value||"").trim(); if(c.length>=4) localStorage.setItem(NUBE_CODE_KEY,c); await nubeVerInforme(); }; }
   { const br=$("#nubeRestore"); if(br) br.onclick=async()=>{ const c=($("#nubeCodeInp").value||"").trim(); if(c.length>=4) localStorage.setItem(NUBE_CODE_KEY,c); await nubeRestaurar(false); }; }
+  { const rs=$("#nubeRescate"); if(rs) rs.onclick=async()=>{ const c=($("#nubeCodeInp").value||"").trim(); if(c.length>=4) localStorage.setItem(NUBE_CODE_KEY,c); await nubeRescatar(); }; }
   $("#iaSend").onclick=()=>iaEnviar();
   const ta=$("#iaText");
   ta.addEventListener("keydown",e=>{ if(e.key==="Enter" && !e.shiftKey){ e.preventDefault(); iaEnviar(); } });
@@ -6749,8 +6936,42 @@ function iaEscuchar(){
     REC.start();
   }catch(_){ RECon=false; iaMicUI(false); toast("No pude iniciar el micrófono"); }
 }
+/* 🗣️ v6.57 — LA VOZ DE ROBERTO DENTRO DE LA APK (Rey, 31-08: "tu teléfono no permite voz…
+   ¿Roberto me puede hablar todavía?"). El teléfono SÍ permite voz: el que no la trae es el
+   navegador interno de la APK. Aquí se usa la voz DEL PROPIO ANDROID a través del puente, y
+   la boca de Roberto se sigue moviendo igual gracias a los avisos de inicio y fin.
+   En la web no existe este camino y todo sigue exactamente como siempre. */
+let _vozNativaLista = false;
+function vozNativa(){
+  try{
+    const P = vigiaPuente();
+    if(!P || typeof P.vozHablar !== "function") return null;
+    if(!_vozNativaLista){
+      _vozNativaLista = true;
+      try{
+        P.addListener("vozInicio", ()=>{ try{ if(ROB_LISTO||ROB_CUERPO) Roberto.hablar("",{mudo:true}); }catch(_){}
+          IA.hablandoIdx = (_vozIdx==null?-1:_vozIdx); pintarIAChat(); });
+        P.addListener("vozFin", ()=>{ try{ Roberto.callar(); }catch(_){}
+          IA.hablandoIdx = null; pintarIAChat(); });
+      }catch(_){}
+    }
+    return P;
+  }catch(_){ return null; }
+}
+let _vozIdx = null;
 /* Habla un texto. idx = índice del mensaje en la conversación (para el botón). */
 function iaHablar(texto, idx){
+  /* 📱 dentro de la APK: la voz del propio Android */
+  const PV = vozNativa();
+  if(PV){
+    const limpio = iaTextoParaVoz(texto);
+    if(!limpio) return;
+    _vozIdx = idx;
+    const tono = (typeof IA.voz.pitch==="number") ? Math.max(0.5, Math.min(1.6, IA.voz.pitch)) : 0.85;
+    try{ PV.vozHablar({ texto: limpio, tono: tono, ritmo: 1.0 }); }
+    catch(_){ toast("No pude hablar ahora mismo"); }
+    return;
+  }
   if(!TTS){ toast("Tu teléfono no permite voz"); return; }
   try{ TTS.cancel(); }catch(_){}
   const limpio=iaTextoParaVoz(texto);
@@ -6784,7 +7005,8 @@ function iaGuardarVoz(){ save(K.iavoz, IA.voz); }
 /* Refresca el botón de encendido y el selector de voces en ajustes */
 function iaVozRefrescarUI(){
   const vt=$("#iaVozToggle");
-  if(vt && TTS){
+  /* v6.58: también con la voz de Android (dentro de la APK), no solo con la del navegador */
+  if(vt && (TTS || vigiaPuente())){
     vt.innerHTML = IA.voz.on ? "🔊 Que Roberto me hable: ACTIVADO" : "🔇 Que Roberto me hable: apagado";
     vt.classList.toggle("gold", !!IA.voz.on);
   }
@@ -6883,6 +7105,56 @@ function robAnimPoner(v){
     document.querySelectorAll("#iaRobAnimSeg button").forEach(b=>b.classList.toggle("on", b.dataset.anim===v));
   }catch(_){}
 }
+/* ══════════════════════════════════════════════════════════════════════════
+   🔔 v6.55 — LOS AVISOS DE LA APP (sin depender del navegador)
+   Rey lleva tiempo peleando con que Android duerme los avisos del navegador
+   ("Doze se traga los pushes"). Dentro de la APK hay una vía que Android NO
+   puede dormir: un vigía en primer plano que mira la MISMA cola de avisos del
+   worker cada minuto y los enseña él mismo, con la cara de Roberto que toque.
+   A cambio deja un aviso fijo "👁️ Roberto en guardia" — que es justo lo que
+   Rey quería ver: que está ahí.
+   Este interruptor SOLO aparece dentro de la APK; en la web no existe.
+   ══════════════════════════════════════════════════════════════════════════ */
+function vigiaPuente(){
+  try{
+    const C = window.Capacitor;
+    if(!C || typeof C.isNativePlatform !== "function" || !C.isNativePlatform()) return null;
+    return (C.Plugins && C.Plugins.Apex) || null;
+  }catch(_){ return null; }
+}
+async function vigiaUI(){
+  try{
+    const P = vigiaPuente();
+    const caja=$("#vigiaCaja"), box=$("#vigiaBox"), btn=$("#vigiaBtn"), nota=$("#vigiaNota");
+    if(!caja||!box||!btn) return;
+    if(!P){ caja.style.display="none"; box.style.display="none"; return; }   /* en la web, ni aparece */
+    caja.style.display=""; box.style.display="";
+    const st = await P.vigiaEstado();
+    const on = !!(st && st.encendido);
+    btn.className = "btn" + (on ? "" : " gold");
+    btn.textContent = on ? "🔕 Apagar los avisos de la app" : "🔔 Encender los avisos de la app";
+    /* 📲 el botón de prueba (Rey, 31-08: "no sé cómo comprobar que las notificaciones
+       funcionan") — solo tiene sentido con el vigía encendido */
+    const pb=$("#vigiaProbar");
+    if(pb){
+      pb.style.display = on ? "" : "none";
+      pb.onclick = async ()=>{ try{ await P.vigiaProbar(); toast("📲 Aviso de prueba enviado — míralo arriba"); }
+        catch(e){ toast("No pude mandarlo: " + (e && e.message ? e.message : e)); } };
+    }
+    nota.innerHTML = on
+      ? "Roberto está de guardia: te trae los avisos aunque Apex esté cerrada, y Android no puede dormirlo. Verás un aviso fijo 👁️ que lo demuestra. <b>Ya puedes quitar las notificaciones de la Apex del navegador</b> para no recibirlas dos veces."
+      : "Con esto encendido, los avisos te llegan por la app y no por el navegador — no se pierde ninguno aunque el teléfono se duerma. <b>Mientras no lo enciendas, sigues con los del navegador.</b>";
+    btn.onclick = async ()=>{
+      btn.disabled = true;
+      try{
+        if(on){ await P.vigiaApagar(); toast("Avisos de la app apagados"); }
+        else  { await P.vigiaEncender(); toast("👁️ Roberto en guardia"); }
+      }catch(e){ toast("No pude cambiarlo: " + (e && e.message ? e.message : e)); }
+      btn.disabled = false;
+      vigiaUI();
+    };
+  }catch(_){}
+}
 function robAnimUI(){
   try{
     const seg=$("#iaRobAnimSeg"); if(!seg) return;
@@ -6960,7 +7232,10 @@ async function robVigilante(){
         if(poss.length){ emo="vigila"; txt="cuidando tu "+(poss[0].dir||"")+" en "+(poss[0].sym||"")+" ($"+(poss[0].pl!=null?poss[0].pl:"?")+")"; }
         else if(live.recup){ emo="serio"; txt="modo recuperación: riesgo a la mitad"; }
         else if(d.on && !d.vivo){ emo="preocupa"; txt="el Ejecutor no responde en la PC"; }
-        else if(d.on && live.enHorario===false && !kz.dentro){ emo="siesta"; txt="fuera de horario — descansando"; }
+        /* ⏳ REY (31-08): "él NO puede estar durmiendo en mi pantalla". Aunque el mercado
+           esté cerrado, Roberto se queda EN GUARDIA con los ojos abiertos — el 😴 queda
+           solo para el aviso puntual de la siesta de la PC, nunca como su cara de fondo. */
+        else if(d.on && live.enHorario===false && !kz.dentro){ emo="espera"; txt="mercado cerrado — aquí sigo, listo"; }
         else if(d.on && !kz.dentro && !txt){ emo="vigila"; txt="en guardia, sin señales"; }
       }
     }catch(_){}
