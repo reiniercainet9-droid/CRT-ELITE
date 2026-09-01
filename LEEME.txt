@@ -1,5 +1,23 @@
-APEX v6.78 — TRADING DESK
+APEX v6.79 — TRADING DESK
 =========================
+
+NOVEDADES v6.79  (LA NUBECITA SALE DE SU BOCA Y SE ESCRIBE SOLA)
+=================================================================
+SOLO EL ZIP. El worker 5.112 sigue vivo. También hay APK nueva.
+
+- 👄 EL RABITO YA APUNTA A SU BOCA. Lo viste enseguida: la colocaba
+  centrada en TODO el cuerpo, así que quedaba a la altura de la barriga y
+  el rabito apuntaba al vacío. Su boca está al 47% de su cuerpo, y ahora
+  la nubecita se sube justo lo necesario para que la punta caiga ahí.
+  Comprobado con números: 0 píxeles de desvío.
+
+- ⌨️ Y RESPONDIENDO A TU PREGUNTA: antes salía la frase entera de golpe.
+  Ahora SE ESCRIBE SOLA, palabra a palabra, mientras mueve la boca. Eso es
+  lo que la hace parecer hablada de verdad.
+
+- 📏 Y más pequeña todavía: 162 px de ancho y letra de 12. Además le quité
+  la palabra 'Roberto' de encima en la charla normal — sobra decir su
+  nombre cuando él está ahí al lado; solo aparece en los avisos urgentes.
 
 NOVEDADES v6.78  (LA NUBECITA, DE CÓMIC Y MÁS HABLADORA)
 =========================================================

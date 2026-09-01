@@ -7559,7 +7559,11 @@ function robDecir(titulo,texto,op){
       g.onclick=()=>{ const d=g.dataset.ir||""; robGloboFuera(); if(d) irDestino(d); else if(typeof abrirIA==="function") abrirIA(); }; }
     g.className="rob-globo"+(op.urge?" urge":"");
     g.dataset.ir=op.ir||"";
-    g.innerHTML="<b>"+esc(titulo||"Roberto")+"</b>"+esc(String(texto||"").slice(0,150));
+    /* 💬 v6.79 — el nombre solo en los avisos urgentes: en la charla normal sobra decir
+       "Roberto" cuando él está ahí mismo, y así la nubecita ocupa una línea menos. */
+    const _txt = String(texto||"").slice(0,150);
+    g.innerHTML = (op.urge ? "<b>"+esc(titulo||"Roberto")+"</b>" : "") + '<span id="robGloboTx"></span>';
+    const _tx = $("#robGloboTx"); if(_tx) _tx.textContent = _txt;   /* medida real antes de escribirla */
     const r=fab.getBoundingClientRect();
     g.style.visibility="hidden"; g.style.display="block"; g.style.left="0px"; g.style.top="0px";
     const gw=g.offsetWidth||220, gh=g.offsetHeight||60;
@@ -7567,14 +7571,39 @@ function robDecir(titulo,texto,op){
     g.classList.remove("izq","der"); g.classList.add(izq?"izq":"der");   /* el rabito, del lado de Roberto */
     robBocaRato(texto);                                                   /* y que mueva la boca al decirlo */
     g.style.left=Math.max(8,Math.min(window.innerWidth-gw-8, izq? r.right+10 : r.left-gw-10))+"px";
-    g.style.top =Math.max(8,Math.min(window.innerHeight-gh-8, r.top+r.height/2-gh/2))+"px";
+    /* 👄 v6.79 — A LA ALTURA DE SU BOCA. Antes se centraba en TODO el cuerpo y quedaba a
+       la altura de la barriga, con el rabito apuntando al vacío (Rey lo vio enseguida).
+       Su boca está al 47% del alto de su cuerpo; el rabito cuelga ~20 px por debajo de la
+       nubecita, así que la nubecita se sube ese tanto para que el rabito caiga en la boca. */
+    const bocaY = r.top + r.height * 0.47;
+    g.style.top = Math.max(8, Math.min(window.innerHeight-gh-8, bocaY - gh - 12)) + "px";
     g.style.visibility="visible";
     requestAnimationFrame(()=>g.classList.add("ver"));
+    robGloboEscribe(_tx, _txt);   /* ⌨️ y la frase se escribe sola, al ritmo de su boca */
     if(_robGloboT) clearTimeout(_robGloboT);
     _robGloboT=setTimeout(robGloboFuera, op.urge?14000:7000);
   }catch(_){}
 }
-function robGloboFuera(){ try{ const g=$("#robGlobo"); if(g){ g.classList.remove("ver"); setTimeout(()=>{ if(g&&!g.classList.contains("ver")) g.style.display="none"; },260); } }catch(_){} }
+/* ⌨️ v6.79 — LA FRASE SE ESCRIBE SOLA, palabra a palabra, mientras Roberto mueve la
+   boca. Rey preguntó si la letra era animada o salía entera de golpe: salía de golpe,
+   y verla aparecer al ritmo de la boca es lo que la hace parecer de verdad hablada.
+   Se escribe rápido (unos 55 ms por palabra) para que nunca se haga lenta de leer. */
+let _robEscT = null;
+function robGloboEscribe(nodo, frase){
+  try{
+    if(_robEscT){ clearInterval(_robEscT); _robEscT=null; }
+    if(!nodo){ return; }
+    const palabras = String(frase||"").split(" ");
+    if(palabras.length < 2){ nodo.textContent = frase||""; return; }
+    let i = 0;
+    nodo.textContent = "";
+    _robEscT = setInterval(()=>{
+      nodo.textContent = palabras.slice(0, ++i).join(" ");
+      if(i >= palabras.length){ clearInterval(_robEscT); _robEscT=null; }
+    }, 55);
+  }catch(_){ try{ nodo.textContent = frase||""; }catch(__){} }
+}
+function robGloboFuera(){ try{ if(_robEscT){ clearInterval(_robEscT); _robEscT=null; } const g=$("#robGlobo"); if(g){ g.classList.remove("ver"); setTimeout(()=>{ if(g&&!g.classList.contains("ver")) g.style.display="none"; },260); } }catch(_){} }
 /* ⚡ Un evento del sistema: le cambia el gesto AL VUELO y lo cuenta en su nubecita.
    Manda sobre el gesto de fondo durante 25 s (para que a Rey le dé tiempo de verlo). */
 function robEvento(titulo,cuerpo,op){
