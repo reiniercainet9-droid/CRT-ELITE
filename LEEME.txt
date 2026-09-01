@@ -1,5 +1,39 @@
-APEX v6.70 — TRADING DESK
+APEX v6.71 — TRADING DESK
 =========================
+
+NOVEDADES v6.71  (LA VOZ · LA NUBECITA · EL PUENTE · LA FRANJA)
+===============================================================
+SOLO EL ZIP para la web. El worker 5.112 sigue vivo.
+El Puente y el Ejecutor de tu PC ya están actualizados: no toques nada.
+
+- 🎙️ LA VOZ DE MUJER, RESUELTA. Tu pista lo dijo todo: el botón de prueba
+  sonaba bien y el del chat no. El de prueba dice una frase CORTA y arranca
+  a la primera; el del chat lee la respuesta larga, y eso activaba mi
+  reintento, que VACIABA la lista de voces del navegador. Chrome, justo
+  después de un corte, la devuelve vacía un instante — y Roberto se quedaba
+  SIN voz asignada, o sea con la de fábrica del teléfono. Ya no puede
+  vaciarse, y además se recuerda su última voz buena.
+
+- 💬 ROBERTO YA DICE LO QUE PASA, no solo lo pone en la cara. Él ya sabía
+  todo (ventana operativa abierta, posición que está cuidando, Ejecutor sin
+  responder, modo recuperación) y hasta redactaba la frase… pero solo la
+  usaba para su gesto: la nubecita únicamente salía con avisos del
+  navegador. Ahora la saca cuando algo CAMBIA de verdad — y solo entonces,
+  para que no sea un cartel cada rato.
+
+- 🔌 EL PUENTE YA NO SE MUERE EN SILENCIO (v4.4, ya instalado en tu PC).
+  Tenía el mismo fallo que el Ejecutor: dos salidas mudas y ninguna red bajo
+  los errores inesperados. Ahora, si se detiene, Roberto te dice POR QUÉ en
+  español, con freno para no repetirse.
+
+- 🔝 LA FRANJA DE LA HORA se pone del color de tu tema ANTES del primer
+  píxel. El manifiesto de la app lleva un color fijo que Android usa al
+  abrir, y ahí estaba el hueco que quedaba.
+
+- 🛡️ Y LO QUE NO SE VE PERO SOSTIENE TODO: la red de seguridad estaba rota
+  (nombres de archivo de 250 letras que Windows ya no podía crear) y solo
+  se estaban corriendo 56 de 92 pruebas. Reconstruida entera: ahora son 88
+  y están TODAS EN VERDE. Por ese agujero se colaban los retrocesos.
 
 NOVEDADES v6.70  (🎙️ LA VOZ DE ROBERTO, ENTERA · 🔝 LA FRANJA DE ARRIBA)
 ====================================================================

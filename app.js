@@ -6885,9 +6885,18 @@ const IA_RECARGA_URL = "https://console.anthropic.com/settings/billing";
    ============================================================ */
 const TTS = ("speechSynthesis" in window) ? window.speechSynthesis : null;
 let _iaVoces = [];
+/* 🎙️ v6.71 — NUNCA BORRAR UNA LISTA BUENA (Rey, 01-09: "sigue la voz de robot
+   mujer desde el inicio en el chat, pero el botón de prueba suena natural").
+   Esa asimetría era la pista: el botón de prueba dice una frase CORTA y arranca a la
+   primera; el del chat lee la respuesta larga y activaba mi reintento, que vaciaba la
+   lista de voces. Chrome, justo después de un cancel(), devuelve la lista VACÍA por un
+   instante — y Roberto se quedaba SIN voz asignada, o sea con la de fábrica (de mujer).
+   Ahora una lista vacía no puede pisar a una buena, y se recuerda la última voz válida. */
+var _iaVozBuena = null;
 function iaCargarVoces(){
   if(!TTS) return;
-  _iaVoces = TTS.getVoices()||[];
+  const lista = TTS.getVoices()||[];
+  if(lista.length) _iaVoces = lista;      /* si viene vacía, se conserva la de antes */
 }
 if(TTS){
   iaCargarVoces();
@@ -6901,7 +6910,11 @@ function iaVozEspanol(){
   if(IA.voz.name){ const g=_iaVoces.find(v=>v.name===IA.voz.name); if(g) return g; }
   /* Prefiere una voz masculina/latina si el nombre lo insinúa, si no la primera en español */
   const pref = es.find(v=>/(latin|america|mexic|us|estados|jorge|diego|carlos|pablo|male|hombre)/i.test(v.name));
-  return pref || es[0] || null;
+  /* si en este instante el navegador no da voces, se usa la ÚLTIMA BUENA en vez de
+     devolver null — devolver null es lo que hacía hablar a Roberto con voz de mujer */
+  const elegida = pref || es[0] || null;
+  if(elegida) _iaVozBuena = elegida;
+  return elegida || _iaVozBuena;
 }
 /* Limpia el texto para que suene natural: sin markdown, sin emojis, sin URLs largas */
 function iaTextoParaVoz(s){
@@ -7094,7 +7107,8 @@ function iaHablar(texto, idx){
   setTimeout(()=>{
     let sonando=false; try{ sonando = !!(TTS.speaking || TTS.pending); }catch(_){}
     if(sonando || IA.hablandoIdx!=null) return;
-    try{ _iaVoces=[]; iaCargarVoces(); }catch(_){}
+    /* ⚠️ NO se vacía la lista: hacerlo dejaba a Roberto sin voz y hablaba una mujer */
+    try{ iaCargarVoces(); }catch(_){}
     /* el reintento también va POR TROZOS: repetir el texto entero volvería a atascarlo */
     _vozCola = trozos.slice(1);
     const u2=new SpeechSynthesisUtterance(trozos[0]);
@@ -7450,7 +7464,22 @@ async function robVigilante(){
         else if(d.on && !kz.dentro && !txt){ emo="vigila"; txt="en guardia, sin señales"; }
       }
     }catch(_){}
-    if(emo!==_robFondo){ _robFondo=emo; robCara(emo,txt); }
+    /* 💬 v6.71 — QUE LO DIGA, NO SOLO QUE LO PONGA EN LA CARA (Rey, 01-09:
+       "debe coordinar sus expresiones con lo que de verdad está ocurriendo… y no está
+       sacando la nubecita al lado diciéndome qué sucede en realidad").
+       Roberto YA sabía todo esto y hasta redactaba la frase — pero solo la usaba para
+       su cara. La nubecita solo salía con avisos del navegador. Ahora, cuando la
+       situación CAMBIA de verdad, la dice: killzone abierta, posición que está
+       cuidando, Ejecutor sin responder, modo recuperación… Solo al cambiar, para que
+       no sea un cartel cada 45 segundos. */
+    if(emo!==_robFondo){
+      const primeraVez = !_robFondo;   /* al abrir Apex no suelta un cartel de golpe */
+      _robFondo=emo; robCara(emo,txt);
+      if(txt && !primeraVez){
+        const urgente = (emo==="preocupa" || emo==="serio" || emo==="alerta");
+        try{ robDecir("Roberto", txt, { urge:urgente, ir: (emo==="vigila"||emo==="preocupa")?"ejec":"" }); }catch(_){}
+      }
+    }
   }catch(_){}
 }
 /* Sus killzones, en hora de Nueva York (las mismas del indicador y del guardián) */

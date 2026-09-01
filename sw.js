@@ -1,4 +1,4 @@
-const CACHE = "crt-elite-v6-70";
+const CACHE = "crt-elite-v6-71";
 const FILES = ["./","./index.html","./data.js","./app.js","./roberto.js","./manifest.json","./icon-192.png","./icon-512.png"];
 const WORKER = "https://elitepro-worker.reiniercainet9.workers.dev";
 /* Web Push: al llegar un aviso (con la app CERRADA), muestra la notificación.

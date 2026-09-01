@@ -10,7 +10,19 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Apex">
-<script>/* 🌗 v6.38: aplica el tema guardado ANTES de pintar (sin destello) */try{if(localStorage.getItem("crtelite_tema")==="claro")document.documentElement.setAttribute("data-tema","claro");}catch(e){}
+<script>/* 🌗 v6.38: aplica el tema guardado ANTES de pintar (sin destello) */
+try{if(localStorage.getItem("crtelite_tema")==="claro")document.documentElement.setAttribute("data-tema","claro");}catch(e){}
+/* 🔝 v6.71 — LA FRANJA DE LA HORA, DEL COLOR DEL TEMA DESDE EL PRIMER PÍXEL.
+   El manifiesto de la app lleva un color FIJO (#0C1024) y no se puede cambiar: es lo
+   que Android usa al abrir. Apex ya actualizaba el color — pero mucho más tarde, al
+   arrancar app.js, y para entonces Rey ya ha visto la franja oscura sobre su tema
+   claro. Aquí se pone bien ANTES de pintar nada, que es donde tenía que estar. */
+try{var _t=localStorage.getItem("crtelite_tema")==="claro";
+  var _m=document.querySelector('meta[name="theme-color"]');
+  if(_m) _m.setAttribute("content", _t?"#EEF1F8":"#0C1024");
+  var _s=document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
+  if(_s) _s.setAttribute("content", _t?"default":"black-translucent");
+}catch(e){}
 /* 🎬 v6.53: ¿estamos dentro de la APK? Se decide AQUÍ, antes de que se pinte una sola
    línea de Apex, para que la entrada tape la pantalla desde el primer instante. */
 try{if(window.Capacitor&&typeof window.Capacitor.isNativePlatform==="function"&&window.Capacitor.isNativePlatform())document.documentElement.classList.add("apk-intro");}catch(e){}</script>
