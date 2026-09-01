@@ -1,5 +1,54 @@
-APEX v6.82 — TRADING DESK
+APEX v6.90 — TRADING DESK
 =========================
+
+NOVEDADES v6.90  (👔 ROBERTO YA TIENE ARMARIO)
+=================================================================
+SOLO EL ZIP. El worker 5.112 sigue vivo. También hay APK nueva.
+
+Su traje de mayordomo estaba CLAVADO dentro del dibujo: era la única
+ropa que podía tener. Ahora es una prenda más de su armario.
+
+- 👔 SE VISTE SOLO SEGÚN LA HORA DE NUEVA YORK, que es la que manda en tu
+  operativa (así no se descoloca con los cambios de horario de Brasil):
+
+    lunes a viernes, de que abre Londres a que cierra NY  →  TRAJE Y CORBATA
+    el resto del día laborable                           →  SUDADERA con capucha
+    fines de semana y madrugada                          →  BATA de casa y su taza
+    24, 25 y 26 de diciembre                             →  TRAJE ROJO de Navidad
+    31 de diciembre y 1 de enero                         →  ESMOQUIN con pajarita dorada
+
+  Wall Street de lunes a viernes, y en cuanto cierra el mercado se afloja
+  la corbata. Tal cual lo pediste 😄
+
+- 🎩 SIETE ACCESORIOS, y puede llevar varios a la vez: gorra, sombrero,
+  gafas de sol, auriculares, móvil, bufanda y taza.
+
+- 📱 Y ALGUNOS SON DEL MOMENTO, no del armario: saca el MÓVIL cuando está
+  cruzando datos o auditando al Ejecutor, y se pone las GAFAS DE SOL
+  cuando celebra una operación cazada. Se le van solos al cambiar de
+  gesto — son del momento, no se le quedan pegados.
+
+- 🎬 Y LA ROPA ESTÁ VIVA, como pediste: la corbata se mece, los cordones
+  de la sudadera cuelgan y se balancean, el cinturón de la bata se mueve,
+  la pantalla del móvil parpadea y el vapor de la taza sube.
+
+- 🧠 ÉL LO SABE. En su manual están sus 5 mudas y sus 7 accesorios, con
+  cuándo lleva cada cosa. Si le preguntas qué lleva puesto, te contesta
+  de verdad. Y entra en su encargo de mejora: puede PROPONERTE ropa,
+  accesorios o disfraces nuevos para momentos concretos (una racha buena,
+  un día de examen de fondeo, una sesión de madrugada) — te dice el
+  nombre, qué diría de él y cuándo se lo pondría. No se lo pone él: te lo
+  propone, tú decides, y se dibuja.
+
+- 🔒 Y SIGUE SIENDO UNO SOLO: al cambiarse de ropa se cambian TODOS sus
+  cuerpos a la vez — su carita del chat, el Roberto que flota en Apex y
+  el que flota sobre las demás apps en la APK. Hay una prueba que lo
+  exige.
+
+COMPROBADO: 98 de 98 pruebas en verde, con la APK v6.90 incluida. El
+banco del armario ABRE a Roberto de verdad en el navegador y le mira la
+ropa puesta, muda por muda y accesorio por accesorio.
+
 
 NOVEDADES v6.82  (TUS AVISOS SON TU RUTINA, NO EL MERCADO)
 =================================================================

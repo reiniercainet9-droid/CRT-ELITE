@@ -29,7 +29,8 @@
   .rob-svg [data-cuerpo="flota"]   .rob-todo{animation:robFlota 3.6s ease-in-out infinite}
   .rob-todo{transform-origin:180px 300px}
   .rob-svg{--rj:#22305f;--rj2:#16204a;--rmad:#f4ac3c;--rmad2:#d3841c;--roro:#f0c95c;--roro2:#b8933a;
-           --rcam:#fbf7ec;--rgu:#fdfcf7;--rgu2:#c9c2ac;--rtz:#3a2a10;--rcor:#ff6f61;--rteal:#4fe0c0}
+           --rcam:#fbf7ec;--rgu:#fdfcf7;--rgu2:#c9c2ac;--rtz:#3a2a10;--rcor:#ff6f61;--rteal:#4fe0c0;
+           --rsud:#3d6bb5;--rsud2:#2d5292;--rbata:#7a5aa8;--rbata2:#5f4489}
   /* ⚠️ TODAS sus animaciones llevan !important A PROPÓSITO (31-08): Apex tiene una regla
      global *{animation:none!important} para "menos movimiento", y sin esto Roberto se
      quedaba de ESTATUA en cuanto el teléfono pedía reducir animaciones. Sus gestos son
@@ -219,6 +220,108 @@
   /* ── las 33 poses, cada una con brazos + manos propios (ninguna repetida) ── */
   function brazo(d) { return '<path d="' + d + '" stroke="var(--rj)" stroke-width="16" fill="none" stroke-linecap="round"/>'; }
   function mano(id, t) { return '<use href="#' + id + '" transform="' + t + '"/>'; }
+
+  /* ══ 👔 EL ARMARIO (v6.90, pedido de Rey) ═══════════════════════════════════════════
+     "que use la corbata mientras está en el horario del mercado, Wall Street, y fuera de
+     él se cambie a ropa casual y también de casa".
+     Su traje de mayordomo era la ÚNICA ropa que podía tener porque estaba clavada dentro
+     del dibujo. Ahora es una prenda más del armario: "wallstreet" es EXACTAMENTE el traje
+     de siempre, sacado tal cual, así que por defecto no cambia nada.
+     Se enseña la que toque con data-ropa, igual que las poses con data-pose. */
+  var ROPAS = {
+    /* 👔 la de trabajar: traje, camisa, pajarita y corbata. La de siempre. */
+    wallstreet:
+      '<path d="M140 270 L220 270 L215 376 L145 376 Z" fill="var(--rj)"/>' +
+      '<path d="M160 270 L200 270 L192 306 L180 322 L168 306 Z" fill="var(--rcam)"/>' +
+      '<path d="M140 270 L166 270 L152 314 L142 306 Z" fill="var(--rj2)"/>' +
+      '<path d="M220 270 L194 270 L208 314 L218 306 Z" fill="var(--rj2)"/>' +
+      '<path d="M166 270 L180 292 L163 288 Z" fill="#fff"/><path d="M194 270 L180 292 L197 288 Z" fill="#fff"/>' +
+      '<path d="M172 286 L188 286 L191 300 L180 306 L169 300 Z" fill="var(--roro)" stroke="var(--rtz)" stroke-width="2.6" stroke-linejoin="round"/>' +
+      '<path d="M172 286 L180 292 L188 286" fill="none" stroke="var(--roro2)" stroke-width="2"/>' +
+      '<path class="rob-corbata" d="M180 306 L193 314 L186 352 L180 360 L174 352 L167 314 Z" fill="var(--roro)" stroke="var(--rtz)" stroke-width="2.6" stroke-linejoin="round"/>' +
+      '<path d="M172 322 L188 330 M170 336 L186 344" stroke="var(--roro2)" stroke-width="3.4" opacity=".85"/>' +
+      '<circle cx="180" cy="368" r="3.4" fill="var(--roro)"/><path d="M198 322 L212 322 L205 311 Z" fill="var(--rcor)"/>',
+
+    /* 👕 la de fuera del mercado: sudadera con capucha y cordones. Sin corbata: cuando el
+       mercado cierra, Roberto también se afloja. */
+    casual:
+      '<path d="M140 270 L220 270 L215 376 L145 376 Z" fill="var(--rsud)"/>' +
+      '<path d="M140 270 L220 270 L215 292 L145 292 Z" fill="var(--rsud2)"/>' +
+      '<path d="M158 268 Q180 300 202 268 Q180 258 158 268 Z" fill="var(--rsud2)"/>' +
+      '<path d="M172 286 L172 322" stroke="var(--rgu)" stroke-width="4" stroke-linecap="round" class="rob-cordon"/>' +
+      '<path d="M188 286 L188 318" stroke="var(--rgu)" stroke-width="4" stroke-linecap="round" class="rob-cordon"/>' +
+      '<circle cx="172" cy="324" r="3.2" fill="var(--rgu)"/><circle cx="188" cy="320" r="3.2" fill="var(--rgu)"/>' +
+      '<path d="M152 330 Q180 342 208 330 L208 348 Q180 358 152 348 Z" fill="var(--rsud2)" opacity=".7"/>',
+
+    /* 🏠 la de casa: bata de estar por casa con su cinturón. Fines de semana y madrugada. */
+    casa:
+      '<path d="M140 270 L220 270 L215 376 L145 376 Z" fill="var(--rbata)"/>' +
+      '<path d="M162 270 L180 316 L198 270 L212 270 L192 330 L168 330 L148 270 Z" fill="var(--rbata2)"/>' +
+      '<path d="M180 292 L180 330" stroke="var(--rbata2)" stroke-width="2.4" opacity=".6"/>' +
+      '<rect x="141" y="330" width="78" height="13" rx="5" fill="var(--rbata2)"/>' +
+      '<path d="M186 336 Q206 344 200 362" stroke="var(--rbata2)" stroke-width="6" fill="none" stroke-linecap="round" class="rob-cinto"/>',
+
+    /* 🎄 diciembre: traje rojo con ribete blanco y su cinturón */
+    navidad:
+      '<path d="M140 270 L220 270 L215 376 L145 376 Z" fill="#c0392b"/>' +
+      '<path d="M140 270 L220 270 L217 288 L143 288 Z" fill="#fbf7ec"/>' +
+      '<path d="M160 288 Q180 312 200 288 Q180 280 160 288 Z" fill="#fbf7ec"/>' +
+      '<rect x="141" y="326" width="78" height="16" rx="4" fill="#2b2b2b"/>' +
+      '<rect x="170" y="326" width="20" height="16" rx="3" fill="var(--roro)"/>' +
+      '<circle cx="180" cy="356" r="4" fill="#fbf7ec"/><circle cx="180" cy="368" r="4" fill="#fbf7ec"/>',
+
+    /* 🎉 días de celebrar: esmoquin con pajarita dorada */
+    fiesta:
+      '<path d="M140 270 L220 270 L215 376 L145 376 Z" fill="#1b1b28"/>' +
+      '<path d="M160 270 L200 270 L192 306 L180 322 L168 306 Z" fill="var(--rcam)"/>' +
+      '<path d="M140 270 L166 270 L152 314 L142 306 Z" fill="#2a2a3d"/>' +
+      '<path d="M220 270 L194 270 L208 314 L218 306 Z" fill="#2a2a3d"/>' +
+      '<path d="M166 288 L180 300 L166 312 Z" fill="var(--roro)" stroke="var(--rtz)" stroke-width="2.2"/>' +
+      '<path d="M194 288 L180 300 L194 312 Z" fill="var(--roro)" stroke="var(--rtz)" stroke-width="2.2"/>' +
+      '<circle cx="180" cy="300" r="4.4" fill="var(--roro2)"/>' +
+      '<circle cx="180" cy="336" r="3.2" fill="var(--roro)"/><circle cx="180" cy="352" r="3.2" fill="var(--roro)"/>',
+  };
+
+  /* ══ 🎩 LOS ACCESORIOS ═══════════════════════════════════════════════════════════════
+     Se llevan VARIOS a la vez: data-acc="gorra movil". Van dibujados DESPUÉS de la ropa
+     para que queden por encima, y la gorra y el sombrero tapan su goma de borrar. */
+  var ACCS = {
+    gorra:
+      '<path d="M138 86 Q180 34 222 86 Z" fill="var(--rteal)"/>' +
+      '<rect x="136" y="82" width="88" height="10" rx="4" fill="#2f9c86"/>' +
+      '<path d="M224 84 Q262 88 256 102 L224 96 Z" fill="#2f9c86"/>' +
+      '<circle cx="180" cy="46" r="5" fill="var(--roro)"/>',
+    sombrero:
+      '<ellipse cx="180" cy="92" rx="64" ry="12" fill="#2b2b3a"/>' +
+      '<path d="M148 92 Q150 46 180 44 Q210 46 212 92 Z" fill="#38384d"/>' +
+      '<rect x="147" y="76" width="66" height="13" fill="var(--rcor)"/>',
+    gafasSol:
+      '<path d="M124 176 H236 L232 200 Q230 212 216 212 H196 Q184 212 182 200 L180 190 L178 200 Q176 212 164 212 H144 Q130 212 128 200 Z" fill="#15161c" stroke="var(--roro)" stroke-width="3.5" stroke-linejoin="round"/>' +
+      '<path d="M136 186 L152 182" stroke="#fff" stroke-width="3.5" opacity=".55" stroke-linecap="round"/>',
+    auriculares:
+      /* la diadema pasa por ENCIMA de su goma y las almohadillas caen a la altura de
+         donde tendría las orejas, no sobre los ojos */
+      '<path d="M123 174 Q180 34 237 174" stroke="#2b2b3a" stroke-width="11" fill="none" stroke-linecap="round"/>' +
+      '<rect x="110" y="166" width="27" height="48" rx="12" fill="#2b2b3a"/>' +
+      '<rect x="223" y="166" width="27" height="48" rx="12" fill="#2b2b3a"/>' +
+      '<rect x="116" y="175" width="15" height="31" rx="7" fill="var(--rteal)" class="rob-auri"/>' +
+      '<rect x="229" y="175" width="15" height="31" rx="7" fill="var(--rteal)" class="rob-auri"/>',
+    movil:
+      '<rect x="238" y="238" width="36" height="62" rx="7" fill="#15161c" stroke="var(--rgu2)" stroke-width="2"/>' +
+      '<rect x="243" y="246" width="26" height="46" rx="3" fill="var(--rteal)" class="rob-pantalla"/>' +
+      '<path d="M246 282 L252 270 L258 276 L266 258" stroke="#0d3a33" stroke-width="2.6" fill="none" stroke-linecap="round"/>' +
+      '<circle cx="256" cy="296" r="2.4" fill="var(--rgu2)"/>',
+    bufanda:
+      '<path d="M138 262 Q180 284 222 262 L222 280 Q180 300 138 280 Z" fill="var(--rcor)"/>' +
+      '<path d="M206 288 Q216 320 206 348 L190 344 Q200 316 192 286 Z" fill="var(--rcor)" class="rob-fleco"/>',
+    taza:
+      '<rect x="232" y="306" width="34" height="32" rx="4" fill="var(--rgu)" stroke="var(--rtz)" stroke-width="2.4"/>' +
+      '<path d="M266 314 Q280 322 266 330" stroke="var(--rtz)" stroke-width="3.4" fill="none"/>' +
+      '<rect x="234" y="312" width="30" height="6" fill="var(--rcor)"/>' +
+      '<path d="M242 300 Q238 290 244 282" stroke="var(--rgu2)" stroke-width="3" fill="none" stroke-linecap="round" class="rob-vapor"/>' +
+      '<path d="M254 300 Q250 288 256 280" stroke="var(--rgu2)" stroke-width="3" fill="none" stroke-linecap="round" class="rob-vapor" style="animation-delay:.9s"/>',
+  };
+
   var POSES = {
     /* — te guía — */
     saluda:   brazo("M145 296 Q110 312 100 344") + mano("rgMano", "translate(98,348) rotate(14)") +
@@ -321,14 +424,39 @@
      `.rob-pose{display:none}` los ocultaba TODOS y no había ninguna regla que mostrara el
      del gesto activo — los 33 pares de brazos existían dibujados pero invisibles. La regla
      se GENERA aquí desde POSES, así jamás se puede volver a desincronizar al añadir gestos. */
-  ROB_CSS += "\n" + Object.keys(POSES).map(function (k) { return '[data-pose="' + k + '"] .rob-p-' + k; }).join(",") + "{display:block}\n";
+  /* 👔 v6.90 — la ropa y los accesorios se enseñan igual que las poses, y la regla se GENERA
+   desde el armario: así no se puede desincronizar al añadir una prenda nueva.
+   Los accesorios usan ~= porque se pueden llevar VARIOS a la vez (data-acc="gorra movil"). */
+ROB_CSS += "\n.rob-ropa,.rob-acc{display:none}\n";
+ROB_CSS += Object.keys(ROPAS).map(function (k) { return '[data-ropa="' + k + '"] .rob-r-' + k; }).join(",") + "{display:block}\n";
+ROB_CSS += Object.keys(ACCS).map(function (k) { return '[data-acc~="' + k + '"] .rob-a-' + k; }).join(",") + "{display:block}\n";
+/* que la ropa VIVA: la corbata se mece, los cordones cuelgan, el móvil parpadea, el vapor
+   de la taza sube. Con !important, como el resto: la app tiene un "menos movimiento"
+   global y su ropa es parte de él, no un adorno. */
+ROB_CSS += `
+  .rob-corbata{transform-origin:180px 306px; animation:robCorbata 3.6s ease-in-out infinite!important}
+  .rob-cordon{transform-origin:180px 286px; animation:robCordon 4.2s ease-in-out infinite!important}
+  .rob-cinto{transform-origin:190px 338px; animation:robCordon 5s ease-in-out infinite!important}
+  .rob-fleco{transform-origin:200px 288px; animation:robCorbata 4.4s ease-in-out infinite!important}
+  .rob-pantalla{animation:robPantalla 2.4s ease-in-out infinite!important}
+  .rob-auri{animation:robPantalla 1.8s ease-in-out infinite!important}
+  .rob-vapor{transform-origin:248px 300px; animation:robVapor 2.8s ease-in-out infinite!important}
+  @keyframes robCorbata{0%,100%{transform:rotate(-3.5deg)}50%{transform:rotate(3.5deg)}}
+  @keyframes robCordon{0%,100%{transform:rotate(-2deg)}50%{transform:rotate(2deg)}}
+  @keyframes robPantalla{0%,100%{opacity:.62}50%{opacity:1}}
+  @keyframes robVapor{0%{opacity:0;transform:translateY(4px)}35%{opacity:.85}100%{opacity:0;transform:translateY(-12px)}}
+`;
+ROB_CSS += "\n" + Object.keys(POSES).map(function (k) { return '[data-pose="' + k + '"] .rob-p-' + k; }).join(",") + "{display:block}\n";
 
   /* ── EL PERSONAJE ── */
   function svgHTML() {
     var poses = "";
     for (var k in POSES) poses += '<g class="rob-pose rob-p-' + k + '">' + POSES[k] + "</g>";
+    var ropas = "", accs = "";
+    for (var r in ROPAS) ropas += '<g class="rob-ropa rob-r-' + r + '">' + ROPAS[r] + "</g>";
+    for (var a in ACCS)  accs  += '<g class="rob-acc rob-a-' + a + '">' + ACCS[a] + "</g>";
     return '<svg class="rob-svg" viewBox="0 0 360 520" data-ojos="normales" data-cejas="alegres" data-boca="sonrisa"' +
-      ' data-pose="saluda" data-cuerpo="flota" data-fx="" role="img" aria-label="Roberto, tu mentor">' +
+      ' data-pose="saluda" data-cuerpo="flota" data-fx="" data-ropa="wallstreet" data-acc="" role="img" aria-label="Roberto, tu mentor">' +
       "<defs>" + MANOS + "</defs><g class=\"rob-todo\">" +
       /* lápiz */
       '<path d="M144 64 Q180 40 216 64 L216 106 L144 106 Z" fill="var(--rcor)"/>' +
@@ -394,17 +522,10 @@
         '<ellipse class="rob-fosa" cx="175" cy="224" rx="3.1" ry="2" fill="var(--rtz)" opacity=".75"/>' +
         '<ellipse class="rob-fosa" cx="185" cy="224" rx="3.1" ry="2" fill="var(--rtz)" opacity=".75"/></g>' +
       '<g class="rob-bo rob-bo-viva"><ellipse class="rob-boca-viva" cx="180" cy="244" rx="17" ry="7" fill="#5e2a1d"/></g>' +
-      /* traje de mayordomo */
-      '<path d="M140 270 L220 270 L215 376 L145 376 Z" fill="var(--rj)"/>' +
-      '<path d="M160 270 L200 270 L192 306 L180 322 L168 306 Z" fill="var(--rcam)"/>' +
-      '<path d="M140 270 L166 270 L152 314 L142 306 Z" fill="var(--rj2)"/>' +
-      '<path d="M220 270 L194 270 L208 314 L218 306 Z" fill="var(--rj2)"/>' +
-      '<path d="M166 270 L180 292 L163 288 Z" fill="#fff"/><path d="M194 270 L180 292 L197 288 Z" fill="#fff"/>' +
-      '<path d="M172 286 L188 286 L191 300 L180 306 L169 300 Z" fill="var(--roro)" stroke="var(--rtz)" stroke-width="2.6" stroke-linejoin="round"/>' +
-      '<path d="M172 286 L180 292 L188 286" fill="none" stroke="var(--roro2)" stroke-width="2"/>' +
-      '<path d="M180 306 L193 314 L186 352 L180 360 L174 352 L167 314 Z" fill="var(--roro)" stroke="var(--rtz)" stroke-width="2.6" stroke-linejoin="round"/>' +
-      '<path d="M172 322 L188 330 M170 336 L186 344" stroke="var(--roro2)" stroke-width="3.4" opacity=".85"/>' +
-      '<circle cx="180" cy="368" r="3.4" fill="var(--roro)"/><path d="M198 322 L212 322 L205 311 Z" fill="var(--rcor)"/>' +
+      /* 👔 v6.90 — SU ROPA Y SUS ACCESORIOS. Antes el traje estaba clavado aquí; ahora se
+         pintan todas las prendas y el CSS enseña la que toca (data-ropa / data-acc), igual
+         que con las poses. Van antes de los brazos para que las manos queden por encima. */
+      ropas + accs +
       poses + "</g></svg>";
   }
 
@@ -485,7 +606,7 @@
      lo que pasa en todo el sistema aunque yo no esté en el chat"): Roberto puede estar
      MONTADO EN VARIOS SITIOS A LA VEZ (su carita en el chat + su cuerpo flotante), y es
      UN SOLO SER: al cambiar de gesto, cambian TODOS sus cuerpos a la vez. */
-  var instancias = [], estado = { emo: "saluda", timer: null };
+  var instancias = [], estado = { emo: "saluda", timer: null, ropa: "wallstreet", acc: "" };
   function vivas() { return (instancias = instancias.filter(function (i) { return i.el && i.el.isConnected; })); }
 
   function css() {
@@ -497,6 +618,8 @@
     if (!el) return null;
     op = op || {};
     css();
+    /* 👔 v6.90 — antes de dibujarlo, que se ponga la ropa de la hora que es */
+    try { if (!op.ropa) vestirSolo(); else vestir(op.ropa, op.acc); } catch (_) {}
     el.innerHTML = svgHTML() +
       '<div class="rob-fx rob-fx-conf"></div>' +
       '<div class="rob-fx rob-fx-zzz"><span class="rob-flota-ico" style="left:64%;top:30%;color:#4fe0c0;font:800 24px system-ui">z</span>' +
@@ -529,6 +652,9 @@
       d.style.left = (5 + i * 7.4) + "%"; d.style.background = col[i % 4]; d.style.animationDelay = (i * 0.14) + "s";
       cf.appendChild(d);
     }
+    /* 👔 v6.90 — un cuerpo nuevo nace con la ropa que Roberto lleva puesta ahora mismo:
+       es uno solo, no puede estar de traje en el chat y en pijama en la pantalla */
+    pintarVestido(inst);
     ponerEn(inst, op.emo || estado.emo || "saluda");
     return inst;
   }
@@ -539,8 +665,88 @@
     s.dataset.ojos = e.ojos; s.dataset.cejas = e.cejas || "neutral"; s.dataset.boca = e.boca;
     s.dataset.pose = e.pose; s.dataset.fx = e.fx || "";
     s.dataset.cuerpo = ""; void s.offsetWidth; s.dataset.cuerpo = e.cuerpo;   // reinicia la animación
+    /* 📱 v6.90 — el accesorio del momento entra y sale con el gesto */
+    try { estado.emo = k; repasarRopa(); pintarVestido(inst); } catch (_) {}
     return e;
   }
+  /* 📱 EL ACCESORIO DEL MOMENTO (no del armario): lo coge para un gesto y lo suelta al
+     cambiar. Si esto se guardara junto a su ropa, al terminar de analizar se quedaría con
+     el móvil en la mano para siempre. */
+  var ACC_GESTO = {
+    analiza: "movil",     /* cruzando datos: mira su móvil */
+    audita:  "movil",     /* revisando al Ejecutor: lo mismo */
+    celebra: "gafasSol",  /* +1.85R cazado: se pone las gafas de sol */
+    presumido: "gafasSol",
+    siesta:  "taza",      /* nunca duerme; si está de guardia a deshora, con su café */
+  };
+  function accDelMomento() { return ACC_GESTO[estado.emo] || ""; }
+  function pintarVestido(inst) {
+    var todo = (estado.acc + " " + accDelMomento()).trim().replace(/\s+/g, " ");
+    inst.svg.dataset.ropa = estado.ropa;
+    inst.svg.dataset.acc = todo;
+  }
+
+  /* ══ 👔 VESTIRSE ═══════════════════════════════════════════════════════════════════
+     vestir("casual")                → se cambia de ropa
+     vestir("wallstreet", "gafasSol")→ ropa + un accesorio
+     vestir(null, ["gorra","movil"]) → deja la ropa, se pone dos accesorios
+     vestir(null, "")                → se quita todos los accesorios
+     Como es UNO SOLO, se cambia en todos sus cuerpos a la vez. */
+  function vestir(ropa, acc) {
+    if (ropa && ROPAS[ropa]) estado.ropa = ropa;
+    if (acc !== undefined && acc !== null) {
+      var lista = Array.isArray(acc) ? acc : String(acc).split(/[ ,]+/);
+      estado.acc = lista.filter(function (a) { return a && ACCS[a]; }).join(" ");
+    }
+    vivas().forEach(pintarVestido);
+    return { ropa: estado.ropa, acc: estado.acc };
+  }
+
+  /* ══ 🕒 Y QUE SE VISTA SOLO, SEGÚN LA HORA DEL MERCADO ═════════════════════════════
+     Rey: "la corbata mientras está en el horario del mercado… fuera de él ropa casual y
+     también de casa". Se mira la hora de NUEVA YORK, que es la que manda en su operativa
+     (y así no se descoloca con los cambios de horario de Brasil).
+       · lunes a viernes, de la apertura de Londres al cierre de Nueva York → TRAJE
+       · el resto del día laborable → ropa casual (y una taza de madrugada, que no duerme)
+       · sábado y domingo → ropa de casa
+       · 24, 25 y 26 de diciembre → el traje rojo · 31 de diciembre y 1 de enero → esmoquin
+     Es de lo poco que Roberto decide sin preguntar: es su ropa. */
+  function ahoraNY() {
+    try {
+      var p = new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", weekday: "short",
+        hour: "2-digit", minute: "2-digit", hour12: false, month: "2-digit", day: "2-digit" }).formatToParts(new Date());
+      var o = {}; p.forEach(function (x) { o[x.type] = x.value; });
+      var h = parseInt(o.hour, 10); if (h === 24) h = 0;
+      return { dia: o.weekday, h: h, min: parseInt(o.minute, 10),
+               mes: parseInt(o.month, 10), num: parseInt(o.day, 10) };
+    } catch (_) { return null; }
+  }
+  function ropaDeAhora() {
+    var t = ahoraNY();
+    if (!t) return { ropa: "wallstreet", acc: "" };
+    if (t.mes === 12 && t.num >= 24 && t.num <= 26) return { ropa: "navidad", acc: "" };
+    if ((t.mes === 12 && t.num === 31) || (t.mes === 1 && t.num === 1)) return { ropa: "fiesta", acc: "" };
+    var finde = (t.dia === "Sat" || t.dia === "Sun");
+    if (finde) return { ropa: "casa", acc: "taza" };
+    /* de Londres (2:00 NY) al cierre de Nueva York (17:00 NY): está trabajando */
+    if (t.h >= 2 && t.h < 17) return { ropa: "wallstreet", acc: "" };
+    /* de madrugada sigue despierto, pero de casa y con su café */
+    if (t.h >= 22 || t.h < 2) return { ropa: "casa", acc: "taza" };
+    return { ropa: "casual", acc: "" };
+  }
+  function vestirSolo() { var r = ropaDeAhora(); return vestir(r.ropa, r.acc); }
+  /* Se repasa la hora AL CAMBIAR DE GESTO (cada 12–28 s en su vida de fondo), como mucho
+     una vez cada 5 minutos. Sin temporizadores: uno que se repite cuelga el navegador de
+     pruebas —el tiempo virtual no llega nunca al final— y deja procesos vivos en Node. */
+  var _ropaVista = 0;
+  function repasarRopa() {
+    var ahora = Date.now();
+    if (ahora - _ropaVista < 5 * 60000) return;
+    _ropaVista = ahora;
+    var r = ropaDeAhora();
+    if (r.ropa !== estado.ropa) vestir(r.ropa, r.acc);
+  }
+
   /* Un solo Roberto: el gesto cambia en TODOS sus cuerpos a la vez */
   function poner(k) {
     var e = ROB_EMO[k]; if (!e) return null;
@@ -578,6 +784,9 @@
 
   raiz.Roberto = {
     montar: montar, poner: poner, hablar: hablar, callar: callar, gestoDe: gestoDe,
+    vestir: vestir, vestirSolo: vestirSolo, ropaDeAhora: ropaDeAhora,
+    ropas: function () { return Object.keys(ROPAS); }, accesorios: function () { return Object.keys(ACCS); },
+    vestido: function () { return { ropa: estado.ropa, acc: estado.acc }; },
     emociones: ROB_EMO, cats: CATS, lista: function () { return Object.keys(ROB_EMO); },
     actual: function () { return estado.emo; }, svgHTML: svgHTML, css: ROB_CSS,
   };
