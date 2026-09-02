@@ -1,5 +1,82 @@
-APEX v7.07 — TRADING DESK
+APEX v7.08 — TRADING DESK
 =========================
+
+NOVEDADES v7.08  (📊 EL LIBRO DE SEÑALES — ARRANCADO)
+=======================================================
+⚠️ ESTA VEZ VAN TRES COSAS, Y EN ESTE ORDEN:
+   1. Cloudflare  → worker-elitepro-v5.115.js
+   2. El zip      → APEX-app-v7.08.zip
+   3. La APK      → Apex-Roberto-v7.08.apk
+   4. Y REINICIA EL EJECUTOR (cierra su ventana y abre
+      "Arrancar Ejecutor Apex"). Es la v2.1.
+
+📊 QUÉ ES Y POR QUÉ AHORA
+--------------------------
+Me preguntaste cómo se calculan las probabilidades y cómo puede usarlas
+Roberto. La respuesta honesta era: HOY NO SE PODÍA. Tu grado A+/B/C no es
+un porcentaje — es un CONTEO de confluencias (7 = A+, 5 = B, 3 = C).
+Nadie ha medido nunca cuántas de tus señales acaban en TP.
+
+Y eso no se puede calcular hacia atrás. Los días que no se cuentan se
+pierden para siempre. Por eso esto es lo primero de todo.
+
+QUÉ HACE, A PARTIR DE QUE LO SUBAS
+-----------------------------------
+Apunta SOLO — tú no tienes que hacer nada — cada señal 🔔 de entrada de tu
+indicador, CON SUS CONDICIONES:
+
+    par · dirección · grado · entrada/SL/TP · RR planeado
+    modelo · killzone · zona (discount/premium) · barrido · MSS ·
+    sesgo · confluencias
+
+Y le sigue la pista hasta el final: encolada → tomada (con su ticket de
+MT5) → cerrada en TP o SL, con las R reales.
+
+LO MÁS IMPORTANTE: TAMBIÉN APUNTA LO QUE **NO** SE TOMÓ
+--------------------------------------------------------
+Las vetadas (con el motivo del veto), las que llegaron con el Ejecutor
+apagado, las rechazadas por grado, las que murieron sin entregarse.
+
+Ésas son las más valiosas del libro. Son las que dentro de unos meses te
+dirán si tus filtros te están PROTEGIENDO o QUITÁNDOTE ganadoras. Sin
+ellas nunca lo sabrías.
+
+⚠️ Y EL FRENO QUE TE PROTEGE DE MÍ
+-----------------------------------
+Con menos de 30 operaciones cerradas NO EXISTE ninguna probabilidad.
+
+Un "73% de acierto" sacado de 12 casos es ruido con cara de ciencia, y te
+daría confianza justo donde más caro se paga. Así que:
+
+ · La pantalla te enseña los números, pero con la advertencia ARRIBA, no
+   debajo: "todavía no te fíes, faltan N".
+ · Roberto tiene PROHIBIDO darte un porcentaje sin decir cuántos casos lo
+   sostienen. Dirá "11 de 18", nunca "61%" a secas.
+ · Y si no hay muestra, su respuesta honesta es "todavía no lo sé".
+
+DÓNDE LO VES
+------------
+Chip nuevo 📊 Libro de señales, en 🤖 Ejecutor y cierres.
+Al principio dirá que está vacío. Es normal: empieza a contar hoy.
+
+LO QUE APRENDERÁS POR EL CAMINO (y Roberto ya lo tiene grabado)
+----------------------------------------------------------------
+No manda el % de aciertos, manda la ESPERANZA:
+
+    (% acierto × R que ganas) − (% fallo × R que pierdes)
+
+Con objetivos de 2R ganas dinero FALLANDO 6 DE CADA 10. A partir del 34%
+de aciertos ya estás en positivo. Por eso perseguir el setup perfecto es
+una trampa: un A+ con RR 1:1 puede valer menos que un B con RR 1:3.
+
+Y una que NO se hará nunca: las probabilidades deciden SI entras, jamás
+CUÁNTO. Subir el lotaje por "mejor probabilidad" con cuentas de reto te
+revienta el drawdown antes de que la ventaja se note. Riesgo fijo 0.5%.
+
+COMPROBADO: 113 de 113. El banco nuevo EJECUTA el libro entero contra un
+almacén fingido: apunta señales, las lleva por todos sus estados, cierra
+operaciones y comprueba las cuentas — incluida la de que con 1 operación
+NO se declare fiable y con 30 sí, con la esperanza calculada exacta.
 
 NOVEDADES v7.07  (⏳ SE ACABARON LOS AVISOS DE HACE HORAS)
 ===========================================================
