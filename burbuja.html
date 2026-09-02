@@ -120,6 +120,14 @@
   window.burbujaDecir = function(texto, g){
     texto = String(texto || "").trim();
     if (!texto) return;
+    /* 💬 v7.13 — PEDIR SITIO ANTES DE HABLAR.
+       Rey: "hay un error en la nube, no se ve, solo sale una línea recta". La ventana
+       flotante mide solo lo que el cuerpo y hay que ENSANCHARLA para que quepa la nubecita.
+       Ese ensanche lo pedía Java cuando él mandaba el aviso — pero la vida de fondo llama a
+       esta función desde AQUÍ DENTRO, y entonces nadie ensanchaba nada: la nubecita quedaba
+       aplastada contra el borde, que es la raya que vio Rey.
+       Se avisa por la consola, que es el canal que Android ya escucha. */
+    try { console.log("BURBUJA-ANCHA 1"); } catch(_){}
     globo.textContent = texto;
     globo.classList.add("hay");
     gesto(g || Roberto.gestoDe(texto));
@@ -132,6 +140,9 @@
   window.burbujaCallar = function(){
     clearTimeout(tVuelta);
     globo.classList.remove("hay");
+    /* y se devuelve el sitio: si la ventana se quedara ancha, se comería los toques de la
+       aplicación que Rey tenga debajo en una franja donde ya no hay nada que ver */
+    try { console.log("BURBUJA-ANCHA 0"); } catch(_){}
     try { Roberto.callar(); } catch(_){}
     gesto(GESTO_FONDO);
   };

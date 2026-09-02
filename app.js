@@ -7848,6 +7848,16 @@ function robCara(emo,txt){
     const e=Roberto.poner(emo);
     const s=$("#iaRobEstado"); if(s&&e) s.textContent=(txt||e.lbl||"").slice(0,34);
     const f=$("#fab"); if(f&&e) f.classList.toggle("alerta", !!e.urgente);
+    /* 🧍 v7.13 — Y EL DE FUERA HACE LO MISMO, EN EL MISMO INSTANTE.
+       Rey (02-09), viéndolos a la vez en su pantalla: "el Roberto de dentro de Apex debe ser
+       el mismo que está afuera… nada de eso debe ser independiente, mientras uno hace un
+       gesto otro hace otra cosa. Eso son dos Roberto, dos cuerpos diferentes."
+       Tenía razón, y era culpa de la vida de fondo que le puse ayer al cuerpo flotante: le di
+       su propio reloj, así que con Apex abierta había DOS vidas eligiendo gestos al azar de
+       la misma tabla. Misma tabla no es lo mismo que misma persona.
+       Ahora, con Apex delante, el gesto se decide AQUÍ y allí solo se repite — y el flotante
+       apaga su vida propia mientras tanto (lo hace el plugin al pasar Apex al frente). */
+    if(emo){ try{ const PV = vozNativa(); if(PV && PV.robertoGesto) PV.robertoGesto({ gesto: emo }); }catch(_){} }
   }catch(_){}
 }
 /* ══ ✏️ v6.47 — ROBERTO VIVO EN TODO APEX ═══════════════════════════════════
@@ -8182,6 +8192,11 @@ function robBocaRato(texto){
 function robDecir(titulo,texto,op){
   op=op||{};
   try{
+    /* 🎈 v7.13 — la nubecita también es la MISMA en los dos cuerpos. Si el de dentro dice
+       algo y el de fuera se queda callado, vuelven a ser dos Roberto distintos. */
+    try{ const PV = vozNativa();
+      if(PV && PV.robertoNube) PV.robertoNube({ texto: String(texto||""), gesto: String(op.gesto||"") });
+    }catch(_){}
     const fab=$("#fab"); if(!fab) return;
     let g=$("#robGlobo");
     if(!g){ g=el("div","rob-globo"); g.id="robGlobo"; document.body.appendChild(g);

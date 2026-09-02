@@ -1,5 +1,63 @@
-APEX v7.12 — TRADING DESK
+APEX v7.13 — TRADING DESK
 =========================
+
+NOVEDADES v7.13  (🧍 UN SOLO ROBERTO, Y SU NUBECITA BIEN PUESTA)
+=================================================================
+Solo el zip y la APK. Worker y Ejecutor no cambian.
+
+Las tres cosas que viste eran fallos MÍOS, y de lo que construí ayer.
+
+1️⃣ LA NUBE SALÍA COMO UNA RAYA
+--------------------------------
+La ventana flotante mide solo lo que el cuerpo, y tiene que ENSANCHARSE
+para que quepa la nubecita. Ese ensanche lo pedía Android cuando él te
+mandaba un aviso.
+
+Pero la vida de fondo que le puse ayer llama a la nubecita DESDE DENTRO de
+la página — así que Android no se enteraba, la ventana seguía estrecha, y
+la nubecita quedaba aplastada contra el borde: esa raya vertical.
+
+ARREGLADO: ahora la página pide sitio ella misma. Se ensancha venga la
+orden de donde venga.
+
+2️⃣ LA NUBE NO SE ADAPTABA AL LADO
+-----------------------------------
+Tenías razón y el fallo era tonto de puro simple: la función que le dice a
+la página "estás en el lado izquierdo" ESTABA ESCRITA y nadie la llamaba
+nunca. La página se creía siempre en el lado derecho, así que al moverlo a
+la izquierda la nubecita se colocaba por la derecha, donde no cabe.
+
+Una función escrita y sin llamar es código muerto que aparenta estar.
+
+ARREGLADO: al soltarlo en un borde se le dice de qué lado quedó, y la
+nubecita se pone SIEMPRE al lado contrario del cuerpo, para no taparlo.
+
+3️⃣ ERAN DOS ROBERTO — Y ESTO ES LO IMPORTANTE
+-----------------------------------------------
+Tenías toda la razón, y es culpa directa de lo de ayer: al darle vida de
+fondo al cuerpo flotante le di también SU PROPIO RELOJ. Con Apex abierta
+quedaban DOS vidas corriendo en paralelo, cada una eligiendo gestos al
+azar de la misma tabla. Por eso hacían cosas distintas.
+
+Y ahí está la lección: MISMA TABLA NO ES LO MISMO QUE MISMA PERSONA.
+
+LA REGLA AHORA — SOLO UNO PIENSA A LA VEZ:
+   · Apex delante → manda Apex. El cuerpo flotante APAGA su vida y repite
+     el gesto y la nubecita del de dentro, en el mismo instante.
+   · Apex detrás  → manda el flotante, que recupera su vida propia.
+
+El que no manda no elige nada: obedece. Así no pueden contradecirse nunca.
+
+COMPROBADO: 122 de 122.
+
+QUÉ HACER
+---------
+  1. Sube APEX-app-v7.13.zip (comprueba que ponga 7.13)
+  2. Instala Apex-Roberto-v7.13.apk
+  3. Con Apex ABIERTA, míralos a los dos: tienen que hacer LO MISMO
+  4. Sal a otra app: el flotante recupera su vida y te saca la nubecita
+  5. Muévelo a la izquierda y espera a que hable: la nube debe salir a su
+     derecha, sin taparlo
 
 NOVEDADES v7.12  (🫧 FASE 2 — ROBERTO FLOTANDO, EL MISMO ESTÉ DONDE ESTÉ)
 ==========================================================================
