@@ -1540,6 +1540,95 @@ async function libroSenales(){
      "cuanto mejor lo lleves, mejor te podré medir.";
   alert(t);
 }
+/* ══════════════════════════════════════════════════════════════════════════════
+   🌙 LA REVISIÓN DE ANTES DE DORMIR — v7.10
+   ═════════════════════════════════════════════════════════════════════════════
+   Rey (02-09): "que Roberto vea y audite que todo está bien y listo para el
+   comienzo del nuevo día al comienzo de la sesión de Londres… antes de suspender
+   la PC. Eso incluye todo: Ejecutor, MT5, botón del Ejecutor encendido en Apex,
+   todo en general, y me diga lo que NO está bien".
+
+   POR QUÉ HACÍA FALTA, con el caso delante: la madrugada del 02-09 la PC despertó
+   sola a las 02:00, el Ejecutor estaba vivo y todo parecía perfecto — pero el
+   botón «Algo Trading» de MT5 estaba apagado y sus tres señales (una A+ de
+   GBPUSD) se estrellaron. Rey se enteró horas después. Una revisión de treinta
+   segundos antes de acostarse lo habría cazado.
+
+   REGLA DE ESTA PANTALLA: se ordena por lo que IMPIDE OPERAR, no por bonito.
+   Primero lo que rompe la sesión de mañana, después lo que solo conviene mirar.
+   Y si algo no se puede comprobar, se dice — jamás se da por bueno lo que no se
+   ha visto, que es como se le coló el botón apagado. */
+async function revisionNoche(){
+  toast("Revisando todo para mañana…");
+  const mal=[], ojo=[], bien=[];
+  let S=null, E=null;
+  try{ const r=await fetch(nubeUrl()+"/salud",{cache:"no-store"}); S=await r.json(); }catch(_){}
+  try{ const r=await fetch(nubeUrl()+"/ejec/estado",{cache:"no-store"}); E=await r.json(); }catch(_){}
+
+  if(!S){ alert("🌙 REVISIÓN DE ANTES DE DORMIR\n\n❌ No pude hablar con la nube, así que NO puedo\nrevisarte nada. Mira tu internet y vuelve a intentarlo.\n\nNo te digo que está todo bien: es que no lo sé."); return; }
+  bien.push("La nube responde (worker "+(S.version||"?")+")");
+
+  /* ── 1) EL EJECUTOR — lo que de verdad decide si mañana se opera ── */
+  if(!E || !E.ok){ mal.push("No pude ver el Ejecutor. Sin él no se toma ninguna entrada."); }
+  else{
+    const L=E.live||{};
+    if(!E.on) mal.push("El Ejecutor está APAGADO en Apex (botón 🔴). Mañana no tomará nada.");
+    else bien.push("El Ejecutor está encendido en Apex");
+
+    if(!E.vivo || (E.vistoHace||999)>120) mal.push("El programa del Ejecutor NO responde en la PC"+(E.vistoHace?" (hace "+E.vistoHace+" s)":"")+".");
+    else bien.push("El programa del Ejecutor está vivo (hace "+E.vistoHace+" s)");
+
+    /* 🔛 el que le costó la sesión del 02-09 */
+    if(L.algo===false) mal.push("El botón «ALGO TRADING» de MT5 está APAGADO. Es el que rechazó tus tres señales esta madrugada.");
+    else if(L.algo===true) bien.push("El botón «Algo Trading» de MT5 está ENCENDIDO");
+    else ojo.push("No sé si el botón «Algo Trading» está encendido (tu Ejecutor es anterior a la v2.3: reinícialo).");
+
+    if(L.cuenta) bien.push("MT5 conectado a la cuenta "+L.cuenta+(L.demo?" (demo)":" ⚠️ REAL"));
+    else mal.push("MT5 no tiene ninguna cuenta conectada.");
+    if(L.demo===false) mal.push("La cuenta de MT5 NO es demo. El Ejecutor se negará a operar.");
+
+    const nPos=(L.posiciones||[]).length;
+    if(nPos) ojo.push(nPos+" posición(es) ABIERTA(S). Si suspendes, se quedan sin vigilancia ni gestión.");
+    else bien.push("No hay posiciones abiertas: puedes suspender tranquilo");
+
+    const c=E.cfg||{};
+    bien.push("Reglas de mañana: grado "+(c.grado||"?")+" · riesgo "+(c.riesgoPct||"?")+"% · máx "+(c.maxOpsDia||"?")+" al día · "+(c.horaIni||"?")+"–"+(c.horaFin||"?")+" NY");
+    if(c.horaIni && c.horaIni>"02:00") ojo.push("Tu ventana empieza a las "+c.horaIni+" NY: Londres abre a las 02:00 y te la perderías.");
+  }
+
+  /* ── 2) LOS OJOS DE ROBERTO ── */
+  if(S.puente && S.puente.vivo) bien.push("El Puente está vivo: Roberto ve tu gráfico");
+  else ojo.push("El Puente NO da señales"+(S.puente&&S.puente.haceSeg?" (hace "+Math.round(S.puente.haceSeg/60)+" min)":"")+". Roberto se queda sin ver el gráfico — pero el Ejecutor SÍ puede operar sin él.");
+  if(S.grafico && S.grafico.fresco) bien.push("El gráfico llega fresco desde TradingView");
+  else ojo.push("Hace rato que no llega nada del gráfico. Mira que TradingView siga abierto con tu indicador.");
+
+  /* ── 3) QUIÉN TE AVISA MIENTRAS DUERMES ── */
+  if(S.apkViva && S.apkViva.vivo) bien.push("El vigía de la APK está despierto: los avisos te llegan al teléfono");
+  else ojo.push("El vigía de la APK no da señales. Te avisará la web (es el respaldo), pero revisa que la APK siga de guardia.");
+
+  /* ── 4) TUS CUENTAS ── */
+  try{
+    const enPeligro=(Array.isArray(CUENTAS)?CUENTAS:[]).filter(c=>c&&c.limite&&c.balance&&(c.balance<=c.limite*1.02));
+    if(enPeligro.length) mal.push(enPeligro.length+" cuenta(s) cerca del límite de pérdida. Mañana cualquier SL puede costarte la cuenta.");
+  }catch(_){}
+
+  /* ── 5) EL VEREDICTO ── */
+  let t="🌙 REVISIÓN DE ANTES DE DORMIR\n"+new Date().toLocaleString("es")+"\n\n";
+  t+= mal.length ? "🔴 NO ESTÁ LISTO — "+mal.length+" cosa(s) que ROMPEN la sesión de mañana:\n\n"
+     : ojo.length ? "🟡 CASI LISTO — nada roto, pero mira esto:\n\n"
+     : "🟢 TODO LISTO PARA LONDRES. Puedes suspender tranquilo.\n\n";
+  if(mal.length) mal.forEach(x=>{ t+="   ❌ "+x+"\n"; });
+  if(ojo.length){ t+=(mal.length?"\n🟡 Además, para que lo sepas:\n":""); ojo.forEach(x=>{ t+="   ⚠️ "+x+"\n"; }); }
+  t+="\n── Lo que SÍ está bien ──\n";
+  bien.forEach(x=>{ t+="   ✅ "+x+"\n"; });
+  t+="\n── Y al despertar ──\n";
+  t+="   Tu PC despierta sola a las 02:00 para Londres, y el guardián\n";
+  t+="   repasa que MT5, el Puente y el Ejecutor estén en pie. Si el\n";
+  t+="   botón de Algo Trading estuviera apagado, el Ejecutor lo\n";
+  t+="   enciende él y te lo dice.\n";
+  if(mal.length) t+="\n⚠️ Arregla lo rojo ANTES de suspender. Dormido no lo vas a poder tocar.";
+  alert(t);
+}
 async function auditoriaEjecutor(){
   try{ hitosMarcar("ejecutor"); }catch(_){}
   if(typeof abrirIA==="function") abrirIA();
@@ -6595,6 +6684,7 @@ const IA_CHIP_CATS = [
     { act:"ejecutor",     t:"🤖 Ejecutor" },
     { act:"auditoria",    t:"🕵️ Auditoría del Ejecutor" },
     { act:"libro",        t:"📊 Libro de señales" },
+    { act:"noche",        t:"🌙 Revisión de antes de dormir" },
     { act:"cierredia",    t:"🤖 Cierre del día" },
     { act:"cierresemana", t:"🤖 Cierre de semana" },
   ]},
@@ -6672,6 +6762,7 @@ function iaCablearChips(){
     if(b.dataset.act==="ideas")        return verIdeas();        /* 🆕 v6.43 */
     if(b.dataset.act==="auditoria")    return auditoriaEjecutor(); /* 🆕 v6.45 */
     if(b.dataset.act==="libro")        return libroSenales();     /* 📊 v7.08 */
+    if(b.dataset.act==="noche")        return revisionNoche();    /* 🌙 v7.10 */
     iaEnviar(b.dataset.q);
   }; });
 }

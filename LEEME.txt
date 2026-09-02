@@ -1,5 +1,59 @@
-APEX v7.09 — TRADING DESK
+APEX v7.10 — TRADING DESK
 =========================
+
+NOVEDADES v7.10  (🌙 LA REVISIÓN DE ANTES DE DORMIR)
+=====================================================
+⚠️ VAN TRES COSAS:
+   1. Cloudflare → worker-elitepro-v5.116.js
+   2. El zip     → APEX-app-v7.10.zip
+   3. La APK     → Apex-Roberto-v7.10.apk
+   4. Y REINICIA EL EJECUTOR otra vez (es la v2.3).
+
+🌙 LO QUE PEDISTE
+------------------
+Chip nuevo: 🌙 Revisión de antes de dormir (en 🤖 Ejecutor y cierres).
+
+Un toque y te dice si mañana puede operar o no. Lo revisa TODO:
+
+  🤖 EL EJECUTOR
+     · encendido en Apex (el botón 🟢 de tu panel)
+     · su programa vivo en la PC, y hace cuánto respondió
+     · el botón ALGO TRADING de MT5 ← el que te costó la madrugada
+     · MT5 conectado, y que la cuenta sea demo
+     · posiciones abiertas (no se suspende con dinero corriendo)
+     · tus reglas de mañana: grado, riesgo, máximo al día, horario
+
+  👁️ LOS OJOS DE ROBERTO
+     · el Puente vivo · el gráfico llegando fresco
+
+  🔔 QUIÉN TE AVISA MIENTRAS DUERMES
+     · el vigía de la APK despierto
+
+  🏦 TUS CUENTAS
+     · alguna cerca del límite de pérdida
+
+Y te da un veredicto de una línea: 🟢 TODO LISTO / 🟡 CASI / 🔴 NO ESTÁ
+LISTO, ordenado por lo que ROMPE la sesión, no por bonito.
+
+⚠️ LA REGLA QUE MÁS ME IMPORTA DE ESTA PANTALLA
+------------------------------------------------
+Lo que NO se puede comprobar, SE DICE. Nunca se da por bueno.
+
+Porque así fue exactamente como se te coló el botón apagado: todo
+"parecía" bien. Si un día no puede ver algo, te lo dirá con esas palabras:
+"no sé si el botón está encendido". Y si no hay internet, no te da un OK
+falso — te dice "no te digo que está todo bien: es que no lo sé".
+
+RESPUESTA A TU PREGUNTA SOBRE LAS TECLAS
+-----------------------------------------
+NO. Si el botón ya está encendido, el Ejecutor no hace absolutamente
+nada: ni busca la ventana de MT5, ni pide el foco, ni toca una tecla.
+Solo actúa cuando de verdad está apagado.
+
+COMPROBADO: 116 de 116. El banco nuevo EJECUTA la revisión rompiendo el
+sistema de una forma distinta cada vez (botón apagado, Ejecutor apagado,
+programa caído, posiciones abiertas, Puente caído, sin internet) y exige
+que lo cace y lo diga con las palabras correctas.
 
 NOVEDADES v7.09  (🧑‍💼 TÚ vs 🤖 EL EJECUTOR)
 =============================================
