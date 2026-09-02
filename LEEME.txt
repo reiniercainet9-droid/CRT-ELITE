@@ -1,5 +1,63 @@
-APEX v6.93 — TRADING DESK
+APEX v6.94 — TRADING DESK
 =========================
+
+NOVEDADES v6.94 + WORKER 5.114  (🚨 POR QUÉ NO TE LLEGARON LOS AVISOS)
+=================================================================
+⚠️ LLEVA WORKER. Sube PRIMERO el worker 5.114 a Cloudflare, luego el zip,
+   y después instala la APK.
+
+Fui a mirar el registro del sistema y EL WORKER TE LO MANDÓ TODO esta
+madrugada:
+
+   02:08  🔔 EURUSD · 4H       03:14  🔔 EURUSD · 4H
+   03:25  🔔 EURUSD · 5M ×2    04:20  🔔 EURUSD · 4H
+   03:00  ⏰ Londres           (apertura de sesión)
+   03:00  🔔 FundedNext 6k exámen en peligro
+   03:00  🔔 FundedNext 6k en peligro
+   05:00  🌅 Buenos días, Rey
+
+Nada falló al enviarse. Falló la ENTREGA a la APK, por DOS causas:
+
+- 📦 LA COLA TENÍA TOPE DE SEIS. Entre las 02:00 y las 05:00 salieron 18
+  avisos. Todo lo que el vigía no alcanzara a recoger antes de que
+  entrara el séptimo se perdía PARA SIEMPRE.
+
+  Y lo que llenó esos seis huecos: una alarma INSISTENTE se repite cada
+  30 segundos hasta 20 veces, y CADA repetición entraba como un aviso
+  nuevo. Una sola alarma insistente vacía una cola de seis TRES VECES. En
+  tu cola de esta mañana, 4 de los 6 huecos eran repeticiones 🔁 de la
+  MISMA alarma de GBPUSD — por eso solo veías esa.
+
+  ARREGLADO: una repetición sustituye a la anterior (es la misma alarma
+  pidiendo lo mismo: ocupa UN hueco), y la cola pasa de 6 a 40 avisos
+  guardados durante 8 horas. Cabe una madrugada entera.
+
+- 🔋 Y LA CAUSA DE FONDO: ANDROID DORMÍA A LA APK. Con el teléfono quieto
+  entra en modo de ahorro y a las apps con la batería optimizada les
+  CORTA INTERNET. El vigía seguía "encendido"... y sin red. Comprobé que
+  la APK nunca le pedía a Android la exención — un servicio en primer
+  plano no basta.
+
+  ARREGLADO: ahora Apex lo detecta y te lo dice en rojo, con un botón
+  que abre el permiso de Android. En cuanto instales, entra al panel del
+  vigía y toca "🔋 Quitarle el límite de batería".
+
+- 🛟 Y TU PREGUNTA: "¿no era que solo notificaba la APK?". La web notificó
+  PORQUE la APK se durmió. No es un fallo: es la red de seguridad de la
+  Fase 1 haciendo su trabajo. Sin ella tampoco habrías visto el EUR/USD
+  en ningún sitio. Cuando la APK vuelve a dar señales, la web se calla
+  sola otra vez.
+
+- 🛠️ Corregido también el consejo viejo del panel: ya NO te dice que
+  quites las notificaciones del navegador. Es tu respaldo.
+
+- 💰 Y UN FALLO QUE CAZÓ UNA PRUEBA: con una posición ABIERTA a las 4 de
+  la mañana, Roberto hacía gestos de "madrugada" en vez de estar
+  cuidándotela. El reloj le ganaba al dinero corriendo. Ahora manda la
+  posición, como en su tabla manda siempre lo más grave.
+
+COMPROBADO: 101 de 101 pruebas en verde. El banco nuevo reproduce TU
+madrugada, aviso por aviso a sus horas reales, y exige que estén todos.
 
 NOVEDADES v6.93  (👑 EL ICONO EN NEGRO Y LA ENTRADA CON TU IMAGEN)
 =================================================================

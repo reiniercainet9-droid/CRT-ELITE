@@ -7261,6 +7261,9 @@ async function vigiaUI(){
   try{
     const P = vigiaPuente();
     const caja=$("#vigiaCaja"), box=$("#vigiaBox"), btn=$("#vigiaBtn"), nota=$("#vigiaNota");
+    /* el hueco del aviso de batería se crea la primera vez que hace falta */
+    if(nota && !$("#vigiaBateria")){ const d=el("div","aviso-rojo"); d.id="vigiaBateria"; d.style.display="none";
+      nota.parentNode.insertBefore(d, nota); }
     if(!caja||!box||!btn) return;
     if(!P){ caja.style.display="none"; box.style.display="none"; return; }   /* en la web, ni aparece */
     caja.style.display=""; box.style.display="";
@@ -7276,8 +7279,33 @@ async function vigiaUI(){
       pb.onclick = async ()=>{ try{ await P.vigiaProbar(); toast("📲 Aviso de prueba enviado — míralo arriba"); }
         catch(e){ toast("No pude mandarlo: " + (e && e.message ? e.message : e)); } };
     }
+    /* 🔋 v6.94 — ¿PUEDE ANDROID DORMIRLO? Es la pregunta que faltaba. El 02-09 el vigía
+       estaba encendido y el panel decía "de guardia"… mientras Android le cortaba la red y
+       Rey perdía toda la madrugada de avisos. Estar encendido no es estar despierto. */
+    let bat = { sinLimite: true };
+    try{ if(P.bateriaEstado) bat = await P.bateriaEstado(); }catch(_){}
+    const bb = $("#vigiaBateria");
+    if(bb){
+      const mal = on && !bat.sinLimite;
+      bb.style.display = mal ? "" : "none";
+      if(mal){
+        bb.innerHTML = '<b>⚠️ Android puede dormir a Apex</b><br>' +
+          'Está de guardia, pero con la batería limitada Android le corta internet cuando el ' +
+          'teléfono lleva un rato quieto: los avisos dejan de llegar por la app sin que nada ' +
+          'lo diga. Pasó la madrugada del 2 de septiembre.' +
+          '<div style="margin-top:8px"><button class="btn gold" id="vigiaBatBtn">🔋 Quitarle el límite de batería</button></div>';
+        const nb = $("#vigiaBatBtn");
+        if(nb) nb.onclick = async ()=>{ try{ await P.bateriaPedir(); toast("Elige «Permitir» en la ventana de Android"); }
+          catch(e){ toast("Ábrelo a mano: Ajustes → Apps → Apex → Batería → Sin restricciones"); } };
+      }
+    }
     nota.innerHTML = on
-      ? "Roberto está de guardia: te trae los avisos aunque Apex esté cerrada, y Android no puede dormirlo. Verás un aviso fijo 👁️ que lo demuestra. <b>Ya puedes quitar las notificaciones de la Apex del navegador</b> para no recibirlas dos veces."
+      ? "Roberto está de guardia: te trae los avisos aunque Apex esté cerrada. Verás un aviso fijo 👁️ que lo demuestra. " +
+        /* 🛟 v6.94 — antes esto decía "ya puedes quitar las notificaciones del navegador".
+           Desde la Fase 1 eso es FALSO y además peligroso: la web se calla sola mientras la
+           app avisa, y es la que toma el relevo si la app se cae o Android la duerme — la
+           madrugada del 02-09 fue la web la que salvó los avisos. */
+        "<b>No le quites los permisos al navegador</b>: se calla solo mientras la app esté de guardia, y vuelve a avisarte si la app deja de dar señales."
       : "Con esto encendido, los avisos te llegan por la app y no por el navegador — no se pierde ninguno aunque el teléfono se duerma. <b>Mientras no lo enciendas, sigues con los del navegador.</b>";
     btn.onclick = async ()=>{
       btn.disabled = true;
@@ -7450,12 +7478,16 @@ function robVidaSituacion(){
   try{
     const d = new Date().getUTCDay();
     if(d === 6 || d === 0) return "finde";
+    /* 💰 v6.94 — LA POSICIÓN ABIERTA MANDA SOBRE LA HORA. Antes la madrugada se miraba
+       ANTES que la posición: con una operación viva a las 4 de la mañana, Roberto hacía
+       gestos de "madrugada" en vez de estar cuidándola. Hay dinero corriendo — eso gana a
+       cualquier otra cosa, igual que en su tabla de situaciones manda siempre lo más grave. */
+    if(_robFondo === "vigila" && /cuidando/.test(($("#iaRobEstado")||{}).textContent||"")) return "posicion";
     const kz = robKillzoneAhora();
     if(kz.dentro) return "killzone";
     if(kz.faltan != null && kz.faltan <= 30) return "cerca";
     /* 🌙 antes de Londres Rey suele estar levantado: ahí Roberto acompaña, no bromea */
     { const h = new Date().getHours(); if(h >= 0 && h < 7) return "madrugada"; }
-    if(_robFondo === "vigila" && /cuidando/.test(($("#iaRobEstado")||{}).textContent||"")) return "posicion";
     return "espera";
   }catch(_){ return "espera"; }
 }
