@@ -1,5 +1,111 @@
-APEX v7.03 — TRADING DESK
+APEX v7.05 — TRADING DESK
 =========================
+
+NOVEDADES v7.05  (LA NUBE DE VERDAD · EL SELECTOR DE VOZ)
+===========================================================
+Solo el zip y la APK. El worker 5.114 YA ESTÁ VIVO (lo comprobé).
+
+🗝️ 1. LA NUBE: ME EQUIVOQUÉ EN LA 7.03 Y TU INFORME ME CORRIGIÓ
+----------------------------------------------------------------
+Acerté la causa (lo que no existe en el aparato no se sube) pero ADIVINÉ
+mal cuáles eran las cuatro claves, y no lo comprobé. Sembré el plan, los
+veredictos, el historial y la dirección del puente.
+
+Tu 🔎 de esta mañana cantó las de verdad:
+   · crtelite_conf_v2        → tu configuración de Apex
+   · crtelite_reglas_v2      → tus reglas leídas
+   · crtelite_estrategias_v3 → tus estrategias
+   · crtelite_estrdefs_v1    → cómo defines cada estrategia
+
+Ninguna de las cuatro que yo había sembrado. Por eso seguías en 22.
+
+AHORA NO HAY LISTA QUE ADIVINAR: se recorren los 26 apartados enteros. Si
+mañana se añade uno nuevo, entra solo. Y se siembra también justo antes de
+pulsar SUBIR, que es el único sitio donde el orden no puede fallar.
+
+Además el informe 🔎 ya nombra LOS 26 en cristiano — a ti te salieron en
+crudo justo los cuatro que no estaban en la tabla, y eso no dice nada.
+
+🗣️ 2. "SIN VOCES EN ESTE TELÉFONO" — Y ERA APEX PISÁNDOSE A SÍ MISMA
+----------------------------------------------------------------------
+Dentro de la APK las voces son las de Android y las pinta el bloque
+nativo. Pero al abrir ⚙️ se llamaba TAMBIÉN a la función del NAVEGADOR,
+que dentro de la APK no ve ninguna voz, y te machacaba el desplegable con
+su "Sin voces en este teléfono". Ganaba la última en escribir, y era la
+equivocada.
+
+Es la misma enfermedad de las cuatro tablas de caras: dos sitios
+decidiendo lo mismo. Ahora cada uno manda en su casa. La web no se tocó:
+fuera de la APK hace exactamente lo de siempre (hay banco que lo exige).
+
+Y el motor ya no se espera "un rato a ojo": se espera hasta 6 s a que
+Android diga que arrancó. Si aun así no hay voces, te dice POR QUÉ — si
+el motor no arrancó, o si arrancó pero no declara ninguna.
+
+COMPROBADO: 110 de 110 bancos en verde.
+
+QUÉ HACER
+---------
+  1. Sube APEX-app-v7.05.zip (comprueba que ponga 7.05)
+  2. Instala Apex-Roberto-v7.05.apk
+  3. En la web: 💾 SUBIR · mira con 🔎 → tiene que decir "26 de 26"
+  4. En la APK: ☁️ TRAER
+  5. Abre ⚙️ en la APK y mira el selector de voz
+
+NOVEDADES v7.04  (🔕 LA INSISTENTE SE CALLA CUANDO TÚ LA DESPACHAS)
+====================================================================
+INCLUYE TODO LO DE LA 7.03. Sube ESTA y olvídate de la anterior.
+
+⚠️ IMPORTANTE: esta vez SÍ hay que subir el worker (5.114) además del zip.
+   Sin él, las repeticiones te siguen llenando la cola y echando fuera
+   las alarmas buenas. Primero Cloudflare, luego el zip, luego la APK.
+
+🔕 LO QUE TE PASÓ HOY, Y POR QUÉ
+--------------------------------
+Tenías razón y el fallo es mío. Una alarma fuerte se repite cada 30 s
+hasta 20 veces, y solo se para con un aviso a la nube (/insist/visto).
+
+Ese aviso lo mandaba el vigilante DEL NAVEGADOR cuando tocabas o
+descartabas la notificación. Desde que manda la APK, tus avisos los pinta
+Android — y ahí dentro NO HABÍA NADIE MANDÁNDOLO. Tocarla o descartarla no
+llegaba a ninguna parte. La insistencia solo moría sola al llegar a 20.
+
+Y encima cada repetición abría una notificación NUEVA en vez de sustituir
+a la anterior: por eso se te amontonaban y se comían las demás.
+
+LO ARREGLADO
+------------
+1. TRES caminos para callarla, no uno:
+   · descartarla (deslizar, o "borrar todas")
+   · un botón nuevo en el propio aviso: 🔕 Ya la vi
+   · tocarla (abre Apex y la calla, sin depender de que cargue la página)
+
+2. FRENO DE MANO EN EL TELÉFONO. El interruptor de la nube tarda hasta un
+   minuto en propagarse — o sea, dos repeticiones más después de que tú ya
+   la despachaste. Ahora la APK se frena sola, en el acto.
+
+3. UNA SOLA CASILLA. Las repeticiones caen todas en el mismo sitio: ves
+   una, no veinte. Un aviso normal conserva su casilla propia.
+
+LO QUE **NO** HACE (tu condición, y está comprobada)
+-----------------------------------------------------
+El freno SOLO calla repeticiones 🔁 de la alarma que tú acabas de
+despachar. Una alarma distinta, un aviso programado, el buenos días, el
+vigía — todo eso se te enseña SIEMPRE. No se pierde ni una.
+
+El banco nuevo COMPILA Y EJECUTA ese freno en Java con 8 casos, y dos de
+ellos existen solo para eso: que una alarma de GBPUSD y un "buenos días"
+pasen mientras la de EURUSD está frenada.
+
+COMPROBADO: 109 de 109 bancos en verde.
+
+ORDEN PARA SUBIR
+----------------
+  1. Cloudflare → worker-elitepro-v5.114.js
+  2. El zip APEX-app-v7.04.zip (comprueba que la web ponga 7.04)
+  3. Instala Apex-Roberto-v7.04.apk
+  4. En la web: 💾 SUBIR · mira con 🔎 que ponga "26 de 26"
+  5. En la APK: ☁️ TRAER
 
 NOVEDADES v7.03  (🗝️ POR FIN: POR QUÉ TU NUBE SE QUEDABA EN 22)
 =================================================================

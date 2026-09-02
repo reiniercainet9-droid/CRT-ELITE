@@ -52,6 +52,38 @@ const NUBE_KEYS = ["crtelite_trades_v2","crtelite_cuentas_v3","crtelite_reminder
      CADA aparato: copiarlo callaría avisos que en el otro nunca salieron) y
      `crtelite_iachat_v3` (rastro de una migración vieja, no guarda nada vivo). */
   "crtelite_plan_v1", "crtelite_vered_v1", "crtelite_robertolog_v3", "crtelite_iaurl_v3"];
+/* 🏷️ v7.05 — LOS 26 APARTADOS, CADA UNO CON SU NOMBRE EN CRISTIANO.
+   El informe 🔎 de la v7.03 solo sabía nombrar siete, y a Rey le salieron justo los otros:
+   leyó "crtelite_conf_v2, crtelite_reglas_v2, crtelite_estrategias_v3, crtelite_estrdefs_v1"
+   y eso no le dice nada a nadie. Están LOS 26: si mañana falta cualquiera, se entiende. */
+const NUBE_NOMBRES = {
+  "crtelite_trades_v2":"tu diario de operaciones",
+  "crtelite_cuentas_v3":"tus cuentas de fondeo",
+  "crtelite_reminders_v3":"tus avisos programados",
+  "crtelite_chk_v2":"tus listas de comprobación",
+  "crtelite_conf_v2":"tu configuración de Apex",
+  "crtelite_reglas_v2":"tus reglas leídas",
+  "crtelite_balance_v2":"tu balance y riesgo por operación",
+  "crtelite_ctx_v3":"el modo y la estrategia en uso",
+  "crtelite_estrategias_v3":"tus estrategias",
+  "crtelite_estrdefs_v1":"cómo defines cada estrategia",
+  "crtelite_pares_v3":"los pares que sigues",
+  "crtelite_calpares_v3":"el filtro del calendario",
+  "crtelite_notif_v3":"los ajustes de tus avisos",
+  "crtelite_vigila_v3":"el vigilante de tus cuentas",
+  "crtelite_fabpos_v3":"dónde dejaste el botón de Roberto",
+  "crtelite_iavoz_v3":"la voz de Roberto",
+  "crtelite_shots_v1":"tus capturas de pantalla",
+  "crtelite_ventanas_v1":"tus ventanas y killzones",
+  "crtelite_plansem_v1":"tu plan de la semana",
+  "crtelite_iaconvs_v3":"vuestros chats",
+  "crtelite_iaact_v3":"el chat abierto",
+  "crtelite_ejectrades_v1":"las operaciones del Ejecutor",
+  "crtelite_plan_v1":"tu PLAN de arranque",
+  "crtelite_vered_v1":"los veredictos de Roberto",
+  "crtelite_robertolog_v3":"el historial de Roberto",
+  "crtelite_iaurl_v3":"la dirección del puente"
+};
 const NUBE_CODE_KEY="crtelite_nubecode_v1", NUBE_TS_KEY="crtelite_datats_v1", NUBE_LAST_KEY="crtelite_nubelast_v1", NUBE_FRENO_KEY="crtelite_nubefreno_v1";
 let NUBE_RESTAURANDO=false, _nubeTimer=null;
 function nubeCode(){ try{ return (localStorage.getItem(NUBE_CODE_KEY)||"").trim(); }catch(_){ return ""; } }
@@ -98,15 +130,7 @@ async function nubeVerInforme(){
     /* 🔎 v7.03 — QUÉ FALTA, Y POR SU NOMBRE. A Rey le costó horas descubrir que su respaldo
        se quedaba en 22 de 26: el informe decía cuántos había, pero no CUÁLES faltaban. */
     ((n.faltan && n.faltan.length) ? ("⚠️ NO están viajando "+n.faltan.length+" apartados:\n"+
-      n.faltan.map(k=>"   · "+({
-        "crtelite_plan_v1":"tu PLAN de arranque",
-        "crtelite_vered_v1":"los veredictos de Roberto",
-        "crtelite_robertolog_v3":"el historial de Roberto",
-        "crtelite_iaurl_v3":"la dirección del puente",
-        "crtelite_trades_v2":"tu diario de operaciones",
-        "crtelite_cuentas_v3":"tus cuentas",
-        "crtelite_iaconvs_v3":"vuestros chats"
-      }[k]||k)).join("\n")+
+      n.faltan.map(k=>"   · "+(NUBE_NOMBRES[k]||k)).join("\n")+
       "\n\nPulsa 💾 SUBIR desde el aparato que SÍ los tenga y vuelve a mirar aquí.\n\n") : "")+
     "📓 Operaciones del diario: "+n.trades+"\n"+
     "🏦 Cuentas: "+n.cuentas+"\n"+
@@ -117,6 +141,12 @@ async function nubeVerInforme(){
 }
 async function nubeSubir(callado){
   const code=nubeCode(); if(!code) return {ok:false, err:"sin código"};
+  /* 🗝️ v7.05 — EL SITIO DEFINITIVO. Rey pulsó SUBIR una y otra vez y siempre le salian 22
+     de 26: lo que no existe en el aparato no se sube (el `if(v==null) return` de abajo), y
+     su configuracion, sus reglas, sus estrategias y las definiciones de estas nunca se
+     habian escrito. Aqui, justo antes de armar el paquete, ya estan TODAS las variables en
+     pie: se siembra lo que falte y entonces si viajan los 26. */
+  try{ asegurarClavesDelRespaldo(); }catch(_){}
   try{
     const data={};
     NUBE_KEYS.forEach(k=>{ let v=localStorage.getItem(k); if(v==null) return;
@@ -5489,13 +5519,60 @@ function guardarVered(){ save(K.vered, VERED); }
    sencillamente no existía como archivo, así que no había nada que subir.
    Aquí se escriben con lo que haya en memoria en cuanto arranca la app. A partir de ahora,
    un aparato recién instalado sube los 26 desde el primer momento. */
+/* 🗝️ v7.05 — Y AQUÍ ME EQUIVOQUÉ YO EN LA v7.03.
+   Acerté el MECANISMO (lo que no existe no se sube) pero adiviné MAL cuáles eran las cuatro
+   claves, y no lo comprobé. El informe 🔎 que se añadió el mismo día cantó las de verdad en
+   el teléfono de Rey: crtelite_conf_v2, crtelite_reglas_v2, crtelite_estrategias_v3 y
+   crtelite_estrdefs_v1 — su configuración, sus reglas leídas, sus estrategias y las
+   definiciones de esas estrategias. Ninguna de las cuatro que yo había sembrado.
+   LECCIÓN, y es la misma de siempre: no se adivina cuál falta, se MIRA.
+   Por eso esto ya no lleva una lista escrita a mano: recorre NUBE_KEYS ENTERA. Si mañana se
+   añade un apartado nuevo, entra aquí solo y no hay una segunda lista que se quede atrás. */
+function semillaDelRespaldo(k){
+  /* el valor que tiene AHORA MISMO en memoria; si no hay variable, el mismo vacío que usa
+     la app al arrancar, para que restaurar no cambie nada */
+  const hay = (n, v) => (typeof n !== "undefined" && n !== undefined) ? n : v;
+  switch(k){
+    case K.trades:   return hay(typeof TRADES!=="undefined"?TRADES:undefined, []);
+    case K.cuentas:  return hay(typeof CUENTAS!=="undefined"?CUENTAS:undefined, []);
+    case K.reminders:return hay(typeof REMINDERS!=="undefined"?REMINDERS:undefined, null);
+    case K.chk:      return hay(typeof CHK!=="undefined"?CHK:undefined, {});
+    case K.conf:     return hay(typeof CONF!=="undefined"?CONF:undefined, {});
+    case K.reglas:   return hay(typeof RLEIDAS!=="undefined"?RLEIDAS:undefined, {});
+    case K.bal:      return hay(typeof BAL!=="undefined"?BAL:undefined, {bal:6000, pct:0.5, pips:10});
+    case K.ctx:      return hay(typeof CTX!=="undefined"?CTX:undefined, { modo:"real", estrategia:"CRT Elite" });
+    case K.estr:     return hay(typeof ESTRATEGIAS!=="undefined"?ESTRATEGIAS:undefined, ["CRT Elite"]);
+    case K.estrdef:  return hay(typeof ESTR_DEFS!=="undefined"?ESTR_DEFS:undefined, {});
+    case K.pares:    return hay(typeof PARES!=="undefined"?PARES:undefined, ["EUR/USD","GBP/USD"]);
+    case K.calpares: return hay(typeof CAL_FILTRO!=="undefined"?CAL_FILTRO:undefined, null);
+    case K.notif:    return hay(typeof NOTIF!=="undefined"?NOTIF:undefined, { on:false, killzone:true, cuentaDD:true });
+    case K.vigila:   return hay(typeof VIGILA!=="undefined"?VIGILA:undefined, {on:true});
+    case K.shots:    return hay(typeof SHOTS!=="undefined"?SHOTS:undefined, []);
+    case K.plansem:  return hay(typeof PLANSEM!=="undefined"?PLANSEM:undefined, null);
+    case K.plan:     return hay(typeof PLAN_ARR!=="undefined"?PLAN_ARR:undefined, { fase:0, pasos:{}, hist:[], docs:0, caps:0 });
+    case K.vered:    return hay(typeof VERED!=="undefined"?VERED:undefined, []);
+    case K.fabpos:   return load(K.fabpos, null);
+    case K.vents:    return load(K.vents, null);
+    case K.ejec:     return load(K.ejec, {trades:{}});
+    case K.robertolog: return load(K.robertolog, []);
+    case K.iavoz:    return (typeof IA!=="undefined" && IA.voz!==undefined) ? IA.voz : {on:false, name:null, pitch:0.6};
+    case K.iaconvs:  return (typeof IA!=="undefined" && IA.convs!==undefined) ? IA.convs : null;
+    case K.iaact:    return (typeof IA!=="undefined" && IA.actId!==undefined) ? IA.actId : null;
+    case K.iaurl:    return (typeof IA!=="undefined" && IA.url) ? IA.url
+                          : (typeof IA_URL_DEFAULT!=="undefined" ? IA_URL_DEFAULT : "");
+    default:         return load(k, null);
+  }
+}
 function asegurarClavesDelRespaldo(){
-  try{
-    if(localStorage.getItem(K.plan) == null)  save(K.plan, PLAN_ARR);
-    if(localStorage.getItem(K.vered) == null) save(K.vered, VERED);
-    if(localStorage.getItem(K.robertolog) == null) save(K.robertolog, load(K.robertolog, []));
-    if(localStorage.getItem(K.iaurl) == null) save(K.iaurl, (typeof IA_URL_DEFAULT!=="undefined") ? IA_URL_DEFAULT : "");
-  }catch(_){}
+  let creadas = 0;
+  NUBE_KEYS.forEach(k=>{
+    try{
+      if(localStorage.getItem(k) != null) return;   // lo que ya existe NO se toca jamás
+      localStorage.setItem(k, JSON.stringify(semillaDelRespaldo(k)));
+      creadas++;
+    }catch(_){}
+  });
+  return creadas;
 }
 /* ⚠️ la llamada NO va aquí: IA_URL_DEFAULT se declara más abajo y leerlo antes
    revienta. Se llama justo después de esa declaración. */
@@ -5995,9 +6072,6 @@ function iaCuentas(){
    de la estrategia de Rey y de su indicador CRT Elite.
    ============================================================ */
 const IA_URL_DEFAULT = "https://elitepro-worker.reiniercainet9.workers.dev";
-/* 🗝️ v7.03 — aquí, ya con la dirección declarada: se crean las claves del respaldo que
-   falten, para que un aparato recién instalado suba los 26 apartados desde el primer día. */
-try{ asegurarClavesDelRespaldo(); }catch(_){}
 
 /* --- PERSONALIDAD + REGLAS DE COMPORTAMIENTO DEL MENTOR --- */
 const IA_SYSTEM_BASE = ""; // 🧠 El CEREBRO de Roberto vive ahora en la NUBE (worker KV roberto:brain), fuera del código público. Recuperable con GET /brain.
@@ -6799,10 +6873,18 @@ function iaInit(){
                  se le explica qué pasa y dónde se arregla, que es en Android. */
               vs.style.display = "none";
               const nota = $("#iaVozNota");
-              if(nota){ nota.style.display=""; nota.innerHTML =
-                "Este motor no dice qué voces tiene, así que Roberto usa la que tengas puesta por defecto. " +
-                "Para cambiarla o instalar una más natural, entra en <b>🔧 Ajustes de voz de Android</b> " +
-                "→ elige el motor → <b>Instalar datos de voz</b> → español."; }
+              /* 🩺 v7.05 — DECIRLE QUÉ PASA, no dejarle un cartel mudo. Rey estuvo dos días
+                 con "Sin voces en este teléfono" sin saber si el fallo era del motor, del
+                 idioma o de Apex. Ahora el propio Android dice si el motor llegó a arrancar
+                 y cada caso lleva su instrucción. */
+              if(nota){ nota.style.display="";
+                nota.innerHTML = (r && r.plazoAgotado && !r.motorArranco)
+                  ? "⚠️ Este motor <b>no llegó a arrancar</b> en 6 segundos. Prueba a elegir otro motor " +
+                    "arriba; si solo tienes ese, entra en <b>🔧 Ajustes de voz de Android</b> y ábrelo una " +
+                    "vez desde ahí para que Android lo despierte."
+                  : "Este motor arrancó pero <b>no declara ninguna voz</b>, así que Roberto usa la que " +
+                    "tengas puesta por defecto. Para instalar una más natural: <b>🔧 Ajustes de voz de " +
+                    "Android</b> → elige el motor → <b>Instalar datos de voz</b> → español."; }
               return;
             }
             { const nota = $("#iaVozNota"); if(nota) nota.style.display="none"; }
@@ -7326,6 +7408,17 @@ function iaHablar(texto, idx){
 /* Rellena el <select> de voces en ajustes */
 function iaPintarVoces(){
   const sel=$("#iaVozSel"); if(!sel) return;
+  /* 🗣️ v7.05 — ESTA FUNCIÓN ES DE LA WEB Y SOLO DE LA WEB.
+     Rey (02-09): "no hay selector de voz, me pone «Sin voces en este teléfono»" — teniendo
+     el motor de Google puesto y sus voces instaladas. LA CAUSA: dentro de la APK las voces
+     NO son las del navegador (ahí `speechSynthesis` viene vacío), son las de Android, y las
+     pinta el bloque nativo de los ajustes. Pero `iaVozRefrescarUI()` llamaba TAMBIÉN a esta,
+     que es la del navegador, y le MACHACABA el desplegable con su lista vacía: "Sin voces
+     en este teléfono". Ganaba la última en escribir, y era la equivocada.
+     Es la misma enfermedad de las cuatro tablas de caras del 01-09: dos sitios decidiendo lo
+     mismo. La cura no es sincronizarlos, es que cada uno mande en SU casa.
+     La web no se toca: fuera de la APK esto sigue haciendo exactamente lo de siempre. */
+  if(vigiaPuente()) return;
   if(!_iaVoces.length) iaCargarVoces();
   const es=_iaVoces.filter(v=>/es(-|_|$)/i.test(v.lang));
   const lista = es.length?es:_iaVoces;
@@ -9900,3 +9993,9 @@ function init(){
   } else if(NOTIF.on){ NOTIF.on=false; guardarNotif(); }
 }
 document.addEventListener("DOMContentLoaded",init);
+
+/* 🗝️ v7.05 — AQUÍ, AL FINAL DEL TODO, Y NO ANTES.
+   La v7.03 lo llamaba a media carga y varias de estas variables (VIGILA, entre otras) aún
+   no existían: leer un `let` antes de su declaracion no da "undefined", REVIENTA. Desde el
+   final, todas estan ya en pie y ninguna clave se queda sin sembrar. */
+try{ asegurarClavesDelRespaldo(); }catch(_){}
