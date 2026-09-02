@@ -6580,6 +6580,7 @@ function iaInit(){
         <button class="btn" id="iaVozToggle" style="margin-bottom:8px">🔇 Que Roberto me hable: apagado</button>
         <select class="inp" id="iaMotorSel" style="margin-bottom:8px;display:none"></select>
         <select class="inp" id="iaVozSel" style="margin-bottom:8px"></select>
+        <div id="iaVozNota" class="aviso-rojo" style="display:none"></div>
         <div class="fl">Tono (más grave = más masculino)</div>
         <div class="seg c4" id="iaVozTono" style="margin-bottom:6px">
           <button data-pitch="0.4">Grave++</button>
@@ -6755,7 +6756,18 @@ function iaInit(){
                le falta instalar la buena, y eso solo se hace ahí */
             if(aj){ aj.style.display = ""; aj.onclick = abrirAjustes; }
 
-            if(!vv.length){ vs.style.display = "none"; return; }
+            if(!vv.length){
+              /* 🗣️ v7.01 — que no se quede un desplegable muerto diciendo "Sin voces":
+                 se le explica qué pasa y dónde se arregla, que es en Android. */
+              vs.style.display = "none";
+              const nota = $("#iaVozNota");
+              if(nota){ nota.style.display=""; nota.innerHTML =
+                "Este motor no dice qué voces tiene, así que Roberto usa la que tengas puesta por defecto. " +
+                "Para cambiarla o instalar una más natural, entra en <b>🔧 Ajustes de voz de Android</b> " +
+                "→ elige el motor → <b>Instalar datos de voz</b> → español."; }
+              return;
+            }
+            { const nota = $("#iaVozNota"); if(nota) nota.style.display="none"; }
 
             vs.style.display = "";
             vv.sort((a,b)=> (b.buena?1:0)-(a.buena?1:0));
@@ -8007,6 +8019,18 @@ function iaTextoDeMsg(x){
    con qué atar cabos y le pidió material otra vez.
    También le damos lo que ESTE aparato tiene delante y cuándo habló con la nube: con eso
    puede razonar solo cuando los números no cuadren con lo que Rey le cuenta. */
+/* ☁️ v7.02 — LA FOTO DE LA NUBE, PARA QUE ROBERTO PUEDA DEDUCIR.
+   Se mira como mucho cada 10 minutos y se guarda: preguntarlo en cada mensaje sería gasto
+   tonto, y con la foto de hace un rato ya puede atar cabos. */
+let _nubeParaRoberto = null, _nubeParaRobertoTs = 0;
+function nubeRefrescarParaRoberto(){
+  try{
+    if(Date.now() - _nubeParaRobertoTs < 10*60000) return;
+    _nubeParaRobertoTs = Date.now();
+    nubeMirar().then(r=>{ if(r && r.ok) _nubeParaRoberto = r; }).catch(()=>{});
+  }catch(_){}
+}
+
 function iaDondeEstoy(){
   try{
     const apk = !!vigiaPuente();
@@ -8034,12 +8058,40 @@ function iaDondeEstoy(){
       ? "Este aparato se sincronizó con la nube el " + new Intl.DateTimeFormat("es",{timeZone:"America/Sao_Paulo",day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit",hour12:false}).format(new Date(ts)) + ". "
       : "⚠️ ESTE APARATO NUNCA HA TRAÍDO NADA DE LA NUBE: lo que ves aquí es solo lo que se escribió en él. ";
 
+    /* ☁️ v7.02 — QUÉ HAY EN LA NUBE, y si ese respaldo se hizo con una versión vieja.
+       Rey (02-09): "Roberto debería decirme que hay un fallo… fue creado para DEDUCIR que
+       algo está mal y recomendarme soluciones". No podía: no veía la nube. Ahora sí. */
+    try{
+      nubeRefrescarParaRoberto();
+      const N = _nubeParaRoberto;
+      if(N && N.ok){
+        const cuando = new Intl.DateTimeFormat("es",{timeZone:"America/Sao_Paulo",day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit",hour12:false}).format(new Date(N.ts||0));
+        s += "EN LA NUBE hay un respaldo del " + cuando + " con " + N.claves + " apartados (" + Math.round(N.bytes/1024) + " KB): " +
+             N.trades + " operaciones, " + N.cuentas + " cuentas, " + N.chats + " chats. ";
+        s += "Y ESTA APP respalda " + NUBE_KEYS.length + " apartados. ";
+        if(N.claves < NUBE_KEYS.length){
+          s += "⚠️ FÍJATE: la nube tiene MENOS apartados de los que esta app guarda (" + N.claves + " frente a " + NUBE_KEYS.length + "). " +
+               "Eso significa que ese respaldo se hizo con una VERSIÓN VIEJA de Apex, y que hay cosas suyas que NO están viajando " +
+               "—entre ellas su PLAN DE ARRANQUE—. Si Rey te dice que en un aparato va por una fase y en otro no, ESTA es la razón, " +
+               "y se lo tienes que decir TÚ sin que te lo pregunte: que actualice Apex en el aparato bueno (cerrando y volviendo a abrir " +
+               "para que coja la versión nueva), que pulse '💾 SUBIR' desde ahí, y luego '☁️ TRAER' en el otro. ";
+        }
+      }
+    }catch(_){}
     s += "CÓMO RAZONAR CON ESTO: los datos de Rey viven en CADA aparato por separado y viajan por el respaldo de la nube. " +
          "Si él te cuenta algo que NO cuadra con los números de arriba —‘en la web ya estoy en la fase 3’, ‘ahí tengo mis trades’, ‘ya te pasé material’— " +
          "NO le pidas que empiece de cero ni le repitas lo que ya hizo: DEDÚCELO y díselo tú. " +
          "Lo correcto es: reconocer dónde estáis, decirle que en este aparato aún no están esos datos, y pedirle que pulse ‘☁️ TRAER mis datos desde la nube’ AQUÍ " +
          "(y que antes SUBA desde el aparato que sí los tiene, si la nube tampoco los tuviera). " +
-         "Avísale siempre de lo contrario: ‘💾 SUBIR’ desde un aparato vacío le machacaría lo bueno. Primero traer, nunca subir.]";
+         "Avísale siempre de lo contrario: ‘💾 SUBIR’ desde un aparato vacío le machacaría lo bueno. Primero traer, nunca subir. " +
+         /* 🧠 v7.02 — LA REGLA QUE REY EXIGIÓ (02-09): "Roberto fue creado sin límites de
+            razonamiento para DEDUCIR que algo está mal y actuar y recomendarme soluciones;
+            esa respuesta me demuestra que sigue solo patrones". */
+         "⭐ Y LO MÁS IMPORTANTE DE TODO: NO ESPERES A QUE REY TE PREGUNTE. Si con los números de arriba deduces que algo no cuadra " +
+         "—la nube con menos apartados de los que esta app guarda, un contador a cero que él dice haber llenado, datos que están en un " +
+         "aparato y no en el otro—, DÍSELO TÚ, EL PRIMERO, en cuanto lo veas: qué has detectado, por qué pasa y qué debe hacer. " +
+         "Repetirle 'mándame material' cuando él ya te lo mandó en el otro aparato NO es hacer tu trabajo: es seguir un patrón. " +
+         "Tú tienes los números delante; úsalos para adelantarte. Rey te construyó para ir un paso por delante, no para esperar órdenes.]";
     return s;
   }catch(_){ return ""; }
 }

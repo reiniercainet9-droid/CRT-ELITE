@@ -1,5 +1,79 @@
-APEX v7.00 — TRADING DESK
+APEX v7.02 — TRADING DESK
 =========================
+
+NOVEDADES v7.02  (🧠 ROBERTO AHORA VE LA NUBE Y DEDUCE)
+=================================================================
+
+TU CAPTURA DE LA NUBE ERA LA PRUEBA. Dice "234 KB · 22 apartados".
+La versión publicada respalda 26. Los 4 que faltan son justo los que
+añadí: TU PLAN, los veredictos de Roberto, su historial y la dirección
+del puente.
+
+Conclusión: el "SUBIR" que hiciste salió de CÓDIGO VIEJO — tu navegador
+seguía sirviendo la versión anterior desde su caché. Por eso tu plan no
+llegó a la nube, y por eso la APK te devuelve a la fase 02.
+
+- 🧠 Y TENÍAS RAZÓN EN LO DE FONDO: ROBERTO DEBERÍA HABERLO DEDUCIDO.
+  No podía, y la culpa es mía: no veía la nube. Tenía delante "fase 02,
+  materiales 0" y respondió lo único que podía con eso. No era falta de
+  inteligencia — era falta de DATOS.
+
+  AHORA RECIBE, en cada mensaje:
+    · qué hay en la nube: fecha, tamaño, cuántos apartados, cuántas
+      operaciones, cuentas y chats
+    · cuántos apartados respalda ESTA app
+    · y la comparación hecha
+
+  Con tus números reales, esto es lo que ve ahora:
+
+    "EN LA NUBE hay un respaldo del 2/9 09:46 con 22 apartados (234 KB).
+     Y ESTA APP respalda 26. ⚠️ FÍJATE: la nube tiene MENOS apartados de
+     los que esta app guarda. Ese respaldo se hizo con una VERSIÓN VIEJA
+     y hay cosas que NO están viajando —entre ellas su PLAN—. Si Rey te
+     dice que en un aparato va por una fase y en otro no, ESTA es la
+     razón, y se lo tienes que decir TÚ sin que te lo pregunte."
+
+- ⭐ Y LA REGLA QUE EXIGISTE, escrita en su cabeza:
+    "NO ESPERES A QUE REY TE PREGUNTE. Si deduces que algo no cuadra,
+     DÍSELO TÚ, EL PRIMERO. Repetirle 'mándame material' cuando él ya te
+     lo mandó en el otro aparato NO es hacer tu trabajo: es seguir un
+     patrón. Rey te construyó para ir un paso por delante."
+
+⚠️ QUÉ HACER TÚ, y el paso que faltaba:
+  1. En la WEB: CIÉRRALA DEL TODO y vuelve a abrirla (así coge la versión
+     nueva; tu navegador tenía la vieja en caché). Comprueba que arriba
+     pone 7.02.
+  2. Ahí: "💾 SUBIR lo de esta app a la nube"
+  3. Mira con 🔎 que ahora diga 26 apartados, no 22
+  4. Luego en la APK: "☁️ TRAER mis datos desde la nube"
+
+COMPROBADO: 107 de 107 en verde. El banco nuevo le pone a Roberto TUS
+números (22 contra 26) y exige que deduzca el fallo y te avise él.
+
+NOVEDADES v7.01  (🗣️ ÚLTIMO INTENTO CON LA LISTA DE VOCES)
+=================================================================
+SOLO EL ZIP Y LA APK. La web no cambia de comportamiento.
+
+- 🎛️ EL SELECTOR DE MOTORES YA FUNCIONA en tu teléfono (te sale
+  "Reconocimiento y síntesis de voz de Google"). Eso confirma que el
+  puente con Android está bien.
+
+- 🗣️ LA LISTA DE VOCES seguía vacía. Dos refuerzos:
+    · una SEGUNDA oportunidad más larga (2 segundos) si el motor aún no
+      ha terminado de arrancar — 900 ms no siempre bastan
+    · y si el motor devuelve una lista nula, ya no revienta en silencio
+
+  Y si aun así no declara voces, en vez de dejarte un desplegable muerto
+  que dice "Sin voces en este teléfono", ahora te explica qué pasa y qué
+  hacer: entrar en 🔧 Ajustes de voz de Android → elegir el motor →
+  Instalar datos de voz → español.
+
+  Nota honesta: si el motor de Google de tu teléfono no declara sus
+  voces, esto no lo puedo arreglar desde Apex — la voz se elige entonces
+  en los ajustes de Android, y Roberto usa la que dejes puesta. Las
+  entonaciones (que es lo que de verdad se nota) ya mejoraron.
+
+COMPROBADO: 107 de 107 pruebas en verde.
 
 NOVEDADES v7.00  (🛟 LA WEB, INTACTA — Y POR QUÉ TE LLEGAN ZIPS)
 =================================================================
