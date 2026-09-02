@@ -1,5 +1,48 @@
-APEX v6.99 — TRADING DESK
+APEX v7.00 — TRADING DESK
 =========================
+
+NOVEDADES v7.00  (🛟 LA WEB, INTACTA — Y POR QUÉ TE LLEGAN ZIPS)
+=================================================================
+
+- 🛟 TENÍAS RAZÓN EN PREOCUPARTE, Y ME PILLASTE UNA. El preparador de
+  texto de la voz lo COMPARTEN la web y la APK. Al arreglar la fluidez de
+  la APK, también cambiaba cómo habla la web — y tú me dijiste que la voz
+  de la web ya era perfecta.
+
+  SEPARADO: la traducción a habla natural ("libra dólar", "41 coma 20
+  dólares", "4 horas") se aplica AHORA SOLO cuando habla el motor de
+  Android. En el navegador el texto sale exactamente como salía antes,
+  letra por letra. Y hay una prueba que lo exige.
+
+- 🔍 POR QUÉ TE LLEGAN ZIPS AUNQUE EL ARREGLO SEA DE LA APK: porque son
+  EL MISMO CÓDIGO. La APK no es un programa aparte: lleva dentro una
+  copia exacta de la web. Los dos leen el mismo app.js. Así que cualquier
+  cosa que se toque para la APK vive en el archivo de la web, y el zip
+  cambia aunque el comportamiento de la web no.
+
+  Eso es también lo BUENO: es lo que hace que sean el mismo Apex y el
+  mismo Roberto. Y por eso cada cosa de la APK va detrás de una "puerta"
+  que el navegador nunca cruza.
+
+- ✅ AUDITORÍA DE TODO LO DE HOY, una por una:
+     botón de parar la voz ...... sale en los dos (en la web usa la voz
+                                  del navegador, como siempre)
+     selector de motores ........ nace ESCONDIDO, solo se enseña en la APK
+     voz elegida de Android ..... solo en la APK
+     aviso de batería ........... solo en la APK
+     traducción a habla natural.. solo en la APK (separado hoy)
+     "dónde estás" .............. se manda siempre: es INFORMACIÓN para
+                                  Roberto, no cambia cómo se comporta nada
+
+  Y lo que la web sigue haciendo EXACTAMENTE igual: su voz del navegador,
+  su lista de voces, tu tono elegido, sus avisos por Web Push y el texto
+  que le entrega a su voz.
+
+- 🔢 Cruzar de 6.99 a 7.00 rompió mi propio corrector de versiones de las
+  pruebas (solo entendía "6.xx"). Arreglado para cruzar de una versión
+  mayor a otra sin tocar números que no son versiones.
+
+COMPROBADO: 107 de 107 pruebas en verde.
 
 NOVEDADES v6.99  (🗣️ LA FLUIDEZ AL HABLAR)
 =================================================================

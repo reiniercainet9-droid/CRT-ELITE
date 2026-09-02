@@ -7030,7 +7030,12 @@ const PARA_LA_VOZ = [
   [/\bPDH\b/g, "máximo del día anterior"], [/\bPDL\b/g, "mínimo del día anterior"],
 ];
 
-function iaTextoParaVoz(s){
+/* ⚠️ REGLA DE REY (02-09): "es fundamental que las actualizaciones de la APK no afecten la
+   web; la web es nuestro respaldo". Esta función la usan LAS DOS voces, y la del navegador
+   YA le gustaba a Rey ("la voz de la web ya era perfecta"). Por eso la traducción a habla
+   natural se aplica SOLO cuando habla el motor de Android (paraAndroid = true): en el
+   navegador el texto sale exactamente como salía antes, letra por letra. */
+function iaTextoParaVoz(s, paraAndroid){
   let t = String(s||"")
     .replace(/https?:\/\/[^\s]+/g,"el enlace que te dejé")
     /* 🔇 v6.28 — TABLAS: la voz leía "pleca guión pleca guión..." (los símbolos | y ---
@@ -7050,12 +7055,15 @@ function iaTextoParaVoz(s){
     .replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2190}-\u{21FF}\u{2B00}-\u{2BFF}]/gu,"");
 
   /* 🗣️ v6.99 — y ahora, a decirlo como lo diría una persona */
-  for (const [re, con] of PARA_LA_VOZ) t = t.replace(re, con);
+  if (paraAndroid) for (const [re, con] of PARA_LA_VOZ) t = t.replace(re, con);
 
   return t
     /* cada línea es una frase: si no acaba en punto, se le pone — ahí está la pausa */
-    .split(/\n+/).map(x=>{ x = x.trim(); if(!x) return ""; return /[.!?:;,]$/.test(x) ? x : x + "."; })
-    .filter(Boolean).join(" ")
+    .split(/\n+/).map(x=>{ x = x.trim(); if(!x) return "";
+      /* el punto al final de cada línea —la PAUSA— solo se añade para la voz de Android.
+         En el navegador el texto sale exactamente como salía antes. */
+      return (!paraAndroid || /[.!?:;,]$/.test(x)) ? x : x + "."; })
+    .filter(Boolean).join(paraAndroid ? " " : ". ")
     /* nunca dos signos seguidos ni espacios de más: eso también suena mal */
     .replace(/([.!?])\s*\1+/g,"$1")
     .replace(/\s+([.,!?;:])/g,"$1")
@@ -7175,7 +7183,8 @@ function iaHablar(texto, idx){
   /* 📱 dentro de la APK: la voz del propio Android */
   const PV = vozNativa();
   if(PV){
-    const limpio = iaTextoParaVoz(texto);
+    /* true = la voz de Android: aquí SÍ se traduce a habla natural (la web no se toca) */
+    const limpio = iaTextoParaVoz(texto, true);
     if(!limpio) return;
     _vozIdx = idx;
     /* 🎚️ v6.99 — EL TONO, COMO LO TENÍA. En la v6.97 lo suavicé para que Android no
