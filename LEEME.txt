@@ -1,5 +1,60 @@
-APEX v6.95 — TRADING DESK
+APEX v6.96 — TRADING DESK
 =========================
+
+NOVEDADES v6.96  (🧭 TU PLAN NO SE RESPALDABA — y Roberto no sabía de la APK)
+=================================================================
+SOLO EL ZIP Y LA APK. El worker 5.114 sigue igual.
+
+Tus tres cosas, y la del plan era más grave de lo que parecía.
+
+- 🧭 POR QUÉ LA APK NO TE DEJA PASAR DE FASE. No era la APK: era el
+  RESPALDO. Audité los 28 apartados que Apex guarda en tu teléfono
+  contra los 22 que viajan a la nube, y faltaban seis. Entre ellos:
+
+    · TU PLAN (en qué fase estás y qué pasos llevas). Por eso la web
+      lo tiene en la fase 3 y la APK te devolvía al principio: tu
+      progreso nunca salió de un aparato. Y algo peor que el susto de
+      hoy: si pierdes el teléfono, ese progreso NO ESTABA EN NINGÚN
+      SITIO.
+    · LOS VEREDICTOS DE ROBERTO (sus GO / NO-GO / ESPERA enlazados con
+      tus trades). Es con lo que él se AUDITA A SÍ MISMO y sabe en qué
+      acierta y en qué falla. Sin eso, al cambiar de aparato Roberto
+      perdía la memoria de sus propias decisiones.
+    · Su historial de lo que te ha dicho, y la dirección de su puente.
+
+  Ya viajan los cuatro. Dos se quedan fuera A PROPÓSITO: el registro de
+  "esto ya te lo avisé hoy" (es de cada aparato: copiarlo haría que el
+  otro se callara avisos) y un rastro de una migración vieja.
+
+  ⚠️ QUÉ HACER TÚ: en la APK, pulsa "☁️ TRAER mis datos desde la nube".
+  NUNCA "💾 SUBIR" desde la APK mientras esté vacía: eso te machacaría
+  lo bueno. Primero traer, nunca subir.
+
+- 🗣️ "SIN VOCES EN ESTE TELÉFONO" era fallo mío. Le preguntaba a Android
+  por sus voces ANTES de que su motor terminara de arrancar, y contestaba
+  una lista vacía. Ahora espera a que esté listo. Deberías ver tus voces,
+  con ⭐ en las buenas.
+
+- 🌉 Y LO QUE MÁS ME IMPORTA DE TU MENSAJE: ROBERTO NO SABÍA NADA DE LA
+  APK. Fui a mirar su manual (20.000 letras) y no la mencionaba NI UNA
+  VEZ. Llevaba días trabajando sin saber que Apex vive ahora en dos
+  sitios. Por eso, cuando le contabas algo de la APK, no tenía con qué
+  entenderlo.
+
+  Ya lo sabe, y en su propio manual: que es EL MISMO en los dos sitios
+  (mismo cerebro, misma memoria, no hay dos Robertos), qué puede hacer
+  la APK que el navegador no, quién avisa y por qué a veces avisa el
+  navegador (es el respaldo entrando, no un fallo), y —lo más útil— que
+  tus datos viven en cada aparato por separado: si le dices que algo no
+  aparece, lo PRIMERO que hará es decirte que traigas tus datos de la
+  nube, y avisarte de que no subas desde un aparato vacío.
+
+  También le dije que estáis en plena mudanza, y que si nota que algo
+  SUYO se ha degradado, te lo diga él mismo. Tú fuiste claro: si Roberto
+  se afecta, se para todo lo demás.
+
+COMPROBADO: 105 de 105 pruebas en verde, incluida la que exige que nada
+de la APK toque la web.
 
 NOVEDADES v6.95  (🔊 PODER CALLARLO, Y ELEGIRLE LA VOZ)
 =================================================================
