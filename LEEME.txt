@@ -1,5 +1,59 @@
-APEX v7.02 — TRADING DESK
+APEX v7.03 — TRADING DESK
 =========================
+
+NOVEDADES v7.03  (🗝️ POR FIN: POR QUÉ TU NUBE SE QUEDABA EN 22)
+=================================================================
+
+No era la caché. Era esto, y está en el subidor:
+
+    NUBE_KEYS.forEach(k => {
+        let v = localStorage.getItem(k);
+        if (v == null) return;        ← AQUÍ
+    });
+
+LO QUE NO EXISTE EN EL APARATO, NO SE SUBE. Y esos cuatro apartados —tu
+PLAN, los veredictos de Roberto, su historial y la dirección del puente—
+solo se crean cuando algo los escribe por primera vez.
+
+Al desinstalar y reinstalar la web, su almacén quedó limpio: esas cuatro
+claves NO EXISTÍAN. Así que por muchas veces que pulsaras SUBIR, no había
+nada que subir de ellas — y la nube se quedaba clavada en 22.
+
+- 🗝️ ARREGLADO DE RAÍZ: al arrancar, si alguna de esas claves no existe,
+  Apex la crea con lo que haya en memoria. A partir de ahora, un aparato
+  recién instalado sube los 26 apartados desde el primer momento. Y si la
+  clave ya existe, no la toca — nunca machaca lo tuyo.
+
+- 🔎 Y EL INFORME DE LA NUBE YA TE LO DICE. Antes decía "22 apartados" y
+  eso no parecía un problema. Ahora dice:
+
+      Tamaño: 234 KB · 22 de 26 apartados
+
+      ⚠️ NO están viajando 4 apartados:
+         · tu PLAN de arranque
+         · los veredictos de Roberto
+         · el historial de Roberto
+         · la dirección del puente
+
+      Pulsa 💾 SUBIR desde el aparato que SÍ los tenga.
+
+  Eso es lo que te habría ahorrado las últimas horas.
+
+⚠️ UNA COSA QUE TENGO QUE DECIRTE: al reinstalar la web, es probable que
+   se borrara su almacén y con él el progreso del plan que tenías ahí
+   (la fase 3). Los 13 recuerdos de Roberto están a salvo — esos viven en
+   la nube, no en el aparato. Si la fase se te reinició, avánzala a mano
+   en la pantalla del plan; con esta versión ya viajará y no se pierde
+   más.
+
+QUÉ HACER:
+  1. Sube el zip y abre la web (comprueba que ponga 7.03)
+  2. Pulsa 💾 SUBIR
+  3. Mira con 🔎 — tiene que decir "26 de 26" y sin la lista de avisos
+  4. Luego en la APK: ☁️ TRAER
+
+COMPROBADO: 108 de 108 en verde. El banco nuevo simula un aparato recién
+instalado y exige que acabe con las 4 claves creadas.
 
 NOVEDADES v7.02  (🧠 ROBERTO AHORA VE LA NUBE Y DEDUCE)
 =================================================================

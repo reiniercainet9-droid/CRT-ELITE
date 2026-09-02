@@ -78,7 +78,11 @@ async function nubeMirar(){
     if(!bk || !bk.data) return {ok:false, err:"vacío"};
     let bytes=0; try{ bytes=JSON.stringify(bk.data).length; }catch(_){}
     const cuenta=(k)=>{ try{ const v=JSON.parse(bk.data[k]||"[]"); return Array.isArray(v)?v.length:Object.keys(v||{}).length; }catch(_){ return 0; } };
-    return { ok:true, ts:bk.ts||0, bytes, claves:Object.keys(bk.data).length,
+    /* 🔎 v7.03 — QUÉ APARTADOS FALTAN. A Rey le costó horas descubrir que su respaldo
+       se quedaba en 22 de 26: el informe decía cuántos había, pero no CUÁLES faltaban.
+       Con esta lista se ve de un vistazo. */
+    const faltan = NUBE_KEYS.filter(k=>!(k in bk.data));
+    return { ok:true, ts:bk.ts||0, bytes, claves:Object.keys(bk.data).length, faltan, deberian:NUBE_KEYS.length,
              trades:cuenta(K.trades), cuentas:cuenta(K.cuentas), chats:cuenta(K.iaconvs),
              plan:cuenta("crtelite_plansem_v1"), ejec:cuenta("crtelite_ejectrades_v1") };
   }catch(_){ return {ok:false, err:"error"}; }
@@ -90,7 +94,20 @@ async function nubeVerInforme(){
     : n.err==="sin código" ? "Primero pon tu código de respaldo." : "No pude conectar con la nube. Mira tu internet e inténtalo otra vez."); return; }
   alert("☁️ ESTO ES LO QUE HAY GUARDADO EN LA NUBE AHORA MISMO\n\n"+
     "Fecha: "+(n.ts?new Date(n.ts).toLocaleString("es"):"—")+"\n"+
-    "Tamaño: "+Math.round(n.bytes/1024)+" KB · "+n.claves+" apartados\n\n"+
+    "Tamaño: "+Math.round(n.bytes/1024)+" KB · "+n.claves+" de "+(n.deberian||n.claves)+" apartados\n\n"+
+    /* 🔎 v7.03 — QUÉ FALTA, Y POR SU NOMBRE. A Rey le costó horas descubrir que su respaldo
+       se quedaba en 22 de 26: el informe decía cuántos había, pero no CUÁLES faltaban. */
+    ((n.faltan && n.faltan.length) ? ("⚠️ NO están viajando "+n.faltan.length+" apartados:\n"+
+      n.faltan.map(k=>"   · "+({
+        "crtelite_plan_v1":"tu PLAN de arranque",
+        "crtelite_vered_v1":"los veredictos de Roberto",
+        "crtelite_robertolog_v3":"el historial de Roberto",
+        "crtelite_iaurl_v3":"la dirección del puente",
+        "crtelite_trades_v2":"tu diario de operaciones",
+        "crtelite_cuentas_v3":"tus cuentas",
+        "crtelite_iaconvs_v3":"vuestros chats"
+      }[k]||k)).join("\n")+
+      "\n\nPulsa 💾 SUBIR desde el aparato que SÍ los tenga y vuelve a mirar aquí.\n\n") : "")+
     "📓 Operaciones del diario: "+n.trades+"\n"+
     "🏦 Cuentas: "+n.cuentas+"\n"+
     "💬 Chats de Roberto: "+n.chats+"\n"+
@@ -5465,6 +5482,24 @@ function iaPlan(){
 let VERED = load(K.vered, []);
 function guardarVered(){ save(K.vered, VERED); }
 
+/* 🗝️ v7.03 — QUE LAS CLAVES DEL RESPALDO EXISTAN SIEMPRE.
+   El subidor salta las que no existen ("if(v==null) return"), y estas cuatro solo se crean
+   cuando algo las escribe. Rey reinstaló la web, su almacén quedó limpio, y por eso su
+   respaldo se quedaba clavado en 22 apartados por muchas veces que pulsara SUBIR: su PLAN
+   sencillamente no existía como archivo, así que no había nada que subir.
+   Aquí se escriben con lo que haya en memoria en cuanto arranca la app. A partir de ahora,
+   un aparato recién instalado sube los 26 desde el primer momento. */
+function asegurarClavesDelRespaldo(){
+  try{
+    if(localStorage.getItem(K.plan) == null)  save(K.plan, PLAN_ARR);
+    if(localStorage.getItem(K.vered) == null) save(K.vered, VERED);
+    if(localStorage.getItem(K.robertolog) == null) save(K.robertolog, load(K.robertolog, []));
+    if(localStorage.getItem(K.iaurl) == null) save(K.iaurl, (typeof IA_URL_DEFAULT!=="undefined") ? IA_URL_DEFAULT : "");
+  }catch(_){}
+}
+/* ⚠️ la llamada NO va aquí: IA_URL_DEFAULT se declara más abajo y leerlo antes
+   revienta. Se llama justo después de esa declaración. */
+
 /* Apunta una lectura de Roberto. La llama él mismo con su mano registrar_veredicto. */
 function veredAdd(o){
   const v = {
@@ -5960,6 +5995,9 @@ function iaCuentas(){
    de la estrategia de Rey y de su indicador CRT Elite.
    ============================================================ */
 const IA_URL_DEFAULT = "https://elitepro-worker.reiniercainet9.workers.dev";
+/* 🗝️ v7.03 — aquí, ya con la dirección declarada: se crean las claves del respaldo que
+   falten, para que un aparato recién instalado suba los 26 apartados desde el primer día. */
+try{ asegurarClavesDelRespaldo(); }catch(_){}
 
 /* --- PERSONALIDAD + REGLAS DE COMPORTAMIENTO DEL MENTOR --- */
 const IA_SYSTEM_BASE = ""; // 🧠 El CEREBRO de Roberto vive ahora en la NUBE (worker KV roberto:brain), fuera del código público. Recuperable con GET /brain.
