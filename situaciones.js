@@ -168,3 +168,66 @@ function robCaraDe(titulo, cuerpo, tipo){
   raiz.ROB_SITUA = ROB_SITUA; raiz.ROB_RUTINA = ROB_RUTINA; raiz.CARAS_HAY = CARAS_HAY;
   raiz.robSitua = robSitua;   raiz.robCaraDe = robCaraDe;
 })(typeof self !== "undefined" ? self : this);
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   🎭 SU VIDA DE FONDO — los gestos y frases de entre tarea y tarea
+   ═════════════════════════════════════════════════════════════════════════════
+   Esto vivía SOLO en app.js, y por eso el Roberto que flota encima de las otras
+   aplicaciones se quedaba quieto: tenía el mismo cuerpo y los mismos 36 gestos,
+   pero no tenía de dónde sacar QUÉ hacer cuando no pasa nada.
+   Rey lo dejó por ley (02-09): "las funciones de él con su cuerpo deben ser las
+   mismas esté donde esté… así, esté donde esté, no me pierdo ninguna señal ni
+   gesto, ni su nubecita diciéndome las frases cortas".
+   Se muda aquí, que es la fuente que YA comparten la app, el vigilante y ahora
+   la burbuja. No se copia: se MUEVE. Copiarla sería repetir la enfermedad de las
+   cuatro tablas de caras del 01-09.
+   ═════════════════════════════════════════════════════════════════════════════ */
+const ROB_VIDA = {
+  killzone: {
+    gestos: ["shhh", "vigila", "apunta", "tiempo", "animo", "serio", "analiza", "ensena", "tetoca", "aprueba", "idea", "olfatea"],
+    frases: ["Ventana abierta. Ojo al gráfico.", "Aquí es donde se gana. Paciencia.",
+             "Nada de forzar: que venga ella.", "Estoy mirando contigo.",
+             "Sweep, MSS, zona. En ese orden.", "Si dudas, no entras. Así de simple."],
+  },
+  cerca: {
+    gestos: ["tiempo", "animo", "apunta", "presumido", "ensena", "idea", "saluda", "aprueba", "analiza", "tetoca"],
+    frases: ["Ya casi. Prepara el checklist.", "Se acerca la buena.",
+             "Repasa tu riesgo antes de que abra.", "Calienta motores.",
+             "Mira tus niveles ahora, no después.", "Yo ya estoy listo. ¿Y tú?"],
+  },
+  posicion: {
+    gestos: ["vigila", "serio", "tiempo", "ojala", "shhh", "animo", "aprueba"],
+    frases: ["No la toques. Déjala trabajar.", "La estoy vigilando yo.", "Respira. Va sola.",
+             "Ni la mires cada minuto, que se te hace larga."],
+  },
+  espera: {
+    gestos: ["espera", "confundido", "guino", "orgulloso", "carino", "ojala", "burla", "presumido",
+             "animo", "sorprende", "idea", "analiza", "presenta", "tetoca", "ensena", "lengua", "aprueba", "huele", "olfatea"],
+    frases: ["Aquí sigo, sin señales todavía.", "Aburrido pero despierto. 😌",
+             "Con ganas de que abra la próxima.", "Ni una señal… así se ganan las cuentas.",
+             "Descansa tú, que yo vigilo.", "Esto está más quieto que un lunes de agosto.",
+             "¿Hacemos backtesting mientras esperamos?", "Si aparece algo, te aviso yo. Tranquilo.",
+             "Llevo un rato sin trabajo. Me aburro. 🙄", "Paciencia hoy, dinero mañana.",
+             "¿Has comido algo? Yo aquí, a base de gráficos. 😄",
+             "Estírate un poco, que llevas rato sentado.",
+             "Bebe agua, jefe. El cerebro opera mejor hidratado.",
+             "Si te agobias, cierra la pantalla diez minutos. Yo vigilo.",
+             "Un día tranquilo también es un buen día.",
+             "Oye… ¿me estás mirando? 👀", "Aquí, oliendo el mercado. 👃"],
+  },
+  finde: {
+    gestos: ["carino", "guino", "orgulloso", "carcajada", "lengua", "presumido", "chocalas",
+             "saluda", "presenta", "felicita", "animo", "idea", "huele"],
+    frases: ["Fin de semana: el mercado descansa, tú también.",
+             "Buen momento para backtesting… o para no hacer nada. 😄",
+             "Aquí estaré el lunes, fresquito.",
+             "Revísate el diario, que ahí está el oro.",
+             "Yo descansando, pero con un ojo abierto. 😉"],
+  },
+  madrugada: {
+    gestos: ["ojala", "espera", "animo", "tiempo", "carino", "orgulloso", "idea", "aprueba"],
+    frases: ["De madrugada y aquí estás. Eso es oficio.",
+             "Londres se acerca. Café y cabeza fría.",
+             "Yo no me duermo, tranquilo.", "A esta hora el spread muerde. Ojo."],
+  },
+};

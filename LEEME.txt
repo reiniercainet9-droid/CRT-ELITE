@@ -1,5 +1,66 @@
-APEX v7.11 — TRADING DESK
+APEX v7.12 — TRADING DESK
 =========================
+
+NOVEDADES v7.12  (🫧 FASE 2 — ROBERTO FLOTANDO, EL MISMO ESTÉ DONDE ESTÉ)
+==========================================================================
+Solo el zip y la APK. El worker 5.119 y el Ejecutor v2.4 no cambian.
+
+👆 TUS CUATRO GESTOS (los que aprobaste)
+-----------------------------------------
+   UN TOQUE          → ⏸ pausa lo que está diciendo / ▶️ sigue
+   MANTENER PULSADO  → 🎤 le hablas (mientras mantienes, escucha)
+   DOBLE TOQUE       → abre Apex
+   ARRASTRAR ABAJO   → ⏹ lo calla y lo aparta
+
+No hace falta que te los aprendas de golpe. El que más vas a usar —callarlo
+un momento— es el más barato: un toque.
+
+⚠️ Y funcionan CON APEX CERRADA. Van por el vigía, que es el único que sigue
+vivo entonces. Si Apex no está, el gesto simplemente no hace nada: nunca
+tumba al guardián, que es quien te trae TODAS las alarmas.
+
+🧍 EL CUERPO, GRANDE DE VERDAD
+-------------------------------
+De 92×160 a 132×231. A 92 no se le distinguían los gestos: un dedo
+levantado, una ceja, la palma de frenar. Y entonces da igual que tenga 36
+gestos, porque no se leen. Su proporción no se toca — deformarlo sería
+peor que dejarlo pequeño.
+
+🎭 Y AHORA TIENE VIDA AHÍ FUERA
+--------------------------------
+Antes se quedaba CLAVADO en un gesto hasta que llegaba un aviso. Tenía el
+mismo cuerpo y los mismos 36 gestos, pero no tenía de dónde sacar qué
+hacer cuando no pasa nada — esa tabla vivía solo dentro de Apex.
+
+Ahora:
+  · gestos cada 12–28 segundos, irregular a propósito (cada 20 clavados se
+    lee como un reloj, no como una persona)
+  · su nubecita con frases cortas, 1 de cada 2 veces
+  · elige qué toca por TU horario: killzone 7:30–9:30 NY, la media hora de
+    antes, tu ventana 1:00–13:00, madrugada, fin de semana
+  · Y SE VISTE SOLO. Antes salía de traje a las once de la noche de un
+    domingo.
+
+⚠️ Y LO HICE SIN COPIAR NADA. La tabla de su vida de fondo se MUDÓ a la
+   fuente que ya compartían Apex y el vigilante. Copiarla habría sido
+   repetir la enfermedad de las cuatro tablas de caras: dos listas que se
+   van separando sin que nadie se dé cuenta.
+
+COMPROBADO: 121 de 121. El banco nuevo EJECUTA su elección de situación con
+cuatro horas distintas y comprueba el cuerpo COMPILADO — el que va dentro
+del APK, no el archivo de trabajo.
+
+QUÉ HACER
+---------
+  1. Sube APEX-app-v7.12.zip (comprueba que ponga 7.12)
+  2. Instala Apex-Roberto-v7.12.apk
+  3. Sácalo a flotar y déjalo un rato encima de otra app: tiene que
+     moverse solo y sacarte la nubecita
+  4. Prueba los cuatro gestos sin prisa
+
+QUEDA DE LA FASE 2: que lo que dice con la voz y lo que hace el cuerpo
+salgan de la misma decisión, y el interruptor para que TÚ decidas cuándo
+se calla — no yo. Eso va en el siguiente paso.
 
 NOVEDADES v7.11  (⏸ PAUSAR A ROBERTO Y QUE SIGA DONDE SE QUEDÓ)
 =================================================================

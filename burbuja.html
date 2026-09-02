@@ -82,6 +82,7 @@
   <div id="pulso"></div>
   <div id="robCuerpo"></div>
 
+<script src="situaciones.js"></script>
 <script src="roberto.js"></script>
 <script>
 (function(){
@@ -98,6 +99,11 @@
     if (typeof Roberto === "undefined") throw new Error("no cargó roberto.js (el cuerpo de Roberto)");
     Roberto.montar(cuerpo, { tam: "cuerpo", emo: GESTO_FONDO });
     document.documentElement.classList.add("rob-anim-on");  /* siempre animado */
+    /* 👔 v7.12 — SE VISTE COMO TOCA, TAMBIÉN AQUÍ. Antes el Roberto flotante salía siempre
+       con la ropa por defecto: de traje a las once de la noche de un domingo. Su armario
+       decide solo por la hora de Nueva York, y esa decisión vive en roberto.js —o sea, es
+       SUYA y es la misma esté donde esté, que es justo la ley que puso Rey. */
+    try { Roberto.vestirSolo(); } catch (_) {}
     if (!document.querySelector("#robCuerpo .rob-svg")) throw new Error("Roberto no llegó a dibujarse");
   } catch (e) { console.log("BURBUJA-ERROR " + e.message); }
 
@@ -129,6 +135,75 @@
     try { Roberto.callar(); } catch(_){}
     gesto(GESTO_FONDO);
   };
+
+  /* ══════════════════════════════════════════════════════════════════════════
+     🎭 SU VIDA DE FONDO, TAMBIÉN AQUÍ FUERA — v7.12
+     ═════════════════════════════════════════════════════════════════════════
+     Rey lo dejó por ley (02-09): "las funciones de él con su cuerpo deben ser
+     las mismas esté donde esté… así, esté donde esté, no me pierdo ninguna
+     señal ni gesto, ni su nubecita diciéndome las frases cortas".
+     Hasta hoy, el Roberto que flota encima de otras aplicaciones se quedaba
+     CLAVADO en un gesto hasta que llegaba un aviso. Tenía el mismo cuerpo y los
+     mismos 36 gestos, pero no tenía de dónde sacar QUÉ hacer cuando no pasa
+     nada — esa tabla vivía solo en app.js.
+     Ahora `ROB_VIDA` está en situaciones.js, la fuente que ya comparten la app y
+     el vigilante, y esta ventana bebe de LA MISMA. No es una copia: si mañana se
+     le añade un gesto a la killzone, le sale aquí igual.
+     ⚠️ Y ojo con la hora: aquí NO se puede preguntar por la killzone como en
+     Apex (eso lo sabe la app, no esta ventana), así que se elige la situación
+     por lo que SÍ se sabe desde fuera — el día y la hora de Nueva York. */
+  var vidaT = null, vidaUlt = "", vidaFrase = 0;
+
+  function situacionAhora(){
+    try{
+      var f = new Date();
+      var ny = new Date(f.toLocaleString("en-US", { timeZone: "America/New_York" }));
+      var d = ny.getDay(), h = ny.getHours() * 60 + ny.getMinutes();
+      /* ⏰ Las horas son LAS SUYAS, no unas cualesquiera: su ventana operativa configurada
+         en el Ejecutor es 01:00–13:00 NY y su killzone Pre-NY es 7:30–9:30. Si aquí se
+         pusieran otras, el Roberto flotante haría gestos de "espera" mientras su propio
+         sistema está operando, o al revés. */
+      if (d === 0 || d === 6) return "finde";
+      if (h >= 450 && h < 570) return "killzone";   /* 7:30–9:30 NY, su mejor ventana */
+      if (h >= 420 && h < 450) return "cerca";      /* la media hora de antes */
+      if (h >= 60 && h < 780) return "espera";      /* 1:00–13:00 NY: su ventana operativa */
+      return "madrugada";                            /* fuera de su horario */
+    }catch(_){ return "espera"; }
+  }
+
+  function unGesto(){
+    try{
+      if (globo.classList.contains("hay")) return;   /* ya está diciendo algo: no se pisa */
+      if (typeof ROB_VIDA === "undefined") return;
+      var pack = ROB_VIDA[situacionAhora()] || ROB_VIDA.espera;
+      if (!pack || !pack.gestos || !pack.gestos.length) return;
+      var posibles = pack.gestos.filter(function(x){ return x !== vidaUlt; });
+      var emo = posibles[Math.floor(Math.random() * posibles.length)] || pack.gestos[0];
+      vidaUlt = emo;
+      gesto(emo);
+      /* 1 de cada 2 veces suelta una frase corta, igual que dentro de Apex */
+      vidaFrase++;
+      if (vidaFrase % 2 === 0 && pack.frases && pack.frases.length){
+        window.burbujaDecir(pack.frases[Math.floor(Math.random() * pack.frases.length)], emo);
+        return;                       /* la nubecita ya devuelve el gesto de guardia sola */
+      }
+      /* y vuelve a su cara de guardia: un gesto que se queda puesto es una foto */
+      setTimeout(function(){ try{ if(!globo.classList.contains("hay")) gesto(GESTO_FONDO); }catch(_){} },
+                 4200 + Math.random() * 1800);
+    }catch(_){}
+  }
+
+  /* Ritmo irregular A PROPÓSITO: cada 12–28 s parece una persona; cada 20 clavados,
+     un reloj. Se reprograma tras cada gesto, nunca con un temporizador que se repita
+     (uno que se repite cuelga el navegador de pruebas y deja procesos vivos). */
+  function vida(){
+    clearTimeout(vidaT);
+    vidaT = setTimeout(function(){ unGesto(); vida(); }, 12000 + Math.random() * 16000);
+  }
+  vida();
+
+  /* Android la para cuando la esconde, para no gastar batería moviendo a nadie */
+  window.burbujaVida = function(on){ if(on) vida(); else clearTimeout(vidaT); };
 
   /* Android comprueba con esto que la página cargó de verdad */
   window.burbujaViva = function(){ return !!document.querySelector("#robCuerpo .rob-svg"); };

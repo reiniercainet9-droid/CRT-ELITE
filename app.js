@@ -7546,6 +7546,39 @@ function iaMicUI(on){
   b.textContent=on?"⏹️":"🎤";
   b.setAttribute("aria-label",on?"Detener":"Hablar con Roberto");
 }
+/* ══════════════════════════════════════════════════════════════════════════════
+   🎤 HABLARLE MANTENIENDO EL DEDO EN EL ROBERTO FLOTANTE — v7.12
+   ═════════════════════════════════════════════════════════════════════════════
+   Rey aprobó los cuatro gestos del cuerpo flotante, y éste es el del micrófono:
+   mientras mantiene el dedo, Roberto escucha; al soltar, responde.
+
+   POR QUÉ MANTENER PULSADO y no un toque para abrir y otro para cerrar: resuelve
+   solo el problema más feo del dictado, que es saber cuándo empieza y cuándo
+   termina de escuchar. Sin palabra mágica, sin que lo despierte la tele de fondo,
+   y sin quedarse el micrófono abierto porque a Rey se le olvidó cerrarlo.
+
+   ⚠️ NO se duplica el micrófono: se usa el MISMO `iaEscuchar()` de siempre. Lo
+   único distinto es quién decide cuándo parar — aquí lo decide el dedo de Rey,
+   no el silencio. Un segundo motor de dictado sería otra fuente que mantener. */
+let _dictadoDesdeBurbuja = false;
+
+function iaDictarEmpezar(quien){
+  try{
+    _dictadoDesdeBurbuja = (quien === "burbuja");
+    if(RECon) return;                      /* ya estaba escuchando: no se reinicia */
+    iaEscuchar();
+  }catch(_){}
+}
+
+function iaDictarSoltar(){
+  try{
+    /* soltó el dedo: se cierra el micrófono. `onend` de iaEscuchar ya se encarga de
+       mandarle a Roberto lo que se entendió, así que aquí no se repite esa parte. */
+    if(RECon && REC){ REC.stop(); }
+    _dictadoDesdeBurbuja = false;
+  }catch(_){}
+}
+
 function iaEscuchar(){
   if(!SR){ toast("Tu teléfono no permite dictado por voz"); return; }
   if(RECon){ try{ REC && REC.stop(); }catch(_){} return; }   /* segundo toque = parar */
@@ -8032,55 +8065,9 @@ let _vidaT = null, _vidaUlt = "", _vidaFrase = 0;
 
 /* cada situación tiene SUS gestos y SUS frases: así lo que hace concuerda con lo
    que ocurre, que es la regla que Rey selló ("el cuerpo y la mente son uno solo") */
-const ROB_VIDA = {
-  killzone: {
-    gestos: ["shhh", "vigila", "apunta", "tiempo", "animo", "serio", "analiza", "ensena", "tetoca", "aprueba", "idea", "olfatea"],
-    frases: ["Ventana abierta. Ojo al gráfico.", "Aquí es donde se gana. Paciencia.",
-             "Nada de forzar: que venga ella.", "Estoy mirando contigo.",
-             "Sweep, MSS, zona. En ese orden.", "Si dudas, no entras. Así de simple."],
-  },
-  cerca: {
-    gestos: ["tiempo", "animo", "apunta", "presumido", "ensena", "idea", "saluda", "aprueba", "analiza", "tetoca"],
-    frases: ["Ya casi. Prepara el checklist.", "Se acerca la buena.",
-             "Repasa tu riesgo antes de que abra.", "Calienta motores.",
-             "Mira tus niveles ahora, no después.", "Yo ya estoy listo. ¿Y tú?"],
-  },
-  posicion: {
-    gestos: ["vigila", "serio", "tiempo", "ojala", "shhh", "animo", "aprueba"],
-    frases: ["No la toques. Déjala trabajar.", "La estoy vigilando yo.", "Respira. Va sola.",
-             "Ni la mires cada minuto, que se te hace larga."],
-  },
-  espera: {
-    gestos: ["espera", "confundido", "guino", "orgulloso", "carino", "ojala", "burla", "presumido",
-             "animo", "sorprende", "idea", "analiza", "presenta", "tetoca", "ensena", "lengua", "aprueba", "huele", "olfatea"],
-    frases: ["Aquí sigo, sin señales todavía.", "Aburrido pero despierto. 😌",
-             "Con ganas de que abra la próxima.", "Ni una señal… así se ganan las cuentas.",
-             "Descansa tú, que yo vigilo.", "Esto está más quieto que un lunes de agosto.",
-             "¿Hacemos backtesting mientras esperamos?", "Si aparece algo, te aviso yo. Tranquilo.",
-             "Llevo un rato sin trabajo. Me aburro. 🙄", "Paciencia hoy, dinero mañana.",
-             "¿Has comido algo? Yo aquí, a base de gráficos. 😄",
-             "Estírate un poco, que llevas rato sentado.",
-             "Bebe agua, jefe. El cerebro opera mejor hidratado.",
-             "Si te agobias, cierra la pantalla diez minutos. Yo vigilo.",
-             "Un día tranquilo también es un buen día.",
-             "Oye… ¿me estás mirando? 👀", "Aquí, oliendo el mercado. 👃"],
-  },
-  finde: {
-    gestos: ["carino", "guino", "orgulloso", "carcajada", "lengua", "presumido", "chocalas",
-             "saluda", "presenta", "felicita", "animo", "idea", "huele"],
-    frases: ["Fin de semana: el mercado descansa, tú también.",
-             "Buen momento para backtesting… o para no hacer nada. 😄",
-             "Aquí estaré el lunes, fresquito.",
-             "Revísate el diario, que ahí está el oro.",
-             "Yo descansando, pero con un ojo abierto. 😉"],
-  },
-  madrugada: {
-    gestos: ["ojala", "espera", "animo", "tiempo", "carino", "orgulloso", "idea", "aprueba"],
-    frases: ["De madrugada y aquí estás. Eso es oficio.",
-             "Londres se acerca. Café y cabeza fría.",
-             "Yo no me duermo, tranquilo.", "A esta hora el spread muerde. Ojo."],
-  },
-};
+/* 🎭 ROB_VIDA se mudó a situaciones.js (v7.12): el Roberto que flota encima de otras
+   aplicaciones necesita la MISMA tabla, y copiarla habría sido repetir la enfermedad de
+   las cuatro listas de caras. Se carga antes que este archivo, como CARAS_HAY y ROB_SITUA. */
 
 function robVidaSituacion(){
   try{
