@@ -1,5 +1,42 @@
-APEX v6.94 — TRADING DESK
+APEX v6.95 — TRADING DESK
 =========================
+
+NOVEDADES v6.95  (🔊 PODER CALLARLO, Y ELEGIRLE LA VOZ)
+=================================================================
+SOLO EL ZIP Y LA APK. El worker 5.114 que ya subiste sigue igual.
+
+Las tres cosas que dijiste, y las tres tenían causa en el código.
+
+- ⏹ NO PODÍAS PARARLO, Y NO ERA UN DESCUIDO PEQUEÑO. El botón del chat
+  se dibujaba así: "si hay voz DEL NAVEGADOR, pon el botón". Dentro de la
+  APK no hay voz de navegador — Roberto habla con la voz de Android — así
+  que el botón NI SE DIBUJABA. Hablaba y no tenías nada que tocar.
+
+  Y lo peor: la orden de callarlo (vozCallar) YA ESTABA escrita en la
+  APK desde el primer día. Nadie la llamaba nunca.
+
+  ARREGLADO: el botón sale si hay voz, venga de donde venga, y "⏹ Parar"
+  ahora calla las dos voces, vacía lo que quedaba pendiente por decir y
+  deja el botón como estaba. Tócalo mientras habla y se calla.
+
+- 🎙️ YA PUEDES ELEGIRLE LA VOZ EN LA APK. El selector estaba escondido a
+  propósito, porque solo se sabían listar las voces del navegador. Ahora
+  se le preguntan AL TELÉFONO: en Ajustes → Voz de Roberto te salen las
+  voces en español que tienes instaladas, con una ⭐ delante de las
+  BUENAS (las de calidad alta, que son las naturales). Elige una y
+  Roberto te habla al momento con ella para que la pruebes.
+
+  Si ves pocas o ninguna con ⭐, instala más desde:
+  Ajustes de Android → Idiomas → Salida de texto a voz → tu motor →
+  Instalar datos de voz.
+
+- 🏃 Y YA NO HABLA ARRASTRADO. El ritmo iba fijo en 1.0 y con el motor
+  básico de Android suena pausado. Ahora va a 1.12: hablar normal, sin
+  correr. Junto con una voz ⭐ debería sonarte parecida a la de la web.
+
+COMPROBADO: 102 de 102 pruebas en verde. El banco nuevo exige que el
+botón exista con las DOS voces, que "Parar" calle las dos, y que el
+selector se llene con las voces del teléfono.
 
 NOVEDADES v6.94 + WORKER 5.114  (🚨 POR QUÉ NO TE LLEGARON LOS AVISOS)
 =================================================================

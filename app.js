@@ -6700,8 +6700,36 @@ function iaInit(){
     if(vp) vp.style.display="none";
   }else{
     /* en la APK la voz la pone Android: no hay lista de voces del navegador que elegir */
-    if(vs){ vs.style.display = enApk ? "none" : "";
-      if(!enApk) vs.onchange=function(){ IA.voz.name=this.value||null; iaGuardarVoz(); iaHablar("Esta es mi voz. ¿Te gusta?", -1); }; }
+    if(vs){
+      vs.style.display = "";
+      if(enApk){
+        /* 🎙️ v6.95 — LAS VOCES DEL TELÉFONO. Antes esto se escondía en la APK porque solo se
+           sabían listar las del navegador, y Rey se quedaba con la que Android trajera por
+           defecto — la básica, la que suena robótica. Ahora se le pregunta al teléfono.
+           Las de calidad alta van primero: son las que suenan naturales. */
+        (async ()=>{
+          try{
+            const PV = vozNativa();
+            const r = PV && PV.vozVoces ? await PV.vozVoces() : null;
+            const vv = (r && r.voces) || [];
+            if(!vv.length){ vs.style.display="none"; return; }
+            vv.sort((a,b)=> (b.buena?1:0)-(a.buena?1:0));
+            vs.innerHTML = '<option value="">La que trae el teléfono</option>' +
+              vv.map(v=>'<option value="'+esc(v.id)+'">' +
+                (v.buena?"⭐ ":"") + esc(v.id.replace(/^es-/,"").replace(/-language$/,"")) +
+                (v.pais?" ("+esc(v.pais)+")":"") + (v.necesitaRed?" · necesita internet":"") +
+                '</option>').join("");
+            vs.value = IA.voz.nativa || "";
+            vs.onchange = function(){
+              IA.voz.nativa = this.value || null; iaGuardarVoz();
+              iaHablar("Esta es mi voz, Rey. ¿Te gusta más así?", -1);
+            };
+          }catch(_){ vs.style.display="none"; }
+        })();
+      } else {
+        vs.onchange=function(){ IA.voz.name=this.value||null; iaGuardarVoz(); iaHablar("Esta es mi voz. ¿Te gusta?", -1); };
+      }
+    }
     if(vt){ vt.disabled=false;
       vt.onclick=()=>{ IA.voz.on=!IA.voz.on; iaGuardarVoz(); iaVozRefrescarUI();
         if(IA.voz.on) iaHablar("Listo, Rey. A partir de ahora te hablo yo, Roberto. Vamos a por esas cuentas.", -1);
@@ -6970,11 +6998,17 @@ function iaTrocearVoz(t){
   return out.filter(Boolean);
 }
 function iaVozParar(){
-  _vozCola = [];              /* lo que quedaba por leer se descarta */
-  if(TTS) try{ TTS.cancel(); }catch(_){}
-  IA.hablandoIdx=null;
-  pintarIAChat();
+  /* 🔇 v6.95 — CALLARLO DE VERDAD, HABLE POR DONDE HABLE. Antes esto solo paraba la voz del
+     navegador; dentro de la APK habla Android, así que no había forma humana de callarlo.
+     `vozCallar` ya existía en el plugin desde el primer día — nadie lo llamaba. */
+  try{ const PV = vozNativa(); if(PV && PV.vozCallar) PV.vozCallar(); }catch(_){}
+  try{ if(TTS) TTS.cancel(); }catch(_){}
+  try{ _vozCola = []; }catch(_){}
+  IA.hablandoIdx = null;
+  try{ if(ROB_LISTO) Roberto.callar(); }catch(_){}
+  try{ pintarIAChat(); }catch(_){}
 }
+
 
 /* ---------- VOZ DE IDA: Rey le HABLA a Roberto (micrófono) ---------- */
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition || null;
@@ -7050,7 +7084,12 @@ function iaHablar(texto, idx){
     if(!limpio) return;
     _vozIdx = idx;
     const tono = (typeof IA.voz.pitch==="number") ? Math.max(0.5, Math.min(1.6, IA.voz.pitch)) : 0.85;
-    try{ PV.vozHablar({ texto: limpio, tono: tono, ritmo: 1.0 }); }
+    /* 🎙️ v6.95 — la voz que eligió Rey y un ritmo algo más vivo. Iba fijo a 1.0 y con el
+       motor básico de Android sonaba arrastrado ("muy pausada", dijo él). 1.12 es hablar
+       normal, no correr. */
+    const ritmo = (typeof IA.voz.ritmo==="number") ? Math.max(0.7, Math.min(1.6, IA.voz.ritmo)) : 1.12;
+    IA.hablandoIdx = (idx==null?-1:idx); try{ pintarIAChat(); }catch(_){}
+    try{ PV.vozHablar({ texto: limpio, tono: tono, ritmo: ritmo, voz: IA.voz.nativa || "" }); }
     catch(_){ toast("No pude hablar ahora mismo"); }
     return;
   }
@@ -7799,7 +7838,11 @@ function pintarIAChat(){
     const foto=x.img?`<img class="ia-msg-img" src="${x.img}" alt="gráfico">`:"";
     if(x.role==="user") return `<div class="ia-msg user">${foto}${cuerpo}</div>`;
     const habla = IA.hablandoIdx===i;
-    const btn = TTS ? `<button class="ia-speak${habla?" on":""}" data-speak="${i}">${habla?"⏹ Parar":"🔊 Escuchar"}</button>` : "";
+    /* 🔊 v6.95 — el botón sale si HAY voz, sea la del navegador o la de Android. Antes se
+         miraba solo `TTS` (la del navegador) y dentro de la APK no existe: Roberto hablaba
+         y Rey no tenía NADA que tocar para callarlo (02-09: "salió hablando como una
+         carretilla sin poder pararlo"). */
+      const btn = (TTS || vozNativa()) ? `<button class="ia-speak${habla?" on":""}" data-speak="${i}">${habla?"⏹ Parar":"🔊 Escuchar"}</button>` : "";
     return `<div class="ia-msg bot">${foto}${cuerpo}${btn}${iaAccionesHTML(x,i)}</div>`;
   }).join("")
     + (IA.busy?`<div class="ia-msg bot ia-typing"><span></span><span></span><span></span></div>
