@@ -1,5 +1,71 @@
-APEX v7.08 — TRADING DESK
+APEX v7.09 — TRADING DESK
 =========================
+
+NOVEDADES v7.09  (🧑‍💼 TÚ vs 🤖 EL EJECUTOR)
+=============================================
+Reemplaza a la 7.08 — sube ESTA. El worker 5.115 y el Ejecutor v2.1
+siguen igual: si ya los subiste, no los toques.
+
+TU PREGUNTA ERA JUSTA Y HABÍA UN HUECO
+---------------------------------------
+El libro nació midiendo la señal del indicador y lo que el Ejecutor hacía
+con ella. TUS operaciones a mano NO estaban dentro, y por eso tampoco se
+separaban. Cerrado.
+
+⚠️ Y NO lo arreglé copiando tus trades al libro. Tus operaciones ya viven
+en tu Diario, y duplicarlas sería crear una segunda fuente de lo mismo —
+la enfermedad que ya nos costó las cuatro tablas de caras y los dos
+selectores de voz. Tu Diario sigue siendo el dueño de lo tuyo; el libro,
+de las señales. La comparación se hace donde se ven los dos.
+
+QUÉ MIDE AHORA, EN CONCRETO
+----------------------------
+DEL EJECUTOR (sale solo, del libro):
+  · cuántas señales vio, cuántas tomó, cuántas vetó y por qué
+  · cuántas terminaron y en qué: TP/SL y las R reales
+  · su esperanza en R
+
+DE TI (sale de tu Diario, solo modo real, mismos 60 días):
+  · cuántas operaciones, cuántas ganadas, tu % de acierto
+  · TU esperanza en R — medida con LA MISMA VARA que él
+
+Y LOS PONE UNO AL LADO DEL OTRO. Si uno va por delante, te lo dice; y si
+va por delante el Ejecutor, te dice lo que eso significa: que merece mirar
+en qué te estás saliendo de tus propias reglas.
+
+⏱️ Y LO QUE MÁS ME IMPORTA DE TODO ESTO
+----------------------------------------
+Tú dices de ti mismo, desde el principio: "mi dirección suele ser
+correcta, pero entro ANTES de que la trampa se liquide".
+
+Hasta hoy eso era una impresión tuya. Ahora se MIDE: el libro sabe el
+minuto exacto en que salió cada señal, y tu Diario la hora a la que
+entraste tú. Así que te dice:
+
+    De tus 14 operaciones, 9 coinciden con una señal del indicador.
+    De ésas, entraste ANTES de que la señal existiera: 4.
+
+Ya no es una sensación. Son cuatro veces, con fecha.
+Y si no te adelantas en ninguna, también te lo dice — enseñar es también
+decirte qué estás haciendo bien para que lo repitas.
+
+⚠️ EL MISMO FRENO DE SIEMPRE
+-----------------------------
+Hacen falta 30 operaciones terminadas DE CADA UNO para comparar de
+verdad. Mientras no las haya, verás los números pero con el aviso arriba,
+y NO se declara ningún ganador. Un veredicto con 10 operaciones sería
+inventado, y de los que cuestan dinero.
+
+COMPROBADO: 114 de 114. El banco nuevo EJECUTA el informe con un Diario y
+un libro de mentira y comprueba los números uno a uno — incluidas las 3
+entradas adelantadas, que no cuele backtests, y que con 10 y 10 NO declare
+ganador.
+
+QUÉ HACER
+---------
+  1. Sube APEX-app-v7.09.zip (comprueba que ponga 7.09)
+  2. Instala Apex-Roberto-v7.09.apk
+  3. Chip 📊 Libro de señales
 
 NOVEDADES v7.08  (📊 EL LIBRO DE SEÑALES — ARRANCADO)
 =======================================================

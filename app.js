@@ -1451,8 +1451,84 @@ async function libroSenales(){
   } else {
     t+="Aún no ha terminado ninguna operación, así que no hay resultados que contar todavía.\n\n";
   }
-  t+="── LAS ÚLTIMAS ──\n";
-  S.slice(0,12).forEach(s=>{
+  /* ══════════════════════════════════════════════════════════════════════════
+     🧑‍💼 vs 🤖 — TÚ Y EL EJECUTOR, MEDIDOS CON LA MISMA VARA (v7.09)
+     ═════════════════════════════════════════════════════════════════════════
+     Rey (02-09): "¿esto aplica solo para mí, o sea mis operaciones, o también
+     las del Ejecutor, y las clasifica y las valora por separado? En concreto,
+     ¿qué va a medir de mí y del Ejecutor?".
+     TENÍA RAZÓN EN EL HUECO: el libro nació midiendo la señal del indicador y
+     lo que el Ejecutor hacía con ella. Lo suyo no estaba.
+     ⚠️ Y NO SE ARREGLA COPIANDO SUS OPERACIONES AL LIBRO. Sus trades ya viven
+     en su Diario, y duplicarlos sería crear una segunda fuente de lo mismo —
+     la enfermedad que ya nos costó las cuatro tablas de caras y los dos
+     selectores de voz. Su Diario sigue siendo el dueño de SUS operaciones; el
+     libro, de las señales. La COMPARACIÓN se hace aquí, donde se ven las dos. */
+  const norm = (p)=>String(p||"").toUpperCase().replace(/[^A-Z]/g,"");
+  const desde = Date.now() - 60*86400000;
+  /* solo las REALES: las de backtest no dicen nada de cómo opera Rey en vivo */
+  const mios = (Array.isArray(TRADES)?TRADES:[]).filter(x=>{
+    if(!x || x.modo!=="real" || x.r==null || isNaN(parseFloat(x.r))) return false;
+    const ts = Date.parse((x.fecha||"")+"T"+(x.hora||"12:00"));
+    return !isNaN(ts) && ts>=desde;
+  });
+  const cuenta = (arr)=>{
+    if(!arr.length) return null;
+    const g = arr.filter(x=>parseFloat(x.r)>0).length;
+    const suma = arr.reduce((s,x)=>s+parseFloat(x.r),0);
+    return { n:arr.length, g, esp:Math.round((suma/arr.length)*100)/100,
+             pct:Math.round((g/arr.length)*100), fiable:arr.length>=30 };
+  };
+  const M = cuenta(mios);
+  const E = R.cerradas ? { n:R.cerradas, g:R.ganadas, esp:R.esperanzaR, pct:R.aciertoPct, fiable:R.fiable } : null;
+
+  t+="── 🧑‍💼 TÚ vs 🤖 EL EJECUTOR ──\n";
+  t+="(mismos 60 días, misma vara: la esperanza en R)\n\n";
+  const linea=(q,x)=>{
+    if(!x) return q+": todavía ninguna operación terminada.\n";
+    return q+": "+x.n+" operacion"+(x.n===1?"":"es")+" · "+x.g+" ganadas ("+x.pct+"%) · "+
+           "esperanza "+(x.esp>0?"+":"")+x.esp+"R"+(x.fiable?"":"  ⚠️ muestra corta")+"\n";
+  };
+  t+=linea("🧑‍💼 TÚ (tu Diario, solo modo real)", M);
+  t+=linea("🤖 EL EJECUTOR (del libro)", E);
+  if(M && E){
+    if(!M.fiable || !E.fiable){
+      t+="\n⚠️ NO SAQUES CONCLUSIONES TODAVÍA. Para comparar de verdad hacen falta 30\n"+
+         "operaciones terminadas de CADA uno, y aún no las hay. Esto es un avance, no un veredicto.\n";
+    } else {
+      const d=Math.round((M.esp-E.esp)*100)/100;
+      t+= Math.abs(d)<0.05 ? "\n👉 Vais parejos.\n"
+        : d>0 ? "\n👉 De momento tú vas por delante ("+d+"R por operación).\n"
+              : "\n👉 De momento el Ejecutor va por delante ("+Math.abs(d)+"R por operación). Merece mirar en qué te sales de tus reglas.\n";
+    }
+  }
+  /* ⏱️ EL TIMING — su debilidad declarada, por fin medible.
+     Rey lo dice de sí mismo: "mi dirección suele ser correcta, pero entro ANTES de que la
+     trampa se liquide". Hasta hoy eso era una impresión suya. Con el libro se puede MEDIR:
+     el libro sabe a qué minuto exacto salió cada señal, y su Diario a qué hora entró él. */
+  if(mios.length && S.length){
+    let conSenal=0, antes=0;
+    mios.forEach(x=>{
+      const ts = Date.parse((x.fecha||"")+"T"+(x.hora||"12:00"));
+      const par = norm(x.par);
+      /* la señal del MISMO par más cercana a su entrada, dentro de ±3 h */
+      let mejor=null;
+      S.forEach(s=>{ if(norm(s.sym)!==par) return;
+        const d=Math.abs((s.ts||0)-ts); if(d<=3*3600000 && (!mejor || d<mejor.d)) mejor={s,d,delta:ts-(s.ts||0)}; });
+      if(mejor){ conSenal++; if(mejor.delta < -60000) antes++; }
+    });
+    if(conSenal){
+      t+="\n── ⏱️ TU TIMING ──\n";
+      t+="De tus "+mios.length+" operaciones, "+conSenal+" coinciden con una señal del indicador.\n";
+      t+="De ésas, entraste ANTES de que la señal existiera: "+antes+".\n";
+      if(antes) t+="👉 Eso es exactamente lo que tú mismo dices de ti: la dirección bien, pero entrando\n"+
+                   "   antes de que la trampa se liquide. Ahora ya no es una impresión: son "+antes+" veces.\n";
+      else t+="👉 Ninguna adelantada. Eso es disciplina, y es tu punto flaco declarado: apúntatelo.\n";
+    }
+  }
+
+  t+="\n── LAS ÚLTIMAS SEÑALES ──\n";
+  S.slice(0,10).forEach(s=>{
     const f=new Date(s.ts||0).toLocaleString("es",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"});
     t+="\n"+f+" · "+s.sym+" "+(s.dir==="buy"?"COMPRA":"VENTA")+" "+(s.grado||"?")+(s.rr?" · RR "+s.rr:"")+"\n";
     t+="   "+(ESTADOS[s.estado]||s.estado);
@@ -1460,7 +1536,8 @@ async function libroSenales(){
     if(s.motivo) t+="\n   "+String(s.motivo).slice(0,110);
     t+="\n";
   });
-  t+="\n\nSe apunta solo, siempre. Tú no tienes que hacer nada.";
+  t+="\n\nLas señales y el Ejecutor se apuntan solos. Lo tuyo sale de tu Diario:\n"+
+     "cuanto mejor lo lleves, mejor te podré medir.";
   alert(t);
 }
 async function auditoriaEjecutor(){
