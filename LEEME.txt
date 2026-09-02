@@ -1,5 +1,77 @@
-APEX v6.91 — TRADING DESK
+APEX v6.93 — TRADING DESK
 =========================
+
+NOVEDADES v6.93  (👑 EL ICONO EN NEGRO Y LA ENTRADA CON TU IMAGEN)
+=================================================================
+LLEVA ZIP Y APK. El worker 5.113 que ya subiste sigue igual.
+
+- ⚫ EL CÍRCULO BLANCO ERA CULPA MÍA. Ayer, para que se viera tu imagen,
+  quité el "icono adaptativo". Y sí, salió tu imagen... pero tu lanzador
+  envuelve en un CÍRCULO BLANCO todo icono que no sea adaptativo. Lo
+  arreglé por un lado y lo rompí por otro.
+
+  Ahora está bien: el icono adaptativo VUELVE, pero con FONDO NEGRO y con
+  tu dibujo recortado de su marco y ampliado para que LLENE el icono.
+  Sin círculo blanco, sin aire alrededor y sin que parezca una foto
+  metida dentro.
+
+  Y de paso: el frente del icono estaba a 192 px cuando ese formato pide
+  432. Por eso además se veía blando. Ahora va a 432.
+
+- 🎬 LA ENTRADA, CON TU IMAGEN. Tenías razón: la animación de apertura
+  seguía con la A vieja dibujada a mano, distinta de la del escritorio —
+  Apex parecía dos aplicaciones. Ahora la entrada usa LA MISMA imagen del
+  icono, más grande, sobre fondo casi negro para que el oro se despegue.
+
+- 📱 Y el icono es el mismo en TODAS partes: el escritorio, la animación
+  de entrada, la web instalada y la carita de los avisos.
+
+- 🧪 LO QUE ARREGLÉ EN LAS PRUEBAS, que es lo que evita repetir esto: el
+  banco ahora abre el APK compilado y exige CINCO cosas — que el icono
+  adaptativo exista (o vuelve el círculo blanco), que el fondo sea negro
+  puro, que el frente esté a 432 px, que sea TU imagen byte por byte, y
+  que la animación de entrada use esa misma imagen y no otra.
+
+COMPROBADO: 99 de 99 pruebas en verde.
+
+⚠️ AL INSTALAR: desinstala primero la anterior. Android guarda el icono
+en memoria y puede seguir enseñándote el viejo. Si aun así lo vieras
+igual, apaga y enciende el teléfono.
+
+NOVEDADES v6.92  (👑 EL ICONO, AHORA SÍ)
+=================================================================
+SOLO LA APK. El zip de la web y el worker 5.113 ya los subiste; esta
+versión no cambia nada de la web, solo arregla el icono.
+
+⚠️ IMPORTANTE PARA INSTALARLA: DESINSTALA PRIMERO la Apex que tienes y
+luego instala esta. Android guarda el icono en memoria y, si instalas
+encima, puede seguir enseñándote el viejo aunque el nuevo ya esté dentro.
+Si aun así lo vieras igual, apaga y enciende el teléfono.
+
+- 👑 POR QUÉ NO CAMBIÓ. Tenías razón y el motivo es concreto: tu teléfono
+  no usaba la imagen que yo cambié.
+
+  El programa pide "el icono", pero en Android 8 en adelante (tu moto va
+  con Android 15) manda un archivo distinto, el ICONO ADAPTATIVO, que
+  decía: "fondo un color, y encima el icono viejo". Yo cambié las
+  imágenes normales... que en tu teléfono ni se miran.
+
+  ARREGLADO: se quita ese archivo. Sin él, Android usa tu imagen tal
+  cual, entera y con su marco dorado.
+
+  No lo dejé como icono adaptativo a propósito: ese formato RECORTA
+  (solo garantiza el 66% del centro y le pone la forma del lanzador
+  encima), así que tu cuadrado con marco saldría ampliado y sin marco.
+  Tú dijiste "exactamente así", y exactamente así es sin recortar.
+
+- 🧪 Y LO QUE FALLÓ EN MIS PRUEBAS, que es lo que más me importa: el
+  banco comprobaba que las imágenes ESTUVIERAN dentro de la APK, pero no
+  CUÁL de ellas usa Android. Contar archivos no sirve de nada si el
+  sistema elige otro. Ahora el banco exige dos cosas dentro del APK
+  compilado: que NO haya icono adaptativo, y que el icono del lanzador
+  sea tu imagen BYTE POR BYTE, no una parecida.
+
+COMPROBADO: 99 de 99 pruebas en verde.
 
 NOVEDADES v6.91 + WORKER 5.113  (📱 FASE 1 DE LA APK: UN SOLO AVISO Y RÁPIDO)
 =================================================================
