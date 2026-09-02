@@ -970,7 +970,7 @@ async function iaEnviarBloques(bloques, resumenChat){
   const msgs=hist.map(x=>iaMsgApi(x,false));
   let calTxt=""; try{ const ev=await cargarCalendarioCache(); calTxt=iaCalendarioContexto(ev)+"\n"; }catch(_){ calTxt=""; }
   /* 💰 v6.02: bloque ESTABLE (lo guardado) con la marca de caché + material + contexto vivo al final */
-  const inj="=== CONTEXTO VIVO DE LA APP (datos de AHORA MISMO) ===\n"+iaReloj()+"\n"+calTxt+iaContexto()+"\n"+iaEstrategiaDef()+"\n"+iaPlan()+"\n"+iaAciertos()+"\n"+iaFugas()+"\n"+iaRacha()+"\n=== FIN DEL CONTEXTO ===";
+  const inj="=== CONTEXTO VIVO DE LA APP (datos de AHORA MISMO) ===\n"+iaDondeEstoy()+"\n"+iaReloj()+"\n"+calTxt+iaContexto()+"\n"+iaEstrategiaDef()+"\n"+iaPlan()+"\n"+iaAciertos()+"\n"+iaFugas()+"\n"+iaRacha()+"\n=== FIN DEL CONTEXTO ===";
   const last=msgs[msgs.length-1];
   last.content=[{type:"text",text:c.msgs[c.msgs.length-1].content, cache_control:{type:"ephemeral",ttl:"1h"}}].concat(bloques).concat([{type:"text",text:inj}]);
   /* estudiar capturas / material adjunto = trabajo profundo: pregunta qué motor usar */
@@ -6578,6 +6578,7 @@ function iaInit(){
       <div class="ia-cfg" id="iaCfgBox" style="display:none">
         <div class="fl">🔊 Voz de Roberto</div>
         <button class="btn" id="iaVozToggle" style="margin-bottom:8px">🔇 Que Roberto me hable: apagado</button>
+        <select class="inp" id="iaMotorSel" style="margin-bottom:8px;display:none"></select>
         <select class="inp" id="iaVozSel" style="margin-bottom:8px"></select>
         <div class="fl">Tono (más grave = más masculino)</div>
         <div class="seg c4" id="iaVozTono" style="margin-bottom:6px">
@@ -6588,6 +6589,7 @@ function iaInit(){
         </div>
         <div class="note" style="text-align:left;margin:0 0 8px">Si tu teléfono solo trae voz de mujer, baja el tono (Grave++). Para una voz de HOMBRE real hay que instalarla en Ajustes del teléfono → "Texto a voz" (no en el Asistente de Google).</div>
         <button class="btn" id="iaVozTest" style="margin-bottom:14px">▶️ Probar voz</button>
+        <button class="btn" id="iaVozAjustes" style="margin-bottom:14px;display:none">🔧 Ajustes de voz de Android</button>
         <div class="fl" id="vigiaCaja" style="display:none">🔔 Avisos de la app (sin navegador)</div>
         <div id="vigiaBox" style="display:none;margin-bottom:14px">
           <button class="btn" id="vigiaBtn" style="margin:0 0 6px">⏳ …</button>
@@ -6713,28 +6715,62 @@ function iaInit(){
     if(vs){
       vs.style.display = "";
       if(enApk){
-        /* 🎙️ v6.95 — LAS VOCES DEL TELÉFONO. Antes esto se escondía en la APK porque solo se
-           sabían listar las del navegador, y Rey se quedaba con la que Android trajera por
-           defecto — la básica, la que suena robótica. Ahora se le pregunta al teléfono.
-           Las de calidad alta van primero: son las que suenan naturales. */
+        /* 🎛️ v6.97 — MOTOR + VOZ. Antes solo se pedían las voces y, si la lista venía vacía,
+           el selector se escondía y Rey se quedaba sin nada que tocar (le pasó tal cual).
+           Ahora se listan los MOTORES instalados —que es lo que de verdad cambia la
+           naturalidad— y las voces del motor elegido; y si aun así no hay ninguna buena, se
+           le abre la puerta a los ajustes de Android en vez de dejarle la pantalla muerta. */
         (async ()=>{
-          try{
-            const PV = vozNativa();
-            const r = PV && PV.vozVoces ? await PV.vozVoces() : null;
-            const vv = (r && r.voces) || [];
-            if(!vv.length){ vs.style.display="none"; return; }
+          const PV = vozNativa();
+          const ms = $("#iaMotorSel"), aj = $("#iaVozAjustes");
+          const abrirAjustes = ()=>{ try{ PV.vozAjustes(); }
+            catch(_){ toast("Ábrelo en Ajustes → Idiomas → Texto a voz"); } };
+
+          const pintar = async (motor)=>{
+            let r = null;
+            try{ r = PV && PV.vozVoces ? await PV.vozVoces({ motor: motor || "" }) : null; }catch(_){}
+            const mot = (r && r.motores) || [], vv = (r && r.voces) || [];
+
+            /* los motores instalados en su teléfono */
+            if(ms){
+              /* 🎛️ v6.99 — antes se escondía si solo había UN motor, y Rey se quedaba sin ver
+                 cuál está usando. Mejor enseñarlo siempre: saber qué motor tienes es medio
+                 diagnóstico cuando la voz no suena bien. */
+              if(mot.length >= 1){
+                ms.style.display = "";
+                ms.innerHTML = mot.map(m=>'<option value="'+esc(m.id)+'"' +
+                  ((m.id===IA.voz.motor || (!IA.voz.motor && m.actual))?" selected":"") + '>🎛️ ' +
+                  esc(m.nombre||m.id) + '</option>').join("");
+                ms.onchange = async function(){
+                  IA.voz.motor = this.value || null;
+                  IA.voz.nativa = null;              /* cada motor tiene sus propias voces */
+                  iaGuardarVoz();
+                  await pintar(this.value);
+                  iaHablar("Cambié de motor, Rey. ¿Suena mejor así?", -1);
+                };
+              } else ms.style.display = "none";
+            }
+
+            /* la puerta a los ajustes queda SIEMPRE a mano: si ninguna suena natural, es que
+               le falta instalar la buena, y eso solo se hace ahí */
+            if(aj){ aj.style.display = ""; aj.onclick = abrirAjustes; }
+
+            if(!vv.length){ vs.style.display = "none"; return; }
+
+            vs.style.display = "";
             vv.sort((a,b)=> (b.buena?1:0)-(a.buena?1:0));
-            vs.innerHTML = '<option value="">La que trae el teléfono</option>' +
-              vv.map(v=>'<option value="'+esc(v.id)+'">' +
-                (v.buena?"⭐ ":"") + esc(v.id.replace(/^es-/,"").replace(/-language$/,"")) +
-                (v.pais?" ("+esc(v.pais)+")":"") + (v.necesitaRed?" · necesita internet":"") +
-                '</option>').join("");
+            vs.innerHTML = '<option value="">La que trae el motor</option>' +
+              vv.map(v=>'<option value="'+esc(v.id)+'">' + (v.buena?"⭐ ":"") +
+                esc(String(v.id).replace(/^es-/,"").replace(/-language$/,"")) +
+                (v.pais?" ("+esc(v.pais)+")":"") +
+                (v.necesitaRed?" · con internet":"") + '</option>').join("");
             vs.value = IA.voz.nativa || "";
             vs.onchange = function(){
               IA.voz.nativa = this.value || null; iaGuardarVoz();
               iaHablar("Esta es mi voz, Rey. ¿Te gusta más así?", -1);
             };
-          }catch(_){ vs.style.display="none"; }
+          };
+          await pintar(IA.voz.motor || "");
         })();
       } else {
         vs.onchange=function(){ IA.voz.name=this.value||null; iaGuardarVoz(); iaHablar("Esta es mi voz. ¿Te gusta?", -1); };
@@ -6957,27 +6993,76 @@ function iaVozEspanol(){
   return elegida || _iaVozBuena;
 }
 /* Limpia el texto para que suene natural: sin markdown, sin emojis, sin URLs largas */
+/* 🗣️ v6.99 — CÓMO SE LO DAMOS A LA VOZ.
+   Rey: "que lea bien los números, las comas donde van, las pausas cuando deba hacerlas;
+   fluidez, no una carretilla". Antes se limpiaban los emojis y las tablas pero se le daba
+   tal cual "1.85R", "-8.7%", "4H", "GBPUSD" — y cualquier motor lee eso deletreando.
+   Aquí se traduce a lo que diría una persona en voz alta. */
+const PARA_LA_VOZ = [
+  /* los pares, por su nombre — "gebeepeeuese" era lo que salía */
+  [/\bEUR\s*\/?\s*USD\b/gi, "euro dólar"],
+  [/\bGBP\s*\/?\s*USD\b/gi, "libra dólar"],
+  [/\bUSD\s*\/?\s*JPY\b/gi, "dólar yen"],
+  [/\bXAU\s*\/?\s*USD\b/gi, "oro"],
+  [/\bUS\s*30\b/gi, "US treinta"],
+  /* las temporalidades, en horas y minutos */
+  [/\b(\d+)\s*H\b/g, "$1 horas"],
+  [/\b1\s*horas\b/g, "1 hora"],
+  [/\b(\d+)\s*[mM]in\b/g, "$1 minutos"],
+  [/\b(\d+)\s*[mM]\b(?!\w)/g, "$1 minutos"],
+  [/\b1 minutos\b/g, "1 minuto"],
+  [/\bD1\b/g, "diario"], [/\bW1\b/g, "semanal"], [/\bH4\b/g, "4 horas"],
+  /* las erres de riesgo: "1.85R" → "1,85 erres" */
+  [/(\d)[.,](\d+)\s*R\b/g, "$1 coma $2 erres"],
+  [/\b1\s*R\b/g, "1 erre"],
+  [/(\d)\s*R\b/g, "$1 erres"],
+  /* porcentajes y dinero */
+  [/(\d)[.,](\d+)\s*%/g, "$1 coma $2 por ciento"],
+  [/(\d)\s*%/g, "$1 por ciento"],
+  /* el número ENTERO, no solo su primera cifra ("$41.20" salía como "4 dólares 1 coma 20"),
+     y sin tragarse la coma que va DESPUÉS ("26.60, salió" salía "26 coma 60, dólares salió") */
+  [/\$\s*(\d+(?:[.,]\d+)?)/g, "$1 dólares"],
+  /* decimales: en español se leen con coma, no con punto */
+  [/(\d)\.(\d)/g, "$1 coma $2"],
+  /* siglas que se leen letra a letra si no se separan */
+  [/\bMSS\b/g, "eme ese ese"], [/\bDD\b/g, "drawdown"], [/\bSL\b/g, "ese ele"],
+  [/\bTP\b/g, "te pe"], [/\bPF\b/g, "pe efe"], [/\bKZ\b/g, "killzone"],
+  [/\bPDH\b/g, "máximo del día anterior"], [/\bPDL\b/g, "mínimo del día anterior"],
+];
+
 function iaTextoParaVoz(s){
-  return String(s||"")
+  let t = String(s||"")
     .replace(/https?:\/\/[^\s]+/g,"el enlace que te dejé")
     /* 🔇 v6.28 — TABLAS: la voz leía "pleca guión pleca guión..." (los símbolos | y ---
        de los recuadros). Las filas separadoras desaparecen y cada fila de tabla se lee
        como frase natural con comas. */
-    .replace(/→/g," a ")                                                          /* 03:29→02:29 = "a" */
-    .replace(/^[\s|:\-]{3,}$/gm,"")                                              /* |---|---| fuera */
+    .replace(/→/g," a ")
+    .replace(/^[\s|:\-]{3,}$/gm,"")
     .replace(/^\s*\|(.+)\|\s*$/gm,(m,inner)=>inner.split("|").map(x=>x.trim()).filter(Boolean).join(", ")+".")
-    .replace(/\|/g,", ")                                                          /* plecas sueltas */
-    .replace(/[—–]/g,", ")                                                        /* rayas largas */
-    .replace(/(^|[\s(])-(\d)/g,"$1menos $2")                                      /* -1.09 → menos 1.09 */
-    .replace(/(^|[\s(])\+(\d|\$)/g,"$1más $2")                                    /* +$44 → más $44 */
+    .replace(/\|/g,", ")
+    .replace(/[—–]/g,", ")
+    /* 🗣️ v6.99 — el separador · marcaba una PAUSA y se perdía al quitarlo: ahora es una coma */
+    .replace(/\s*·\s*/g,", ")
+    .replace(/(^|[\s(])-(\d)/g,"$1menos $2")
+    .replace(/(^|[\s(])\+(\d|\$)/g,"$1más $2")
     .replace(/\*\*(.+?)\*\*/g,"$1")
     .replace(/[*#_`>]/g,"")
-    .replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2190}-\u{21FF}\u{2B00}-\u{2BFF}]/gu,"")
-    .replace(/\s+\n/g,". ")
-    .replace(/\n+/g,". ")
+    .replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2190}-\u{21FF}\u{2B00}-\u{2BFF}]/gu,"");
+
+  /* 🗣️ v6.99 — y ahora, a decirlo como lo diría una persona */
+  for (const [re, con] of PARA_LA_VOZ) t = t.replace(re, con);
+
+  return t
+    /* cada línea es una frase: si no acaba en punto, se le pone — ahí está la pausa */
+    .split(/\n+/).map(x=>{ x = x.trim(); if(!x) return ""; return /[.!?:;,]$/.test(x) ? x : x + "."; })
+    .filter(Boolean).join(" ")
+    /* nunca dos signos seguidos ni espacios de más: eso también suena mal */
+    .replace(/([.!?])\s*\1+/g,"$1")
+    .replace(/\s+([.,!?;:])/g,"$1")
     .replace(/\s{2,}/g," ")
     .trim();
 }
+
 /* 🔊 v6.69 — trozos pendientes de la respuesta que Roberto está leyendo en voz alta */
 let _vozCola = [];
 /* Parte un texto largo en trozos que Chrome sí acepta, cortando por frases para que no
@@ -7093,13 +7178,17 @@ function iaHablar(texto, idx){
     const limpio = iaTextoParaVoz(texto);
     if(!limpio) return;
     _vozIdx = idx;
-    const tono = (typeof IA.voz.pitch==="number") ? Math.max(0.5, Math.min(1.6, IA.voz.pitch)) : 0.85;
+    /* 🎚️ v6.99 — EL TONO, COMO LO TENÍA. En la v6.97 lo suavicé para que Android no
+       deformara la voz, y Rey fue claro: "eso no, mejor que quede como estaba". Su tono
+       grave es suyo y se respeta tal cual; la naturalidad se arregla por donde de verdad
+       fallaba, que es CÓMO se le da el texto (ver iaTextoParaVoz). */
+    const tono = (typeof IA.voz.pitch==="number") ? Math.max(0.4, Math.min(1.6, IA.voz.pitch)) : 0.6;
     /* 🎙️ v6.95 — la voz que eligió Rey y un ritmo algo más vivo. Iba fijo a 1.0 y con el
        motor básico de Android sonaba arrastrado ("muy pausada", dijo él). 1.12 es hablar
        normal, no correr. */
     const ritmo = (typeof IA.voz.ritmo==="number") ? Math.max(0.7, Math.min(1.6, IA.voz.ritmo)) : 1.12;
     IA.hablandoIdx = (idx==null?-1:idx); try{ pintarIAChat(); }catch(_){}
-    try{ PV.vozHablar({ texto: limpio, tono: tono, ritmo: ritmo, voz: IA.voz.nativa || "" }); }
+    try{ PV.vozHablar({ texto: limpio, tono: tono, ritmo: ritmo, voz: IA.voz.nativa || "", motor: IA.voz.motor || "" }); }
     catch(_){ toast("No pude hablar ahora mismo"); }
     return;
   }
@@ -7902,6 +7991,50 @@ function iaTextoDeMsg(x){
 /* Reloj real desde el teléfono: hora Brasil + Nueva York + ventana operativa.
    Le quita al mentor el bache de "no tengo reloj". America/New_York maneja
    EST/EDT solo, así que el desfase sale siempre correcto. */
+/* 🧭 v6.98 — DÓNDE ESTÁ ROBERTO AHORA MISMO, y con qué datos cuenta AQUÍ.
+   Rey: "Roberto debe saber y deducir por dónde lo estoy usando". Sin esto no podía: el
+   contexto le daba la hora, el calendario y sus números… pero nunca el aparato. Por eso,
+   cuando Rey le dijo desde la APK que en la web ya estaba en la fase 3, Roberto no tenía
+   con qué atar cabos y le pidió material otra vez.
+   También le damos lo que ESTE aparato tiene delante y cuándo habló con la nube: con eso
+   puede razonar solo cuando los números no cuadren con lo que Rey le cuenta. */
+function iaDondeEstoy(){
+  try{
+    const apk = !!vigiaPuente();
+    const movil = /Android|iPhone|iPad/i.test(navigator.userAgent||"");
+    const donde = apk ? "la APK (la aplicación instalada en su teléfono)"
+                      : (movil ? "el NAVEGADOR de su teléfono" : "el NAVEGADOR de su PC");
+
+    let s = "[🧭 DÓNDE ESTÁS AHORA MISMO: Rey te está hablando desde " + donde + ". ";
+    s += apk
+      ? "Aquí puedes lo que el navegador no: el 🔔 vigía te trae los avisos con Apex cerrada, hablas con la voz de Android y puedes salir flotando sobre otras apps. "
+      : "Aquí los avisos van por el navegador, que además es el RESPALDO si la app deja de dar señales. ";
+    s += "Tus MANOS son las mismas en los dos sitios y tu VISIÓN del gráfico viene del Puente de su PC: no pierdes ninguna capacidad por estar aquí. ";
+
+    /* Lo que HAY en este aparato: con esto puede detectar solo que faltan datos */
+    const nT = (Array.isArray(TRADES)?TRADES.length:0);
+    const nC = (Array.isArray(CUENTAS)?CUENTAS.length:0);
+    const fase = (PLAN_ARR && PLAN_ARR.fase!=null) ? (PLAN_ARR.fase+1) : "?";
+    /* el contador real de materiales: documentos con el clip + capturas */
+    const nMat = ((PLAN_ARR&&PLAN_ARR.docs)||0) + ((PLAN_ARR&&PLAN_ARR.caps)||0);
+    s += "EN ESTE APARATO tienes delante: " + nT + " operaciones, " + nC + " cuentas, el plan en la fase 0" + fase + " y " + nMat + " materiales suyos. ";
+
+    /* Cuándo habló este aparato con la nube */
+    const ts = (typeof nubeTs==="function") ? nubeTs() : 0;
+    s += ts
+      ? "Este aparato se sincronizó con la nube el " + new Intl.DateTimeFormat("es",{timeZone:"America/Sao_Paulo",day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit",hour12:false}).format(new Date(ts)) + ". "
+      : "⚠️ ESTE APARATO NUNCA HA TRAÍDO NADA DE LA NUBE: lo que ves aquí es solo lo que se escribió en él. ";
+
+    s += "CÓMO RAZONAR CON ESTO: los datos de Rey viven en CADA aparato por separado y viajan por el respaldo de la nube. " +
+         "Si él te cuenta algo que NO cuadra con los números de arriba —‘en la web ya estoy en la fase 3’, ‘ahí tengo mis trades’, ‘ya te pasé material’— " +
+         "NO le pidas que empiece de cero ni le repitas lo que ya hizo: DEDÚCELO y díselo tú. " +
+         "Lo correcto es: reconocer dónde estáis, decirle que en este aparato aún no están esos datos, y pedirle que pulse ‘☁️ TRAER mis datos desde la nube’ AQUÍ " +
+         "(y que antes SUBA desde el aparato que sí los tiene, si la nube tampoco los tuviera). " +
+         "Avísale siempre de lo contrario: ‘💾 SUBIR’ desde un aparato vacío le machacaría lo bueno. Primero traer, nunca subir.]";
+    return s;
+  }catch(_){ return ""; }
+}
+
 function iaReloj(){
   try{
     const now=new Date();

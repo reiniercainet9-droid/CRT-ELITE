@@ -1,5 +1,136 @@
-APEX v6.96 — TRADING DESK
+APEX v6.99 — TRADING DESK
 =========================
+
+NOVEDADES v6.99  (🗣️ LA FLUIDEZ AL HABLAR)
+=================================================================
+SOLO EL ZIP Y LA APK.
+
+- 🗣️ LA CAUSA DE LA "CARRETILLA" NO ERA LA VOZ: ERA EL TEXTO. Se le
+  limpiaban los emojis y las tablas, pero se le entregaba tal cual:
+
+     1.85R    →  leía "uno punto ocho cinco ERRE"
+     -8.7%    →  "menos ocho punto siete"
+     4H · 15m →  "cuatro HACHE, quince EME"
+     GBPUSD   →  "gebeepeeuese"
+     ·        →  se lo comía, y con él la PAUSA que separaba las ideas
+
+  Por buena que fuera la voz, eso suena a máquina deletreando.
+
+  Ahora dice las cosas como las dirías tú en voz alta:
+
+     "libra dólar, 4 horas, Alarma."
+     "Ganó 41 coma 20 dólares (más 1 coma 85 erres) en 23 minutos."
+     "Perdió 26 coma 60 dólares, salió por stop."
+     "menos 8 coma 7 por ciento, cerca del drawdown máximo"
+     "Espera la zona de reacción en 15 minutos, sweep, eme ese ese..."
+
+  Y CADA LÍNEA se convierte en una frase con su punto — ahí están las
+  pausas que faltaban. Se respetan las preguntas y las exclamaciones, y
+  ya no quedan puntos dobles ni espacios sueltos antes de una coma.
+
+- 🎚️ EL TONO, COMO LO TENÍAS. En la anterior te lo suavicé para que
+  Android no deformara la voz, y me dijiste "eso no, mejor que quede
+  como estaba". Revertido: tu grave vuelve a ser tu grave, tal cual.
+  La naturalidad se arregla por donde de verdad fallaba, que es el texto.
+
+- 🎛️ El selector de MOTOR ya no se esconde cuando solo hay uno: verlo es
+  medio diagnóstico cuando la voz no suena bien.
+
+COMPROBADO: 107 de 107 pruebas en verde. El banco nuevo ejecuta el
+preparador de texto con frases REALES del sistema y exige las pausas.
+
+NOVEDADES v6.98  (🧭 ROBERTO NO SABÍA DÓNDE ESTABA)
+=================================================================
+SOLO EL ZIP Y LA APK.
+
+Tenías razón, y lo comprobé en el código. Te lo cuento con datos.
+
+- 🔍 EL DIAGNÓSTICO. Esto es TODO lo que Roberto recibía en cada mensaje:
+
+    reloj + calendario + tus datos + estrategia + plan + aciertos +
+    fugas + racha
+
+  NI UNA SOLA LÍNEA sobre el aparato. La variable que sabe si está en la
+  APK existía... solo dentro de la pantalla de ajustes. Así que Roberto
+  NO PODÍA saber si le hablas desde el navegador del PC, del teléfono o
+  desde la APK. Sin eso no podía razonar lo que le pedías. No es que se
+  quedara atrás: es que nunca se lo dijimos.
+
+- ✅ LO QUE SÍ ESTÁ BIEN, y lo comprobé también: sus MANOS se ejecutan
+  dentro de la propia app — el mismo código en los dos sitios — y su
+  VISIÓN del gráfico viene del Puente de tu PC. Roberto NO perdió
+  ninguna capacidad al pasar a la APK. Le faltaba saber dónde estaba.
+
+- 🧭 LO QUE AHORA RECIBE EN CADA MENSAJE, lo primero de todo:
+    · desde dónde le hablas (APK / navegador del teléfono / navegador
+      del PC) y qué puede hacer ahí
+    · que sus manos y su visión son las mismas en los dos sitios
+    · LOS NÚMEROS DE ESE APARATO: cuántas operaciones, cuántas cuentas,
+      en qué fase está el plan y cuántos materiales tiene
+    · si ese aparato NUNCA ha traído nada de la nube (tu caso de hoy)
+    · y cómo RAZONAR: si le cuentas algo que no cuadra con esos números
+      —"en la web ya estoy en la fase 3", "ahí tengo mis trades"— NO
+      debe pedirte empezar de cero ni repetir lo hecho: debe DEDUCIRLO y
+      decírtelo él, y pedirte que traigas los datos AQUÍ.
+
+  Con esto, la respuesta que te dio hoy habría sido: "Rey, estamos en la
+  APK y aquí tu plan está en la fase 02 con 0 materiales, pero en la web
+  ya ibas por la 3 — trae tus datos de la nube y lo cuadramos".
+
+⚠️ Y UNA COSA QUE TIENES QUE HACER TÚ, en este orden:
+  1. En la WEB (donde SÍ está tu plan en la fase 3): pulsa
+     "💾 SUBIR lo de esta app a la nube"
+  2. Después, en la APK: "☁️ TRAER mis datos desde la nube"
+
+  Por qué: hasta la v6.96 el PLAN no viajaba en el respaldo, así que la
+  nube todavía no lo tiene. Hay que subirlo una vez desde la web.
+
+COMPROBADO: 106 de 106 pruebas en verde. El banco nuevo ejecuta el
+bloque en los tres sitios y exige que Roberto razone en vez de preguntar.
+
+NOVEDADES v6.97  (🎙️ LA VOZ: MOTOR, VOCES Y NATURALIDAD)
+=================================================================
+SOLO EL ZIP Y LA APK.
+
+Encontré DOS causas, y la segunda explica lo de la naturalidad.
+
+- 🔍 POR QUÉ NO SALÍA NINGUNA VOZ. Yo filtraba las voces preguntándole a
+  Android si su idioma era "es"... y Android devuelve "spa" en muchos
+  motores. Con ese filtro se descartaban TODAS. Por eso primero decía
+  "Sin voces en este teléfono" y después el selector desaparecía.
+
+  Ahora acepta es / spa / es-*, y si aun así no encontrara ninguna en
+  español, te da TODAS para que puedas elegir — antes que dejarte con
+  una pantalla muerta.
+
+- 🎛️ Y AHORA SÍ PUEDES ELEGIR EL MOTOR. No existía esa opción. Y el
+  motor es justo lo que más cambia la naturalidad: el de Google (con
+  internet) suena como la voz de la web; el básico del sistema suena a
+  robot. Verás dos selectores: MOTOR y VOZ. Al cambiar de motor, Roberto
+  te habla al momento para que lo compares.
+
+  Las voces buenas salen con ⭐ y arriba del todo. Y hay un botón
+  "🔧 Ajustes de voz de Android" por si te falta instalar la natural.
+
+- 🎚️ Y LA CAUSA PRINCIPAL DE QUE SONARA ROBÓTICA: EL TONO. Los botones
+  de tono guardan 0.4 / 0.6 / 0.8 / 1.0 — pensados para la voz del
+  NAVEGADOR, que es neuronal y aguanta bien un tono grave. Tú tienes
+  "Grave" = 0.6, y ese 0.6 se le pasaba TAL CUAL al motor de Android,
+  que con ese valor saca una voz honda y arrastrada. Justo lo que
+  describiste.
+
+  Ahora tu elección se respeta pero llevada al rango donde Android sigue
+  sonando humano:
+      Grave++ → 0.82   Grave → 0.90   Grave+ → 0.98   Normal → 1.06
+
+QUÉ HACER AL INSTALAR:
+  1. Ajustes → Voz de Roberto
+  2. En MOTOR, elige el de Google si lo tienes (suele llamarse
+     "Servicios de voz de Google" o "Speech Recognition & Synthesis")
+  3. En VOZ, elige una con ⭐
+  4. Dale a "▶️ Probar voz" y compárala
+
+COMPROBADO: 105 de 105 pruebas en verde.
 
 NOVEDADES v6.96  (🧭 TU PLAN NO SE RESPALDABA — y Roberto no sabía de la APK)
 =================================================================
