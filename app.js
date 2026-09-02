@@ -7462,6 +7462,64 @@ function iaTrocearVoz(t){
   if(actual.trim()) out.push(actual.trim());
   return out.filter(Boolean);
 }
+/* ══════════════════════════════════════════════════════════════════════════════
+   ⏸ PAUSAR A ROBERTO Y QUE SIGA DONDE SE QUEDÓ — v7.11
+   ═════════════════════════════════════════════════════════════════════════════
+   Rey (02-09): "quiero un botón en el chat con Roberto que pause lo que me está
+   diciendo. El de que continúe y pare ya lo tengo; el de pausarlo y después
+   continúe donde se quedó, no".
+
+   POR QUÉ NO EXISTÍA, y no era pereza: Android NO TIENE PAUSA. Su TextToSpeech
+   solo sabe hablar y callarse del todo; no hay `pause()` que valga. La única
+   forma real de pausar es hablar POR TROZOS y recordar cuál sonaba.
+
+   Y resulta que la web YA hablaba por trozos desde la v6.69 — no por esto, sino
+   porque Chrome se atraganta con textos largos y los deja en cola sin sonar.
+   Ese troceo que nació de un apaño es justo la pieza que hacía falta aquí: se
+   aprovecha, y así la pausa funciona IGUAL en la web y en la APK, con un solo
+   estado y no dos mecanismos que se contradigan.
+
+   DÓNDE SIGUE AL REANUDAR: al principio de la FRASE que estaba sonando, no a
+   media palabra. Es a propósito — retomar una frase por la mitad se entiende
+   peor que oírla entera otra vez.
+
+   ⚠️ Y LA VOZ NO CAMBIA. En la APK los trozos se encadenan con QUEUE_ADD (sin
+   silencio entre frases) y en la web se hacía ya así. Suena exactamente igual
+   que antes: lo único nuevo es que se puede parar a media exposición. */
+let VOZ = { trozos: [], i: 0, pausada: false, idx: null };
+
+/** ¿Roberto está hablando o está pausado a media frase? */
+function iaVozEstado(){
+  if(VOZ.pausada) return "pausa";
+  return IA.hablandoIdx!=null ? "hablando" : "quieto";
+}
+
+/** Pausa: se calla, pero NO se olvida de por dónde iba. */
+function iaVozPausa(){
+  if(iaVozEstado()!=="hablando") return;
+  VOZ.pausada = true;
+  /* callar sin tocar VOZ: el índice del trozo es justo lo que hay que conservar */
+  try{ const PV = vozNativa(); if(PV && PV.vozCallar) PV.vozCallar(); }catch(_){}
+  try{ if(TTS) TTS.cancel(); }catch(_){}
+  try{ if(ROB_LISTO) Roberto.callar(); }catch(_){}
+  try{ pintarIAChat(); }catch(_){}
+}
+
+/* Seguir: retoma desde la frase en la que se quedó.
+   ⚠️ NO reimplementa el modo de hablar: vuelve a llamar a `iaHablar` con LO QUE
+   QUEDA. Así la reanudación pasa por exactamente el mismo camino ya probado —el
+   troceo de Chrome, el pedir la voz de nuevo en cada frase (si no, Roberto
+   empezaba y terminaba una voz de mujer), el reintento cuando el navegador se
+   traga la orden en silencio— en vez de una copia mía que se iría desviando. */
+function iaVozSeguir(){
+  if(!VOZ.pausada || !VOZ.trozos.length) return;
+  const queda = VOZ.trozos.slice(VOZ.i).join(" ");
+  const idx = VOZ.idx;
+  VOZ.pausada = false;
+  if(!queda.trim()){ iaVozParar(); return; }
+  iaHablar(queda, idx, true);   /* true = ya viene limpio: no traducirlo dos veces */
+}
+
 function iaVozParar(){
   /* 🔇 v6.95 — CALLARLO DE VERDAD, HABLE POR DONDE HABLE. Antes esto solo paraba la voz del
      navegador; dentro de la APK habla Android, así que no había forma humana de callarlo.
@@ -7469,6 +7527,9 @@ function iaVozParar(){
   try{ const PV = vozNativa(); if(PV && PV.vozCallar) PV.vozCallar(); }catch(_){}
   try{ if(TTS) TTS.cancel(); }catch(_){}
   try{ _vozCola = []; }catch(_){}
+  /* ⏹ PARAR es distinto de PAUSAR: aquí se tira lo que quedaba por decir. Si no se
+     limpiara, el botón seguiría ofreciendo "▶️ Seguir" sobre un discurso descartado. */
+  try{ VOZ = { trozos: [], i: 0, pausada: false, idx: null }; }catch(_){}
   IA.hablandoIdx = null;
   try{ if(ROB_LISTO) Roberto.callar(); }catch(_){}
   try{ pintarIAChat(); }catch(_){}
@@ -7530,10 +7591,19 @@ function vozNativa(){
     if(!_vozNativaLista){
       _vozNativaLista = true;
       try{
-        P.addListener("vozInicio", ()=>{ try{ if(ROB_LISTO||ROB_CUERPO) Roberto.hablar("",{mudo:true}); }catch(_){}
+        /* ⏸ v7.11 — cada trozo avisa por dónde va. Ese número es TODA la pausa: sin él,
+           Apex sabría que Roberto habla pero no desde dónde retomarlo. */
+        P.addListener("vozInicio", (ev)=>{ try{ if(ROB_LISTO||ROB_CUERPO) Roberto.hablar("",{mudo:true}); }catch(_){}
+          try{ const m=/^apex-(\d+)$/.exec((ev&&ev.marca)||""); if(m) VOZ.i = +m[1]; }catch(_){}
           IA.hablandoIdx = (_vozIdx==null?-1:_vozIdx); pintarIAChat(); });
-        P.addListener("vozFin", ()=>{ try{ Roberto.callar(); }catch(_){}
-          IA.hablandoIdx = null; pintarIAChat(); });
+        P.addListener("vozFin", (ev)=>{
+          /* ⚠️ solo se da por terminado con el ÚLTIMO trozo. Antes cualquier "fin" apagaba
+             el botón, y troceando eso lo habría apagado en la primera frase de diez. */
+          try{ const m=/^apex-(\d+)$/.exec((ev&&ev.marca)||"");
+               if(m && VOZ.trozos.length && (+m[1]) < VOZ.trozos.length-1) return; }catch(_){}
+          if(VOZ.pausada) return;                 /* pausar también llega aquí: no es el final */
+          try{ Roberto.callar(); }catch(_){}
+          IA.hablandoIdx = null; VOZ.trozos = []; VOZ.i = 0; pintarIAChat(); });
       }catch(_){}
     }
     return P;
@@ -7541,12 +7611,14 @@ function vozNativa(){
 }
 let _vozIdx = null;
 /* Habla un texto. idx = índice del mensaje en la conversación (para el botón). */
-function iaHablar(texto, idx){
+function iaHablar(texto, idx, yaLimpio){
   /* 📱 dentro de la APK: la voz del propio Android */
   const PV = vozNativa();
   if(PV){
-    /* true = la voz de Android: aquí SÍ se traduce a habla natural (la web no se toca) */
-    const limpio = iaTextoParaVoz(texto, true);
+    /* true = la voz de Android: aquí SÍ se traduce a habla natural (la web no se toca).
+       `yaLimpio` lo pone la reanudación: ese texto ya pasó por aquí y volver a traducirlo
+       le haría cosas raras a los números que ya están escritos en palabras. */
+    const limpio = yaLimpio ? String(texto||"") : iaTextoParaVoz(texto, true);
     if(!limpio) return;
     _vozIdx = idx;
     /* 🎚️ v6.99 — EL TONO, COMO LO TENÍA. En la v6.97 lo suavicé para que Android no
@@ -7559,8 +7631,19 @@ function iaHablar(texto, idx){
        normal, no correr. */
     const ritmo = (typeof IA.voz.ritmo==="number") ? Math.max(0.7, Math.min(1.6, IA.voz.ritmo)) : 1.12;
     IA.hablandoIdx = (idx==null?-1:idx); try{ pintarIAChat(); }catch(_){}
-    try{ PV.vozHablar({ texto: limpio, tono: tono, ritmo: ritmo, voz: IA.voz.nativa || "", motor: IA.voz.motor || "" }); }
-    catch(_){ toast("No pude hablar ahora mismo"); }
+    /* ⏸ v7.11 — POR TROZOS, PARA PODER PAUSARLO. Android no tiene pausa: su voz solo sabe
+       hablar y callarse del todo. La única pausa real es trocear y recordar por dónde iba.
+       Se encolan TODOS de una vez con QUEUE_ADD (`anadir`), así se encadenan SIN silencio
+       entre frases y suena exactamente igual que cuando iba de una pieza; lo único nuevo es
+       que cada trozo lleva su marca y Apex sabe cuál está sonando. */
+    VOZ = { trozos: iaTrocearVoz(limpio), i: 0, pausada: false, idx: (idx==null?-1:idx) };
+    try{
+      VOZ.trozos.forEach((tr, k)=>{
+        PV.vozHablar({ texto: tr, tono: tono, ritmo: ritmo,
+          voz: IA.voz.nativa || "", motor: IA.voz.motor || "",
+          marca: "apex-"+k, anadir: k>0 });
+      });
+    }catch(_){ toast("No pude hablar ahora mismo"); }
     return;
   }
   if(!TTS){ toast("Tu teléfono no permite voz"); return; }
@@ -7586,6 +7669,9 @@ function iaHablar(texto, idx){
      Se parte en trozos por frases y se encadenan: cada uno arranca al terminar el anterior,
      así suena entero y se puede parar en cualquier momento. */
   const trozos = iaTrocearVoz(limpio);
+  /* ⏸ v7.11 — el mismo troceo que ya existía por el límite de Chrome sirve ahora para
+     PAUSAR: se apunta en VOZ para saber por qué frase va. */
+  VOZ = { trozos: trozos, i: 0, pausada: false, idx: (idx==null?-1:idx) };
   _vozCola = trozos.slice(1);
   u.text = trozos[0];
   const finTrozo = u.onend;
@@ -7597,8 +7683,10 @@ function iaHablar(texto, idx){
      Ahora cada trozo pide su voz de nuevo POR NOMBRE, y toma el tono del ajuste de Rey:
      es el mismo Roberto de la primera palabra a la última. */
   u.onend = ()=>{
+    if(VOZ.pausada) return;            /* ⏸ pausado: no se sigue, y VOZ.i queda donde estaba */
     const sig = _vozCola.shift();
     if(sig==null){ finTrozo(); return; }
+    VOZ.i++;                           /* ⏸ por aquí va: es desde donde se reanudará */
     const w = new SpeechSynthesisUtterance(sig);
     const vv = iaVozEspanol();                     /* fresca, no la de hace 20 segundos */
     if(vv){ w.voice=vv; w.lang=vv.lang; } else { w.lang="es-ES"; }
@@ -8323,7 +8411,23 @@ function pintarIAChat(){
          miraba solo `TTS` (la del navegador) y dentro de la APK no existe: Roberto hablaba
          y Rey no tenía NADA que tocar para callarlo (02-09: "salió hablando como una
          carretilla sin poder pararlo"). */
-      const btn = (TTS || vozNativa()) ? `<button class="ia-speak${habla?" on":""}" data-speak="${i}">${habla?"⏹ Parar":"🔊 Escuchar"}</button>` : "";
+      /* ⏸ v7.11 — TRES ESTADOS, no dos (Rey: "el de que continúe y pare ya lo tengo;
+         el de pausarlo y después continúe donde se quedó, no"). Mientras habla salen DOS
+         botones: pausar y parar — son cosas distintas y hay que poder elegir. Pausado, el
+         primero pasa a "Seguir" y el de parar sigue ahí para descartarlo del todo. */
+      const _ve = (typeof iaVozEstado==="function") ? iaVozEstado() : (habla?"hablando":"quieto");
+      const _mio = (VOZ && VOZ.idx===i) || habla;
+      let btn = "";
+      if(TTS || vozNativa()){
+        if(_mio && _ve==="hablando")
+          btn = `<button class="ia-speak on" data-pausa="${i}">⏸ Pausa</button>`
+              + `<button class="ia-speak" data-speak="${i}">⏹ Parar</button>`;
+        else if(_mio && _ve==="pausa")
+          btn = `<button class="ia-speak on" data-seguir="${i}">▶️ Seguir</button>`
+              + `<button class="ia-speak" data-speak="${i}">⏹ Parar</button>`;
+        else
+          btn = `<button class="ia-speak" data-speak="${i}">🔊 Escuchar</button>`;
+      }
     return `<div class="ia-msg bot">${foto}${cuerpo}${btn}${iaAccionesHTML(x,i)}</div>`;
   }).join("")
     + (IA.busy?`<div class="ia-msg bot ia-typing"><span></span><span></span><span></span></div>
@@ -8336,9 +8440,11 @@ function pintarIAChat(){
   m.querySelectorAll("[data-acc]").forEach(b=>{
     b.onclick=(e)=>{ e.stopPropagation(); const a=IA_ACCIONES[b.dataset.acc]; if(a && a.fn) a.fn(); };
   });
+  m.querySelectorAll("[data-pausa]").forEach(b=>{ b.onclick=()=>{ iaVozPausa(); }; });
+  m.querySelectorAll("[data-seguir]").forEach(b=>{ b.onclick=()=>{ iaVozSeguir(); }; });
   m.querySelectorAll("[data-speak]").forEach(b=>{
     b.onclick=()=>{ const i=+b.dataset.speak;
-      if(IA.hablandoIdx===i){ iaVozParar(); return; }
+      if(IA.hablandoIdx===i || (VOZ && VOZ.pausada && VOZ.idx===i)){ iaVozParar(); return; }
       const texto = iaTextoDeMsg(c.msgs[i]);
       if(!texto){ toast("En este mensaje no hay texto que leer"); return; }
       iaHablar(texto, i); };

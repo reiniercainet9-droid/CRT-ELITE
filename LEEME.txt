@@ -1,5 +1,51 @@
-APEX v7.10 — TRADING DESK
+APEX v7.11 — TRADING DESK
 =========================
+
+NOVEDADES v7.11  (⏸ PAUSAR A ROBERTO Y QUE SIGA DONDE SE QUEDÓ)
+=================================================================
+Sube el zip y la APK. El worker 5.118 y el Ejecutor v2.4 no cambian.
+
+⏸ LO QUE PEDISTE
+-----------------
+En el chat, mientras Roberto habla, ahora salen DOS botones:
+
+        ⏸ Pausa      ⏹ Parar
+
+Y en cuanto pausas, el primero cambia a ▶️ Seguir, y retoma donde se
+quedó. Parar sigue estando ahí para descartarlo del todo — son cosas
+distintas y tienes que poder elegir.
+
+POR QUÉ NO EXISTÍA (y no era pereza)
+-------------------------------------
+ANDROID NO TIENE PAUSA. Su voz solo sabe hablar y callarse del todo; no
+hay ningún "pausar" que se le pueda pedir. La única pausa real es hablar
+POR TROZOS y recordar cuál sonaba.
+
+Y aquí viene lo bueno: la web YA hablaba por trozos desde la v6.69 —
+pero por otro motivo, porque Chrome se atraganta con textos largos y los
+deja mudos. Ese apaño de entonces resultó ser exactamente la pieza que
+hacía falta ahora. Así que la pausa funciona IGUAL en la web y en la APK,
+con un solo mecanismo y no dos que se contradigan.
+
+DÓNDE RETOMA: al principio de la FRASE que estaba diciendo, no a media
+palabra. Es a propósito — media frase se entiende peor que oírla entera.
+
+⚠️ Y LA VOZ NO CAMBIA
+----------------------
+Sé que esto te preocupa, con razón. En la APK los trozos se encadenan sin
+silencio entre frases (QUEUE_ADD), y en la web ya se hacía así. Suena
+exactamente igual que antes: lo único nuevo es que puedes cortarlo a
+media exposición y retomarlo.
+
+COMPROBADO: el banco nuevo EJECUTA el estado de la voz: pausa a mitad de
+cinco frases y exige que al seguir diga "Tres. Cuatro. Cinco." — ni
+repitiendo lo ya dicho ni saltándose nada — y que PARAR sí lo tire todo.
+
+QUÉ HACER
+---------
+  1. Sube APEX-app-v7.11.zip (comprueba que ponga 7.11)
+  2. Instala Apex-Roberto-v7.11.apk
+  3. Pon a Roberto a leerte algo largo y córtalo a media frase
 
 NOVEDADES v7.10  (🌙 LA REVISIÓN DE ANTES DE DORMIR)
 =====================================================
