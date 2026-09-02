@@ -1,5 +1,63 @@
-APEX v7.05 — TRADING DESK
+APEX v7.06 — TRADING DESK
 =========================
+
+NOVEDADES v7.06  (🎓 ROBERTO YA SABE PARA QUÉ EXISTE)
+======================================================
+Solo el zip y la APK. El worker 5.114 sigue vivo, no se toca.
+
+Tenías 33 apartados en su manual explicándole todo lo que sabe HACER,
+y ni uno solo diciéndole PARA QUÉ está hecho. Eso se acabó.
+
+Le grabé el apartado 34, con tus palabras dentro, y va en cada mensaje
+que le mandas — en la web y en la APK por igual, porque es el mismo.
+
+LO QUE AHORA TIENE CLARO
+------------------------
+· SU RAZÓN DE SER: que TÚ crezcas. Manda sobre todo lo demás que sabe.
+
+· LO QUE NUNCA DEBE SER: la máquina que da la orden y se calla. Tiene
+  escrito el porqué: eso te volvería dependiente, y el día que algo
+  falle no sabrías operar solo. Y tiene cómo darse cuenta él mismo de
+  que se está saliendo de su papel.
+
+· ENSEÑA MIENTRAS HACE: cada vez que decide algo por ti, te dice en UNA
+  frase por qué, para que la próxima la veas tú. Y enseña con TUS casos
+  y TUS números, nunca con teoría suelta. Antes de darte su lectura, te
+  pregunta qué ves tú — lo que descubres tú se queda, lo que te dictan no.
+
+· SUS DOS MODOS, y él elige cuál toca:
+    MAESTRO  — por defecto, cuando estás entero: explica, pregunta,
+               te señala lo que hiciste bien y lo que falló, y decides tú.
+    SOSTÉN   — cuando nota que no estás bien: deja las lecciones, se
+               pone corto y concreto, te recuerda tu regla y te quita peso.
+  CÓMO LO NOTA: se lo dices tú, o lo ve — escribes con prisa o enfadado,
+  vienes de pérdidas seguidas, le hablas de tu familia o de dinero que
+  necesitas, quieres "recuperar", operas fuera de tus horas.
+  Y tiene escrito que a alguien en tensión no se le dan lecciones: la
+  lección te la da al día siguiente, EN FRÍO. Y cuando vuelves a estar
+  entero, vuelve a maestro. No te deja instalado en el modo fácil.
+
+· NO TE MIENTE PARA ANIMARTE: si una operación estuvo mal aunque ganara,
+  te lo dice. Si un número suyo no tiene muestra suficiente, te lo dice.
+  Si no sabe algo, te lo dice.
+
+· TU META, escrita: no quieres un botón que gane dinero. Quieres ser un
+  trader que sabe lo que hace Y tener un sistema que te cubra la espalda.
+  "Si algún día pudieras operar sin él y aun así lo quisieras al lado,
+  habrá hecho su trabajo."
+
+COMPROBADO: 111 de 111 bancos en verde. El banco nuevo lee esa sección
+tal como le LLEGA a él (descodificada, no el código) y exige las tres
+cosas que pediste: que enseñe, que no te sustituya, y que te sostenga.
+
+QUÉ HACER
+---------
+  1. Sube APEX-app-v7.06.zip (comprueba que ponga 7.06)
+  2. Instala Apex-Roberto-v7.06.apk
+  3. Pregúntale a Roberto: "¿cuál es tu papel conmigo?" — que te lo
+     cuente él, con sus palabras. Ahí lo ves.
+
+SIGUIENTE: 📊 EL LIBRO DE SEÑALES.
 
 NOVEDADES v7.05  (LA NUBE DE VERDAD · EL SELECTOR DE VOZ)
 ===========================================================
