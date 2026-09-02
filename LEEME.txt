@@ -1,5 +1,57 @@
-APEX v7.06 — TRADING DESK
+APEX v7.07 — TRADING DESK
 =========================
+
+NOVEDADES v7.07  (⏳ SE ACABARON LOS AVISOS DE HACE HORAS)
+===========================================================
+Solo el zip y la APK. Incluye la 7.06 (el papel de Roberto).
+
+⏳ LO QUE TE PASÓ A LAS 13:00
+-----------------------------
+Se te cayeron de golpe el reset de disciplina de las 7:55, el análisis
+Pre-NY, el prompt diario y alarmas de GBPUSD de hacía 6 horas.
+
+Fue el cruce de dos cosas que POR SEPARADO estaban bien:
+
+  · Al instalar una APK nueva, su lista de "esto ya te lo enseñé" nace
+    VACÍA. Normal: es una instalación limpia.
+  · Desde el worker 5.114 la cola guarda hasta 40 avisos durante 8 horas.
+    Eso se hizo a propósito, y es correcto: para que una madrugada con el
+    teléfono dormido no te haga perder nada.
+
+Juntas: el vigía estrenó, se encontró la mañana entera sin enseñar, y te
+la soltó toda junta. Ninguna de las dos piezas estaba mal; faltaba la
+tercera, que es la que pongo ahora.
+
+ARREGLADO, EN DOS CAPAS
+-----------------------
+1. AL ESTRENAR: lo que ya estaba en la cola se da por visto. Te llegó por
+   la web o por la APK anterior, y sigue entero en "Avisos recibidos"
+   dentro de Apex. Solo se enseña lo que entre a partir de ese momento.
+
+2. Y PARA SIEMPRE, UN AVISO VIEJO NO SE ENSEÑA. Esto no es solo por no
+   molestarte: una alarma de entrada de hace 6 horas apunta a un precio
+   QUE YA NO EXISTE. Enseñártela como si acabara de llegar es invitarte a
+   entrar tarde. Eso te podía costar dinero.
+
+   · Alarmas del gráfico y tus avisos programados → 45 minutos.
+     Son órdenes con hora ("entra aquí", "reset antes de Pre-NY"): pasada
+     su ventana, sobran.
+   · Todo lo demás (buenos días, cierres, lo que te cuenta Roberto) → 4 h.
+
+   NADA SE PIERDE: lo caducado sigue en "Avisos recibidos" en Apex.
+
+COMPROBADO: 112 de 112. El banco nuevo COMPILA Y EJECUTA esa caducidad en
+Java con tus 8 casos reales — incluida la alarma de GBPUSD de 6 horas y tu
+reset de disciplina 5 horas tarde.
+
+⚠️ NOTA AL INSTALAR ESTA: como es una instalación nueva, la primera ronda
+   dará por vistos los avisos que haya en cola en ese momento. Es
+   exactamente lo que queremos. A partir de ahí, todo normal.
+
+QUÉ HACER
+---------
+  1. Sube APEX-app-v7.07.zip (comprueba que ponga 7.07)
+  2. Instala Apex-Roberto-v7.07.apk
 
 NOVEDADES v7.06  (🎓 ROBERTO YA SABE PARA QUÉ EXISTE)
 ======================================================
