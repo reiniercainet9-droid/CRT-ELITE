@@ -1,42 +1,54 @@
-APEX v7.21 — TRADING DESK
+APEX v7.22 — TRADING DESK
 =========================
 
-🩺 NUEVO CHIP «¿ME LLEGA TODO?» — la revisión de la cadena entera, en 2 segundos
-Me pediste que me asegurara de que te llegan todos los avisos y de que Roberto te
-informa con el cuerpo y la voz aunque la pantalla esté apagada. Revisé la cadena
-entera y te la dejo por escrito abajo — pero hay algo que tienes que saber:
+🎤 FASE 3 — HABLARLE: ya puedes hablarle a Roberto dentro de la APK, y te obedece
+El botón 🎤 estaba puesto pero por dentro usaba el dictado del navegador, que en la
+APK no existe: por eso decía "tu teléfono no permite dictado". Ahora se lo pide a
+Android directamente (como se hizo con la voz). La primera vez que toques el 🎤 te
+pedirá permiso de micrófono: dale que sí. Mantén pulsado para hablar, suelta para
+mandar; también funciona manteniendo pulsado a Roberto flotante. Mientras te escucha
+se calla (para no oírse a sí mismo) y un respiro tuyo no le corta la frase.
 
-LA MITAD DE ESA CADENA SOLO LA VE TU TELÉFONO. Desde aquí puedo comprobar la nube,
-el Puente y el indicador. Pero si Android le pone límite de batería a Apex, si el
-vigía está apagado, si Roberto no está en pantalla, o si el interruptor de la voz
-que TÚ ves no es el que obedece el vigía (el fallo de esta mañana), eso solo se sabe
-desde el teléfono. Y todos esos fallos son MUDOS: parece que todo está bien y no
-llega nada. Así que te lo pongo en tus manos: chip 🩺 ¿Me llega todo?, en "Ejecutor
-y cierres". No gasta créditos — mira, no le pregunta a Roberto.
+Órdenes de voz, gratis y al instante (no pasan por Roberto ni gastan créditos):
+  "cállate / calla / silencio / basta / para"  → se calla
+  "pausa / espera"                             → pausa
+  "sigue / continúa / dale"                    → sigue
+  "repite / otra vez"                          → repite lo último
+Una PREGUNTA que contenga esas palabras ("¿para qué sirve el CRT?") NO es una orden:
+va a Roberto y te la responde. Lo demás que digas también va a Roberto como texto.
 
-Comprueba, uno por uno: la nube, el Puente, el gráfico, si la app está mirando la
-cola, el vigía, el límite de batería, Roberto en pantalla, y —lo más importante— si
-los DOS interruptores de la voz dicen lo mismo. Si algo está roto te dice cuál y
-cómo arreglarlo. Y lo que no se puede comprobar lo dice; no regala ningún ✅.
+📅 ALARMAS ≠ AVISOS — lo que me cazaste con la captura de la noticia
+Tenías razón dos veces. Roberto le dijo "no entres, no hay setup" a una NOTICIA porque
+elegía la frase por PALABRAS del cuerpo, y el cuerpo de la noticia decía "veto". Ese
+mismo fallo explica el "entró GBP/USD" de esta mañana que buscaste en MT5 y no
+existía: era la alarma 🟥 CRT 4H EN CONTRA con la cola "🤖 No pude leerte esta alarma"
+— y el 🤖 le sonaba a Ejecutor. NUNCA HUBO ENTRADA.
 
-⚠️ Y AHORA LO QUE TIENES QUE DECIDIR TÚ
-Pediste "sin excepciones". Hay CUATRO reglas que callan avisos a propósito, y las
-pediste tú en su día. No son averías, pero son omisiones de verdad y las tienes que
-ver, así que ahora salen en esa misma pantalla:
-  ⏰ Las alarmas del mercado solo te avisan de 01:00 a 13:00 de Nueva York (02:00 a
-     14:00 tuyas). Fuera de esa franja se guardan pero no suenan.
-  🎯 Solo avisan las de decisión (entrada, sesgo, liquidez, MSS, giro, invalidación,
-     CRT 4H). Las de contexto (pinchazo, cierre confirmado, continuación) no suenan.
-  🔁 La misma alarma repetida antes de 10 minutos no vuelve a sonar.
-  ⏳ Un aviso de más de 45 minutos no se enseña como nuevo (apuntaría a un precio que
-     ya no existe). Queda entero en 📥 Avisos recibidos.
-Si alguna no la quieres, dímelo y te la quito.
+Ahora cada cosa se dice como lo que ES:
+  · ALARMAS DEL INDICADOR: por su señal cruda, y tu lectura va DETRÁS y corta.
+    "Rey, el día se viró en GBPUSD: nuevo sesgo alcista. Olvídate del de antes. Yo digo: no entres."
+    "Rey, se forma un CRT de 4 horas EN CONTRA en GBPUSD. Cuidado con entrar a favor del sesgo."
+    "Rey, hubo MSS en 15m en EURUSD: permiso de Fase 3. Baja a 5m a buscar el gatillo. Yo digo: espera."
+    (las 10 alarmas esenciales: entrada, largo, corto, premium, giro, MSS, Fase 3,
+    CRT a favor, CRT en contra, invalidación)
+  · AVISOS DEL SISTEMA: por su título, diciendo de qué clase son.
+    "Rey, aviso de noticia, no es señal: en 40 minutos sale ISM Services PMI, impacto medio. Si entras a mano, ojo."
+    "Rey, el Ejecutor entró en compra en GBPUSD, lote 0.10. Yo te la vigilo."
+    "Rey, el Ejecutor cerró GBPUSD en objetivo: +$17.88. Bien jugado."
+    "Rey, aviso de tu cuenta FundedNext 6k: va justa de margen (diario 5% · total 1.3%). Tenlo presente si operas hoy."
+  · SUS RESPUESTAS DEL CHAT: la nubecita enseña sus propias primeras palabras, tal
+    cual — antes "Quedó grabado, sábado 5:30 PM" salía como "cerramos en ganancia".
+Lo comprobé con los 60 avisos REALES que te llegaron estos dos días: todos leen bien.
 
-Roberto también lo sabe: se le añadió al manual, para que cuando le digas "no me
-llegó tal cosa" te diga si cae en una de las cuatro o si es una avería de verdad —
-en vez de teorizar.
+⏰ HORARIO: solo las alarmas del indicador, como pediste
+Así estaba hecho en la nube (el horario 01:00–13:00 NY solo toca las alarmas del
+gráfico; tus avisos ⏰, killzones, noticias, Ejecutor y análisis van por otro camino
+que no lo mira). Lo que decía a medias era el texto del chip 🩺 y el manual de Roberto:
+ahora lo dicen con tus palabras, "los avisos programados se mantienen igual".
 
-Regresión: 131/131 en verde.
+Instalación: sube APEX-app-v7.22.zip a la web y luego instala Apex-Roberto-v7.22.apk.
+La nube (worker 5.121) no cambia.
+Regresión: 133/133 en verde (banco nuevo: alarma-no-es-aviso, 18/18 con textos reales).
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

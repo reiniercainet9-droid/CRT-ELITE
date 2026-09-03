@@ -104,7 +104,9 @@ const ROB_SITUA = [
     di:()=>"Buenos días, Rey. Vamos a por el día." },
 
   { id:"ejecutor",   gesto:"audita",
-    re:/auditor[íi]a|expediente|🤖|entré en/,
+    /* v7.22: el 🤖 suelto ya NO vale — "🤖 No pude leerte esta alarma" hacía decir "el
+       Ejecutor acaba de entrar" (el "entró GBP/USD" fantasma del 03-09). Tiene que DECIRLO. */
+    re:/auditor[íi]a|expediente|🤖 entré|entré en|acabo de entrar/,
     di:(d)=>"Rey, el Ejecutor acaba de entrar" + (d.par ? " en " + d.par : "") + ". Yo te la vigilo." },
 
   { id:"felicita",   gesto:"felicita",
@@ -129,6 +131,177 @@ const ROB_SITUA = [
             ". Ve para el gráfico." },
 ];
 
+/* ══════════════════════════════════════════════════════════════════════════════
+   🔔 LAS ALARMAS DEL INDICADOR SE LEEN POR SU SEÑAL, NO POR LA LECTURA — v7.22
+   ═════════════════════════════════════════════════════════════════════════════
+   Lo que destapó el registro real del 03-09 al pasar los 60 últimos avisos por esta tabla:
+   · 12:31 y 15:03 — la alarma era "🟥 GBPUSD | CRT 4H EN CONTRA formándose", pero Roberto
+     no llegó a leerla a tiempo y el cuerpo traía "🤖 No pude leerte esta alarma ahora…".
+     Ese 🤖 caía en la regla del Ejecutor y el cuerpo le dijo a Rey "el Ejecutor acaba de
+     entrar en GBPUSD". NUNCA HUBO ENTRADA. Es el "entró GBP/USD" que Rey vio esa mañana y
+     no encontró en MT5: no fue el Ejecutor, fue esta tabla leyendo un emoji suelto.
+   · 12:54 — la alarma era "🔄 ¡EL DÍA SE VIRÓ!" y la lectura de Roberto empezaba con
+     "🔴 NO ENTRES": el cuerpo dijo "no entres, no hay setup" y el HECHO (el giro) se perdió.
+   LA REGLA: el cuerpo de una alarma trae DOS cosas — la lectura de Roberto (su opinión) y la
+   señal cruda del indicador (el hecho). La situación la decide EL HECHO, con el texto exacto
+   que escribe el indicador v3.8 para cada alarma esencial; la opinión va detrás, en cuatro
+   palabras, porque también importa (Rey la lee entera en la notificación).
+   ⚠️ NO es "clasificar por el color del emoji": el emoji de cabecera de cada alarma es el
+   CÓDIGO del propio indicador (único por tipo, el mismo que usa la nube para decidir cuáles
+   notifican) y se confirma con la palabra clave de cada una. */
+const ROB_ALARMAS = [
+  { id:"entrada",   gesto:"alerta",   re:/^🔔 .*\bENTRADA\b/,
+    di:(d)=>"Rey, señal de entrada" + (d.dir ? " " + d.dir : "") + (d.grado ? " " + d.grado : "") + (d.par ? " en " + d.par : "") + (d.tf ? " " + d.tf : "") + ". Ve para el gráfico." },
+  { id:"largo",     gesto:"alerta",   re:/^🟢 CRT Elite LARGO/,
+    di:(d)=>"Rey, señal en largo" + (d.par ? " en " + d.par : "") + (d.tf ? " " + d.tf : "") + ", con entrada, stop y objetivo. Mira el gráfico." },
+  { id:"corto",     gesto:"alerta",   re:/^🔴 CRT Elite CORTO/,
+    di:(d)=>"Rey, señal en corto" + (d.par ? " en " + d.par : "") + (d.tf ? " " + d.tf : "") + ", con entrada, stop y objetivo. Mira el gráfico." },
+  { id:"premium",   gesto:"alerta",   re:/^⭐ .*PREMIUM/,
+    di:(d)=>"Rey, oportunidad premium" + (d.par ? " en " + d.par : "") + ": se liquidó una trampa y reacciona a favor. Revisa la entrada." },
+  { id:"giro",      gesto:"sorprende", re:/^🔄 .*VIR[ÓO]/,
+    di:(d)=>"Rey, el día se viró" + (d.par ? " en " + d.par : "") + (d.sesgo ? ": nuevo sesgo " + d.sesgo : "") + ". Olvídate del de antes." },
+  { id:"estructura", gesto:"vigila",  re:/^2️⃣ .*\bMSS\b/,
+    di:(d)=>"Rey, hubo MSS en 15m" + (d.par ? " en " + d.par : "") + ": permiso de Fase 3. Baja a 5m a buscar el gatillo." },
+  { id:"fase3",     gesto:"alerta",   re:/^✅ .*FASE 3 COMPLETA/,
+    di:(d)=>"Rey, Fase 3 completa" + (d.par ? " en " + d.par : "") + ": sweep, MSS y zona. Ejecuta el gatillo en 5m." },
+  { id:"crt_favor", gesto:"vigila",   re:/^🟩 .*CRT 4H/,
+    di:(d)=>"Rey, se forma un CRT de 4 horas a favor" + (d.par ? " en " + d.par : "") + ". Baja a 15m o 5m al gatillo." },
+  { id:"crt_contra", gesto:"preocupa", re:/^🟥 .*CRT 4H/,
+    di:(d)=>"Rey, se forma un CRT de 4 horas EN CONTRA" + (d.par ? " en " + d.par : "") + ". Cuidado con entrar a favor del sesgo." },
+  { id:"invalidacion", gesto:"frena", re:/^⛔ .*INVALIDACI[ÓO]N/,
+    di:(d)=>"Rey, invalidación rota" + (d.par ? " en " + d.par : "") + (d.tf ? " " + d.tf : "") + ": ese lado del plan está muerto. No lo operes." },
+];
+/* la opinión de Roberto, en cuatro palabras: es la 1ª línea de su lectura */
+const ROB_VEREDICTO = [
+  { re:/^🔴 NO ENTRES/, di:" Yo digo: no entres." },
+  { re:/^🟡 ESPERA/,    di:" Yo digo: espera." },
+  { re:/^🟢 A FAVOR/,   di:" Yo digo: a favor." },
+];
+/** ¿Es una alarma del indicador? Por su título, que lo pone la nube: "🔔 PAR · TF · Alarma". */
+function robEsAlarma(titulo){ return /^🔔 .*· Alarma\s*$/.test(String(titulo||"").trim()); }
+/** Separa el cuerpo de una alarma en {senal, veredicto}: la señal cruda del indicador y la
+    1ª línea de la lectura de Roberto (si la hubo). El cuerpo es "lectura\n\nseñal", o
+    "señal\n\n🤖 No pude leerte…" cuando Roberto no llegó a tiempo. */
+function robPartesAlarma(cuerpo){
+  const partes = String(cuerpo||"").split(/\n\s*\n/).map(x=>x.trim()).filter(Boolean);
+  const esSenal = (p)=>/^(🔔|⭐|🔄|2️⃣|✅|🟩|🟥|⛔|▶️|⏰|📡)/.test(p) || /^(🟢|🔴) CRT Elite/.test(p);
+  let senal = partes.find(esSenal) || "";
+  if(!senal){ senal = (partes.length && /^🤖/.test(partes[partes.length-1])) ? partes[0] : (partes[partes.length-1] || ""); }
+  const primera = (partes[0] || "").split("\n")[0].trim();
+  let veredicto = "";
+  for(const v of ROB_VEREDICTO){ if(v.re.test(primera)){ veredicto = v.di; break; } }
+  return { senal, veredicto };
+}
+function robAlarma(titulo, cuerpo){
+  const { senal, veredicto } = robPartesAlarma(cuerpo);
+  const linea = senal.split("\n")[0].trim();
+  const par = (String(titulo||"").match(/^🔔 ([A-Z]{6})\b/) || linea.match(/\b([A-Z]{6})\b/) || [])[1] || "";
+  const tf  = ((linea.match(/\b(\d+m|\d+h)\b/i) || [])[1] || "").toLowerCase();
+  const dirM = senal.match(/ENTRADA (COMPRA|VENTA)/);
+  const d = { par, tf,
+    dir: dirM ? dirM[1].toLowerCase() : "",
+    grado: (senal.match(/ENTRADA (?:COMPRA|VENTA) (A\+|B|C)(?![A-Za-z0-9])/) || [])[1] || "",
+    sesgo: /ALCISTA/.test(senal) ? "alcista" : /BAJISTA/.test(senal) ? "bajista" : "" };
+  for(const a of ROB_ALARMAS){
+    if(a.re.test(linea)) return { id:a.id, gesto:a.gesto, frase: a.di(d) + veredicto };
+  }
+  return null;   /* una alarma que no está en la tabla: se lee por sus palabras, como antes */
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   📅 LOS AVISOS DEL SISTEMA SE RECONOCEN POR SU TÍTULO — v7.22
+   ═════════════════════════════════════════════════════════════════════════════
+   Rey (03-09), con la captura en la mano: el teléfono decía "📅 Noticia cerca · En 40 min:
+   ISM Services PMI (USD, 🟠 MEDIO)" y Roberto le dijo "no entres, no hay setup". "El gesto
+   estaba bien, pero es una noticia: son cosas diferentes. Debe distinguir las alarmas y los
+   avisos con claridad, no mezclarlos ni confundirlos."
+   POR QUÉ PASÓ: el cuerpo del aviso dice "…el veto del Ejecutor solo frena las de ALTO…",
+   y la palabra "veto" caía en la regla del VETO de la tabla del mercado (que va antes que
+   la de noticia). Roberto le puso a una noticia la frase de un setup que no existe.
+   LA REGLA: una ALARMA del indicador se entiende por LO QUE PASÓ (sus palabras); un AVISO
+   del sistema tiene un TÍTULO FIJO que ya dice qué es, y se reconoce por él ANTES de mirar
+   ninguna palabra del cuerpo. El cuerpo solo sirve para sacar los datos (cuántos minutos,
+   qué noticia, qué impacto). Y la frase lo dice sin rodeos: "aviso de noticia, no es señal",
+   para que Rey sepa de qué clase de cosa le está hablando.
+   Aquí van SOLO los avisos del sistema que no traen tipo "rem" (los que sí lo traen ya se
+   leen como rutina más abajo, con su propio título). */
+const ROB_AVISOS = [
+  { id:"noticia_cerca", gesto:"frena",
+    re:/^\s*📅|noticia cerca/i,
+    lee:(b)=>{
+      const m = String(b||"").match(/En (\d+) min: (.+?) \(([A-Z]{3}), (🔴 ALTO|🟠 MEDIO)\)/);
+      const min = m ? m[1] : "", que = m ? m[2].trim() : "";
+      const alto = m ? /ALTO/.test(m[4]) : /ALTO/.test(String(b||""));
+      return { frase: "Rey, aviso de noticia, no es señal: " + (min ? "en " + min + " minutos" : "pronto")
+             + " sale " + (que || "una noticia") + ", impacto " + (alto ? "alto. Sin operar hasta que pase." : "medio. Si entras a mano, ojo.") };
+    } },
+  /* los demás avisos fijos de la nube que el registro real del 03-09 enseñó leídos con
+     reglas del mercado ("🤖 Cierre del día" → "el Ejecutor acaba de entrar"; el 🌅 →
+     "tu análisis está listo"). Cada uno dice lo que ES. */
+  { id:"buenos_dias",  gesto:"saluda",  re:/^🌅/,
+    lee:()=>({ frase:"Buenos días, Rey. Tu día ya está preparado: ábreme cuando quieras." }) },
+  { id:"analisis_dia", gesto:"tiempo",  re:/^📆 Análisis del día/,
+    lee:(b)=>({ frase:"Rey, aviso: se acerca " + (/Pre-NY/i.test(b) ? "tu ventana Pre-NY" : "Londres") + ". Enciende la PC y toca el aviso, y te hago el análisis del día." }) },
+  { id:"analisis_sem", gesto:"tiempo",  re:/^🗓️ Análisis semanal/,
+    lee:()=>({ frase:"Rey, aviso: el mercado abre pronto. Enciende la PC y toca el aviso, y te hago el análisis semanal." }) },
+  { id:"noche",        gesto:"carino",  re:/^🌙/,
+    lee:()=>({ frase:"Rey, cierra el día conmigo cuando puedas: cómo te fue y el foco de mañana." }) },
+  { id:"cierre_ejec",  gesto:"audita",  re:/^🤖 Cierre (del día|de semana)/,
+    lee:(b)=>({ frase:"Rey, el Ejecutor cerró su " + (/semana/i.test(b) ? "semana" : "día") + ". Ábreme y te lo cuento." }) },
+  /* 🤖 lo que el Ejecutor hace de verdad, por su título (v7.22): su "ENTRÉ" lleva "SL" y
+     "TP" en el cuerpo y las reglas del mercado decían "saltó el stop" a una ENTRADA. Y el
+     "CERRÉ" ya trae en el título CÓMO cerró — ✅ TP, ❌ SL o ✋ a mano — que son palabras,
+     no colores. */
+  /* 💬 su propia respuesta del chat (v7.22): el registro real del 03-09 la enseñó leída con
+     reglas del mercado — "Quedó grabado, sábado 5:30 PM…" salía como "cerramos en ganancia"
+     y una auditoría como "se abre tu ventana de Londres". Lo que dijo Roberto se enseña
+     TAL CUAL (sus primeras palabras), nunca se reinterpreta. */
+  { id:"cambio",       gesto:"idea",    re:/^💬 Roberto te respondió/,
+    lee:(b)=>/^Roberto quiere hacer un cambio/.test(String(b||"").trim()) ? { frase:"Rey, quiero hacer un cambio: ábreme y me lo confirmas." } : null },
+  { id:"respuesta",    gesto:"presenta", re:/^💬 Roberto te respondió/,
+    lee:(b)=>{
+      const txt = String(b||"").replace(/\*\*|__|^#+\s*/gm, "").replace(/\s+/g, " ").trim();
+      if (!txt) return null;
+      const cab = "Rey, te respondí: ";
+      const cabe = 140 - cab.length;
+      return { frase: cab + (txt.length > cabe ? txt.slice(0, cabe - 1).replace(/\s+\S*$/, "") + "…" : txt) };
+    } },
+  /* 💼 sus cuentas en peligro (v7.22): el aviso que la nube manda al abrir cada ventana si
+     una cuenta suya va justa de margen. Por título dice de QUÉ cuenta habla y cuánto le
+     queda; la regla del mercado decía "para hoy" cuando el aviso solo pedía tenerlo presente. */
+  { id:"cuenta_peligro", gesto:"vigila", re:/^🔔 .+ en peligro$/,
+    lee:(b,t)=>{
+      const alias = (String(t||"").match(/^🔔 (.+) en peligro$/) || [])[1] || "tu cuenta";
+      const margen = (String(b||"").match(/margen (.+?)\.(?:\s|$)/) || [])[1] || "";
+      return { frase:"Rey, aviso de tu cuenta " + alias + ": va justa de margen" + (margen ? " (" + margen + ")" : "") + ". Tenlo presente si operas hoy." };
+    } },
+  { id:"cuenta_limite", gesto:"frena", re:/^🔴 .+ AL LÍMITE$/,
+    lee:(b,t)=>{
+      const alias = (String(t||"").match(/^🔴 (.+) AL LÍMITE$/) || [])[1] || "tu cuenta";
+      return { frase:"Rey, tu cuenta " + alias + " está al límite: hoy no se opera en ella. Protégela." };
+    } },
+  { id:"ejec_entro",   gesto:"audita",  re:/^🤖 ENTRÉ/,
+    lee:(b,t)=>{
+      const m = String(t||"").match(/^🤖 ENTRÉ · (COMPRA|VENTA) ([A-Z]{6})/);
+      const lote = (String(b||"").match(/Lote ([\d.]+)/) || [])[1];
+      return { frase:"Rey, el Ejecutor entró" + (m ? " en " + m[1].toLowerCase() + " en " + m[2] : "") + (lote ? ", lote " + lote : "") + ". Yo te la vigilo." };
+    } },
+  { id:"ejec_cerro",   gesto:"audita",
+    re:/^🤖 CERRÉ/,
+    lee:(b,t)=>{
+      const tit = String(t||""), cuerpo = String(b||"");
+      const par = (tit.match(/^🤖 CERRÉ · ([A-Z]{6})/) || [])[1] || "";
+      /* primero las PALABRAS del título (TP / SL); si cerró a mano, el signo o la palabra del cuerpo */
+      const gano = /\bTP\b/.test(tit) ? true : /\bSL\b/.test(tit) ? false
+                 : (/\+\$|gan[óo]|ganancia/i.test(cuerpo) && !/[−-]\$|perd/i.test(cuerpo));
+      let pl = (cuerpo.match(/^[^\n]*?([+−-]?\$[\d.]+)/) || [])[1] || "";
+      if (pl && !/^[+−-]/.test(pl)) pl = (gano ? "+" : "−") + pl;
+      const como = /\bTP\b/.test(tit) ? "en objetivo" : /\bSL\b/.test(tit) ? "en stop" : "a mano";
+      return { gesto: gano ? "celebra" : "preocupa",
+               frase:"Rey, el Ejecutor cerró" + (par ? " " + par : "") + " " + como + (pl ? ": " + pl : "") + (gano ? ". Bien jugado." : ". Respira y sigue tu plan.") };
+    } },
+];
+
 /* ⏰ LOS AVISOS QUE REY SE PROGRAMA A SÍ MISMO (v6.82)
    Un aviso suyo NO es un hecho del mercado: es su rutina. Leerlo con las reglas del
    mercado hacía cosas feas — su "🧭 Reset de disciplina" de las 7:55 acababa en
@@ -138,6 +311,8 @@ const ROB_SITUA = [
    escribió corto y claro; así Roberto nunca le pone en la boca algo que él no puso.
    Se mira su TÍTULO primero (es la etiqueta que él eligió) y el mensaje después. */
 const ROB_RUTINA = [
+  /* algo se cayó o se desconectó (el "🤖 Ejecutor CAÍDO" llega con tipo rem): preocupado, no con el reloj */
+  { re:/ca[íi]do|desconect|no s[ée] nada/, gesto:"preocupa" },
   /* algo se cierra o se acaba: se pone serio */
   { re:/cerrada|se acab|almuerzo|no m[áa]s entradas|fin de (la )?sesi|descanso/, gesto:"serio" },
   /* le manda hacer algo A ÉL: se lo señala con el dedo */
@@ -170,6 +345,14 @@ function robSitua(titulo, cuerpo, tipo){
     /* en la nubecita, SU título: él ya lo escribió corto y para leerlo de un vistazo */
     return { id:"rutina", gesto:g, frase: tit.slice(0,64) || "tienes un aviso" };
   }
+  /* 📅 v7.22 — un AVISO del sistema se reconoce por su título, antes de leer ninguna
+     palabra del cuerpo (la "noticia cerca" caía en la regla del veto por decir "veto") */
+  const tit0 = String(titulo||"");
+  for(const a of ROB_AVISOS){
+    if(a.re.test(tit0)){ const r = a.lee(cuerpo, tit0); if(r && r.frase) return { id:a.id, gesto:r.gesto||a.gesto, frase:r.frase }; }
+  }
+  /* 🔔 v7.22 — una ALARMA del indicador se lee por su SEÑAL (el hecho), no por la lectura */
+  if(robEsAlarma(titulo)){ const r = robAlarma(titulo, cuerpo); if(r) return r; }
   const t = (String(titulo||"") + " " + String(cuerpo||"")).replace(/\s+/g," ").trim();
   const d = { b: t.toLowerCase(),
     par: (t.match(/\b(EURUSD|GBPUSD|XAUUSD|USDJPY|[A-Z]{6})\b/) || [])[1] || "",
@@ -191,7 +374,7 @@ function robCaraDe(titulo, cuerpo, tipo){
 }
 /* se cuelga de donde toque: la página (window) o el vigilante (self) */
 (function(raiz){
-  raiz.ROB_SITUA = ROB_SITUA; raiz.ROB_RUTINA = ROB_RUTINA; raiz.CARAS_HAY = CARAS_HAY;
+  raiz.ROB_SITUA = ROB_SITUA; raiz.ROB_AVISOS = ROB_AVISOS; raiz.ROB_ALARMAS = ROB_ALARMAS; raiz.robAlarma = robAlarma; raiz.robEsAlarma = robEsAlarma; raiz.ROB_RUTINA = ROB_RUTINA; raiz.CARAS_HAY = CARAS_HAY;
   raiz.robSitua = robSitua;   raiz.robCaraDe = robCaraDe;
 })(typeof self !== "undefined" ? self : this);
 
