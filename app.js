@@ -7835,16 +7835,24 @@ function micNativo(){
     if(!_oidoListo){
       _oidoListo = true;
       try{
-        P.addListener("oyeListo", ()=>{ OIDO.on = true; iaMicUI(true); toast("Te escucho, Rey… habla 🎙️"); });
+        /* 🎤 v7.23 — "TE ESCUCHO" SOLO CUANDO ANDROID CONFIRMA QUE OYE (oyeListo), y se le
+           pone la mano en la oreja al Roberto de dentro (el de fuera lo copia solo). Antes la
+           burbuja lo decía por su cuenta antes de saber nada — Rey: "me notifica que me
+           escucha pero no me responde nada". */
+        P.addListener("oyeListo", ()=>{ OIDO.on = true; iaMicUI(true); oidoTraza("listo"); toast("Te escucho, Rey… habla 🎙️"); try{ robCara("shhh","te escucho…"); }catch(_){} });
         /* lo que va entendiendo, EN VIVO: sin esto Rey no sabe si le está oyendo o no */
         P.addListener("oyeParcial", (ev)=>{ oidoPintar((ev && ev.texto) || "", false); });
-        P.addListener("oyeFinal",   (ev)=>{ oidoPintar((ev && ev.texto) || "", true); });
+        P.addListener("oyeFinal",   (ev)=>{ oidoTraza("final: "+((ev && ev.texto) || "")); oidoPintar((ev && ev.texto) || "", true); });
         P.addListener("oyeError",   (ev)=>{
           OIDO.on = false; iaMicUI(false);
           const m = (ev && ev.motivo) || "el dictado falló";
+          oidoTraza("error "+((ev && ev.codigo) || "?")+": "+m);
           /* "no te entendí" y "no te oí nada" NO son averías: pasan a cada rato y no
              merecen asustarle. Se dicen suave y se sigue. */
-          toast(/no te (entend|o[ií])/i.test(m) ? (m.charAt(0).toUpperCase()+m.slice(1)+", prueba otra vez") : ("🎤 "+m));
+          const suave = /no te (entend|o[ií])/i.test(m);
+          toast(suave ? (m.charAt(0).toUpperCase()+m.slice(1)+", prueba otra vez") : ("🎤 "+m));
+          try{ robCaraRato(suave ? "confundido" : "preocupa", 3500, suave ? "no te oí, otra vez" : m); }catch(_){}
+          oidoParteAlaNube();
         });
       }catch(_){}
     }
@@ -7862,11 +7870,45 @@ function oidoPintar(texto, esFinal){
   if(!esFinal) return;
   OIDO.on = false; iaMicUI(false);
   const dicho = (ta && ta.value || "").trim();
-  if(!dicho) return;
+  /* 🎤 v7.23 — NUNCA CALLADO. Antes, si Android devolvía el texto vacío, o Roberto estaba
+     ocupado con la pregunta anterior, aquí se salía sin decir nada — y Rey se quedaba con
+     "te escucho" y ningún porqué. */
+  if(!dicho){ oidoTraza("vacío"); toast("No te oí nada, Rey — prueba otra vez"); try{ robCaraRato("confundido",3000,"no te oí"); }catch(_){} oidoParteAlaNube(); return; }
   /* 🎛️ ¿era una ORDEN o una pregunta? Las órdenes no pasan por Roberto: ni esperan,
      ni cuestan un céntimo. */
-  if(oidoOrden(dicho)){ if(ta){ ta.value=""; ta.style.height="auto"; } return; }
+  if(oidoOrden(dicho)){ oidoTraza("orden: "+dicho); if(ta){ ta.value=""; ta.style.height="auto"; } oidoParteAlaNube(); return; }
+  if(IA.busy){ oidoTraza("ocupado, se queda escrito: "+dicho); toast("Roberto sigue con lo anterior; tu frase quedó escrita, mándala en un momento"); oidoParteAlaNube(); return; }
+  oidoTraza("a Roberto: "+dicho); oidoParteAlaNube();
   setTimeout(()=>iaEnviar(), 150);        /* al terminar de hablar, Roberto responde solo */
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   📮 v7.23 — LA TRAZA DEL OÍDO, que viaja sola (como el parte de la burbuja en la v6.66)
+   ═════════════════════════════════════════════════════════════════════════════
+   Rey (03-09): "dejo presionado a Roberto, me notifica que me escucha pero no me responde
+   nada". Desde aquí no se puede ver qué pasó en su teléfono, y adivinar ya costó una
+   versión. Cada paso del oído (empezar, listo, texto, error, a Roberto) se apunta con su
+   hora, y al terminar cada intento se manda al puente bajo un código propio
+   (APEX-DIAG-OIDO), sin ningún dato personal: solo los pasos y lo dictado. Se lee con
+   POST /backup/get {"code":"APEX-DIAG-OIDO"}. */
+const OIDO_TRAZA_KEY = "crtelite_oido_traza";
+function oidoTraza(paso){
+  try{
+    const l = JSON.parse(localStorage.getItem(OIDO_TRAZA_KEY) || "[]");
+    l.push({ t: new Date().toISOString(), p: String(paso||"").slice(0,200) });
+    while(l.length > 40) l.shift();
+    localStorage.setItem(OIDO_TRAZA_KEY, JSON.stringify(l));
+  }catch(_){}
+}
+function oidoParteAlaNube(){
+  try{
+    if(!micNativo()) return;                           /* solo en la APK: en la web no hay oído de Android */
+    const l = JSON.parse(localStorage.getItem(OIDO_TRAZA_KEY) || "[]");
+    const d = { version: (typeof APP_VERSION!=="undefined" ? APP_VERSION : "?"), cuando: new Date().toISOString(),
+                chatAbierto: (typeof iaAbierto==="function" ? iaAbierto() : null), desdeBurbuja: !!OIDO.desdeBurbuja, traza: l };
+    fetch(nubeUrl()+"/backup/set", { method:"POST", headers:{ "content-type":"application/json" },
+      body: JSON.stringify({ code:"APEX-DIAG-OIDO", ts:Date.now(), forzar:true, data:{ crtelite_diagoido: JSON.stringify(d) } }) }).catch(()=>{});
+  }catch(_){}
 }
 
 /* ══════════════════════════════════════════════════════════════════════════════
@@ -7922,16 +7964,24 @@ function oidoEmpezar(){
   if(!PM) return false;
   if(OIDO.on) return true;                 /* ya estaba escuchando: no se reinicia */
   iaVozParar();                            /* que Roberto calle mientras Rey habla */
+  oidoTraza("empezar" + (OIDO.desdeBurbuja ? " (cuerpo flotante)" : " (🎤)"));
+  /* 🎤 v7.23 — viene del cuerpo flotante: Apex se acaba de poner delante para poder oír
+     (Android no da el micrófono a una app que está detrás), así que se le enseña el chat
+     para que VEA lo que va entendiendo y la respuesta. Sin sacar el teclado: está hablando. */
+  if(OIDO.desdeBurbuja){ try{ const ov=$("#iaOv"); if(ov && !ov.classList.contains("show")){ ov.classList.add("show"); pintarIAChat(); } }catch(_){} }
   const ta = $("#iaText");
   OIDO.base = (ta && ta.value ? ta.value.replace(/\s+$/,"")+" " : "");
   try{
     PM.oirEmpezar({ idioma:"es-US" }).catch((e)=>{
       OIDO.on = false; iaMicUI(false);
       const msg = String((e && e.message) || e || "");
+      oidoTraza("no abrió: "+msg);
       if(/sin-permiso/.test(msg)){
         toast("Dale permiso al micrófono y vuelve a tocar 🎤");
+        try{ robCaraRato("preocupa",4000,"sin permiso de micrófono"); }catch(_){}
         try{ PM.oirPermiso(); }catch(_){}
-      } else toast("No pude abrir el micrófono");
+      } else { toast("No pude abrir el micrófono"); try{ robCaraRato("preocupa",4000,"no pude abrir el micrófono"); }catch(_){} }
+      oidoParteAlaNube();
     });
   }catch(_){ iaMicUI(false); return false; }
   return true;

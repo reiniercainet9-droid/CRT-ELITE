@@ -1,54 +1,35 @@
-APEX v7.22 — TRADING DESK
+APEX v7.23 — TRADING DESK
 =========================
 
-🎤 FASE 3 — HABLARLE: ya puedes hablarle a Roberto dentro de la APK, y te obedece
-El botón 🎤 estaba puesto pero por dentro usaba el dictado del navegador, que en la
-APK no existe: por eso decía "tu teléfono no permite dictado". Ahora se lo pide a
-Android directamente (como se hizo con la voz). La primera vez que toques el 🎤 te
-pedirá permiso de micrófono: dale que sí. Mantén pulsado para hablar, suelta para
-mandar; también funciona manteniendo pulsado a Roberto flotante. Mientras te escucha
-se calla (para no oírse a sí mismo) y un respiro tuyo no le corta la frase.
+🎤 HABLARLE DESDE ROBERTO FLOTANTE — por qué "te escuchaba" y no respondía nada
+Tenías razón: el botón no funcionaba, y no era el botón sino DÓNDE está Roberto.
+Cuando mantienes pulsado a Roberto flotante, tú estás en otra app (TradingView, MT5,
+la pantalla de inicio) y Apex está DETRÁS. Android 15 (tu moto g54) NO le da el
+micrófono a una app que está detrás: el reconocedor fallaba en silencio. Y el cuerpo
+flotante decía "te escucho…" por su cuenta, ANTES de saber si el micrófono se había
+abierto. Por eso te notificaba que escuchaba y no pasaba nada más.
 
-Órdenes de voz, gratis y al instante (no pasan por Roberto ni gastan créditos):
-  "cállate / calla / silencio / basta / para"  → se calla
-  "pausa / espera"                             → pausa
-  "sigue / continúa / dale"                    → sigue
-  "repite / otra vez"                          → repite lo último
-Una PREGUNTA que contenga esas palabras ("¿para qué sirve el CRT?") NO es una orden:
-va a Roberto y te la responde. Lo demás que digas también va a Roberto como texto.
+Lo que cambia en la v7.23:
+  · Mantienes pulsado a Roberto flotante → Apex SE PONE DELANTE sola (Android lo
+    permite porque Roberto ya está en pantalla) con el chat a la vista → abre el oído
+    → dice "Te escucho, Rey…" SOLO cuando Android confirma que oye (mano en la oreja).
+  · Lo que va entendiendo se escribe en vivo en el chat; sueltas → va a Roberto y
+    te responde ahí mismo (y con su voz, como siempre).
+  · Si sueltas antes de que Apex llegue, no se queda ningún micrófono abierto.
+  · Nunca más callado: si no te oyó nada, te lo dice ("No te oí nada, Rey — prueba
+    otra vez"); si Roberto sigue con la pregunta anterior, tu frase queda escrita y
+    te lo dice; si Android falla (permiso, red, etc.), lo ves y Roberto lo enseña.
+  · La 1ª vez pide permiso de micrófono: dale que sí.
+  · Las órdenes de voz (cállate / pausa / sigue / repite) funcionan por este mismo
+    camino: ya puedes probarlas.
 
-📅 ALARMAS ≠ AVISOS — lo que me cazaste con la captura de la noticia
-Tenías razón dos veces. Roberto le dijo "no entres, no hay setup" a una NOTICIA porque
-elegía la frase por PALABRAS del cuerpo, y el cuerpo de la noticia decía "veto". Ese
-mismo fallo explica el "entró GBP/USD" de esta mañana que buscaste en MT5 y no
-existía: era la alarma 🟥 CRT 4H EN CONTRA con la cola "🤖 No pude leerte esta alarma"
-— y el 🤖 le sonaba a Ejecutor. NUNCA HUBO ENTRADA.
+📮 Traza del oído: cada intento de hablarle deja apuntados sus pasos (empezar, listo,
+lo entendido, error, a Roberto) y los manda solos al puente. Si algo vuelve a fallar,
+lo leo desde aquí sin adivinar.
 
-Ahora cada cosa se dice como lo que ES:
-  · ALARMAS DEL INDICADOR: por su señal cruda, y tu lectura va DETRÁS y corta.
-    "Rey, el día se viró en GBPUSD: nuevo sesgo alcista. Olvídate del de antes. Yo digo: no entres."
-    "Rey, se forma un CRT de 4 horas EN CONTRA en GBPUSD. Cuidado con entrar a favor del sesgo."
-    "Rey, hubo MSS en 15m en EURUSD: permiso de Fase 3. Baja a 5m a buscar el gatillo. Yo digo: espera."
-    (las 10 alarmas esenciales: entrada, largo, corto, premium, giro, MSS, Fase 3,
-    CRT a favor, CRT en contra, invalidación)
-  · AVISOS DEL SISTEMA: por su título, diciendo de qué clase son.
-    "Rey, aviso de noticia, no es señal: en 40 minutos sale ISM Services PMI, impacto medio. Si entras a mano, ojo."
-    "Rey, el Ejecutor entró en compra en GBPUSD, lote 0.10. Yo te la vigilo."
-    "Rey, el Ejecutor cerró GBPUSD en objetivo: +$17.88. Bien jugado."
-    "Rey, aviso de tu cuenta FundedNext 6k: va justa de margen (diario 5% · total 1.3%). Tenlo presente si operas hoy."
-  · SUS RESPUESTAS DEL CHAT: la nubecita enseña sus propias primeras palabras, tal
-    cual — antes "Quedó grabado, sábado 5:30 PM" salía como "cerramos en ganancia".
-Lo comprobé con los 60 avisos REALES que te llegaron estos dos días: todos leen bien.
+La WEB no cambia: sigue con su dictado de navegador de siempre (es el respaldo).
 
-⏰ HORARIO: solo las alarmas del indicador, como pediste
-Así estaba hecho en la nube (el horario 01:00–13:00 NY solo toca las alarmas del
-gráfico; tus avisos ⏰, killzones, noticias, Ejecutor y análisis van por otro camino
-que no lo mira). Lo que decía a medias era el texto del chip 🩺 y el manual de Roberto:
-ahora lo dicen con tus palabras, "los avisos programados se mantienen igual".
-
-Instalación: sube APEX-app-v7.22.zip a la web y luego instala Apex-Roberto-v7.22.apk.
-La nube (worker 5.121) no cambia.
-Regresión: 133/133 en verde (banco nuevo: alarma-no-es-aviso, 18/18 con textos reales).
+Regresión 134/134. Instala Apex-Roberto-v7.23.apk y sube APEX-app-v7.23.zip.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
