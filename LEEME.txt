@@ -1,5 +1,60 @@
-APEX v7.13 — TRADING DESK
+APEX v7.14 — TRADING DESK
 =========================
+
+NOVEDADES v7.14  (🎈 SU NUBECITA DE FUERA, IGUAL QUE LA DE DENTRO)
+===================================================================
+Solo el zip y la APK. Worker y Ejecutor no cambian.
+
+Las tres cosas que señalaste, y las tres eran verdad:
+
+1️⃣ LOS BORDES
+---------------
+Fuera tenía las cuatro esquinas redondeadas por igual y un borde apagado.
+Dentro de Apex la esquina de abajo es VIVA — es la que "sale" de él — y el
+borde es dorado y definido. Ahora son iguales.
+
+2️⃣ EL RABITO ESTABA EN LOS PIES, Y ERA UN PICO
+------------------------------------------------
+Fuera había un pico triangular a la altura de su cuerpo. Dentro hay DOS
+BOLITAS que van menguando hacia su boca.
+
+Ahora son las mismas dos bolitas, y hacen algo que antes no hacían: MUEREN
+JUSTO EN SU BOCA. La nube sale a 58 de altura y el rabito baja hasta 51,
+que es donde tiene la boca. Antes le quedaba por el pecho.
+
+Y giran con él: si lo mueves a la izquierda, el rabito se da la vuelta.
+
+3️⃣ LA ANIMACIÓN FEA
+---------------------
+"Como que sale y entra". Exacto: subía y encogía a la vez con una curva
+suave, y sobre un elemento que además aparecía de golpe se leía como un
+tirón de ida y vuelta.
+
+Ahora usa EL MISMO rebotito de cómic que la de dentro: crece, se pasa un
+pelín, y se asienta. Sale una vez y se queda.
+
+⚠️ Y ALGO QUE QUIERO QUE SEPAS
+--------------------------------
+Las dos nubecitas NO pueden compartir el mismo código: una vive en píxeles
+de página y la otra en una ventana flotante de 132 puntos. Son dos copias
+a la fuerza.
+
+Y dos copias se separan solas — es la historia de las cuatro listas de
+caras que ya nos costó un día entero.
+
+Como aquí no se puede tener una sola fuente, le puse un VIGILANTE: un
+banco que compara las dos y salta si vuelven a diferenciarse en la forma,
+el borde, el rabito o la animación.
+
+COMPROBADO: 123 de 123.
+
+QUÉ HACER
+---------
+  1. Sube APEX-app-v7.14.zip (comprueba que ponga 7.14)
+  2. Instala Apex-Roberto-v7.14.apk
+  3. Sal a otra app y espera a que hable: la nube tiene que salir de su
+     BOCA, con sus dos bolitas y sus bordes dorados
+  4. Muévelo al otro lado y espera otra: el rabito debe darse la vuelta
 
 NOVEDADES v7.13  (🧍 UN SOLO ROBERTO, Y SU NUBECITA BIEN PUESTA)
 =================================================================

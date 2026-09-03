@@ -51,22 +51,52 @@
   #robCuerpo .rob-svg{filter:drop-shadow(0 2px 5px rgba(0,0,0,.55)) drop-shadow(0 0 14px rgba(240,201,92,.28))}
 
   /* 💬 la nubecita: SIEMPRE al lado contrario del cuerpo, para no taparlo */
-  #globo{position:fixed;bottom:16vh;max-width:52vw;display:none;
-         background:linear-gradient(180deg,#1b2340,#141a30);color:#f4efe2;
-         border:1px solid rgba(240,201,92,.55);border-radius:3vh;
-         padding:2vh 2.4vh;font-size:7.2vh;line-height:1.3;font-weight:600;
-         box-shadow:0 6px 22px rgba(0,0,0,.55);
-         animation:globoEntra .28s ease-out both}
-  body[data-lado="der"] #globo{right:calc(var(--rob-ancho) + 3vh)}
-  body[data-lado="izq"] #globo{left:calc(var(--rob-ancho) + 3vh)}
-  #globo.hay{display:block}
-  #globo b{color:#f0c95c}
-  /* el piquito que apunta al cuerpo */
-  #globo::after{content:"";position:absolute;bottom:3vh;width:0;height:0;
-                border-top:1.6vh solid transparent;border-bottom:1.6vh solid transparent}
-  body[data-lado="der"] #globo::after{right:-1.8vh;border-left:1.8vh solid rgba(240,201,92,.55)}
-  body[data-lado="izq"] #globo::after{left:-1.8vh;border-right:1.8vh solid rgba(240,201,92,.55)}
-  @keyframes globoEntra{from{opacity:0;transform:translateY(6px) scale(.94)}to{opacity:1;transform:none}}
+  /* 💬 LA NUBECITA — v7.13, CALCADA A LA DE DENTRO DE APEX
+     ─────────────────────────────────────────────────────────────────────────────────
+     Rey (02-09), con las dos delante en una captura: "la del de afuera es fea, debe quedar
+     EXACTAMENTE igual que la de adentro: los bordes definidos, redondeados, los circulitos
+     del rabito a la medida de la cabeza apuntando a la boca, no a los pies".
+     Tenía toda la razón. Aquí había un pico triangular a la altura de los PIES y unas
+     esquinas redondeadas por igual; dentro de Apex hay una esquina viva abajo (la que
+     "sale" de él), DOS BOLITAS por rabito, y sale a la altura de su BOCA.
+     ⚠️ ESTA ES LA COPIA, Y EL ORIGINAL ES `.rob-globo` DE index.html. No se pueden
+     compartir literalmente porque viven en mundos distintos —allí son píxeles de página y
+     aquí vh de una ventana de 132 dp—, pero el ASPECTO debe ser el mismo. Hay un banco
+     (`test-nube-igual`) que compara las dos y salta si se separan: sin él, esto se vuelve
+     la quinta lista de caras del proyecto.
+     ───────────────────────────────────────────────────────────────────────────────── */
+  #globo{position:fixed;max-width:52vw;display:none;
+         background:#1B2145;color:#f4efe2;
+         border:0.9vh solid #f0c95c;
+         /* la esquina de abajo VIVA, del lado por el que sale: igual que dentro de Apex */
+         border-radius:9vh 9vh 9vh 3.5vh;
+         padding:3.5vh 5vh;font-size:7.2vh;line-height:1.28;font-weight:600;
+         box-shadow:0 8px 24px rgba(0,0,0,.5)}
+  /* 🎈 A LA ALTURA DE SU BOCA, NO DE SUS PIES. Su cuerpo mide 94vh desde 1vh del suelo, y
+     la boca le cae al 47% de arriba — o sea a ~51vh del suelo. El rabito CUELGA de la nube
+     y baja 7,5vh, así que la nube se pone a 58vh: la bolita pequeña muere justo en su boca.
+     (Con 51vh el rabito le quedaba por el pecho — se ve, y se ve mal.) */
+  body[data-lado="der"] #globo{right:calc(var(--rob-ancho) + 2vh); bottom:58vh}
+  body[data-lado="izq"] #globo{left:calc(var(--rob-ancho) + 2vh);  bottom:58vh}
+  #globo.hay{display:block; animation:robGloboPop .34s cubic-bezier(.34,1.56,.64,1) both}
+  #globo b{color:#f0c95c;display:block;font-size:6vh;letter-spacing:.3px;margin-bottom:.4vh}
+  /* 🫧 EL RABITO: dos bolitas que van menguando hacia su boca, como en Apex — no un pico */
+  #globo::before,#globo::after{content:"";position:absolute;background:#1B2145;
+         border:0.9vh solid #f0c95c;border-radius:50%;pointer-events:none}
+  #globo::before{width:4.6vh;height:4.6vh;bottom:-3vh}
+  #globo::after{width:2.9vh;height:2.9vh;bottom:-7.5vh}
+  body[data-lado="der"] #globo::before{right:7vh}
+  body[data-lado="der"] #globo::after{right:2.6vh}
+  body[data-lado="izq"] #globo::before{left:7vh}
+  body[data-lado="izq"] #globo::after{left:2.6vh}
+  /* ✨ EL REBOTITO DE CÓMIC, el MISMO de dentro de Apex.
+     Rey: "cuando va a salir la nube hace un gesto extraño, como que sale y entra, es feo".
+     El de antes subía 6px y encogía a la vez con un `ease-out`, y al aplicarse sobre un
+     elemento que además cambiaba de `display` se leía como un tirón de ida y vuelta.
+     Éste crece de 0.8 a 1.06 y se asienta en 1: sale una vez, y se queda. */
+  @keyframes robGloboPop{0%{opacity:0;transform:translateY(2vh) scale(.8)}
+                         60%{transform:translateY(0) scale(1.06)}
+                         100%{opacity:1;transform:none}}
 
   /* un punto discreto que indica que está de guardia (nunca dormido) */
   #pulso{position:fixed;bottom:2vh;width:1.6vh;height:1.6vh;border-radius:50%;
