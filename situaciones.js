@@ -23,87 +23,110 @@
    ⚠️ Y NO SE CLASIFICA POR EL COLOR DEL EMOJI: Rey usa el 🔴 para todo lo rojo, así que
    tomarlo por "pérdida" disfrazaba el aviso más grave del más común. Mandan las PALABRAS. */
 const ROB_SITUA = [
+  /* 🗣️ v7.17 — QUE LE HABLE A ÉL, NO QUE LE PONGA UNA ETIQUETA.
+     Rey (03-09): "debe referirse a mí, como: Rey no entres en Londres todavía no hay setup,
+     o Rey ya puedes bajar a 5m a esperar la confirmación, o Rey el día se viró, o Rey hubo
+     MSS en 15m mira el gráfico… esos mensajes son los que quiero, no esos genéricos como el
+     que me puso: (no entres en GBP/USD), solo eso, ni sé a quién se refiere ni por qué".
+     TENÍA RAZÓN: esto eran ETIQUETAS, no mensajes. Servían para leerlas de un vistazo en
+     una nubecita, pero desde que Roberto las DICE EN VOZ ALTA —y Rey las oye haciendo
+     ejercicio, con el teléfono en el bolsillo— tienen que sostenerse solas: a quién le
+     habla, qué pasó, y qué hacer ahora.
+     LAS TRES REGLAS: (1) empiezan por su NOMBRE, que es lo que hace que levante la cabeza;
+     (2) dicen QUÉ pasó con su par y su temporalidad, no una categoría; (3) acaban en algo
+     que PUEDE HACER ("ve para el gráfico", "baja a 5m", "todavía no entres").
+     Siguen siendo cortas: se oyen en tres segundos y caben en la nubecita. */
   { id:"limite",   gesto:"serio",
     re:/límite|limite|drawdown|\bdd\b|peligro/,
-    di:()=>"cuenta cerca del límite — protégela" },
+    di:()=>"Rey, tu cuenta está cerca del límite. Para hoy y protégela." },
 
   { id:"roto",     gesto:"apenado",
     re:/no puedo arrancar|no responde|no arranca|ca[íi]d[oa]|se cayó|sin conexión|desconect/,
-    di:(d)=>(/ejecutor/.test(d.b) ? "el Ejecutor no arranca — míralo"
-           : /puente/.test(d.b)   ? "el Puente se cayó — míralo"
-           : "algo se cayó: revísalo") },
+    di:(d)=>(/ejecutor/.test(d.b) ? "Rey, el Ejecutor no arranca. No va a tomar ninguna entrada hasta que lo mires."
+           : /puente/.test(d.b)   ? "Rey, se cayó el Puente. Me quedé sin ver tu gráfico."
+           : "Rey, algo del sistema se cayó. Échale un ojo cuando puedas.") },
 
   { id:"perdida",  gesto:"apenado",
     re:/señal perdida|⚰️|sin recoger|no la recogió/,
-    di:()=>"una señal se quedó sin recoger" },
+    di:(d)=>"Rey, hubo una señal" + (d.par ? " en " + d.par : "") + " y el Ejecutor no llegó a recogerla." },
 
   { id:"veto",     gesto:"frena",
     re:/no entres|no entrar|veto|vetó|rechaz|abstén/,
-    di:(d)=>"no entres" + (d.par ? " en " + d.par : "") },
+    di:(d)=>"Rey, no entres" + (d.par ? " en " + d.par : "") + " todavía: aún no hay setup." },
 
   { id:"cierre_mal", gesto:"preocupa",
     re:/\bsl\b|stop|pérdida|perdida|perdi[óo]/,
-    di:(d)=>"saltó el stop" + (d.par ? " en " + d.par : "") },
+    di:(d)=>"Rey, saltó el stop" + (d.par ? " en " + d.par : "") + ". Respira y sigue tu plan." },
 
   { id:"cierre_ok",  gesto:"celebra",
     re:/\btp\b|ganad|ganancia|cazad|\+\d+(\.\d+)?r/,
-    di:(d)=>"cerrada en ganancia" + (d.par ? ": " + d.par : "") },
+    di:(d)=>"Rey, cerramos en ganancia" + (d.par ? " en " + d.par : "") + ". Bien jugado." },
 
   { id:"confirmada", gesto:"alerta",
     re:/entrada confirmada|confirmad/,
-    di:(d)=>"zona confirmada" + (d.tf ? " — baja a " + d.tf : "") },
+    di:(d)=>"Rey, ya llegó a la zona de confirmación" + (d.par ? " en " + d.par : "") +
+            (d.tf ? ". Baja a " + d.tf + " y espera la vela" : ". Ve para el gráfico") + "." },
 
   { id:"liquidez",   gesto:"alerta",
     re:/liquidez|sweep|barrid/,
-    di:(d)=>"ya hay toma de liquidez" + (d.tf ? " en " + d.tf : "") },
+    di:(d)=>"Rey, ya barrió la liquidez" + (d.par ? " en " + d.par : "") +
+            (d.tf ? " en " + d.tf : "") + ". Mira el gráfico." },
 
   { id:"reaccion",   gesto:"tiempo",
     re:/zona de reacci[óo]n|reacci[óo]n/,
-    di:(d)=>"espera la zona de reacción" + (d.tf ? " en " + d.tf : "") },
+    di:(d)=>"Rey, el precio va hacia tu zona" + (d.par ? " de " + d.par : "") +
+            ". Todavía no entres: espera la reacción" + (d.tf ? " en " + d.tf : "") + "." },
 
   { id:"estructura", gesto:"vigila",
     re:/\bmss\b|estructura/,
-    di:(d)=>"estructura rota" + (d.tf ? " en " + d.tf : "") + " — vigila" },
+    di:(d)=>"Rey, hubo MSS" + (d.tf ? " en " + d.tf : "") + (d.par ? " en " + d.par : "") +
+            ". Mira el gráfico, ya tienes permiso." },
 
   { id:"ventana",    gesto:"tiempo",
     re:/killzone|kill zone|ventana operativa|pre-ny|londres|ny apertura/,
-    di:()=>"ventana abierta — atento" },
+    di:(d)=>"Rey, se abre tu ventana" + (/londres/.test(d.b) ? " de Londres" : /pre-ny|ny/.test(d.b) ? " de Nueva York" : "") +
+            ". Ponte delante del gráfico." },
 
   { id:"noticia",    gesto:"analiza",
     re:/noticia|calendario|📰/,
-    di:()=>"noticia cerca: no operes ahora" },
+    di:()=>"Rey, viene una noticia fuerte. No entres hasta que pase." },
 
   { id:"posicion",   gesto:"vigila",
     re:/posici[óo]n|vigil|👁/,
-    di:(d)=>"te vigilo la posición" + (d.par ? " de " + d.par : "") },
+    di:(d)=>"Rey, te estoy cuidando la posición" + (d.par ? " de " + d.par : "") + ". Tú tranquilo." },
 
   { id:"dossier",    gesto:"idea",
     re:/dossier|te propongo|pensadero|💡|idea/,
-    di:()=>"tu dossier del día está listo" },
+    di:()=>"Rey, ya tienes tu análisis del día listo. Ábrelo cuando puedas." },
 
   { id:"saludo",     gesto:"saluda",
     re:/buenos días|buen día|🌅|amanecer/,
-    di:()=>"buenos días, Rey" },
+    di:()=>"Buenos días, Rey. Vamos a por el día." },
 
   { id:"ejecutor",   gesto:"audita",
     re:/auditor[íi]a|expediente|🤖|entré en/,
-    di:(d)=>"el Ejecutor entró" + (d.par ? " en " + d.par : "") },
+    di:(d)=>"Rey, el Ejecutor acaba de entrar" + (d.par ? " en " + d.par : "") + ". Yo te la vigilo." },
 
   { id:"felicita",   gesto:"felicita",
     re:/felicidades|bien hecho|bien jugado|👏|así se opera/,
-    di:()=>"bien jugado, Rey" },
+    di:()=>"Así se opera, Rey. Bien jugado." },
 
   { id:"vialibre",   gesto:"aprueba",
     re:/vía libre|puedes operar|👍/,
-    di:()=>"vía libre" },
+    di:(d)=>"Rey, tienes vía libre" + (d.par ? " en " + d.par : "") + ". Cumple tu plan." },
 
   { id:"descanso",   gesto:"siesta",
     re:/siesta|suspend|😴|hasta mañana/,
-    di:()=>"hasta luego, Rey" },
+    di:()=>"Hasta luego, Rey. Yo sigo de guardia." },
+
+  { id:"giro",       gesto:"sorprende",
+    re:/giro|se vir[óo]|cambio de sesgo|invalidad|invalidación/,
+    di:(d)=>"Rey, el día se viró" + (d.par ? " en " + d.par : "") + ". Olvídate del sesgo de antes." },
 
   { id:"alarma",     gesto:"alerta",
     re:/🔔|alarma|se[ñn]al/,
-    di:(d)=>"señal" + (d.par ? " en " + d.par : "") + (d.tf ? " · " + d.tf : "") + " — míralo" },
+    di:(d)=>"Rey, tienes señal" + (d.par ? " en " + d.par : "") + (d.tf ? " en " + d.tf : "") +
+            ". Ve para el gráfico." },
 ];
 
 /* ⏰ LOS AVISOS QUE REY SE PROGRAMA A SÍ MISMO (v6.82)
@@ -127,7 +150,10 @@ const ROB_RUTINA = [
    estas; si la situación pide un gesto que aún no tiene foto, sale la de presentarse.
    (El banco compara esta lista con la carpeta de verdad: si algún día se dibuja una cara
    nueva y no se apunta aquí, el banco lo canta.) */
-const CARAS_HAY = ["alerta","analiza","apenado","aprueba","audita","carino","celebra",
+/* 🖼️ v7.17 — entra "sorprende", que la pide la situación nueva del GIRO DEL DIA.
+   Sin su foto, ese aviso saldría en el teléfono con la cara de otro — y el banco lo cazó
+   antes de que Rey lo viera. La foto se dibuja del MISMO roberto.js con hacer-caras.cjs. */
+const CARAS_HAY = ["alerta","analiza","apenado","aprueba","audita","carino","celebra","sorprende",
   "felicita","frena","idea","preocupa","presenta","saluda","serio","siesta","tetoca","tiempo","vigila"];
 
 /* La lectura del aviso: qué situación es, con su gesto y su frase. UNA sola vez, y de

@@ -169,18 +169,36 @@
     } catch(_){}
     /* si por lo que sea no hubiera frase corta, se usa el título, que él ya escribió corto */
     if (!frase) frase = String(titulo || cuerpo || "").replace(/\s+/g, " ").trim();
-    window.burbujaDecir(frase, g);
+    /* 🗣️ ESTO SÍ SE DICE EN VOZ ALTA: es una alarma del mercado o un aviso que Rey se
+       programó. Es lo ÚNICO que suena — ver la regla en burbujaDecir. */
+    window.burbujaDecir(frase, g, true);
   };
 
-  window.burbujaDecir = function(texto, g){
+  /* ══════════════════════════════════════════════════════════════════════════
+     🔇 CUÁNDO SUENA Y CUÁNDO NO — v7.16, LEY DE REY
+     ═════════════════════════════════════════════════════════════════════════
+     Rey (03-09), y lo vio venir antes de que le explotara en la cara: "solo los
+     avisos programados y las alarmas del mercado. Cuando no hay nada de eso, no,
+     porque si no va a estar sonando todo el tiempo… puede mantener los gestos y
+     la nube, pero si no es de esas cosas no habla."
+     TENÍA TODA LA RAZÓN Y ERA UN FALLO MÍO DE ANOCHE: al darle voz al cuerpo
+     flotante se la di a TODO lo que dice, y su vida de fondo saca una frase cada
+     dos gestos — o sea que habría estado hablándole cada 24-56 segundos, todo el
+     día, encima de cualquier aplicación. Insoportable.
+     LA REGLA, ahora en el código: el tercer parámetro `hablar` es FALSO por
+     defecto. Su vida de fondo sigue igual de viva —gestos, nubecita, frases— pero
+     MUDA. Solo suenan las alarmas del mercado y los avisos que él se programó,
+     que es lo que pidió. Y encima de eso sigue mandando su interruptor de siempre
+     (🔊 Que Roberto me hable): si lo apaga, no suena ni eso. */
+  window.burbujaDecir = function(texto, g, hablar){
     texto = String(texto || "").trim();
     if (!texto) return;
     /* 🛟 SEGURO DE ÚLTIMA HORA: pase lo que pase, en esta ventana no cabe un párrafo.
        Aunque alguien mande un texto largo por otro camino, aquí se corta a lo que se
        puede LEER de un vistazo — que es para lo que sirve una nubecita. */
-    if (texto.length > 72) {
-      var c = texto.lastIndexOf(" ", 72);
-      texto = texto.slice(0, c > 40 ? c : 72).trim() + "…";
+    if (texto.length > 95) {
+      var c = texto.lastIndexOf(" ", 95);
+      texto = texto.slice(0, c > 60 ? c : 95).trim() + "…";
     }
     /* 💬 v7.13 — PEDIR SITIO ANTES DE HABLAR.
        Rey: "hay un error en la nube, no se ve, solo sale una línea recta". La ventana
@@ -201,8 +219,10 @@
        decidiré yo". El interruptor del silencio es SUYO y vive en los ajustes de Apex
        (🔊 Que Roberto me hable); esta línea no decide nada, solo reparte el trabajo. */
     try { Roberto.hablar(texto, { mudo: true }); } catch(_){}
-    /* y se le pide a Android que lo DIGA, si Rey tiene su voz encendida */
-    try { console.log("BURBUJA-VOZ " + texto); } catch(_){}
+    /* 🔇 y SOLO si esto es una alarma o un aviso programado se le pide a Android que lo
+       DIGA. Su vida de fondo pasa por aquí sin `hablar`, así que mueve la boca y saca su
+       nubecita pero no suena — que es exactamente lo que pidió Rey. */
+    if (hablar) { try { console.log("BURBUJA-VOZ " + texto); } catch(_){} }
     clearTimeout(tVuelta);
     /* vuelve solo a estar de guardia: no se queda con cara de nada */
     tVuelta = setTimeout(window.burbujaCallar, 9000);

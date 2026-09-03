@@ -1,5 +1,93 @@
-APEX v7.15 — TRADING DESK
+APEX v7.17 — TRADING DESK
 =========================
+
+NOVEDADES v7.17  (🗣️ QUE TE HABLE A TI, Y QUE SUENE BLOQUEADO)
+================================================================
+Reemplaza a la 7.16 — sube ESTA. Worker y Ejecutor no cambian.
+
+Hiciste bien en NO subir todavía. Faltaban tres cosas.
+
+1️⃣ LAS FRASES ERAN ETIQUETAS, NO MENSAJES
+--------------------------------------------
+Tenías toda la razón con "(no entres en GBP/USD)": eso servía para leerlo
+de un vistazo en una nubecita, pero desde que Roberto lo DICE EN VOZ ALTA
+—y tú lo oyes con el teléfono en el bolsillo— tiene que sostenerse solo.
+
+Reescribí las 23. Ahora empiezan por tu nombre, dicen QUÉ pasó y acaban
+en algo que puedes hacer:
+
+   "Rey, no entres en GBPUSD todavía: aún no hay setup."
+   "Rey, ya llegó a la zona de confirmación en EURUSD. Baja a 5m y espera
+    la vela."
+   "Rey, hubo MSS en 15m en EURUSD. Mira el gráfico, ya tienes permiso."
+   "Rey, el día se viró en GBPUSD. Olvídate del sesgo de antes."
+   "Rey, ya barrió la liquidez en GBPUSD en 4H. Mira el gráfico."
+   "Rey, se abre tu ventana de Londres. Ponte delante del gráfico."
+
+Y una situación NUEVA que no existía: el GIRO DEL DÍA. Con su cara propia.
+
+2️⃣ LA VOZ CON LA PANTALLA BLOQUEADA — AHORA SÍ
+------------------------------------------------
+Antes NO funcionaba, y ésta era la razón: la voz salía por la página de
+Apex, y con la pantalla bloqueada Android la duerme para ahorrar batería.
+Roberto se quedaba mudo justo cuando lo llevas en el bolsillo.
+
+La mudé al VIGÍA — el mismo que hace que tus notificaciones sí te lleguen
+bloqueado, porque va en primer plano y Android no lo duerme.
+
+Ahora te informa mientras haces ejercicio, con el teléfono guardado.
+
+3️⃣ AL QUITARLO DE LA PANTALLA, SE CALLA
+-----------------------------------------
+Era un cabo suelto: si te lo quitabas de encima mientras hablaba, la
+ventana desaparecía pero LA VOZ SEGUÍA. Una voz sin cuerpo, desde un
+Roberto que acababas de retirar. Ahora se le corta a media palabra.
+
+LAS REGLAS, TODAS JUNTAS
+-------------------------
+   🔊 SUENA: alarmas del mercado · tus avisos programados · cuando hablas
+             con él en el chat
+   🔇 NO:    su vida de fondo y todo lo demás (sigue con GESTOS y NUBECITA,
+             solo que callado)
+   Y encima de todo, tu interruptor: 🔊 Que Roberto me hable.
+
+COMPROBADO: 126 de 126. El banco nuevo ejecuta 8 avisos REALES de tu
+sistema y exige que las 8 frases te hablen a ti por tu nombre.
+
+⚠️ Y DE PASO SE ARREGLÓ ALGO QUE LLEVABA ROTO SIN QUE SE NOTARA: la
+   herramienta que dibuja las caras de las notificaciones buscaba su lista
+   donde ya no estaba desde hace versiones. Nadie se dio cuenta porque no
+   hizo falta ninguna cara nueva hasta hoy.
+
+NOVEDADES v7.16  (🔇 SOLO HABLA DE LO REAL)
+=============================================
+Reemplaza a la 7.15 — sube ESTA. Worker y Ejecutor no cambian.
+
+LO CAZASTE ANTES DE QUE TE EXPLOTARA
+-------------------------------------
+Tenías toda la razón, y era un fallo mío de anoche.
+
+Al darle voz al cuerpo flotante se la di a TODO lo que dice. Y su vida de
+fondo suelta una frase cada dos gestos… o sea que te habría estado
+hablando CADA 24-56 SEGUNDOS, todo el día, encima de cualquier app.
+
+Insoportable. Y lo viste antes de instalarlo.
+
+LA REGLA, AHORA EN EL CÓDIGO
+-----------------------------
+   🔊 SUENAN:  las alarmas del mercado
+               los avisos que TÚ te programaste
+
+   🔇 NO SUENAN: su vida de fondo, sus frases sueltas, todo lo demás
+               (siguen los GESTOS y sigue saliendo la NUBECITA — solo
+                que en silencio, como pediste)
+
+Y encima de eso manda tu interruptor de siempre: 🔊 Que Roberto me hable.
+Si lo apagas, no suena ni una alarma.
+
+COMPROBADO: 125 de 125. El banco nuevo le hace decir tres frases de su
+vida de fondo y exige CERO sonidos, luego una alarma y un aviso
+programado y exige que esos DOS sí suenen.
 
 NOVEDADES v7.15  (🫧 FASE 2 CERRADA)
 =====================================
