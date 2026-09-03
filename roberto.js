@@ -26,6 +26,10 @@
   /* ── colores propios (no dependen del tema de Apex: él siempre se ve igual) ── */
   var ROB_CSS = `
   .rob-svg{overflow:visible; display:block; width:100%; height:100%}
+  /* 🎬 v7.15 — el instante en el que se reinicia su animación. NO le quita la pose: solo
+     congela lo que se mueve durante un fotograma, para que la animación arranque de cero.
+     Antes esto se hacía borrándole el cuerpo, y ahí Roberto desaparecía y volvía. */
+  .rob-svg.rob-recongela, .rob-svg.rob-recongela *{animation:none!important;transition:none!important}
   .rob-svg [data-cuerpo="flota"]   .rob-todo{animation:robFlota 3.6s ease-in-out infinite}
   .rob-todo{transform-origin:180px 300px}
   .rob-svg{--rj:#22305f;--rj2:#16204a;--rmad:#f4ac3c;--rmad2:#d3841c;--roro:#f0c95c;--roro2:#b8933a;
@@ -371,6 +375,18 @@
               brazo("M215 296 Q254 316 218 346") + mano("rgMano", "translate(214,348) rotate(30)"),
     reposo:   brazo("M145 296 Q124 326 136 358") + mano("rgMano", "translate(140,362)") +
               brazo("M215 296 Q236 326 224 358") + mano("rgMano", "translate(220,362)"),
+    /* 🧍 v7.15 — SU POSTURA DE GUARDIA, NUEVA Y SOLO SUYA.
+       Rey (02-09): "descruzarle los brazos, que no sea su pose principal". `espera` es la
+       cara que MÁS tiempo lleva puesta y estaba de brazos cruzados, que a la larga se lee
+       como desganado o a la defensiva.
+       ⚠️ Se le dibuja una POSTURA PROPIA en vez de reaprovechar `reposo`: ésa ya la usa
+       `preocupa`, y compartirla haría que "en guardia" y "esto no me gusta" se vieran
+       IGUAL de cuerpo. Cada gesto suyo tiene su postura — es lo que los hace distinguibles,
+       y hay un banco que lo exige desde hace versiones.
+       Ésta es de mayordomo atento: de pie, los brazos bajando sueltos y las manos juntas
+       por delante, a la altura de la cintura. Disponible, no cerrado. */
+    atento:   brazo("M145 296 Q132 330 166 356") + mano("rgMano", "translate(170,360)") +
+              brazo("M215 296 Q228 330 194 356") + mano("rgMano", "translate(190,360)"),
     visor:    brazo("M145 296 Q122 324 132 356") + mano("rgMano", "translate(134,360)") +
               brazo("M215 296 Q264 280 230 158") + mano("rgPalma", "translate(206,150) rotate(176) scale(1.35)"),
     /* — carisma, bromas y sentimiento — */
@@ -554,7 +570,13 @@ ROB_CSS += "\n" + Object.keys(POSES).map(function (k) { return '[data-pose="' + 
     shhh:     {c:2, chip:"🤫 Silencio",       ojos:"grandes",  cejas:"altas",   boca:"o",         pose:"shh",     cuerpo:"firme",  ico:"🤫", lbl:"Concéntrate ahora",     frase:"Killzone abierta: dedo en los labios, a operar."},
     /* ⏳ Rey (31-08): "él NO puede estar durmiendo en mi pantalla" — este es su reposo
        de guardia: brazos cruzados pero OJOS ABIERTOS, mirándote, listo. */
-    espera:   {c:2, chip:"⏳ En guardia",     ojos:"normales", cejas:"neutral", boca:"recta",     pose:"cruzados",cuerpo:"lento",  ico:"⏳", lbl:"Aquí sigo, listo",      frase:"Brazos cruzados y ojos bien abiertos: el mercado descansa, él no."},
+    /* 🧍 v7.15 — SIN LOS BRAZOS CRUZADOS. Rey (02-09): "descruzarle los brazos, que no sea
+       su pose principal; hay que buscar otro gesto o señal entre tantos".
+       `espera` es la cara que MÁS tiempo lleva puesta —es su descanso— y estaba con los
+       brazos cruzados, que a la larga se lee como desganado o a la defensiva. Se le pone la
+       postura de REPOSO: de pie, brazos sueltos y atento. Sigue siendo "aquí sigo, listo",
+       pero con la actitud que Rey quiere ver todo el día en su pantalla. */
+    espera:   {c:2, chip:"⏳ En guardia",     ojos:"normales", cejas:"neutral", boca:"recta",     pose:"atento",  cuerpo:"lento",  ico:"⏳", lbl:"Aquí sigo, listo",      frase:"De pie, con los brazos sueltos y los ojos bien abiertos: el mercado descansa, él no."},
     animo:    {c:2, chip:"💪🏾 ¡Vamos!",       ojos:"felices",  cejas:"alegres", boca:"dientes",   pose:"musculo", cuerpo:"brinca", ico:"💪🏾", lbl:"¡Tú puedes, Rey!",   frase:"Cuando necesitas que alguien crea en ti."},
     /* carisma, bromas y sentimiento */
     carcajada:{c:3, chip:"😂 Carcajada",      ojos:"felices",  cejas:"alegres", boca:"carcajada", pose:"panza",   cuerpo:"rie",    fx:"risa", ico:"😂", lbl:"¡JAJAJA!",           frase:"Se agarra la panza de la risa cuando le sale un chiste bueno."},
@@ -664,7 +686,18 @@ ROB_CSS += "\n" + Object.keys(POSES).map(function (k) { return '[data-pose="' + 
     s.classList.remove("rob-hablando");
     s.dataset.ojos = e.ojos; s.dataset.cejas = e.cejas || "neutral"; s.dataset.boca = e.boca;
     s.dataset.pose = e.pose; s.dataset.fx = e.fx || "";
-    s.dataset.cuerpo = ""; void s.offsetWidth; s.dataset.cuerpo = e.cuerpo;   // reinicia la animación
+    /* 🎬 v7.15 — REINICIAR LA ANIMACIÓN SIN QUE SE LE BORRE EL CUERPO.
+       Rey (02-09): "hace un gesto extraño cuando va a salir la nube, como que aparece y
+       desaparece en ese momento; debería salir con naturalidad".
+       LA CAUSA ESTABA JUSTO AQUÍ: para que la animación del cuerpo volviera a empezar se
+       ponía `data-cuerpo=""`, se forzaba un recálculo y se volvía a poner. Ese hueco dura un
+       fotograma — pero en ese fotograma NINGUNA regla de postura casa con él, así que Roberto
+       se queda sin brazos ni piernas y vuelve. Es el parpadeo que ve Rey, y salta a la vista
+       justo al sacar la nubecita porque es cuando cambia de gesto.
+       Ahora se congela un instante lo que se mueve (con una clase; nada se borra) y se
+       suelta: la animación arranca de cero igual, pero él no deja de estar ni un fotograma. */
+    s.classList.add("rob-recongela"); void s.offsetWidth; s.classList.remove("rob-recongela");
+    s.dataset.cuerpo = e.cuerpo;
     /* 📱 v6.90 — el accesorio del momento entra y sale con el gesto */
     try { estado.emo = k; repasarRopa(); pintarVestido(inst); } catch (_) {}
     return e;
@@ -727,13 +760,41 @@ ROB_CSS += "\n" + Object.keys(POSES).map(function (k) { return '[data-pose="' + 
     if (t.mes === 12 && t.num >= 24 && t.num <= 26) return { ropa: "navidad", acc: "" };
     if ((t.mes === 12 && t.num === 31) || (t.mes === 1 && t.num === 1)) return { ropa: "fiesta", acc: "" };
     var finde = (t.dia === "Sat" || t.dia === "Sun");
-    if (finde) return { ropa: "casa", acc: "taza" };
+    /* 👔 v7.15 — QUE VARÍE, NO SOLO QUE ACIERTE.
+       Rey (02-09): "también debe cambiarse más de ropa, es la misma sudadera de todos los
+       días, debe variar cada x tiempo".
+       Tenía razón: la ropa se elegía SOLO por la hora, así que dentro de cada tramo salía
+       siempre exactamente lo mismo. De tarde-noche entre semana: sudadera, sudadera y
+       sudadera. La ropa acertaba con el momento pero no tenía vida.
+       Ahora, DENTRO de cada tramo, los accesorios rotan por DÍA (no al azar: al azar se
+       cambiaría de gorra cada 20 segundos y parecería un disfraz, no una persona). El mismo
+       día lleva lo mismo de la mañana a la noche, y mañana lleva otra cosa. */
+    var acc = accDelDia(t);
+    if (finde) return { ropa: "casa", acc: mezcla("taza", acc) };
     /* de Londres (2:00 NY) al cierre de Nueva York (17:00 NY): está trabajando */
-    if (t.h >= 2 && t.h < 17) return { ropa: "wallstreet", acc: "" };
+    if (t.h >= 2 && t.h < 17) return { ropa: "wallstreet", acc: acc };
     /* de madrugada sigue despierto, pero de casa y con su café */
-    if (t.h >= 22 || t.h < 2) return { ropa: "casa", acc: "taza" };
-    return { ropa: "casual", acc: "" };
+    if (t.h >= 22 || t.h < 2) return { ropa: "casa", acc: mezcla("taza", acc) };
+    return { ropa: "casual", acc: acc };
   }
+
+  /* El accesorio de HOY. Cambia de un día para otro y se mantiene todo el día: así se le
+     nota que se arregla distinto, sin que parezca que se cambia de ropa cada rato. */
+  function accDelDia(t) {
+    try {
+      var TURNOS = ["", "gorra", "", "gafasSol", "auriculares", "", "sombrero", "bufanda"];
+      /* un número que cambia SOLO al cambiar de día */
+      var n = (t.num || 1) + (t.mes || 1) * 31;
+      var a = TURNOS[n % TURNOS.length];
+      /* las gafas de sol de noche no, que no es un videoclip */
+      if (a === "gafasSol" && (t.h >= 18 || t.h < 6)) return "";
+      /* la bufanda solo cuando el traje o la ropa de casa la admiten sin quedar raro */
+      if (a === "bufanda" && t.h >= 2 && t.h < 17) return "";
+      return a;
+    } catch (_) { return ""; }
+  }
+
+  function mezcla(a, b) { return b ? (a + " " + b) : a; }
   function vestirSolo() { var r = ropaDeAhora(); return vestir(r.ropa, r.acc); }
   /* Se repasa la hora AL CAMBIAR DE GESTO (cada 12–28 s en su vida de fondo), como mucho
      una vez cada 5 minutos. Sin temporizadores: uno que se repite cuelga el navegador de

@@ -147,9 +147,41 @@
     document.body.dataset.lado = (lado === "izq") ? "izq" : "der";
   };
 
+  /* ══════════════════════════════════════════════════════════════════════════
+     📩 UN AVISO DEL SISTEMA, RESUMIDO COMO DENTRO DE APEX — v7.15
+     ═════════════════════════════════════════════════════════════════════════
+     Rey (02-09): "saltó un aviso de la noche antes de dormir y la nube salió
+     CORTADA A LA MITAD, con lo que decía la alarma".
+     LA CAUSA: al cuerpo flotante le llegaba el aviso ENTERO, recortado a 120
+     letras. Dentro de Apex eso no pasa porque ahí la nubecita enseña la FRASE
+     CORTA de acción que decide `robSitua` ("no entres", "zona confirmada"…),
+     no el texto del aviso. Fuera se enseñaba el discurso, y en una ventana de
+     231 puntos de alto un párrafo de seis líneas no cabe: se sale por arriba.
+     Ahora se usa la MISMA `robSitua` de siempre —viaja pegada en esta página—
+     así que dentro y fuera dicen exactamente lo mismo. */
+  window.burbujaAviso = function(titulo, cuerpo, kind){
+    var frase = "", g = "";
+    try {
+      if (typeof robSitua === "function") {
+        var s = robSitua(titulo || "", cuerpo || "", kind || "");
+        if (s) { frase = s.frase || ""; g = s.gesto || ""; }
+      }
+    } catch(_){}
+    /* si por lo que sea no hubiera frase corta, se usa el título, que él ya escribió corto */
+    if (!frase) frase = String(titulo || cuerpo || "").replace(/\s+/g, " ").trim();
+    window.burbujaDecir(frase, g);
+  };
+
   window.burbujaDecir = function(texto, g){
     texto = String(texto || "").trim();
     if (!texto) return;
+    /* 🛟 SEGURO DE ÚLTIMA HORA: pase lo que pase, en esta ventana no cabe un párrafo.
+       Aunque alguien mande un texto largo por otro camino, aquí se corta a lo que se
+       puede LEER de un vistazo — que es para lo que sirve una nubecita. */
+    if (texto.length > 72) {
+      var c = texto.lastIndexOf(" ", 72);
+      texto = texto.slice(0, c > 40 ? c : 72).trim() + "…";
+    }
     /* 💬 v7.13 — PEDIR SITIO ANTES DE HABLAR.
        Rey: "hay un error en la nube, no se ve, solo sale una línea recta". La ventana
        flotante mide solo lo que el cuerpo y hay que ENSANCHARLA para que quepa la nubecita.
@@ -161,7 +193,16 @@
     globo.textContent = texto;
     globo.classList.add("hay");
     gesto(g || Roberto.gestoDe(texto));
-    try { Roberto.hablar(texto, { mudo: true }); } catch(_){}   /* solo la boca: sin audio encima de otras apps */
+    /* 🗣️ v7.15 — LA BOCA SE MUEVE AQUÍ; LA VOZ LA PONE ANDROID, Y LA DECIDE REY.
+       `mudo:true` NO es "que se calle": es que esta página no reproduce audio — la voz la
+       pone el motor de Android desde el servicio, que suena mucho mejor y no depende de que
+       el navegador interno esté despierto. Aquí solo se le mueve la boca al ritmo.
+       ⚠️ Y OJO CON LA LEY DE REY (02-09): "si yo necesito que no me interrumpa, ya lo
+       decidiré yo". El interruptor del silencio es SUYO y vive en los ajustes de Apex
+       (🔊 Que Roberto me hable); esta línea no decide nada, solo reparte el trabajo. */
+    try { Roberto.hablar(texto, { mudo: true }); } catch(_){}
+    /* y se le pide a Android que lo DIGA, si Rey tiene su voz encendida */
+    try { console.log("BURBUJA-VOZ " + texto); } catch(_){}
     clearTimeout(tVuelta);
     /* vuelve solo a estar de guardia: no se queda con cara de nada */
     tVuelta = setTimeout(window.burbujaCallar, 9000);

@@ -1,5 +1,81 @@
-APEX v7.14 — TRADING DESK
+APEX v7.15 — TRADING DESK
 =========================
+
+NOVEDADES v7.15  (🫧 FASE 2 CERRADA)
+=====================================
+Solo el zip y la APK. Worker y Ejecutor no cambian.
+Sube estas dos y me lo cuentas al levantarte.
+
+Las cuatro cosas que me dijiste anoche, y las cuatro eran verdad:
+
+1️⃣ EL GESTO EXTRAÑO AL SALIR LA NUBE
+--------------------------------------
+"Como que aparece y desaparece". Exacto, y lo estaba haciendo.
+
+Para que su animación volviera a empezar, el código le BORRABA el cuerpo
+un instante y se lo devolvía. Ese instante dura un fotograma — pero en ese
+fotograma Roberto se queda sin brazos ni piernas. Y saltaba a la vista
+justo al sacar la nube, porque es cuando cambia de gesto.
+
+Ahora la animación se reinicia sin quitarle nada. No desaparece ni un
+fotograma.
+
+2️⃣ LOS BRAZOS CRUZADOS
+------------------------
+Tenías razón: era su postura de fondo, la que más tiempo lleva puesta, y a
+la larga se lee como desganado.
+
+Le dibujé una postura NUEVA y solo suya: de pie, brazos sueltos y las
+manos juntas por delante. De mayordomo atento — disponible, no cerrado.
+
+(No reaproveché una que ya existía: "reposo" ya la usa "esto no me gusta",
+y compartirla haría que las dos se vieran igual de cuerpo.)
+
+3️⃣ SIEMPRE LA MISMA SUDADERA
+-------------------------------
+La ropa se elegía SOLO por la hora, así que dentro de cada tramo salía
+siempre exactamente lo mismo.
+
+Ahora sus accesorios ROTAN POR DÍA: gorra, gafas, auriculares, sombrero,
+bufanda… El mismo día lleva lo mismo de la mañana a la noche, y mañana
+lleva otra cosa. Se arregla distinto, no se disfraza cada rato.
+
+Y sigue acertando: traje en horario de mercado, de casa el finde, y su
+traje de Navidad el 24.
+
+4️⃣ LA NUBE CORTADA A LA MITAD
+-------------------------------
+Al de fuera le llegaba el aviso ENTERO. Dentro de Apex eso no pasa porque
+la nube enseña la FRASE CORTA de acción, no el texto de la alarma. Fuera
+se enseñaba el párrafo, y en una ventana de 231 puntos de alto seis líneas
+no caben: se salía por arriba.
+
+Ahora fuera resume con LA MISMA regla que dentro. Y hay un tope por si
+algún día llega un texto largo por otro camino.
+
+🗣️ Y LO QUE FALTABA PARA CERRAR LA FASE 2
+-------------------------------------------
+Tu ley: "debe estar coordinado lo que dice con la voz y lo que hace el
+cuerpo: son uno solo… si necesito que no me interrumpa, ya lo decidiré yo".
+
+Hasta ahora, encima de otras apps Roberto movía la boca EN SILENCIO
+porque YO decidí que no te molestara. Esa decisión no era mía.
+
+Ahora habla también ahí fuera, con el gesto y la nubecita a la vez. Y el
+interruptor es el tuyo de siempre: 🔊 Que Roberto me hable, en ajustes.
+Si lo tienes apagado, calla. Lo decides tú.
+
+⚠️ UN SUSTO QUE DEBES SABER
+-----------------------------
+Haciendo esto dejé el archivo del cuerpo de Roberto EN CERO por un error
+mío escribiendo con Python (una trampa que ya tenía documentada y volví a
+pisar). Lo recuperé entero de la copia que va dentro del APK, y lo primero
+que comprueba el banco nuevo es justo eso: que su cuerpo esté completo,
+con sus 34 gestos.
+
+Te lo cuento porque prefiero que lo sepas a que parezca que no pasó nada.
+
+COMPROBADO: 124 de 124 bancos en verde.
 
 NOVEDADES v7.14  (🎈 SU NUBECITA DE FUERA, IGUAL QUE LA DE DENTRO)
 ===================================================================
