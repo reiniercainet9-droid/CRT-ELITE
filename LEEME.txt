@@ -1,5 +1,36 @@
-APEX v7.18 — TRADING DESK
+APEX v7.19 — TRADING DESK
 =========================
+
+🎂 EL LIBRO DE SEÑALES YA DICE DESDE CUÁNDO CUENTA — se acabó la "incoherencia"
+Tú lo viste: "el libro de señales dice 0 y el registro dice 4, revisa esa parte".
+Y Roberto hizo bien en cantarlo en vez de maquillarlo. Pero la incoherencia no era
+del sistema: era del dato que yo le daba. El libro se estrenó ayer, y esas 4 señales
+son del 2/9 — de antes de que existiera. No están porque no PODÍAN estar (lo
+comprobé: el registro de alarmas solo guarda las últimas horas, no hay de dónde
+sacarlas). Yo le daba el cero sin decirle desde cuándo cuenta, y un cero sin fecha
+solo se puede leer de una manera: como una avería.
+Es el MISMO fallo que el de las cegueras del Ejecutor de ayer. Ahora, cada vez que
+se enseña el libro —en tu chip 📊 y en la auditoría de Roberto— va pegada su fecha
+de nacimiento, y dice claro que un cero de días anteriores significa "no lo sé", no
+"no hubo". Roberto además tiene la advertencia por escrito: si ve señales viejas en
+la bitácora y cero en el libro, eso NO es una contradicción.
+
+🔊 Y ARREGLADO QUE ROBERTO NO TE HABLARA CUANDO LLEGÓ EL AVISO
+No era el motor de voz ni el teléfono. El que habla contigo con la pantalla
+bloqueada es el vigía, y el vigía no puede leer los ajustes de Apex: hay que
+dejárselos escritos. Pero eso solo se escribía cuando TÚ tocabas algo dentro de los
+ajustes de voz. Tú ya la tenías encendida de antes, instalaste la versión nueva y no
+volviste a entrar ahí — así que el vigía se encontró la casilla vacía y, como su
+regla es callar ante la duda (y es la regla correcta: puede estar sonando en tu
+bolsillo), se quedó mudo. Tú veías ACTIVADO y él callado: el interruptor que veías
+no era el que mandaba.
+Ahora Apex se lo cuenta al vigía cada vez que arranca. Lo que tú ves es lo que manda.
+
+🧹 Y de paso: había una función duplicada de la época anterior que elegía la cara de
+los avisos sin mirar de qué tipo eran. Como en JavaScript manda la última, era la
+vieja la que se usaba y la unificación de caras estaba a medias sin que se notara.
+
+Regresión: 128/128 en verde (dos bancos nuevos, uno por cada fallo de arriba).
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

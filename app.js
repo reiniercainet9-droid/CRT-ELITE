@@ -1419,15 +1419,24 @@ async function libroSenales(){
   try{ const r=await fetch(nubeUrl()+"/libro?dias=60",{cache:"no-store"}); d=await r.json(); }catch(_){}
   if(!d || !d.ok){ alert("No pude leer tu libro de señales. Mira tu internet e inténtalo otra vez."); return; }
   const R=d.resumen||{}, S=d.senales||[];
+  /* 🎂 v7.19 — desde cuándo cuenta, en cristiano. Sin esto Rey ve un cero y piensa que algo
+     se rompió, que es exactamente lo que pasó el 03-09 con la auditoría de Roberto. */
+  const nacTxt = d.nacido
+    ? ("Empezó a contar el "+d.nacido+(typeof d.nacidoHaceDias==="number"?(" (hace "+d.nacidoHaceDias+" día"+(d.nacidoHaceDias===1?"":"s")+")"):"")+".")
+    : "";
   if(!R.vistas){
     alert("📊 TU LIBRO DE SEÑALES\n\nTodavía está vacío: aún no ha pasado ninguna señal 🔔 de entrada por él.\n\n"+
+      (nacTxt ? (nacTxt+" Lo de antes de esa fecha no está aquí, y no puede estarlo: el libro no existía.\n"+
+                 "Si en el registro del Ejecutor ves señales más viejas, no es un fallo — es que él lleva más tiempo contando.\n\n") : "")+
       "A partir de ahora se apunta SOLA cada señal de tu indicador — la tome el Ejecutor o no — con sus condiciones "+
       "y en qué acabó. No tienes que hacer nada.\n\nVuelve por aquí en unos días.");
     return;
   }
   const ESTADOS={ vista:"vista", encolada:"encolada", tomada:"✅ tomada", vetada:"🛑 vetada",
                   no_tomada:"— no tomada", rechazada:"🚫 rechazada", muerta:"⚰️ perdida" };
-  let t="📊 TU LIBRO DE SEÑALES · últimos "+d.dias+" días\n\n";
+  let t="📊 TU LIBRO DE SEÑALES · últimos "+d.dias+" días\n";
+  if(nacTxt) t+=nacTxt+" Lo anterior no está aquí: el libro no existía.\n";
+  t+="\n";
   t+="Señales vistas: "+R.vistas+"\n";
   t+="   ✅ tomadas: "+R.tomadas+"   🛑 vetadas: "+R.vetadas+"   — no tomadas: "+R.noTomadas+"\n";
   t+="   Terminadas (con resultado): "+R.cerradas+"\n\n";
@@ -1645,8 +1654,27 @@ async function auditoriaEjecutor(){
   let elIndicador="";
   try{
     const R=(libro&&libro.resumen)||{};
-    elIndicador = "\n\n📊 LO QUE EL INDICADOR MANDÓ (libro de señales, 7 días): "+(R.vistas||0)+" señales de ENTRADA. "+
+    /* 🎂 v7.19 — Y CON SU FECHA DE NACIMIENTO PEGADA AL LADO, SIEMPRE.
+       Rey (03-09): "todavía señala una incoherencia en sus datos: el libro de señales dice 0
+       y el registro dice 4 — revisa esa parte". Roberto hizo bien en cantarlo en vez de
+       maquillarlo. Pero la incoherencia no era del sistema: era MÍA. El libro se estrenó con
+       esta tanda y las 4 señales son de antes; no están porque no PODÍAN estar (se comprobó:
+       tv:log solo guarda las últimas horas, no hay de dónde sacarlas). Yo le daba el cero sin
+       decirle desde cuándo cuenta, y un cero sin fecha solo se puede leer como una avería.
+       ES EL MISMO FALLO QUE EL DE LAS CEGUERAS: un dato ambiguo hace que hasta un buen
+       razonamiento llegue a una conclusión falsa. La cura es la misma: fechar el dato. */
+    const nac=(libro&&libro.nacido)||null;
+    const nacDias=(libro&&typeof libro.nacidoHaceDias==="number")?libro.nacidoHaceDias:null;
+    elIndicador = "\n\n📊 LO QUE EL INDICADOR MANDÓ (libro de señales, últimos 7 días): "+(R.vistas||0)+" señales de ENTRADA. "+
       "De ellas: "+(R.tomadas||0)+" tomadas, "+(R.vetadas||0)+" vetadas, "+(R.noTomadas||0)+" no tomadas.\n"+
+      (nac ? ("🎂 ESTE LIBRO CUENTA DESDE EL "+nac+(nacDias!=null?(" (hace "+nacDias+" día"+(nacDias===1?"":"s")+")"):"")+", "+
+              "que es cuando se estrenó. DE LOS DÍAS ANTERIORES NO HAY NADA Y NO PUEDE HABERLO. "+
+              "Un cero referido a días de antes de esa fecha significa «no lo sé», JAMÁS «no hubo».\n"+
+              "⚠️ Y ESTO IMPORTA PORQUE YA TE HIZO TROPEZAR: si la bitácora del Ejecutor te enseña señales "+
+              "anteriores a esa fecha y el libro dice cero, NO es una contradicción ni un fallo de la app — "+
+              "es que uno empezó a contar antes que el otro. No se lo presentes a Rey como una incoherencia "+
+              "del sistema: dile desde cuándo cuenta el libro y sigue.\n")
+           : "🎂 No consta desde cuándo cuenta este libro, así que trata sus ceros con pinzas: pueden ser «no lo sé».\n")+
       "⚠️ CÓMO LEER ESTO, Y ES LO MÁS IMPORTANTE DE LA AUDITORÍA: si aquí pone CERO señales, el Ejecutor "+
       "NO tiene nada que ejecutar y su quietud NO es una avería — es que el indicador no ha dado entrada. "+
       "No confundas «no operó» con «falló»: son cosas opuestas y Rey necesita saber cuál de las dos es. "+
@@ -2144,12 +2172,15 @@ function sonarAlerta(){
    como el vigilante que pinta los avisos con la app cerrada (sw.js). Estaba aquí, y por eso
    el vigilante tenía su propia copia que decía otra cosa: en el teléfono, una operación
    PERDIDA salía con la cara de CELEBRAR. Ahora hay UNA sola fuente para los dos. */
+/* 🧹 v7.19 — AQUÍ ABAJO HABÍA UNA SEGUNDA `caraAviso` DE LA ÉPOCA ANTERIOR, y como en
+   JavaScript la última declaración es la que manda, era ESA la que se usaba: la vieja, la
+   que no mira el TIPO del aviso. O sea que la unificación de la v6.82 estaba a medias sin
+   que se notara — los avisos que pinta la propia Apex elegían la cara sin saber si el aviso
+   era una alarma, un recordatorio o un cierre. Borrada la vieja; queda la que reparte a la
+   tabla única de situaciones.js, que es la que usan también el vigilante y el cuerpo de
+   fuera. LECCIÓN, otra vez la misma: cuando algo se muda de sitio hay que borrar lo que
+   quedó atrás, no solo escribir lo nuevo. */
 function caraAviso(titulo, cuerpo, tipo){ return robCaraDe(titulo, cuerpo, tipo); }
-
-function caraAviso(titulo, cuerpo){
-  const g = robSitua(titulo, cuerpo).gesto;
-  return "caras/rob-" + (CARAS_HAY.indexOf(g)>=0 ? g : "presenta") + ".png";
-}
 function notifLanzar(titulo, cuerpo, tag){
   if(!notifSoportado() || Notification.permission!=="granted") return;
   /* vibración distintiva (Android): patrón propio de Apex */
@@ -6919,6 +6950,11 @@ function iaInit(){
   IA.voz   = load(K.iavoz, {on:false, name:null, pitch:0.6});
   if(!IA.voz || typeof IA.voz!=="object") IA.voz={on:false, name:null, pitch:0.6};
   if(typeof IA.voz.pitch!=="number") IA.voz.pitch=0.6;
+  /* 🔊 v7.19 — y que el vigía se entere YA de cómo está ese interruptor, sin esperar a que
+     Rey vuelva a entrar en los ajustes de voz (ver vozContarleAlVigia: por eso se quedó mudo).
+     Se reintenta un par de veces porque el puente de Android tarda un momento en levantarse;
+     en la web no existe ese puente y esto no hace absolutamente nada. */
+  [800, 4000, 12000].forEach((ms)=>setTimeout(()=>{ try{ vozContarleAlVigia(); }catch(_){} }, ms));
   /* Migración: si venías de la versión de un solo chat, lo conservo como conversación */
   if(!IA.convs){
     IA.convs=[];
@@ -7817,21 +7853,35 @@ function iaPintarVoces(){
   const actual=iaVozEspanol();
   sel.innerHTML=lista.map(v=>`<option value="${esc(v.name)}"${actual&&v.name===actual.name?" selected":""}>${esc(v.name)} (${esc(v.lang)})</option>`).join("");
 }
-function iaGuardarVoz(){
-  save(K.iavoz, IA.voz);
-  /* 🔊 v7.17 — Y SE LE COPIA AL VIGÍA, que es quien habla con la pantalla bloqueada.
-     Rey (03-09) quiere que Roberto le informe "mientras estoy haciendo ejercicio o en
-     cualquier lado, así el teléfono esté bloqueado". Eso solo lo puede hacer el servicio
-     (Android duerme el navegador de la app al bloquear la pantalla), y un servicio no
-     puede leer el almacén de la app: hay que dejárselo escrito. */
+/* 🔊 v7.17 — SE LE COPIA AL VIGÍA CÓMO ESTÁ EL INTERRUPTOR DE LA VOZ, que es quien habla
+   con la pantalla bloqueada. Rey quiere que Roberto le informe "mientras estoy haciendo
+   ejercicio o en cualquier lado, así el teléfono esté bloqueado". Eso solo lo puede hacer el
+   servicio (Android duerme el navegador de la app al bloquear la pantalla), y un servicio no
+   puede leer el almacén de la app: hay que dejárselo escrito.
+
+   🔴 v7.19 — Y AQUÍ ESTABA EL FALLO QUE DEJÓ A ROBERTO MUDO.
+   Rey (03-09): "llegó un aviso y Roberto no me habló". No era el motor ni el teléfono: era
+   MEDIO CAMINO CONSTRUIDO, el mismo patrón que el del botón de Algo Trading. Esto solo se
+   escribía cuando Rey TOCABA algo en los ajustes de voz. Él ya la tenía encendida de antes,
+   instaló la versión nueva y no volvió a entrar ahí — así que el vigía se encontró la casilla
+   vacía y, como ante la duda calla, no dijo nada. Rey veía su interruptor en ACTIVADO y
+   Roberto callado: EL INTERRUPTOR QUE ÉL VEÍA NO ERA EL QUE MANDABA. Ahora también se le
+   cuenta al arrancar, así que lo que Rey ve es siempre lo que manda. */
+function vozContarleAlVigia(){
   try{
     const PV = vozNativa();
-    if(PV && PV.vozAjuste) PV.vozAjuste({
-      on: !!IA.voz.on, motor: IA.voz.motor || "", voz: IA.voz.nativa || "",
-      tono: (typeof IA.voz.pitch==="number") ? IA.voz.pitch : 0.6,
-      ritmo: (typeof IA.voz.ritmo==="number") ? IA.voz.ritmo : 1.12,
+    if(!PV || !PV.vozAjuste) return false;
+    PV.vozAjuste({
+      on: !!(IA.voz && IA.voz.on), motor: (IA.voz && IA.voz.motor) || "", voz: (IA.voz && IA.voz.nativa) || "",
+      tono: (IA.voz && typeof IA.voz.pitch==="number") ? IA.voz.pitch : 0.6,
+      ritmo: (IA.voz && typeof IA.voz.ritmo==="number") ? IA.voz.ritmo : 1.12,
     });
-  }catch(_){}
+    return true;
+  }catch(_){ return false; }
+}
+function iaGuardarVoz(){
+  save(K.iavoz, IA.voz);
+  vozContarleAlVigia();
 }
 /* Refresca el botón de encendido y el selector de voces en ajustes */
 function iaVozRefrescarUI(){
