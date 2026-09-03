@@ -1,35 +1,46 @@
-APEX v7.23 — TRADING DESK
+APEX v7.24 — TRADING DESK
 =========================
 
-🎤 HABLARLE DESDE ROBERTO FLOTANTE — por qué "te escuchaba" y no respondía nada
-Tenías razón: el botón no funcionaba, y no era el botón sino DÓNDE está Roberto.
-Cuando mantienes pulsado a Roberto flotante, tú estás en otra app (TradingView, MT5,
-la pantalla de inicio) y Apex está DETRÁS. Android 15 (tu moto g54) NO le da el
-micrófono a una app que está detrás: el reconocedor fallaba en silencio. Y el cuerpo
-flotante decía "te escucho…" por su cuenta, ANTES de saber si el micrófono se había
-abierto. Por eso te notificaba que escuchaba y no pasaba nada más.
+🎤 HABLARLE DESDE DONDE ESTÉS, SIN QUE APEX SE ABRA (esto es lo que faltaba)
 
-Lo que cambia en la v7.23:
-  · Mantienes pulsado a Roberto flotante → Apex SE PONE DELANTE sola (Android lo
-    permite porque Roberto ya está en pantalla) con el chat a la vista → abre el oído
-    → dice "Te escucho, Rey…" SOLO cuando Android confirma que oye (mano en la oreja).
-  · Lo que va entendiendo se escribe en vivo en el chat; sueltas → va a Roberto y
-    te responde ahí mismo (y con su voz, como siempre).
-  · Si sueltas antes de que Apex llegue, no se queda ningún micrófono abierto.
-  · Nunca más callado: si no te oyó nada, te lo dice ("No te oí nada, Rey — prueba
-    otra vez"); si Roberto sigue con la pregunta anterior, tu frase queda escrita y
-    te lo dice; si Android falla (permiso, red, etc.), lo ves y Roberto lo enseña.
-  · La 1ª vez pide permiso de micrófono: dale que sí.
-  · Las órdenes de voz (cállate / pausa / sigue / repite) funcionan por este mismo
-    camino: ya puedes probarlas.
+Tenías razón en todo. La v7.23 traía Apex al frente para poder oírte, y eso mata el
+sentido de tener a Roberto en tu pantalla. Era mi error de enfoque, no tuyo.
 
-📮 Traza del oído: cada intento de hablarle deja apuntados sus pasos (empezar, listo,
-lo entendido, error, a Roberto) y los manda solos al puente. Si algo vuelve a fallar,
-lo leo desde aquí sin adivinar.
+EL PORQUÉ, EN CORTO: Android no le da el micrófono a una app que está detrás. La
+puerta buena no era abrir Apex: es que EL VIGÍA (el servicio que ya vigila tus alarmas
+24 h) sea también un servicio de MICRÓFONO — el mismo permiso con el que una grabadora
+de voz sigue grabando cuando sales de la app. Ese permiso solo se puede "armar"
+mientras Apex está delante, así que ahora se arma solo cada vez que abres Apex, y a
+partir de ahí Roberto te oye estés donde estés.
 
-La WEB no cambia: sigue con su dictado de navegador de siempre (es el respaldo).
+AHORA, DESDE TRADINGVIEW, MT5 O DONDE SEA:
+  · Mantienes pulsado a Roberto → él dice "Te escucho, Rey…" en su nubecita SOLO
+    cuando Android confirma de verdad que está oyendo.
+  · Mientras hablas, vas viendo en la nubecita lo que va entendiendo.
+  · Sueltas → te contesta EN LA NUBECITA y en voz alta. Apex NO se abre.
+  · "hazme una captura de esta entrada", "prográmame un aviso", "audítame el ejecutor":
+    todo eso ya funciona desde fuera.
+  · Órdenes gratis, sin pasar por Roberto: cállate / pausa / sigue / repite.
 
-Regresión 134/134. Instala Apex-Roberto-v7.23.apk y sube APEX-app-v7.23.zip.
+LA PRIMERA VEZ: abre Apex una vez después de instalar. Si nunca le diste el permiso
+de MICRÓFONO (es aparte de los que diste al instalar), te lo pedirá ahí mismo: dale
+que sí. Ese permiso es justo lo que faltaba para que te contestara.
+
+NUNCA MÁS SILENCIO: si falta el permiso, si el micrófono no está armado todavía, si no
+te oyó nada, si Android falla o si Roberto está con lo anterior — te lo dice en la
+nubecita. Nada se queda callado.
+
+🫧 LA NUBE YA NO SE ROMPE: una palabra larga se salía del recuadro (tu foto de las 2:42).
+Ahora ninguna palabra se sale, ni en la nube de fuera ni en la de dentro de Apex.
+
+📮 Y cada vez que le hablas, los pasos del oído viajan solos al puente: si algo vuelve a
+fallar, lo leo desde aquí sin adivinar.
+
+LOS GESTOS SIGUEN IGUAL (los confirmé en el código): dos toques = abrir Apex · un toque
+= pausar / otro = que siga · mantener pulsado = que te escuche · arrastrarlo abajo del
+todo = callarlo y apartarlo.
+
+Regresión completa en verde. Instala Apex-Roberto-v7.24.apk y sube APEX-app-v7.24.zip.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

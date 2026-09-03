@@ -7900,6 +7900,39 @@ function oidoTraza(paso){
     localStorage.setItem(OIDO_TRAZA_KEY, JSON.stringify(l));
   }catch(_){}
 }
+/* ══════════════════════════════════════════════════════════════════════════════
+   🎤 v7.24 — LO QUE REY DICE DESDE FUERA, ESTANDO EN OTRA APP
+   ═════════════════════════════════════════════════════════════════════════════
+   Rey (03-09): "la idea era poder hablar con él desde cualquier lugar, cualquier app,
+   hasta de TradingView… si es desde adentro, ¿qué objetivo tiene Roberto en mi pantalla?".
+   Quien OYE es el vigía (un servicio de tipo micrófono: Android no le da el micrófono a una
+   app que está detrás). Aquí llega lo ya entendido y esta página solo hace lo suyo: PENSAR.
+   Apex NO se abre, ni se toca el chat: Rey está mirando TradingView y lo único que ve es la
+   nubecita de Roberto, así que la respuesta va por ahí — escrita en la nube y hablada. */
+function iaDesdeFuera(texto){
+  try{
+    const dicho = String(texto||"").trim();
+    if(!dicho) return;
+    oidoTraza("desde fuera: "+dicho);
+    /* órdenes (cállate, pausa, sigue, repite): se resuelven aquí, gratis, sin molestar a
+       Roberto — la misma tabla que cuando le habla desde dentro. Un solo Roberto. */
+    if(typeof oidoOrden==="function" && oidoOrden(dicho)) return;
+    if(IA.busy){
+      try{ robDecir("Roberto","Voy con lo anterior, Rey. Dímelo otra vez en un momento.",{gesto:"espera"}); }catch(_){}
+      return;
+    }
+    IA.deFuera = true;          /* la respuesta se le enseña en la nubecita, esté donde esté */
+    IA.autoHablarUna = true;    /* y se la digo en voz alta: no está mirando la pantalla */
+    const ta = $("#iaText"); if(ta){ ta.value = dicho; }
+    iaEnviar(dicho);
+  }catch(_){}
+}
+/* la respuesta a lo que dijo desde fuera: a su nubecita, dondequiera que esté Roberto */
+function iaRespuestaFuera(txt){
+  if(!IA.deFuera) return;
+  IA.deFuera = false;
+  try{ robDecir("Roberto", String(txt||"").trim(), {}); }catch(_){}
+}
 function oidoParteAlaNube(){
   try{
     if(!micNativo()) return;                           /* solo en la APK: en la web no hay oído de Android */
@@ -7965,10 +7998,6 @@ function oidoEmpezar(){
   if(OIDO.on) return true;                 /* ya estaba escuchando: no se reinicia */
   iaVozParar();                            /* que Roberto calle mientras Rey habla */
   oidoTraza("empezar" + (OIDO.desdeBurbuja ? " (cuerpo flotante)" : " (🎤)"));
-  /* 🎤 v7.23 — viene del cuerpo flotante: Apex se acaba de poner delante para poder oír
-     (Android no da el micrófono a una app que está detrás), así que se le enseña el chat
-     para que VEA lo que va entendiendo y la respuesta. Sin sacar el teclado: está hablando. */
-  if(OIDO.desdeBurbuja){ try{ const ov=$("#iaOv"); if(ov && !ov.classList.contains("show")){ ov.classList.add("show"); pintarIAChat(); } }catch(_){} }
   const ta = $("#iaText");
   OIDO.base = (ta && ta.value ? ta.value.replace(/\s+$/,"")+" " : "");
   try{
@@ -10378,6 +10407,7 @@ async function iaBgResuelto(jobId, d){
   iaGuardarConvs();
   pintarIAChat();
   if(IA.voz.on || IA.autoHablarUna){ const ult=c.msgs[c.msgs.length-1]; if(ult && ult.role==="assistant" && ult.content && !/^⚠️|^💳|^🚫|^✅/.test(ult.content)) iaHablar(ult.content, c.msgs.length-1); IA.autoHablarUna=false; }
+  iaRespuestaFuera(txt);        /* 🎤 v7.24: si preguntó desde fuera, a su nubecita */
 }
 /* Muestra en el chat la respuesta de un job concreto (el de la notificación que
    tocaste). Busca su resultado y lo añade a la conversación, sin duplicar. */
@@ -10397,6 +10427,7 @@ async function iaMostrarJob(jobId, intentos){
   if(!ya){ iaBarrerFallos(c); c.msgs.push({role:"assistant",content:txt}); }
   IA.busy=false; iaGuardarConvs(); pintarIAChat();
   if((IA.voz.on || IA.autoHablarUna) && !ya && !/^⚠️|^💳|^🚫|^✅/.test(txt)){ iaHablar(txt, c.msgs.length-1); IA.autoHablarUna=false; }
+  iaRespuestaFuera(txt);        /* 🎤 v7.24: si preguntó desde fuera, a su nubecita */
 }
 /* Al abrir la app, recupera respuestas que terminaron mientras estaba cerrada */
 /* Recupera respuestas que quedaron en marcha (app cerrada, móvil bloqueado…).
