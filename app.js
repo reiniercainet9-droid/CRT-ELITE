@@ -1635,6 +1635,23 @@ async function auditoriaEjecutor(){
   iaTemaChat("🕵️ Auditoría del Ejecutor");
   let d=null;
   try{ const r=await fetch(nubeUrl()+"/ejec/estado",{cache:"no-store"}); d=await r.json(); }catch(_){}
+  /* 📊 v7.18 — Y LO QUE EL INDICADOR MANDÓ DE VERDAD, para poder distinguir
+     «el Ejecutor falla» de «no hubo señales». Rey (03-09): "a mi vista está todo bien pero
+     internamente si está pasando algo mal no lo puedo ver, ya sea que no esté pasando alguna
+     señal o algo que no le esté permitido ver". Sin este dato la auditoría no puede separar
+     las dos cosas, y son OPUESTAS: una es una avería y la otra es el mercado. */
+  let libro=null;
+  try{ const r2=await fetch(nubeUrl()+"/libro?dias=7",{cache:"no-store"}); libro=await r2.json(); }catch(_){}
+  let elIndicador="";
+  try{
+    const R=(libro&&libro.resumen)||{};
+    elIndicador = "\n\n📊 LO QUE EL INDICADOR MANDÓ (libro de señales, 7 días): "+(R.vistas||0)+" señales de ENTRADA. "+
+      "De ellas: "+(R.tomadas||0)+" tomadas, "+(R.vetadas||0)+" vetadas, "+(R.noTomadas||0)+" no tomadas.\n"+
+      "⚠️ CÓMO LEER ESTO, Y ES LO MÁS IMPORTANTE DE LA AUDITORÍA: si aquí pone CERO señales, el Ejecutor "+
+      "NO tiene nada que ejecutar y su quietud NO es una avería — es que el indicador no ha dado entrada. "+
+      "No confundas «no operó» con «falló»: son cosas opuestas y Rey necesita saber cuál de las dos es. "+
+      "Si hubo señales y no se tomaron, AHÍ sí hay algo que mirar, y el motivo está en la bitácora.";
+  }catch(_){}
   if(!d||!d.ok){
     const c=iaConvAct();
     c.msgs.push({role:"assistant",content:"⚠️ No pude leer el Ejecutor para auditarlo. Revisa tu internet y toca el chip otra vez."});
@@ -1648,7 +1665,29 @@ async function auditoriaEjecutor(){
     if(x.tipo==="salida") return "📤 SALIDA "+dir+" "+(x.sym||"")+" → "+(x.motivo||"")+" "+((x.pl||0)>=0?"+$":"−$")+Math.abs(x.pl||0).toFixed(2)+(x.r!=null?" ("+x.r+"R)":"");
     if(x.tipo==="rechazo") return "🚫 RECHAZO "+(x.sym||"")+(x.grado?" ("+x.grado+")":"")+" — "+(x.motivo||"");
     if(x.tipo==="senal_muerta") return "⚰️ SEÑAL MUERTA "+(x.sym||"")+" — "+(x.motivo||"");
-    if(x.tipo==="ciego") return "👁️ CIEGO "+(x.seg!=null?x.seg+" s":"?")+" ("+(x.fallos!=null?x.fallos:"?")+" consultas fallidas) — sin internet: no podía recibir señales";
+    /* 👁️ v7.18 — DECIR DESDE CUÁNDO Y HASTA CUÁNDO, NO SOLO CUÁNTO.
+       Rey (03-09) pidió comprobar la auditoría de Roberto contra los datos reales, y ahí
+       saltó: Roberto escribió "3/9 01:59 → ciego 3h39min… dos noches seguidas a la MISMA
+       hora exacta se queda ciego, y esa franja tapa la apertura de Londres; anoche te
+       perdiste killzone completa". ERA AL REVÉS.
+       Esta línea le daba la hora del EVENTO —que es cuando el Ejecutor VUELVE y lo reporta—
+       más la duración, y él la leyó como el INICIO. Los datos de verdad decían: ciego DESDE
+       las 22:20 HASTA las 01:59. O sea, la PC durmiendo de noche y despertando a su hora.
+       Y 01:59 BR son las 00:59 NY: un minuto ANTES de que abra su ventana. No se perdió
+       nada — el despertador hizo justo lo que debía.
+       Un dato ambiguo hace que hasta un buen razonamiento llegue a una conclusión falsa. Y
+       una falsa alarma sobre su sistema le cuesta a Rey la confianza en él, que es lo único
+       que no se puede reconstruir. */
+    if(x.tipo==="ciego"){
+      const dd = x.desde ? ejecFmtTs(x.desde) : "?", hh = x.hasta ? ejecFmtTs(x.hasta) : "?";
+      const mins = x.seg!=null ? Math.round(x.seg/60) : null;
+      return "👁️ CIEGO DESDE "+dd+" HASTA "+hh+(mins!=null?" ("+mins+" min)":"")
+        +" ("+(x.fallos!=null?x.fallos:"?")+" consultas fallidas) — no podía recibir señales EN ESE TRAMO"
+        +". ⚠️ OJO AL LEER ESTO: la hora que encabeza la línea es cuando VOLVIÓ, no cuando se quedó ciego."
+        +" Y si el tramo cae de noche fuera de su ventana ("+(CTX&&CTX.horaIni?CTX.horaIni:"01:00")
+        +"–13:00 NY), lo más probable es que sea la PC DURMIENDO a propósito y despertando a su hora:"
+        +" eso NO es una avería ni una oportunidad perdida. Solo es grave si pisa su ventana operativa.";
+    }
     if(x.tipo==="recuperacion") return "🟠 MODO RECUPERACIÓN — "+(x.motivo||"");
     if(x.tipo==="autooff") return "🛑 AUTO-APAGADO por freno diario (P&L del día $"+(x.plDia!=null?x.plDia:"?")+")";
     if(x.tipo==="arranque") return "🔄 ARRANQUE (balance "+(x.balance!=null?x.balance:"?")+")";
@@ -1665,6 +1704,7 @@ async function auditoriaEjecutor(){
   setTimeout(()=>iaEnviar("🕵️ Hazle la auditoría a mi Ejecutor.",
     AUDITORIA_PROM+"\n\n"+estado+
     "\nOJO: las horas de abajo están en HORA DE BRASIL (NY = Brasil − 1h en esta época).\n\nBITÁCORA COMPLETA (lo más nuevo arriba):\n"+bit+
+    elIndicador+
     "\n\nEXPEDIENTE DE SEÑALES ENCOLADAS (todo lo que el sistema le mandó, últimos 2 días):\n"+(ql||"(ninguna señal 🔔 encolada en los últimos 2 días — si su quietud cuadra con el plan, es disciplina)")),300);
 }
 /* ── 🤖 LA SECCIÓN EJECUTOR (v6.09) — pestaña propia con TODO el control.

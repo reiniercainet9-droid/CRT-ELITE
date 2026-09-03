@@ -1,5 +1,72 @@
-APEX v7.17 — TRADING DESK
+APEX v7.18 — TRADING DESK
 =========================
+
+NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
+========================================================
+⚠️ VAN DOS: Cloudflare -> worker-elitepro-v5.120.js
+            El zip     -> APEX-app-v7.18.zip
+            La APK     -> Apex-Roberto-v7.18.apk
+
+Comprobé su auditoría contra los datos reales, uno por uno.
+
+✅ EN LO GRANDE, ACERTÓ
+------------------------
+· 4 señales en 2 días → CIERTO, exactamente 4.
+· 3 de 4 perdidas por el botón Algo Trading (03:25 B, 04:35 A+, 05:55 B)
+  → CIERTO, las tres con el mismo error 10027.
+· La 4ª rechazada por grado C → CIERTO y correcto.
+· 7 arranques → CIERTO.
+· Sin señales desde las 10:31 del 2/9 → CIERTO.
+· "Su lógica es de fiar, su ejecución esta semana NO" → JUSTO.
+
+❌ PERO SE EQUIVOCÓ EN ALGO IMPORTANTE
+---------------------------------------
+Dijo: "3/9 01:59 → ciego 3h39min… dos noches seguidas a la MISMA hora se
+queda ciego, esa franja tapa Londres, anoche te perdiste killzone
+completa".
+
+ES AL REVÉS. Los datos dicen: ciego DESDE las 22:20 HASTA las 01:59.
+
+O sea: tu PC durmiendo de noche y DESPERTANDO A SU HORA. Y 01:59 de
+Brasil son las 00:59 de Nueva York — UN MINUTO ANTES de que abra tu
+ventana. No te perdiste nada. El despertador hizo justo lo que debía.
+
+¿Por qué se equivocó? Porque yo le daba la hora del EVENTO (que es cuando
+el Ejecutor VUELVE y lo reporta) más la duración, y él la leyó como el
+inicio. Un dato ambiguo hace que hasta un buen razonamiento llegue a una
+conclusión falsa. ARREGLADO: ahora dice "CIEGO DESDE X HASTA Y".
+
+Los 7 arranques tampoco eran "la PC peleándose": fuimos tú y yo
+reiniciando el Ejecutor para instalar las versiones de ayer.
+
+🔴 Y ENCONTRÉ UN FALLO REAL QUE ÉL NO PODÍA VER
+------------------------------------------------
+Roberto decía "no sabemos si el interruptor sigue apagado ahora mismo".
+Tenía razón, y la culpa era MÍA: el Ejecutor SÍ manda ese dato desde
+ayer, pero el worker armaba su foto con una lista fija de campos donde
+ese dato no estaba — llegaba y se tiraba a la basura en silencio.
+
+Medio camino construido. Por eso ni él ni la revisión de antes de dormir
+podían ver el botón. ARREGLADO en el worker 5.120.
+
+📊 Y AHORA, TU PREGUNTA DE FONDO: ¿POR QUÉ NO HA OPERADO HOY?
+--------------------------------------------------------------
+Lo comprobé por dos caminos distintos y coinciden:
+
+   HOY EL INDICADOR NO HA DADO NI UNA SEÑAL DE ENTRADA.
+
+Sí ha mandado 12 alarmas (la última hace minutos): "CRT 4H en contra",
+"cierre confirmado", "pinchazo"… pero todas son de CONTEXTO. Ninguna es
+una 🔔 ENTRADA con sus números.
+
+El Ejecutor no ha operado porque NO HA TENIDO NADA QUE EJECUTAR. No es
+una avería: es el mercado.
+
+Y para que no vuelvas a quedarte con la duda, la auditoría ahora recibe
+también ese dato y tiene escrito: "no confundas «no operó» con «falló»:
+son cosas opuestas y Rey necesita saber cuál de las dos es".
+
+COMPROBADO: 126 de 126.
 
 NOVEDADES v7.17  (🗣️ QUE TE HABLE A TI, Y QUE SUENE BLOQUEADO)
 ================================================================
