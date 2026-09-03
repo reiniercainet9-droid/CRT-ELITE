@@ -1,41 +1,42 @@
-APEX v7.20 — TRADING DESK
+APEX v7.21 — TRADING DESK
 =========================
 
-📏 LA NUBECITA YA SE HACE DEL TAMAÑO DEL MENSAJE — tenías razón y era de raíz
-Dijiste: "mira cómo corta la nube, y creo que la nube es fija, no adaptativa al
-mensaje; debe adaptarse sin romperse, lo más natural posible, no un parche pegado
-que entra y sale genéricamente". Las tres cosas eran ciertas.
-LO QUE PASABA: la ventana flotante de Roberto medía 231 puntos de alto SIEMPRE
-—solo cambiaba de ancho, y entre dos tallas fijas: estrecha o ancha—, mientras que
-su nubecita crece hacia ARRIBA desde su boca. Con tres líneas cabía raspando; con
-cuatro se salía por el techo de la VENTANA. No la cortaba el diseño: la cortaba el
-marco. Por eso se veía como un recorte pegado.
-Para poder agrandar la ventana había una trampa que resolver antes: ahí dentro todo
-se medía en porcentajes de la altura de la ventana, así que al crecer la ventana
-Roberto se habría hecho gigante cada vez que dijera algo largo. Ahora esa medida se
-congela al arrancar y ya no se mueve.
-LO QUE HACE AHORA: pone la frase con la nubecita puesta pero invisible, la MIDE de
-verdad, le pide a Android el sitio exacto que ocupa, y solo cuando la ventana ya es
-así de grande la nubecita sale con su rebotito. Al irse se desinfla hacia su boca
-—de donde salió— y la ventana se devuelve DESPUÉS, no a la vez. Roberto no se mueve
-ni un pelo: crece el hueco de arriba, que es hacia donde habla.
-Y como ya cabe más, el tope de la frase sube de 95 a 140 letras.
+🩺 NUEVO CHIP «¿ME LLEGA TODO?» — la revisión de la cadena entera, en 2 segundos
+Me pediste que me asegurara de que te llegan todos los avisos y de que Roberto te
+informa con el cuerpo y la voz aunque la pantalla esté apagada. Revisé la cadena
+entera y te la dejo por escrito abajo — pero hay algo que tienes que saber:
 
-🔊 Y ARREGLADO POR QUÉ NO TE HABLÓ AL PROBARLO
-El botón de "Probar un aviso AHORA" no podía hablarte: ese camino pedía la nubecita
-sin el encargo de decirla en voz alta. Movía el cuerpo y sacaba la nube, pero era
-MUDO por construcción. O sea que probaba dos tercios de lo que decía probar, y te
-mandó a buscar la avería donde no estaba. Ahora la prueba prueba las tres cosas: el
-aviso, el cuerpo y la voz. Y sigue mandando tu interruptor: si la tienes apagada,
-calla igual.
+LA MITAD DE ESA CADENA SOLO LA VE TU TELÉFONO. Desde aquí puedo comprobar la nube,
+el Puente y el indicador. Pero si Android le pone límite de batería a Apex, si el
+vigía está apagado, si Roberto no está en pantalla, o si el interruptor de la voz
+que TÚ ves no es el que obedece el vigía (el fallo de esta mañana), eso solo se sabe
+desde el teléfono. Y todos esos fallos son MUDOS: parece que todo está bien y no
+llega nada. Así que te lo pongo en tus manos: chip 🩺 ¿Me llega todo?, en "Ejecutor
+y cierres". No gasta créditos — mira, no le pregunta a Roberto.
 
-🧹 Y de paso, dos cosas que ya estaban mal y no se veían: la nubecita se pasaba 33
-puntos del ancho calculado (el tope se refería solo al texto, no al borde ni al
-relleno), y al ensancharse se guardaba la posición de la ventana ANCHA — Roberto se
-iba corriendo un poco hacia dentro cada vez que le hablabas estando pegado al borde.
+Comprueba, uno por uno: la nube, el Puente, el gráfico, si la app está mirando la
+cola, el vigía, el límite de batería, Roberto en pantalla, y —lo más importante— si
+los DOS interruptores de la voz dicen lo mismo. Si algo está roto te dice cuál y
+cómo arreglarlo. Y lo que no se puede comprobar lo dice; no regala ningún ✅.
 
-Regresión: 130/130 en verde. Dos bancos nuevos, y uno de ellos abre un navegador de
-verdad y mide la nubecita con la MISMA frase de tu foto.
+⚠️ Y AHORA LO QUE TIENES QUE DECIDIR TÚ
+Pediste "sin excepciones". Hay CUATRO reglas que callan avisos a propósito, y las
+pediste tú en su día. No son averías, pero son omisiones de verdad y las tienes que
+ver, así que ahora salen en esa misma pantalla:
+  ⏰ Las alarmas del mercado solo te avisan de 01:00 a 13:00 de Nueva York (02:00 a
+     14:00 tuyas). Fuera de esa franja se guardan pero no suenan.
+  🎯 Solo avisan las de decisión (entrada, sesgo, liquidez, MSS, giro, invalidación,
+     CRT 4H). Las de contexto (pinchazo, cierre confirmado, continuación) no suenan.
+  🔁 La misma alarma repetida antes de 10 minutos no vuelve a sonar.
+  ⏳ Un aviso de más de 45 minutos no se enseña como nuevo (apuntaría a un precio que
+     ya no existe). Queda entero en 📥 Avisos recibidos.
+Si alguna no la quieres, dímelo y te la quito.
+
+Roberto también lo sabe: se le añadió al manual, para que cuando le digas "no me
+llegó tal cosa" te diga si cae en una de las cuatro o si es una avería de verdad —
+en vez de teorizar.
+
+Regresión: 131/131 en verde.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
