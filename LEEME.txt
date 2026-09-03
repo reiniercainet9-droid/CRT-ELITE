@@ -1,36 +1,41 @@
-APEX v7.19 — TRADING DESK
+APEX v7.20 — TRADING DESK
 =========================
 
-🎂 EL LIBRO DE SEÑALES YA DICE DESDE CUÁNDO CUENTA — se acabó la "incoherencia"
-Tú lo viste: "el libro de señales dice 0 y el registro dice 4, revisa esa parte".
-Y Roberto hizo bien en cantarlo en vez de maquillarlo. Pero la incoherencia no era
-del sistema: era del dato que yo le daba. El libro se estrenó ayer, y esas 4 señales
-son del 2/9 — de antes de que existiera. No están porque no PODÍAN estar (lo
-comprobé: el registro de alarmas solo guarda las últimas horas, no hay de dónde
-sacarlas). Yo le daba el cero sin decirle desde cuándo cuenta, y un cero sin fecha
-solo se puede leer de una manera: como una avería.
-Es el MISMO fallo que el de las cegueras del Ejecutor de ayer. Ahora, cada vez que
-se enseña el libro —en tu chip 📊 y en la auditoría de Roberto— va pegada su fecha
-de nacimiento, y dice claro que un cero de días anteriores significa "no lo sé", no
-"no hubo". Roberto además tiene la advertencia por escrito: si ve señales viejas en
-la bitácora y cero en el libro, eso NO es una contradicción.
+📏 LA NUBECITA YA SE HACE DEL TAMAÑO DEL MENSAJE — tenías razón y era de raíz
+Dijiste: "mira cómo corta la nube, y creo que la nube es fija, no adaptativa al
+mensaje; debe adaptarse sin romperse, lo más natural posible, no un parche pegado
+que entra y sale genéricamente". Las tres cosas eran ciertas.
+LO QUE PASABA: la ventana flotante de Roberto medía 231 puntos de alto SIEMPRE
+—solo cambiaba de ancho, y entre dos tallas fijas: estrecha o ancha—, mientras que
+su nubecita crece hacia ARRIBA desde su boca. Con tres líneas cabía raspando; con
+cuatro se salía por el techo de la VENTANA. No la cortaba el diseño: la cortaba el
+marco. Por eso se veía como un recorte pegado.
+Para poder agrandar la ventana había una trampa que resolver antes: ahí dentro todo
+se medía en porcentajes de la altura de la ventana, así que al crecer la ventana
+Roberto se habría hecho gigante cada vez que dijera algo largo. Ahora esa medida se
+congela al arrancar y ya no se mueve.
+LO QUE HACE AHORA: pone la frase con la nubecita puesta pero invisible, la MIDE de
+verdad, le pide a Android el sitio exacto que ocupa, y solo cuando la ventana ya es
+así de grande la nubecita sale con su rebotito. Al irse se desinfla hacia su boca
+—de donde salió— y la ventana se devuelve DESPUÉS, no a la vez. Roberto no se mueve
+ni un pelo: crece el hueco de arriba, que es hacia donde habla.
+Y como ya cabe más, el tope de la frase sube de 95 a 140 letras.
 
-🔊 Y ARREGLADO QUE ROBERTO NO TE HABLARA CUANDO LLEGÓ EL AVISO
-No era el motor de voz ni el teléfono. El que habla contigo con la pantalla
-bloqueada es el vigía, y el vigía no puede leer los ajustes de Apex: hay que
-dejárselos escritos. Pero eso solo se escribía cuando TÚ tocabas algo dentro de los
-ajustes de voz. Tú ya la tenías encendida de antes, instalaste la versión nueva y no
-volviste a entrar ahí — así que el vigía se encontró la casilla vacía y, como su
-regla es callar ante la duda (y es la regla correcta: puede estar sonando en tu
-bolsillo), se quedó mudo. Tú veías ACTIVADO y él callado: el interruptor que veías
-no era el que mandaba.
-Ahora Apex se lo cuenta al vigía cada vez que arranca. Lo que tú ves es lo que manda.
+🔊 Y ARREGLADO POR QUÉ NO TE HABLÓ AL PROBARLO
+El botón de "Probar un aviso AHORA" no podía hablarte: ese camino pedía la nubecita
+sin el encargo de decirla en voz alta. Movía el cuerpo y sacaba la nube, pero era
+MUDO por construcción. O sea que probaba dos tercios de lo que decía probar, y te
+mandó a buscar la avería donde no estaba. Ahora la prueba prueba las tres cosas: el
+aviso, el cuerpo y la voz. Y sigue mandando tu interruptor: si la tienes apagada,
+calla igual.
 
-🧹 Y de paso: había una función duplicada de la época anterior que elegía la cara de
-los avisos sin mirar de qué tipo eran. Como en JavaScript manda la última, era la
-vieja la que se usaba y la unificación de caras estaba a medias sin que se notara.
+🧹 Y de paso, dos cosas que ya estaban mal y no se veían: la nubecita se pasaba 33
+puntos del ancho calculado (el tope se refería solo al texto, no al borde ni al
+relleno), y al ensancharse se guardaba la posición de la ventana ANCHA — Roberto se
+iba corriendo un poco hacia dentro cada vez que le hablabas estando pegado al borde.
 
-Regresión: 128/128 en verde (dos bancos nuevos, uno por cada fallo de arriba).
+Regresión: 130/130 en verde. Dos bancos nuevos, y uno de ellos abre un navegador de
+verdad y mide la nubecita con la MISMA frase de tu foto.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

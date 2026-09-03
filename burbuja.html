@@ -41,12 +41,30 @@
      así que Roberto conserva su tamaño y no depende de píxeles ni de la densidad del
      teléfono (en el moto g54 un píxel de la página era un píxel de pantalla y Roberto
      salía a un tercio de su tamaño). 0.571 es su proporción real (264/462). */
-  :root{ --rob-alto:94vh; --rob-ancho:calc(94vh * 0.571); }
+  /* 📏 v7.20 — LA UNIDAD CONGELADA, Y POR QUÉ HIZO FALTA.
+     Rey (03-09, con foto): "mira cómo corta la nube, y creo que la nube es fija, no
+     adaptativa al mensaje; la nube debe adaptarse al mensaje sin romperse, lo más natural
+     posible… no un parche pegado que entra y sale genéricamente".
+     TENÍA RAZÓN Y LA CAUSA ERA DE RAÍZ: la ventana flotante medía 231 puntos de ALTO SIEMPRE
+     —solo cambiaba de ancho, y de dos maneras: estrecha o ancha—, mientras que la nubecita
+     crece hacia ARRIBA desde la boca de Roberto. Con tres líneas cabía raspando; con cuatro
+     se salía por el techo de la VENTANA y Android la cortaba. No la cortaba el CSS: la
+     cortaba el marco. Por eso se veía como un recorte pegado.
+     PARA QUE LA VENTANA PUEDA CRECER hay que resolver antes una trampa: aquí todo se medía
+     en `vh`, que es un porcentaje de la ALTURA DE LA VENTANA. Si la ventana crece, `vh`
+     crece — y Roberto se haría gigante cada vez que dijera algo largo.
+     Así que la unidad se CONGELA al arrancar: `--u` vale lo que valía 1vh con la ventana en
+     su tamaño de reposo, y ya no se mueve. A partir de ahí la ventana puede crecer lo que
+     necesite la frase sin que Roberto ni su nubecita cambien un pelo de tamaño.
+     El valor de aquí abajo es solo el de emergencia (si el guion no llegara a correr, todo
+     se comporta como antes en vez de quedarse en blanco). */
+  :root{ --u:1vh; --globo-max:52vw;
+         --rob-alto:calc(94 * var(--u)); --rob-ancho:calc(calc(94 * var(--u)) * 0.571); }
 
   /* 🧍 el cuerpo: pegado al borde donde Rey lo haya dejado */
-  #robCuerpo{position:fixed;bottom:1vh;width:var(--rob-ancho);height:var(--rob-alto);transition:none}
-  body[data-lado="der"] #robCuerpo{right:1.5vh}
-  body[data-lado="izq"] #robCuerpo{left:1.5vh}
+  #robCuerpo{position:fixed;bottom:calc(1 * var(--u));width:var(--rob-ancho);height:var(--rob-alto);transition:none}
+  body[data-lado="der"] #robCuerpo{right:calc(1.5 * var(--u))}
+  body[data-lado="izq"] #robCuerpo{left:calc(1.5 * var(--u))}
   /* que se despegue del fondo de cualquier app, clara u oscura */
   #robCuerpo .rob-svg{filter:drop-shadow(0 2px 5px rgba(0,0,0,.55)) drop-shadow(0 0 14px rgba(240,201,92,.28))}
 
@@ -65,45 +83,61 @@
      (`test-nube-igual`) que compara las dos y salta si se separan: sin él, esto se vuelve
      la quinta lista de caras del proyecto.
      ───────────────────────────────────────────────────────────────────────────────── */
-  #globo{position:fixed;max-width:52vw;display:none;
+  /* 📏 v7.20 — `border-box` para que el tope de ancho signifique LO QUE MIDE LA NUBECITA
+     ENTERA, con su borde y su relleno dentro. Sin esto el tope se refería solo al texto y
+     la nubecita acababa 33 px más ancha de lo que se había calculado — justo lo suficiente
+     para no caber en la pantalla junto al cuerpo. */
+  #globo{position:fixed;max-width:var(--globo-max);box-sizing:border-box;display:none;
          background:#1B2145;color:#f4efe2;
-         border:0.9vh solid #f0c95c;
+         border:calc(0.9 * var(--u)) solid #f0c95c;
          /* la esquina de abajo VIVA, del lado por el que sale: igual que dentro de Apex */
-         border-radius:9vh 9vh 9vh 3.5vh;
-         padding:3.5vh 5vh;font-size:7.2vh;line-height:1.28;font-weight:600;
+         border-radius:calc(9 * var(--u)) calc(9 * var(--u)) calc(9 * var(--u)) calc(3.5 * var(--u));
+         padding:calc(3.5 * var(--u)) calc(5 * var(--u));font-size:calc(7.2 * var(--u));line-height:1.28;font-weight:600;
          box-shadow:0 8px 24px rgba(0,0,0,.5)}
   /* 🎈 A LA ALTURA DE SU BOCA, NO DE SUS PIES. Su cuerpo mide 94vh desde 1vh del suelo, y
      la boca le cae al 47% de arriba — o sea a ~51vh del suelo. El rabito CUELGA de la nube
      y baja 7,5vh, así que la nube se pone a 58vh: la bolita pequeña muere justo en su boca.
      (Con 51vh el rabito le quedaba por el pecho — se ve, y se ve mal.) */
-  body[data-lado="der"] #globo{right:calc(var(--rob-ancho) + 2vh); bottom:58vh}
-  body[data-lado="izq"] #globo{left:calc(var(--rob-ancho) + 2vh);  bottom:58vh}
+  body[data-lado="der"] #globo{right:calc(var(--rob-ancho) + calc(2 * var(--u))); bottom:calc(58 * var(--u))}
+  body[data-lado="izq"] #globo{left:calc(var(--rob-ancho) + calc(2 * var(--u)));  bottom:calc(58 * var(--u))}
   #globo.hay{display:block; animation:robGloboPop .34s cubic-bezier(.34,1.56,.64,1) both}
-  #globo b{color:#f0c95c;display:block;font-size:6vh;letter-spacing:.3px;margin-bottom:.4vh}
+  #globo b{color:#f0c95c;display:block;font-size:calc(6 * var(--u));letter-spacing:.3px;margin-bottom:calc(.4 * var(--u))}
   /* 🫧 EL RABITO: dos bolitas que van menguando hacia su boca, como en Apex — no un pico */
   #globo::before,#globo::after{content:"";position:absolute;background:#1B2145;
-         border:0.9vh solid #f0c95c;border-radius:50%;pointer-events:none}
-  #globo::before{width:4.6vh;height:4.6vh;bottom:-3vh}
-  #globo::after{width:2.9vh;height:2.9vh;bottom:-7.5vh}
-  body[data-lado="der"] #globo::before{right:7vh}
-  body[data-lado="der"] #globo::after{right:2.6vh}
-  body[data-lado="izq"] #globo::before{left:7vh}
-  body[data-lado="izq"] #globo::after{left:2.6vh}
+         border:calc(0.9 * var(--u)) solid #f0c95c;border-radius:50%;pointer-events:none}
+  #globo::before{width:calc(4.6 * var(--u));height:calc(4.6 * var(--u));bottom:calc(-3 * var(--u))}
+  #globo::after{width:calc(2.9 * var(--u));height:calc(2.9 * var(--u));bottom:calc(-7.5 * var(--u))}
+  body[data-lado="der"] #globo::before{right:calc(7 * var(--u))}
+  body[data-lado="der"] #globo::after{right:calc(2.6 * var(--u))}
+  body[data-lado="izq"] #globo::before{left:calc(7 * var(--u))}
+  body[data-lado="izq"] #globo::after{left:calc(2.6 * var(--u))}
   /* ✨ EL REBOTITO DE CÓMIC, el MISMO de dentro de Apex.
      Rey: "cuando va a salir la nube hace un gesto extraño, como que sale y entra, es feo".
      El de antes subía 6px y encogía a la vez con un `ease-out`, y al aplicarse sobre un
      elemento que además cambiaba de `display` se leía como un tirón de ida y vuelta.
      Éste crece de 0.8 a 1.06 y se asienta en 1: sale una vez, y se queda. */
-  @keyframes robGloboPop{0%{opacity:0;transform:translateY(2vh) scale(.8)}
+  @keyframes robGloboPop{0%{opacity:0;transform:translateY(calc(2 * var(--u))) scale(.8)}
                          60%{transform:translateY(0) scale(1.06)}
                          100%{opacity:1;transform:none}}
+  /* 🌬️ Y AL IRSE, QUE SE VAYA — no que desaparezca de golpe.
+     Rey: "no un parche pegado que entra y sale genéricamente". Antes la nubecita se
+     quitaba con un `display:none` seco y en el mismo instante la ventana se encogía: dos
+     cortes a la vez, que es exactamente lo que se lee como un parche. Ahora se desinfla
+     hacia su boca —de donde salió— y solo cuando ha terminado se encoge la ventana. */
+  #globo.va{animation:robGloboIr .22s ease-in both}
+  @keyframes robGloboIr{0%{opacity:1;transform:none}
+                        100%{opacity:0;transform:translateY(calc(1 * var(--u))) scale(.86)}}
+  /* la nubecita se mide ANTES de enseñarse: ocupa su sitio pero todavía no se ve, así
+     Android puede agrandar la ventana y solo entonces sale. Sin esto, Rey vería la
+     nubecita cortada durante un instante y luego saltando a su sitio. */
+  #globo.midiendo{display:block;visibility:hidden;animation:none}
 
   /* un punto discreto que indica que está de guardia (nunca dormido) */
-  #pulso{position:fixed;bottom:2vh;width:1.6vh;height:1.6vh;border-radius:50%;
-         background:#4fe0c0;box-shadow:0 0 1.8vh #4fe0c0;opacity:.85;
+  #pulso{position:fixed;bottom:calc(2 * var(--u));width:calc(1.6 * var(--u));height:calc(1.6 * var(--u));border-radius:50%;
+         background:#4fe0c0;box-shadow:0 0 calc(1.8 * var(--u)) #4fe0c0;opacity:.85;
          animation:latido 2.8s ease-in-out infinite}
-  body[data-lado="der"] #pulso{right:calc(var(--rob-ancho) + 1vh)}
-  body[data-lado="izq"] #pulso{left:calc(var(--rob-ancho) + 1vh)}
+  body[data-lado="der"] #pulso{right:calc(var(--rob-ancho) + calc(1 * var(--u)))}
+  body[data-lado="izq"] #pulso{left:calc(var(--rob-ancho) + calc(1 * var(--u)))}
   @keyframes latido{0%,100%{transform:scale(1);opacity:.5}50%{transform:scale(1.5);opacity:1}}
 </style>
 </head>
@@ -121,6 +155,85 @@
   var cuerpo = document.getElementById("robCuerpo");
   var globo  = document.getElementById("globo");
   var tVuelta = null;
+
+  /* ══════════════════════════════════════════════════════════════════════════
+     📏 LA MEDIDA — v7.20: LA VENTANA SE ADAPTA A LA FRASE, NO LA FRASE A LA VENTANA
+     ═════════════════════════════════════════════════════════════════════════
+     Rey (03-09, con foto): "mira cómo corta la nube… la nube debe adaptarse al mensaje sin
+     romperse, lo más natural posible, no un parche pegado que entra y sale genéricamente".
+     Aquí está la mitad de la página de ese arreglo (la otra mitad la pone Android):
+       1. se CONGELA la unidad `--u` con la ventana en reposo, para que crecer la ventana
+          no agrande a Roberto;
+       2. se pone la frase con la nubecita puesta pero INVISIBLE, y se MIDE lo que ocupa;
+       3. se le pide a Android por la consola el tamaño exacto que hace falta;
+       4. cuando la ventana ya es de ese tamaño, la nubecita SALE con su rebotito.
+     Así nunca se ve cortada, ni se ve saltar. */
+  var BASE = { alto: 0, ancho: 0, u: 0 };
+  var esperandoSitio = null;      /* lo que hay que hacer en cuanto la ventana crezca */
+
+  function congelarUnidad(){
+    var h = window.innerHeight || 0, w = window.innerWidth || 0;
+    if (h < 40) return false;     /* aún no la ha medido Android: se reintenta */
+    BASE.alto = h; BASE.ancho = w; BASE.u = h / 100;
+    var raiz = document.documentElement;
+    raiz.style.setProperty("--u", BASE.u + "px");
+    /* El ancho máximo de la nubecita se mide contra la PANTALLA, no contra la ventana: la
+       ventana en reposo solo mide el cuerpo, y midiéndose contra ella la nubecita saldría
+       diminuta (es la "raya vertical" que Rey vio en su día). Se le deja su sitio al cuerpo
+       y un margen, para que nunca llegue a tocar el borde del teléfono.
+       Gracias al `border-box` de arriba, este número es la nubecita ENTERA: borde y relleno
+       incluidos. Antes se refería solo al texto y se pasaba 33 px de lo calculado. */
+    var pantalla = (window.screen && window.screen.width) ? window.screen.width : (w * 3);
+    var cuerpoAncho = BASE.alto * 0.94 * 0.571;
+    var max = Math.max(BASE.u * 45, pantalla - cuerpoAncho - BASE.u * 8);
+    raiz.style.setProperty("--globo-max", Math.round(max) + "px");
+    return true;
+  }
+  (function intentar(n){
+    if (congelarUnidad()) return;
+    if (n > 0) setTimeout(function(){ intentar(n - 1); }, 60);
+    else console.log("BURBUJA-ERROR no pude medir la ventana: la nubecita irá a ojo");
+  })(20);
+
+  /* Android avisa cuando la ventana vuelve a su tamaño de reposo (por ejemplo al girar el
+     teléfono): entonces —y solo entonces— se vuelve a congelar la unidad. */
+  window.burbujaRemedir = function(){ congelarUnidad(); };
+
+  /* Lo que hace falta de ALTO para que la nubecita quepa entera: desde el suelo de la
+     ventana hasta su borde de arriba, más un respiro. Y de ANCHO: el cuerpo, la nubecita
+     y la separación entre los dos. Se mide de verdad, no se estima. */
+  function pedirSitio(luego){
+    var pedidoAlto = BASE.alto, pedidoAncho = BASE.ancho;
+    try {
+      var r = globo.getBoundingClientRect();
+      var suelo = window.innerHeight;
+      /* el rabito cuelga por debajo de la nube: entra en la cuenta */
+      var rabito = BASE.u * 8;
+      pedidoAlto = Math.ceil((suelo - r.top) + BASE.u * 4);
+      pedidoAncho = Math.ceil(r.width + BASE.alto * 0.94 * 0.571 + BASE.u * 5);
+      if (r.bottom + rabito > suelo) pedidoAlto += Math.ceil(r.bottom + rabito - suelo);
+      if (pedidoAlto < BASE.alto) pedidoAlto = BASE.alto;
+      if (pedidoAncho < BASE.ancho) pedidoAncho = BASE.ancho;
+    } catch(_){}
+    esperandoSitio = luego;
+    /* ⚠️ SE PIDE EN PROPORCIÓN, NO EN PÍXELES, Y ES A PROPÓSITO.
+       Esta página mide en píxeles de CSS y la ventana de Android en píxeles de pantalla, y
+       entre los dos hay un factor de densidad que cambia con cada teléfono. Traducirlo aquí
+       sería adivinar. Diciendo "necesito 2,4 veces el ancho de reposo y 1,7 veces el alto",
+       Android multiplica por SU propia medida de reposo, que la conoce exacta. Sin
+       conversiones y sin suposiciones. */
+    var rAncho = Math.max(1, pedidoAncho / BASE.ancho);
+    var rAlto  = Math.max(1, pedidoAlto  / BASE.alto);
+    try { console.log("BURBUJA-CAJA " + rAncho.toFixed(3) + " " + rAlto.toFixed(3)); } catch(_){}
+    /* 🛟 SEGURO: si el mensaje no llegara o Android no pudiera crecer, la nubecita SALE
+       IGUAL a los 260 ms. Vale más verla un poco justa que no verla nunca. */
+    setTimeout(function(){ if (esperandoSitio) { var f = esperandoSitio; esperandoSitio = null; f(); } }, 260);
+  }
+  /* Android contesta llamando aquí cuando la ventana ya tiene el tamaño pedido */
+  window.burbujaHaySitio = function(){
+    if (!esperandoSitio) return;
+    var f = esperandoSitio; esperandoSitio = null; f();
+  };
 
   /* Si roberto.js no cargara, esta página sería un cuadro TRANSPARENTE: Rey no vería
      nada y parecería que la burbuja no arrancó. Por eso se dice en voz alta — Android
@@ -193,24 +306,38 @@
   window.burbujaDecir = function(texto, g, hablar){
     texto = String(texto || "").trim();
     if (!texto) return;
-    /* 🛟 SEGURO DE ÚLTIMA HORA: pase lo que pase, en esta ventana no cabe un párrafo.
-       Aunque alguien mande un texto largo por otro camino, aquí se corta a lo que se
-       puede LEER de un vistazo — que es para lo que sirve una nubecita. */
-    if (texto.length > 95) {
-      var c = texto.lastIndexOf(" ", 95);
-      texto = texto.slice(0, c > 60 ? c : 95).trim() + "…";
+    /* 🛟 SEGURO DE ÚLTIMA HORA: una nubecita no es una carta. Aunque alguien mande un
+       texto larguísimo por otro camino, aquí se corta a lo que se puede LEER de un
+       vistazo — que es para lo que sirve.
+       📏 v7.20: el tope sube de 95 a 140 porque la ventana ya crece con la frase, así que
+       lo que antes no CABÍA ahora sí cabe. Sigue habiendo tope: el límite ya no lo pone el
+       marco, lo pone lo que un ojo lee de una pasada. */
+    if (texto.length > 140) {
+      var c = texto.lastIndexOf(" ", 140);
+      texto = texto.slice(0, c > 90 ? c : 140).trim() + "…";
     }
     /* 💬 v7.13 — PEDIR SITIO ANTES DE HABLAR.
        Rey: "hay un error en la nube, no se ve, solo sale una línea recta". La ventana
-       flotante mide solo lo que el cuerpo y hay que ENSANCHARLA para que quepa la nubecita.
+       flotante mide solo lo que el cuerpo y hay que agrandarla para que quepa la nubecita.
        Ese ensanche lo pedía Java cuando él mandaba el aviso — pero la vida de fondo llama a
        esta función desde AQUÍ DENTRO, y entonces nadie ensanchaba nada: la nubecita quedaba
        aplastada contra el borde, que es la raya que vio Rey.
-       Se avisa por la consola, que es el canal que Android ya escucha. */
-    try { console.log("BURBUJA-ANCHA 1"); } catch(_){}
+       📏 v7.20 — Y AHORA SE PIDE EL SITIO EXACTO, NO "ANCHA/ESTRECHA".
+       Rey, con la foto de la nubecita cortada: "la nube debe adaptarse al mensaje sin
+       romperse". El orden importa y es lo que hace que se vea natural:
+         1) se pone la frase con la nubecita PUESTA PERO INVISIBLE, para poder medirla;
+         2) se le pide a Android el alto y el ancho que de verdad ocupa;
+         3) SOLO cuando la ventana ya es así de grande, sale con su rebotito.
+       Al revés —enseñarla y luego agrandar— Rey vería medio segundo de nubecita cortada
+       pegando un salto, que es justo el "parche pegado" del que se quejó. */
+    globo.classList.remove("va");
     globo.textContent = texto;
-    globo.classList.add("hay");
+    globo.classList.add("midiendo");
     gesto(g || Roberto.gestoDe(texto));
+    pedirSitio(function(){
+      globo.classList.remove("midiendo");
+      globo.classList.add("hay");
+    });
     /* 🗣️ v7.15 — LA BOCA SE MUEVE AQUÍ; LA VOZ LA PONE ANDROID, Y LA DECIDE REY.
        `mudo:true` NO es "que se calle": es que esta página no reproduce audio — la voz la
        pone el motor de Android desde el servicio, que suena mucho mejor y no depende de que
@@ -230,12 +357,24 @@
 
   window.burbujaCallar = function(){
     clearTimeout(tVuelta);
-    globo.classList.remove("hay");
-    /* y se devuelve el sitio: si la ventana se quedara ancha, se comería los toques de la
-       aplicación que Rey tenga debajo en una franja donde ya no hay nada que ver */
-    try { console.log("BURBUJA-ANCHA 0"); } catch(_){}
+    esperandoSitio = null;
     try { Roberto.callar(); } catch(_){}
     gesto(GESTO_FONDO);
+    if (!globo.classList.contains("hay") && !globo.classList.contains("midiendo")) return;
+    /* 🌬️ v7.20 — QUE SE VAYA, NO QUE DESAPAREZCA.
+       Antes esto era un corte seco (quitar la nubecita) y, en el mismo instante, la ventana
+       encogiendo: dos tijeretazos a la vez. Rey lo llamó por su nombre — "un parche pegado
+       que entra y sale genéricamente". Ahora la nubecita se desinfla hacia su boca, que es
+       de donde salió, y la ventana solo se devuelve CUANDO YA NO HAY NADA QUE ENSEÑAR. */
+    globo.classList.remove("hay");
+    globo.classList.remove("midiendo");
+    globo.classList.add("va");
+    setTimeout(function(){
+      globo.classList.remove("va");
+      /* y se devuelve el sitio: si la ventana se quedara grande, se comería los toques de
+         la aplicación que Rey tenga debajo en una franja donde ya no hay nada que ver */
+      try { console.log("BURBUJA-CAJA 1 1"); } catch(_){}
+    }, 230);
   };
 
   /* ══════════════════════════════════════════════════════════════════════════
