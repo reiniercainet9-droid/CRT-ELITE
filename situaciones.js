@@ -343,6 +343,11 @@ function robSitua(titulo, cuerpo, tipo){
     for(const r of ROB_RUTINA){ if(r.re.test(bt)){ g = r.gesto; break; } }
     if(g === "tiempo") for(const r of ROB_RUTINA){ if(r.re.test(bc)){ g = r.gesto; break; } }
     /* en la nubecita, SU título: él ya lo escribió corto y para leerlo de un vistazo */
+    /* 🗣️ v7.25 — QUIEN SE LO DICE ES ROBERTO (Rey: "recuerda que es Roberto diciéndome,
+       no otra IA"), pero la nubecita lleva SU TÍTULO TAL CUAL: eso ya lo decidió Rey en la
+       v6.82 y lo guarda el banco test-rutina682 — él lo escribió corto para leerlo de un
+       vistazo, y ponerle nada delante solo le roba sitio. Lo que hace que sea Roberto y no
+       "otra IA" es que lo dice con SU voz, SU cara y SU gesto, no un cartel del sistema. */
     return { id:"rutina", gesto:g, frase: tit.slice(0,64) || "tienes un aviso" };
   }
   /* 📅 v7.22 — un AVISO del sistema se reconoce por su título, antes de leer ninguna
@@ -437,6 +442,6 @@ const ROB_VIDA = {
     gestos: ["ojala", "espera", "animo", "tiempo", "carino", "orgulloso", "idea", "aprueba"],
     frases: ["De madrugada y aquí estás. Eso es oficio.",
              "Londres se acerca. Café y cabeza fría.",
-             "Yo no me duermo, tranquilo.", "A esta hora el spread muerde. Ojo."],
+             "Yo no me duermo, tranquilo.", "A esta hora el spread se abre. Ojo."],
   },
 };

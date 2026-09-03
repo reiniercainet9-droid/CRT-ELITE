@@ -102,7 +102,18 @@
   body[data-lado="der"] #globo{right:calc(var(--rob-ancho) + calc(2 * var(--u))); bottom:calc(58 * var(--u))}
   body[data-lado="izq"] #globo{left:calc(var(--rob-ancho) + calc(2 * var(--u)));  bottom:calc(58 * var(--u))}
   #globo.hay{display:block; animation:robGloboPop .34s cubic-bezier(.34,1.56,.64,1) both}
+  /* 🤏 v7.25 — plan B: si la ventana no creció a tiempo, la nubecita se pone ENCIMA del
+     cuerpo en vez de quedarse fuera de la ventana (donde solo se veía su borde: la raya) */
+  body.apretada #globo{left:calc(2 * var(--u)) !important; right:calc(2 * var(--u)) !important}
   #globo b{color:#f0c95c;display:block;font-size:calc(6 * var(--u));letter-spacing:.3px;margin-bottom:calc(.4 * var(--u))}
+  /* ✅ v7.25 — LOS DOS BOTONES DE LA TARJETA. Grandes a propósito: Rey los toca con el
+     pulgar, de pie, mirando otra cosa. Los mismos colores que la tarjeta de dentro de Apex
+     para que sea la MISMA tarjeta, no una parecida. */
+  #tarj{display:flex;gap:calc(2 * var(--u));margin-top:calc(3 * var(--u))}
+  #tarj span{flex:1;text-align:center;padding:calc(2.6 * var(--u)) 0;border-radius:calc(4 * var(--u));
+    font-size:calc(6.4 * var(--u));font-weight:700;border:calc(0.7 * var(--u)) solid transparent}
+  #tarjNo{background:#3a1d24;color:#ffb4b4;border-color:#7a2b3a !important}
+  #tarjSi{background:#f0c95c;color:#1B2145}
   /* 🫧 EL RABITO: dos bolitas que van menguando hacia su boca, como en Apex — no un pico */
   #globo::before,#globo::after{content:"";position:absolute;background:#1B2145;
          border:calc(0.9 * var(--u)) solid #f0c95c;border-radius:50%;pointer-events:none}
@@ -184,11 +195,15 @@
        y un margen, para que nunca llegue a tocar el borde del teléfono.
        Gracias al `border-box` de arriba, este número es la nubecita ENTERA: borde y relleno
        incluidos. Antes se refería solo al texto y se pasaba 33 px de lo calculado. */
-    var pantalla = (window.screen && window.screen.width) ? window.screen.width : (w * 3);
+    congelarAnchoMaximo();
+    return true;
+  }
+  function congelarAnchoMaximo(){
+    var raiz = document.documentElement;
+    var pantalla = (window.screen && window.screen.width) ? window.screen.width : (BASE.ancho * 3);
     var cuerpoAncho = BASE.alto * 0.94 * 0.571;
     var max = Math.max(BASE.u * 45, pantalla - cuerpoAncho - BASE.u * 8);
     raiz.style.setProperty("--globo-max", Math.round(max) + "px");
-    return true;
   }
   (function intentar(n){
     if (congelarUnidad()) return;
@@ -226,12 +241,47 @@
     var rAncho = Math.max(1, pedidoAncho / BASE.ancho);
     var rAlto  = Math.max(1, pedidoAlto  / BASE.alto);
     try { console.log("BURBUJA-CAJA " + rAncho.toFixed(3) + " " + rAlto.toFixed(3)); } catch(_){}
-    /* 🛟 SEGURO: si el mensaje no llegara o Android no pudiera crecer, la nubecita SALE
-       IGUAL a los 260 ms. Vale más verla un poco justa que no verla nunca. */
-    setTimeout(function(){ if (esperandoSitio) { var f = esperandoSitio; esperandoSitio = null; f(); } }, 260);
+    /* 🛟 SEGURO — v7.25: SALE IGUAL, PERO DENTRO DE LA VENTANA.
+       Rey (03-09, con foto): "hubo un mensaje cortado, solo salió una raya de la nube".
+       ERA ESTE SEGURO. La nubecita se coloca al lado del cuerpo, y su sitio solo existe
+       cuando Android ya ha ensanchado la ventana. Si el ensanche tardaba más de 260 ms
+       (el teléfono ocupado, la orden en cola), el seguro la enseñaba IGUAL... colocada más
+       allá del borde derecho de la ventana: de la nube entera solo se veía su borde
+       izquierdo — una raya vertical dorada. Enseñar algo invisible no es un seguro.
+       Ahora se espera casi un segundo, y si aun así no hay sitio, la nubecita se APRIETA
+       para caber en la ventana que hay. Se ve más estrecha, pero se ve entera. */
+    setTimeout(function(){
+      if (!esperandoSitio) return;
+      apretarEnLaVentana();
+      var f = esperandoSitio; esperandoSitio = null; f();
+    }, 900);
   }
+  /* 🤏 La nubecita, apretada para caber en la ventana que hay AHORA MISMO. Es el plan B:
+     mejor estrecha y legible que perfecta y fuera de la pantalla. Si al lado del cuerpo no
+     queda ni un dedo de sitio, se le pone ENCIMA (él se ve igual por detrás de su nube, y
+     Rey puede leerla) en vez de mandarla fuera de la ventana, que es no enseñar nada. */
+  function apretarEnLaVentana(){
+    try {
+      var raiz = document.documentElement;
+      var libre = (window.innerWidth || BASE.ancho) - (BASE.alto * 0.94 * 0.571) - BASE.u * 5;
+      if (libre < BASE.u * 20) {                       /* no cabe al lado: va encima */
+        document.body.classList.add("apretada");
+        libre = (window.innerWidth || BASE.ancho) - BASE.u * 4;
+      }
+      raiz.style.setProperty("--globo-max", Math.max(Math.round(libre), 60) + "px");
+    } catch(_){}
+  }
+  /* y en cuanto la ventana vuelve a tener su sitio, la nubecita recupera su ancho de verdad */
+  function soltarApretada(){
+    try {
+      document.body.classList.remove("apretada");
+      if (BASE.alto) congelarAnchoMaximo();
+    } catch(_){}
+  }
+
   /* Android contesta llamando aquí cuando la ventana ya tiene el tamaño pedido */
   window.burbujaHaySitio = function(){
+    soltarApretada();
     if (!esperandoSitio) return;
     var f = esperandoSitio; esperandoSitio = null; f();
   };
@@ -307,6 +357,9 @@
   window.burbujaDecir = function(texto, g, hablar){
     texto = String(texto || "").trim();
     if (!texto) return;
+    /* ✅ v7.25 — una pregunta a medio contestar NO se pisa con una frase suelta: sería
+       quitarle a Rey la tarjeta de las manos. La vida de fondo se calla mientras decide. */
+    if (tarjetaViva && !PISAR_TARJETA) return;
     /* 🛟 SEGURO DE ÚLTIMA HORA: una nubecita no es una carta. Aunque alguien mande un
        texto larguísimo por otro camino, aquí se corta a lo que se puede LEER de un
        vistazo — que es para lo que sirve.
@@ -354,6 +407,69 @@
     clearTimeout(tVuelta);
     /* vuelve solo a estar de guardia: no se queda con cara de nada */
     tVuelta = setTimeout(window.burbujaCallar, 9000);
+  };
+
+  /* ══════════════════════════════════════════════════════════════════════════════
+     ✅ LA TARJETA DE CONFIRMACIÓN — v7.25
+     ═════════════════════════════════════════════════════════════════════════════
+     Rey (03-09): "cuando sea para yo confirmar alguna cosa, él debe sacarme la tarjeta de
+     confirmación en la nube para yo confirmar, igual que el chat".
+     Es la misma nubecita de siempre, con lo que Roberto quiere hacer y dos botones. NO se
+     va sola a los 9 segundos como una frase: una pregunta se queda hasta que él conteste
+     (o hasta el minuto y medio, y entonces sigue esperándole DENTRO de Apex, sin perderse).
+     Quién decide el toque: Android le pasa el punto tocado en fracciones de la ventana y
+     aquí se mira qué hay debajo. Sin cuentas de densidad, sin adivinar nada. */
+  var tarjetaViva = false, tTarjeta = null, PISAR_TARJETA = false;
+
+  window.burbujaTarjeta = function(texto){
+    texto = String(texto || "").trim();
+    if (!texto) return;
+    if (texto.length > 160) texto = texto.slice(0, 157).trim() + "…";
+    clearTimeout(tVuelta); clearTimeout(tTarjeta);
+    tarjetaViva = true;
+    globo.classList.remove("va");
+    globo.innerHTML = "";
+    var t = document.createElement("b"); t.textContent = "¿Lo hago, Rey?";
+    var d = document.createElement("span"); d.textContent = texto;
+    var bar = document.createElement("div"); bar.id = "tarj";
+    var no = document.createElement("span"); no.id = "tarjNo"; no.textContent = "✖ No";
+    var si = document.createElement("span"); si.id = "tarjSi"; si.textContent = "✓ Sí";
+    bar.appendChild(no); bar.appendChild(si);
+    globo.appendChild(t); globo.appendChild(d); globo.appendChild(bar);
+    globo.classList.add("midiendo");
+    gesto("tetoca");
+    pedirSitio(function(){
+      globo.classList.remove("midiendo");
+      globo.classList.add("hay");
+    });
+    /* si no contesta, no se pierde: se retira del cuerpo y sigue esperándole en el chat */
+    tTarjeta = setTimeout(function(){ window.burbujaTarjetaFuera(""); }, 90000);
+  };
+
+  window.burbujaTarjetaFuera = function(remate){
+    clearTimeout(tTarjeta);
+    if (!tarjetaViva) return;
+    tarjetaViva = false;
+    remate = String(remate || "").trim();
+    if (remate) { PISAR_TARJETA = true; try{ window.burbujaDecir(remate, "aprueba"); } finally { PISAR_TARJETA = false; } return; }
+    window.burbujaCallar();
+  };
+
+  /* Android pasa el punto tocado (fracciones de la ventana): aquí se mira qué botón es */
+  window.burbujaToque = function(fx, fy){
+    if (!tarjetaViva) return;
+    try {
+      var x = fx * (window.innerWidth || 0), y = fy * (window.innerHeight || 0);
+      var e = document.elementFromPoint(x, y);
+      while (e && e.id !== "tarjSi" && e.id !== "tarjNo") e = e.parentElement;
+      if (!e) return;                                  /* tocó fuera: la tarjeta espera */
+      console.log("BURBUJA-CONFIRMA " + (e.id === "tarjSi" ? "si" : "no"));
+      tarjetaViva = false;
+      clearTimeout(tTarjeta);
+      PISAR_TARJETA = true;
+      try { window.burbujaDecir(e.id === "tarjSi" ? "Hecho, Rey." : "Cancelado, Rey.", e.id === "tarjSi" ? "aprueba" : "rechaza"); }
+      finally { PISAR_TARJETA = false; }
+    } catch(_){}
   };
 
   window.burbujaCallar = function(){

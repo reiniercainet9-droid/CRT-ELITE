@@ -1,46 +1,57 @@
-APEX v7.24 — TRADING DESK
+APEX v7.25 — TRADING DESK
 =========================
 
-🎤 HABLARLE DESDE DONDE ESTÉS, SIN QUE APEX SE ABRA (esto es lo que faltaba)
+🗣️ MIENTRAS ROBERTO TE HABLA, LA NUBE NO SALE (como habíamos quedado)
+La v7.24 sacaba la respuesta ENTERA en la nubecita y quedaba fea encima de toda la
+pantalla. Rompí un acuerdo nuestro y ya está como tocaba: mientras te la dice, solo
+ves sus GESTOS; la respuesta va HABLADA y ESCRITA en el chat. La nube vuelve a ser lo
+que era: frases cortas y avisos, nunca un discurso.
 
-Tenías razón en todo. La v7.23 traía Apex al frente para poder oírte, y eso mata el
-sentido de tener a Roberto en tu pantalla. Era mi error de enfoque, no tuyo.
+🗂️ CADA PREGUNTA EN SU CHAT, NO TODAS EN UNA CARRETILLA
+Si lo que preguntas sigue el mismo tema (o viene seguido de lo anterior), continúa en
+ese chat. Si es otro asunto, Roberto abre uno nuevo. Se acabó la hilera de preguntas
+y respuestas metidas en el mismo hilo.
 
-EL PORQUÉ, EN CORTO: Android no le da el micrófono a una app que está detrás. La
-puerta buena no era abrir Apex: es que EL VIGÍA (el servicio que ya vigila tus alarmas
-24 h) sea también un servicio de MICRÓFONO — el mismo permiso con el que una grabadora
-de voz sigue grabando cuando sales de la app. Ese permiso solo se puede "armar"
-mientras Apex está delante, así que ahora se arma solo cada vez que abres Apex, y a
-partir de ahí Roberto te oye estés donde estés.
+✅ LA TARJETA DE CONFIRMACIÓN, TAMBIÉN EN LA NUBE
+Cuando Roberto necesita tu permiso para hacer algo (guardar un trade, cambiar un
+aviso, tocar tu config), antes te llegaba "ábreme para confirmar" y había que soltar
+lo que estuvieras haciendo. Ahora te sale LA MISMA tarjeta en su cuerpo flotante, con
+✓ Sí y ✖ No: decides ahí mismo, sin salir de TradingView. Es la misma decisión que la
+del chat, no una copia (esto toca tu dinero: un solo camino). Si no contestas en un
+minuto y medio, no se pierde: sigue esperándote dentro de Apex. Y mientras hay una
+tarjeta puesta, ninguna frase suelta la pisa.
 
-AHORA, DESDE TRADINGVIEW, MT5 O DONDE SEA:
-  · Mantienes pulsado a Roberto → él dice "Te escucho, Rey…" en su nubecita SOLO
-    cuando Android confirma de verdad que está oyendo.
-  · Mientras hablas, vas viendo en la nubecita lo que va entendiendo.
-  · Sueltas → te contesta EN LA NUBECITA y en voz alta. Apex NO se abre.
-  · "hazme una captura de esta entrada", "prográmame un aviso", "audítame el ejecutor":
-    todo eso ya funciona desde fuera.
-  · Órdenes gratis, sin pasar por Roberto: cállate / pausa / sigue / repite.
+🫧 LA RAYA: ARREGLADA DE RAÍZ
+Tu mensaje cortado ("solo salió una raya de la nube") era la nube pintada FUERA de la
+ventana: solo se veía su borde dorado. Pasaba cuando Android tardaba en ensanchar la
+ventana y un seguro la enseñaba igual. Ahora se espera, y si aun así no hay sitio, la
+nube se APRIETA para caber. Nunca más se pinta fuera.
 
-LA PRIMERA VEZ: abre Apex una vez después de instalar. Si nunca le diste el permiso
-de MICRÓFONO (es aparte de los que diste al instalar), te lo pedirá ahí mismo: dale
-que sí. Ese permiso es justo lo que faltaba para que te contestara.
+⏰ TUS AVISOS Y LOS DEL SISTEMA: QUÉ ES DE QUIÉN
+· ⏰ Mis avisos es TU lista, el único sitio con horas tuyas. Roberto puede crear o
+  cambiar ahí, pero siempre con tu confirmación.
+· Las killzones, noticias, alarmas del indicador, Ejecutor y cuenta NO son avisos
+  programados: son hechos del mercado, y no tienen hora tuya.
+· "⏰ NY Apertura" y "⏰ NY Lunch" que te llegaron hoy eran del SISTEMA, no los tuyos
+  apagados. Se parecían en el nombre, y por eso parecía que sonaban dos veces.
+· AHORA NO SE PISAN: si tienes un aviso tuyo activo a esa hora (±10 min), la killzone
+  se calla. Manda el tuyo. Y tu interruptor de killzones ya llega hasta la nube.
 
-NUNCA MÁS SILENCIO: si falta el permiso, si el micrófono no está armado todavía, si no
-te oyó nada, si Android falla o si Roberto está con lo anterior — te lo dice en la
-nubecita. Nada se queda callado.
+⏰ EL AVISO DE LAS 17:30 QUE NO TE SONÓ — dos agujeros tapados
+1. Tu lista solo se subía a la nube al TOCAR un aviso. Si una subida se perdía, la
+   nube se quedaba con lo de antes. Ahora se sube al abrir Apex y al volver a ella.
+2. La marca de "ya lo mandé hoy" era por id: dos avisos con el mismo id (pasa cuando
+   Roberto los crea seguidos) se tragaban el uno al otro EN SILENCIO todo el día.
+   Ahora la marca lleva también la hora.
+Y el worker nuevo tiene una ruta que me dice qué avisos tiene la nube de verdad: en
+cuanto lo subas, miro qué pasó exactamente con tu 17:30 y te lo digo.
 
-🫧 LA NUBE YA NO SE ROMPE: una palabra larga se salía del recuadro (tu foto de las 2:42).
-Ahora ninguna palabra se sale, ni en la nube de fuera ni en la de dentro de Apex.
+🔤 "A esta hora el spread se abre. Ojo." (antes decía "muerde" — era mío, no tuyo).
 
-📮 Y cada vez que le hablas, los pasos del oído viajan solos al puente: si algo vuelve a
-fallar, lo leo desde aquí sin adivinar.
-
-LOS GESTOS SIGUEN IGUAL (los confirmé en el código): dos toques = abrir Apex · un toque
-= pausar / otro = que siga · mantener pulsado = que te escuche · arrastrarlo abajo del
-todo = callarlo y apartarlo.
-
-Regresión completa en verde. Instala Apex-Roberto-v7.24.apk y sube APEX-app-v7.24.zip.
+⚠️ ESTA VEZ HAY DOS COSAS QUE SUBIR:
+  1. APEX-app-v7.25.zip  → a GitHub, como siempre
+  2. worker-elitepro-v5.122.js → a Cloudflare (es el que arregla lo de los avisos)
+  3. Apex-Roberto-v7.25.apk → instalar en el teléfono
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

@@ -2099,11 +2099,36 @@ const AVISOS_DEFAULT = [
 let REMINDERS = load(K.reminders, null);
 if(!Array.isArray(REMINDERS)) REMINDERS = AVISOS_DEFAULT.map(x=>({...x}));
 function guardarReminders(){ save(K.reminders, REMINDERS); }
-/* Sube los avisos al worker para que el vigilante (cron) los dispare en segundo plano */
-async function syncReminders(){
+/* ══════════════════════════════════════════════════════════════════════════════
+   ⏰ LOS AVISOS QUE REY VE SON LOS QUE LA NUBE DISPARA — v7.25
+   ═════════════════════════════════════════════════════════════════════════════
+   Rey (03-09): "quedamos que los avisos continuarían igual, y el aviso del backtesting de
+   las 5:30 no me notificó; la regla de horarios es solo para las del mercado, los avisos
+   continúan a su hora y él debe decírmela aunque el teléfono esté bloqueado".
+   TENÍA RAZÓN Y ERA UN FALLO DE VERDAD, no del horario. Sus capturas lo demuestran: el
+   17:30 🏋️ Backtesting está en "Todos los días" y encendido. Y el registro de la nube de
+   ese día disparó "NY Apertura" y "NY Lunch" — ¡avisos que Rey YA NO TIENE! O sea: la nube
+   estaba disparando UNA LISTA VIEJA. La subida existía, pero solo ocurría al tocar un
+   aviso: si una de esas subidas se perdía (sin cobertura, la app cerrada a mitad, un
+   teléfono nuevo, una restauración del respaldo), la nube se quedaba con lo de antes PARA
+   SIEMPRE, y ningún aviso nuevo sonaba jamás. Nadie lo notaba porque los viejos SÍ sonaban.
+   AHORA: además de al tocarlos, la lista se sube al arrancar y cada vez que Rey vuelve a
+   Apex (como mucho una vez cada 10 minutos, y solo si hay algo que subir). Es barato,
+   es idempotente, y cierra el agujero venga de donde venga. */
+let _remSubidoTs = 0, _remSubidoFirma = "";
+function remFirma(){ try{ return JSON.stringify(REMINDERS) + "|kz" + (NOTIF && NOTIF.killzone ? 1 : 0); }catch(_){ return String(Date.now()); } }
+async function syncReminders(forzar){
   if(!IA.url) return;
-  try{ await fetch(IA.url.replace(/\/+$/,"")+"/rem/set",{ method:"POST", headers:{"content-type":"application/json"}, body:JSON.stringify({reminders:REMINDERS}) }); }catch(_){}
+  const firma = remFirma();
+  /* si no ha cambiado nada y hace poco que se subió, no se molesta a la nube */
+  if(!forzar && firma === _remSubidoFirma && (Date.now() - _remSubidoTs) < 10*60*1000) return;
+  try{
+    const r = await fetch(IA.url.replace(/\/+$/,"")+"/rem/set",{ method:"POST", headers:{"content-type":"application/json"}, body:JSON.stringify({reminders:REMINDERS, killzones: !!(NOTIF && NOTIF.killzone)}) });
+    if(r && r.ok){ _remSubidoFirma = firma; _remSubidoTs = Date.now(); }
+  }catch(_){}
 }
+/* al arrancar y al volver a Apex: que la nube tenga SIEMPRE la lista de Rey */
+function syncRemindersDeGuardia(){ try{ syncReminders(false); }catch(_){} }
 /* Ajustes de notificaciones de Roberto */
 let NOTIF = load(K.notif, { on:false, killzone:true, cuentaDD:true });
 if(!NOTIF || typeof NOTIF!=="object") NOTIF = { on:false, killzone:true, cuentaDD:true };
@@ -7921,17 +7946,78 @@ function iaDesdeFuera(texto){
       try{ robDecir("Roberto","Voy con lo anterior, Rey. Dímelo otra vez en un momento.",{gesto:"espera"}); }catch(_){}
       return;
     }
-    IA.deFuera = true;          /* la respuesta se le enseña en la nubecita, esté donde esté */
+    iaChatParaFuera(dicho);     /* 🗂️ v7.25: ¿sigue el hilo de antes o es un tema nuevo? */
+    iaFueraApunta();
+    IA.deFuera = true;          /* la respuesta se le DICE y queda escrita; la nube no la saca */
     IA.autoHablarUna = true;    /* y se la digo en voz alta: no está mirando la pantalla */
     const ta = $("#iaText"); if(ta){ ta.value = dicho; }
     iaEnviar(dicho);
   }catch(_){}
 }
-/* la respuesta a lo que dijo desde fuera: a su nubecita, dondequiera que esté Roberto */
+/* ══════════════════════════════════════════════════════════════════════════════
+   🗣️ v7.25 — MIENTRAS HABLA, NO HAY NUBE: SOLO SU CARA
+   ═════════════════════════════════════════════════════════════════════════════
+   Rey (03-09): "quedamos que mientras él me esté hablando la nube no iba a salir, solo los
+   gestos, señales y movimientos; la respuesta va en el chat, no en la nube, porque sale
+   fea una respuesta larga en toda la pantalla si ya él me la está diciendo".
+   Tenía razón y la v7.24 lo rompió: sacaba la respuesta ENTERA en la nubecita. Ahora la
+   respuesta a lo que pregunta desde fuera va a DOS sitios y ninguno es la nube: se la DICE
+   (voz) y queda ESCRITA en su chat. El cuerpo solo pone la cara de estar explicando.
+   La nube vuelve a ser lo que era: frases cortas y avisos, nunca un discurso. */
 function iaRespuestaFuera(txt){
   if(!IA.deFuera) return;
   IA.deFuera = false;
-  try{ robDecir("Roberto", String(txt||"").trim(), {}); }catch(_){}
+  const dicho = String(txt||"").trim();
+  if(!dicho) return;
+  /* ¿de verdad se la está diciendo? Si la voz está en marcha, NADA de nube: solo su cara. */
+  let hablando = false;
+  try{ hablando = !!(IA.voz && IA.voz.on) || !!IA.hablando || (typeof _vozIdx!=="undefined" && _vozIdx!==null); }catch(_){}
+  if(hablando){ try{ robCara("ensena","te lo estoy diciendo"); }catch(_){} return; }
+  /* si por lo que sea NO puede hablar (voz apagada, motor caído), no se le deja sin nada:
+     una línea corta en la nube diciendo DÓNDE está la respuesta. Nunca la respuesta entera. */
+  try{ robDecir("Roberto", "Te contesté por escrito, Rey — ábreme y lo lees.", {gesto:"apunta"}); }catch(_){}
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   🗂️ v7.25 — CADA PREGUNTA EN SU CHAT, NO TODAS EN UNA CARRETILLA
+   ═════════════════════════════════════════════════════════════════════════════
+   Rey (03-09): "las preguntas que yo le hago las pone todas en un solo chat; Roberto debe
+   distinguir dónde va cada cual, no una hilera de preguntas y respuestas en una carretilla
+   en el mismo chat… el chat que él deduce: uno nuevo, o el mismo".
+   CÓMO SE DECIDE (sin gastar un céntimo en preguntárselo a la nube): si lo que dice ahora
+   viene SEGUIDO de lo anterior (menos de 8 minutos) o habla de lo mismo (comparte una
+   palabra de peso con el hilo), es la misma conversación y sigue ahí. Si no, es un tema
+   nuevo: se abre un chat nuevo con su propio título. Es lo que haría cualquiera con una
+   libreta: no se empieza página por cada frase, pero tampoco se mezclan dos asuntos. */
+const FUERA_SEGUIDO_MS = 8 * 60 * 1000;
+function fueraPalabrasClave(t){
+  return String(t||"").toLowerCase()
+    .replace(/[¿?¡!.,;:()"']/g, " ")
+    .split(/\s+/)
+    .filter(p => p.length >= 4 && !/^(para|pero|como|cuando|donde|porque|desde|hasta|sobre|esto|esta|eso|ese|con|que|los|las|del|una|uno|por|más|mas|muy|todo|toda|dime|dame|hazme|quiero|puedes|ahora|mismo)$/.test(p));
+}
+function iaChatParaFuera(dicho){
+  try{
+    const c = iaConvAct();
+    if(!c || !Array.isArray(c.msgs) || !c.msgs.length) return;      /* vacío: se usa tal cual */
+    /* ⚠️ el ts de la conversacion NO sirve para esto: solo se toca al ponerle título a la conversación, así
+       que un hilo vivo de hace horas parecería recién nacido. Lo que vale es cuándo fue la
+       ÚLTIMA pregunta de fuera y en qué chat cayó. */
+    const u = IA.fueraUlt;
+    const seguido = !!(u && u.id === c.id && (Date.now() - u.t) < FUERA_SEGUIDO_MS);
+    let mismoTema = false;
+    try{
+      const claves = fueraPalabrasClave(dicho);
+      const hilo = (String(c.t||"") + " " + c.msgs.slice(-4).map(m=>String(m.content||"")).join(" ")).toLowerCase();
+      mismoTema = claves.some(p => hilo.includes(p));
+    }catch(_){}
+    if(seguido || mismoTema) return;                                 /* sigue en el mismo */
+    if(typeof iaNuevaConv === "function") iaNuevaConv();             /* tema nuevo: chat nuevo */
+  }catch(_){}
+}
+/* deja apuntado dónde cayó esta pregunta de fuera, para saber si la siguiente la sigue */
+function iaFueraApunta(){
+  try{ const c = iaConvAct(); IA.fueraUlt = { id: c.id, t: Date.now() }; }catch(_){}
 }
 function oidoParteAlaNube(){
   try{
@@ -9934,8 +10020,58 @@ function confirmarTool(tu){
     if(!$("#iaMsgs") && typeof abrirIA==="function"){ try{ abrirIA(); }catch(_){} }
     IA_TOOL_PEND.push({ tu, resolve, estado:"pendiente" });
     iaPintarTools();
+    /* ✅ v7.25 — y en su cuerpo flotante, para que pueda decidir sin soltar lo que hace */
+    iaTarjetaAlCuerpo(tu);
     try{ if(navigator.vibrate) navigator.vibrate([120,60,120]); }catch(_){}
   });
+}
+/* ══════════════════════════════════════════════════════════════════════════════
+   ✅ v7.25 — LA MISMA DECISIÓN, SE TOQUE DONDE SE TOQUE
+   ═════════════════════════════════════════════════════════════════════════════
+   Rey (03-09): "cuando sea para yo confirmar alguna cosa, él debe sacarme la tarjeta de
+   confirmación en la nube para yo confirmar, igual que el chat".
+   Desde que la tarjeta sale en DOS sitios (el chat de Apex y el cuerpo flotante), el sí y
+   el no tienen que ser UNA SOLA cosa. Si fueran dos copias, un día una haría algo que la
+   otra no — y estamos hablando de acciones que tocan su dinero. Así que los botones de la
+   tarjeta del chat y el toque en el cuerpo llaman exactamente aquí. */
+async function iaToolSi(p, card){
+  const bar = card ? card.querySelector(".ia-tool-bar") : null;
+  if(bar) bar.innerHTML="<span class='ia-tool-done'>⏳ Ejecutando…</span>";
+  let res; try{ res=await ejecutarTool(p.tu.name, p.tu.input); }catch(e){ res={ok:false,msg:"Error: "+e}; }
+  if(res&&res.ok) logRoberto(res.msg);
+  if(bar) bar.innerHTML="<span class='ia-tool-done'>"+((res&&res.ok)?"✓ Hecho":"⚠️ No se aplicó")+"</span>";
+  p.estado="hecha"; const i=IA_TOOL_PEND.indexOf(p); if(i>=0) IA_TOOL_PEND.splice(i,1);
+  iaTarjetaCuerpoFuera((res&&res.ok) ? "Hecho, Rey." : "No se pudo aplicar, Rey.");
+  p.resolve({confirmed:true, res});
+}
+function iaToolNo(p, card){
+  if(card) card.querySelector(".ia-tool-bar").innerHTML="<span class='ia-tool-cancel'>🚫 Cancelado</span>";
+  p.estado="hecha"; const i=IA_TOOL_PEND.indexOf(p); if(i>=0) IA_TOOL_PEND.splice(i,1);
+  iaTarjetaCuerpoFuera("Cancelado, Rey.");
+  p.resolve({confirmed:false});
+}
+/* Rey decidió en su cuerpo flotante (dos botones en la nubecita): es la MISMA decisión. */
+function iaConfirmarDesdeFuera(si){
+  try{
+    const p = IA_TOOL_PEND.find(x=>x.estado==="pendiente");
+    if(!p) return;
+    const card = document.querySelector(".ia-tool");
+    if(si) iaToolSi(p, card); else iaToolNo(p, card);
+    try{ iaPintarTools(); }catch(_){}
+  }catch(_){}
+}
+/* la tarjeta al cuerpo (y su retirada): solo existe dentro de la APK */
+function iaTarjetaAlCuerpo(tu){
+  try{
+    const PV = vozNativa(); if(!PV || !PV.robertoTarjeta) return;
+    PV.robertoTarjeta({ texto: describeTool(tu.name, tu.input) });
+  }catch(_){}
+}
+function iaTarjetaCuerpoFuera(remate){
+  try{
+    const PV = vozNativa(); if(!PV || !PV.robertoTarjetaFuera) return;
+    PV.robertoTarjetaFuera({ remate: String(remate||"") });
+  }catch(_){}
 }
 /* Pinta (o repinta) las tarjetas que están esperando decisión. */
 function iaPintarTools(){
@@ -9947,20 +10083,8 @@ function iaPintarTools(){
       <div class="ia-tool-d">${esc(describeTool(p.tu.name, p.tu.input)).replace(/\n/g,"<br>")}</div>
       <div class="ia-tool-bar"><button class="btn danger ia-tool-no">Cancelar</button><button class="btn gold ia-tool-si">✓ Confirmar</button></div>`;
     cont.appendChild(card);
-    card.querySelector(".ia-tool-si").onclick=async ()=>{
-      const bar=card.querySelector(".ia-tool-bar");
-      bar.innerHTML="<span class='ia-tool-done'>⏳ Ejecutando…</span>";
-      let res; try{ res=await ejecutarTool(p.tu.name, p.tu.input); }catch(e){ res={ok:false,msg:"Error: "+e}; }
-      if(res&&res.ok) logRoberto(res.msg);
-      bar.innerHTML="<span class='ia-tool-done'>"+((res&&res.ok)?"✓ Hecho":"⚠️ No se aplicó")+"</span>";
-      p.estado="hecha"; const i=IA_TOOL_PEND.indexOf(p); if(i>=0) IA_TOOL_PEND.splice(i,1);
-      p.resolve({confirmed:true, res});
-    };
-    card.querySelector(".ia-tool-no").onclick=()=>{
-      card.querySelector(".ia-tool-bar").innerHTML="<span class='ia-tool-cancel'>🚫 Cancelado</span>";
-      p.estado="hecha"; const i=IA_TOOL_PEND.indexOf(p); if(i>=0) IA_TOOL_PEND.splice(i,1);
-      p.resolve({confirmed:false});
-    };
+    card.querySelector(".ia-tool-si").onclick=()=>iaToolSi(p, card);
+    card.querySelector(".ia-tool-no").onclick=()=>iaToolNo(p, card);
   });
   cont.scrollTop=cont.scrollHeight;
 }
@@ -10722,6 +10846,9 @@ function init(){
   try{ nubeRestaurar(true); }catch(_){}  /* ☁️ si la nube tiene datos más nuevos (otro teléfono), restaura solo */
   /* Al volver a la app (no cerrarla del todo), recupera lo que haya terminado */
   document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible") iaResumePend(); });
+  /* ⏰ v7.25 — y que la nube tenga SIEMPRE los avisos que Rey ve (el 17:30 que no sonó) */
+  syncRemindersDeGuardia();
+  document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible") syncRemindersDeGuardia(); });
   /* Si abriste tocando el push de una respuesta de Roberto, abre el chat con ella */
   try{ if(navigator.serviceWorker){ navigator.serviceWorker.addEventListener("message", ev=>{ if(ev.data && ev.data.type==="apex-open-chat"){ if(typeof abrirIA==="function") abrirIA(); if(ev.data.seed){ setTimeout(()=>iaProactivo(ev.data.seed),300); } else if(ev.data.jobId){ /* 📦 v6.24: si la notificación traía la respuesta completa, pintar directo */ let pend=null; try{ pend=iaPendCargar().find(x=>x.jobId===ev.data.jobId); }catch(_){} if(ev.data.texto && pend){ if(_iaPolling[ev.data.jobId]){ clearTimeout(_iaPolling[ev.data.jobId]); delete _iaPolling[ev.data.jobId]; } iaBgResuelto(ev.data.jobId, { ready:true, text: ev.data.texto }); } else iaMostrarJob(ev.data.jobId); } else iaResumePend(); } }); } }catch(_){}
   /* ✏️ v6.47 — CUALQUIER aviso del sistema (alarma del indicador, Ejecutor, killzone,
