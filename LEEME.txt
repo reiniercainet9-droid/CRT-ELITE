@@ -1,57 +1,42 @@
-APEX v7.25 — TRADING DESK
+APEX v7.26 — TRADING DESK
 =========================
 
-🗣️ MIENTRAS ROBERTO TE HABLA, LA NUBE NO SALE (como habíamos quedado)
-La v7.24 sacaba la respuesta ENTERA en la nubecita y quedaba fea encima de toda la
-pantalla. Rompí un acuerdo nuestro y ya está como tocaba: mientras te la dice, solo
-ves sus GESTOS; la respuesta va HABLADA y ESCRITA en el chat. La nube vuelve a ser lo
-que era: frases cortas y avisos, nunca un discurso.
+🔴 LO PRIMERO: TU PC ESTABA AHOGADA Y ERA CULPA MÍA
+El Puente no estaba roto. Tenías 0,4 GB de RAM libres de 7,8 y el procesador al 100%
+por MIS pruebas: cuatro regresiones completas, tres compilaciones del APK, y un proceso
+`find` mío colgado desde la mañana comiéndose 16.688 segundos de CPU. Con la máquina
+así, Edge se arrastraba, las pestañas no contestaban a tiempo y el Puente perdía un par.
+Lo que hice: maté el `find`, paré mis pruebas, borré 924 carpetas temporales que dejaron
+(7,3 GB), y dejé el corredor de pruebas recogiendo su basura solo.
 
-🗂️ CADA PREGUNTA EN SU CHAT, NO TODAS EN UNA CARRETILLA
-Si lo que preguntas sigue el mismo tema (o viene seguido de lo anterior), continúa en
-ese chat. Si es otro asunto, Roberto abre uno nuevo. Se acabó la hilera de preguntas
-y respuestas metidas en el mismo hilo.
+👁️ EL PUENTE (v4.8) — Y ADEMÁS HABÍA DOS CORRIENDO
+Al reiniciarlo encontré DOS Puentes vivos a la vez: por eso te duplicaba los pares.
+Ahora hay uno solo, con sus dos pestañas (EURUSD y GBPUSD) y empujando los dos pares
+cada 15 segundos. Verificado tres veces seguidas antes de suspender.
+Y el agujero de fondo, tapado: cuando una pestaña no contestaba, ese par se caía SIN
+UNA SOLA LÍNEA en el registro y el Puente seguía como si nada — el Ejecutor operando a
+ciegas sin que nadie lo dijera. Ahora se dice siempre en el registro.
 
-✅ LA TARJETA DE CONFIRMACIÓN, TAMBIÉN EN LA NUBE
-Cuando Roberto necesita tu permiso para hacer algo (guardar un trade, cambiar un
-aviso, tocar tu config), antes te llegaba "ábreme para confirmar" y había que soltar
-lo que estuvieras haciendo. Ahora te sale LA MISMA tarjeta en su cuerpo flotante, con
-✓ Sí y ✖ No: decides ahí mismo, sin salir de TradingView. Es la misma decisión que la
-del chat, no una copia (esto toca tu dinero: un solo camino). Si no contestas en un
-minuto y medio, no se pierde: sigue esperándote dentro de Apex. Y mientras hay una
-tarjeta puesta, ninguna frase suelta la pisa.
+🗣️ LA VOZ DE TUS AVISOS (v7.26) — los dos agujeros que te dejaron mudo
+1. La voz de un aviso viajaba SIEMPRE por la página de tu cuerpo flotante. Si el cuerpo
+   no estaba en pantalla, el aviso llegaba mudo. Ahora, sin cuerpo, lo dice el propio
+   vigía. Nunca mudo.
+2. El interruptor de tu voz solo se le recordaba al vigía al arrancar Apex. Ahora también
+   cada vez que vuelves a ella: lo que tú ves es lo que manda.
+3. Y cada aviso que debía sonar deja su parte en la nube (APEX-DIAG-VOZ) diciendo si tu
+   interruptor estaba puesto, si el motor de voz estaba listo y si había cuerpo. La
+   próxima vez que me digas "no me habló", lo leo en diez segundos.
 
-🫧 LA RAYA: ARREGLADA DE RAÍZ
-Tu mensaje cortado ("solo salió una raya de la nube") era la nube pintada FUERA de la
-ventana: solo se veía su borde dorado. Pasaba cuando Android tardaba en ensanchar la
-ventana y un seguro la enseñaba igual. Ahora se espera, y si aun así no hay sitio, la
-nube se APRIETA para caber. Nunca más se pinta fuera.
+ESTADO AL SUSPENDER (comprobado uno por uno):
+  · Puente: 1 instancia · 2 pestañas · los 2 pares empujando · gráfico fresco
+  · Ejecutor: 🟢 encendido y vivo (visto hace 8 s) · EURUSD+GBPUSD · riesgo 0.5% · veto ON
+  · MT5: corriendo · cuenta demo 61587406 · balance 50.000
+  · Despertadores: Londres, NY, siesta y suspensión — todos listos
+  · Worker 5.122: ya subido por ti ✓ · App 7.25 en la nube ✓
 
-⏰ TUS AVISOS Y LOS DEL SISTEMA: QUÉ ES DE QUIÉN
-· ⏰ Mis avisos es TU lista, el único sitio con horas tuyas. Roberto puede crear o
-  cambiar ahí, pero siempre con tu confirmación.
-· Las killzones, noticias, alarmas del indicador, Ejecutor y cuenta NO son avisos
-  programados: son hechos del mercado, y no tienen hora tuya.
-· "⏰ NY Apertura" y "⏰ NY Lunch" que te llegaron hoy eran del SISTEMA, no los tuyos
-  apagados. Se parecían en el nombre, y por eso parecía que sonaban dos veces.
-· AHORA NO SE PISAN: si tienes un aviso tuyo activo a esa hora (±10 min), la killzone
-  se calla. Manda el tuyo. Y tu interruptor de killzones ya llega hasta la nube.
-
-⏰ EL AVISO DE LAS 17:30 QUE NO TE SONÓ — dos agujeros tapados
-1. Tu lista solo se subía a la nube al TOCAR un aviso. Si una subida se perdía, la
-   nube se quedaba con lo de antes. Ahora se sube al abrir Apex y al volver a ella.
-2. La marca de "ya lo mandé hoy" era por id: dos avisos con el mismo id (pasa cuando
-   Roberto los crea seguidos) se tragaban el uno al otro EN SILENCIO todo el día.
-   Ahora la marca lleva también la hora.
-Y el worker nuevo tiene una ruta que me dice qué avisos tiene la nube de verdad: en
-cuanto lo subas, miro qué pasó exactamente con tu 17:30 y te lo digo.
-
-🔤 "A esta hora el spread se abre. Ojo." (antes decía "muerde" — era mío, no tuyo).
-
-⚠️ ESTA VEZ HAY DOS COSAS QUE SUBIR:
-  1. APEX-app-v7.25.zip  → a GitHub, como siempre
-  2. worker-elitepro-v5.122.js → a Cloudflare (es el que arregla lo de los avisos)
-  3. Apex-Roberto-v7.25.apk → instalar en el teléfono
+⚠️ LA APK v7.26 NO LA INSTALES TODAVÍA: le falta la parte de la regresión que abre
+navegador (129/129 en verde, faltan 8 bancos). La corro mañana temprano y te aviso.
+Hoy te quedas con la 7.25, que sí está verificada entera.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

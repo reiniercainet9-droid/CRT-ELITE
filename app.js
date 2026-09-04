@@ -10849,6 +10849,13 @@ function init(){
   /* ⏰ v7.25 — y que la nube tenga SIEMPRE los avisos que Rey ve (el 17:30 que no sonó) */
   syncRemindersDeGuardia();
   document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible") syncRemindersDeGuardia(); });
+  /* 🔊 v7.26 — Y EL INTERRUPTOR DE SU VOZ, CADA VEZ QUE VUELVE, NO SOLO AL ARRANCAR.
+     Rey, por segunda vez (03-09 noche): "la voz de Roberto no llegó avisándome eso". El
+     interruptor vive en la app y el que MANDA es la copia que tiene el vigía; si esa copia
+     se quedara atrás (una reinstalación, un arranque a medias, el servicio reiniciado por
+     Android), Rey vería su interruptor encendido y Roberto seguiría mudo — que es
+     exactamente lo que ya pasó en la v7.19. Recordárselo al volver cuesta nada. */
+  document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible"){ try{ vozContarleAlVigia(); }catch(_){} } });
   /* Si abriste tocando el push de una respuesta de Roberto, abre el chat con ella */
   try{ if(navigator.serviceWorker){ navigator.serviceWorker.addEventListener("message", ev=>{ if(ev.data && ev.data.type==="apex-open-chat"){ if(typeof abrirIA==="function") abrirIA(); if(ev.data.seed){ setTimeout(()=>iaProactivo(ev.data.seed),300); } else if(ev.data.jobId){ /* 📦 v6.24: si la notificación traía la respuesta completa, pintar directo */ let pend=null; try{ pend=iaPendCargar().find(x=>x.jobId===ev.data.jobId); }catch(_){} if(ev.data.texto && pend){ if(_iaPolling[ev.data.jobId]){ clearTimeout(_iaPolling[ev.data.jobId]); delete _iaPolling[ev.data.jobId]; } iaBgResuelto(ev.data.jobId, { ready:true, text: ev.data.texto }); } else iaMostrarJob(ev.data.jobId); } else iaResumePend(); } }); } }catch(_){}
   /* ✏️ v6.47 — CUALQUIER aviso del sistema (alarma del indicador, Ejecutor, killzone,
