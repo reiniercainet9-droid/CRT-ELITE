@@ -2127,8 +2127,34 @@ async function syncReminders(forzar){
     if(r && r.ok){ _remSubidoFirma = firma; _remSubidoTs = Date.now(); }
   }catch(_){}
 }
+/* ⏰ v7.31 — Y QUE EL PROPIO TELÉFONO SE SEPA SUS HORAS.
+   Rey (04-09): "notificaron 1 minuto después, tarde". El aviso salió a su hora en la nube;
+   el que llegaba tarde era el teléfono, que sale a BUSCAR avisos cada 15 s en mercado y
+   cada 60 s fuera de él (así no se come la batería). Su prueba fue fuera de mercado: de
+   ahí el minuto justo.
+   ARREGLARLO PREGUNTANDO MÁS SERÍA PAGARLO CON BATERÍA — y sin necesidad, porque estos
+   avisos TIENEN HORA FIJA: se le pasan al reloj de Android y suenan solos, al segundo,
+   aunque no haya internet. La nube sigue mandando el suyo de respaldo y el teléfono
+   descarta el repetido (el apretón de manos vive en DespertadorApex.java).
+   Solo dentro de la APK; en la web no existe el reloj de Android y no pasa nada. */
+async function avisosAlRelojDelTelefono(){
+  try{
+    const P = (typeof vigiaPuente === "function") ? vigiaPuente() : null;
+    if(!P || typeof P.programarAvisos !== "function") return;
+    const activos = (Array.isArray(REMINDERS) ? REMINDERS : []).filter(r => r && r.on && r.hora)
+      .map(r => ({ id:String(r.id||""), tit:String(r.tit||""), msg:String(r.msg||""),
+                   tipo:(r.tipo==="fuerte"?"fuerte":"normal"), hora:String(r.hora||""),
+                   dias: parseDias(r.dias).join(",") }))
+      .filter(r => r.id && /^\d{1,2}:\d{2}$/.test(r.hora));
+    /* "todos" = TODOS los ids que Rey tiene, encendidos o no: primero se borran los
+       despertadores viejos y luego se ponen los que toquen. Así, si apaga o borra un
+       aviso, su alarma se va con él y no queda ninguna sonando por su cuenta. */
+    const todos = (Array.isArray(REMINDERS) ? REMINDERS : []).map(r => String((r&&r.id)||"")).filter(Boolean);
+    await P.programarAvisos({ avisos: activos, todos: todos });
+  }catch(_){}
+}
 /* al arrancar y al volver a Apex: que la nube tenga SIEMPRE la lista de Rey */
-function syncRemindersDeGuardia(){ try{ syncReminders(false); }catch(_){} }
+function syncRemindersDeGuardia(){ try{ syncReminders(false); }catch(_){} try{ avisosAlRelojDelTelefono(); }catch(_){} }
 /* Ajustes de notificaciones de Roberto */
 let NOTIF = load(K.notif, { on:false, killzone:true, cuentaDD:true });
 if(!NOTIF || typeof NOTIF!=="object") NOTIF = { on:false, killzone:true, cuentaDD:true };
@@ -2913,10 +2939,10 @@ function renderAvisos(){
   body.querySelectorAll("[data-del]").forEach(b=>b.onclick=(e)=>{ e.stopPropagation(); borrarAviso(b.dataset.del); });
   const rb=$("#avRoberto"); if(rb) rb.onclick=()=>{ abrirIA(); setTimeout(()=>iaEnviar("Ayúdame a crear un recordatorio nuevo para mi rutina de trading. Pregúntame la hora, qué me recordará y si es de lunes a viernes o un día concreto. Cuando lo tengamos, dímelo en una línea corta y clara para que yo lo guarde en mis avisos."),250); };
 }
-function toggleAviso(id){ const r=REMINDERS.find(x=>x.id===id); if(!r) return; r.on=!r.on; guardarReminders(); syncReminders(); renderAvisos(); toast(r.on?"Aviso activado":"Aviso en pausa"); }
+function toggleAviso(id){ const r=REMINDERS.find(x=>x.id===id); if(!r) return; r.on=!r.on; guardarReminders(); syncReminders(); avisosAlRelojDelTelefono(); renderAvisos(); toast(r.on?"Aviso activado":"Aviso en pausa"); }
 function borrarAviso(id){ const r=REMINDERS.find(x=>x.id===id); if(!r) return;
   abrirModal(`<div class="modal-t">¿Borrar este aviso?</div><p class="desc">${esc(r.hora)} · ${esc(r.tit)}</p>`,
-    [{t:"Cancelar",fn:cerrarModal},{t:"Borrar",cls:"danger",fn:()=>{ REMINDERS=REMINDERS.filter(x=>x.id!==id); guardarReminders(); syncReminders(); cerrarModal(); renderAvisos(); toast("Aviso borrado"); }}]); }
+    [{t:"Cancelar",fn:cerrarModal},{t:"Borrar",cls:"danger",fn:()=>{ REMINDERS=REMINDERS.filter(x=>x.id!==id); guardarReminders(); syncReminders(); avisosAlRelojDelTelefono(); cerrarModal(); renderAvisos(); toast("Aviso borrado"); }}]); }
 function avisoModal(id){
   const r = id ? REMINDERS.find(x=>x.id===id) : { hora:"08:00", tit:"", msg:"", dias:"LV", tipo:"normal" };
   if(!r) return;
@@ -2953,7 +2979,7 @@ function guardarAvisoForm(id){
   const ir=($("#avIr")&&$("#avIr").value)||"";
   if(id){ const r=REMINDERS.find(x=>x.id===id); if(r){ Object.assign(r,{hora,tit,msg,dias,tipo,ir}); } }
   else { REMINDERS.push({ id:"r"+Date.now().toString(36), hora, tit, msg, dias, tipo, ir, on:true }); }
-  guardarReminders(); syncReminders(); cerrarModal(); renderAvisos(); toast("Aviso guardado ✓");
+  guardarReminders(); syncReminders(); avisosAlRelojDelTelefono(); cerrarModal(); renderAvisos(); toast("Aviso guardado ✓");
   robertoVigila((id?"Editó":"Creó")+" un AVISO de rutina: "+hora+" · "+tit+" — “"+msg+"” ("+diasLabel(dias)+", "+tipo+").");
 }
 
@@ -8702,7 +8728,32 @@ function robVidaUnGesto(){
        ⚠️ Las de crecimiento (`dichas`) NO se dicen aquí: las dice su cuerpo flotante, que
        es el que está siempre en pantalla. Si las dijeran los dos, Rey las oiría dobladas. */
     _vidaFrase++;
-    if(_vidaFrase % 4 === 0 && pack.frases.length){
+    if(_vidaFrase % 6 === 0 && pack.frases.length){
+      /* 🗣️ v7.30 — LAS DE CRECIMIENTO TAMBIÉN SE DICEN AQUÍ DENTRO.
+         Rey (04-09): "Roberto está poniendo las frases pero no las está hablando".
+         EL AGUJERO: cuando Apex está DELANTE, el cuerpo flotante apaga su vida propia
+         (`apexDelante` → `burbujaVida(false)`) y toma el relevo este Roberto de dentro…
+         que nunca hablaba. O sea: justo cuando Rey está MIRANDO Apex —que es cuando más
+         atención le presta— las frases de crecimiento salían mudas. Y como él pidió
+         expresamente que fueran habladas, aquí no valía "es que las dice el otro".
+         No hay riesgo de oírlas dobladas: los dos nunca están vivos a la vez. */
+      let dicha = "";
+      try{
+        if(pack.dichas && pack.dichas.length && typeof robTocaHablar === "function" && IA.voz && IA.voz.on){
+          let marca = {}; try{ marca = JSON.parse(localStorage.getItem("robDichas")||"{}"); }catch(_){}
+          const t = robTocaHablar(marca);
+          if(t.toca){
+            try{ localStorage.setItem("robDichas", JSON.stringify(t.marca)); }catch(_){}
+            dicha = (typeof robFraseDe === "function") ? robFraseDe("dichas-"+sit, pack.dichas)
+                                                      : pack.dichas[Math.floor(Math.random()*pack.dichas.length)];
+          }
+        }
+      }catch(_){}
+      if(dicha){
+        try{ robDecir("Roberto", dicha, {gesto:"carino"}); }catch(_){}
+        try{ iaHablar(dicha, -1); }catch(_){}
+        return;
+      }
       const f = (typeof robFraseDe === "function")
         ? robFraseDe(sit, pack.frases)
         : pack.frases[Math.floor(Math.random() * pack.frases.length)];
@@ -8726,10 +8777,10 @@ function robVidaUnGesto(){
 function robVida(){
   try{
     clearTimeout(_vidaT);
-    /* 🎭 v7.27 — de 12–28 s a 30–75 s, el mismo ritmo que su cuerpo flotante (Rey: "cada
-       1 minuto repite los mismos mensajes"). Sigue siendo irregular a propósito: un
-       intervalo fijo se lee como un reloj, no como una persona. */
-    const espera = 30000 + Math.random() * 45000;
+    /* 🎭 v7.29 — el gesto vuelve a 12–30 s (Rey: "se queda parado como estatua") y lo que
+       se espacia es la FRASE, que era lo que cansaba. Sigue siendo irregular a propósito:
+       un intervalo fijo se lee como un reloj, no como una persona. */
+    const espera = 12000 + Math.random() * 18000;
     _vidaT = setTimeout(()=>{ robVidaUnGesto(); robVida(); }, espera);
   }catch(_){}
 }
@@ -9631,7 +9682,7 @@ async function ejecutarTool(name, i){
       const hora=i.hora.length===4?("0"+i.hora):i.hora;
       const ir=IR_DESTINOS.some(d=>d.v===i.destino)?i.destino:"";
       const r={ id:"r"+Date.now().toString(36), hora, tit:i.tit||"⏰ Aviso", msg:i.msg||"", dias:parseDias(i.dias||"LV"), tipo:(i.tipo==="fuerte"?"fuerte":"normal"), ir, on:true };
-      REMINDERS.push(r); guardarReminders(); syncReminders(); if(TAB==="avisos") renderAvisos();
+      REMINDERS.push(r); guardarReminders(); syncReminders(); avisosAlRelojDelTelefono(); if(TAB==="avisos") renderAvisos();
       return {ok:true,msg:"Aviso creado: "+r.hora+" · "+r.tit+" ("+diasLabel(r.dias)+")"+(ir?(" → abre "+irDestinoLabel(ir)):"")};
     }
     if(name==="editar_aviso"){
@@ -9643,7 +9694,7 @@ async function ejecutarTool(name, i){
       ["hora","tit","msg","tipo"].forEach(k=>{ if(i[k]!=null && i[k]!=="") r[k]=i[k]; });
       if(i.dias!=null && i.dias!=="") r.dias=parseDias(i.dias);
       if(i.destino!=null && i.destino!=="" && IR_DESTINOS.some(d=>d.v===i.destino)) r.ir=i.destino;   /* v6.05: corregir el destino */
-      guardarReminders(); syncReminders(); if(TAB==="avisos") renderAvisos();
+      guardarReminders(); syncReminders(); avisosAlRelojDelTelefono(); if(TAB==="avisos") renderAvisos();
       const estado = i.on===false||i.on==="false"?" (APAGADO)":i.on===true||i.on==="true"?" (ACTIVADO)":"";
       return {ok:true,msg:"Aviso actualizado: "+r.hora+" · "+r.tit+estado+(i.destino&&irDestinoLabel(i.destino)?(" → abre "+irDestinoLabel(i.destino)):"")};
     }
@@ -9652,7 +9703,7 @@ async function ejecutarTool(name, i){
       const hb=normH(i.hora);
       const c=REMINDERS.filter(x=>normH(x.hora)===hb && (!i.tit || String(x.tit).toLowerCase().includes(String(i.tit).toLowerCase())));
       if(!c.length) return {ok:false,msg:"No encontré ese aviso"};
-      const r=c[0]; REMINDERS=REMINDERS.filter(x=>x.id!==r.id); guardarReminders(); syncReminders(); if(TAB==="avisos") renderAvisos();
+      const r=c[0]; REMINDERS=REMINDERS.filter(x=>x.id!==r.id); guardarReminders(); syncReminders(); avisosAlRelojDelTelefono(); if(TAB==="avisos") renderAvisos();
       return {ok:true,msg:"Aviso borrado: "+r.hora+" · "+r.tit};
     }
     if(name==="set_pares"){

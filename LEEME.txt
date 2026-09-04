@@ -1,52 +1,40 @@
-APEX v7.28 — TRADING DESK
+APEX v7.31 — TRADING DESK
 =========================
 
-🔴 LO PRIMERO: POR QUÉ NO TE SONÓ EL AVISO DE LAS 17:30 (y ninguno desde las 13:41)
-No era tu lista ni tu teléfono. El cron de la nube ejecutaba DIECINUEVE tareas
-encadenadas SIN una sola protección: si una revienta (el proveedor de noticias que
-no contesta, una llamada a la IA que se cae), MUEREN TODAS LAS DE DETRÁS. Tus avisos
-iban en la sexta posición, detrás de las noticias. El registro lo enseña sin lugar a
-dudas: trabajó toda la mañana (7:55, 8:00, 8:15, 8:20, killzones, 13:00) y a las 13:41
-dejó de mandar absolutamente todo.
-ARREGLADO (worker v5.123): cada tarea en su propia caja — si una falla, se apunta y las
-demás siguen. Y reordenadas: PRIMERO LO TUYO (tus avisos, tus killzones, los guardianes)
-y después lo que depende del mundo exterior. Además ahora hay un latido del cron y un
-registro de qué tarea falló, visibles en /salud: esto no se vuelve a adivinar.
-⚠️ ESTE WORKER HAY QUE SUBIRLO SÍ O SÍ: es el que te devuelve los avisos.
+⏰ TUS AVISOS SUENAN A TU HORA, NO CUANDO AL TELÉFONO LE TOCA PREGUNTAR
+Lo del minuto de retraso está resuelto por donde de verdad estaba.
+Tu aviso NO salió tarde de la nube: se disparó a las 18:52:34, clavado. Lo que llegaba
+tarde era tu teléfono, que sale a BUSCAR los avisos (nadie se los empuja): cada 15
+segundos con el mercado abierto y cada 60 fuera. Tu prueba fue fuera de mercado, y por eso
+te cuadró justo un minuto.
+Preguntar más a menudo lo pagarías con batería, y no hace falta: tus avisos programados
+tienen HORA FIJA, así que ahora se los sabe el reloj del propio teléfono y suenan solos, al
+segundo — aunque estés sin internet y aunque tengas el teléfono bloqueado.
 
-🤖 POR QUÉ ROBERTO TE DIJO "0 OPERACIONES" HABIENDO HECHO 2
-Tenías razón: era basura. Al contexto que recibe Roberto en cada mensaje no le llegaba
-NI UNA LÍNEA del Ejecutor. Le llegan el gráfico, tu plan, tus cuentas y el Guardián de
-Riesgo — y el Guardián mira tus CUATRO CUENTAS DE FONDEO, no la demo donde el Ejecutor
-opera. Así que contestó con lo único que tenía, y sonaba seguro diciendo lo contrario de
-la verdad. El detalle fino existía solo dentro del chip 🕵️ Auditoría, pero tú no tienes
-por qué saber en qué chip está cada dato.
-AHORA en CADA mensaje le viaja lo que hizo el Ejecutor hoy: cada entrada con su lote,
-grado, SL y TP; cada salida con su precio, sus dólares, su R y su motivo; y cuántas
-señales rechazó y por qué.
+🤝 Y RESPONDO A LO QUE PREGUNTASTE: no, esto NO afecta a que Apex te notifique ni a que
+Roberto te hable el aviso. El despertador entra por el MISMO camino de siempre: notifica
+igual y Roberto lo dice con su voz igual.
+La nube NO se quita: sigue mandando su copia como respaldo. Si un día Android matara la
+alarma o el teléfono se quedara sin datos, el aviso te llega igual por el otro lado.
+Y no lo verás dos veces: los dos caminos se dan la mano y el segundo que llega se calla.
+Si tú apagas al vigía, el despertador se calla también — la decisión sigue siendo tuya.
+Si reinicias el teléfono, Android borra todas las alarmas: el vigía las vuelve a poner él
+solo al arrancar, sin que tengas que abrir Apex.
 
-🕐 LAS FRASES A DESHORA (lo de "Londres se acerca" a las 4 de la tarde)
-Era un fallo de verdad: TODO lo que caía fuera de 1:00–13:00 NY se llamaba "madrugada".
-Y encima la app y tu cuerpo flotante calculaban la hora cada uno por su lado, así que
-podían decirte cosas distintas del mismo momento. Ahora hay NUEVE franjas con contenido
-propio (madrugada, Londres, antes de tu ventana, killzone, NY activa, cierre, tarde,
-noche, finde) y UNA SOLA función que usan los dos.
+👕 LA ROPA: se arregla cuatro veces al día y ya no le falta nada
+Hice correr su código real una semana entera para verlo, y salieron las tres cosas que tú
+notaste a ojo:
+  · 4 de sus 12 turnos estaban VACÍOS → había días enteros sin un solo accesorio;
+  · el turno duraba de las 2:00 a las 13:00 de Nueva York → la misma gorra toda tu jornada;
+  · la ropa de casa ya trae taza, y si el turno traía taza salía con DOS tazas.
+Ahora el día tiene cuatro momentos (Londres · Nueva York · tarde · noche) y en cada uno se
+arregla distinto: 25 conjuntos distintos en los 28 momentos de la semana, ninguno vacío y
+ninguno con una pieza repetida. Dentro de un mismo momento no se cambia — se arregla una
+vez y sigue con lo suyo; cambiarse cada rato parecería un disfraz, y eso me lo dijiste tú.
+Sin inventarme nada: sus 5 mudas y sus 7 accesorios son los que ya tenía.
 
-💬 Y LO QUE PEDISTE: CRECIMIENTO Y ABUNDANCIA, HABLADO
-26 frases nuevas de crecimiento personal y abundancia, que Roberto te DICE en voz alta.
-Con límite para que sea un regalo y no una lata: máximo 4 al día, nunca antes de 90
-minutos de la anterior, y solo si tienes su voz encendida.
-Después del cierre operativo (13:00 NY) ya no te habla del mercado: solo consejos,
-abundancia y tus avisos programados. Como pediste.
-
-🎲 YA NO SE REPITE: de ~40 frases a 104, y funcionan como una baraja — no repite hasta
-agotar el paquete. Y habla cada 3-5 minutos, no cada 40 segundos.
-
-👔 Y NO VA SIEMPRE IGUAL: el traje se comía de las 3 de la mañana a las 6 de la tarde.
-Ahora son TRES mudas en un día normal (traje mientras opera, casual por la tarde, de
-casa por la noche) y los accesorios cambian tres veces al día, no una.
-
-Regresión 138/138. Sube el zip, el worker v5.123 e instala la APK.
+Regresión completa en verde. Sube el zip e instala la APK v7.31: el worker ya está bien y
+no hay que tocar la nube.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

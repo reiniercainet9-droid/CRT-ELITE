@@ -534,12 +534,12 @@
       var emo = posibles[Math.floor(Math.random() * posibles.length)] || pack.gestos[0];
       vidaUlt = emo;
       gesto(emo);
-      /* 💬 v7.27 — UNA FRASE CADA 4 GESTOS, NO CADA 2.
+      /* 💬 v7.29 — UNA FRASE CADA 6 GESTOS (unos 2 minutos), no cada 2 (40 s).
          Rey (04-09): "cada 1 minuto repite los mismos mensajes, no me gusta eso". Con una
          frase cada dos gestos salía uno cada 40 segundos, y del mismo puñado. Ahora: menos
          a menudo, sin repetir (bolsa) y con muchas más frases donde elegir. */
       vidaFrase++;
-      if (vidaFrase % 4 === 0 && pack.frases && pack.frases.length){
+      if (vidaFrase % 6 === 0 && pack.frases && pack.frases.length){
         /* 🗣️ ¿toca una de crecimiento, de las que se DICEN en voz alta? */
         var dicha = "";
         try{
@@ -563,15 +563,19 @@
     }catch(_){}
   }
 
-  /* Ritmo irregular A PROPÓSITO: cada 30–75 s parece una persona; cada 20 clavados,
+  /* Ritmo irregular A PROPÓSITO: cada 12–30 s parece una persona; cada 20 clavados,
      un reloj. Se reprograma tras cada gesto, nunca con un temporizador que se repita
      (uno que se repite cuelga el navegador de pruebas y deja procesos vivos).
-     ⏱️ v7.27 — de 12–28 s a 30–75 s. Rey: "cada 1 minuto repite los mismos mensajes".
-     Con el gesto cada 12 s y frase cada 2, hablaba cada 40 segundos: eso no es compañía,
-     es un loro. Ahora gesticula cada medio minuto largo y habla cada 3-5 minutos. */
+     🕺 v7.29 — EL CUERPO SE MUEVE A MENUDO; LA BOCA, POCO. Rey (04-09, después de la
+     v7.28): "está muy quieto… se queda parado como estatua". Y antes de eso: "cada 1 minuto
+     repite los mismos mensajes". LAS DOS QUEJAS SON DISTINTAS y yo las mezclé: al frenar
+     las frases frené también el cuerpo, y lo dejé medio minuto largo sin mover un dedo.
+     El cuerpo moviéndose NO molesta —es lo que le hace parecer vivo—; lo que cansaba era
+     oír la misma frase cada rato. Así que: gesto cada 12-30 s (como antes) y frase cada
+     SEIS gestos (unos dos minutos), sin repetir hasta agotar el paquete. */
   function vida(){
     clearTimeout(vidaT);
-    vidaT = setTimeout(function(){ unGesto(); vida(); }, 30000 + Math.random() * 45000);
+    vidaT = setTimeout(function(){ unGesto(); vida(); }, 12000 + Math.random() * 18000);
   }
   vida();
 

@@ -794,21 +794,73 @@ ROB_CSS += "\n" + Object.keys(POSES).map(function (k) { return '[data-pose="' + 
      cada veinte segundos, que eso parecería un disfraz y no una persona. */
   function accDelDia(t) {
     try {
-      var TURNOS = ["", "gorra", "", "gafasSol", "auriculares", "", "sombrero", "bufanda",
-                    "gorra auriculares", "", "movil", "taza"];
-      /* cambia al cambiar de día Y al cambiar de tramo (mañana / tarde / noche) */
-      var tramo = (t.h < 13) ? 0 : (t.h < 20 ? 1 : 2);
-      var n = (t.num || 1) + (t.mes || 1) * 31 + tramo * 5;
-      var a = TURNOS[n % TURNOS.length];
-      /* las gafas de sol de noche no, que no es un videoclip */
-      if (a === "gafasSol" && (t.h >= 18 || t.h < 6)) return "";
-      /* la bufanda solo cuando el traje o la ropa de casa la admiten sin quedar raro */
-      if (a === "bufanda" && t.h >= 2 && t.h < 17) return "";
-      return a;
+      /* 👕 v7.31 — SE ARREGLA SIEMPRE, Y NUNCA IGUAL QUE HACE UN RATO.
+         Rey (04-09): "diversificar la ropa y los accesorios… nada de él sea aburrido, debe
+         sorprenderme para presumirlo con cualquiera".
+         SE PROBÓ SU CÓDIGO REAL UNA SEMANA ENTERA (scratchpad/ver-ropa.cjs) y salieron tres
+         cosas feas que él ya había notado a ojo:
+           · 4 de los 12 turnos estaban VACÍOS → días enteros sin un solo accesorio.
+           · el turno duraba de las 2:00 a las 13:00 NY → la misma gorra toda su jornada.
+           · "casa" añade taza y el turno podía traer taza → salía "taza taza" (dos tazas).
+         AHORA: doce combinaciones, TODAS con algo puesto; cuatro momentos al día en vez de
+         tres (Londres · Nueva York · tarde · noche), y el salto de 7 con 12 turnos hace que
+         no se repita ninguno ni al pasar de momento ni al pasar de día.
+         ⚠️ SOLO se usan prendas y accesorios QUE YA EXISTEN (ACCS, arriba): aquí no se
+         diseña nada nuevo — se combina lo que Rey ya aprobó. */
+      var TURNOS = ["gorra", "movil", "gafasSol", "auriculares", "sombrero",
+                    "gorra movil", "bufanda", "auriculares movil", "taza",
+                    "sombrero gafasSol", "gorra auriculares", "movil taza"];
+      var tramo = momentoDelDia(t);
+      var n = (t.num || 1) + (t.mes || 1) * 31 + tramo * 7;
+      /* si lo que toca no pega con el momento, se pasa al siguiente turno — NO se queda sin
+         nada, que ese era justo el defecto de antes */
+      for (var i = 0; i < TURNOS.length; i++) {
+        var a = quitaLoQueNoPega(TURNOS[(n + i) % TURNOS.length], tramo);
+        if (a) return a;
+      }
+      return "gorra";
     } catch (_) { return ""; }
   }
 
-  function mezcla(a, b) { return b ? (a + " " + b) : a; }
+  /* Los cuatro momentos de su día: 0 Londres (madrugada) · 1 Nueva York · 2 tarde · 3 noche.
+     Todo lo que decide cómo va vestido cuelga de AQUÍ y no del reloj pelado, y esa es la
+     diferencia que arregló el defecto: si una regla mira la hora cruda, a las 17:59 lleva
+     gafas y a las 18:01 no — o sea, se cambia solo delante de Rey, que es justo lo que él
+     llamó "disfrazarse". Colgando de los momentos, se arregla UNA vez y así sigue. */
+  function momentoDelDia(t) {
+    var h = t && typeof t.h === "number" ? t.h : 12;
+    return (h < 8) ? 0 : (h < 13 ? 1 : (h < 20 ? 2 : 3));
+  }
+
+  /* Las dos reglas de sentido común que ya tenía, ahora por momento y pieza a pieza (un
+     turno puede llevar dos accesorios y antes se caía entero por culpa de uno). */
+  function quitaLoQueNoPega(combo, tramo) {
+    var fuera = [];
+    var piezas = String(combo || "").split(" ");
+    for (var i = 0; i < piezas.length; i++) {
+      var p = piezas[i];
+      if (!p) continue;
+      /* las gafas de sol de noche no, que no es un videoclip: solo con el sol arriba */
+      if (p === "gafasSol" && (tramo === 0 || tramo === 3)) continue;
+      /* la bufanda solo de madrugada y de noche, que es cuando refresca */
+      if (p === "bufanda" && (tramo === 1 || tramo === 2)) continue;
+      fuera.push(p);
+    }
+    return fuera.join(" ");
+  }
+
+  /* 🍵 v7.31 — y sin repetir pieza. "casa" ya trae su taza, y si el turno del día también
+     traía taza salía con DOS tazas ("taza taza"): se veía en la simulación de la semana. */
+  function mezcla(a, b) {
+    var vistas = {}, out = [];
+    var todo = String(a || "").split(" ").concat(String(b || "").split(" "));
+    for (var i = 0; i < todo.length; i++) {
+      var p = todo[i];
+      if (!p || vistas[p]) continue;
+      vistas[p] = 1; out.push(p);
+    }
+    return out.join(" ");
+  }
   function vestirSolo() { var r = ropaDeAhora(); return vestir(r.ropa, r.acc); }
   /* Se repasa la hora AL CAMBIAR DE GESTO (cada 12–28 s en su vida de fondo), como mucho
      una vez cada 5 minutos. Sin temporizadores: uno que se repite cuelga el navegador de
