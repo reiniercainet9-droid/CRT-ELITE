@@ -396,6 +396,72 @@ function robCaraDe(titulo, cuerpo, tipo){
    la burbuja. No se copia: se MUEVE. Copiarla sería repetir la enfermedad de las
    cuatro tablas de caras del 01-09.
    ═════════════════════════════════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════════════════════════════
+   🕐 LA FRANJA DEL DÍA — v7.27: UNA SOLA, PARA LA APP Y PARA SU CUERPO FLOTANTE
+   ═════════════════════════════════════════════════════════════════════════════
+   Rey (04-09, con foto): "el tiene que saber los horarios y decirme las cosas según
+   correspondan, no a las 4pm que me pone de madrugada… y a esta hora ese mensaje de que
+   Londres se acerca". TENÍA RAZÓN Y ERA UN FALLO GORDO: la franja se decidía así —
+       if (h >= 60 && h < 780) return "espera";   // 1:00–13:00 NY
+       return "madrugada";                        // ← TODO LO DEMÁS
+   O sea que las 4 de la tarde, las 6 y las 9 de la noche eran "madrugada" y le salían
+   frases de Londres y del spread nocturno a plena luz del día.
+   Y había OTRO problema debajo: la app y la burbuja calculaban la franja cada una por su
+   lado (la app con la hora local y el día UTC, la burbuja con Nueva York), así que podían
+   contradecirse. Ahora la franja se decide AQUÍ y beben las dos.
+
+   LAS FRANJAS, con la hora de Nueva York (que es la que manda en su operativa):
+     finde      · sábado y domingo
+     madrugada  · 0:00–2:00  (1:00–3:00 en su hora) — si está levantado, se le acompaña
+     londres    · 2:00–7:00  — abre Londres, el spread se abre, café
+     cerca      · 7:00–7:30  — media hora antes de su killzone
+     killzone   · 7:30–9:30  — SU ventana, la buena
+     nyactiva   · 9:30–11:30 — Nueva York abierta
+     cierre     · 11:30–13:00 — se acaba su ventana operativa (13:00 NY)
+     tarde      · 13:00–18:00 — MERCADO CERRADO PARA ÉL: aquí manda el crecimiento
+     noche      · 18:00–24:00 — descanso, balance del día, abundancia
+   Rey (04-09): "después que cierra el horario operativo, solo los mensajes programados y
+   las alertas; prefiero consejos, mensajes de abundancia, riquezas, crecimiento personal".
+   Por eso de 13:00 NY en adelante NO se habla del mercado en su vida de fondo. */
+function robFranja(opts) {
+  try {
+    var o = opts || {};
+    if (o.posicion) return "posicion";          /* dinero corriendo: manda sobre la hora */
+    var f = new Date();
+    var ny = new Date(f.toLocaleString("en-US", { timeZone: "America/New_York" }));
+    var d = ny.getDay(), h = ny.getHours() * 60 + ny.getMinutes();
+    if (d === 0 || d === 6) return "finde";
+    if (o.killzone) return "killzone";          /* lo que sepa la app manda sobre el reloj */
+    if (o.faltanKz != null && o.faltanKz <= 30) return "cerca";
+    if (h < 120) return "madrugada";            /* 0:00–2:00 */
+    if (h < 420) return "londres";              /* 2:00–7:00 */
+    if (h < 450) return "cerca";                /* 7:00–7:30 */
+    if (h < 570) return "killzone";             /* 7:30–9:30 */
+    if (h < 690) return "nyactiva";             /* 9:30–11:30 */
+    if (h < 780) return "cierre";               /* 11:30–13:00 */
+    if (h < 1080) return "tarde";               /* 13:00–18:00 */
+    return "noche";                             /* 18:00–24:00 */
+  } catch (_) { return "espera"; }
+}
+
+/* 🎲 LA BOLSA DE FRASES — para que no repita.
+   Rey (04-09): "son los únicos mensajes y repetidos todo el tiempo, no me gusta eso, cada
+   1 minuto repite los mismos". Antes se elegía al azar puro: con 6 frases en el paquete,
+   la misma salía cada tres o cuatro veces. Ahora funciona como una baraja: se van sacando
+   sin repetir hasta que se acaban, y entonces se baraja de nuevo. */
+var _bolsas = {};
+function robFraseDe(franja, lista) {
+  try {
+    if (!lista || !lista.length) return "";
+    var b = _bolsas[franja];
+    if (!b || !b.length) { b = lista.slice(); _bolsas[franja] = b; }
+    var i = Math.floor(Math.random() * b.length);
+    var frase = b[i];
+    b.splice(i, 1);
+    return frase;
+  } catch (_) { return lista && lista[0] || ""; }
+}
+
 const ROB_VIDA = {
   killzone: {
     gestos: ["shhh", "vigila", "apunta", "tiempo", "animo", "serio", "analiza", "ensena", "tetoca", "aprueba", "idea", "olfatea"],
@@ -436,12 +502,148 @@ const ROB_VIDA = {
              "Buen momento para backtesting… o para no hacer nada. 😄",
              "Aquí estaré el lunes, fresquito.",
              "Revísate el diario, que ahí está el oro.",
-             "Yo descansando, pero con un ojo abierto. 😉"],
+             "Yo descansando, pero con un ojo abierto. 😉",
+             "El descanso también es parte del oficio, Rey.",
+             "Los lunes se ganan los domingos, preparando.",
+             "Hoy no hay gráfico. Hoy hay vida."],
+    /* 🗣️ las que DICE en voz alta (ver ROB_DICHAS) */
+    dichas: ["Rey, la cuenta crece cuando el que la maneja crece. Y tú estás creciendo.",
+             "El dinero llega donde hay orden. Tú ya tienes el orden.",
+             "Descansa sin culpa: el que descansa decide mejor, y el que decide mejor gana más.",
+             "Lo que estás construyendo no se mide en un mes. Se mide en años, y vas bien.",
+             "La abundancia no es tener más, es no tener miedo. Y cada día tienes menos."],
   },
   madrugada: {
-    gestos: ["ojala", "espera", "animo", "tiempo", "carino", "orgulloso", "idea", "aprueba"],
+    gestos: ["ojala", "espera", "animo", "tiempo", "carino", "orgulloso", "idea", "aprueba", "shhh"],
     frases: ["De madrugada y aquí estás. Eso es oficio.",
-             "Londres se acerca. Café y cabeza fría.",
-             "Yo no me duermo, tranquilo.", "A esta hora el spread se abre. Ojo."],
+             "Yo no me duermo, tranquilo.",
+             "A esta hora hay poca gente y mucho ruido. Ojo.",
+             "Si vas a estar, que sea con cabeza. Si no, a dormir.",
+             "El mercado no se va a acabar esta noche, Rey.",
+             "Duerme tú, que yo vigilo."],
+    dichas: ["Rey, el descanso es parte del plan. Mañana decides mejor.",
+             "Nadie se hizo rico quitándose el sueño una noche. Se hace con constancia."],
+  },
+  londres: {
+    gestos: ["tiempo", "animo", "apunta", "ensena", "idea", "saluda", "analiza", "vigila", "aprueba", "olfatea"],
+    frases: ["Londres abre. El día empieza de verdad.",
+             "Café y cabeza fría: entra la sesión europea.",
+             "A esta hora el spread se abre. Ojo con entrar a lo loco.",
+             "Sesión de Londres: hay movimiento, no todo es señal.",
+             "Repasa tus niveles antes de que esto coja velocidad.",
+             "El primer impulso engaña. Espera la confirmación.",
+             "Aquí estoy, leyendo el arranque contigo."],
+  },
+  cerca: {
+    gestos: ["tiempo", "animo", "apunta", "presumido", "ensena", "idea", "saluda", "aprueba", "analiza", "tetoca"],
+    frases: ["Ya casi. Prepara el checklist.", "Se acerca la buena.",
+             "Repasa tu riesgo antes de que abra.", "Calienta motores.",
+             "Mira tus niveles ahora, no después.", "Yo ya estoy listo. ¿Y tú?",
+             "Media hora para tu ventana. Respira y enfócate."],
+  },
+  killzone: {
+    gestos: ["shhh", "vigila", "apunta", "tiempo", "animo", "serio", "analiza", "ensena", "tetoca", "aprueba", "idea", "olfatea"],
+    frases: ["Ventana abierta. Ojo al gráfico.", "Aquí es donde se gana. Paciencia.",
+             "Nada de forzar: que venga ella.", "Estoy mirando contigo.",
+             "Sweep, MSS, zona. En ese orden.", "Si dudas, no entras. Así de simple.",
+             "Tu mejor ventana del día. No la gastes en una señal fea.",
+             "Una buena vale más que tres regulares."],
+  },
+  nyactiva: {
+    gestos: ["vigila", "analiza", "tiempo", "serio", "apunta", "ensena", "animo", "shhh", "aprueba"],
+    frases: ["Nueva York abierta: aquí se mueve el dinero grande.",
+             "Con NY dentro, los barridos son más limpios… y más caros.",
+             "Ya estamos en la segunda parte del día. Cabeza.",
+             "Si ya operaste tu A+, hoy cumpliste. No busques más.",
+             "Esta hora premia al que espera, no al que persigue."],
+  },
+  cierre: {
+    gestos: ["tiempo", "serio", "apunta", "aprueba", "analiza", "carino", "orgulloso"],
+    frases: ["Se acaba tu ventana operativa. Vamos cerrando.",
+             "Última media hora: gestión, no entradas nuevas.",
+             "Lo que no entró hoy, entra mañana. Hay más días.",
+             "Apunta lo que viste hoy, aunque no operaras.",
+             "Cerramos con orden, que es como se gana a largo."],
+  },
+  tarde: {
+    gestos: ["carino", "orgulloso", "idea", "animo", "presenta", "guino", "ensena", "aprueba",
+             "felicita", "presumido", "chocalas", "huele", "sorprende", "analiza"],
+    frases: ["Mercado cerrado para ti. Ahora toca vivir.",
+             "El día operativo terminó. Lo demás es tuyo.",
+             "¿Y si dedicas media hora a estudiar algo que te haga mejor?",
+             "Buen momento para el diario: ahí está tu oro.",
+             "Ya no hay gráfico que valga. Hoy cumpliste."],
+    dichas: ["Rey, el dinero es consecuencia. Ocúpate de la causa y él viene solo.",
+             "La riqueza empieza cuando dejas de perseguirla y empiezas a construirla.",
+             "Cada día que respetas tus reglas te haces más rico, aunque el día cierre en cero.",
+             "Tu mayor activo no es la cuenta: eres tú. Inviértete.",
+             "Los que ganan de verdad no operan más: operan mejor y esperan más.",
+             "El que aguanta sin romper sus reglas ya está por delante del 90%.",
+             "No compares tu capítulo cinco con el veinte de otro. Vas en tu tiempo.",
+             "Abundancia es tener opciones. Cada regla que cumples te da una más.",
+             "Lo que haces cuando el mercado está cerrado decide lo que ganas cuando abre.",
+             "Rey, tu disciplina de hoy es el dinero de dentro de un año.",
+             "El talento sin proceso se gasta. El proceso sin talento llega igual.",
+             "No necesitas un día perfecto. Necesitas muchos días iguales.",
+             "El que se hace rico rápido casi siempre se hace pobre rápido. Tú vas por el camino largo, que es el que llega."],
+  },
+  noche: {
+    /* ⚠️ NADA de "siesta" aquí: ley sellada de Rey (31-08) — "él NO puede estar durmiendo
+       en mi pantalla". De noche está despierto y cómodo, nunca dormido. Lo cacé con el
+       banco test-vida675 al añadir esta franja. */
+    gestos: ["carino", "orgulloso", "serio", "aprueba", "animo", "idea", "presenta", "guino", "felicita", "tiempo"],
+    frases: ["Se acabó el día. Balance y a descansar.",
+             "¿Anotaste lo de hoy? Mañana lo agradeces.",
+             "Mañana hay otra ventana. Hoy ya está.",
+             "Cierra la pantalla, Rey. El gráfico seguirá ahí.",
+             "Yo me quedo de guardia. Tú descansa."],
+    dichas: ["Rey, hoy hiciste tu parte. Mañana se sigue.",
+             "El sueño también es gestión de riesgo: sin descanso se opera peor.",
+             "Lo que sembraste hoy no se ve hoy. Se ve dentro de un año.",
+             "Cierra el día en paz: la cuenta se construye con calma, no con prisa.",
+             "Un día menos para llegar. Eso es todo lo que hace falta hoy.",
+             "La abundancia no llega de golpe: se acumula en días como este."],
+  },
+  posicion: {
+    gestos: ["vigila", "serio", "tiempo", "ojala", "shhh", "animo", "aprueba"],
+    frases: ["No la toques. Déjala trabajar.", "La estoy vigilando yo.", "Respira. Va sola.",
+             "Ni la mires cada minuto, que se te hace larga.",
+             "Ya hiciste lo difícil: entrar bien. Ahora, quieto."],
+  },
+  espera: {
+    gestos: ["espera", "confundido", "guino", "orgulloso", "carino", "ojala", "burla", "presumido",
+             "animo", "sorprende", "idea", "analiza", "presenta", "tetoca", "ensena", "lengua", "aprueba", "huele", "olfatea"],
+    frases: ["Aquí sigo, sin señales todavía.", "Aburrido pero despierto. 😌",
+             "Con ganas de que abra la próxima.", "Ni una señal… así se ganan las cuentas.",
+             "Descansa tú, que yo vigilo.", "Esto está más quieto que un lunes de agosto.",
+             "¿Hacemos backtesting mientras esperamos?", "Si aparece algo, te aviso yo. Tranquilo.",
+             "Llevo un rato sin trabajo. Me aburro. 🙄", "Paciencia hoy, dinero mañana.",
+             "¿Has comido algo? Yo aquí, a base de gráficos. 😄",
+             "Estírate un poco, que llevas rato sentado.",
+             "Bebe agua, jefe. El cerebro opera mejor hidratado.",
+             "Si te agobias, cierra la pantalla diez minutos. Yo vigilo.",
+             "Un día tranquilo también es un buen día.",
+             "Oye… ¿me estás mirando? 👀", "Aquí, oliendo el mercado. 👃"],
   },
 };
+
+/* 🗣️ v7.27 — LAS QUE DICE EN VOZ ALTA.
+   Rey (04-09): "quisiera que Roberto me dijera frases de crecimiento personal y abundancia
+   en el día cada cierto tiempo… habladas".
+   ⚠️ Esto CAMBIA una ley suya anterior (02-09: la voz era solo para alarmas, avisos
+   programados y respuestas del chat; su vida de fondo era muda). Lo cambia ÉL, y con
+   límites para que sea un regalo y no una lata: solo las frases de crecimiento (`dichas`),
+   como mucho 4 al día, nunca menos de 90 minutos seguidas, y siempre con su interruptor de
+   voz encendido — si lo apaga, ni una palabra. */
+const ROB_DICHAS = { max: 4, cadaMin: 90 };
+function robTocaHablar(marca) {
+  try {
+    var hoy = new Date().toDateString();
+    var m = marca || {};
+    if (m.dia !== hoy) { m = { dia: hoy, n: 0, ts: 0 }; }
+    if (m.n >= ROB_DICHAS.max) return { toca: false, marca: m };
+    if (m.ts && (Date.now() - m.ts) < ROB_DICHAS.cadaMin * 60000) return { toca: false, marca: m };
+    m.n++; m.ts = Date.now();
+    return { toca: true, marca: m };
+  } catch (_) { return { toca: false, marca: marca || {} }; }
+}

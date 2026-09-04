@@ -8645,18 +8645,25 @@ let _vidaT = null, _vidaUlt = "", _vidaFrase = 0;
 
 function robVidaSituacion(){
   try{
-    const d = new Date().getUTCDay();
-    if(d === 6 || d === 0) return "finde";
-    /* 💰 v6.94 — LA POSICIÓN ABIERTA MANDA SOBRE LA HORA. Antes la madrugada se miraba
-       ANTES que la posición: con una operación viva a las 4 de la mañana, Roberto hacía
-       gestos de "madrugada" en vez de estar cuidándola. Hay dinero corriendo — eso gana a
-       cualquier otra cosa, igual que en su tabla de situaciones manda siempre lo más grave. */
-    if(_robFondo === "vigila" && /cuidando/.test(($("#iaRobEstado")||{}).textContent||"")) return "posicion";
-    const kz = robKillzoneAhora();
-    if(kz.dentro) return "killzone";
-    if(kz.faltan != null && kz.faltan <= 30) return "cerca";
-    /* 🌙 antes de Londres Rey suele estar levantado: ahí Roberto acompaña, no bromea */
-    { const h = new Date().getHours(); if(h >= 0 && h < 7) return "madrugada"; }
+    /* 🕐 v7.27 — LA FRANJA SALE DE situaciones.js, LA MISMA QUE USA SU CUERPO FLOTANTE.
+       Rey (04-09): "él tiene que saber los horarios y decirme las cosas según correspondan,
+       no a las 4pm que me pone de madrugada". Aquí había otro problema además del de la
+       burbuja: el fin de semana se miraba con el día UTC y la madrugada con la hora LOCAL,
+       así que a las 21:00 del sábado en Brasil (domingo UTC) ya era "finde" para la app y
+       aún no para el cuerpo. Una sola función y se acabó la discusión.
+       Lo que esta app SÍ sabe y la burbuja no —si hay posición viva y su killzone real—
+       se le pasa como pistas: eso manda sobre el reloj. */
+    if(typeof robFranja === "function"){
+      const kz = robKillzoneAhora();
+      return robFranja({
+        posicion: (_robFondo === "vigila" && /cuidando/.test(($("#iaRobEstado")||{}).textContent||"")),
+        killzone: !!kz.dentro,
+        faltanKz: kz.faltan,
+      });
+    }
+    /* sin situaciones.js no hay vida de fondo: se queda de guardia y ya. Antes aquí había
+       una COPIA de la lógica de las franjas (día UTC, hora local) y era justo la que se
+       contradecía con la del cuerpo flotante. Una sola fuente o ninguna. */
     return "espera";
   }catch(_){ return "espera"; }
 }
@@ -8687,11 +8694,18 @@ function robVidaUnGesto(){
     _vidaUlt = emo;
 
     robCara(emo);
-    /* 1 de cada 4 veces, además, dice algo corto */
+    /* 💬 v7.27 — UNA FRASE CADA 4 GESTOS Y SIN REPETIR.
+       Rey (04-09): "son los únicos mensajes y repetidos todo el tiempo… cada 1 minuto
+       repite los mismos, no me gusta eso". Antes: una frase cada 2 gestos elegida al azar
+       puro sobre 6 frases — la misma volvía cada tres o cuatro veces. Ahora sale de la
+       BOLSA (no repite hasta agotar el paquete) y con 104 frases donde elegir.
+       ⚠️ Las de crecimiento (`dichas`) NO se dicen aquí: las dice su cuerpo flotante, que
+       es el que está siempre en pantalla. Si las dijeran los dos, Rey las oiría dobladas. */
     _vidaFrase++;
-    /* 💬 v6.78 — Rey pidió que salga MÁS a menudo: de 1 de cada 4 gestos a 1 de cada 2 */
-    if(_vidaFrase % 2 === 0 && pack.frases.length){
-      const f = pack.frases[Math.floor(Math.random() * pack.frases.length)];
+    if(_vidaFrase % 4 === 0 && pack.frases.length){
+      const f = (typeof robFraseDe === "function")
+        ? robFraseDe(sit, pack.frases)
+        : pack.frases[Math.floor(Math.random() * pack.frases.length)];
       try{ robDecir("Roberto", f, {}); }catch(_){}
     }
     /* y vuelve a su cara de guardia, la de verdad */
@@ -8712,9 +8726,10 @@ function robVidaUnGesto(){
 function robVida(){
   try{
     clearTimeout(_vidaT);
-    /* 🎭 v6.76 — más vivo: de 12 a 28 s en vez de 20 a 45. Sigue siendo irregular a
-       propósito: un intervalo fijo se lee como un reloj, no como una persona. */
-    const espera = 12000 + Math.random() * 16000;
+    /* 🎭 v7.27 — de 12–28 s a 30–75 s, el mismo ritmo que su cuerpo flotante (Rey: "cada
+       1 minuto repite los mismos mensajes"). Sigue siendo irregular a propósito: un
+       intervalo fijo se lee como un reloj, no como una persona. */
+    const espera = 30000 + Math.random() * 45000;
     _vidaT = setTimeout(()=>{ robVidaUnGesto(); robVida(); }, espera);
   }catch(_){}
 }
@@ -8877,6 +8892,55 @@ function robEvento(titulo,cuerpo,op){
 /* 👁️ EL VIGILANTE: lee el estado REAL del sistema y le pone la cara que toca.
    Sin coste (una llamada a /ejec/estado) y sin ruido: solo cambia si cambió algo. */
 let _robFondo="";
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   🤖 v7.28 — LO QUE HIZO EL EJECUTOR, EN EL CONTEXTO DE ROBERTO
+   ═════════════════════════════════════════════════════════════════════════════
+   Rey (04-09): le pidió a Roberto "evalúa las operaciones del ejecutor hoy" y Roberto le
+   contestó «hoy el Ejecutor NO ejecutó ninguna operación — 0/2 trades en las 4 cuentas,
+   confirmado por el Guardián de Riesgo». ERA MENTIRA: ese día el Ejecutor hizo DOS
+   operaciones en EURUSD (04:00 y 04:16) — las mismas que estuvimos analizando toda la
+   mañana. Rey lo llamó por su nombre: "es todo basura".
+   LA CAUSA: al contexto que se le manda a Roberto en cada mensaje NO iba ni una línea del
+   Ejecutor. Iban el gráfico, el plan, sus cuentas, el Guardián de Riesgo… y el Guardián
+   mira sus CUATRO CUENTAS DE FONDEO, no la demo donde el Ejecutor opera. Así que Roberto
+   respondía con lo único que tenía y sonaba seguro diciendo justo lo contrario de la verdad.
+   El detalle fino seguía existiendo solo dentro del chip 🕵️ Auditoría — pero Rey no tiene
+   por qué saber en qué chip está cada dato: se lo pregunta a Roberto y ya está.
+   AHORA: en CADA mensaje va lo que hizo hoy, con sus entradas y salidas de verdad. */
+let EJEC_CACHE = { ts: 0, d: null };
+async function ejecRefrescar(){
+  try{
+    if(Date.now() - EJEC_CACHE.ts < 20000 && EJEC_CACHE.d) return EJEC_CACHE.d;
+    const r = await fetch(nubeUrl()+"/ejec/estado",{cache:"no-store"});
+    const d = await r.json();
+    if(d && d.ok){ EJEC_CACHE = { ts: Date.now(), d: d }; }
+    return EJEC_CACHE.d;
+  }catch(_){ return EJEC_CACHE.d; }
+}
+function iaEjecutorHoy(){
+  try{
+    const d = EJEC_CACHE.d;
+    if(!d) return "";
+    const live = d.live||{}, cfg = d.cfg||{};
+    const hoy = new Date().toDateString();
+    const suyas = (d.log||[]).filter(x => {
+      try{ return new Date(x.ts).toDateString() === hoy && (x.tipo==="entrada" || x.tipo==="salida"); }catch(_){ return false; }
+    });
+    const hora = (ts)=>{ try{ return new Date(ts).toLocaleTimeString("es",{hour:"2-digit",minute:"2-digit"}); }catch(_){ return "?"; } };
+    const lineas = suyas.slice(0,12).reverse().map(x=>{
+      if(x.tipo==="entrada") return "  · "+hora(x.ts)+" ENTRÓ "+(x.dir==="buy"?"COMPRA":"VENTA")+" "+(x.sym||"")+" a "+(x.entrada||x.precio||"?")+" (lote "+(x.lote!=null?x.lote:"?")+", grado "+(x.grado||"?")+", SL "+(x.sl||"?")+", TP "+(x.tp||"?")+")";
+      return "  · "+hora(x.ts)+" SALIÓ "+(x.sym||"")+" a "+(x.salida||"?")+" · "+(x.pl!=null?("$"+x.pl):"?")+" ("+(x.r!=null?x.r+"R":"?")+") · motivo: "+(x.motivo||"?");
+    }).join("\n");
+    const rechazos = (d.log||[]).filter(x=>{ try{ return new Date(x.ts).toDateString()===hoy && x.tipo==="rechazo"; }catch(_){ return false; } });
+    const porQue = rechazos.length ? ("\n  · señales que RECHAZÓ hoy: "+rechazos.length+" (motivo más repetido: "+(rechazos[0].motivo||"?")+")") : "";
+    return "\n[🤖 EL EJECUTOR HOY] "+(d.on?"🟢 encendido":"🔴 apagado")+(d.vivo?"":" · ⚠️ SIN CONEXIÓN con la PC")+
+      " · operaciones hoy: "+(live.opsHoy!=null?live.opsHoy:"?")+" · P&L del día: $"+(live.plHoy!=null?live.plHoy:"0")+
+      " · cuenta "+(live.cuenta||"?")+(live.demo?" (DEMO)":"")+" · balance $"+(live.balance!=null?live.balance:"?")+
+      "\n  ⚠️ ESTO es lo que hizo el Ejecutor: sus operaciones NO salen en el Guardián de Riesgo (ese mira las cuentas de fondeo de Rey). Si te preguntan por el Ejecutor, contesta con ESTE bloque." + "\n"+
+      (lineas || "  · hoy no entró en ninguna operación")+porQue+"\n";
+  }catch(_){ return ""; }
+}
 async function robVigilante(){
   try{
     if(typeof Roberto==="undefined" || document.visibilityState!=="visible") return;
@@ -10636,6 +10700,9 @@ async function iaEnviar(textoForzado, promptExtra){
   // Inyecta el contexto de datos en el bloque de texto del último mensaje del usuario
   let calTxt=""; try{ const ev=await cargarCalendarioCache(); calTxt=iaCalendarioContexto(ev)+"\n"; }catch(_){ calTxt=""; }
   let grafTxt=""; try{ grafTxt=await iaGrafico()+"\n"; }catch(_){ grafTxt=""; }
+  /* 🤖 v7.28 — y una foto FRESCA de lo que hizo el Ejecutor, para que Roberto no vuelva a
+     decirle a Rey que hoy no operó cuando sí operó (04-09: "es todo basura"). */
+  try{ await ejecRefrescar(); }catch(_){}
   // promptExtra = framework de análisis (semanal/diario) que va a la API pero NO se muestra en el chat
   const marco = promptExtra ? ("\n\n=== INSTRUCCIONES DEL ANÁLISIS QUE PIDE REY ===\n"+promptExtra+"\n=== FIN INSTRUCCIONES ===") : "";
   /* 💰 v6.02 — EL AGUJERO GRANDE, con datos reales del 22/08 ($5.44 en un día): el contexto
@@ -10645,7 +10712,7 @@ async function iaEnviar(textoForzado, promptExtra){
      viaja en su bloque ESTABLE (idéntico byte a byte al que luego va en el historial) con la
      marca de caché puesta AQUÍ MISMO, y el contexto vivo va DETRÁS de la marca, en su propio
      bloque, a precio normal (1×). El worker v5.68 respeta esta marca y no la pisa. */
-  const inj="=== CONTEXTO VIVO DE LA APP (datos de AHORA MISMO; el mensaje de Rey es el bloque anterior) ===\n"+iaReloj()+"\n"+grafTxt+calTxt+iaContexto()+"\n"+iaEstrategiaDef()+"\n"+guardianRiesgo()+"\n"+iaPlan()+"\n"+iaAciertos()+"\n"+(estadoRecuperacionFreno().block||"")+iaFugas()+"\n"+iaRacha()+"\n"+iaPatrones()+"\n"+iaDatosSueltos()+"\n"+iaHitos()+"\n"+iaChats()+"\n"+iaPendientes()+"\n"+iaPlanSemanal()+"\n"+iaAvisos()+"\n"+iaEntradasAbiertas()+marco+"\n=== FIN DEL CONTEXTO — responde al mensaje de Rey del bloque anterior ===";
+  const inj="=== CONTEXTO VIVO DE LA APP (datos de AHORA MISMO; el mensaje de Rey es el bloque anterior) ===\n"+iaReloj()+"\n"+grafTxt+calTxt+iaContexto()+"\n"+iaEstrategiaDef()+"\n"+guardianRiesgo()+"\n"+iaPlan()+"\n"+iaAciertos()+"\n"+(estadoRecuperacionFreno().block||"")+iaFugas()+"\n"+iaRacha()+"\n"+iaPatrones()+"\n"+iaDatosSueltos()+"\n"+iaHitos()+"\n"+iaChats()+"\n"+iaPendientes()+"\n"+iaPlanSemanal()+"\n"+iaAvisos()+"\n"+iaEntradasAbiertas()+iaEjecutorHoy()+marco+"\n=== FIN DEL CONTEXTO — responde al mensaje de Rey del bloque anterior ===";
   const last=msgs[msgs.length-1];
   const textoMsg=c.msgs[c.msgs.length-1].content;   /* EXACTAMENTE lo guardado (texto + nota del doc) */
   let bloquesMsg = Array.isArray(last.content) ? last.content.filter(b=>b.type==="image") : [];   /* la foto va delante */

@@ -1,42 +1,52 @@
-APEX v7.26 — TRADING DESK
+APEX v7.28 — TRADING DESK
 =========================
 
-🔴 LO PRIMERO: TU PC ESTABA AHOGADA Y ERA CULPA MÍA
-El Puente no estaba roto. Tenías 0,4 GB de RAM libres de 7,8 y el procesador al 100%
-por MIS pruebas: cuatro regresiones completas, tres compilaciones del APK, y un proceso
-`find` mío colgado desde la mañana comiéndose 16.688 segundos de CPU. Con la máquina
-así, Edge se arrastraba, las pestañas no contestaban a tiempo y el Puente perdía un par.
-Lo que hice: maté el `find`, paré mis pruebas, borré 924 carpetas temporales que dejaron
-(7,3 GB), y dejé el corredor de pruebas recogiendo su basura solo.
+🔴 LO PRIMERO: POR QUÉ NO TE SONÓ EL AVISO DE LAS 17:30 (y ninguno desde las 13:41)
+No era tu lista ni tu teléfono. El cron de la nube ejecutaba DIECINUEVE tareas
+encadenadas SIN una sola protección: si una revienta (el proveedor de noticias que
+no contesta, una llamada a la IA que se cae), MUEREN TODAS LAS DE DETRÁS. Tus avisos
+iban en la sexta posición, detrás de las noticias. El registro lo enseña sin lugar a
+dudas: trabajó toda la mañana (7:55, 8:00, 8:15, 8:20, killzones, 13:00) y a las 13:41
+dejó de mandar absolutamente todo.
+ARREGLADO (worker v5.123): cada tarea en su propia caja — si una falla, se apunta y las
+demás siguen. Y reordenadas: PRIMERO LO TUYO (tus avisos, tus killzones, los guardianes)
+y después lo que depende del mundo exterior. Además ahora hay un latido del cron y un
+registro de qué tarea falló, visibles en /salud: esto no se vuelve a adivinar.
+⚠️ ESTE WORKER HAY QUE SUBIRLO SÍ O SÍ: es el que te devuelve los avisos.
 
-👁️ EL PUENTE (v4.8) — Y ADEMÁS HABÍA DOS CORRIENDO
-Al reiniciarlo encontré DOS Puentes vivos a la vez: por eso te duplicaba los pares.
-Ahora hay uno solo, con sus dos pestañas (EURUSD y GBPUSD) y empujando los dos pares
-cada 15 segundos. Verificado tres veces seguidas antes de suspender.
-Y el agujero de fondo, tapado: cuando una pestaña no contestaba, ese par se caía SIN
-UNA SOLA LÍNEA en el registro y el Puente seguía como si nada — el Ejecutor operando a
-ciegas sin que nadie lo dijera. Ahora se dice siempre en el registro.
+🤖 POR QUÉ ROBERTO TE DIJO "0 OPERACIONES" HABIENDO HECHO 2
+Tenías razón: era basura. Al contexto que recibe Roberto en cada mensaje no le llegaba
+NI UNA LÍNEA del Ejecutor. Le llegan el gráfico, tu plan, tus cuentas y el Guardián de
+Riesgo — y el Guardián mira tus CUATRO CUENTAS DE FONDEO, no la demo donde el Ejecutor
+opera. Así que contestó con lo único que tenía, y sonaba seguro diciendo lo contrario de
+la verdad. El detalle fino existía solo dentro del chip 🕵️ Auditoría, pero tú no tienes
+por qué saber en qué chip está cada dato.
+AHORA en CADA mensaje le viaja lo que hizo el Ejecutor hoy: cada entrada con su lote,
+grado, SL y TP; cada salida con su precio, sus dólares, su R y su motivo; y cuántas
+señales rechazó y por qué.
 
-🗣️ LA VOZ DE TUS AVISOS (v7.26) — los dos agujeros que te dejaron mudo
-1. La voz de un aviso viajaba SIEMPRE por la página de tu cuerpo flotante. Si el cuerpo
-   no estaba en pantalla, el aviso llegaba mudo. Ahora, sin cuerpo, lo dice el propio
-   vigía. Nunca mudo.
-2. El interruptor de tu voz solo se le recordaba al vigía al arrancar Apex. Ahora también
-   cada vez que vuelves a ella: lo que tú ves es lo que manda.
-3. Y cada aviso que debía sonar deja su parte en la nube (APEX-DIAG-VOZ) diciendo si tu
-   interruptor estaba puesto, si el motor de voz estaba listo y si había cuerpo. La
-   próxima vez que me digas "no me habló", lo leo en diez segundos.
+🕐 LAS FRASES A DESHORA (lo de "Londres se acerca" a las 4 de la tarde)
+Era un fallo de verdad: TODO lo que caía fuera de 1:00–13:00 NY se llamaba "madrugada".
+Y encima la app y tu cuerpo flotante calculaban la hora cada uno por su lado, así que
+podían decirte cosas distintas del mismo momento. Ahora hay NUEVE franjas con contenido
+propio (madrugada, Londres, antes de tu ventana, killzone, NY activa, cierre, tarde,
+noche, finde) y UNA SOLA función que usan los dos.
 
-ESTADO AL SUSPENDER (comprobado uno por uno):
-  · Puente: 1 instancia · 2 pestañas · los 2 pares empujando · gráfico fresco
-  · Ejecutor: 🟢 encendido y vivo (visto hace 8 s) · EURUSD+GBPUSD · riesgo 0.5% · veto ON
-  · MT5: corriendo · cuenta demo 61587406 · balance 50.000
-  · Despertadores: Londres, NY, siesta y suspensión — todos listos
-  · Worker 5.122: ya subido por ti ✓ · App 7.25 en la nube ✓
+💬 Y LO QUE PEDISTE: CRECIMIENTO Y ABUNDANCIA, HABLADO
+26 frases nuevas de crecimiento personal y abundancia, que Roberto te DICE en voz alta.
+Con límite para que sea un regalo y no una lata: máximo 4 al día, nunca antes de 90
+minutos de la anterior, y solo si tienes su voz encendida.
+Después del cierre operativo (13:00 NY) ya no te habla del mercado: solo consejos,
+abundancia y tus avisos programados. Como pediste.
 
-⚠️ LA APK v7.26 NO LA INSTALES TODAVÍA: le falta la parte de la regresión que abre
-navegador (129/129 en verde, faltan 8 bancos). La corro mañana temprano y te aviso.
-Hoy te quedas con la 7.25, que sí está verificada entera.
+🎲 YA NO SE REPITE: de ~40 frases a 104, y funcionan como una baraja — no repite hasta
+agotar el paquete. Y habla cada 3-5 minutos, no cada 40 segundos.
+
+👔 Y NO VA SIEMPRE IGUAL: el traje se comía de las 3 de la mañana a las 6 de la tarde.
+Ahora son TRES mudas en un día normal (traje mientras opera, casual por la tarde, de
+casa por la noche) y los accesorios cambian tres veces al día, no una.
+
+Regresión 138/138. Sube el zip, el worker v5.123 e instala la APK.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

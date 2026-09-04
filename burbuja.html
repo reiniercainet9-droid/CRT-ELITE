@@ -512,22 +512,17 @@
      por lo que SÍ se sabe desde fuera — el día y la hora de Nueva York. */
   var vidaT = null, vidaUlt = "", vidaFrase = 0;
 
+  /* 🕐 v7.27 — LA FRANJA YA NO SE CALCULA AQUÍ.
+     Rey (04-09, con foto): "a las 4pm me pone mensajes de madrugada… y que Londres se
+     acerca". El fallo estaba en esta función: todo lo que caía fuera de 1:00–13:00 NY se
+     llamaba "madrugada". Y encima la app la calculaba a su manera (hora local, día UTC),
+     así que las dos podían decir cosas distintas del mismo momento.
+     Ahora la decide `robFranja()` en situaciones.js — una sola, para los dos Robertos. */
   function situacionAhora(){
-    try{
-      var f = new Date();
-      var ny = new Date(f.toLocaleString("en-US", { timeZone: "America/New_York" }));
-      var d = ny.getDay(), h = ny.getHours() * 60 + ny.getMinutes();
-      /* ⏰ Las horas son LAS SUYAS, no unas cualesquiera: su ventana operativa configurada
-         en el Ejecutor es 01:00–13:00 NY y su killzone Pre-NY es 7:30–9:30. Si aquí se
-         pusieran otras, el Roberto flotante haría gestos de "espera" mientras su propio
-         sistema está operando, o al revés. */
-      if (d === 0 || d === 6) return "finde";
-      if (h >= 450 && h < 570) return "killzone";   /* 7:30–9:30 NY, su mejor ventana */
-      if (h >= 420 && h < 450) return "cerca";      /* la media hora de antes */
-      if (h >= 60 && h < 780) return "espera";      /* 1:00–13:00 NY: su ventana operativa */
-      return "madrugada";                            /* fuera de su horario */
-    }catch(_){ return "espera"; }
+    try{ return (typeof robFranja === "function") ? robFranja({}) : "espera"; }
+    catch(_){ return "espera"; }
   }
+
 
   function unGesto(){
     try{
@@ -539,10 +534,27 @@
       var emo = posibles[Math.floor(Math.random() * posibles.length)] || pack.gestos[0];
       vidaUlt = emo;
       gesto(emo);
-      /* 1 de cada 2 veces suelta una frase corta, igual que dentro de Apex */
+      /* 💬 v7.27 — UNA FRASE CADA 4 GESTOS, NO CADA 2.
+         Rey (04-09): "cada 1 minuto repite los mismos mensajes, no me gusta eso". Con una
+         frase cada dos gestos salía uno cada 40 segundos, y del mismo puñado. Ahora: menos
+         a menudo, sin repetir (bolsa) y con muchas más frases donde elegir. */
       vidaFrase++;
-      if (vidaFrase % 2 === 0 && pack.frases && pack.frases.length){
-        window.burbujaDecir(pack.frases[Math.floor(Math.random() * pack.frases.length)], emo);
+      if (vidaFrase % 4 === 0 && pack.frases && pack.frases.length){
+        /* 🗣️ ¿toca una de crecimiento, de las que se DICEN en voz alta? */
+        var dicha = "";
+        try{
+          if (pack.dichas && pack.dichas.length && typeof robTocaHablar === "function"){
+            var marca = {};
+            try{ marca = JSON.parse(localStorage.getItem("robDichas") || "{}"); }catch(_){}
+            var t = robTocaHablar(marca);
+            if (t.toca){
+              try{ localStorage.setItem("robDichas", JSON.stringify(t.marca)); }catch(_){}
+              dicha = robFraseDe("dichas-" + situacionAhora(), pack.dichas);
+            }
+          }
+        }catch(_){}
+        if (dicha){ window.burbujaDecir(dicha, "carino", true); return; }   /* true = la dice */
+        window.burbujaDecir(robFraseDe(situacionAhora(), pack.frases), emo);
         return;                       /* la nubecita ya devuelve el gesto de guardia sola */
       }
       /* y vuelve a su cara de guardia: un gesto que se queda puesto es una foto */
@@ -551,12 +563,15 @@
     }catch(_){}
   }
 
-  /* Ritmo irregular A PROPÓSITO: cada 12–28 s parece una persona; cada 20 clavados,
+  /* Ritmo irregular A PROPÓSITO: cada 30–75 s parece una persona; cada 20 clavados,
      un reloj. Se reprograma tras cada gesto, nunca con un temporizador que se repita
-     (uno que se repite cuelga el navegador de pruebas y deja procesos vivos). */
+     (uno que se repite cuelga el navegador de pruebas y deja procesos vivos).
+     ⏱️ v7.27 — de 12–28 s a 30–75 s. Rey: "cada 1 minuto repite los mismos mensajes".
+     Con el gesto cada 12 s y frase cada 2, hablaba cada 40 segundos: eso no es compañía,
+     es un loro. Ahora gesticula cada medio minuto largo y habla cada 3-5 minutos. */
   function vida(){
     clearTimeout(vidaT);
-    vidaT = setTimeout(function(){ unGesto(); vida(); }, 12000 + Math.random() * 16000);
+    vidaT = setTimeout(function(){ unGesto(); vida(); }, 30000 + Math.random() * 45000);
   }
   vida();
 

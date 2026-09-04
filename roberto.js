@@ -771,20 +771,34 @@ ROB_CSS += "\n" + Object.keys(POSES).map(function (k) { return '[data-pose="' + 
        día lleva lo mismo de la mañana a la noche, y mañana lleva otra cosa. */
     var acc = accDelDia(t);
     if (finde) return { ropa: "casa", acc: mezcla("taza", acc) };
-    /* de Londres (2:00 NY) al cierre de Nueva York (17:00 NY): está trabajando */
-    if (t.h >= 2 && t.h < 17) return { ropa: "wallstreet", acc: acc };
-    /* de madrugada sigue despierto, pero de casa y con su café */
+    /* 👔 v7.27 — EL TRAJE SOLO MIENTRAS TRABAJA DE VERDAD.
+       Rey (04-09): "Roberto está con el traje todavía, no se cambió a una ropa distinta…
+       diversificar la ropa y los accesorios para que no sea monótono".
+       Tenía razón y la causa era el tramo: el traje iba de 2:00 a 17:00 NY — o sea de las
+       3 de la mañana a las 6 de la tarde en su hora, casi todo su día despierto. Su
+       operativa termina a las 13:00 NY (así lo tiene configurado el Ejecutor), y a partir
+       de ahí ya no está trabajando: no tiene por qué seguir de corbata.
+       AHORA: traje de 2:00 a 13:00 NY (su ventana), casual de 13:00 a 22:00, y de casa de
+       22:00 a 2:00. Tres ropas distintas en un día normal, no una. */
+    if (t.h >= 2 && t.h < 13) return { ropa: "wallstreet", acc: acc };
     if (t.h >= 22 || t.h < 2) return { ropa: "casa", acc: mezcla("taza", acc) };
     return { ropa: "casual", acc: acc };
   }
 
-  /* El accesorio de HOY. Cambia de un día para otro y se mantiene todo el día: así se le
-     nota que se arregla distinto, sin que parezca que se cambia de ropa cada rato. */
+  /* El accesorio del MOMENTO. Cambia con el día Y con el tramo del día.
+     🎩 v7.27 — Rey (04-09): "hoy está de traje y con gafa puesta… diversificar la ropa y
+     los accesorios para que no sea monótono; nada de él sea aburrido, que me sorprenda para
+     presumirlo con cualquiera". Antes el accesorio se elegía SOLO por la fecha: el mismo
+     de las 3 de la mañana a las 11 de la noche. Ahora el día tiene TRES momentos (mañana
+     de mercado, tarde y noche) y en cada uno se arregla distinto — sin llegar a cambiarse
+     cada veinte segundos, que eso parecería un disfraz y no una persona. */
   function accDelDia(t) {
     try {
-      var TURNOS = ["", "gorra", "", "gafasSol", "auriculares", "", "sombrero", "bufanda"];
-      /* un número que cambia SOLO al cambiar de día */
-      var n = (t.num || 1) + (t.mes || 1) * 31;
+      var TURNOS = ["", "gorra", "", "gafasSol", "auriculares", "", "sombrero", "bufanda",
+                    "gorra auriculares", "", "movil", "taza"];
+      /* cambia al cambiar de día Y al cambiar de tramo (mañana / tarde / noche) */
+      var tramo = (t.h < 13) ? 0 : (t.h < 20 ? 1 : 2);
+      var n = (t.num || 1) + (t.mes || 1) * 31 + tramo * 5;
       var a = TURNOS[n % TURNOS.length];
       /* las gafas de sol de noche no, que no es un videoclip */
       if (a === "gafasSol" && (t.h >= 18 || t.h < 6)) return "";
@@ -805,7 +819,10 @@ ROB_CSS += "\n" + Object.keys(POSES).map(function (k) { return '[data-pose="' + 
     if (ahora - _ropaVista < 5 * 60000) return;
     _ropaVista = ahora;
     var r = ropaDeAhora();
-    if (r.ropa !== estado.ropa) vestir(r.ropa, r.acc);
+    /* 👕 v7.27 — antes solo se miraba la MUDA: si el traje seguía siendo el traje, el
+       accesorio nuevo no llegaba nunca a ponerse. Ahora se mira también lo que lleva
+       encima, que es justo lo que Rey nota. */
+    if (r.ropa !== estado.ropa || (r.acc || "") !== (estado.acc || "")) vestir(r.ropa, r.acc);
   }
 
   /* Un solo Roberto: el gesto cambia en TODOS sus cuerpos a la vez */
