@@ -1017,7 +1017,7 @@ async function iaEnviarBloques(bloques, resumenChat){
   const msgs=hist.map(x=>iaMsgApi(x,false));
   let calTxt=""; try{ const ev=await cargarCalendarioCache(); calTxt=iaCalendarioContexto(ev)+"\n"; }catch(_){ calTxt=""; }
   /* 💰 v6.02: bloque ESTABLE (lo guardado) con la marca de caché + material + contexto vivo al final */
-  const inj="=== CONTEXTO VIVO DE LA APP (datos de AHORA MISMO) ===\n"+iaDondeEstoy()+"\n"+iaReloj()+"\n"+calTxt+iaContexto()+"\n"+iaEstrategiaDef()+"\n"+iaPlan()+"\n"+iaAciertos()+"\n"+iaFugas()+"\n"+iaRacha()+"\n=== FIN DEL CONTEXTO ===";
+  const inj="=== CONTEXTO VIVO DE LA APP (datos de AHORA MISMO) ===\n"+iaDondeEstoy()+"\n"+iaReloj()+"\n"+calTxt+iaContexto()+"\n"+iaEstrategiaDef()+"\n"+iaPlan()+"\n"+iaAciertos()+"\n"+iaFugas()+"\n"+iaRacha()+iaLeyes(resumenChat||"")+"\n=== FIN DEL CONTEXTO ===";
   const last=msgs[msgs.length-1];
   last.content=[{type:"text",text:c.msgs[c.msgs.length-1].content, cache_control:{type:"ephemeral",ttl:"1h"}}].concat(bloques).concat([{type:"text",text:inj}]);
   /* estudiar capturas / material adjunto = trabajo profundo: pregunta qué motor usar */
@@ -9257,6 +9257,81 @@ async function ejecRefrescar(){
    Aquí va el RESUMEN de ese archivo: cuántas van, cómo cerraron, cuánto R, y cómo le está
    yendo a cada regla de salida. Resumen y no lista: el detalle está arriba, y cada línea
    de más se paga en cada pregunta que Rey le hace. */
+/* ══════════════════════════════════════════════════════════════════════════════
+   📜 LAS LEYES QUE APLICAN A ESTA PREGUNTA — v7.39
+   ═════════════════════════════════════════════════════════════════════════════
+   Rey (05-09) trajo un catálogo de 86 leyes para que Roberto las APLIQUE solas y además se
+   las enseñe. El motor (roberto-leyes.js) elige 2-6 según lo que Rey escriba.
+
+   ⚠️ DOS DECISIONES DE SITIO, Y LAS DOS IMPORTAN:
+
+   1. EL BLOQUE VA EN EL CONTEXTO DEL MENSAJE, NO EN EL SYSTEM PROMPT.
+      El documento proponía pegarlo al system ("ROBERTO_CORE + extra"). En Apex eso sería
+      caro de verdad: el system de Roberto —su cerebro y su marco— viaja con marca de CACHÉ
+      de 1 hora, y la caché solo pega si ese bloque es IDÉNTICO byte a byte entre llamadas.
+      Metiéndole leyes que cambian con cada pregunta, la caché no pegaría NUNCA y Rey pagaría
+      su cerebro entero en cada mensaje. Ya pasó una vez: 5,44 dólares en un solo día, por
+      exactamente este error. Por eso el marco fijo vive en su cerebro (cacheado) y las leyes
+      elegidas viajan aquí, detrás de la marca, a precio normal.
+
+   2. SE LE PASA EL ESTADO REAL DE LA CUENTA, no solo lo que Rey escriba.
+      Es lo que el propio documento señala como lo que más sube la calidad: así la alarma de
+      supervivencia no depende de que Rey CONFIESE lo que va a hacer. Si lleva 2 pérdidas
+      seguidas y el día en rojo, las leyes de drawdown y ruina entran aunque él solo pregunte
+      "¿cómo ves el EUR?". */
+function iaLeyes(mensaje){
+  try{
+    if(typeof contextoLeyes !== "function") return "";
+    /* el estado de verdad, para que las leyes se elijan por los hechos y no por las palabras */
+    const trozos = [];
+    try{
+      const d = EJEC_CACHE && EJEC_CACHE.d;
+      const live = (d && d.live) || {};
+      if(live.opsHoy != null) trozos.push("Operaciones hoy: " + live.opsHoy + "/" + ((d.cfg && d.cfg.maxOpsDia) || "?"));
+      if(live.plHoy != null) trozos.push("Resultado del día: " + live.plHoy);
+      if(live.recup) trozos.push("En modo recuperación tras pérdidas");
+      if((live.posiciones || []).length) trozos.push("Con " + live.posiciones.length + " posición(es) abierta(s)");
+    }catch(_){}
+    try{
+      const t = (typeof TRADES !== "undefined" && Array.isArray(TRADES)) ? TRADES : [];
+      const cerrados = t.filter(x => x && !x.abierta && x.r != null).slice(-6).reverse();
+      let racha = 0;
+      for(const x of cerrados){ if(Number(x.r) < 0) racha++; else break; }
+      if(racha >= 2) trozos.push("Racha perdedora de " + racha);
+    }catch(_){}
+    try{ const g = guardianRiesgo(); if(g && /peligro|límite|limite|drawdown/i.test(g)) trozos.push("Guardián de riesgo con aviso"); }catch(_){}
+
+    let bloque = contextoLeyes(String(mensaje || "") + "\n" + trozos.join(" · "));
+    if(!bloque) return "";
+
+    /* 🚨 LA ALARMA TAMBIÉN POR LOS HECHOS, no solo por lo que Rey escriba.
+       El cartel de "SEÑAL DE RIESGO DE CUENTA" del motor se dispara con las PALABRAS de Rey
+       ("voy a subir el lote para recuperar"). Pero el día que de verdad hace falta es
+       justamente el que Rey NO lo dice: cupo agotado, racha perdedora y el día en rojo, y él
+       preguntando "¿cómo ves el EUR?" como si nada. Aquí se mira lo que está pasando de
+       verdad y, si pinta mal, el aviso entra igual — dejando claro que viene de sus datos y
+       no de sus palabras, para que Roberto no invente una intención que Rey no ha expresado. */
+    try{
+      const peligro = [];
+      const d = EJEC_CACHE && EJEC_CACHE.d;
+      const live = (d && d.live) || {};
+      const cupo = (d && d.cfg && d.cfg.maxOpsDia) || 0;
+      if(cupo && live.opsHoy >= cupo) peligro.push("ya agotó su cupo de operaciones de hoy (" + live.opsHoy + "/" + cupo + ")");
+      if(live.recup) peligro.push("está en modo recuperación");
+      if(Number(live.plHoy) < 0) peligro.push("el día va en rojo (" + live.plHoy + ")");
+      const rachaTxt = trozos.find(x => /Racha perdedora/.test(x));
+      if(rachaTxt) peligro.push(rachaTxt.toLowerCase());
+      if(peligro.length >= 2 && !/SEÑAL DE RIESGO DE CUENTA/.test(bloque)){
+        bloque = bloque.replace("### LEYES APLICABLES A ESTA CONSULTA",
+          "### LEYES APLICABLES A ESTA CONSULTA\n\n⚠ RIESGO DE CUENTA POR SUS DATOS DE HOY (no por lo que te ha dicho): " +
+          peligro.join(", ") + ". Antepón las leyes de supervivencia y dilo tú primero, aunque Rey te pregunte otra cosa.");
+      }
+    }catch(_){}
+
+    return "\n" + bloque + "\n";
+  }catch(_){ return ""; }
+}
+
 function iaEjecutorArchivo(){
   try{
     const a = load(K.ejec, {trades:{}});
@@ -11240,7 +11315,7 @@ async function iaEnviar(textoForzado, promptExtra){
      viaja en su bloque ESTABLE (idéntico byte a byte al que luego va en el historial) con la
      marca de caché puesta AQUÍ MISMO, y el contexto vivo va DETRÁS de la marca, en su propio
      bloque, a precio normal (1×). El worker v5.68 respeta esta marca y no la pisa. */
-  const inj="=== CONTEXTO VIVO DE LA APP (datos de AHORA MISMO; el mensaje de Rey es el bloque anterior) ===\n"+iaReloj()+"\n"+grafTxt+calTxt+iaContexto()+"\n"+iaEstrategiaDef()+"\n"+guardianRiesgo()+"\n"+iaPlan()+"\n"+iaAciertos()+"\n"+(estadoRecuperacionFreno().block||"")+iaFugas()+"\n"+iaRacha()+"\n"+iaPatrones()+"\n"+iaDatosSueltos()+"\n"+iaHitos()+"\n"+iaChats()+"\n"+iaPendientes()+"\n"+iaPlanSemanal()+"\n"+iaAvisos()+"\n"+iaEntradasAbiertas()+iaEjecutorArchivo()+iaEjecutorHoy()+marco+"\n=== FIN DEL CONTEXTO — responde al mensaje de Rey del bloque anterior ===";
+  const inj="=== CONTEXTO VIVO DE LA APP (datos de AHORA MISMO; el mensaje de Rey es el bloque anterior) ===\n"+iaReloj()+"\n"+grafTxt+calTxt+iaContexto()+"\n"+iaEstrategiaDef()+"\n"+guardianRiesgo()+"\n"+iaPlan()+"\n"+iaAciertos()+"\n"+(estadoRecuperacionFreno().block||"")+iaFugas()+"\n"+iaRacha()+"\n"+iaPatrones()+"\n"+iaDatosSueltos()+"\n"+iaHitos()+"\n"+iaChats()+"\n"+iaPendientes()+"\n"+iaPlanSemanal()+"\n"+iaAvisos()+"\n"+iaEntradasAbiertas()+iaEjecutorArchivo()+iaEjecutorHoy()+iaLeyes(texto)+marco+"\n=== FIN DEL CONTEXTO — responde al mensaje de Rey del bloque anterior ===";
   const last=msgs[msgs.length-1];
   const textoMsg=c.msgs[c.msgs.length-1].content;   /* EXACTAMENTE lo guardado (texto + nota del doc) */
   let bloquesMsg = Array.isArray(last.content) ? last.content.filter(b=>b.type==="image") : [];   /* la foto va delante */

@@ -1,47 +1,54 @@
-APEX v7.38 — TRADING DESK
+APEX v7.39 — TRADING DESK
 =========================
 
-Comprobado todo lo que subiste: worker 5.124 ✅, app 7.37 reportando ✅, cron latiendo sin
-fallos ✅, Puente vivo ✅, vigía de la APK despierto ✅.
+📜 LAS 86 LEYES, INSTALADAS EN ROBERTO
 
-⏱️ TU PREGUNTA DE LAS FRASES — tenías razón, y el problema no era que fueran pocas
-Simulé un día entero con su código real. Con la configuración que tenía (4 al día, mínimo 90
-minutos) te caían a las 06:02, 09:30, 11:00 y 12:30 de Nueva York… y se acababan. Toda la
-tarde y toda la noche, nada — justo las franjas que MÁS frases de crecimiento tienen (13 y 6).
-Un tope por día con un hueco mínimo siempre amontona al principio: en cuanto pasa el hueco,
-dispara. Por eso "casi no te hablaba" a partir del mediodía.
+Revisé tu documento entero y está BIEN ELABORADO: el motor funciona y su propia tabla de
+verificación pasa completa. Las 86 leyes están, y las cuatro marcadas como FOLCLORE (64, 66,
+71 y 84) conservan su etiqueta, que era una de sus condiciones.
 
-AHORA: 6 al día, repartidas de las 6 de la mañana a las 11 de la noche. Medido:
-   06:01 · 09:31 · 11:41 · 14:32 · 17:22 · 20:12 (hora de Nueva York)
-Huecos de 2 a 3 horas entre una y otra, y cubre mañana, mercado, cierre, tarde y noche.
-Ni tormento ni silencio. Si te parece mucho o poco, se cambia en un minuto.
+Rectifiqué tres cosas para que encajara en TU sistema real:
 
-🧮 Y de paso encontré algo que rompía tu ley del "un solo Roberto": el Roberto de DENTRO de
-Apex y el cuerpo flotante llevaban CUENTAS SEPARADAS de esas frases (viven en almacenes
-distintos del teléfono), así que el tope era en realidad "6 por cada cuerpo". Ahora la cuenta
-la guarda Android, que es lo único que los dos comparten: son 6 en total.
+1️⃣ DÓNDE VAN — y esta era importante para tu bolsillo.
+   El documento proponía pegarlas al system prompt. En Apex eso saldría caro: el system de
+   Roberto (su cerebro) viaja con caché de 1 hora, y la caché solo funciona si ese bloque es
+   idéntico entre mensajes. Metiéndole leyes que cambian con cada pregunta, la caché no
+   pegaría NUNCA y pagarías su cerebro entero cada vez. Ya te pasó: 5,44 dólares en un día.
+   Ahora el marco fijo vive en su cerebro (cacheado, gratis a partir del primero) y las leyes
+   elegidas viajan en el contexto del mensaje, a precio normal.
+   Coste medido: 589 tokens por consulta, en vez de los ~15.000 que serían las 86.
 
-────────────────────────────────────────────────────────────────────────
-🏁 Y LA REVISIÓN QUE PEDISTE, PIEZA POR PIEZA:
+2️⃣ EL TONO — y esta te habría molestado.
+   El documento decía "Rey no necesita ánimo, necesita diagnóstico". Eso contradice lo que me
+   pediste ayer y hoy: frases de crecimiento para alentarte e inspirarte. Lo dejé conviviendo,
+   cada cosa en su sitio: diagnóstico seco cuando hay dinero, riesgo o disciplina delante;
+   aliento de verdad en tu vida diaria. Y ahora esas frases tienen 86 leyes de las que salir
+   — que es justo lo que querías: que dejen de ser genéricas y lleven un principio dentro.
 
-🔔 ALARMAS DEL GRÁFICO — listas. Puente vivo, lectura fresca, tus dos pares configurados, y
-   la nube ya con la 5.124 (si una lectura falla, te dice el motivo real).
-📢 AVISOS Y VOZ — listos. 12 avisos tuyos en la nube, el cron latiendo, el vigía despierto,
-   tus avisos suenan por el reloj del teléfono a la hora exacta, y el vigía los habla aunque
-   el cuerpo no esté en pantalla.
-📸 CAPTURAS Y RELLENO — listos. El Puente captura, la nube detecta tu entrada sola y te
-   ofrece registrarla, Roberto rellena y corrige tu diario, MAE/MFE automáticos, y ya puedes
-   compartirle una captura desde TradingView directo a su chat.
-🎬 BACKTESTING DE HOY — listo. Replay guiado y Roberto sabe que el fin de semana toca
-   entrenar.
-🤖 EL LUNES — listo. Ejecutor en guardia, cuenta 61587406 en DEMO, riesgo 0.5%, máximo 2
-   operaciones al día, un solo gatillo por par, grado mínimo B, ventana 01:00–13:00 NY, veto
-   de noticias ±15 min, la regla de salida validada (H4) corriendo, y sin posiciones abiertas.
-🧠 ROBERTO — listo. Cerebro completo, sabe manejar su cuerpo, ve el historial COMPLETO del
-   Ejecutor y usa la misma regla del mercado que Apex y la web.
+3️⃣ LOS DATOS DE TU CUENTA.
+   El documento traía tus cuentas escritas a mano ("una fondeada de 6k, una en desafío"). Eso
+   envejece y acaba contradiciendo la realidad. Se lo quité y le ordené que mande SIEMPRE el
+   bloque vivo que ya recibe.
 
-Regresión 145/145. Solo hay que subir el zip e instalar la APK v7.38 — el worker NO se toca,
-ya tienes la 5.124 arriba.
+🚨 Y le añadí algo que el propio documento señalaba como lo más valioso: LA ALARMA TAMBIÉN
+   SALTA POR LOS HECHOS, no solo por lo que escribas. Probado: con el cupo agotado, racha
+   perdedora de 2 y el día en rojo, si le preguntas "¿cómo ves el EUR?" como si nada, le
+   entran igual las leyes de drawdown, ruina y Kelly, y se le avisa de que el riesgo viene de
+   TUS DATOS y no de tus palabras. Con la cuenta sana, no avisa — no es el pastor que grita
+   lobo.
+
+📖 Y la octava regla, que es tuya y va por encima de las siete del documento: ENSEÑÁRTELAS.
+   Le dejé escrito que no basta con aplicar la ley: tiene que nombrártela, decirte en una
+   frase por qué aplica ahí, y dejarte el criterio para reconocerla tú solo la próxima vez.
+
+Cómo verlo funcionando: dile "Pareto esto", "invierte esto", "cuello de botella", "revisión
+de leyes" o "¿esto es folclore?" — son sus frases gatillo.
+
+Un fallo mío que cazó la prueba: la vía que usa cuando le adjuntas capturas o material NO
+recibía las leyes. Arreglado: ahora van por las dos.
+
+Regresión 146/146. Sube el zip e instala la APK v7.39. El worker no se toca, y el cerebro ya
+está actualizado en la nube.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
