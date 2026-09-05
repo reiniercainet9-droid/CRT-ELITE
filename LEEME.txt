@@ -1,59 +1,91 @@
-APEX v7.39 — TRADING DESK
+APEX v7.42 — TRADING DESK
 =========================
 
-📜 LAS 86 LEYES, INSTALADAS EN ROBERTO
+🏛️ EL TEMPLO COMPLETO + TU INTERRUPTOR DE VOZ. Todo en una sola entrega.
 
-Revisé tu documento entero y está BIEN ELABORADO: el motor funciona y su propia tabla de
-verificación pasa completa. Las 86 leyes están, y las cuatro marcadas como FOLCLORE (64, 66,
-71 y 84) conservan su etiqueta, que era una de sus condiciones.
+🔊 TU IDEA, HECHA: EL INTERRUPTOR DE VOZ AVISO POR AVISO
+Al programar un aviso, justo debajo de "Tipo", ahora eliges: ¿Roberto lo dice en voz alta o
+solo te notifica? Tres reglas:
+   · Por defecto SÍ habla — ningún aviso que ya tenías se queda mudo sin que tú lo decidas
+   · Solo QUITA voz: tu interruptor general sigue mandando por encima
+   · Y quita LA VOZ y nada más: el aviso se enseña igual y el cuerpo reacciona igual, porque
+     tu ley dice que no se pierde ni una señal ni un gesto
 
-Rectifiqué tres cosas para que encajara en TU sistema real:
+🪜 LA ESCALERA: DEL AIRE LIBRE AL GIMNASIO
+Cinco niveles y se sube POR MÉRITO, no por tiempo:
+   0 Base (calle) → 1 Constancia (calle y casa) → 2 Fuerza con tu peso (parque) →
+   3 Gimnasio inicio → 4 Gimnasio fuerza
+Cada nivel dice exactamente qué hace falta para subir. Y cada ejercicio trae su CÓMO SE HACE:
+un plan que no explica la técnica es un plan que se hace mal.
 
-1️⃣ DÓNDE VAN — y esta era importante para tu bolsillo.
-   El documento proponía pegarlas al system prompt. En Apex eso saldría caro: el system de
-   Roberto (su cerebro) viaja con caché de 1 hora, y la caché solo funciona si ese bloque es
-   idéntico entre mensajes. Metiéndole leyes que cambian con cada pregunta, la caché no
-   pegaría NUNCA y pagarías su cerebro entero cada vez. Ya te pasó: 5,44 dólares en un día.
-   Ahora el marco fijo vive en su cerebro (cacheado, gratis a partir del primero) y las leyes
-   elegidas viajan en el contexto del mensaje, a precio normal.
-   Coste medido: 589 tokens por consulta, en vez de los ~15.000 que serían las 86.
+📏 LA PRUEBA DE NIVEL
+Cuatro cosas sencillas —flexiones, plancha, sentadillas en un minuto, 1 km— y Apex te coloca
+solo en tu escalón. Manda tu marca MÁS FLOJA, no la mejor: el cuerpo va al ritmo de su
+eslabón débil, y empezar por debajo es lo que hace que no lo abandones.
+Se repite cada 6 semanas: así ves progreso aunque la báscula esté parada, que es justo el mes
+en el que la gente lo deja.
 
-2️⃣ EL TONO — y esta te habría molestado.
-   El documento decía "Rey no necesita ánimo, necesita diagnóstico". Eso contradice lo que me
-   pediste ayer y hoy: frases de crecimiento para alentarte e inspirarte. Lo dejé conviviendo,
-   cada cosa en su sitio: diagnóstico seco cuando hay dinero, riesgo o disciplina delante;
-   aliento de verdad en tu vida diaria. Y ahora esas frases tienen 86 leyes de las que salir
-   — que es justo lo que querías: que dejen de ser genéricas y lleven un principio dentro.
+🎯 HOY TE TOCA · 📅 ESTA SEMANA
+Abres la sección y lo primero es lo que toca hoy, con sus ejercicios y un botón grande.
+Marcar es DOS TOQUES: hecha, y qué tan duro fue. Nada más — un registro largo no se rellena,
+y eso ya lo aprendimos con tu diario.
 
-3️⃣ LOS DATOS DE TU CUENTA.
-   El documento traía tus cuentas escritas a mano ("una fondeada de 6k, una en desafío"). Eso
-   envejece y acaba contradiciendo la realidad. Se lo quité y le ordené que mande SIEMPRE el
-   bloque vivo que ya recibe.
+🔄 Y SE ADAPTA SOLA AL CERRAR LA SEMANA
+   · 80% o más cumplido → progresas
+   · 50-79% → repites la semana (no se progresa sobre lo que no se hizo)
+   · menos del 50% → SE RECORTA el plan. Si no lo cumples es que era demasiado grande:
+     se adapta él a ti, no tú a él
+   · cada 5 semanas → semana suave obligatoria
+   · si apuntas dolor o mal descanso → baja el volumen sola
+No tienes que pulsar nada un lunes: la semana rueda y se ajusta sola.
 
-🚨 Y le añadí algo que el propio documento señalaba como lo más valioso: LA ALARMA TAMBIÉN
-   SALTA POR LOS HECHOS, no solo por lo que escribas. Probado: con el cupo agotado, racha
-   perdedora de 2 y el día en rojo, si le preguntas "¿cómo ves el EUR?" como si nada, le
-   entran igual las leyes de drawdown, ruina y Kelly, y se le avisa de que el riesgo viene de
-   TUS DATOS y no de tus palabras. Con la cuenta sana, no avisa — no es el pastor que grita
-   lobo.
+⏰ Y LOS AVISOS TE DICEN QUÉ TE TOCA — como en el trading, que era tu punto importante
+Cada día de entrenamiento tiene SU aviso, con la sesión y los ejercicios de ESE día dentro.
+No un "toca entrenar" genérico. Y se regeneran solos cuando el plan cambia, para que nunca te
+digan la rutina de hace tres semanas.
+No monté un sistema de horarios nuevo: son tus avisos de siempre, así que heredan el reloj de
+hora exacta, la voz del vigía, tu interruptor nuevo y la pantalla de ⏰ Mis avisos.
 
-📖 Y la octava regla, que es tuya y va por encima de las siete del documento: ENSEÑÁRTELAS.
-   Le dejé escrito que no basta con aplicar la ley: tiene que nombrártela, decirte en una
-   frase por qué aplica ahí, y dejarte el criterio para reconocerla tú solo la próxima vez.
+⏰ TUS HORARIOS DE ENTRENO — lo preguntaste antes de instalar y ERA UN FALLO MÍO
+Sí, los avisos del entrenamiento están en ⏰ Mis avisos. Pero tal como los tenía, la hora se
+te reescribía a las 17:00 cada vez que abrías el templo, y las sesiones caían en días
+seguidos, sin descanso. Arreglado antes de que instales:
+   · Botón ⏰ Horarios en el templo: pones CADA sesión en su día y su hora. Una el lunes a las
+     5 de la mañana y otra el jueves de noche, si es lo que te cuadra con el trabajo
+   · Y si la cambias desde ⏰ Mis avisos, TAMBIÉN vale: antes de regenerar se lee lo que
+     pusiste y se respeta — la hora, el día, el tipo y tu interruptor de voz
+   · Por defecto reparte con descanso entre medias (lunes, miércoles, viernes…), no en días
+     seguidos
+   · Y «Hoy te toca» es HOY de verdad: si hoy no te toca, te dice que descanses y te enseña la
+     siguiente, en vez de empujarte a entrenar un día que dejaste libre
 
-Cómo verlo funcionando: dile "Pareto esto", "invierte esto", "cuello de botella", "revisión
-de leyes" o "¿esto es folclore?" — son sus frases gatillo.
+🍽️ DÉFICIT Y AYUNO, ESCALONADOS
+   0 Ordenar (2 sem) — todavía no se toca la cantidad: proteína, agua, no picar
+   1 Déficit 10% + ayuno 12:12 (3 sem) — del 10% ni te enteras
+   2 Déficit 15% + 14:10 (4 sem) — aquí se nota
+   3 Déficit 18% + 16:8 (4 sem) — máximo 8-10 semanas seguidas
+   4 Descanso metabólico (2 sem) — NO es rendirse: es lo que hace que lo anterior siga
+     funcionando. El peso sube un poco y es agua, no grasa
+⚠️ Y con tu horario: en el escalón 3 estarías operando en ayunas. Si notas la cabeza espesa,
+la operativa manda — adelantas la ventana o bajas un escalón. Apex te avisa si tu ventana de
+comer choca con tu killzone.
 
-Un fallo mío que cazó la prueba: la vía que usa cuando le adjuntas capturas o material NO
-recibía las leyes. Arreglado: ahora van por las dos.
+🏛️ EL CHIP QUE PEDISTE
+En el chat: "🏛️ Mi templo" con cuatro evaluaciones — tu semana, tu nivel, la comida y la
+parte mental. Funciona como el del Ejecutor: le manda a Roberto tu semana REAL (lo hecho, el
+esfuerzo, lo que fallaste y por qué) y le exige veredicto con acción, cerrando con la pregunta
+que no le hiciste.
 
-👋 Y un último detalle que salió al comprobar que nada se hubiera roto: «buenos días» le
-metía una ley (la de los hábitos, por la palabra «días») — y Roberto te saluda así cada
-mañana. Eran tokens pagados por nada y una lección de hábitos como respuesta a un saludo.
-Arreglado: los saludos no gastan ley; «buenos días, voy a subir el lote» sí la trae entera.
+🧠 Y ROBERTO
+Sabe todo esto y una cosa más que le dejé escrita con todas las letras: EL PLAN LO CALCULA
+APEX, NO ÉL. Es la misma arquitectura de tu trading — el indicador decide y Roberto lee. Si
+se lo inventara cada día, cada día sería otro plan y no habría progresión que medir.
+Su papel: explicarte por qué toca lo que toca, corregirte, empujarte cuando aflojes y frenarte
+cuando fuerces. Y unir las dos disciplinas: un día sin dormir no es solo un mal entrenamiento,
+es un día en el que decides peor delante del gráfico.
 
-Regresión 146/146. Sube el zip e instala la APK v7.39. El worker no se toca, y el cerebro ya
-está actualizado en la nube.
+Regresión 148/148 (con 21 comprobaciones solo del templo). ⚠️ ESTA VEZ HAY WORKER: sube worker-elitepro-v5.125.js (lleva tu
+interruptor de voz), después el zip, y por último instala la APK v7.42.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

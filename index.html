@@ -526,6 +526,65 @@ html.apk-intro #apexIntro{position:fixed;inset:0;z-index:9999;display:flex;flex-
    tenía color propio: por eso hacía falta pintarlo. Antes lo tapaba (mal) la clase de
    arranque con un azul fijo. Ahora lo pinta el TEMA, así que la franja acompaña a Apex en
    claro y en oscuro sola, sin que Android tenga que hacer nada. */
+/* 🏛️ MI TEMPLO — cuerpo y mente. Usa los mismos colores y tarjetas que el resto de Apex:
+   es una sección más de su casa, no una app aparte pegada al lado. */
+.tmp-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:10px}
+.tmp-n{background:var(--card2,rgba(255,255,255,.03));border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.tmp-n .v{display:block;font-size:22px;font-weight:700;color:var(--gold);font-variant-numeric:tabular-nums}
+.tmp-n .q{display:block;font-size:12px;color:var(--txt2);margin-top:2px;line-height:1.35}
+.tmp-lista{margin-top:8px}
+.tmp-fila{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;
+  padding:7px 0;border-top:1px solid var(--line);font-size:13px;color:var(--txt2)}
+.tmp-fila b{color:var(--txt);font-variant-numeric:tabular-nums;text-align:left}
+.tmp-fila span:last-child{text-align:right;font-size:12px}
+.tmp-pil{padding:10px 0;border-top:1px solid var(--line)}
+.tmp-pil:first-of-type{border-top:0}
+.tmp-pil .t{font-weight:600;font-size:14px}
+.tmp-pil .q{font-size:13px;color:var(--txt2);margin-top:3px;line-height:1.45}
+.tmp-pil .c{font-size:13px;margin-top:4px;line-height:1.45}
+.tmp-et{margin:14px 0 6px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--txt2);font-weight:600}
+.tmp-sup{padding:9px 0;border-top:1px solid var(--line)}
+.tmp-sup .t{font-weight:600;font-size:13.5px}
+.tmp-sup .q{font-size:12.5px;color:var(--txt2);margin-top:3px;line-height:1.45}
+.tmp-sup .c{font-size:12.5px;margin-top:3px;line-height:1.45}
+.tmp-sup .ev{font-size:10.5px;padding:1px 7px;border-radius:99px;margin-left:6px;white-space:nowrap;vertical-align:middle}
+.tmp-sup .ev.ok{background:rgba(46,160,110,.16);color:#3fbe86}
+.tmp-sup .ev.warn{background:rgba(200,150,30,.16);color:#d2a33c}
+.tmp-sup .ev.bad{background:rgba(200,60,60,.16);color:#e07070}
+.tmp-prac{padding:11px 0;border-top:1px solid var(--line)}
+.tmp-prac:first-of-type{border-top:0}
+.tmp-prac .t{font-weight:600;font-size:14px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.tmp-prac .ev{font-size:10.5px;padding:1px 7px;border-radius:99px}
+.tmp-prac .ev.ok{background:rgba(46,160,110,.16);color:#3fbe86}
+.tmp-prac .ev.warn{background:rgba(200,150,30,.16);color:#d2a33c}
+.tmp-prac .min{font-size:11.5px;color:var(--txt2);margin-left:auto;font-variant-numeric:tabular-nums}
+.tmp-prac .q{font-size:12.5px;color:var(--txt2);margin-top:4px;line-height:1.45}
+.tmp-prac .c{font-size:12.5px;margin-top:4px;line-height:1.45}
+.tmp-acc{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+.tmp-acc .btn{font-size:12.5px;padding:6px 12px}
+.tmp-guion{margin:0;padding-left:20px}
+.tmp-guion li{margin:9px 0;line-height:1.5;font-size:14px}
+.tmp-hoy{margin-top:8px}
+.tmp-hoy .t{font-weight:700;font-size:16px;color:var(--gold);margin-bottom:8px}
+.tmp-hoy .bl,.bl{padding:7px 0;border-top:1px solid var(--line);font-size:13.5px;line-height:1.45}
+.tmp-hoy .bl:first-of-type{border-top:0}
+.bl .como{font-size:12.5px;color:var(--txt2);margin-top:2px}
+.tmp-sem{display:grid;gap:6px;margin-top:8px}
+.tmp-dia{display:flex;align-items:center;gap:9px;padding:9px 11px;border:1px solid var(--line);
+  border-radius:9px;cursor:pointer;font-size:13.5px}
+.tmp-dia.ok{border-color:rgba(46,160,110,.4);background:rgba(46,160,110,.07)}
+.tmp-dia .ic{font-size:15px}
+.tmp-dia .n{flex:1}
+.tmp-dia .cuando{font-size:11.5px;color:var(--txt2);white-space:nowrap;font-variant-numeric:tabular-nums}
+.tmp-esc{display:grid;gap:5px;margin-top:8px}
+.tmp-paso{display:grid;grid-template-columns:auto 1fr auto;gap:9px;align-items:center;
+  padding:8px 11px;border:1px solid var(--line);border-radius:9px;font-size:13px;opacity:.55}
+.tmp-paso.hecho{opacity:.8;border-color:rgba(46,160,110,.3)}
+.tmp-paso.aqui{opacity:1;border-color:var(--gold);background:rgba(200,150,30,.07)}
+.tmp-paso .n{width:20px;height:20px;border-radius:50%;background:var(--line);display:grid;place-items:center;font-size:11px;font-weight:700}
+.tmp-paso.aqui .n{background:var(--gold);color:#1a1408}
+.tmp-paso .t{font-weight:600}
+.tmp-paso .d{font-size:11.5px;color:var(--txt2)}
 html.es-apk{background-color:var(--bg)}
 html.es-apk body{
   padding-top:max(var(--apk-top,0px), env(safe-area-inset-top,0px));
@@ -994,6 +1053,7 @@ html.rob-anim-min .fab.rob-cuerpo.alerta{animation:none!important}
 <div class="toast" id="toast"></div>
 
 <script src="roberto.js"></script>
+<script src="templo.js"></script>
 <script src="roberto-leyes.js"></script>
 <script src="situaciones.js"></script>   <!-- 🧩 la tabla que comparten la página y el vigilante -->
 <script src="data.js"></script>

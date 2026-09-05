@@ -326,7 +326,7 @@
      231 puntos de alto un párrafo de seis líneas no cabe: se sale por arriba.
      Ahora se usa la MISMA `robSitua` de siempre —viaja pegada en esta página—
      así que dentro y fuera dicen exactamente lo mismo. */
-  window.burbujaAviso = function(titulo, cuerpo, kind){
+  window.burbujaAviso = function(titulo, cuerpo, kind, dice){
     var frase = "", g = "";
     try {
       if (typeof robSitua === "function") {
@@ -337,8 +337,10 @@
     /* si por lo que sea no hubiera frase corta, se usa el título, que él ya escribió corto */
     if (!frase) frase = String(titulo || cuerpo || "").replace(/\s+/g, " ").trim();
     /* 🗣️ ESTO SÍ SE DICE EN VOZ ALTA: es una alarma del mercado o un aviso que Rey se
-       programó. Es lo ÚNICO que suena — ver la regla en burbujaDecir. */
-    window.burbujaDecir(frase, g, true);
+       programó. Es lo ÚNICO que suena — ver la regla en burbujaDecir.
+       🔊 v7.41 — salvo que Rey haya apagado la voz de ESE aviso concreto: entonces sale la
+       nubecita y el gesto igual, pero callado. Su idea del 05-09. */
+    window.burbujaDecir(frase, g, dice !== false);
   };
 
   /* ══════════════════════════════════════════════════════════════════════════

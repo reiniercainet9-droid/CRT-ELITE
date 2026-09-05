@@ -1017,7 +1017,7 @@ async function iaEnviarBloques(bloques, resumenChat){
   const msgs=hist.map(x=>iaMsgApi(x,false));
   let calTxt=""; try{ const ev=await cargarCalendarioCache(); calTxt=iaCalendarioContexto(ev)+"\n"; }catch(_){ calTxt=""; }
   /* 💰 v6.02: bloque ESTABLE (lo guardado) con la marca de caché + material + contexto vivo al final */
-  const inj="=== CONTEXTO VIVO DE LA APP (datos de AHORA MISMO) ===\n"+iaDondeEstoy()+"\n"+iaReloj()+"\n"+calTxt+iaContexto()+"\n"+iaEstrategiaDef()+"\n"+iaPlan()+"\n"+iaAciertos()+"\n"+iaFugas()+"\n"+iaRacha()+iaLeyes(resumenChat||"")+"\n=== FIN DEL CONTEXTO ===";
+  const inj="=== CONTEXTO VIVO DE LA APP (datos de AHORA MISMO) ===\n"+iaDondeEstoy()+"\n"+iaReloj()+"\n"+calTxt+iaContexto()+"\n"+iaEstrategiaDef()+"\n"+iaPlan()+"\n"+iaAciertos()+"\n"+iaFugas()+"\n"+iaRacha()+iaTemplo()+iaLeyes(resumenChat||"")+"\n=== FIN DEL CONTEXTO ===";
   const last=msgs[msgs.length-1];
   last.content=[{type:"text",text:c.msgs[c.msgs.length-1].content, cache_control:{type:"ephemeral",ttl:"1h"}}].concat(bloques).concat([{type:"text",text:inj}]);
   /* estudiar capturas / material adjunto = trabajo profundo: pregunta qué motor usar */
@@ -2876,6 +2876,10 @@ function irDestino(v){
        vivo; el cierre de trades tiene sus destinos propios (cierredia / cierresemana). */
     diario:  ()=>analisisDiario(),
     semanal: ()=>analisisSemanal(),
+    temploSemana: ()=>evalTemplo("semana"),
+    temploPlan:   ()=>evalTemplo("plan"),
+    temploComida: ()=>evalTemplo("comida"),
+    temploMente:  ()=>evalTemplo("mente"),
     cierredia:    ()=>evalDia(),
     cierresemana: ()=>evalSemana(),
     progreso:()=>progresoRoberto(),
@@ -2898,6 +2902,608 @@ function irDestino(v){
   };
   const fn=F[acc];
   if(fn) setTimeout(fn, 260);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   🏛️ MI TEMPLO — CUERPO Y MENTE
+   ═════════════════════════════════════════════════════════════════════════════
+   Rey (05-09): *"quiero cuidar mi templo, que es mi cuerpo y mi mente… una nueva sección que
+   no es de trading pero sí de cuidado en general, y Roberto debe ser también mi entrenador"*.
+   ⚖️ SU LEY: *"los datos deben configurarse en la sección, NADA FIJO, todo se calcula en el
+   recorrido, porque esos datos son variables según vaya entrenando… debo poder variar eso"*.
+   Por eso lo primero de la sección es su ficha, editable siempre, y todo lo demás sale de
+   ahí: en cuanto cambia un número, cambia la sección entera.
+   Se monta ENCIMA de lo que ya existe (sus avisos, sus rachas, su diario, la memoria de
+   Roberto), no al lado: es el mismo hombre el que cumple las dos disciplinas. */
+const TEMPLO_K = { ficha:"crtelite_templo_ficha", peso:"crtelite_templo_peso", hechos:"crtelite_templo_hechos" };
+let TEMPLO_FICHA = load(TEMPLO_K.ficha, null);
+let TEMPLO_PESO  = load(TEMPLO_K.peso, []);          /* sus pesadas y medidas, con fecha */
+let TEMPLO_HECHOS= load(TEMPLO_K.hechos, []);        /* los entrenos que marca como hechos */
+if(!Array.isArray(TEMPLO_PESO)) TEMPLO_PESO=[];
+if(!Array.isArray(TEMPLO_HECHOS)) TEMPLO_HECHOS=[];
+function temploGuardar(){ save(TEMPLO_K.ficha, TEMPLO_FICHA); save(TEMPLO_K.peso, TEMPLO_PESO); save(TEMPLO_K.hechos, TEMPLO_HECHOS); }
+function temploCuentas(){ try{ return (window.TEMPLO && TEMPLO_FICHA) ? TEMPLO.calcular(TEMPLO_FICHA) : null; }catch(_){ return null; } }
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   🪜 SU PLAN: NIVEL, SEMANA Y ADAPTACIÓN
+   ═════════════════════════════════════════════════════════════════════════════
+   Rey (05-09): "Roberto me recomienda los entrenamientos y me pone la planificación diaria,
+   semana por semana, lo que va tocando cada día… y va cambiando esas planificaciones a
+   medida que vaya cumpliendo los entrenamientos".
+   ⚠️ EL PLAN LO CALCULA LA APP CON REGLAS, NO ROBERTO EN CADA CHARLA. Si se lo inventara él
+   cada día, cada día sería otro plan y no habría progresión que medir — el mismo motivo por
+   el que su indicador decide y Roberto lee. Aquí es igual: el motor decide, Roberto explica,
+   corrige y empuja. */
+const TEMPLO_KP = { plan:"crtelite_templo_plan", marcas:"crtelite_templo_marcas" };
+let TEMPLO_PLAN = load(TEMPLO_KP.plan, null);      /* { nivel, semanaNum, modo, inicio, hechas:{} } */
+let TEMPLO_MARCAS = load(TEMPLO_KP.marcas, []);    /* sus pruebas de nivel, con fecha */
+if(!Array.isArray(TEMPLO_MARCAS)) TEMPLO_MARCAS=[];
+function temploPlanGuardar(){ save(TEMPLO_KP.plan, TEMPLO_PLAN); save(TEMPLO_KP.marcas, TEMPLO_MARCAS); }
+
+/* el lunes de la semana de una fecha: así "la semana" es siempre la misma para todos */
+function temploLunes(d){ const x=new Date(d||Date.now()); const n=(x.getDay()+6)%7; x.setHours(0,0,0,0); x.setDate(x.getDate()-n); return x.getTime(); }
+
+/** La semana que toca AHORA. Si la anterior ya se cerró, se cierra sola y se adapta:
+    Rey no tiene que pulsar nada un lunes para que su plan avance. */
+function temploSemanaAhora(){
+  try{
+    if(!TEMPLO_PLAN || !window.TEMPLO) return null;
+    const lunes = temploLunes();
+    /* ¿pasamos de semana desde la última vez que se miró? entonces se cierra la anterior */
+    while(TEMPLO_PLAN.lunes && TEMPLO_PLAN.lunes < lunes){
+      const ses = TEMPLO.semanaDe(TEMPLO_PLAN.nivel, TEMPLO_PLAN.semanaNum, TEMPLO_PLAN.modo).sesiones;
+      const hechas = Object.keys(TEMPLO_PLAN.hechas||{}).filter(k=>k.indexOf(TEMPLO_PLAN.lunes+":")===0).length;
+      const r = TEMPLO.cerrarSemana(hechas, ses.length, TEMPLO_PLAN.semanaNum, TEMPLO_PLAN.avisos||{});
+      TEMPLO_PLAN.historia = (TEMPLO_PLAN.historia||[]).concat([{ lunes:TEMPLO_PLAN.lunes, hechas, total:ses.length, que:r.que, por:r.por }]).slice(-26);
+      TEMPLO_PLAN.semanaNum++;
+      TEMPLO_PLAN.modo = (r.que==="sube") ? "normal" : r.que;
+      TEMPLO_PLAN.avisos = {};
+      TEMPLO_PLAN.lunes += 7*86400000;
+    }
+    if(!TEMPLO_PLAN.lunes) TEMPLO_PLAN.lunes = lunes;
+    temploPlanGuardar();
+    return TEMPLO.semanaDe(TEMPLO_PLAN.nivel, TEMPLO_PLAN.semanaNum, TEMPLO_PLAN.modo);
+  }catch(_){ return null; }
+}
+function temploHecha(i){ try{ return !!(TEMPLO_PLAN && TEMPLO_PLAN.hechas && TEMPLO_PLAN.hechas[TEMPLO_PLAN.lunes+":"+i]); }catch(_){ return false; } }
+
+function viewTemplo(){
+  const v=el("div","view"); v.id="v-templo";
+  v.innerHTML=`
+    <div class="card">
+      <div class="nt-head">
+        <div class="nt-htxt"><div class="nt-tt">🏛️ Mi templo</div>
+          <div class="nt-sub">Cuerpo y mente · todo se calcula con TUS datos, y los cambias cuando quieras</div></div>
+        <button class="btn nt-ff gold" id="tmpFicha">✏️ Mis datos</button>
+      </div>
+    </div>
+    <div id="tmpBody"></div>`;
+  return v;
+}
+
+function renderTemplo(){
+  const b=$("#tmpBody"); if(!b) return;
+  const fb=$("#tmpFicha"); if(fb) fb.onclick=()=>temploFichaModal();
+
+  if(!TEMPLO_FICHA || !TEMPLO_FICHA.peso || !TEMPLO_FICHA.estatura){
+    b.innerHTML=`<div class="card"><div class="empty">
+      <div class="t">Aún no me has dado tus datos</div>
+      <div class="s">Toca <b>✏️ Mis datos</b> y pon tu fecha de nacimiento, peso, estatura y qué quieres lograr.
+        A partir de ahí Apex calcula todo solo — y lo recalcula cada vez que cambies algo.</div>
+      </div></div>`;
+    return;
+  }
+
+  const c = temploCuentas();
+  if(!c){ b.innerHTML='<div class="card"><div class="empty"><div class="t">No pude calcular</div><div class="s">Revisa tus datos.</div></div></div>'; return; }
+  const t = (window.TEMPLO ? TEMPLO.tendencia(TEMPLO_PESO) : null);
+  const n1 = (x)=> x==null ? "—" : (Math.round(x*10)/10).toString().replace(".", ",");
+  const ent = (x)=> x==null ? "—" : Math.round(x).toLocaleString("es");
+  const tono = { bien:"ok", ojo:"warn", mal:"bad" }[(c.imcQueEs&&c.imcQueEs.tono)||"ojo"] || "warn";
+
+  const sem = temploSemanaAhora();
+  b.innerHTML = `
+    ${!TEMPLO_PLAN ? `
+    <div class="card">
+      <div class="empty">
+        <div class="t">🪜 Todavía no tienes plan</div>
+        <div class="s">Haz la <b>prueba de nivel</b> —cuatro cosas sencillas, cinco minutos— y Apex te coloca
+          en el escalón que te toca y te arma la semana. Se empieza al aire libre y se sube al gimnasio
+          cuando te lo hayas ganado, no cuando pase el tiempo.</div>
+        <div style="margin-top:10px"><button class="btn gold" id="tmpPrueba">📏 Hacer la prueba de nivel</button></div>
+      </div>
+    </div>` : `
+    <div class="card">
+      <div class="nt-head">
+        <div class="nt-htxt">
+          <div class="nt-tt" style="font-size:15px">🎯 Hoy te toca</div>
+          <div class="nt-sub">Nivel ${sem.nivel.n} · ${esc(sem.nivel.n2)} · ${esc(sem.nivel.donde)} · semana ${TEMPLO_PLAN.semanaNum+1}${sem.modo!=="normal"?(" · "+esc({descarga:"semana suave",repite:"repites semana",recorta:"plan recortado"}[sem.modo]||sem.modo)):""}</div>
+        </div>
+        <button class="btn nt-ff" id="tmpHorario">⏰ Horarios</button>
+      </div>
+      ${(function(){
+        const pend = sem.sesiones.map((x,i)=>({x,i})).filter(o=>!temploHecha(o.i));
+        if(!pend.length) return '<div class="note" style="text-align:left"><b>Semana completa.</b> Lo hiciste todo. Descansa sin culpa: eso también es parte del plan.</div>';
+        /* 🗓️ v7.42 — "hoy" es HOY de verdad: la sesión que él puso en el día de hoy.
+           Si hoy no le toca ninguna, se le dice que descanse y se le enseña la siguiente —
+           en vez de empujarle a entrenar un día que él decidió libre. */
+        const hoyDia = String(((new Date().getDay())+6)%7 + 1);
+        const hor = temploHorario(sem.sesiones.length);
+        const deHoy = pend.filter(o => hor[o.i] && String(hor[o.i].dia) === hoyDia);
+        if(!deHoy.length){
+          const sig = pend[0];
+          const dHor = hor[sig.i] || {};
+          const nomDia = (TEMPLO_DIAS.find(d=>d[0]===String(dHor.dia))||["","?"])[1];
+          return '<div class="note" style="text-align:left"><b>Hoy descansas.</b> ' +
+            'Descansar está en el plan: el músculo crece descansando, no entrenando.</div>' +
+            '<div class="tmp-hoy"><div class="t">Lo próximo: ' + esc(sig.x.n) + '</div>' +
+            '<div class="bl"><b>' + esc(nomDia) + '</b> a las ' + esc(dHor.hora||"") + '</div>' +
+            sig.x.bloques.map(bl=>'<div class="bl"><b>'+esc(bl.e)+'</b> — '+esc(bl.d)+
+              (bl.como?('<div class="como">'+esc(bl.como)+'</div>'):'')+'</div>').join("") +
+            '<div class="tmp-acc"><button class="btn gold" data-hecha="'+sig.i+'">✅ La hice igual</button></div></div>';
+        }
+        const o = deHoy[0];
+        return '<div class="tmp-hoy"><div class="t">'+esc(o.x.n)+'</div>'+
+          o.x.bloques.map(bl=>'<div class="bl"><b>'+esc(bl.e)+'</b> — '+esc(bl.d)+
+            (bl.como?('<div class="como">'+esc(bl.como)+'</div>'):'')+'</div>').join("")+
+          '<div class="tmp-acc"><button class="btn gold" data-hecha="'+o.i+'">✅ Hecha</button>'+
+          '<button class="btn" data-nohecha="'+o.i+'">Hoy no pude</button></div></div>';
+      })()}
+    </div>
+
+    <div class="card">
+      <div class="nt-tt" style="font-size:15px">📅 Esta semana</div>
+      <div class="tmp-sem">
+        ${(function(){ const hor=temploHorario(sem.sesiones.length);
+          return sem.sesiones.map((x,i)=>{
+            const d=hor[i]||{}; const nom=(TEMPLO_DIAS.find(z=>z[0]===String(d.dia))||["","?"])[1];
+            return '<div class="tmp-dia '+(temploHecha(i)?"ok":"")+'" data-ses="'+i+'">'+
+              '<span class="ic">'+(temploHecha(i)?"✅":"⬜")+'</span><span class="n">'+esc(x.n)+'</span>'+
+              '<span class="cuando">'+esc(nom)+' '+esc(d.hora||"")+'</span></div>';
+          }).join(""); })()}
+      </div>
+      <div class="note" style="text-align:left;margin-top:8px">
+        Al acabar la semana el plan se ajusta solo: si cumples el 80% subes, si cumples la mitad la repites,
+        y si cumples menos <b>se recorta</b> — se adapta él a ti, no tú a él. Cada 5 semanas toca una suave.
+      </div>
+      ${(TEMPLO_PLAN.historia||[]).length ? ('<div class="tmp-lista">'+TEMPLO_PLAN.historia.slice(-4).reverse().map(h=>
+        '<div class="tmp-fila"><span>'+new Date(h.lunes).toLocaleDateString("es",{day:"2-digit",month:"short"})+'</span><b>'+h.hechas+'/'+h.total+'</b><span>'+esc(h.que)+'</span></div>').join("")+'</div>') : ""}
+    </div>
+
+    <div class="card">
+      <div class="nt-head">
+        <div class="nt-htxt"><div class="nt-tt" style="font-size:15px">🪜 Tu escalera</div>
+          <div class="nt-sub">Para subir al siguiente: ${esc(sem.nivel.sube)}</div></div>
+        <button class="btn nt-ff" id="tmpPrueba">📏 Repetir prueba</button>
+      </div>
+      <div class="tmp-esc">
+        ${(window.TEMPLO?TEMPLO.NIVELES:[]).map(nv=>'<div class="tmp-paso '+(nv.n===sem.nivel.n?"aqui":(nv.n<sem.nivel.n?"hecho":""))+'">'+
+          '<span class="n">'+nv.n+'</span><span class="t">'+esc(nv.n2)+'</span><span class="d">'+esc(nv.donde)+'</span></div>').join("")}
+      </div>
+    </div>`}
+
+    <div class="card">
+      <div class="nt-tt" style="font-size:15px">📊 Tus números de hoy</div>
+      <div class="tmp-grid">
+        <div class="tmp-n"><span class="v">${n1(c.imc)}</span><span class="q">IMC · <b class="hoy-pill ${tono}">${esc((c.imcQueEs&&c.imcQueEs.txt)||"")}</b></span></div>
+        <div class="tmp-n"><span class="v">${ent(c.calorias)}</span><span class="q">kcal al día para ${esc(c.objetivo.n.toLowerCase())}</span></div>
+        <div class="tmp-n"><span class="v">${ent(c.proteina)} g</span><span class="q">de proteína al día</span></div>
+        <div class="tmp-n"><span class="v">${n1(c.agua/1000)} L</span><span class="q">de agua al día</span></div>
+      </div>
+      <div class="note" style="text-align:left;margin-top:10px">
+        Con ${esc(String(TEMPLO_FICHA.estatura))} cm, tu peso saludable va de <b>${n1(c.pesoSano.min)}</b> a
+        <b>${n1(c.pesoSano.max)} kg</b>. Gastas <b>${ent(c.reposo)}</b> kcal en reposo y
+        <b>${ent(c.gastoDiario)}</b> con tu actividad. ${esc(c.objetivo.nota)}.
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="nt-head">
+        <div class="nt-htxt"><div class="nt-tt" style="font-size:15px">⚖️ Tu peso</div>
+          <div class="nt-sub">${t ? ("desde hace "+t.dias+" días · "+(t.cambio>0?"+":"")+n1(t.cambio)+" kg ("+(t.porSemana>0?"+":"")+n1(t.porSemana)+" kg por semana)") : "apunta tu peso para ver la tendencia"}</div></div>
+        <button class="btn nt-ff gold" id="tmpPesar">＋ Apuntar</button>
+      </div>
+      ${TEMPLO_PESO.length ? ('<div class="tmp-lista">'+TEMPLO_PESO.slice().sort((a,b)=>b.ts-a.ts).slice(0,8).map(p=>
+        '<div class="tmp-fila"><span>'+new Date(p.ts).toLocaleDateString("es",{day:"2-digit",month:"short"})+'</span>'+
+        '<b>'+n1(p.peso)+' kg</b>'+(p.cintura?('<span>'+n1(p.cintura)+' cm cintura</span>'):'<span></span>')+'</div>').join("")+'</div>') : ""}
+    </div>
+
+    <div class="card">
+      <div class="nt-tt" style="font-size:15px">🧱 Los cuatro pilares</div>
+      <div class="nt-sub" style="margin-bottom:8px">Lo que sostiene el entrenamiento. Sin esto, lo demás no cuaja.</div>
+      ${(window.TEMPLO?TEMPLO.PILARES:[]).map(p=>`<div class="tmp-pil">
+        <div class="t">${p.ic} ${esc(p.n)}</div>
+        <div class="q">${esc(p.q)}</div>
+        <div class="c">${esc(p.c)}</div></div>`).join("")}
+    </div>
+
+    <div class="card">
+      <div class="nt-head">
+        <div class="nt-htxt"><div class="nt-tt" style="font-size:15px">🧘 Respiración y meditación</div>
+          <div class="nt-sub">Con su guion paso a paso · y las programas a tu hora</div></div>
+      </div>
+      ${(window.TEMPLO?TEMPLO.PRACTICAS:[]).map(p=>{
+        const prog = temploProgramada(p.id);
+        return `<div class="tmp-prac" data-prac="${p.id}">
+          <div class="t">${p.ic} ${esc(p.n)}
+            <span class="ev ${/SÓLIDA/.test(p.ev)?"ok":"warn"}">${esc(p.ev)}</span>
+            <span class="min">${p.min} min</span></div>
+          <div class="q">${esc(p.q)}</div>
+          <div class="c"><b>Cuándo:</b> ${esc(p.cuando)}</div>
+          <div class="tmp-acc">
+            <button class="btn" data-guia="${p.id}">▶️ Guíame</button>
+            <button class="btn ${prog?"gold":""}" data-prog="${p.id}">${prog?("⏰ "+esc(prog.hora)):"⏰ Programar"}</button>
+          </div>
+        </div>`;
+      }).join("")}
+      <div class="note" style="text-align:left;margin-top:8px">
+        Las que programes se convierten en avisos tuyos: te suenan a la hora exacta y Roberto te las dice,
+        aunque Apex esté cerrada. Se ven y se editan también en ⏰ Mis avisos.
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="nt-tt" style="font-size:15px">💊 Suplementos, por etapas</div>
+      <div class="nt-sub" style="margin-bottom:8px">De la base a lo avanzado. Con su etiqueta de evidencia, igual que las leyes de Roberto.</div>
+      ${["base","intermedio","avanzado","ninguna"].map(et=>{
+        const l=(window.TEMPLO?TEMPLO.SUPLEMENTOS:[]).filter(x=>x.etapa===et);
+        if(!l.length) return "";
+        const tit={base:"🟢 BASE — empieza por aquí",intermedio:"🔵 INTERMEDIO — cuando la base ya es constante",avanzado:"🟣 AVANZADO — solo si lo anterior está sólido",ninguna:"🔴 NO GASTES AQUÍ"}[et];
+        return '<div class="tmp-et">'+tit+'</div>'+l.map(x=>`<div class="tmp-sup">
+          <div class="t">${esc(x.n)} <span class="ev ${/SÓLIDA|SOLIDA/.test(x.ev)?"ok":(/FOLCLORE/.test(x.ev)?"bad":"warn")}">${esc(x.ev)}</span></div>
+          <div class="q">${esc(x.q)}</div><div class="c">${esc(x.c)}</div></div>`).join("");
+      }).join("")}
+      <div class="aviso-rojo" style="margin-top:10px">
+        <b>Esto informa y planifica, no receta.</b> Si tomas alguna medicación o tienes alguna condición,
+        confírmalo con tu médico antes — sobre todo la vitamina D, que se mide con analítica.
+      </div>
+    </div>`;
+
+  const pb=$("#tmpPesar"); if(pb) pb.onclick=()=>temploPesarModal();
+  try{ if(TEMPLO_PLAN) temploAvisosDelPlan(); }catch(_){}
+  const hb=$("#tmpHorario"); if(hb) hb.onclick=()=>temploHorarioModal();
+  const pr=$("#tmpPrueba"); if(pr) pr.onclick=()=>temploPruebaModal();
+  b.querySelectorAll("[data-hecha]").forEach(x=>{ x.onclick=()=>temploMarcar(+x.dataset.hecha, true); });
+  b.querySelectorAll("[data-nohecha]").forEach(x=>{ x.onclick=()=>temploMarcar(+x.dataset.nohecha, false); });
+  b.querySelectorAll("[data-ses]").forEach(x=>{ x.onclick=()=>temploVerSesion(+x.dataset.ses); });
+  b.querySelectorAll("[data-guia]").forEach(x=>{ x.onclick=()=>temploGuiar(x.dataset.guia); });
+  b.querySelectorAll("[data-prog]").forEach(x=>{ x.onclick=()=>temploProgramarModal(x.dataset.prog); });
+}
+/* ✏️ SU FICHA — la única fuente de todos los números del templo.
+   Se puede abrir y cambiar SIEMPRE: es su ley. La edad no se escribe, se calcula de su
+   fecha de nacimiento, así cambia sola cada cumpleaños sin que él tenga que acordarse. */
+function temploFichaModal(){
+  const f = TEMPLO_FICHA || { sexo:"hombre", actividad:"moderado", objetivo:"grasa" };
+  const acts = (window.TEMPLO?TEMPLO.ACTIVIDAD:[]).map(a=>`<option value="${a.id}" ${f.actividad===a.id?"selected":""}>${esc(a.n)}</option>`).join("");
+  const objs = (window.TEMPLO?TEMPLO.OBJETIVOS:[]).map(o=>`<option value="${o.id}" ${f.objetivo===o.id?"selected":""}>${esc(o.n)}</option>`).join("");
+  abrirModal("✏️ Mis datos", `
+    <div class="note" style="text-align:left;margin-bottom:10px">
+      Nada de esto queda fijo: vuelve aquí y cámbialo cuando quieras. Todo lo demás se recalcula solo.
+    </div>
+    <label class="lbl">Fecha de nacimiento</label>
+    <input class="inp" id="tfNac" type="date" value="${esc(f.nacimiento||"")}">
+    <div class="note" style="text-align:left">Tu edad se calcula sola de aquí — no hay que tocarla cada año.</div>
+    <label class="lbl">Peso de hoy (kg)</label>
+    <input class="inp" id="tfPeso" type="number" step="0.1" inputmode="decimal" value="${esc(String(f.peso||""))}">
+    <label class="lbl">Estatura (cm)</label>
+    <input class="inp" id="tfEst" type="number" step="1" inputmode="numeric" value="${esc(String(f.estatura||""))}">
+    <label class="lbl">Cintura (cm) — opcional, pero es el mejor termómetro de la grasa</label>
+    <input class="inp" id="tfCin" type="number" step="0.1" inputmode="decimal" value="${esc(String(f.cintura||""))}">
+    <label class="lbl">Sexo (solo para la fórmula del gasto)</label>
+    <select class="inp" id="tfSexo">
+      <option value="hombre" ${f.sexo!=="mujer"?"selected":""}>Hombre</option>
+      <option value="mujer" ${f.sexo==="mujer"?"selected":""}>Mujer</option>
+    </select>
+    <label class="lbl">Cuánto te mueves</label>
+    <select class="inp" id="tfAct">${acts}</select>
+    <label class="lbl">Qué quieres lograr</label>
+    <select class="inp" id="tfObj">${objs}</select>
+    <label class="lbl">Escalón de comida (déficit y ayuno)</label>
+    <select class="inp" id="tfNut">${(window.TEMPLO?TEMPLO.NUTRI:[]).map(x=>`<option value="${x.n}" ${(f.nutri||0)===x.n?"selected":""}>${x.n} · ${esc(x.n2)}</option>`).join("")}</select>
+    <div class="note" style="text-align:left">Empieza por el 0 aunque te parezca poco. Se sube un escalón solo cuando cumpliste el anterior — igual que el entrenamiento.</div>`,
+    [{t:"Cancelar",fn:cerrarModal},{t:"Guardar",cls:"gold",fn:()=>{
+      const nac=($("#tfNac")||{}).value||"";
+      const peso=parseFloat(($("#tfPeso")||{}).value)||0;
+      const est=parseFloat(($("#tfEst")||{}).value)||0;
+      const cin=parseFloat(($("#tfCin")||{}).value)||0;
+      if(!peso || !est){ toast("Me faltan el peso y la estatura"); return; }
+      TEMPLO_FICHA = { nacimiento:nac, peso, estatura:est, cintura:cin||undefined,
+                       sexo:($("#tfSexo")||{}).value||"hombre",
+                       actividad:($("#tfAct")||{}).value||"moderado",
+                       objetivo:($("#tfObj")||{}).value||"grasa",
+                       nutri: parseInt(($("#tfNut")||{}).value,10)||0, ts:Date.now() };
+      /* el peso de la ficha entra también en su historial: así la tendencia arranca sola */
+      const hoy=new Date().toDateString();
+      if(!TEMPLO_PESO.some(p=>new Date(p.ts).toDateString()===hoy))
+        TEMPLO_PESO.push({ ts:Date.now(), peso, cintura:cin||undefined });
+      temploGuardar(); cerrarModal(); renderTemplo();
+      toast("🏛️ Listo — todo recalculado con tus datos");
+    }}]);
+}
+
+/* ⚖️ Una pesada nueva. Es lo que alimenta la tendencia, que vale más que el número de hoy. */
+function temploPesarModal(){
+  abrirModal("⚖️ Apuntar peso", `
+    <label class="lbl">Peso (kg)</label>
+    <input class="inp" id="tpPeso" type="number" step="0.1" inputmode="decimal" value="${esc(String((TEMPLO_FICHA&&TEMPLO_FICHA.peso)||""))}">
+    <label class="lbl">Cintura (cm) — opcional</label>
+    <input class="inp" id="tpCin" type="number" step="0.1" inputmode="decimal">
+    <div class="note" style="text-align:left">
+      Pésate siempre igual: en ayunas, después del baño y sin ropa. La báscula miente un día;
+      la tendencia de varias semanas, no.
+    </div>`,
+    [{t:"Cancelar",fn:cerrarModal},{t:"Guardar",cls:"gold",fn:()=>{
+      const peso=parseFloat(($("#tpPeso")||{}).value)||0;
+      const cin=parseFloat(($("#tpCin")||{}).value)||0;
+      if(!peso){ toast("Dime el peso"); return; }
+      const hoy=new Date().toDateString();
+      TEMPLO_PESO = TEMPLO_PESO.filter(p=>new Date(p.ts).toDateString()!==hoy);
+      TEMPLO_PESO.push({ ts:Date.now(), peso, cintura:cin||undefined });
+      /* y su ficha se pone al día sola: el peso de hoy manda sobre el de la última vez */
+      if(TEMPLO_FICHA){ TEMPLO_FICHA.peso=peso; if(cin) TEMPLO_FICHA.cintura=cin; }
+      temploGuardar(); cerrarModal(); renderTemplo();
+      toast("⚖️ Apuntado — tus números ya están recalculados");
+    }}]);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   ⏰ LOS AVISOS DEL PLAN: QUE TE DIGA QUÉ TE TOCA — v7.41
+   ═════════════════════════════════════════════════════════════════════════════
+   Rey (05-09), y lo marcó como punto importante: "Roberto debe decirme QUÉ ME TOCA en los
+   avisos, al igual que el trading: debe funcionar igual".
+   Así que las sesiones de la semana se convierten en avisos suyos de verdad — uno por día de
+   entrenamiento, CON EL CONTENIDO DE ESE DÍA dentro. No un "toca entrenar" genérico: te dice
+   la sesión y sus ejercicios, y Roberto te lo lee en voz alta aunque Apex esté cerrada.
+   ⚠️ NO SE MONTA UN SISTEMA DE HORARIOS NUEVO. Son sus avisos de siempre, así que heredan
+   todo lo que ya funciona y está probado: el despertador de hora exacta, la voz del vigía,
+   el interruptor de voz por aviso, la nube y la pantalla de ⏰ Mis avisos.
+   Y se regeneran solos cada vez que el plan cambia (sube de nivel, repite, recorta, semana
+   suave), porque el aviso tiene que decir lo que toca HOY, no lo que tocaba hace tres semanas. */
+/* ⏰ SUS HORARIOS DE ENTRENO — v7.42
+   Rey (05-09, antes de instalar): "¿los avisos de los entrenamientos están en mi sección de
+   avisos y son configurables? Porque debo adaptar el entrenamiento según horario: por la
+   mañana 5am, o por la tarde o noche, por mi trabajo".
+   ⚠️ TENÍA RAZÓN Y ERA UN FALLO MÍO: los avisos SÍ estaban en su sección, pero se
+   regeneraban a las 17:00 cada vez que abría el templo, así que si él cambiaba la hora se la
+   pisaba yo al rato. Y encima repartía las sesiones en días seguidos (lunes, martes,
+   miércoles…), sin descanso entre medias.
+   AHORA: cada sesión tiene SU día y SU hora, y él los elige. Puede entrenar el lunes a las
+   5 de la mañana y el jueves a las 8 de la noche, que es exactamente su vida real.
+   Y si cambia la hora desde ⏰ Mis avisos, TAMBIÉN vale: antes de regenerar se lee lo que
+   haya puesto y se respeta. Un solo sistema, dos puertas. */
+function temploHorarioPorDefecto(nSesiones){
+  /* días repartidos con descanso entre medias: 1=lunes … 7=domingo */
+  const REPARTO = { 1:["1"], 2:["1","4"], 3:["1","3","5"], 4:["1","3","5","6"], 5:["1","2","4","5","6"] };
+  const dias = REPARTO[Math.min(5, Math.max(1, nSesiones))] || REPARTO[3];
+  return dias.map(d=>({ dia:d, hora:"18:00" }));
+}
+function temploHorario(nSesiones){
+  try{
+    if(!TEMPLO_PLAN) return temploHorarioPorDefecto(nSesiones);
+    if(!Array.isArray(TEMPLO_PLAN.horario) || TEMPLO_PLAN.horario.length !== nSesiones){
+      const viejo = Array.isArray(TEMPLO_PLAN.horario) ? TEMPLO_PLAN.horario : [];
+      const base = temploHorarioPorDefecto(nSesiones);
+      /* si ya había horarios y solo cambió el número de sesiones, se conserva lo que sirva */
+      TEMPLO_PLAN.horario = base.map((x,i)=> viejo[i] || x);
+      temploPlanGuardar();
+    }
+    return TEMPLO_PLAN.horario;
+  }catch(_){ return temploHorarioPorDefecto(nSesiones); }
+}
+
+const TEMPLO_DIAS = [["1","Lunes"],["2","Martes"],["3","Miércoles"],["4","Jueves"],["5","Viernes"],["6","Sábado"],["7","Domingo"]];
+
+function temploHorarioModal(){
+  const sem = temploSemanaAhora(); if(!sem) return;
+  const h = temploHorario(sem.sesiones.length);
+  abrirModal("⏰ Mis horarios de entreno", `
+    <div class="note" style="text-align:left;margin-bottom:10px">
+      Pon cada sesión donde te cuadre de verdad con tu trabajo. Puedes entrenar un día a las
+      5 de la mañana y otro por la noche: <b>el mejor horario es el que cumples</b>.
+      Se convierten en tus avisos, así que te sonarán a la hora exacta y Roberto te dirá lo que toca.
+    </div>
+    ${sem.sesiones.map((x,i)=>`
+      <label class="lbl">${esc(x.n)}</label>
+      <div style="display:flex;gap:8px">
+        <select class="inp" id="thD${i}" style="flex:1">${TEMPLO_DIAS.map(d=>'<option value="'+d[0]+'"'+((h[i]&&h[i].dia)===d[0]?" selected":"")+'>'+d[1]+'</option>').join("")}</select>
+        <input class="inp" id="thH${i}" type="time" value="${esc((h[i]&&h[i].hora)||"18:00")}" style="flex:1">
+      </div>`).join("")}
+    <div class="note" style="text-align:left;margin-top:10px">
+      Deja al menos un día de descanso entre sesiones parecidas. Si dos caen seguidas, no pasa
+      nada — pero el músculo crece descansando, no entrenando.
+    </div>`,
+    [{t:"Cancelar",fn:cerrarModal},{t:"Guardar",cls:"gold",fn:()=>{
+      const nuevo = sem.sesiones.map((x,i)=>({
+        dia: (($("#thD"+i)||{}).value)||"1",
+        hora: (($("#thH"+i)||{}).value)||"18:00",
+      }));
+      TEMPLO_PLAN.horario = nuevo;
+      temploPlanGuardar(); temploAvisosDelPlan(); renderTemplo();
+      toast("⏰ Horarios guardados — tus avisos ya están puestos");
+    }}]);
+}
+
+function temploAvisosDelPlan(){
+  try{
+    if(!TEMPLO_PLAN || !window.TEMPLO) return;
+    const sem = temploSemanaAhora(); if(!sem) return;
+    const horario = temploHorario(sem.sesiones.length);
+    /* 🔁 ANTES DE BORRAR, SE LEE LO QUE ÉL HAYA CAMBIADO en ⏰ Mis avisos. Si tocó la hora,
+       el día, el tipo o el interruptor de voz desde allí, eso MANDA: aquí solo se refresca
+       el CONTENIDO (los ejercicios de la semana), nunca sus decisiones. */
+    const suyo = {};
+    (REMINDERS||[]).forEach(r=>{ if(r && r.temploPlan) suyo[r.id] = r; });
+    REMINDERS = (REMINDERS||[]).filter(r => !(r && r.temploPlan));
+    sem.sesiones.forEach((x,i)=>{
+      const id = "tplan"+i;
+      const ya = suyo[id];
+      const cuerpo = x.bloques.map(bl=>bl.e+" "+bl.d).join(" · ");
+      REMINDERS.push({
+        id, temploPlan:true,
+        hora: (ya && ya.hora) || (horario[i] && horario[i].hora) || "18:00",
+        dias: (ya && ya.dias) || (horario[i] && horario[i].dia) || "1",
+        tipo: (ya && ya.tipo) || "normal",
+        on:   ya ? ya.on !== false : true,
+        voz:  ya ? ya.voz !== false : true,
+        tit:"🏋️ "+x.n,
+        msg:"Hoy te toca: "+cuerpo+". Ábreme y te lo marco.",
+        ir:"tab:templo",
+      });
+      /* y si cambió la hora desde Mis avisos, el horario del templo se pone al día:
+         los dos sitios enseñan lo mismo, que es lo que Rey pide siempre */
+      if(ya && horario[i] && (ya.hora!==horario[i].hora || ya.dias!==horario[i].dia)){
+        horario[i].hora = ya.hora; horario[i].dia = String(ya.dias||horario[i].dia);
+      }
+    });
+    if(TEMPLO_PLAN) TEMPLO_PLAN.horario = horario;
+    temploPlanGuardar();
+    guardarReminders(); syncReminders(); avisosAlRelojDelTelefono();
+    if(TAB==="avisos") renderAvisos();
+  }catch(_){}
+}
+
+/* 📏 LA PRUEBA DE NIVEL — cuatro cosas sencillas que le colocan solo en su escalón.
+   En vez de que yo le ponga a ojo (y me equivoque por arriba, que es como se lesiona la
+   gente), sus propias marcas deciden. Y se repite cada 6 semanas: así ve progreso aunque la
+   báscula esté parada, que es justo el mes en el que se abandona. */
+function temploPruebaModal(){
+  const ult = (TEMPLO_MARCAS||[]).slice(-1)[0] || {};
+  abrirModal("📏 Prueba de nivel", `
+    <div class="note" style="text-align:left;margin-bottom:10px">
+      Hazlas con calma, descansando entre una y otra. <b>No es un examen</b>: es tu punto de partida.
+      Si en alguna no te sale ninguna repetición, pon 0 — eso también es un dato.
+    </div>
+    ${(window.TEMPLO?TEMPLO.PRUEBAS:[]).map(p=>`
+      <label class="lbl">${esc(p.n)} (${esc(p.u)})</label>
+      <input class="inp" id="tp_${p.id}" type="number" step="1" inputmode="numeric" value="${esc(String(ult[p.id]!=null?ult[p.id]:""))}">
+      <div class="note" style="text-align:left">${esc(p.como)}</div>`).join("")}
+    <label class="lbl">¿Cuántos días por semana te comprometes a entrenar?</label>
+    <select class="inp" id="tpDias">
+      <option value="3">3 días</option><option value="4" selected>4 días</option><option value="5">5 días</option>
+    </select>
+    <div class="note" style="text-align:left">
+      Sé honesto aquí. Un plan de 3 días que cumples vale más que uno de 6 que abandonas en dos semanas.
+    </div>`,
+    [{t:"Cancelar",fn:cerrarModal},{t:"Ver mi nivel",cls:"gold",fn:()=>{
+      const m={ ts:Date.now(), dias:parseInt(($("#tpDias")||{}).value,10)||4 };
+      (window.TEMPLO?TEMPLO.PRUEBAS:[]).forEach(p=>{ m[p.id]=parseFloat(($("#tp_"+p.id)||{}).value)||0; });
+      TEMPLO_MARCAS.push(m);
+      const nivel = TEMPLO.nivelDePrueba(m);
+      /* si ya tenía plan, se le respeta el nivel alcanzado: la prueba mide, no degrada */
+      const antes = TEMPLO_PLAN ? TEMPLO_PLAN.nivel : -1;
+      TEMPLO_PLAN = { nivel: Math.max(nivel, antes), semanaNum: (TEMPLO_PLAN?TEMPLO_PLAN.semanaNum:0),
+                      modo:"normal", lunes: temploLunes(), hechas:(TEMPLO_PLAN?TEMPLO_PLAN.hechas:{})||{},
+                      historia:(TEMPLO_PLAN?TEMPLO_PLAN.historia:[])||[], dias:m.dias, avisos:{} };
+      temploPlanGuardar(); cerrarModal(); renderTemplo(); temploAvisosDelPlan();
+      const N=(window.TEMPLO?TEMPLO.NIVELES:[]).find(x=>x.n===TEMPLO_PLAN.nivel);
+      toast("🪜 Estás en el nivel "+TEMPLO_PLAN.nivel+" — "+(N?N.n2:""));
+      try{ robDecir("Roberto","Nivel "+TEMPLO_PLAN.nivel+", Rey: "+(N?N.n2.toLowerCase()+", "+N.donde.toLowerCase():"")+". Empezamos.",{gesto:"animo"}); }catch(_){}
+    }}]);
+}
+
+/* ✅ MARCAR UNA SESIÓN — dos toques y ya. Rey ya sabe lo que pasa con los registros largos:
+   su diario de trading se rellenaba a posteriori y por eso se falseaba. Aquí: hecha o no,
+   y qué tan duro fue. Nada más. */
+function temploMarcar(i, hecha){
+  if(!TEMPLO_PLAN) return;
+  if(!hecha){
+    TEMPLO_PLAN.hechas = TEMPLO_PLAN.hechas || {};
+    delete TEMPLO_PLAN.hechas[TEMPLO_PLAN.lunes+":"+i];
+    temploPlanGuardar(); renderTemplo();
+    toast("Anotado. Mañana se sigue.");
+    return;
+  }
+  abrirModal("✅ Sesión hecha", `
+    <label class="lbl">¿Qué tan duro fue? (1 muy suave · 10 al límite)</label>
+    <input class="inp" id="tmEsf" type="number" min="1" max="10" step="1" inputmode="numeric" value="6">
+    <label class="lbl">¿Algo que apuntar? (opcional)</label>
+    <input class="inp" id="tmNota" type="text" placeholder="dormí mal, molestia en la rodilla…">
+    <div class="note" style="text-align:left">
+      Si marcas dolor o mal descanso, la semana que viene baja el volumen sola. Forzar ahí es
+      como operar cansado: sale caro.
+    </div>`,
+    [{t:"Cancelar",fn:cerrarModal},{t:"Guardar",cls:"gold",fn:()=>{
+      const esf=parseInt(($("#tmEsf")||{}).value,10)||6;
+      const nota=(($("#tmNota")||{}).value||"").trim();
+      TEMPLO_PLAN.hechas = TEMPLO_PLAN.hechas || {};
+      TEMPLO_PLAN.hechas[TEMPLO_PLAN.lunes+":"+i] = { ts:Date.now(), esf, nota };
+      TEMPLO_PLAN.avisos = TEMPLO_PLAN.avisos || {};
+      if(/dolor|molest|lesion/i.test(nota)) TEMPLO_PLAN.avisos.dolor = true;
+      if(/dorm|sue[ñn]o|cansad/i.test(nota)) TEMPLO_PLAN.avisos.malSueno = true;
+      TEMPLO_HECHOS.push({ ts:Date.now(), nivel:TEMPLO_PLAN.nivel, ses:i, esf, nota });
+      temploGuardar(); temploPlanGuardar(); cerrarModal(); renderTemplo();
+      try{ temploAvisosDelPlan(); }catch(_){}   /* el plan pudo cambiar: sus avisos también */
+      toast("✅ Anotada");
+      try{ robDecir("Roberto","Hecha. Así se construye, Rey.",{gesto:"chocalas"}); }catch(_){}
+    }}]);
+}
+
+/* 👀 ver una sesión cualquiera de la semana, con su técnica */
+function temploVerSesion(i){
+  const sem = temploSemanaAhora(); if(!sem) return;
+  const x = sem.sesiones[i]; if(!x) return;
+  abrirModal(x.n, x.bloques.map(bl=>
+    '<div class="bl"><b>'+esc(bl.e)+'</b> — '+esc(bl.d)+(bl.como?('<div class="como">'+esc(bl.como)+'</div>'):'')+'</div>').join(""),
+    [{t:"Cerrar",fn:cerrarModal},{t:temploHecha(i)?"Quitar la marca":"✅ Hecha",cls:"gold",fn:()=>{ cerrarModal(); setTimeout(()=>temploMarcar(i,!temploHecha(i)),120); }}]);
+}
+
+/* 🧘 GUIARLE LA PRÁCTICA, paso a paso. No es un vídeo ni un audio: es el guion escrito,
+   que es lo que se puede seguir con el móvil en el bolsillo mientras respira. */
+function temploGuiar(id){
+  const p = (window.TEMPLO?TEMPLO.PRACTICAS:[]).find(x=>x.id===id);
+  if(!p) return;
+  abrirModal(p.ic+" "+p.n, `
+    <div class="note" style="text-align:left;margin-bottom:10px">${esc(p.q)}</div>
+    <ol class="tmp-guion">${p.guion.map(g=>"<li>"+esc(g)+"</li>").join("")}</ol>
+    <div class="note" style="text-align:left;margin-top:10px"><b>Cuándo va bien:</b> ${esc(p.cuando)}</div>`,
+    [{t:"Cerrar",fn:cerrarModal},
+     {t:"⏰ Programarla",cls:"gold",fn:()=>{ cerrarModal(); setTimeout(()=>temploProgramarModal(id),120); }}]);
+  /* que su cuerpo acompañe: es una práctica de calma, no un aviso de mercado */
+  try{ robDecir("Roberto", "Vamos con "+p.n.toLowerCase()+", Rey. Sin prisa.", {gesto:"carino"}); }catch(_){}
+}
+
+/* ⏰ ¿ESTÁ YA PROGRAMADA? Las prácticas NO tienen su propio sistema de horarios: se guardan
+   como avisos de Rey, los de siempre. Así heredan todo lo que ya funciona y está probado —
+   suenan a la hora exacta por el reloj del teléfono, Roberto las dice en voz alta aunque
+   Apex esté cerrada, se ven en ⏰ Mis avisos y viajan a la nube con el resto.
+   Montar un segundo sistema de horarios al lado habría sido el error de siempre: dos cosas
+   haciendo lo mismo y contradiciéndose. */
+function temploProgramada(id){
+  try{ return (REMINDERS||[]).find(r=>r && r.templo===id) || null; }catch(_){ return null; }
+}
+function temploProgramarModal(id){
+  const p = (window.TEMPLO?TEMPLO.PRACTICAS:[]).find(x=>x.id===id);
+  if(!p) return;
+  const ya = temploProgramada(id);
+  abrirModal("⏰ Programar "+p.n, `
+    <label class="lbl">A qué hora (hora de Brasil)</label>
+    <input class="inp" id="tpgHora" type="time" value="${esc((ya&&ya.hora)||"07:00")}">
+    <label class="lbl">Qué días</label>
+    <select class="inp" id="tpgDias">
+      <option value="D" ${!ya||ya.dias==="D"?"selected":""}>Todos los días</option>
+      <option value="LV" ${ya&&ya.dias==="LV"?"selected":""}>De lunes a viernes</option>
+      <option value="finde" ${ya&&ya.dias==="finde"?"selected":""}>Fin de semana</option>
+    </select>
+    <div class="note" style="text-align:left">
+      Te sonará a la hora exacta y Roberto te lo dirá, aunque Apex esté cerrada.
+      Lo puedes cambiar o quitar cuando quieras, aquí o en ⏰ Mis avisos.
+    </div>`,
+    [{t:"Cancelar",fn:cerrarModal}]
+      .concat(ya?[{t:"Quitar",cls:"danger",fn:()=>{
+        REMINDERS = REMINDERS.filter(r=>r.templo!==id);
+        guardarReminders(); syncReminders(); avisosAlRelojDelTelefono();
+        cerrarModal(); renderTemplo(); toast("Aviso quitado");
+      }}]:[])
+      .concat([{t:"Guardar",cls:"gold",fn:()=>{
+        const hora=($("#tpgHora")||{}).value||"07:00";
+        const dias=($("#tpgDias")||{}).value||"D";
+        REMINDERS = REMINDERS.filter(r=>r.templo!==id);
+        REMINDERS.push({ id:"tpl"+id, templo:id, hora, dias, tipo:"normal", on:true,
+          tit:p.ic+" "+p.n, msg:p.q.charAt(0).toUpperCase()+p.q.slice(1), ir:"tab:templo" });
+        guardarReminders(); syncReminders(); avisosAlRelojDelTelefono();
+        cerrarModal(); renderTemplo(); if(TAB==="avisos") renderAvisos();
+        toast("⏰ Programado a las "+hora);
+      }}]));
 }
 
 function viewAvisos(){
@@ -2969,6 +3575,16 @@ function avisoModal(id){
     <select class="inp" id="avIr">${IR_DESTINOS.map(d=>`<option value="${d.v}"${d.v===(r.ir||"")?" selected":""}>${d.t}</option>`).join("")}</select>
     <label class="fl" style="margin-top:12px">Tipo</label>
     <select class="inp" id="avTipo">${opt("normal",r.tipo,"Aviso normal")}${opt("fuerte",r.tipo,"Fuerte (se queda en pantalla + vibración fuerte)")}</select>
+    <!-- 🔊 v7.41 — EL INTERRUPTOR DE VOZ, AVISO POR AVISO. Idea de Rey (05-09):
+         "poder elegir cuál va a decirme Roberto en voz alta dentro y fuera de Apex y cuál no,
+          o sea como un interruptor para que Roberto me hable los avisos".
+         Hasta ahora la voz era un interruptor ÚNICO: o hablaba todos o ninguno. Ahora él elige
+         cuáles merecen voz — los de disciplina sí, los de rutina quizá no.
+         ⚠️ Por defecto ENCENDIDO, para que ningún aviso suyo se quede mudo sin que él lo haya
+         decidido; y su interruptor general sigue mandando por encima: si lo apaga, no habla
+         ninguno. El silencio lo decide él, que es su ley. -->
+    <label class="fl" style="margin-top:12px">¿Roberto lo dice en voz alta?</label>
+    <select class="inp" id="avVoz">${opt("si", (r.voz===false?"no":"si"), "Sí — me lo dice dentro y fuera de Apex")}${opt("no", (r.voz===false?"no":"si"), "No — solo la notificación, sin voz")}</select>
   `,[{t:"Cancelar",fn:cerrarModal},{t:"Guardar",cls:"gold",fn:()=>guardarAvisoForm(id)}]);
   document.querySelectorAll("#avDias .dia-chip").forEach(b=>b.onclick=()=>b.classList.toggle("on"));
 }
@@ -2983,8 +3599,9 @@ function guardarAvisoForm(id){
   if(!msg){ toast("Escribe el mensaje"); return; }
   if(!dias.length){ toast("Elige al menos un día"); return; }
   const ir=($("#avIr")&&$("#avIr").value)||"";
-  if(id){ const r=REMINDERS.find(x=>x.id===id); if(r){ Object.assign(r,{hora,tit,msg,dias,tipo,ir}); } }
-  else { REMINDERS.push({ id:"r"+Date.now().toString(36), hora, tit, msg, dias, tipo, ir, on:true }); }
+  const voz=(($("#avVoz")&&$("#avVoz").value)||"si")!=="no";   /* 🔊 v7.41 */
+  if(id){ const r=REMINDERS.find(x=>x.id===id); if(r){ Object.assign(r,{hora,tit,msg,dias,tipo,ir,voz}); } }
+  else { REMINDERS.push({ id:"r"+Date.now().toString(36), hora, tit, msg, dias, tipo, ir, voz, on:true }); }
   guardarReminders(); syncReminders(); avisosAlRelojDelTelefono(); cerrarModal(); renderAvisos(); toast("Aviso guardado ✓");
   robertoVigila((id?"Editó":"Creó")+" un AVISO de rutina: "+hora+" · "+tit+" — “"+msg+"” ("+diasLabel(dias)+", "+tipo+").");
 }
@@ -3011,6 +3628,8 @@ const TABS=[
   {id:"noticias",  ic:"📰", n:"Noticias"},
   {id:"almanaque", ic:"📅", n:"Almanaque"},
   {id:"avisos",    ic:"⏰", n:"Avisos"},
+  /* ── El templo: cuerpo y mente (no es trading, y a propósito) ── */
+  {id:"templo",    ic:"🏛️", n:"Mi templo"},
   /* ── Consulta ── */
   {id:"reglas",    ic:"⛔", n:"Reglas"},
   {id:"conf",      ic:"🎯", n:"Confluencias"},
@@ -3037,6 +3656,7 @@ function irA(id){
   if(id==="noticias") renderNoticias();
   if(id==="avisos")   renderAvisos();
   if(id==="ejecutor") renderEjecutor();
+  if(id==="templo")   renderTemplo();
 }
 function buildNav(){
   const n=$("#nav"); n.innerHTML="";
@@ -6828,6 +7448,52 @@ function tradesTexto(list){
       +(t.nota?(" · nota: "+t.nota):"");
   }).join("\n");
 }
+/* 🏛️ EL CHIP DEL TEMPLO — el que Rey pidió: "un chip organizado igual para evaluar mis
+   entrenamientos y progreso y así él poder ir adaptando el plan".
+   Funciona como el del Ejecutor: le manda a Roberto su semana REAL —lo hecho, el esfuerzo,
+   lo que falló y por qué— y le pide un veredicto con acción. No le pregunta "¿qué opinas?":
+   le da los datos y le exige que se moje, igual que con sus operaciones. */
+async function evalTemplo(que){
+  const titulos = { semana:"🏋️ Mi semana de entrenos", plan:"🪜 Mi nivel", comida:"🍽️ Déficit y ayuno", mente:"🧘 Respiración y mente" };
+  iaTemaChat(titulos[que] || "🏛️ Mi templo");
+
+  if(!TEMPLO_FICHA || !TEMPLO_FICHA.peso){
+    iaEnviar("Todavía no configuré mis datos del templo. Dime en dos frases qué necesito poner y por qué, y no me armes ningún plan hasta que lo tenga.");
+    return;
+  }
+
+  /* la semana real, tal cual está */
+  let real = "";
+  try{
+    const sem = temploSemanaAhora();
+    if(sem){
+      const hechas = sem.sesiones.map((x,i)=>({x,i,h:temploHecha(i)}));
+      const n = hechas.filter(o=>o.h).length;
+      real = "\nMI SEMANA (nivel " + sem.nivel.n + " · " + sem.nivel.n2 + " · " + sem.nivel.donde +
+        " · semana " + (TEMPLO_PLAN.semanaNum+1) + (sem.modo!=="normal"?(" · "+sem.modo):"") + "):\n" +
+        hechas.map(o=>{
+          const d = (TEMPLO_PLAN.hechas||{})[TEMPLO_PLAN.lunes+":"+o.i];
+          return "  · " + o.x.n + " → " + (o.h ? ("HECHA" + (d&&d.esf?(", esfuerzo "+d.esf+"/10"):"") + (d&&d.nota?(", nota: "+d.nota):"")) : "pendiente");
+        }).join("\n") + "\n  Cumplido: " + n + "/" + sem.sesiones.length + "\n";
+      if((TEMPLO_PLAN.historia||[]).length)
+        real += "  Semanas anteriores: " + TEMPLO_PLAN.historia.slice(-6).map(h=>h.hechas+"/"+h.total+" ("+h.que+")").join(" · ") + "\n";
+      real += "  Para subir de nivel: " + sem.nivel.sube + "\n";
+    }
+  }catch(_){}
+  try{
+    const m=(TEMPLO_MARCAS||[]).slice(-2);
+    if(m.length) real += "  Pruebas de nivel: " + m.map(x=>"["+new Date(x.ts).toLocaleDateString("es")+" flex "+x.flex+", plancha "+x.plancha+"s, sent "+x.sentadillas+", 1km "+x.km+"']").join(" ") + "\n";
+  }catch(_){}
+
+  const P = {
+    semana: "Evalúa MI SEMANA de entrenamiento con los datos de abajo y con mis números del templo. Quiero: (1) qué fue bien y qué no, sin adornos; (2) si el esfuerzo que apunté cuadra con lo que toca, o voy demasiado suave o demasiado al límite; (3) UNA cosa concreta que cambie la semana que viene, con número; (4) y cierra con ❓ LA PREGUNTA QUE NO TE HICE. Si cumplí poco, dime la verdad: no me consueles.",
+    plan: "Mírame el nivel: ¿voy donde me toca o me estoy quedando corto? Dime qué me falta EXACTAMENTE para subir al siguiente escalón, cuánto tiempo realista me llevará a este ritmo, y si ves que estoy forzando por encima de mi nivel, párame.",
+    comida: "Repásame el déficit y el ayuno: en qué escalón debería estar según lo que llevo cumplido, si mi ventana de comer choca con mi horario de operar, y qué es lo ÚNICO que debería cambiar esta semana en la comida. Nada de listas largas: una cosa.",
+    mente: "Repásame la parte mental: qué práctica de respiración o meditación me conviene ahora según cómo va mi semana de trading y de entreno, cuándo hacerla exactamente en mi día, y por qué esa y no otra. Guíamela paso a paso si toca.",
+  };
+  iaEnviar((P[que] || P.semana) + "\n" + real);
+}
+
 async function evalDia(){
   iaTemaChat("🤖 Cierre del día");
   const hoy=hoyISO();
@@ -6958,6 +7624,12 @@ const IA_CHIP_CATS = [
     { act:"cadena",       t:"🩺 ¿Me llega todo?" },
     { act:"cierredia",    t:"🤖 Cierre del día" },
     { act:"cierresemana", t:"🤖 Cierre de semana" },
+  ]},
+  { id:"templo", n:"🏛️ Mi templo", chips:[
+    { act:"temploSemana", t:"🏋️ Evalúa mi semana" },
+    { act:"temploPlan",   t:"🪜 ¿Voy bien de nivel?" },
+    { act:"temploComida", t:"🍽️ Déficit y ayuno" },
+    { act:"temploMente",  t:"🧘 Respiración y mente" },
   ]},
   { id:"aprendizaje", n:"🧠 Mi aprendizaje", chips:[
     { act:"estrategias", t:"📚 Mis estrategias (laboratorio)" },
@@ -9279,6 +9951,63 @@ async function ejecRefrescar(){
       supervivencia no depende de que Rey CONFIESE lo que va a hacer. Si lleva 2 pérdidas
       seguidas y el día en rojo, las leyes de drawdown y ruina entran aunque él solo pregunte
       "¿cómo ves el EUR?". */
+/* 🏛️ LO QUE ROBERTO SABE DE SU TEMPLO — v1
+   Rey (05-09): "Roberto debe ser también mi entrenador… y debe saber distinguir esa sección
+   con todas sus capacidades igualmente".
+   Le llegan sus datos VIVOS y ya calculados, no los crudos: así no tiene que hacer cuentas
+   (y no puede equivocarse en ellas). Si aún no ha configurado su ficha, se le dice — para
+   que no se invente un plan sobre datos que no existen, que es justo lo que hizo el 05-09
+   con el Ejecutor cuando no le llegaba el historial. */
+function iaTemplo(){
+  try{
+    if(typeof TEMPLO_FICHA === "undefined" || !TEMPLO_FICHA || !TEMPLO_FICHA.peso)
+      return "\n[🏛️ SU TEMPLO (cuerpo y mente)] Rey todavía NO ha configurado sus datos en la sección 🏛️ Mi templo. Si te pregunta de entrenamiento, peso, calorías o suplementos, lo PRIMERO es mandarle a configurarlos ahí (fecha de nacimiento, peso, estatura y objetivo): sin eso cualquier plan que le des sería inventado. No le pidas los datos por el chat: la sección los guarda y los recalcula sola.\n";
+    const c = temploCuentas();
+    if(!c) return "";
+    const n1 = (x)=> x==null ? "?" : (Math.round(x*10)/10);
+    const t = (window.TEMPLO ? TEMPLO.tendencia(TEMPLO_PESO) : null);
+    const ult = (TEMPLO_PESO||[]).slice().sort((a,b)=>b.ts-a.ts)[0];
+    let txt = "\n[🏛️ SU TEMPLO (cuerpo y mente) — datos de AHORA, calculados por la app]\n" +
+      "  · " + (c.edad!=null?c.edad+" años · ":"") + n1(TEMPLO_FICHA.peso) + " kg · " + n1(TEMPLO_FICHA.estatura) + " cm" +
+      (TEMPLO_FICHA.cintura?(" · cintura " + n1(TEMPLO_FICHA.cintura) + " cm"):"") + "\n" +
+      "  · IMC " + n1(c.imc) + " (" + ((c.imcQueEs&&c.imcQueEs.txt)||"?") + ") · peso saludable para su estatura: " + n1(c.pesoSano.min) + "-" + n1(c.pesoSano.max) + " kg\n" +
+      "  · objetivo: " + c.objetivo.n + " → " + Math.round(c.calorias) + " kcal al día, " + c.proteina + " g de proteína, " + n1(c.agua/1000) + " L de agua\n" +
+      "  · gasta " + Math.round(c.reposo) + " kcal en reposo y " + Math.round(c.gastoDiario) + " con su actividad declarada\n";
+    if(t) txt += "  · tendencia: " + (t.cambio>0?"+":"") + n1(t.cambio) + " kg en " + t.dias + " días (" + (t.porSemana>0?"+":"") + n1(t.porSemana) + " kg por semana, " + t.pesadas + " pesadas)\n";
+    else if(ult) txt += "  · solo tiene una pesada apuntada: aún no hay tendencia que juzgar\n";
+    /* 🪜 su plan de entrenamiento, tal como está AHORA MISMO */
+    try{
+      const sem = temploSemanaAhora();
+      if(sem){
+        const hechas = sem.sesiones.filter((x,i)=>temploHecha(i)).length;
+        txt += "  · PLAN: nivel " + sem.nivel.n + " (" + sem.nivel.n2 + ", " + sem.nivel.donde + ") · semana " +
+          (TEMPLO_PLAN.semanaNum+1) + (sem.modo!=="normal"?(" en modo " + sem.modo):"") +
+          " · cumplido " + hechas + "/" + sem.sesiones.length + " esta semana\n";
+        txt += "  · para subir de nivel: " + sem.nivel.sube + "\n";
+        const pend = sem.sesiones.map((x,i)=>({x,i})).filter(o=>!temploHecha(o.i))[0];
+        if(pend) txt += "  · lo próximo que le toca: " + pend.x.n + " (" + pend.x.bloques.map(b=>b.e+" "+b.d).join(", ") + ")\n";
+        if((TEMPLO_PLAN.historia||[]).length)
+          txt += "  · semanas anteriores: " + TEMPLO_PLAN.historia.slice(-5).map(h=>h.hechas+"/"+h.total+" ("+h.que+")").join(" · ") + "\n";
+      } else if(!TEMPLO_PLAN){
+        txt += "  · TODAVÍA NO TIENE PLAN: no ha hecho la prueba de nivel. Mándale a hacerla en 🏛️ Mi templo antes de recomendarle ejercicios sueltos — se empieza al aire libre y se sube al gimnasio por mérito, no por tiempo.\n";
+      }
+    }catch(_){}
+    /* 🍽️ y en qué escalón de comida está */
+    try{
+      if(window.TEMPLO && TEMPLO_FICHA){
+        const esc = (TEMPLO_FICHA.nutri!=null) ? TEMPLO_FICHA.nutri : 0;
+        const nd = TEMPLO.nutriDe(TEMPLO_FICHA, esc);
+        if(nd) txt += "  · COMIDA: escalón " + nd.escalon.n + " (" + nd.escalon.n2 + ") · " + nd.calorias +
+          " kcal" + (nd.escalon.ayuno?(" · ayuno de " + nd.escalon.ayuno + " h, ventana de " + nd.ventana + " h"):" · sin ayuno todavía") +
+          " · para subir: " + nd.escalon.sube + "\n";
+      }
+    }catch(_){}
+    txt += "  ⚠️ Estos números YA están calculados: úsalos, no los recalcules. Si te pregunta de entrenamiento, comida, suplementos o descanso, contesta con ESTOS datos.\n" +
+      "  ⚠️ Y aquí NO recetas: informas y planificas. Lo que se cruce con su salud o su medicación, dile que lo confirme con un profesional — una vez, en una frase, sin sermón.\n";
+    return txt;
+  }catch(_){ return ""; }
+}
+
 function iaLeyes(mensaje){
   try{
     if(typeof contextoLeyes !== "function") return "";
@@ -11328,7 +12057,7 @@ async function iaEnviar(textoForzado, promptExtra){
      viaja en su bloque ESTABLE (idéntico byte a byte al que luego va en el historial) con la
      marca de caché puesta AQUÍ MISMO, y el contexto vivo va DETRÁS de la marca, en su propio
      bloque, a precio normal (1×). El worker v5.68 respeta esta marca y no la pisa. */
-  const inj="=== CONTEXTO VIVO DE LA APP (datos de AHORA MISMO; el mensaje de Rey es el bloque anterior) ===\n"+iaReloj()+"\n"+grafTxt+calTxt+iaContexto()+"\n"+iaEstrategiaDef()+"\n"+guardianRiesgo()+"\n"+iaPlan()+"\n"+iaAciertos()+"\n"+(estadoRecuperacionFreno().block||"")+iaFugas()+"\n"+iaRacha()+"\n"+iaPatrones()+"\n"+iaDatosSueltos()+"\n"+iaHitos()+"\n"+iaChats()+"\n"+iaPendientes()+"\n"+iaPlanSemanal()+"\n"+iaAvisos()+"\n"+iaEntradasAbiertas()+iaEjecutorArchivo()+iaEjecutorHoy()+iaLeyes(texto)+marco+"\n=== FIN DEL CONTEXTO — responde al mensaje de Rey del bloque anterior ===";
+  const inj="=== CONTEXTO VIVO DE LA APP (datos de AHORA MISMO; el mensaje de Rey es el bloque anterior) ===\n"+iaReloj()+"\n"+grafTxt+calTxt+iaContexto()+"\n"+iaEstrategiaDef()+"\n"+guardianRiesgo()+"\n"+iaPlan()+"\n"+iaAciertos()+"\n"+(estadoRecuperacionFreno().block||"")+iaFugas()+"\n"+iaRacha()+"\n"+iaPatrones()+"\n"+iaDatosSueltos()+"\n"+iaHitos()+"\n"+iaChats()+"\n"+iaPendientes()+"\n"+iaPlanSemanal()+"\n"+iaAvisos()+"\n"+iaEntradasAbiertas()+iaEjecutorArchivo()+iaEjecutorHoy()+iaTemplo()+iaLeyes(texto)+marco+"\n=== FIN DEL CONTEXTO — responde al mensaje de Rey del bloque anterior ===";
   const last=msgs[msgs.length-1];
   const textoMsg=c.msgs[c.msgs.length-1].content;   /* EXACTAMENTE lo guardado (texto + nota del doc) */
   let bloquesMsg = Array.isArray(last.content) ? last.content.filter(b=>b.type==="image") : [];   /* la foto va delante */
@@ -11492,7 +12221,7 @@ function respChequear(){
    ============================================================ */
 function init(){
   const c=$("#views");
-  c.append(viewNoticias(),viewAvisos(),viewHoy(),viewArranque(),viewChecklist(),viewConf(),viewRutina(),viewReglas(),viewRiesgo(),viewGatillo(),viewDiario(),viewGaleria(),viewCuentas(),viewEjecutor(),viewAlmanaque(),viewAnalisis(),viewMentor(),viewPlan());
+  c.append(viewNoticias(),viewAvisos(),viewHoy(),viewArranque(),viewChecklist(),viewConf(),viewRutina(),viewReglas(),viewRiesgo(),viewGatillo(),viewDiario(),viewGaleria(),viewCuentas(),viewEjecutor(),viewAlmanaque(),viewAnalisis(),viewMentor(),viewPlan(),viewTemplo());
   /* 🤖 la pestaña Ejecutor se refresca sola mientras la miras (cada 25 s) */
   setInterval(()=>{ try{ if(TAB==="ejecutor" && document.visibilityState==="visible") renderEjecutor(); }catch(_){} }, 25000);
   buildNav();
