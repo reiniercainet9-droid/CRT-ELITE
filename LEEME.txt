@@ -1,52 +1,47 @@
-APEX v7.46 — TRADING DESK
+APEX v7.47 — TRADING DESK
 =========================
 
-🧠 TIENES RAZÓN: ABRIR APEX NO ERA LA SOLUCIÓN, ERA MATAR LA IDEA
+🔙 LO ENCONTRÉ, Y ESTA VEZ TU PROPIO PARTE LO SEÑALÓ CON EL DEDO
 
-"Si abre Apex cada vez, entonces mejor lo hago en el chat: es inútil afuera si de cualquier
-forma tengo que ir al chat."
+Tu prueba de las 16:46 dejó una pista que no admite discusión:
 
-Exacto. Lo de ayer resolvía que tu pregunta no se perdiera, pero al precio de meterte dentro
-— o sea, el precio era justo lo que tú querías evitar. Hoy va la causa de raíz.
+   · 16:45:33 — Apex se abrió, recogió tu pregunta y te contestó bien (886 letras).
+   · Saliste.
+   · 16:46:29 — le hablaste otra vez… y DOS SEGUNDOS después: "la página de Apex ya no
+     existía".
 
-POR QUÉ HABÍA QUE ABRIR APEX (medido en tu teléfono, no supuesto)
-El parte del oído de tu prueba de las 15:50 dice, palabra por palabra, que el navegador de
-Apex SEGUÍA VIVO ("apexViva: true") y aun así no contestaba. Eso no es un fallo de Apex: es
-Android. Cuando la pantalla de Apex deja de verse, Chromium marca esa ventana como escondida
-y CONGELA la página: no ejecuta absolutamente nada hasta que se vuelve a ver. Por eso la
-única forma de que Roberto pensara era traerlo delante.
+Dos segundos. Una página que se acaba de usar no se congela en dos segundos. Es que ya no
+estaba. Y ahí está mi error de ayer: arreglé que la página no se DURMIERA, cuando lo que
+pasaba es que se MORÍA.
+
+POR QUÉ SE MORÍA
+Porque al salir con el botón ATRÁS, Android no esconde la app: la TERMINA. Destruye la
+pantalla y con ella el navegador donde vive Roberto. Por eso daba igual lo de ayer: no había
+a quién despertar. Y por eso Apex se te abría una y otra vez.
 
 EL ARREGLO
-La ventana donde vive la página ahora es NUESTRA, y le dice a Chromium una cosa muy simple:
-esta ventana nunca está escondida. Aunque estés en TradingView, en WhatsApp o con la pantalla
-apagada, la página de Roberto sigue despierta y sigue pensando.
+Atrás ahora se comporta como el botón de INICIO: esconde Apex y la deja VIVA por detrás.
+   · Si estás dentro y hay a dónde volver, atrás vuelve como siempre.
+   · Si ya no hay a dónde, Apex se va al fondo en vez de cerrarse.
+   · Y cuando quieras cerrarla del todo, la cierras desde las apps recientes, como cualquier
+     app.
 
-QUÉ SIGNIFICA PARA TI, EN CRISTIANO
-Desde fuera, sin entrar a Apex ni una vez:
-   · Le hablas y te contesta en voz alta.
-   · Te saca la TARJETA de confirmación en su propio cuerpo flotante: apruebas ahí mismo.
-   · Y ejecuta: programa el aviso, lo que sea, con tu sí desde fuera.
-   · Y siguen valiendo los comandos de siempre: cállate, pausa, sigue, repite.
-Apex solo se abrirá si alguna vez Android se lleva la página entera de la memoria — y eso
-ahora será raro, no la norma. Cuando pase, ya sabes que la pregunta no se pierde.
+Con esto MÁS lo de ayer (la ventana que no se duerme), Roberto se queda despierto por detrás:
+le hablas desde TradingView, te contesta en voz alta, te saca la tarjeta en su cuerpo y
+ejecuta con tu sí. Sin abrir Apex.
 
-DOS COSAS QUE ME PREGUNTASTE
-   · "Lo pone todo en un mismo chat": es a propósito, pero mira si te cuadra — si sigues
-     hablando del mismo tema, va al mismo hilo; si cambias de tema, abre uno nuevo. Tus tres
-     pruebas eran el mismo aviso, por eso cayeron juntas. Si lo prefieres de otra forma
-     (por ejemplo, un hilo nuevo cada vez que le hablas desde fuera), dímelo y lo cambio.
-   · "Abrió Apex en la pantalla principal, no en el chat": cierto, y ya no viene al caso
-     porque no va a abrirse; si algún día pasa, se abre y te contesta igual.
+Y ADEMÁS, PARA NO VOLVER A DEDUCIR NADA DEL RELOJ
+   · El parte ahora dice, con todas las letras, si la pantalla de Apex estaba destruida o
+     solo dormida. Son dos averías distintas y ahora se distinguen de un vistazo.
+   · Y si la pantalla ya está muerta, ya no te hace esperar 2,5 segundos en balde: va al plan
+     B al instante.
 
-Comprobado, no supuesto: he mirado DENTRO de la APK que se entrega para confirmar que la
-pantalla usa esa ventana nueva y no la de serie — si no, todo habría compilado igual y tú
-habrías visto el mismo fallo otra vez.
+Regresión 154/154. Sube el zip e instala la APK v7.47. El worker no se toca (sigue 5.125).
 
-Regresión 153/153. Sube el zip e instala la APK v7.46. El worker no se toca (sigue 5.125).
-
-TU PRUEBA, la de verdad: quédate en TradingView, mantén el cuerpo de Roberto y dile que te
-programe un aviso. NO debe abrirse Apex: la tarjeta tiene que salirte ahí mismo, encima de
-TradingView, y con tu sí queda programado.
+TU PRUEBA: abre Apex una vez (para que quede viva), sal con atrás, vete a TradingView y
+pídele el aviso manteniendo su cuerpo. NO debe abrirse Apex: la tarjeta tiene que salirte
+encima de TradingView. Si esta vez tampoco, mándame captura y miro el parte: ahora dirá
+exactamente si la pantalla estaba muerta o dormida, y eso ya no deja sitio a suposiciones.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
