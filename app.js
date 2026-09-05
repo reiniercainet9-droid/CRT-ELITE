@@ -2230,7 +2230,13 @@ function horaNY(){
    17:00 NY, y viernes desde las 17:00 NY. (El indicador y sus killzones son de
    Forex; para cripto —24/7— esto no aplica, pero su operativa actual es FX.) */
 function forexAbierto(ny){
-  ny=ny||horaNY(); const d=ny.wd, hd=ny.dec;
+  ny=ny||horaNY();
+  /* ⚖️ v7.37 — la regla vive en situaciones.js, que es el único fichero que cargan LOS TRES
+     (la página, el cuerpo flotante y el vigilante de avisos). Aquí solo se consulta, para
+     que Apex y Roberto no puedan volver a contestar cosas distintas — que es lo que Rey
+     cazó el sábado: "Pre-NY abierta" con el cartel de "Forex cerrado" justo debajo. */
+  if(typeof robMercadoAbierto === "function") return robMercadoAbierto(ny.wd, ny.dec);
+  const d=ny.wd, hd=ny.dec;
   if(d===6) return false;            // Sábado
   if(d===0 && hd<17) return false;   // Domingo antes de 17:00 NY
   if(d===5 && hd>=17) return false;  // Viernes tras 17:00 NY
@@ -7089,7 +7095,17 @@ const MEM_TEMAS_APP = {
   personal:"🧍 Rey (rutina, vida, objetivos)", general:"🗂️ General"
 };
 /* 🔎 BUSCADOR de chats y memoria */
-let _iaMemCache=null;
+/* 🧠⏳ v7.37 — LA CACHÉ DE SU MEMORIA CADUCA.
+   Estaba pendiente desde el 03-09 y es más importante de lo que parece: esta lista es la
+   memoria VIVA de Roberto, y se guardaba una vez y no caducaba nunca. Si él aprendía algo
+   —y aprende solo, de cada cierre del Ejecutor— Rey seguía viendo la lista vieja hasta que
+   por casualidad abriera y cerrara el panel de conversaciones. O sea: Roberto sabía cosas
+   que su propia app no le enseñaba a Rey.
+   Ahora vive 5 minutos, y se tira a la basura EN EL ACTO cuando él guarda o borra un
+   recuerdo — que es justo el momento en que la lista vieja pasa a ser mentira. */
+const IA_MEM_TTL = 5 * 60 * 1000;
+let _iaMemCache=null, _iaMemCacheTs=0;
+function iaMemOlvidaCache(){ _iaMemCache=null; _iaMemCacheTs=0; }
 function iaBuscarMemoria(q){
   const out=$("#iaMemHits"); if(!out) return;
   if(!q){ out.innerHTML=""; return; }
@@ -7098,8 +7114,10 @@ function iaBuscarMemoria(q){
     out.innerHTML = hits.length ? `<div class="ia-conv-fold">🧠 En la memoria de Roberto · ${hits.length}</div>`+
       hits.map(e=>`<div class="note" style="text-align:left;margin:0 0 6px;font-size:12.5px">${esc(e.texto)}</div>`).join("") : "";
   };
-  if(_iaMemCache){ pinta(_iaMemCache); return; }
-  try{ fetch(nubeUrl()+"/mem",{cache:"no-store"}).then(r=>r.json()).then(d=>{ _iaMemCache=(d&&d.entries)||[]; pinta(_iaMemCache); }).catch(()=>{}); }catch(_){}
+  if(_iaMemCache && (Date.now()-_iaMemCacheTs) < IA_MEM_TTL){ pinta(_iaMemCache); return; }
+  /* mientras llega la lista fresca se pinta la que hay (si la hay): nunca una pantalla vacía */
+  if(_iaMemCache) pinta(_iaMemCache);
+  try{ fetch(nubeUrl()+"/mem",{cache:"no-store"}).then(r=>r.json()).then(d=>{ _iaMemCache=(d&&d.entries)||[]; _iaMemCacheTs=Date.now(); pinta(_iaMemCache); }).catch(()=>{}); }catch(_){}
 }
 function renderConvList(){
   const box=$("#iaConvList"); if(!box) return;
@@ -7284,7 +7302,7 @@ function iaInit(){
   ov.onclick=(e)=>{ if(e.target===ov) cerrarIA(); };
   $("#iaNew").onclick=iaNuevaConv;
   $("#iaNew2").onclick=iaNuevaConv;
-  $("#iaConvs").onclick=()=>{ const b=$("#iaConvsBox"); const show=b.style.display==="none"; $("#iaCfgBox").style.display="none"; b.style.display=show?"block":"none"; if(show){ _iaMemCache=null; renderConvList(); } };
+  $("#iaConvs").onclick=()=>{ const b=$("#iaConvsBox"); const show=b.style.display==="none"; $("#iaCfgBox").style.display="none"; b.style.display=show?"block":"none"; if(show){ iaMemOlvidaCache(); renderConvList(); } };
   const bq=$("#iaBuscar"); if(bq){ let _bqT=null; bq.addEventListener("input",()=>{ clearTimeout(_bqT); _bqT=setTimeout(renderConvList,250); }); }
   $("#iaCfg").onclick=()=>{ const b=$("#iaCfgBox"); const show=b.style.display==="none"; $("#iaConvsBox").style.display="none"; b.style.display=show?"block":"none"; if(show){ $("#iaUrl").value=IA.url; iaVozRefrescarUI(); notifRefrescarUI(); robAnimUI(); vigiaUI(); } };
   /* Controles de notificaciones */
@@ -7370,6 +7388,36 @@ function iaInit(){
             if(aj){ aj.style.display = ""; aj.onclick = abrirAjustes; }
 
             if(!vv.length){
+              /* 🗣️ A4 v7.37 — SI NO HAY VOCES SUELTAS, QUE PUEDA ELEGIR EL IDIOMA.
+                 Rey lleva desde el 01-09 con esta lista vacía, y lo peor no era la lista:
+                 era quedarse sin NADA que tocar. El motor de Google no declara sus voces
+                 aunque las tenga —las suyas funcionan: ese mismo día la voz de Roberto se
+                 arregló instalando la de Estados Unidos— así que ahora se le ofrecen los
+                 IDIOMAS que Android sí reconoce instalados. Cambiar de español de España a
+                 español de Estados Unidos o de México es justo lo que cambia cómo suena
+                 Roberto, que era lo que él quería poder hacer sin salir de Apex. */
+              const idi = (r && r.idiomas) || [];
+              if(idi.length){
+                const NOM = { ES:"España", US:"Estados Unidos", MX:"México", AR:"Argentina",
+                              CO:"Colombia", CL:"Chile", PE:"Perú", VE:"Venezuela", "":"español" };
+                vs.style.display = "";
+                vs.innerHTML = idi.map(x=>{
+                  const nombre = NOM[String(x.pais||"").toUpperCase()] || x.pais || x.id;
+                  return '<option value="'+esc(x.id)+'">Español de '+esc(nombre)+'</option>';
+                }).join("");
+                vs.onchange = async ()=>{
+                  try{
+                    const res = (PV && PV.vozIdioma) ? await PV.vozIdioma({ id: vs.value }) : null;
+                    toast(res && res.ok ? "🗣️ Voz cambiada" : "Ese idioma no está instalado");
+                    if(res && res.ok) try{ PV.vozHablar({ texto:"Así sueno ahora, Rey.", trozo:"prueba" }); }catch(_){}
+                  }catch(_){ toast("No pude cambiarla"); }
+                };
+                const nota0 = $("#iaVozNota");
+                if(nota0){ nota0.style.display="";
+                  nota0.innerHTML = "Tu motor no declara sus voces una por una, pero sí estos <b>idiomas instalados</b>: " +
+                    "elige el que quieras y Roberto cambia al momento. Para instalar más: <b>🔧 Ajustes de voz de Android</b>."; }
+                return;
+              }
               /* 🗣️ v7.01 — que no se quede un desplegable muerto diciendo "Sin voces":
                  se le explica qué pasa y dónde se arregla, que es en Android. */
               vs.style.display = "none";
@@ -7518,6 +7566,43 @@ function iaLeerImagen(file, cb){
   }catch(_){ cb(null); }
 }
 /* Vista previa de la imagen pendiente, encima del cuadro de texto */
+/* ══════════════════════════════════════════════════════════════════════════════
+   📸 UNA CAPTURA COMPARTIDA A APEX DESDE CUALQUIER APP — Fase 4, v7.37
+   ═════════════════════════════════════════════════════════════════════════════
+   Rey lo pidió el 01-09 y quedó aplazado a la Fase 4: poder mandarle a Roberto una captura
+   desde CUALQUIER app —TradingView, la galería, un chat— sin tener que guardarla, abrir
+   Apex, ir a la galería y buscarla. Ahora Apex sale en el menú de compartir de Android y la
+   imagen entra directa en el chat, adjunta y con Roberto esperando.
+   NO SE MANDA SOLA: se le adjunta y se abre el chat, para que Rey escriba lo que quiere
+   preguntar. Mandarla solo con "analiza esto" sería adivinar qué quiere saber — y le
+   costaría un mensaje de Roberto cada vez que comparte algo por error.
+   La imagen llega ya convertida desde MainActivity, porque el permiso que la otra app le
+   presta a Apex se acaba en cuanto Apex pierde el foco. */
+function apexCapturaCompartida(dataUrl){
+  try{
+    const d = String(dataUrl||"");
+    if(!/^data:image\//.test(d)){ try{ toast("No pude leer esa imagen"); }catch(_){} return; }
+    IA.pendImg = d;
+    try{ if(typeof abrirIA === "function") abrirIA(); }catch(_){}
+    try{ iaPintarAtt(); }catch(_){}
+    try{ toast("📸 Captura lista — dile a Roberto qué quieres que mire"); }catch(_){}
+    /* que se le note en la cara que ya la tiene delante */
+    try{ robCara("analiza","mirando tu captura"); }catch(_){}
+    try{ const ta=$("#iaText"); if(ta) ta.focus(); }catch(_){}
+  }catch(_){}
+}
+/* 🕐 si Apex estaba CERRADA, Android la abre y la imagen llega antes de que esta función
+   exista: MainActivity la deja aquí y se recoge en cuanto la app termina de montarse.
+   Compartir a una app cerrada es el caso NORMAL, no la excepción. */
+function apexCapturaPendiente(){
+  try{
+    const d = window.__apexCapturaPend;
+    if(!d) return;
+    window.__apexCapturaPend = null;
+    apexCapturaCompartida(d);
+  }catch(_){}
+}
+
 function iaPintarAtt(){
   const a=$("#iaAtt"); if(!a) return;
   if(!IA.pendImg && !IA.pendDoc){ a.style.display="none"; a.innerHTML=""; return; }
@@ -9280,8 +9365,22 @@ async function robVigilante(){
   }catch(_){}
 }
 /* Sus killzones, en hora de Nueva York (las mismas del indicador y del guardián) */
+/* ⚖️ v7.37 — UNA SOLA VERDAD SOBRE SI EL MERCADO ESTÁ ABIERTO.
+   Rey (05-09, con la captura del sábado a las 08:31): "este mensaje dentro de Apex está
+   fuera de hora, día y momento. Yo pienso que no hay varios cuerpos y varios Robertos: en
+   todo lugar —web, Apex y estando fuera— deben ser los mismos y las mismas metodologías.
+   Es Roberto y su cuerpo en todas partes."
+   TENÍA RAZÓN Y ERA LITERAL: esta función miraba la HORA de Nueva York y NUNCA el día. Un
+   sábado a las 7:31 NY cae dentro de 7:30–9:30, así que Roberto anunciaba "Pre-NY abierta —
+   concéntrate" con el mercado cerrado y con el propio Apex enseñándole justo debajo el
+   cartel rojo de "Forex cerrado hasta el domingo".
+   O sea: DOS PARTES DE APEX DECIDIENDO LO MISMO POR SU CUENTA, y una equivocada. Es la
+   misma enfermedad de las cuatro tablas de caras y de las dos listas de voces. La cura no
+   es sincronizarlas: es que haya UNA sola, y aquí ya existía y acertaba (forexAbierto).
+   Ahora las killzones cuelgan de ella. Con el mercado cerrado no hay ventana que anunciar. */
 function robKillzoneAhora(){
   try{
+    if(typeof forexAbierto === "function" && !forexAbierto()) return {dentro:false,nombre:"",faltan:null,cerrado:true};
     const p=new Intl.DateTimeFormat("en-GB",{timeZone:"America/New_York",hour:"2-digit",minute:"2-digit",hour12:false}).formatToParts(new Date());
     let H=0,M=0; p.forEach(x=>{ if(x.type==="hour")H=parseInt(x.value,10); if(x.type==="minute")M=parseInt(x.value,10); });
     const m=H*60+M;
@@ -10329,6 +10428,7 @@ async function ejecutarTool(name, i){
       }catch(e){ return {ok:false,msg:"Sin conexión con la nube: "+String(e).slice(0,80)}; }
     }
     if(name==="guardar_memoria"){
+      iaMemOlvidaCache();   /* 🧠 v7.37: acaba de aprender algo — la lista vieja ya es mentira */
       const texto=String(i.texto||"").trim();
       if(!texto) return {ok:false,msg:"No había nada que recordar"};
       const tipo=i.tipo||"aprendizaje";
@@ -10338,6 +10438,7 @@ async function ejecutarTool(name, i){
       return {ok:true,msg:"Guardado en mi memoria ("+(MEM_TEMAS_APP[tema])+"): “"+texto+"”. Lo recordaré de aquí en adelante."};
     }
     if(name==="borrar_memoria"){
+      iaMemOlvidaCache();   /* 🧠 v7.37: acaba de olvidar algo — la lista vieja ya es mentira */
       const id=String(i.id||"").trim();
       if(!id) return {ok:false,msg:"Falta el id a borrar"};
       try{ fetch(nubeUrl()+"/mem",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({del:id})}).catch(()=>{}); }catch(_){}
@@ -11300,6 +11401,9 @@ function init(){
   try{ nubeRestaurar(true); }catch(_){}  /* ☁️ si la nube tiene datos más nuevos (otro teléfono), restaura solo */
   /* Al volver a la app (no cerrarla del todo), recupera lo que haya terminado */
   document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible") iaResumePend(); });
+  /* 📸 v7.37 — si compartió una captura con Apex cerrada, aquí se recoge */
+  setTimeout(()=>{ try{ apexCapturaPendiente(); }catch(_){} }, 900);
+  document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible"){ try{ apexCapturaPendiente(); }catch(_){} } });
   /* 🚨 A3 (v7.33) — y que nadie se entere tarde de que el vigía está apagado */
   setTimeout(()=>{ try{ vigiaCentinela(); }catch(_){} }, 2500);
   document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible"){ try{ vigiaCentinela(); }catch(_){} } });

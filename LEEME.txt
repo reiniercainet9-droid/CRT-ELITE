@@ -1,37 +1,58 @@
-APEX v7.36 — TRADING DESK
+APEX v7.37 — TRADING DESK
 =========================
 
-Primero lo primero. Los tres puntos que abrían la lista, hechos y comprobados.
+ENTREGA FINAL DEL TRADING. Todo lo que quedaba de mi parte, cerrado y comprobado.
 
-🎭 1 · ROBERTO YA MANEJA SU CUERPO — era el hueco de raíz
-Hasta hoy Roberto escribía su respuesta y DESPUÉS un código mío la leía buscando palabras
-clave para adivinarle la cara. Su cuerpo lo manejaba yo desde fuera, a ciegas: él ni sabía
-que lo tenía. Por eso decía una cosa y su cuerpo hacía otra.
-Ahora su cerebro sabe que tiene 36 gestos y elige el suyo con cada respuesta, igual que ya
-elige cuándo usar sus manos. Le enseñé cuál va con qué: frena cuando te frena, celebra
-cuando ganaste, vigila cuando cuida una posición, serio cuando habla de dinero.
-La etiqueta con la que lo manda se lee y se borra en UN solo sitio, antes de que nada más
-la toque: tú nunca la vas a ver escrita. Y si algún día no la pusiera, se sigue adivinando
-como antes — nunca se queda sin cara.
+⚖️ UN SOLO ROBERTO Y UNA SOLA REGLA — lo que cazaste en la captura del sábado
+Tenías razón en las dos cosas que se veían ahí, y eran el MISMO problema de fondo.
 
-🗄️ 2 · ROBERTO VE TU EXPEDIENTE COMPLETO DEL EJECUTOR
-La ventana de 7 días que te puse ayer era el detalle reciente. Pero el ARCHIVO de verdad
-—cada operación desde el primer día, con su entrada, su salida, su R y su motivo— vive en
-tu teléfono y no le llegaba. Sin eso no podía juzgar semanas ni meses, que es justo lo que
-se le pide a un gerente.
-Ahora recibe el resumen entero: cuántas van, cuántas ganaron, R acumulado, y —esto es lo
-importante— POR QUÉ cerró cada una, agrupado. Ahí se ve de un vistazo si la regla de salida
-te sirve o te está cortando los trades. Y por par, que es donde decides en cuál confiar.
+1️⃣ "Pre-NY abierta — concéntrate" un sábado, con el cartel rojo de "Forex cerrado" justo
+   debajo en la misma pantalla. La causa: había TRES sitios decidiendo por su cuenta si el
+   mercado estaba abierto — el cartel (acertaba), las killzones del cuerpo de dentro (miraban
+   la hora y NUNCA el día) y las franjas del cuerpo de fuera (sábado y domingo, pero no el
+   viernes por la tarde ni la reapertura del domingo). Tres métodos, tres respuestas.
+   Ahora la regla vive en UN solo fichero — el único que cargan la web, Apex y el cuerpo
+   flotante — y los tres preguntan ahí. Comprobado en los 7 bordes de la semana, incluido tu
+   sábado a las 07:31.
+   De paso: el viernes a las 19:00 NY ya no dice "mañana se sigue" (no hay mañana: el mercado
+   abre el domingo). Y el domingo a las 18:00 deja de decir "finde", porque ya reabrió.
 
-⚠️ 3 · EL EJECUTOR AVISA SI ESTÁ CORRIENDO CON CÓDIGO VIEJO
-Lo de esta madrugada no puede repetirse. Python lee su fichero UNA vez al arrancar: mientras
-el proceso viva, un arreglo en el disco no existe para él. Así estuvo el jueves y el viernes
-—saliendo por la regla vieja y entrando dos veces en el mismo par— sin que nadie lo dijera.
-Ahora se mira solo cada 5 minutos: si le cambiaron el fichero, te avisa UNA vez y sigue
-trabajando (callarse sería peor). Ya está reiniciado y corriendo la v2.7.
+2️⃣ Se veían DOS cuerpos suyos a la vez: el que Apex dibuja dentro y el flotante de Android
+   encima, los dos con la misma nubecita. No eran dos Roberto: era tu único Roberto dibujado
+   dos veces. Ahora, con Apex delante, el flotante se aparta — y vuelve solo a su sitio, con
+   su posición y su estado intactos, en cuanto sales de Apex.
 
-Regresión 144/144. Sube el zip e instala la APK v7.36. El worker no se toca — el cerebro de
-Roberto ya está actualizado en la nube.
+🔍 LAS DOS LECTURAS DE ALARMA QUE FALLARON EL DÍA 3
+Te decía "crédito o demora": dos causas adivinadas y ninguna accionable. Y era peor de lo que
+parecía — cualquier fallo (sin crédito, límite de ritmo, error, red caída) se borraba y salía
+esa misma frase. Ahora te dice lo que PASÓ de verdad, y si son los créditos te lo dice con
+todas las letras, porque es lo único que tú puedes arreglar.
+Además se cortaba a los 8 segundos sin necesidad: TradingView ya no está esperando en ese
+punto. Sube a 20 — se comía lecturas que iban a llegar bien.
+
+📸 COMPARTIR UNA CAPTURA A APEX (Fase 4, la que faltaba)
+Apex ya sale en el menú de compartir de Android. Desde TradingView, la galería o donde sea:
+compartir → Apex, y la imagen entra directa al chat, adjunta y con Roberto esperando. No se
+la mando solo: la deja lista para que tú escribas qué quieres que mire.
+El notch en tema claro ya estaba resuelto — lo comprobé.
+
+🗣️ LA LISTA DE VOCES (A4)
+Tu motor no declara sus voces una por una — es cosa suya, no de Apex, y tus voces SÍ
+funcionan. Lo malo era quedarte sin nada que tocar. Ahora, si no hay voces sueltas, Apex te
+ofrece los IDIOMAS instalados: "Español de España", "de Estados Unidos", "de México"… eliges y
+Roberto cambia al momento, con una frase de prueba para que lo oigas.
+
+🧠 Y la lista de la memoria de Roberto ya caduca: antes se guardaba una vez y no se
+actualizaba nunca, así que él aprendía cosas que su propia app no te enseñaba.
+
+────────────────────────────────────────────────────────────────────────
+Regresión 145/145 · auditoría del sistema vivo en verde (nube, cron, Puente, cerebro,
+Ejecutor, respaldo).
+
+⚠️ ESTA VEZ SÍ HAY QUE SUBIR EL WORKER: el arreglo de las lecturas de alarma vive en la nube.
+   1. Sube worker-elitepro-v5.124.js
+   2. Sube el zip APEX-app-v7.37.zip
+   3. Instala Apex-Roberto-v7.37.apk
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

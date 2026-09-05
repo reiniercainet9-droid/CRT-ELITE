@@ -467,6 +467,35 @@ function robCaraDe(titulo, cuerpo, tipo){
    Rey (04-09): "después que cierra el horario operativo, solo los mensajes programados y
    las alertas; prefiero consejos, mensajes de abundancia, riquezas, crecimiento personal".
    Por eso de 13:00 NY en adelante NO se habla del mercado en su vida de fondo. */
+/* ══════════════════════════════════════════════════════════════════════════════
+   🕒 ¿ESTÁ EL MERCADO ABIERTO? — LA ÚNICA RESPUESTA, v7.37
+   ═════════════════════════════════════════════════════════════════════════════
+   Rey (05-09, con la captura del sábado a las 08:31 en la que Roberto anunciaba "Pre-NY
+   abierta — concéntrate" con el cartel de "Forex cerrado" justo debajo):
+     "yo pienso que no hay varios cuerpos y varios Robertos: en todo lugar —web, Apex y
+      estando fuera— deben ser los mismos y las mismas metodologías. Es Roberto y su cuerpo
+      en todas partes."
+   Había TRES sitios decidiendo por su cuenta si el mercado estaba abierto: el cartel de
+   Apex (acertaba), las killzones del cuerpo de dentro (miraban la hora y NUNCA el día) y
+   las franjas del cuerpo de fuera (miraban sábado y domingo, pero no el viernes por la
+   tarde ni la reapertura del domingo). Tres métodos, tres respuestas distintas.
+   Esta función vive AQUÍ a propósito: situaciones.js es el fichero que cargan la página de
+   Apex, el cuerpo flotante y el vigilante de los avisos. Es el único sitio del sistema
+   donde una regla puede ser la misma en todas partes. */
+function robMercadoAbierto(wd, dec) {
+  try {
+    if (wd == null || dec == null) {
+      var f = new Date();
+      var ny = new Date(f.toLocaleString("en-US", { timeZone: "America/New_York" }));
+      wd = ny.getDay(); dec = ny.getHours() + ny.getMinutes() / 60;
+    }
+    if (wd === 6) return false;                 /* sábado: cerrado todo el día */
+    if (wd === 0 && dec < 17) return false;     /* domingo: abre a las 17:00 NY */
+    if (wd === 5 && dec >= 17) return false;    /* viernes: cierra a las 17:00 NY */
+    return true;
+  } catch (_) { return true; }                  /* ante la duda, NO se le silencia el sistema */
+}
+
 function robFranja(opts) {
   try {
     var o = opts || {};
@@ -474,7 +503,9 @@ function robFranja(opts) {
     var f = new Date();
     var ny = new Date(f.toLocaleString("en-US", { timeZone: "America/New_York" }));
     var d = ny.getDay(), h = ny.getHours() * 60 + ny.getMinutes();
-    if (d === 0 || d === 6) return "finde";
+    /* 🕒 v7.37 — con el mercado cerrado es FINDE, y punto: nada de anunciar ventanas que no
+       existen. Y se decide con la MISMA regla que usa el cartel de Apex, no con otra. */
+    if (!robMercadoAbierto(d, h / 60)) return "finde";
     if (o.killzone) return "killzone";          /* lo que sepa la app manda sobre el reloj */
     if (o.faltanKz != null && o.faltanKz <= 30) return "cerca";
     if (h < 120) return "madrugada";            /* 0:00–2:00 */
