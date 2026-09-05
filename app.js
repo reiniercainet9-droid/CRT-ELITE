@@ -1015,7 +1015,12 @@ async function iaEnviarBloques(bloques, resumenChat){
   let hist=c.msgs.slice(c.histIni);
   while(hist.length && hist[0].role!=="user") hist.shift();
   const msgs=hist.map(x=>iaMsgApi(x,false));
-  let calTxt=""; try{ const ev=await cargarCalendarioCache(); calTxt=iaCalendarioContexto(ev)+"\n"; }catch(_){ calTxt=""; }
+  /* ⏱️ v7.43 — mismo tope que en el envío normal: el contexto nunca retrasa el mensaje */
+  let calTxt="";
+  await Promise.race([
+    (async()=>{ try{ const ev=await cargarCalendarioCache(); calTxt=iaCalendarioContexto(ev)+"\n"; }catch(_){ calTxt=""; } })(),
+    new Promise(r=>setTimeout(r, 8000)),
+  ]);
   /* 💰 v6.02: bloque ESTABLE (lo guardado) con la marca de caché + material + contexto vivo al final */
   const inj="=== CONTEXTO VIVO DE LA APP (datos de AHORA MISMO) ===\n"+iaDondeEstoy()+"\n"+iaReloj()+"\n"+calTxt+iaContexto()+"\n"+iaEstrategiaDef()+"\n"+iaPlan()+"\n"+iaAciertos()+"\n"+iaFugas()+"\n"+iaRacha()+iaTemplo()+iaLeyes(resumenChat||"")+"\n=== FIN DEL CONTEXTO ===";
   const last=msgs[msgs.length-1];
@@ -2545,7 +2550,10 @@ function nyFechaISO(off){
 async function cargarCalendario(){
   if(!IA.url) return null;
   try{
-    const r=await fetch(IA.url.replace(/\/+$/,"")+"/?calendar=1");
+    /* ⏱️ v7.43 — con reloj. Este era el TERCER fetch sin tiempo límite del camino de una
+       pregunta, y el 05-09 fue el que colgó la de Rey desde fuera: el 04-09 se le puso reloj
+       al gráfico y al Ejecutor, y este se quedó sin él. Uno basta para romperlo todo. */
+    const r=await traerConTiempo(IA.url.replace(/\/+$/,"")+"/?calendar=1", {}, 6000);
     if(!r.ok) return null;
     const data=await r.json();
     return Array.isArray(data)?data:null;
@@ -8738,6 +8746,11 @@ function iaDesdeFuera(texto){
     IA.autoHablarUna = true;    /* y se la digo en voz alta: no está mirando la pantalla */
     const ta = $("#iaText"); if(ta){ ta.value = dicho; }
     if(typeof preguntaTraza==="function") preguntaTraza("se la mando a la nube");
+    /* 📮 v7.43 — el parte se manda AQUÍ, no solo al terminar. El 05-09 la pregunta de Rey se
+       colgó reuniendo el contexto y el parte se quedó sin enviar: al ir a mirar qué había
+       pasado, el último apunte era de la mañana. Un diagnóstico que solo llega cuando todo
+       fue bien no sirve para nada — justo lo que hace falta es el rastro del que falló. */
+    if(typeof preguntaParteAlaNube==="function") preguntaParteAlaNube("salió de Apex");
     iaEnviar(dicho);
   }catch(_){}
 }
@@ -11381,11 +11394,32 @@ function confirmarTool(tu){
   return new Promise(resolve=>{
     /* si el chat está cerrado, se ABRE: nunca más una confirmación cancelada a espaldas de Rey */
     if(!$("#iaMsgs") && typeof abrirIA==="function"){ try{ abrirIA(); }catch(_){} }
-    IA_TOOL_PEND.push({ tu, resolve, estado:"pendiente" });
+    const p = { tu, resolve, estado:"pendiente" };
+    IA_TOOL_PEND.push(p);
     iaPintarTools();
     /* ✅ v7.25 — y en su cuerpo flotante, para que pueda decidir sin soltar lo que hace */
     iaTarjetaAlCuerpo(tu);
     try{ if(navigator.vibrate) navigator.vibrate([120,60,120]); }catch(_){}
+    /* 📮 v7.43 — que quede constancia de que la tarjeta SALIÓ. Si un día Rey dice que no la
+       vio, esto separa "no salió" de "salió y no llegó a su pantalla", que son dos averías
+       distintas y se arreglan en sitios distintos. */
+    try{ if(typeof preguntaTraza==="function"){ preguntaTraza("tarjeta a la vista: "+tu.name); preguntaParteAlaNube("esperando su sí"); } }catch(_){}
+    /* ⏳ v7.43 — Y NO SE ESPERA PARA SIEMPRE. Esta promesa deja a Roberto "pensando" hasta
+       que Rey toca sí o no; si la tarjeta no llega a su pantalla —o él no la ve— antes se
+       quedaba colgado sin fin y sin rastro. A los 10 minutos se da por no contestada: se
+       cancela la acción (que es lo prudente: NUNCA se hace algo suyo sin su sí), Roberto se
+       desatasca y se le dice lo que pasó para que pueda repetirlo. */
+    setTimeout(()=>{
+      try{
+        if(p.estado!=="pendiente") return;
+        p.estado="caducada";
+        const i=IA_TOOL_PEND.indexOf(p); if(i>=0) IA_TOOL_PEND.splice(i,1);
+        iaPintarTools(); iaTarjetaCuerpoFuera("");
+        try{ preguntaTraza("la tarjeta caducó sin respuesta"); preguntaParteAlaNube("tarjeta sin contestar"); }catch(_){}
+        try{ robDecir("Roberto","No me contestaste la tarjeta, Rey. No hice nada — pídemelo otra vez cuando quieras.",{gesto:"espera"}); }catch(_){}
+        resolve({confirmed:false, res:{ok:false,msg:"la tarjeta caducó sin respuesta"}});
+      }catch(_){}
+    }, 10*60000);
   });
 }
 /* ══════════════════════════════════════════════════════════════════════════════
@@ -12043,11 +12077,33 @@ async function iaEnviar(textoForzado, promptExtra){
   // La foto solo viaja en el ÚLTIMO mensaje; los turnos anteriores van sin ella.
   let msgs=hist.map((x,i)=>iaMsgApi(x, i===hist.length-1));
   // Inyecta el contexto de datos en el bloque de texto del último mensaje del usuario
-  let calTxt=""; try{ const ev=await cargarCalendarioCache(); calTxt=iaCalendarioContexto(ev)+"\n"; }catch(_){ calTxt=""; }
-  let grafTxt=""; try{ grafTxt=await iaGrafico()+"\n"; }catch(_){ grafTxt=""; }
-  /* 🤖 v7.28 — y una foto FRESCA de lo que hizo el Ejecutor, para que Roberto no vuelva a
-     decirle a Rey que hoy no operó cuando sí operó (04-09: "es todo basura"). */
-  try{ await ejecRefrescar(); }catch(_){}
+  /* ══════════════════════════════════════════════════════════════════════════════
+     ⏱️ v7.43 — EL CONTEXTO NO PUEDE RETRASAR LA PREGUNTA MÁS DE 8 SEGUNDOS. NUNCA.
+     ═════════════════════════════════════════════════════════════════════════════
+     Rey (05-09, probando desde fuera): "le dicté exactamente el aviso, la nube me puso
+     exactamente el mensaje que le dije, se quedó pensando… pero ni la tarjeta de
+     confirmación ni nada. Me quedé esperando y nada".
+     SE MIDIÓ, NO SE SUPUSO: el gasto de la nube de ese día decía 2 llamadas de chat, las dos
+     de la mañana. Su pregunta de las 13:32 NUNCA LLEGÓ. Se colgó AQUÍ, reuniendo el contexto,
+     antes de salir — y como IA.busy ya estaba encendido, Roberto se quedó "pensando" para
+     siempre y la tarjeta no llegó a existir.
+     LA CAUSA: el calendario era el tercer fetch sin tiempo límite. El 04-09 le puse reloj al
+     gráfico y al Ejecutor y me dejé este. **Uno solo basta para romperlo todo.**
+     POR ESO AHORA EL TOPE ES DEL BLOQUE ENTERO, no de cada llamada: si mañana se añade otra
+     fuente de contexto y alguien olvida su reloj, la pregunta sale igual. El contexto es un
+     extra — perder el dato del calendario es una molestia; perder la pregunta es lo que Rey
+     lleva dos días sufriendo. */
+  let calTxt="", grafTxt="";
+  await Promise.race([
+    (async()=>{
+      try{ const ev=await cargarCalendarioCache(); calTxt=iaCalendarioContexto(ev)+"\n"; }catch(_){ calTxt=""; }
+      try{ grafTxt=await iaGrafico()+"\n"; }catch(_){ grafTxt=""; }
+      /* 🤖 v7.28 — y una foto FRESCA de lo que hizo el Ejecutor, para que Roberto no vuelva a
+         decirle a Rey que hoy no operó cuando sí operó (04-09: "es todo basura"). */
+      try{ await ejecRefrescar(); }catch(_){}
+    })(),
+    new Promise(r=>setTimeout(r, 8000)),
+  ]);
   // promptExtra = framework de análisis (semanal/diario) que va a la API pero NO se muestra en el chat
   const marco = promptExtra ? ("\n\n=== INSTRUCCIONES DEL ANÁLISIS QUE PIDE REY ===\n"+promptExtra+"\n=== FIN INSTRUCCIONES ===") : "";
   /* 💰 v6.02 — EL AGUJERO GRANDE, con datos reales del 22/08 ($5.44 en un día): el contexto

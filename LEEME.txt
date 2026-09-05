@@ -1,91 +1,49 @@
-APEX v7.42 — TRADING DESK
+APEX v7.43 — TRADING DESK
 =========================
 
-🏛️ EL TEMPLO COMPLETO + TU INTERRUPTOR DE VOZ. Todo en una sola entrega.
+🔍 LO DE TU PRUEBA: ENCONTRADO, Y ERA MÍO
 
-🔊 TU IDEA, HECHA: EL INTERRUPTOR DE VOZ AVISO POR AVISO
-Al programar un aviso, justo debajo de "Tipo", ahora eliges: ¿Roberto lo dice en voz alta o
-solo te notifica? Tres reglas:
-   · Por defecto SÍ habla — ningún aviso que ya tenías se queda mudo sin que tú lo decidas
-   · Solo QUITA voz: tu interruptor general sigue mandando por encima
-   · Y quita LA VOZ y nada más: el aviso se enseña igual y el cuerpo reacciona igual, porque
-     tu ley dice que no se pierde ni una señal ni un gesto
+No lo adiviné. Tres datos de tu propio sistema:
 
-🪜 LA ESCALERA: DEL AIRE LIBRE AL GIMNASIO
-Cinco niveles y se sube POR MÉRITO, no por tiempo:
-   0 Base (calle) → 1 Constancia (calle y casa) → 2 Fuerza con tu peso (parque) →
-   3 Gimnasio inicio → 4 Gimnasio fuerza
-Cada nivel dice exactamente qué hace falta para subir. Y cada ejercicio trae su CÓMO SE HACE:
-un plan que no explica la técnica es un plan que se hace mal.
+   1. El parte del oído: te entendió LITERAL a las 13:32:53 —"Roberto prográmame un aviso a
+      la 1:40 de la tarde que diga prueba de rey"— y se lo pasó a Roberto. Esa parte funcionó.
+   2. El gasto de la nube de hoy: 2 llamadas de chat, las DOS de esta mañana.
+      → TU PREGUNTA DE LAS 13:32 NUNCA LLEGÓ A LA NUBE.
+   3. El parte de la pregunta: el último apunte era de las 05:27.
 
-📏 LA PRUEBA DE NIVEL
-Cuatro cosas sencillas —flexiones, plancha, sentadillas en un minuto, 1 km— y Apex te coloca
-solo en tu escalón. Manda tu marca MÁS FLOJA, no la mejor: el cuerpo va al ritmo de su
-eslabón débil, y empezar por debajo es lo que hace que no lo abandones.
-Se repite cada 6 semanas: así ves progreso aunque la báscula esté parada, que es justo el mes
-en el que la gente lo deja.
+O sea: la pregunta se colgó ANTES de salir, reuniendo el contexto. Y como Roberto ya estaba
+marcado como "ocupado", se quedó pensando para siempre — y la tarjeta no apareció porque
+nunca llegó a existir. No fue la tarjeta: fue que la pregunta no salió.
 
-🎯 HOY TE TOCA · 📅 ESTA SEMANA
-Abres la sección y lo primero es lo que toca hoy, con sus ejercicios y un botón grande.
-Marcar es DOS TOQUES: hecha, y qué tan duro fue. Nada más — un registro largo no se rellena,
-y eso ya lo aprendimos con tu diario.
+LA CAUSA, y es un fallo mío de ayer a medias: el calendario era el TERCER "fetch" sin tiempo
+límite del camino. Ayer le puse reloj al gráfico y al Ejecutor… y me dejé ese. Uno solo basta
+para romperlo todo.
 
-🔄 Y SE ADAPTA SOLA AL CERRAR LA SEMANA
-   · 80% o más cumplido → progresas
-   · 50-79% → repites la semana (no se progresa sobre lo que no se hizo)
-   · menos del 50% → SE RECORTA el plan. Si no lo cumples es que era demasiado grande:
-     se adapta él a ti, no tú a él
-   · cada 5 semanas → semana suave obligatoria
-   · si apuntas dolor o mal descanso → baja el volumen sola
-No tienes que pulsar nada un lunes: la semana rueda y se ajusta sola.
+CÓMO LO ARREGLÉ, para que no dependa de que yo me acuerde:
+   · El tope ya no es de cada llamada, es del BLOQUE ENTERO: 8 segundos. Si mañana se añade
+     otra fuente de contexto y alguien olvida su reloj, tu pregunta sale igual. El contexto es
+     un extra; perder tu pregunta no.
+   · Y de segunda red, ninguna fuente llama a la red sin reloj. Comprobado una por una.
 
-⏰ Y LOS AVISOS TE DICEN QUÉ TE TOCA — como en el trading, que era tu punto importante
-Cada día de entrenamiento tiene SU aviso, con la sesión y los ejercicios de ESE día dentro.
-No un "toca entrenar" genérico. Y se regeneran solos cuando el plan cambia, para que nunca te
-digan la rutina de hace tres semanas.
-No monté un sistema de horarios nuevo: son tus avisos de siempre, así que heredan el reloj de
-hora exacta, la voz del vigía, tu interruptor nuevo y la pantalla de ⏰ Mis avisos.
+📮 Y ARREGLÉ EL DIAGNÓSTICO, que también falló
+El parte solo se mandaba AL TERMINAR. Justo del intento que falla —el que hace falta— no
+quedaba rastro. Ahora se manda en cuanto la pregunta sale, y otra vez cuando la tarjeta
+aparece. Así se puede distinguir "no salió" de "salió y no llegó a tu pantalla", que son dos
+averías distintas y se arreglan en sitios distintos.
 
-⏰ TUS HORARIOS DE ENTRENO — lo preguntaste antes de instalar y ERA UN FALLO MÍO
-Sí, los avisos del entrenamiento están en ⏰ Mis avisos. Pero tal como los tenía, la hora se
-te reescribía a las 17:00 cada vez que abrías el templo, y las sesiones caían en días
-seguidos, sin descanso. Arreglado antes de que instales:
-   · Botón ⏰ Horarios en el templo: pones CADA sesión en su día y su hora. Una el lunes a las
-     5 de la mañana y otra el jueves de noche, si es lo que te cuadra con el trabajo
-   · Y si la cambias desde ⏰ Mis avisos, TAMBIÉN vale: antes de regenerar se lee lo que
-     pusiste y se respeta — la hora, el día, el tipo y tu interruptor de voz
-   · Por defecto reparte con descanso entre medias (lunes, miércoles, viernes…), no en días
-     seguidos
-   · Y «Hoy te toca» es HOY de verdad: si hoy no te toca, te dice que descanses y te enseña la
-     siguiente, en vez de empujarte a entrenar un día que dejaste libre
+⏳ Y LA TARJETA YA NO CUELGA A ROBERTO
+Si una tarjeta se queda sin contestar, a los 10 minutos se cancela sola y Roberto se
+desatasca y te lo dice. Se CANCELA, nunca se aprueba: jamás se hace algo tuyo sin tu sí.
+Antes se quedaba esperando para siempre.
 
-🍽️ DÉFICIT Y AYUNO, ESCALONADOS
-   0 Ordenar (2 sem) — todavía no se toca la cantidad: proteína, agua, no picar
-   1 Déficit 10% + ayuno 12:12 (3 sem) — del 10% ni te enteras
-   2 Déficit 15% + 14:10 (4 sem) — aquí se nota
-   3 Déficit 18% + 16:8 (4 sem) — máximo 8-10 semanas seguidas
-   4 Descanso metabólico (2 sem) — NO es rendirse: es lo que hace que lo anterior siga
-     funcionando. El peso sube un poco y es agua, no grasa
-⚠️ Y con tu horario: en el escalón 3 estarías operando en ayunas. Si notas la cabeza espesa,
-la operativa manda — adelantas la ventana o bajas un escalón. Apex te avisa si tu ventana de
-comer choca con tu killzone.
+SOBRE TU DUDA: dictarle desde fuera funciona exactamente igual que el chat — es el mismo
+Roberto y el mismo camino. Lo que falló no era del dictado ni del chat: era del contexto, y
+te habría pasado igual escribiéndole desde dentro con el teléfono en ese estado.
 
-🏛️ EL CHIP QUE PEDISTE
-En el chat: "🏛️ Mi templo" con cuatro evaluaciones — tu semana, tu nivel, la comida y la
-parte mental. Funciona como el del Ejecutor: le manda a Roberto tu semana REAL (lo hecho, el
-esfuerzo, lo que fallaste y por qué) y le exige veredicto con acción, cerrando con la pregunta
-que no le hiciste.
+Regresión 149/149. Sube el zip e instala la APK v7.43. El worker no se toca.
 
-🧠 Y ROBERTO
-Sabe todo esto y una cosa más que le dejé escrita con todas las letras: EL PLAN LO CALCULA
-APEX, NO ÉL. Es la misma arquitectura de tu trading — el indicador decide y Roberto lee. Si
-se lo inventara cada día, cada día sería otro plan y no habría progresión que medir.
-Su papel: explicarte por qué toca lo que toca, corregirte, empujarte cuando aflojes y frenarte
-cuando fuerces. Y unir las dos disciplinas: un día sin dormir no es solo un mal entrenamiento,
-es un día en el que decides peor delante del gráfico.
-
-Regresión 148/148 (con 21 comprobaciones solo del templo). ⚠️ ESTA VEZ HAY WORKER: sube worker-elitepro-v5.125.js (lleva tu
-interruptor de voz), después el zip, y por último instala la APK v7.42.
+Cuando la instales, repite tu prueba tal cual. Si volviera a fallar, ahora SÍ queda el rastro
+y te digo en un minuto dónde se cortó.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
