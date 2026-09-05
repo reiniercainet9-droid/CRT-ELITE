@@ -1,52 +1,65 @@
-APEX v7.34 — TRADING DESK
+APEX v7.35 — TRADING DESK
 =========================
 
-Trabajé de corrido mientras dormías. Esta APK lleva TODO lo de esta noche.
+Tenías razón en todo lo que dijiste esta mañana. Fui a mirarlo y aquí está lo que había.
 
-🎤 LO DE HABLARLE DESDE FUERA: ENCONTRADO. NO ERA EL OÍDO.
-No lo adiviné. Tu teléfono deja un parte en la nube cada vez que le hablas, y ahí estaba
-todo con hora:
+👀 POR QUÉ ROBERTO NO SABÍA LO DE AYER — y no era que le faltara el dato
+El dato ESTABA entero en la nube: la entrada y la salida del viernes con sus precios, 6
+rechazos y 4 señales que murieron sin llegarle. Lo que le pasaba a Roberto es que el bloque
+de información que recibe se llama literalmente "EL EJECUTOR HOY" y filtraba solo el día de
+hoy. Tú preguntaste un sábado por el viernes: para él, ayer no existía. Ni podía sospecharlo.
+Ahora recibe los ÚLTIMOS 7 DÍAS, día por día, con HOY y AYER nombrados: cada entrada con su
+precio, cada salida con su motivo y su resultado, los rechazos, las señales que murieron y
+hasta los ratos en que estuvo ciego. Y lleva escrito que mire ahí ANTES de decirte que no
+tiene un dato.
 
-   20:17:44  mantienes pulsado el cuerpo
-   20:17:44  Android confirma que oye
-   20:17:49  entendido: "Roberto audita el Ejecutor"     ← TE OYÓ Y TE ENTENDIÓ
-   20:17:49  se lo paso a Roberto sin abrir Apex          ← Y SE LO PASÓ
-   20:17:51  sueltas el dedo
-   20:17:51  error 5: el dictado se cortó
+🤖 Y BUSCANDO ESO ENCONTRÉ ALGO PEOR
+El Ejecutor llevaba corriendo desde el viernes a las 7:34 de la mañana, pero el fichero se
+arregló a las 19:59. Estaba ejecutando el código VIEJO en memoria. Por eso el viernes:
+  · salió por "extremo H1" — la regla vieja, la que te sacaba demasiado pronto
+  · y entró DOS veces en EURUSD, cuando tu regla de un gatillo por par ya estaba escrita
+Lo reinicié a las 05:41 con el mercado cerrado y sin nada abierto. Ya corre tu regla.
+⚠️ El aviso "🤖 Ejecutor conectado" que te llegó NO era un aviso atrasado: salió a las
+05:41:23 y lo generé yo con ese reinicio. Ese no era un fallo.
 
-O sea que el oído funciona perfecto. Fallaban dos cosas después:
+🤔 EL CUERPO Y ROBERTO, POR FIN COORDINADOS
+El culpable de que el cuerpo bailara mientras él te respondía tiene nombre: cada 45 segundos
+un vigilante le repintaba la cara con la killzone de turno — es el "Concéntrate ahora" que
+sale en tu captura — y borraba el "pensando". Ahora:
+  · Le hablas y se queda con cara de estar pensando, quieto en eso, SIN bailar y sin soltar
+    frases, hasta que la respuesta llega. Dentro de Apex y fuera, el mismo Roberto.
+  · Cuando contesta, MUEVE LA BOCA. Antes solo la movía con los avisos, no con su respuesta.
+Así ves que está trabajando sin tener que entrar al chat, que es justo lo que pediste.
 
-1️⃣ ESE "ERROR 5" NO ES UN ERROR. Es lo que Android manda SIEMPRE al cerrar el micrófono,
-   solo porque soltaste el dedo. Pero le pisaba la nubecita con "el dictado se cortó" y cara
-   de preocupación, dos segundos después de que Roberto ya estuviera pensando tu respuesta.
-   Se veía exactamente lo que contaste: suena, y ya. Ahora, si ya te entendió, ese aviso de
-   cierre se ignora y se le deja pensar.
+💬 LAS FRASES DE CRECIMIENTO: por eso no habías oído ninguna
+De las once franjas de tu día, solo CUATRO tenían frases de crecimiento: fin de semana,
+madrugada, tarde y noche. Las que cubren tu jornada —espera, Londres, Nueva York, cierre,
+antes de la ventana— tenían CERO. No fallaba la voz: no había ninguna que decir.
+Ahora hay 39 repartidas por todo el día. Dos momentos siguen sin ellas a propósito: con la
+killzone abierta y con una posición tuya viva. Ahí necesitas foco, no filosofía.
 
-2️⃣ EL GORDO: antes de mandar tu pregunta a la nube, Apex reúne el contexto (gráfico,
-   calendario, lo que hizo hoy el Ejecutor). Esas llamadas NO tenían tiempo límite. Con el
-   teléfono en segundo plano basta que una se cuelgue para que tu pregunta no salga NUNCA —
-   y como Roberto ya quedaba marcado "ocupado", tampoco salía ninguna de las siguientes. Por
-   eso probabas otra vez y otra vez y nada.
-   Ahora cada una tiene su reloj de 6 segundos: si no contesta, se va sin ella y tu pregunta
-   sale igual. Y el seguro que desatasca a Roberto se arma al principio, no al final: antes
-   se armaba justo en la parte a la que nunca se llegaba.
-   📮 Además le puse un parte a ese tramo, que era el único a oscuras. Si vuelve a fallar
-   algo, lo veo sin adivinar.
+🧹 Y UNA TRAMPA DE FONDO, que es la que hace que los problemas vuelvan
+La tabla de frases tenía cuatro franjas definidas DOS veces. En programación gana la última,
+así que las primeras eran código muerto que parecía vivo. Lo comprobé en carne propia: al
+meter tus frases nuevas fueron a parar a la copia muerta — el arreglo se aplicó, todo
+compiló, y en tu teléfono no habría pasado NADA. Quitadas las cuatro, comprobando que lo que
+Roberto dice y hace no cambia ni una coma.
 
-🚨 Y SI EL VIGÍA SE QUEDA APAGADO, AHORA APEX LO GRITA (era el A3 de tu lista)
-Al abrir Apex, si Roberto no está de guardia, sale un cartel rojo arriba del todo con su
-botón, y él te lo dice en voz alta. No lo enciendo yo solo: puede que lo hayas apagado tú a
-propósito, y el silencio lo decides tú. Lo que no puede pasar es que lo estés sin saberlo,
-como el 01-09 (casi una hora sin vigía, y se descubrió porque fui yo a mirarlo).
 
-🖥️ Y EN LA PC (sin tocar nada tuyo de trading): MT5 ya arranca solo con Windows — era el A1.
-Sin MT5 el Ejecutor se queda ciego toda la sesión. Si lo quieres quitar, borra el acceso
-directo «MetaTrader 5 (auto-arranque)» de la carpeta de Inicio.
+📓 Y LA OTRA MITAD DE AQUELLA RESPUESTA
+Roberto se apoyó en tu Diario para negarlo: "ni en el Diario, sigue en cero trades
+registrados". Son DOS LIBROS distintos: el Diario es donde TÚ apuntas a mano; lo que hace
+el Ejecutor va en su propio bloque. Ahora, cuando tu Diario está vacío, a Roberto le llega
+escrito que eso NO significa que no se haya operado, y que no use ese dato para negarte
+nada.
 
-Y lo de antes, que sigue dentro: ⏰ el despertador (tus avisos a la hora exacta, sin quitar
-la nube), 👕 la ropa (cuatro cambios al día) y 🚧 el "no entres todavía" fuera de lugar.
+🔇 LO QUE SE HABLA Y LO QUE NO
+Lo comprobé camino por camino: solo hay DOS sitios que producen voz — los avisos/alarmas y
+las frases de crecimiento. Las frases genéricas ("aquí estaré el lunes, fresquito") salen a
+la nube MUDAS, y así se queda. Ahora hay un banco que lo vigila: si algún día alguien hace
+hablar una genérica, la regresión se planta antes de que llegue a tu teléfono.
 
-Regresión 142/142. Sube el zip e instala la APK v7.34. El worker no se toca.
+Regresión 143/143. Sube el zip e instala la APK v7.35. El worker no se toca.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

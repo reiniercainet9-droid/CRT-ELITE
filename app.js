@@ -8864,6 +8864,44 @@ function robVidaUnGesto(){
 
 /* ritmo irregular a propósito: un gesto cada 20-45 s parece vida; cada 30 exactos,
    un reloj. Se reprograma solo tras cada gesto. */
+/* ══════════════════════════════════════════════════════════════════════════════
+   🤔 MIENTRAS PIENSA, SE LE NOTA — Y NADA SE LO PISA (v7.35)
+   ═════════════════════════════════════════════════════════════════════════════
+   Rey (05-09): "no se supone que Roberto y su cuerpo son uno solo en todas partes?
+   Entonces cómo es que le pregunto algo, él me está respondiendo, y el cuerpo está poniendo
+   frases y bailando sin hacer nada y sin mover la boca mientras Roberto me responde.
+   Además, después de yo presionarlo y hablarle, mientras él está pensando, el gesto debe
+   mantenerse hasta que me responda: porque si no, ¿cómo sé yo que está pensando mi
+   respuesta? ¿Cómo sé que funciona si tengo que entrar al chat para ver?".
+   Es su LEY del cuerpo, la del 02-09: voz y cuerpo son UNO, esté donde esté.
+   POR QUÉ SE VIGILA EN VEZ DE AVISAR EN CADA SITIO: el "estoy ocupado" (IA.busy) se
+   enciende y se apaga en once puntos distintos del código —el envío normal, el de fuera,
+   los reintentos, el seguro, las manos de Roberto—. Ir a poner un aviso en cada uno es
+   justo como se olvidan la mitad: basta con que uno se escape para que el cuerpo vuelva a
+   bailar mientras él piensa. Mirándolo se cubren todos, hoy y los que vengan. */
+let _robPensandoAnt = false;
+function robPensandoPoner(si){
+  try{
+    if(si){
+      try{ robCara("analiza","pensando tu respuesta…"); }catch(_){}
+    }
+    /* y el cuerpo de fuera, que es el MISMO Roberto */
+    try{
+      const P = vigiaPuente();
+      if(P && typeof P.robertoPensando === "function") P.robertoPensando({ si: !!si });
+    }catch(_){}
+  }catch(_){}
+}
+function robPensandoVigilante(){
+  try{
+    setInterval(()=>{
+      const ahora = !!(typeof IA!=="undefined" && IA.busy);
+      if(ahora === _robPensandoAnt) return;
+      _robPensandoAnt = ahora;
+      robPensandoPoner(ahora);
+    }, 700);
+  }catch(_){}
+}
 function robVida(){
   try{
     clearTimeout(_vidaT);
@@ -8893,6 +8931,7 @@ function robCuerpoMontar(){
     robVigilante();
     setInterval(robVigilante,45000);
     robVida();                       /* 🎭 y su vida propia entre tarea y tarea */
+    robPensandoVigilante();          /* 🤔 y que se le note cuando está pensando (v7.35) */
     document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible") robVigilante(); });
   }catch(_){}
 }
@@ -9059,32 +9098,88 @@ async function ejecRefrescar(){
     return EJEC_CACHE.d;
   }catch(_){ return EJEC_CACHE.d; }
 }
+/* ══════════════════════════════════════════════════════════════════════════════
+   🤖👀 LO QUE ROBERTO SABE DEL EJECUTOR — v7.35: LOS ÚLTIMOS DÍAS, NO SOLO HOY
+   ═════════════════════════════════════════════════════════════════════════════
+   Rey (05-09, 5:28 de la mañana, con la captura): le pidió *"la entrada del Ejecutor de
+   ayer"* y Roberto contestó *"no me llegó ningún dato del Ejecutor de ayer en este
+   contexto… así que no puedo inventarte nada"*, y le pidió a ÉL que se lo contara.
+   Rey, con toda la razón: *"Roberto no está informado de nada, no tiene vista en Apex,
+   cuando eso era una regla principal: ojos y manos para hacer cualquier cosa en todo mi
+   sistema… Roberto es mi gerente, mi manager, mi mayordomo, mi mentor, mi guía"*.
+
+   ⚠️ Y EL DATO ESTABA. Se comprobó contra la nube: el registro del Ejecutor tenía las 25
+   últimas entradas, con la ENTRADA y la SALIDA del viernes, 5 rechazos y 4 señales que
+   murieron sin llegarle. Roberto no estaba desinformado: estaba MIRANDO POR UNA MIRILLA.
+   Esta función filtraba por 'toDateString() === hoy' — y él preguntó a las 5:28 del SÁBADO
+   por el VIERNES. Para Roberto, ayer no existía. Ni el título le dejaba sospecharlo: decía
+   "EL EJECUTOR HOY", así que ni podía avisar de que le faltaba medio mundo.
+
+   LA REGLA QUE ESTO RESTAURA, que es de Rey y es principal: Roberto tiene OJOS sobre todo
+   el sistema. Un mayordomo que solo se acuerda de hoy no sirve de mayordomo.
+   AHORA: los últimos 7 días, agrupados por día y con HOY y AYER nombrados; entradas y
+   salidas con sus precios, los rechazos con su motivo, las señales que murieron sin
+   llegarle y los ratos que estuvo ciego (que también son parte de la verdad). */
 function iaEjecutorHoy(){
   try{
     const d = EJEC_CACHE.d;
     if(!d) return "";
-    const live = d.live||{}, cfg = d.cfg||{};
-    const hoy = new Date().toDateString();
-    const suyas = (d.log||[]).filter(x => {
-      try{ return new Date(x.ts).toDateString() === hoy && (x.tipo==="entrada" || x.tipo==="salida"); }catch(_){ return false; }
-    });
+    const live = d.live||{};
+    const DIA = 86400000;
+    const hoy0 = new Date(); hoy0.setHours(0,0,0,0);
     const hora = (ts)=>{ try{ return new Date(ts).toLocaleTimeString("es",{hour:"2-digit",minute:"2-digit"}); }catch(_){ return "?"; } };
-    const lineas = suyas.slice(0,12).reverse().map(x=>{
-      if(x.tipo==="entrada") return "  · "+hora(x.ts)+" ENTRÓ "+(x.dir==="buy"?"COMPRA":"VENTA")+" "+(x.sym||"")+" a "+(x.entrada||x.precio||"?")+" (lote "+(x.lote!=null?x.lote:"?")+", grado "+(x.grado||"?")+", SL "+(x.sl||"?")+", TP "+(x.tp||"?")+")";
-      return "  · "+hora(x.ts)+" SALIÓ "+(x.sym||"")+" a "+(x.salida||"?")+" · "+(x.pl!=null?("$"+x.pl):"?")+" ("+(x.r!=null?x.r+"R":"?")+") · motivo: "+(x.motivo||"?");
+    const nombreDia = (ini)=>{
+      const dif = Math.round((hoy0.getTime() - ini)/DIA);
+      if(dif===0) return "HOY";
+      if(dif===1) return "AYER";
+      try{ return new Date(ini).toLocaleDateString("es",{weekday:"long", day:"2-digit", month:"2-digit"}).toUpperCase(); }
+      catch(_){ return "hace "+dif+" días"; }
+    };
+    /* se agrupa por día, de hoy hacia atrás */
+    const cubos = {};
+    for(const x of (d.log||[])){
+      let t = 0; try{ t = new Date(x.ts).getTime(); }catch(_){ continue; }
+      if(!t) continue;
+      const dd = new Date(t); dd.setHours(0,0,0,0);
+      const ini = dd.getTime();
+      if((hoy0.getTime() - ini) > 7*DIA) continue;          /* una semana: lo que un gerente recuerda */
+      (cubos[ini] = cubos[ini] || []).push(x);
+    }
+    const dias = Object.keys(cubos).map(Number).sort((a,b)=>b-a);
+    const bloques = dias.map(ini=>{
+      const l = cubos[ini].slice().sort((a,b)=> new Date(a.ts) - new Date(b.ts));
+      const ops = l.filter(x=>x.tipo==="entrada"||x.tipo==="salida");
+      const rech = l.filter(x=>x.tipo==="rechazo");
+      const muertas = l.filter(x=>x.tipo==="senal_muerta");
+      const ciego = l.filter(x=>x.tipo==="ciego");
+      const filas = ops.map(x=>{
+        if(x.tipo==="entrada") return "    · "+hora(x.ts)+" ENTRÓ "+(x.dir==="buy"?"COMPRA":"VENTA")+" "+(x.sym||"")+" a "+(x.entrada||x.precio||"?")+" (lote "+(x.lote!=null?x.lote:"?")+", grado "+(x.grado||"?")+", SL "+(x.sl||"?")+", TP "+(x.tp||"?")+")";
+        return "    · "+hora(x.ts)+" SALIÓ "+(x.sym||"")+" a "+(x.salida||"?")+" · "+(x.pl!=null?("$"+x.pl):"?")+" ("+(x.r!=null?x.r+"R":"?")+") · motivo: "+(x.motivo||"?");
+      });
+      if(rech.length) filas.push("    · rechazó "+rech.length+" señal(es) — motivo: "+(rech[0].motivo||"?"));
+      if(muertas.length) filas.push("    · "+muertas.length+" señal(es) murieron sin llegarle (la PC estuvo sin internet)");
+      if(ciego.length) filas.push("    · estuvo CIEGO "+ciego.length+" rato(s): "+(ciego[0].motivo||"sin conexión"));
+      if(!filas.length) filas.push("    · sin actividad");
+      return "  " + nombreDia(ini) + ":\n" + filas.join("\n");
     }).join("\n");
-    const rechazos = (d.log||[]).filter(x=>{ try{ return new Date(x.ts).toDateString()===hoy && x.tipo==="rechazo"; }catch(_){ return false; } });
-    const porQue = rechazos.length ? ("\n  · señales que RECHAZÓ hoy: "+rechazos.length+" (motivo más repetido: "+(rechazos[0].motivo||"?")+")") : "";
-    return "\n[🤖 EL EJECUTOR HOY] "+(d.on?"🟢 encendido":"🔴 apagado")+(d.vivo?"":" · ⚠️ SIN CONEXIÓN con la PC")+
-      " · operaciones hoy: "+(live.opsHoy!=null?live.opsHoy:"?")+" · P&L del día: $"+(live.plHoy!=null?live.plHoy:"0")+
+
+    return "\n[🤖 EL EJECUTOR — ÚLTIMOS 7 DÍAS] "+(d.on?"🟢 encendido":"🔴 apagado")+(d.vivo?"":" · ⚠️ SIN CONEXIÓN con la PC")+
+      " · operaciones HOY: "+(live.opsHoy!=null?live.opsHoy:"?")+" · P&L de hoy: $"+(live.plHoy!=null?live.plHoy:"0")+
       " · cuenta "+(live.cuenta||"?")+(live.demo?" (DEMO)":"")+" · balance $"+(live.balance!=null?live.balance:"?")+
-      "\n  ⚠️ ESTO es lo que hizo el Ejecutor: sus operaciones NO salen en el Guardián de Riesgo (ese mira las cuentas de fondeo de Rey). Si te preguntan por el Ejecutor, contesta con ESTE bloque." + "\n"+
-      (lineas || "  · hoy no entró en ninguna operación")+porQue+"\n";
+      "\n  ⚠️ ESTO es lo que hizo el Ejecutor, día por día. Sus operaciones NO salen en el Guardián de Riesgo (ese mira las cuentas de fondeo de Rey) NI en el Diario (ese es la libreta donde Rey apunta a mano). Si te preguntan por el Ejecutor —de hoy, de ayer o de esta semana— contesta con ESTE bloque, y NUNCA digas que no tienes el dato ni te apoyes en el Diario vacío para decir que no hubo operaciones.\n"+
+      (bloques || "  · sin nada registrado en los últimos 7 días")+"\n";
   }catch(_){ return ""; }
 }
 async function robVigilante(){
   try{
     if(typeof Roberto==="undefined" || document.visibilityState!=="visible") return;
+    /* 🤔 v7.35 — Rey (05-09, con la captura): "le pregunto algo, él me está respondiendo, y
+       el cuerpo está poniendo frases y bailando sin hacer nada y sin mover la boca".
+       ESTE ERA EL CULPABLE: el vigilante repinta su cara y su rótulo cada 45 segundos con
+       la killzone de turno ("Concéntrate ahora" en su captura) y borraba el "pensando…".
+       La vida propia (robVidaUnGesto) ya se callaba cuando Roberto trabaja; este no. Y era
+       el que se veía, porque manda sobre el rótulo. Mientras piensa, aquí no se toca nada. */
+    if(typeof IA!=="undefined" && IA.busy) return;
     if(Date.now()-_robEvTs < 25000) return;            /* un evento reciente manda */
     let emo="presenta", txt="";
     /* 1) ¿ventana operativa abierta? (sus killzones, hora de Nueva York) */
@@ -9361,7 +9456,14 @@ function iaContexto(){
   /* BUGFIX: aunque NO haya trades, hay que seguir e incluir SIEMPRE las cuentas.
      Antes se cortaba aquí y el bloque [CUENTAS] nunca llegaba a Roberto si el
      alumno tenía cuentas pero cero trades ligados. */
-  if(!m){ return c+"Aún no tiene trades registrados en este contexto (empezando de cero)."+iaCuentas(); }
+  /* 📓≠🤖 v7.35 — EL DIARIO VACÍO NO SIGNIFICA QUE NO HAYA PASADO NADA.
+     Rey (05-09, con la captura): le pidió la entrada del Ejecutor de ayer y Roberto contestó
+     "no me llegó ningún dato… ni en el Diario (sigue en cero trades registrados)". Usó ESTA
+     línea como prueba de que no había operaciones — y el Ejecutor había entrado dos veces.
+     Son dos libros distintos: el Diario es donde REY apunta sus trades a mano; lo que hace
+     el Ejecutor va en su propio bloque. Que uno esté vacío no dice nada del otro, y Roberto
+     tiene que saberlo o seguirá negándole cosas que sí pasaron. */
+  if(!m){ return c+"Aún no tiene trades registrados A MANO en su Diario de este contexto. ⚠️ Eso NO significa que no se haya operado: lo que hace el Ejecutor va en su propio bloque [🤖 EL EJECUTOR], que es otro libro. Nunca uses este dato para decirle que no hubo operaciones."+iaCuentas(); }
   c+=`${m.n} trades. R neto ${r1(m.rNeto)}R. Win rate ${pct(m.wr*100)}. Profit factor ${fmtPF(m.pf)}. Expectancy ${r2(m.exp)}R por trade. RR real 1:${r1(m.rrReal)}. Drawdown máx ${r1(m.dd)}R. Plan roto en ${m.roto} trades, ${m.emoMal} con prisa/ansiedad, ${m.fueraVent} fuera de ventana, ${m.setupsC} setups C. `;
   const rank=[]; DIMS_MENTOR.forEach(([dim,fn])=>{ cortePor(list,fn).forEach(x=>{ if(x.n>=3) rank.push({dim,k:x.k,exp:x.exp,n:x.n}); }); });
   rank.sort((a,b)=>b.exp-a.exp);
@@ -10735,6 +10837,12 @@ async function iaBgResuelto(jobId, d){
   c.msgs.push({role:"assistant",content: txt || "⚠️ No me llegó respuesta, reintenta."});
   iaGuardarConvs();
   pintarIAChat();
+  /* 👄 v7.35 — Y QUE MUEVA LA BOCA AL CONTESTAR. Rey (05-09): "el cuerpo está… sin mover
+     la boca mientras Roberto me responde". La boca se movía cuando llegaba un aviso por
+     push y cuando salía su nubecita, pero NO cuando aterrizaba su respuesta en el chat —
+     que es el momento en que Rey le está mirando esperando. Un Roberto que contesta con la
+     boca cerrada no parece que conteste él. */
+  try{ if(txt) robBocaRato(txt); }catch(_){}
   if(IA.voz.on || IA.autoHablarUna){ const ult=c.msgs[c.msgs.length-1]; if(ult && ult.role==="assistant" && ult.content && !/^⚠️|^💳|^🚫|^✅/.test(ult.content)) iaHablar(ult.content, c.msgs.length-1); IA.autoHablarUna=false; }
   iaRespuestaFuera(txt);        /* 🎤 v7.24: si preguntó desde fuera, a su nubecita */
 }

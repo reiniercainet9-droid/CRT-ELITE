@@ -301,6 +301,9 @@
     if (!document.querySelector("#robCuerpo .rob-svg")) throw new Error("Roberto no llegó a dibujarse");
   } catch (e) { console.log("BURBUJA-ERROR " + e.message); }
 
+  /* 🤔 ¿está pensando la respuesta de Rey? (v7.35 — ver burbujaPensando) */
+  var PENSANDO = false;
+
   function gesto(g){
     try { if (Roberto.emociones[g]) Roberto.poner(g); } catch(_){}
   }
@@ -575,12 +578,34 @@
      SEIS gestos (unos dos minutos), sin repetir hasta agotar el paquete. */
   function vida(){
     clearTimeout(vidaT);
-    vidaT = setTimeout(function(){ unGesto(); vida(); }, 12000 + Math.random() * 18000);
+    /* 🤔 mientras piensa la respuesta de Rey, su vida propia no le pisa el gesto */
+    if(PENSANDO) return;
+    vidaT = setTimeout(function(){ if(PENSANDO){ vida(); return; } unGesto(); vida(); }, 12000 + Math.random() * 18000);
   }
   vida();
 
   /* Android la para cuando la esconde, para no gastar batería moviendo a nadie */
   window.burbujaVida = function(on){ if(on) vida(); else clearTimeout(vidaT); };
+
+  /* ══════════════════════════════════════════════════════════════════════════
+     🤔 MIENTRAS PIENSA TU RESPUESTA, EL GESTO SE MANTIENE — v7.35
+     ═════════════════════════════════════════════════════════════════════════
+     Rey (05-09): "no se supone que Roberto y su cuerpo son uno solo en todas partes?
+     Entonces cómo es que le pregunto algo, él me está respondiendo, y el cuerpo está
+     poniendo frases y bailando sin hacer nada y sin mover la boca. Después de yo
+     presionarlo y hablarle, mientras él está pensando, el gesto debe mantenerse hasta que
+     me responda: si no, ¿cómo sé yo que está pensando mi respuesta? ¿Cómo sé que funciona
+     si tengo que entrar al chat para ver?".
+     Tiene toda la razón, y es su LEY del cuerpo: voz y cuerpo son uno solo. Le preguntas,
+     y el cuerpo se queda con cara de estar pensando —quieto en eso, sin bailar y sin
+     soltar frases sueltas— hasta que la respuesta llega. Entonces mueve la boca.
+     Esto es lo que hace que se note que funciona SIN abrir el chat, que es justo lo que
+     él pidió. */
+  window.burbujaPensando = function(si){
+    PENSANDO = !!si;
+    if(PENSANDO){ clearTimeout(vidaT); gesto("analiza"); }
+    else { vida(); }
+  };
 
   /* Android comprueba con esto que la página cargó de verdad */
   window.burbujaViva = function(){ return !!document.querySelector("#robCuerpo .rob-svg"); };

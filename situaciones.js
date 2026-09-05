@@ -507,38 +507,6 @@ function robFraseDe(franja, lista) {
 }
 
 const ROB_VIDA = {
-  killzone: {
-    gestos: ["shhh", "vigila", "apunta", "tiempo", "animo", "serio", "analiza", "ensena", "tetoca", "aprueba", "idea", "olfatea"],
-    frases: ["Ventana abierta. Ojo al gráfico.", "Aquí es donde se gana. Paciencia.",
-             "Nada de forzar: que venga ella.", "Estoy mirando contigo.",
-             "Sweep, MSS, zona. En ese orden.", "Si dudas, no entras. Así de simple."],
-  },
-  cerca: {
-    gestos: ["tiempo", "animo", "apunta", "presumido", "ensena", "idea", "saluda", "aprueba", "analiza", "tetoca"],
-    frases: ["Ya casi. Prepara el checklist.", "Se acerca la buena.",
-             "Repasa tu riesgo antes de que abra.", "Calienta motores.",
-             "Mira tus niveles ahora, no después.", "Yo ya estoy listo. ¿Y tú?"],
-  },
-  posicion: {
-    gestos: ["vigila", "serio", "tiempo", "ojala", "shhh", "animo", "aprueba"],
-    frases: ["No la toques. Déjala trabajar.", "La estoy vigilando yo.", "Respira. Va sola.",
-             "Ni la mires cada minuto, que se te hace larga."],
-  },
-  espera: {
-    gestos: ["espera", "confundido", "guino", "orgulloso", "carino", "ojala", "burla", "presumido",
-             "animo", "sorprende", "idea", "analiza", "presenta", "tetoca", "ensena", "lengua", "aprueba", "huele", "olfatea"],
-    frases: ["Aquí sigo, sin señales todavía.", "Aburrido pero despierto. 😌",
-             "Con ganas de que abra la próxima.", "Ni una señal… así se ganan las cuentas.",
-             "Descansa tú, que yo vigilo.", "Esto está más quieto que un lunes de agosto.",
-             "¿Hacemos backtesting mientras esperamos?", "Si aparece algo, te aviso yo. Tranquilo.",
-             "Llevo un rato sin trabajo. Me aburro. 🙄", "Paciencia hoy, dinero mañana.",
-             "¿Has comido algo? Yo aquí, a base de gráficos. 😄",
-             "Estírate un poco, que llevas rato sentado.",
-             "Bebe agua, jefe. El cerebro opera mejor hidratado.",
-             "Si te agobias, cierra la pantalla diez minutos. Yo vigilo.",
-             "Un día tranquilo también es un buen día.",
-             "Oye… ¿me estás mirando? 👀", "Aquí, oliendo el mercado. 👃"],
-  },
   finde: {
     gestos: ["carino", "guino", "orgulloso", "carcajada", "lengua", "presumido", "chocalas",
              "saluda", "presenta", "felicita", "animo", "idea", "huele"],
@@ -569,6 +537,13 @@ const ROB_VIDA = {
              "Nadie se hizo rico quitándose el sueño una noche. Se hace con constancia."],
   },
   londres: {
+    dichas: [
+      "Rey, el día empieza para ti antes que para casi todos. Eso se paga solo.",
+      "Levantarte a esta hora ya te pone por delante del que aún duerme.",
+      "La constancia de las mañanas es la que construye las cuentas grandes.",
+      "Hoy no hace falta un día grande: hace falta un día tuyo.",
+      "Empieza tranquilo. El dinero llega donde hay orden, y tú tienes orden.",
+    ],
     gestos: ["tiempo", "animo", "apunta", "ensena", "idea", "saluda", "analiza", "vigila", "aprueba", "olfatea"],
     frases: ["Londres abre. El día empieza de verdad.",
              "Café y cabeza fría: entra la sesión europea.",
@@ -579,6 +554,10 @@ const ROB_VIDA = {
              "Aquí estoy, leyendo el arranque contigo."],
   },
   cerca: {
+    dichas: [
+      "Rey, prepárate sin ansiedad: la prisa es lo único que no se recupera.",
+      "Llegas a tu hora y con el plan hecho. Eso ya es media ganancia.",
+    ],
     gestos: ["tiempo", "animo", "apunta", "presumido", "ensena", "idea", "saluda", "aprueba", "analiza", "tetoca"],
     frases: ["Ya casi. Prepara el checklist.", "Se acerca la buena.",
              "Repasa tu riesgo antes de que abra.", "Calienta motores.",
@@ -594,6 +573,12 @@ const ROB_VIDA = {
              "Una buena vale más que tres regulares."],
   },
   nyactiva: {
+    dichas: [
+      "Rey, no necesitas cazarlo todo. Necesitas cazar lo tuyo.",
+      "Una entrada buena vale más que cinco entradas por aburrimiento.",
+      "El que se retira a tiempo vuelve mañana. El que fuerza, a veces no vuelve.",
+      "Tu plan ya decidió por ti. Hoy solo hay que obedecerlo.",
+    ],
     gestos: ["vigila", "analiza", "tiempo", "serio", "apunta", "ensena", "animo", "shhh", "aprueba"],
     frases: ["Nueva York abierta: aquí se mueve el dinero grande.",
              "Con NY dentro, los barridos son más limpios… y más caros.",
@@ -602,6 +587,12 @@ const ROB_VIDA = {
              "Esta hora premia al que espera, no al que persigue."],
   },
   cierre: {
+    dichas: [
+      "Rey, cerraste tu jornada. Da igual el número: cumpliste, y eso se acumula.",
+      "El día se juzga por lo bien que lo hiciste, no por lo que te dio.",
+      "Ya está. Suelta el gráfico: lo que sigue se gana descansando.",
+      "Un día más de disciplina en la cuenta. Eso no se ve hoy, se ve en un año.",
+    ],
     gestos: ["tiempo", "serio", "apunta", "aprueba", "analiza", "carino", "orgulloso"],
     frases: ["Se acaba tu ventana operativa. Vamos cerrando.",
              "Última media hora: gestión, no entradas nuevas.",
@@ -655,6 +646,14 @@ const ROB_VIDA = {
              "Ya hiciste lo difícil: entrar bien. Ahora, quieto."],
   },
   espera: {
+    dichas: [
+      "Rey, esperar bien también es trabajar. El que no fuerza, gana más.",
+      "La paciencia no es perder el tiempo: es cobrar más caro tu turno.",
+      "Cada día que no rompes tus reglas, tu cuenta futura se hace más grande.",
+      "No hace falta que hoy pase algo. Hace falta que tú sigas siendo el mismo.",
+      "El mercado paga a los que saben estar quietos. Eso también se entrena.",
+      "Tu ventaja no está en operar más, está en aguantar mejor. Y aguantas bien.",
+    ],
     gestos: ["espera", "confundido", "guino", "orgulloso", "carino", "ojala", "burla", "presumido",
              "animo", "sorprende", "idea", "analiza", "presenta", "tetoca", "ensena", "lengua", "aprueba", "huele", "olfatea"],
     frases: ["Aquí sigo, sin señales todavía.", "Aburrido pero despierto. 😌",
@@ -679,6 +678,17 @@ const ROB_VIDA = {
    límites para que sea un regalo y no una lata: solo las frases de crecimiento (`dichas`),
    como mucho 4 al día, nunca menos de 90 minutos seguidas, y siempre con su interruptor de
    voz encendido — si lo apaga, ni una palabra. */
+/* 💬 v7.35 — LAS FRASES DE CRECIMIENTO, EN TODO SU DÍA (antes solo en 4 de 11 franjas).
+   Rey (05-09, ya cansado): "Roberto es muy mecánico, no habla las frases importantes de
+   abundancia y crecimiento personal, no ha dicho ninguna desde que está afuera".
+   SE MIRÓ Y TENÍA RAZÓN, con número: de las once franjas del día solo CUATRO tenían frases
+   de crecimiento —finde, madrugada, tarde y noche—. Las que cubren su jornada entera
+   (espera, Londres, Nueva York, cierre, cerca de la ventana) tenían CERO. O sea que él pidió
+   "frases de crecimiento habladas en el día cada cierto tiempo" y en el día no había ninguna
+   que decir: no fallaba la voz, la lista estaba vacía.
+   ⚠️ DOS FRANJAS SIGUEN SIN ELLAS Y ES A PROPÓSITO: 'killzone' (su ventana de entrada
+   abierta) y 'posicion' (con dinero suyo dentro). Ahí necesita foco, no filosofía, y es la
+   propia ley de Rey: su cuerpo no le pisa el trabajo de verdad. */
 const ROB_DICHAS = { max: 4, cadaMin: 90 };
 function robTocaHablar(marca) {
   try {
