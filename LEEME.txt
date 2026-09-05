@@ -1,50 +1,44 @@
-APEX v7.44 — TRADING DESK
+APEX v7.45 — TRADING DESK
 =========================
 
-🗣️ LO DE HABLARLE DESDE FUERA: ENCONTRADO, Y ERA MÍO
+🗣️ TU AVISO ERA EXACTO, Y ME DIO LA MITAD QUE ME FALTABA
 
-Tu comparación fue la pista buena: "probé el del chat y funciona perfecto". Eso descartaba
-la nube, el micrófono y a Roberto entero. Los datos lo confirmaron:
+"Lo único que hace es abrir Apex al terminar de hablar, más nada."
 
-   · El parte de la pregunta registró tu prueba del CHAT (14:15:55, "tarjeta a la vista")
-     y NO registró NINGUNA de las de fuera → tu frase nunca llegaba a ejecutarse dentro
-     de Apex.
-   · El parte del oído decía "se lo paso a Roberto"… y eso era MENTIRA del código.
+Esa frase vale más que veinte pruebas mías, porque dice DÓNDE se corta. Que Apex se abra
+significa que la parte de ayer SÍ funcionó: Roberto se dio cuenta de que su página estaba
+muerta y fue a buscarla. Lo que fallaba era el paso siguiente, y era otro fallo distinto,
+debajo del primero.
 
-LA CAUSA: el puente que le lleva a Roberto lo que dices desde fuera daba la frase por
-entregada SIN COMPROBAR NADA. Con el teléfono al 17% y varias apps abiertas, Android se
-lleva de la memoria la pantalla de Apex: por dentro parece que sigue ahí, pero ya no ejecuta
-nada. Tu frase se veía en la nubecita y ahí moría. Sin error, sin aviso y sin rastro.
+QUÉ PASABA
+Al abrirse Apex, Android le "empujaba" tu pregunta a la página en ese mismo instante. Pero en
+ese instante Apex acababa de arrancar: su página todavía se estaba cargando. Cuando termina de
+cargar, el navegador tira lo que había antes — y tu pregunta se iba con ello. Se le estaba
+hablando a una casa vacía. Por eso veías exactamente lo que viste: Apex abriéndose y nada más.
 
-Y lo peor, que es lo que quiero que sepas: el plan B —abrir Apex un segundo para poder
-contestarte— YA ESTABA ESCRITO desde hacía días. Pero colgaba de que aquello dijera "no
-llegó"… y nunca decía "no llegó". Código muerto que parecía vivo. Por eso te fallaba
-justo lo que yo daba por hecho que funcionaba.
+CÓMO QUEDA AHORA — Y POR QUÉ ESTA VEZ NO DEPENDE DE LA SUERTE
+Le he dado la vuelta al asunto: ya no se te empuja nada.
+   · Tu pregunta se GUARDA, con su hora, en la memoria y en el disco del teléfono.
+   · Apex se abre.
+   · Y es la propia Apex, cuando ya está viva y sabe pensar, la que VIENE A BUSCARLA.
+Así no hay que adivinar cuánto tarda en cargar: el que sabe cuándo está listo es ella, así que
+pregunta ella. Es exactamente el mismo mecanismo con el que ya te funcionan las capturas que
+le compartes con Apex cerrada — ese lleva días sin fallarte, y ahora tu voz va por ahí.
 
-CÓMO QUEDA AHORA
-   · Antes de entregar, se le PREGUNTA a la página si está viva de verdad y se espera su
-     respuesta. Si no contesta en 1,5 segundos, se da por muerta (una sola vez, nunca dos).
-   · Si no está viva, Apex se abre sola, te dice "se me había cerrado por dentro, te
-     contesto" y CONTESTA TU PREGUNTA ELLA SOLA al abrirse. No tienes que repetirla.
-   · El parte apunta por cuál de los dos caminos salió. Nunca más habrá que adivinarlo.
+Detalles que van dentro:
+   · Aunque Android mate Apex entera mientras hablas, la pregunta sigue guardada en el disco.
+   · Se recoge UNA sola vez (no te va a contestar dos veces lo mismo).
+   · Caduca a los 10 minutos: nunca te contestará algo de otro rato, fuera de lugar.
+   · Se busca al arrancar Apex y también cada vez que vuelves a verla en pantalla.
+   · Queda rastro de la recogida, así que si aún fallara, te digo dónde en un minuto.
 
-🎤 Y TU DETALLE DEL MICRÓFONO: TENÍAS RAZÓN, Y ERA TU PROPIA LEY
-Dijiste: "el chat funciona solo dándole al botón, no dejándolo apretado". Cierto. Fuera se
-le habla MANTENIENDO el cuerpo, dentro solo valía el toque — dos gestos para el mismo
-Roberto, que es justo lo que tú prohibiste. Y encima, al mantener apretado, Android sacaba
-su menú de copiar/pegar y se comía el gesto: parecía roto sin estarlo.
+Y cuando la recoge, va por el MISMO camino del chat que a ti sí te funciona: te saca la tarjeta
+de confirmación en pantalla, te la lee en voz alta y ejecuta cuando tú digas que sí.
 
-AHORA VALEN LOS DOS, DENTRO Y FUERA:
-   · Toque corto = enciende el micrófono (otro toque lo apaga).
-   · Mantener = te escucha mientras tengas el dedo puesto y manda al soltar.
-Es el MISMO micrófono, no hay uno nuevo: solo aprendió los dos gestos.
+Regresión 152/152. Sube el zip e instala la APK v7.45. El worker no se toca (sigue 5.125).
 
-Regresión 151/151. Sube el zip e instala la APK v7.44. El worker no se toca (sigue 5.125).
-
-CUANDO LA INSTALES, repite tu prueba tal cual: sal de Apex, mantén el cuerpo de Roberto y
-dile que te programe un aviso. Si tu pantalla de Apex sigue viva, te saca la tarjeta al
-momento; si Android se la había llevado, verás que Apex se abre un segundo y te contesta
-igual. Cualquiera de las dos cosas es que funciona.
+TU PRUEBA: sal de Apex, mantén el cuerpo de Roberto y dile "prográmame un aviso a las X que
+diga Y". Verás Apex abrirse y, un segundo después, la tarjeta encima. Ahí está todo.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

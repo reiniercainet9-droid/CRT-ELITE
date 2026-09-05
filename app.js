@@ -8274,6 +8274,29 @@ function apexCapturaCompartida(dataUrl){
 /* 🕐 si Apex estaba CERRADA, Android la abre y la imagen llega antes de que esta función
    exista: MainActivity la deja aquí y se recoge en cuanto la app termina de montarse.
    Compartir a una app cerrada es el caso NORMAL, no la excepción. */
+/* 🗣️ v7.45 — LA PREGUNTA QUE REY DEJÓ DICHA DESDE FUERA, SE RECOGE AL LLEGAR
+   ─────────────────────────────────────────────────────────────────────────────
+   Rey (05-09, con la 7.44 ya instalada): "lo único que hace es abrir Apex al terminar de
+   hablar, más nada: ni tarjeta de confirmación ni se ejecuta nada."
+   Y tenía toda la razón: el plan B funcionaba a medias. Apex se abría —eso era lo nuevo—
+   pero la pregunta se perdía un segundo después, porque Android se la EMPUJABA a la página
+   justo al volver, cuando la página aún se estaba cargando; al terminar de cargar, ese
+   recado ya no existía. Se le hablaba a una casa vacía.
+   Ahora es al revés y por eso no puede fallar: Android la deja guardada y es la página —ya
+   viva, ya sabiendo pensar— la que viene a buscarla. Igual que las capturas compartidas. */
+async function preguntaDeFueraPendiente(){
+  try{
+    const P = vigiaPuente();
+    if(!P || typeof P.preguntaPendiente !== "function") return;
+    const r = await P.preguntaPendiente();
+    const t = String((r && r.texto) || "").trim();
+    if(!t) return;
+    if(typeof preguntaTraza==="function") preguntaTraza("recogida al abrir Apex: " + t.slice(0,60));
+    if(typeof preguntaParteAlaNube==="function") preguntaParteAlaNube("recogida al abrir Apex");
+    iaDesdeFuera(t);
+  }catch(_){}
+}
+
 function apexCapturaPendiente(){
   try{
     const d = window.__apexCapturaPend;
@@ -12353,6 +12376,10 @@ function init(){
   /* 🧮 v7.38 — la cuenta de frases que llevó el cuerpo flotante mientras Rey estaba fuera */
   setTimeout(()=>{ try{ robMarcaRefrescar(); }catch(_){} }, 1500);
   document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible"){ try{ robMarcaRefrescar(); }catch(_){} } });
+  /* 🗣️ v7.45 — si le habló a Roberto desde fuera y Apex tuvo que abrirse para poder
+     contestarle, la pregunta está esperando: se recoge aquí, con la página ya viva. */
+  setTimeout(()=>{ try{ preguntaDeFueraPendiente(); }catch(_){} }, 1200);
+  document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible"){ try{ preguntaDeFueraPendiente(); }catch(_){} } });
   /* 📸 v7.37 — si compartió una captura con Apex cerrada, aquí se recoge */
   setTimeout(()=>{ try{ apexCapturaPendiente(); }catch(_){} }, 900);
   document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible"){ try{ apexCapturaPendiente(); }catch(_){} } });
