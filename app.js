@@ -7965,10 +7965,13 @@ function iaDesdeFuera(texto){
     const dicho = String(texto||"").trim();
     if(!dicho) return;
     oidoTraza("desde fuera: "+dicho);
+    if(typeof preguntaTraza==="function") preguntaTraza("me llega desde fuera: " + dicho.slice(0,60));
     /* órdenes (cállate, pausa, sigue, repite): se resuelven aquí, gratis, sin molestar a
        Roberto — la misma tabla que cuando le habla desde dentro. Un solo Roberto. */
-    if(typeof oidoOrden==="function" && oidoOrden(dicho)) return;
+    if(typeof oidoOrden==="function" && oidoOrden(dicho)){ if(typeof preguntaTraza==="function") preguntaTraza("era una orden (callar/pausa/seguir): resuelta aquí"); return; }
     if(IA.busy){
+      if(typeof preguntaTraza==="function") preguntaTraza("NO SALIÓ: Roberto estaba ocupado con lo anterior");
+      if(typeof preguntaParteAlaNube==="function") preguntaParteAlaNube("ocupado con lo anterior");
       try{ robDecir("Roberto","Voy con lo anterior, Rey. Dímelo otra vez en un momento.",{gesto:"espera"}); }catch(_){}
       return;
     }
@@ -7977,6 +7980,7 @@ function iaDesdeFuera(texto){
     IA.deFuera = true;          /* la respuesta se le DICE y queda escrita; la nube no la saca */
     IA.autoHablarUna = true;    /* y se la digo en voz alta: no está mirando la pantalla */
     const ta = $("#iaText"); if(ta){ ta.value = dicho; }
+    if(typeof preguntaTraza==="function") preguntaTraza("se la mando a la nube");
     iaEnviar(dicho);
   }catch(_){}
 }
@@ -7994,7 +7998,8 @@ function iaRespuestaFuera(txt){
   if(!IA.deFuera) return;
   IA.deFuera = false;
   const dicho = String(txt||"").trim();
-  if(!dicho) return;
+  if(!dicho){ try{ preguntaTraza("volvió la respuesta VACÍA"); preguntaParteAlaNube("respuesta vacía"); }catch(_){} return; }
+  try{ preguntaTraza("respuesta de Roberto: " + dicho.length + " letras"); preguntaParteAlaNube("contestada"); }catch(_){}
   /* ¿de verdad se la está diciendo? Si la voz está en marcha, NADA de nube: solo su cara. */
   let hablando = false;
   try{ hablando = !!(IA.voz && IA.voz.on) || !!IA.hablando || (typeof _vozIdx!=="undefined" && _vozIdx!==null); }catch(_){}
@@ -8044,6 +8049,38 @@ function iaChatParaFuera(dicho){
 /* deja apuntado dónde cayó esta pregunta de fuera, para saber si la siguiente la sigue */
 function iaFueraApunta(){
   try{ const c = iaConvAct(); IA.fueraUlt = { id: c.id, t: Date.now() }; }catch(_){}
+}
+/* 📮 v7.33 — EL PARTE DE LA PREGUNTA (APEX-DIAG-PREGUNTA).
+   El del oído (APEX-DIAG-OIDO) llega hasta "se lo paso a Roberto" y ahí se acaba: de la
+   pregunta en adelante no había ni un rastro, y por eso lo de Rey ("le pregunto y nada de
+   nada") se pasó días sin poder mirarse. Ahora el camino entero deja huella: cuándo entró,
+   si salió a la nube, cuánto tardó, si volvió la respuesta y si se la dijo en voz alta.
+   Se lee con POST /backup/get {"code":"APEX-DIAG-PREGUNTA"}. Sin datos personales: los
+   pasos y, como mucho, las primeras palabras — lo justo para saber dónde se corta. */
+const PREG_TRAZA_KEY = "crtelite_traza_pregunta";
+function preguntaTraza(paso){
+  try{
+    const l = JSON.parse(localStorage.getItem(PREG_TRAZA_KEY) || "[]");
+    const h = new Date();
+    l.push({ t: ("0"+h.getHours()).slice(-2)+":"+("0"+h.getMinutes()).slice(-2)+":"+("0"+h.getSeconds()).slice(-2),
+             p: String(paso||"").slice(0,140) });
+    while(l.length > 24) l.shift();
+    localStorage.setItem(PREG_TRAZA_KEY, JSON.stringify(l));
+  }catch(_){}
+}
+function preguntaParteAlaNube(motivo){
+  try{
+    const l = JSON.parse(localStorage.getItem(PREG_TRAZA_KEY) || "[]");
+    const d = { motivo: String(motivo||""),
+                version: (typeof APP_VERSION!=="undefined" ? APP_VERSION : "?"),
+                pasos: l.map(x => x.t + "  " + x.p).join(" · "),
+                busy: !!(typeof IA!=="undefined" && IA.busy),
+                vozOn: !!(typeof IA!=="undefined" && IA.voz && IA.voz.on),
+                cuando: new Date().toString() };
+    fetch(nubeUrl()+"/backup/set", { method:"POST", headers:{ "content-type":"application/json" },
+      body: JSON.stringify({ code:"APEX-DIAG-PREGUNTA", ts:Date.now(), forzar:true,
+                             data:{ crtelite_diagpregunta: JSON.stringify(d) } }) }).catch(()=>{});
+  }catch(_){}
 }
 function oidoParteAlaNube(){
   try{
@@ -8497,6 +8534,59 @@ function vigiaPuente(){
     if(!C || typeof C.isNativePlatform !== "function" || !C.isNativePlatform()) return null;
     return (C.Plugins && C.Plugins.Apex) || null;
   }catch(_){ return null; }
+}
+/* ══════════════════════════════════════════════════════════════════════════════
+   🚨 A3 — SI EL VIGÍA SE QUEDA APAGADO, APEX LO GRITA (v7.33)
+   ═════════════════════════════════════════════════════════════════════════════
+   Pasó el 01-09 y así quedó anotado en PENDIENTES: tras reinstalar la APK el vigía quedó
+   apagado y Rey estuvo casi una hora sin él. **No se descubrió solo: se descubrió porque
+   fui yo a mirarlo.** Un fallo que solo se ve si alguien va a mirar no es un fallo
+   controlado, es una bomba de tiempo — y el vigía es quien le trae los avisos con Apex
+   cerrada, o sea la pieza de la que dependen todas las demás.
+   El panel del vigía ya lo decía… pero está dentro de Ajustes, y a Ajustes se entra cuando
+   uno ya sospecha algo. Esto no espera a que sospeche: en cuanto abre Apex, si el vigía
+   está apagado, sale un cartel rojo arriba del todo y Roberto se lo dice.
+   ⚠️ NO SE ENCIENDE SOLO. Es una decisión suya: puede haberlo apagado a propósito, y su ley
+   es que el silencio lo decide él. Lo que no puede pasar es que lo esté sin saberlo.
+   Y no se repite hasta cansarle: una vez por sesión, y calla en cuanto lo enciende. */
+let _vigiaGritado = false;
+async function vigiaCentinela(){
+  try{
+    const P = vigiaPuente();
+    if(!P) return;                                  /* en la web no hay vigía que valga */
+    const st = await P.vigiaEstado();
+    const on = !!(st && st.encendido);
+    const caja = document.getElementById("vigiaGrito");
+    if(on){
+      _vigiaGritado = false;
+      if(caja) caja.remove();
+      return;
+    }
+    if(!caja){
+      const d = el("div","aviso-rojo");
+      d.id = "vigiaGrito";
+      d.style.margin = "10px 12px";
+      d.innerHTML = '<b>🚨 Roberto NO está de guardia</b><br>' +
+        'Los avisos y las alarmas no te llegarán con Apex cerrada. Suele pasar después de ' +
+        'reinstalar la app. Enciéndelo y vuelve a estar cubierto.' +
+        '<div style="margin-top:8px"><button class="btn gold" id="vigiaGritoBtn">🔔 Ponerlo de guardia</button></div>';
+      const cont = document.querySelector(".wrap") || document.body;
+      cont.insertBefore(d, cont.firstChild);
+      const b = document.getElementById("vigiaGritoBtn");
+      if(b) b.onclick = async ()=>{
+        try{ await P.vigiaEncender(); toast("👁️ Roberto en guardia"); }
+        catch(e){ toast("No pude encenderlo: " + (e && e.message ? e.message : e)); }
+        try{ vigiaCentinela(); }catch(_){}
+        try{ vigiaUI(); }catch(_){}
+      };
+    }
+    /* y que se lo DIGA, que para eso tiene voz: una sola vez, no cada vez que vuelve */
+    if(!_vigiaGritado){
+      _vigiaGritado = true;
+      try{ robDecir("Roberto","Rey, no estoy de guardia: con Apex cerrada no te llegarán los avisos.",{gesto:"alerta"}); }catch(_){}
+      try{ iaHablar("Rey, no estoy de guardia. Con Apex cerrada no te van a llegar los avisos.", -1); }catch(_){}
+    }
+  }catch(_){}
 }
 async function vigiaUI(){
   try{
@@ -8963,7 +9053,7 @@ let EJEC_CACHE = { ts: 0, d: null };
 async function ejecRefrescar(){
   try{
     if(Date.now() - EJEC_CACHE.ts < 20000 && EJEC_CACHE.d) return EJEC_CACHE.d;
-    const r = await fetch(nubeUrl()+"/ejec/estado",{cache:"no-store"});
+    const r = await traerConTiempo(nubeUrl()+"/ejec/estado",{cache:"no-store"},6000);
     const d = await r.json();
     if(d && d.ok){ EJEC_CACHE = { ts: Date.now(), d: d }; }
     return EJEC_CACHE.d;
@@ -9294,7 +9384,7 @@ function iaAvisos(){
    precio y niveles. Si no, se lo dice claro para que Rey encienda la PC. */
 async function iaGrafico(){
   try{
-    const r=await fetch(iaBase()+"/chart/state",{cache:"no-store"});
+    const r=await traerConTiempo(iaBase()+"/chart/state",{cache:"no-store"},6000);
     if(!r.ok) return "[👁️ GRÁFICO EN VIVO: el puente no respondió en este instante.]";
     const d=await r.json();
     const pares=Array.isArray(d.pares)?d.pares:(d.estado?[d.estado]:[]);
@@ -10691,12 +10781,42 @@ function iaResumePend(){
 /* 🛟 SEGURO ANTIBLOQUEO: pase lo que pase, la caja de texto no se queda muerta.
    Si Roberto lleva más de 6 minutos "pensando", se libera solo y avisa. */
 let _iaBusyGuard=null;
+/* ⏱️ v7.33 — UNA RED QUE NO CONTESTA NO PUEDE DEJAR A ROBERTO COLGADO PARA SIEMPRE.
+   Rey (04-09, de noche): "los comandos de Roberto afuera no los he podido probar bien,
+   principalmente el de hablarle: le pregunto, le pido… y nada de nada, no me responde nada,
+   no hace nada, solo suena y ya".
+   EL PARTE DEL OÍDO (APEX-DIAG-OIDO del 20:17) DEMOSTRÓ QUE EL OÍDO FUNCIONA: "mantiene
+   pulsado el cuerpo · Android confirma que oye · entendido: Roberto audita el Ejecutor · se
+   lo paso a Roberto sin abrir Apex". O sea que le oyó, le entendió y le pasó la pregunta.
+   Lo que fallaba estaba DESPUÉS: antes de mandar nada a la nube, Apex reúne el contexto
+   (el gráfico, el calendario, lo que hizo hoy el Ejecutor) con fetch SIN TIEMPO LÍMITE.
+   Con el teléfono en segundo plano o medio dormido, uno de esos puede quedarse colgado
+   para siempre: el await no vuelve nunca, la pregunta no llega a salir… y IA.busy ya
+   estaba encendido, así que TODAS las siguientes tampoco salían. Exactamente lo que Rey
+   describe: suena, y ya.
+   ⚠️ Y el detalle que lo hacía invisible: el vigilante que desatasca a Roberto se armaba
+   DENTRO de iaBgStart, que es justo la parte a la que nunca se llegaba.
+   Este ayudante le pone un reloj a cada llamada de contexto: si no contesta a tiempo, se
+   va sin ella. El contexto es un extra — perder el dato del gráfico es una molestia;
+   perder la respuesta entera es lo que Rey lleva días sufriendo. */
+async function traerConTiempo(url, opts, ms){
+  const espera = ms || 6000;
+  let ctl = null, tmr = null;
+  try{ ctl = (typeof AbortController!=="undefined") ? new AbortController() : null; }catch(_){}
+  if(ctl) tmr = setTimeout(()=>{ try{ ctl.abort(); }catch(_){} }, espera);
+  try{
+    const o = Object.assign({}, opts||{});
+    if(ctl) o.signal = ctl.signal;
+    return await fetch(url, o);
+  } finally { if(tmr) clearTimeout(tmr); }
+}
 function iaVigilarBusy(){
   clearTimeout(_iaBusyGuard);
   if(!IA.busy) return;
   _iaBusyGuard=setTimeout(()=>{
     if(!IA.busy) return;
     IA.busy=false;
+    try{ preguntaTraza("saltó el seguro: la respuesta no llegó a tiempo"); preguntaParteAlaNube("saltó el seguro"); }catch(_){}
     try{ const c=iaConvAct(); if(c){ c.msgs.push(iaMsgFallo("")); iaGuardarConvs(); } }catch(_){}
     pintarIAChat();
     toast("Ya puedes escribir: la respuesta anterior no llegó");
@@ -10735,6 +10855,10 @@ async function iaEnviar(textoForzado, promptExtra){
   c.msgs.push({role:"user",content:texto + (doc?("\n\n📄 (te adjunté: "+(doc.nombre||"documento")+")"):""), img:img||undefined});
   if(!c.t) c.t=iaTit(c);
   IA.busy=true;
+  /* 🛟 v7.33 — el seguro se arma AQUÍ, no dentro de iaBgStart: si algo se cuelga reuniendo
+     el contexto (que es lo que le pasaba a Rey desde fuera), Roberto se desatasca solo y
+     puede volver a preguntar. Antes se armaba después, o sea justo donde ya no se llegaba. */
+  try{ iaVigilarBusy(); }catch(_){}
   if(!iaGuardarConvs()) toast("Imagen muy pesada: se envía pero quizá no se guarde en el historial");
   pintarIAChat();
   /* 💰 VENTANA ESTABLE DE HISTORIAL: antes se mandaban SIEMPRE "los últimos 14" y la
@@ -10964,6 +11088,9 @@ function init(){
   try{ nubeRestaurar(true); }catch(_){}  /* ☁️ si la nube tiene datos más nuevos (otro teléfono), restaura solo */
   /* Al volver a la app (no cerrarla del todo), recupera lo que haya terminado */
   document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible") iaResumePend(); });
+  /* 🚨 A3 (v7.33) — y que nadie se entere tarde de que el vigía está apagado */
+  setTimeout(()=>{ try{ vigiaCentinela(); }catch(_){} }, 2500);
+  document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible"){ try{ vigiaCentinela(); }catch(_){} } });
   /* ⏰ v7.25 — y que la nube tenga SIEMPRE los avisos que Rey ve (el 17:30 que no sonó) */
   syncRemindersDeGuardia();
   document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible") syncRemindersDeGuardia(); });

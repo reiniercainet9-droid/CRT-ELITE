@@ -1,40 +1,52 @@
-APEX v7.31 — TRADING DESK
+APEX v7.34 — TRADING DESK
 =========================
 
-⏰ TUS AVISOS SUENAN A TU HORA, NO CUANDO AL TELÉFONO LE TOCA PREGUNTAR
-Lo del minuto de retraso está resuelto por donde de verdad estaba.
-Tu aviso NO salió tarde de la nube: se disparó a las 18:52:34, clavado. Lo que llegaba
-tarde era tu teléfono, que sale a BUSCAR los avisos (nadie se los empuja): cada 15
-segundos con el mercado abierto y cada 60 fuera. Tu prueba fue fuera de mercado, y por eso
-te cuadró justo un minuto.
-Preguntar más a menudo lo pagarías con batería, y no hace falta: tus avisos programados
-tienen HORA FIJA, así que ahora se los sabe el reloj del propio teléfono y suenan solos, al
-segundo — aunque estés sin internet y aunque tengas el teléfono bloqueado.
+Trabajé de corrido mientras dormías. Esta APK lleva TODO lo de esta noche.
 
-🤝 Y RESPONDO A LO QUE PREGUNTASTE: no, esto NO afecta a que Apex te notifique ni a que
-Roberto te hable el aviso. El despertador entra por el MISMO camino de siempre: notifica
-igual y Roberto lo dice con su voz igual.
-La nube NO se quita: sigue mandando su copia como respaldo. Si un día Android matara la
-alarma o el teléfono se quedara sin datos, el aviso te llega igual por el otro lado.
-Y no lo verás dos veces: los dos caminos se dan la mano y el segundo que llega se calla.
-Si tú apagas al vigía, el despertador se calla también — la decisión sigue siendo tuya.
-Si reinicias el teléfono, Android borra todas las alarmas: el vigía las vuelve a poner él
-solo al arrancar, sin que tengas que abrir Apex.
+🎤 LO DE HABLARLE DESDE FUERA: ENCONTRADO. NO ERA EL OÍDO.
+No lo adiviné. Tu teléfono deja un parte en la nube cada vez que le hablas, y ahí estaba
+todo con hora:
 
-👕 LA ROPA: se arregla cuatro veces al día y ya no le falta nada
-Hice correr su código real una semana entera para verlo, y salieron las tres cosas que tú
-notaste a ojo:
-  · 4 de sus 12 turnos estaban VACÍOS → había días enteros sin un solo accesorio;
-  · el turno duraba de las 2:00 a las 13:00 de Nueva York → la misma gorra toda tu jornada;
-  · la ropa de casa ya trae taza, y si el turno traía taza salía con DOS tazas.
-Ahora el día tiene cuatro momentos (Londres · Nueva York · tarde · noche) y en cada uno se
-arregla distinto: 25 conjuntos distintos en los 28 momentos de la semana, ninguno vacío y
-ninguno con una pieza repetida. Dentro de un mismo momento no se cambia — se arregla una
-vez y sigue con lo suyo; cambiarse cada rato parecería un disfraz, y eso me lo dijiste tú.
-Sin inventarme nada: sus 5 mudas y sus 7 accesorios son los que ya tenía.
+   20:17:44  mantienes pulsado el cuerpo
+   20:17:44  Android confirma que oye
+   20:17:49  entendido: "Roberto audita el Ejecutor"     ← TE OYÓ Y TE ENTENDIÓ
+   20:17:49  se lo paso a Roberto sin abrir Apex          ← Y SE LO PASÓ
+   20:17:51  sueltas el dedo
+   20:17:51  error 5: el dictado se cortó
 
-Regresión completa en verde. Sube el zip e instala la APK v7.31: el worker ya está bien y
-no hay que tocar la nube.
+O sea que el oído funciona perfecto. Fallaban dos cosas después:
+
+1️⃣ ESE "ERROR 5" NO ES UN ERROR. Es lo que Android manda SIEMPRE al cerrar el micrófono,
+   solo porque soltaste el dedo. Pero le pisaba la nubecita con "el dictado se cortó" y cara
+   de preocupación, dos segundos después de que Roberto ya estuviera pensando tu respuesta.
+   Se veía exactamente lo que contaste: suena, y ya. Ahora, si ya te entendió, ese aviso de
+   cierre se ignora y se le deja pensar.
+
+2️⃣ EL GORDO: antes de mandar tu pregunta a la nube, Apex reúne el contexto (gráfico,
+   calendario, lo que hizo hoy el Ejecutor). Esas llamadas NO tenían tiempo límite. Con el
+   teléfono en segundo plano basta que una se cuelgue para que tu pregunta no salga NUNCA —
+   y como Roberto ya quedaba marcado "ocupado", tampoco salía ninguna de las siguientes. Por
+   eso probabas otra vez y otra vez y nada.
+   Ahora cada una tiene su reloj de 6 segundos: si no contesta, se va sin ella y tu pregunta
+   sale igual. Y el seguro que desatasca a Roberto se arma al principio, no al final: antes
+   se armaba justo en la parte a la que nunca se llegaba.
+   📮 Además le puse un parte a ese tramo, que era el único a oscuras. Si vuelve a fallar
+   algo, lo veo sin adivinar.
+
+🚨 Y SI EL VIGÍA SE QUEDA APAGADO, AHORA APEX LO GRITA (era el A3 de tu lista)
+Al abrir Apex, si Roberto no está de guardia, sale un cartel rojo arriba del todo con su
+botón, y él te lo dice en voz alta. No lo enciendo yo solo: puede que lo hayas apagado tú a
+propósito, y el silencio lo decides tú. Lo que no puede pasar es que lo estés sin saberlo,
+como el 01-09 (casi una hora sin vigía, y se descubrió porque fui yo a mirarlo).
+
+🖥️ Y EN LA PC (sin tocar nada tuyo de trading): MT5 ya arranca solo con Windows — era el A1.
+Sin MT5 el Ejecutor se queda ciego toda la sesión. Si lo quieres quitar, borra el acceso
+directo «MetaTrader 5 (auto-arranque)» de la carpeta de Inicio.
+
+Y lo de antes, que sigue dentro: ⏰ el despertador (tus avisos a la hora exacta, sin quitar
+la nube), 👕 la ropa (cuatro cambios al día) y 🚧 el "no entres todavía" fuera de lugar.
+
+Regresión 142/142. Sube el zip e instala la APK v7.34. El worker no se toca.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

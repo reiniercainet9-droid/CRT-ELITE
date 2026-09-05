@@ -300,6 +300,36 @@ const ROB_AVISOS = [
       return { gesto: gano ? "celebra" : "preocupa",
                frase:"Rey, el Ejecutor cerró" + (par ? " " + par : "") + " " + como + (pl ? ": " + pl : "") + (gano ? ". Bien jugado." : ". Respira y sigue tu plan.") };
     } },
+
+  /* 🎓 v7.32 — LOS AVISOS DE LO QUE ROBERTO APRENDE. Rey (04-09, con la captura de las
+     8:01 en la mano): "en una de estas alarmas Roberto me dijo NO ENTRES TODAVÍA, AÚN NO
+     HAY SETUP; eso está fuera de hora, fuera de lugar y fuera de todo".
+     TENÍA RAZÓN Y SE REPRODUJO EJECUTANDO SU CÓDIGO: el aviso "🎓 Aprendí solo de hoy" dice
+     en su texto "mi VETO de mañana ya las lleva dentro" — y esa palabra suelta lo mandaba
+     derecho a la regla del veto del mercado. O sea que un aviso que hablaba de APRENDIZAJE
+     le contestaba con una orden de trading a las 8 de la mañana, sin gráfico y sin señal.
+     ES EXACTAMENTE EL MISMO FALLO DEL 03-09 (la "noticia cerca" que caía en el veto por
+     decir "veto") en otro aviso que se quedó fuera de la tabla. Se cierra por donde se
+     cerró aquel: cada aviso del sistema se reconoce por SU TÍTULO y dice lo que ES. */
+  { id:"aprendi_hoy",  gesto:"idea", re:/aprend[íi] solo/i,
+    lee:(b)=>{ const m = String(b||"").match(/(\d+) lecci/);
+      return { frase:"Rey, aprendí " + (m ? m[1] + (m[1] === "1" ? " lección" : " lecciones") : "algo")
+             + " de las operaciones de hoy. Tócame y te las cuento." }; } },
+  { id:"aprendi_sem",  gesto:"idea", re:/esto aprend[íi] de ti/i,
+    lee:()=>({ frase:"Rey, esto es lo que aprendí de ti esta semana. Ábreme y lo repasamos." }) },
+  { id:"repaso_lecc",  gesto:"presenta", re:/repaso de tus lecciones/i,
+    lee:()=>({ frase:"Rey, te traigo una lección tuya de hace días, para que no se te olvide." }) },
+  { id:"gimnasio",     gesto:"tetoca", re:/gimnasio/i,
+    lee:()=>({ frase:"Rey, es fin de semana: toca entrenar. Ábreme y hacemos backtesting." }) },
+  { id:"revision_sis", gesto:"audita", re:/revisi[óo]n del sistema/i,
+    lee:()=>({ frase:"Rey, revisemos juntos cómo va todo: tu operativa, el Ejecutor y Apex." }) },
+  { id:"pendientes",   gesto:"tetoca", re:/cosas pendientes/i,
+    lee:()=>({ frase:"Rey, tienes cosas pendientes esperándote. Ábreme y las vemos." }) },
+  { id:"entrada_det",  gesto:"analiza", re:/entrada detectada/i,
+    lee:(b)=>{ const par = (String(b||"").match(/\b([A-Z]{6})\b/) || [])[1] || "";
+      return { frase:"Rey, detecté tu entrada" + (par ? " en " + par : "") + ". Ábreme y la registro en tu diario." }; } },
+  { id:"mercado_abre", gesto:"tiempo", re:/mercado abierto/i,
+    lee:()=>({ frase:"Rey, abrió el mercado. Arranca la semana: si no hiciste el análisis semanal, ahora." }) },
 ];
 
 /* ⏰ LOS AVISOS QUE REY SE PROGRAMA A SÍ MISMO (v6.82)
@@ -358,6 +388,20 @@ function robSitua(titulo, cuerpo, tipo){
   }
   /* 🔔 v7.22 — una ALARMA del indicador se lee por su SEÑAL (el hecho), no por la lectura */
   if(robEsAlarma(titulo)){ const r = robAlarma(titulo, cuerpo); if(r) return r; }
+  /* 🚧 v7.32 — EL CORTAFUEGOS. Las reglas de abajo son las del MERCADO: dicen "no entres",
+     "saltó el stop", "tienes señal". Solo pueden hablar de algo que venga del gráfico o del
+     Ejecutor. Un aviso de CHARLA (kind "chat": lo que Roberto aprendió, una lección suya, su
+     repaso) NO es un hecho del mercado, y si no está en la tabla de arriba no puede acabar
+     contestado con una orden de trading — que es justo lo que Rey vio a las 8:01 de la
+     mañana con el "🎓 Aprendí solo de hoy".
+     Van dos fallos iguales por la misma puerta (el 03-09 con la noticia, hoy con el 🎓), así
+     que aquí se cierra la puerta y no solo se tapa el agujero: si mañana la nube manda un
+     aviso de charla nuevo que nadie metió en la tabla, lo peor que puede pasar es que
+     Roberto diga su título — nunca que se invente una orden de entrar o de no entrar. */
+  if(String(tipo||"") === "chat"){
+    const tc = String(titulo||"").replace(/^[^\wÁÉÍÓÚÑáéíóúñ]+/,"").trim();
+    if(tc) return { id:"charla", gesto:"presenta", frase: tc.slice(0,64) };
+  }
   const t = (String(titulo||"") + " " + String(cuerpo||"")).replace(/\s+/g," ").trim();
   const d = { b: t.toLowerCase(),
     par: (t.match(/\b(EURUSD|GBPUSD|XAUUSD|USDJPY|[A-Z]{6})\b/) || [])[1] || "",
