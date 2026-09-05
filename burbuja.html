@@ -547,11 +547,17 @@
         var dicha = "";
         try{
           if (pack.dichas && pack.dichas.length && typeof robTocaHablar === "function"){
+            /* 🧮 v7.38 — LA CUENTA ES DE LOS DOS CUERPOS, y la guarda Android.
+               Esta ventana y la página de Apex viven en orígenes distintos, así que cada una
+               tenía su propio almacén y su propia cuenta: el tope "6 al día" era en realidad
+               "6 por cuerpo". Ahora Android deja aquí la cuenta compartida y aquí se le
+               devuelve al usarla. La REGLA de cuántas y cada cuánto sigue siendo una sola,
+               la de situaciones.js. */
             var marca = {};
-            try{ marca = JSON.parse(localStorage.getItem("robDichas") || "{}"); }catch(_){}
+            try{ marca = window.__ROB_MARCA || {}; }catch(_){}
             var t = robTocaHablar(marca);
             if (t.toca){
-              try{ localStorage.setItem("robDichas", JSON.stringify(t.marca)); }catch(_){}
+              try{ window.__ROB_MARCA = t.marca; console.log("BURBUJA-DICHA " + JSON.stringify(t.marca)); }catch(_){}
               dicha = robFraseDe("dichas-" + situacionAhora(), pack.dichas);
             }
           }

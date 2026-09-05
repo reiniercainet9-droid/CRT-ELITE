@@ -8915,10 +8915,10 @@ function robVidaUnGesto(){
       let dicha = "";
       try{
         if(pack.dichas && pack.dichas.length && typeof robTocaHablar === "function" && IA.voz && IA.voz.on){
-          let marca = {}; try{ marca = JSON.parse(localStorage.getItem("robDichas")||"{}"); }catch(_){}
+          const marca = robMarcaLeer();
           const t = robTocaHablar(marca);
           if(t.toca){
-            try{ localStorage.setItem("robDichas", JSON.stringify(t.marca)); }catch(_){}
+            robMarcaGuardar(t.marca);
             dicha = (typeof robFraseDe === "function") ? robFraseDe("dichas-"+sit, pack.dichas)
                                                       : pack.dichas[Math.floor(Math.random()*pack.dichas.length)];
           }
@@ -8985,6 +8985,46 @@ function robPensandoVigilante(){
       _robPensandoAnt = ahora;
       robPensandoPoner(ahora);
     }, 700);
+  }catch(_){}
+}
+/* ══════════════════════════════════════════════════════════════════════════════
+   🧮 LA CUENTA DE FRASES ES DE LOS DOS CUERPOS — v7.38
+   ═════════════════════════════════════════════════════════════════════════════
+   Al medir cada cuánto le habla Roberto (Rey, 05-09: "casi no me habla") apareció, además
+   del amontonamiento de la mañana, algo que rompía su ley: el Roberto de DENTRO de Apex y
+   el cuerpo flotante llevaban CUENTAS SEPARADAS. La página de Apex vive en su origen de
+   Capacitor y la ventana flotante en file:///android_asset: dos almacenes distintos, así
+   que el tope de 6 al día era en realidad 6 por cada cuerpo.
+   Ahora la cuenta la guarda Android, que es lo único que los dos comparten. Aquí se lee al
+   arrancar y al volver a Apex, y se le devuelve en cuanto se usa una.
+   ⚠️ En la WEB no hay Android — y tampoco hay dos cuerpos: allí sigue usándose el almacén
+   del navegador, que es exactamente lo correcto. */
+let _robMarcaDichas = null;
+function robMarcaLeer(){
+  try{
+    if(_robMarcaDichas) return _robMarcaDichas;
+    let m = {};
+    try{ m = JSON.parse(localStorage.getItem("robDichas") || "{}"); }catch(_){}
+    _robMarcaDichas = m;
+    return m;
+  }catch(_){ return {}; }
+}
+function robMarcaGuardar(m){
+  _robMarcaDichas = m || {};
+  try{ localStorage.setItem("robDichas", JSON.stringify(_robMarcaDichas)); }catch(_){}
+  try{
+    const P = vigiaPuente();
+    if(P && P.dichasMarca) P.dichasMarca({ marca: JSON.stringify(_robMarcaDichas) });
+  }catch(_){}
+}
+/* al arrancar y al volver a Apex se trae la cuenta que Android guarda: si el cuerpo
+   flotante habló mientras Rey estaba fuera, aquí se sabe y no se le repite. */
+async function robMarcaRefrescar(){
+  try{
+    const P = vigiaPuente();
+    if(!P || !P.dichasMarca) return;
+    const r = await P.dichasMarca({});
+    if(r && r.marca){ try{ _robMarcaDichas = JSON.parse(r.marca) || {}; }catch(_){} }
   }catch(_){}
 }
 function robVida(){
@@ -11401,6 +11441,9 @@ function init(){
   try{ nubeRestaurar(true); }catch(_){}  /* ☁️ si la nube tiene datos más nuevos (otro teléfono), restaura solo */
   /* Al volver a la app (no cerrarla del todo), recupera lo que haya terminado */
   document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible") iaResumePend(); });
+  /* 🧮 v7.38 — la cuenta de frases que llevó el cuerpo flotante mientras Rey estaba fuera */
+  setTimeout(()=>{ try{ robMarcaRefrescar(); }catch(_){} }, 1500);
+  document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible"){ try{ robMarcaRefrescar(); }catch(_){} } });
   /* 📸 v7.37 — si compartió una captura con Apex cerrada, aquí se recoge */
   setTimeout(()=>{ try{ apexCapturaPendiente(); }catch(_){} }, 900);
   document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible"){ try{ apexCapturaPendiente(); }catch(_){} } });

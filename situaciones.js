@@ -720,7 +720,29 @@ const ROB_VIDA = {
    ⚠️ DOS FRANJAS SIGUEN SIN ELLAS Y ES A PROPÓSITO: 'killzone' (su ventana de entrada
    abierta) y 'posicion' (con dinero suyo dentro). Ahí necesita foco, no filosofía, y es la
    propia ley de Rey: su cuerpo no le pisa el trabajo de verdad. */
-const ROB_DICHAS = { max: 4, cadaMin: 90 };
+const ROB_DICHAS = {
+  max: 6,           /* al día */
+  cadaMin: 55,      /* nunca dos seguidas antes de esto */
+  desde: 6,         /* su día empieza a las 6:00 de Nueva York… */
+  hasta: 23         /* …y se acaba a las 23:00 */
+};
+/* ══════════════════════════════════════════════════════════════════════════════
+   ⏱️ EL RITMO DE LAS FRASES DE CRECIMIENTO — v7.38
+   ═════════════════════════════════════════════════════════════════════════════
+   Rey (05-09): "¿con qué frecuencia me da las frases motivadoras de crecimiento personal y
+   abundancia? Es que casi no me habla. No quiero que sea muy seguido, que me atormente,
+   pero sí con una frecuencia adecuada para alentarme e inspirarme cada cierto tiempo sin
+   agobiarme."
+   SE MIDIÓ SIMULANDO UN DÍA ENTERO CON SU CÓDIGO REAL, y el problema no era que fueran
+   pocas: era QUE SE LE GASTABAN TODAS ANTES DEL MEDIODÍA. Con "4 al día, mínimo 90 min",
+   las cuatro caían a las 06:02, 09:30, 11:00 y 12:30 de Nueva York — y a partir de ahí,
+   nada. Justo la tarde y la noche, que son las franjas con MÁS frases de crecimiento (13 y
+   6), no le llegaba ninguna nunca.
+   Un tope por día con un hueco mínimo SIEMPRE amontona al principio: en cuanto pasa el
+   hueco, dispara. Por eso ahora, además del tope y del hueco, hay un RITMO: a media tarde
+   solo puede haber gastado la mitad. Así se reparten de la mañana a la noche.
+   RESULTADO: unas 6 al día, una cada hora y pico, de las 6 de la mañana a las 11 de la
+   noche. Ni tormento ni silencio. */
 function robTocaHablar(marca) {
   try {
     var hoy = new Date().toDateString();
@@ -728,6 +750,17 @@ function robTocaHablar(marca) {
     if (m.dia !== hoy) { m = { dia: hoy, n: 0, ts: 0 }; }
     if (m.n >= ROB_DICHAS.max) return { toca: false, marca: m };
     if (m.ts && (Date.now() - m.ts) < ROB_DICHAS.cadaMin * 60000) return { toca: false, marca: m };
+    /* 📅 EL RITMO DEL DÍA: cuántas puede llevar dichas A ESTAS HORAS. */
+    var f = new Date();
+    var ny = new Date(f.toLocaleString("en-US", { timeZone: "America/New_York" }));
+    var h = ny.getHours() + ny.getMinutes() / 60;
+    var ini = ROB_DICHAS.desde, fin = ROB_DICHAS.hasta;
+    if (h >= ini && h < fin) {
+      var parte = (h - ini) / (fin - ini);                 /* 0 al empezar el día, 1 al acabarlo */
+      var cupoAhora = Math.ceil(ROB_DICHAS.max * parte);
+      if (cupoAhora < 1) cupoAhora = 1;                    /* siempre una de buena mañana */
+      if (m.n >= cupoAhora) return { toca: false, marca: m };
+    }
     m.n++; m.ts = Date.now();
     return { toca: true, marca: m };
   } catch (_) { return { toca: false, marca: marca || {} }; }

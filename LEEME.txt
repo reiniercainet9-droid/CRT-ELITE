@@ -1,58 +1,47 @@
-APEX v7.37 — TRADING DESK
+APEX v7.38 — TRADING DESK
 =========================
 
-ENTREGA FINAL DEL TRADING. Todo lo que quedaba de mi parte, cerrado y comprobado.
+Comprobado todo lo que subiste: worker 5.124 ✅, app 7.37 reportando ✅, cron latiendo sin
+fallos ✅, Puente vivo ✅, vigía de la APK despierto ✅.
 
-⚖️ UN SOLO ROBERTO Y UNA SOLA REGLA — lo que cazaste en la captura del sábado
-Tenías razón en las dos cosas que se veían ahí, y eran el MISMO problema de fondo.
+⏱️ TU PREGUNTA DE LAS FRASES — tenías razón, y el problema no era que fueran pocas
+Simulé un día entero con su código real. Con la configuración que tenía (4 al día, mínimo 90
+minutos) te caían a las 06:02, 09:30, 11:00 y 12:30 de Nueva York… y se acababan. Toda la
+tarde y toda la noche, nada — justo las franjas que MÁS frases de crecimiento tienen (13 y 6).
+Un tope por día con un hueco mínimo siempre amontona al principio: en cuanto pasa el hueco,
+dispara. Por eso "casi no te hablaba" a partir del mediodía.
 
-1️⃣ "Pre-NY abierta — concéntrate" un sábado, con el cartel rojo de "Forex cerrado" justo
-   debajo en la misma pantalla. La causa: había TRES sitios decidiendo por su cuenta si el
-   mercado estaba abierto — el cartel (acertaba), las killzones del cuerpo de dentro (miraban
-   la hora y NUNCA el día) y las franjas del cuerpo de fuera (sábado y domingo, pero no el
-   viernes por la tarde ni la reapertura del domingo). Tres métodos, tres respuestas.
-   Ahora la regla vive en UN solo fichero — el único que cargan la web, Apex y el cuerpo
-   flotante — y los tres preguntan ahí. Comprobado en los 7 bordes de la semana, incluido tu
-   sábado a las 07:31.
-   De paso: el viernes a las 19:00 NY ya no dice "mañana se sigue" (no hay mañana: el mercado
-   abre el domingo). Y el domingo a las 18:00 deja de decir "finde", porque ya reabrió.
+AHORA: 6 al día, repartidas de las 6 de la mañana a las 11 de la noche. Medido:
+   06:01 · 09:31 · 11:41 · 14:32 · 17:22 · 20:12 (hora de Nueva York)
+Huecos de 2 a 3 horas entre una y otra, y cubre mañana, mercado, cierre, tarde y noche.
+Ni tormento ni silencio. Si te parece mucho o poco, se cambia en un minuto.
 
-2️⃣ Se veían DOS cuerpos suyos a la vez: el que Apex dibuja dentro y el flotante de Android
-   encima, los dos con la misma nubecita. No eran dos Roberto: era tu único Roberto dibujado
-   dos veces. Ahora, con Apex delante, el flotante se aparta — y vuelve solo a su sitio, con
-   su posición y su estado intactos, en cuanto sales de Apex.
-
-🔍 LAS DOS LECTURAS DE ALARMA QUE FALLARON EL DÍA 3
-Te decía "crédito o demora": dos causas adivinadas y ninguna accionable. Y era peor de lo que
-parecía — cualquier fallo (sin crédito, límite de ritmo, error, red caída) se borraba y salía
-esa misma frase. Ahora te dice lo que PASÓ de verdad, y si son los créditos te lo dice con
-todas las letras, porque es lo único que tú puedes arreglar.
-Además se cortaba a los 8 segundos sin necesidad: TradingView ya no está esperando en ese
-punto. Sube a 20 — se comía lecturas que iban a llegar bien.
-
-📸 COMPARTIR UNA CAPTURA A APEX (Fase 4, la que faltaba)
-Apex ya sale en el menú de compartir de Android. Desde TradingView, la galería o donde sea:
-compartir → Apex, y la imagen entra directa al chat, adjunta y con Roberto esperando. No se
-la mando solo: la deja lista para que tú escribas qué quieres que mire.
-El notch en tema claro ya estaba resuelto — lo comprobé.
-
-🗣️ LA LISTA DE VOCES (A4)
-Tu motor no declara sus voces una por una — es cosa suya, no de Apex, y tus voces SÍ
-funcionan. Lo malo era quedarte sin nada que tocar. Ahora, si no hay voces sueltas, Apex te
-ofrece los IDIOMAS instalados: "Español de España", "de Estados Unidos", "de México"… eliges y
-Roberto cambia al momento, con una frase de prueba para que lo oigas.
-
-🧠 Y la lista de la memoria de Roberto ya caduca: antes se guardaba una vez y no se
-actualizaba nunca, así que él aprendía cosas que su propia app no te enseñaba.
+🧮 Y de paso encontré algo que rompía tu ley del "un solo Roberto": el Roberto de DENTRO de
+Apex y el cuerpo flotante llevaban CUENTAS SEPARADAS de esas frases (viven en almacenes
+distintos del teléfono), así que el tope era en realidad "6 por cada cuerpo". Ahora la cuenta
+la guarda Android, que es lo único que los dos comparten: son 6 en total.
 
 ────────────────────────────────────────────────────────────────────────
-Regresión 145/145 · auditoría del sistema vivo en verde (nube, cron, Puente, cerebro,
-Ejecutor, respaldo).
+🏁 Y LA REVISIÓN QUE PEDISTE, PIEZA POR PIEZA:
 
-⚠️ ESTA VEZ SÍ HAY QUE SUBIR EL WORKER: el arreglo de las lecturas de alarma vive en la nube.
-   1. Sube worker-elitepro-v5.124.js
-   2. Sube el zip APEX-app-v7.37.zip
-   3. Instala Apex-Roberto-v7.37.apk
+🔔 ALARMAS DEL GRÁFICO — listas. Puente vivo, lectura fresca, tus dos pares configurados, y
+   la nube ya con la 5.124 (si una lectura falla, te dice el motivo real).
+📢 AVISOS Y VOZ — listos. 12 avisos tuyos en la nube, el cron latiendo, el vigía despierto,
+   tus avisos suenan por el reloj del teléfono a la hora exacta, y el vigía los habla aunque
+   el cuerpo no esté en pantalla.
+📸 CAPTURAS Y RELLENO — listos. El Puente captura, la nube detecta tu entrada sola y te
+   ofrece registrarla, Roberto rellena y corrige tu diario, MAE/MFE automáticos, y ya puedes
+   compartirle una captura desde TradingView directo a su chat.
+🎬 BACKTESTING DE HOY — listo. Replay guiado y Roberto sabe que el fin de semana toca
+   entrenar.
+🤖 EL LUNES — listo. Ejecutor en guardia, cuenta 61587406 en DEMO, riesgo 0.5%, máximo 2
+   operaciones al día, un solo gatillo por par, grado mínimo B, ventana 01:00–13:00 NY, veto
+   de noticias ±15 min, la regla de salida validada (H4) corriendo, y sin posiciones abiertas.
+🧠 ROBERTO — listo. Cerebro completo, sabe manejar su cuerpo, ve el historial COMPLETO del
+   Ejecutor y usa la misma regla del mercado que Apex y la web.
+
+Regresión 145/145. Solo hay que subir el zip e instalar la APK v7.38 — el worker NO se toca,
+ya tienes la 5.124 arriba.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
