@@ -1,44 +1,52 @@
-APEX v7.45 — TRADING DESK
+APEX v7.46 — TRADING DESK
 =========================
 
-🗣️ TU AVISO ERA EXACTO, Y ME DIO LA MITAD QUE ME FALTABA
+🧠 TIENES RAZÓN: ABRIR APEX NO ERA LA SOLUCIÓN, ERA MATAR LA IDEA
 
-"Lo único que hace es abrir Apex al terminar de hablar, más nada."
+"Si abre Apex cada vez, entonces mejor lo hago en el chat: es inútil afuera si de cualquier
+forma tengo que ir al chat."
 
-Esa frase vale más que veinte pruebas mías, porque dice DÓNDE se corta. Que Apex se abra
-significa que la parte de ayer SÍ funcionó: Roberto se dio cuenta de que su página estaba
-muerta y fue a buscarla. Lo que fallaba era el paso siguiente, y era otro fallo distinto,
-debajo del primero.
+Exacto. Lo de ayer resolvía que tu pregunta no se perdiera, pero al precio de meterte dentro
+— o sea, el precio era justo lo que tú querías evitar. Hoy va la causa de raíz.
 
-QUÉ PASABA
-Al abrirse Apex, Android le "empujaba" tu pregunta a la página en ese mismo instante. Pero en
-ese instante Apex acababa de arrancar: su página todavía se estaba cargando. Cuando termina de
-cargar, el navegador tira lo que había antes — y tu pregunta se iba con ello. Se le estaba
-hablando a una casa vacía. Por eso veías exactamente lo que viste: Apex abriéndose y nada más.
+POR QUÉ HABÍA QUE ABRIR APEX (medido en tu teléfono, no supuesto)
+El parte del oído de tu prueba de las 15:50 dice, palabra por palabra, que el navegador de
+Apex SEGUÍA VIVO ("apexViva: true") y aun así no contestaba. Eso no es un fallo de Apex: es
+Android. Cuando la pantalla de Apex deja de verse, Chromium marca esa ventana como escondida
+y CONGELA la página: no ejecuta absolutamente nada hasta que se vuelve a ver. Por eso la
+única forma de que Roberto pensara era traerlo delante.
 
-CÓMO QUEDA AHORA — Y POR QUÉ ESTA VEZ NO DEPENDE DE LA SUERTE
-Le he dado la vuelta al asunto: ya no se te empuja nada.
-   · Tu pregunta se GUARDA, con su hora, en la memoria y en el disco del teléfono.
-   · Apex se abre.
-   · Y es la propia Apex, cuando ya está viva y sabe pensar, la que VIENE A BUSCARLA.
-Así no hay que adivinar cuánto tarda en cargar: el que sabe cuándo está listo es ella, así que
-pregunta ella. Es exactamente el mismo mecanismo con el que ya te funcionan las capturas que
-le compartes con Apex cerrada — ese lleva días sin fallarte, y ahora tu voz va por ahí.
+EL ARREGLO
+La ventana donde vive la página ahora es NUESTRA, y le dice a Chromium una cosa muy simple:
+esta ventana nunca está escondida. Aunque estés en TradingView, en WhatsApp o con la pantalla
+apagada, la página de Roberto sigue despierta y sigue pensando.
 
-Detalles que van dentro:
-   · Aunque Android mate Apex entera mientras hablas, la pregunta sigue guardada en el disco.
-   · Se recoge UNA sola vez (no te va a contestar dos veces lo mismo).
-   · Caduca a los 10 minutos: nunca te contestará algo de otro rato, fuera de lugar.
-   · Se busca al arrancar Apex y también cada vez que vuelves a verla en pantalla.
-   · Queda rastro de la recogida, así que si aún fallara, te digo dónde en un minuto.
+QUÉ SIGNIFICA PARA TI, EN CRISTIANO
+Desde fuera, sin entrar a Apex ni una vez:
+   · Le hablas y te contesta en voz alta.
+   · Te saca la TARJETA de confirmación en su propio cuerpo flotante: apruebas ahí mismo.
+   · Y ejecuta: programa el aviso, lo que sea, con tu sí desde fuera.
+   · Y siguen valiendo los comandos de siempre: cállate, pausa, sigue, repite.
+Apex solo se abrirá si alguna vez Android se lleva la página entera de la memoria — y eso
+ahora será raro, no la norma. Cuando pase, ya sabes que la pregunta no se pierde.
 
-Y cuando la recoge, va por el MISMO camino del chat que a ti sí te funciona: te saca la tarjeta
-de confirmación en pantalla, te la lee en voz alta y ejecuta cuando tú digas que sí.
+DOS COSAS QUE ME PREGUNTASTE
+   · "Lo pone todo en un mismo chat": es a propósito, pero mira si te cuadra — si sigues
+     hablando del mismo tema, va al mismo hilo; si cambias de tema, abre uno nuevo. Tus tres
+     pruebas eran el mismo aviso, por eso cayeron juntas. Si lo prefieres de otra forma
+     (por ejemplo, un hilo nuevo cada vez que le hablas desde fuera), dímelo y lo cambio.
+   · "Abrió Apex en la pantalla principal, no en el chat": cierto, y ya no viene al caso
+     porque no va a abrirse; si algún día pasa, se abre y te contesta igual.
 
-Regresión 152/152. Sube el zip e instala la APK v7.45. El worker no se toca (sigue 5.125).
+Comprobado, no supuesto: he mirado DENTRO de la APK que se entrega para confirmar que la
+pantalla usa esa ventana nueva y no la de serie — si no, todo habría compilado igual y tú
+habrías visto el mismo fallo otra vez.
 
-TU PRUEBA: sal de Apex, mantén el cuerpo de Roberto y dile "prográmame un aviso a las X que
-diga Y". Verás Apex abrirse y, un segundo después, la tarjeta encima. Ahí está todo.
+Regresión 153/153. Sube el zip e instala la APK v7.46. El worker no se toca (sigue 5.125).
+
+TU PRUEBA, la de verdad: quédate en TradingView, mantén el cuerpo de Roberto y dile que te
+programe un aviso. NO debe abrirse Apex: la tarjeta tiene que salirte ahí mismo, encima de
+TradingView, y con tu sí queda programado.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
