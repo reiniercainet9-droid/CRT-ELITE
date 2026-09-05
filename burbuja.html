@@ -426,6 +426,46 @@
      aquí se mira qué hay debajo. Sin cuentas de densidad, sin adivinar nada. */
   var tarjetaViva = false, tTarjeta = null, PISAR_TARJETA = false;
 
+  /* ══════════════════════════════════════════════════════════════════════════════
+     👀 EL VISTAZO Y LA INSIGNIA — v7.51 (los pidió Rey y los aprobó)
+     ═════════════════════════════════════════════════════════════════════════════
+     "¿se pueden agregar más funciones?" — sí. Estas cuatro, todas con datos del MISMO
+     Roberto (nunca un segundo cerebro que calcule por su cuenta):
+       ⏰ cuántos avisos te quedan hoy y cuál es el próximo
+       💰 cuánto margen de riesgo te queda, por cuenta
+       🤖 cómo está el Ejecutor
+       🔔 la última señal de tu indicador
+     La INSIGNIA es el número pequeño encima de su cuerpo: lo que tienes pendiente. El
+     VISTAZO es ese resumen escrito en su nubecita; NO lo dice en voz alta (sería una lata) y
+     sale como mucho una vez cada 45 minutos. */
+  var _vistazoUlt = 0;
+  window.burbujaInsignia = function(n){
+    try{
+      n = parseInt(n, 10) || 0;
+      var b = document.getElementById("insignia");
+      if (!b) {
+        b = document.createElement("div");
+        b.id = "insignia";
+        b.style.cssText = "position:absolute;top:2px;right:2px;min-width:18px;height:18px;"
+          + "border-radius:9px;background:#e2574c;color:#fff;font:700 11px/18px system-ui,sans-serif;"
+          + "text-align:center;padding:0 4px;box-shadow:0 1px 4px rgba(0,0,0,.35);z-index:9;display:none";
+        (document.getElementById("rob") || document.body).appendChild(b);
+      }
+      b.textContent = String(n);
+      b.style.display = n > 0 ? "block" : "none";
+    }catch(_){}
+  };
+  window.burbujaVistazo = function(texto, forzado){
+    try{
+      texto = String(texto || "").trim();
+      if (!texto) return false;
+      if (!forzado && Date.now() - _vistazoUlt < 45 * 60000) return false;
+      _vistazoUlt = Date.now();
+      window.burbujaDecir(texto, "ensena", false);   /* escrito, NO hablado */
+      return true;
+    }catch(_){ return false; }
+  };
+
   window.burbujaTarjeta = function(texto){
     texto = String(texto || "").trim();
     if (!texto) return;
@@ -447,8 +487,13 @@
       globo.classList.remove("midiendo");
       globo.classList.add("hay");
     });
-    /* si no contesta, no se pierde: se retira del cuerpo y sigue esperándole en el chat */
-    tTarjeta = setTimeout(function(){ window.burbujaTarjetaFuera(""); }, 90000);
+    /* ⏳ v7.51 — SE QUEDA HASTA QUE REY DECIDA. Él lo preguntó: "¿la tarjeta se queda ahí
+       hasta que yo apruebe, o se quita rápido igual que todos los mensajes? Debería quedarse
+       hasta que yo apruebe o desapruebe". SE MIDIÓ: se retiraba sola a los 90 segundos. Si
+       estaba conduciendo, mirando el gráfico o hablando con alguien, la perdía.
+       Ahora no se retira por su cuenta: solo se va cuando él toca Sí o No, o cuando la
+       propia acción caduca en Apex (una hora), y entonces Roberto se lo dice. */
+    tTarjeta = 0;
   };
 
   window.burbujaTarjetaFuera = function(remate){
@@ -481,6 +526,17 @@
     clearTimeout(tVuelta);
     esperandoSitio = null;
     try { Roberto.callar(); } catch(_){}
+    /* ⏳ v7.51 — UNA PREGUNTA A MEDIO CONTESTAR NO SE CIERRA POR TIEMPO.
+       Rey: "¿la tarjeta se queda ahí hasta que yo apruebe, o se quita rápido igual que todos
+       los mensajes? Debería quedarse hasta que yo apruebe o desapruebe".
+       SE MIDIÓ EN SU TELÉFONO: se iba entre los 45 y los 100 segundos. Y no era el plazo de
+       la tarjeta (ese ya lo había quitado): era ESTE cierre. Android arma un cierre de la
+       nubecita 9,5 s después de CADA cosa que Roberto dice; la página se negaba a PINTAR
+       encima de la tarjeta, pero este cierre la borraba igual. O sea: bastaba con que Roberto
+       soltara una frase de las suyas para que la pregunta de Rey desapareciera de su cuerpo.
+       Ahora, con una tarjeta puesta, esto solo calla la voz: la pregunta se queda hasta que
+       él toque Sí o No. */
+    if (tarjetaViva && !PISAR_TARJETA) return;
     gesto(GESTO_FONDO);
     if (!globo.classList.contains("hay") && !globo.classList.contains("midiendo")) return;
     /* 🌬️ v7.20 — QUE SE VAYA, NO QUE DESAPAREZCA.
@@ -544,6 +600,10 @@
          frase cada dos gestos salía uno cada 40 segundos, y del mismo puñado. Ahora: menos
          a menudo, sin repetir (bolsa) y con muchas más frases donde elegir. */
       vidaFrase++;
+      /* 👀 v7.51 — cada tanto, en vez de una frase, el VISTAZO (si Apex le pasó datos) */
+      if (vidaFrase % 18 === 0){
+        try{ if (window.burbujaVistazo(window.__VISTAZO || "")) return; }catch(_){}
+      }
       if (vidaFrase % 6 === 0 && pack.frases && pack.frases.length){
         /* 🗣️ ¿toca una de crecimiento, de las que se DICEN en voz alta? */
         var dicha = "";

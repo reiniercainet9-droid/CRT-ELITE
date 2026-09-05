@@ -1,47 +1,55 @@
-APEX v7.47 — TRADING DESK
+APEX v7.51 — TRADING DESK
 =========================
 
-🔙 LO ENCONTRÉ, Y ESTA VEZ TU PROPIO PARTE LO SEÑALÓ CON EL DEDO
+👀 LA TARJETA YA TE ESPERA, Y ROBERTO YA TE CUENTA LO TUYO DE UN VISTAZO
 
-Tu prueba de las 16:46 dejó una pista que no admite discusión:
+TU PREGUNTA TENÍA RESPUESTA, Y ERA LA MALA
+Preguntaste si la tarjeta se queda hasta que apruebes o si se quita rápido como los mensajes.
+La medí con cronómetro en tu teléfono: SE IBA. Y el culpable no era el que yo pensaba.
 
-   · 16:45:33 — Apex se abrió, recogió tu pregunta y te contestó bien (886 letras).
-   · Saliste.
-   · 16:46:29 — le hablaste otra vez… y DOS SEGUNDOS después: "la página de Apex ya no
-     existía".
+   · Tenía un plazo escrito de 90 segundos. Lo quité… y seguía yéndose.
+   · La causa real: Android arma un cierre de la nubecita 9,5 segundos después de CADA cosa
+     que Roberto dice. La página se negaba a PINTAR encima de tu tarjeta, pero ese cierre te
+     la borraba igual. O sea: bastaba con que Roberto soltara una frase suya para que tu
+     pregunta desapareciera de tu pantalla.
 
-Dos segundos. Una página que se acaba de usar no se congela en dos segundos. Es que ya no
-estaba. Y ahí está mi error de ayer: arreglé que la página no se DURMIERA, cuando lo que
-pasaba es que se MORÍA.
+AHORA: con una tarjeta puesta, NADIE la cierra por tiempo. Solo tu Sí o tu No. Y la acción
+aguanta una hora (antes diez minutos), así que tu Sí siempre sirve. Probado esperando 100
+segundos con Roberto hablando: la tarjeta seguía ahí.
 
-POR QUÉ SE MORÍA
-Porque al salir con el botón ATRÁS, Android no esconde la app: la TERMINA. Destruye la
-pantalla y con ella el navegador donde vive Roberto. Por eso daba igual lo de ayer: no había
-a quién despertar. Y por eso Apex se te abría una y otra vez.
+Y COMPROBADO DE VERDAD: aprobar desde fuera FUNCIONA
+Puse una tarjeta con una acción inventada (para no tocarte nada), simulé tu dedo en el botón
+"✓ Sí" de su cuerpo, y la decisión llegó a Apex y se ejecutó. Ese tramo nunca se había
+probado; ahora sí.
 
-EL ARREGLO
-Atrás ahora se comporta como el botón de INICIO: esconde Apex y la deja VIVA por detrás.
-   · Si estás dentro y hay a dónde volver, atrás vuelve como siempre.
-   · Si ya no hay a dónde, Apex se va al fondo en vez de cerrarse.
-   · Y cuando quieras cerrarla del todo, la cierras desde las apps recientes, como cualquier
-     app.
+👀 LAS CUATRO FUNCIONES NUEVAS QUE APROBASTE
+En su cuerpo flotante, sin abrir nada:
+   ⏰ cuántos avisos te quedan hoy y cuál es el próximo
+   💰 cuánto margen de riesgo te queda, de la cuenta más apretada
+   🤖 cómo está el Ejecutor (encendido/apagado, PC conectada, posiciones abiertas)
+   🔔 la última señal de tu indicador
+Más una INSIGNIA: un número rojo sobre su cuerpo con lo que tienes pendiente.
 
-Con esto MÁS lo de ayer (la ventana que no se duerme), Roberto se queda despierto por detrás:
-le hablas desde TradingView, te contesta en voz alta, te saca la tarjeta en su cuerpo y
-ejecuta con tu sí. Sin abrir Apex.
+Lo probé en tu teléfono y salió con TUS datos reales:
+   ⏰ No te queda ningún aviso por hoy
+   💰 FundedNext 6k exám: te queda 5% hoy y 2.5% en total
+   🤖 Ejecutor apagado · PC sin conexión
+   🔔 🔔 EURUSD 5m | ENTRADA 🔴 CORTO B Entrada: 1.162
 
-Y ADEMÁS, PARA NO VOLVER A DEDUCIR NADA DEL RELOJ
-   · El parte ahora dice, con todas las letras, si la pantalla de Apex estaba destruida o
-     solo dormida. Son dos averías distintas y ahora se distinguen de un vistazo.
-   · Y si la pantalla ya está muerta, ya no te hace esperar 2,5 segundos en balde: va al plan
-     B al instante.
+El vistazo sale como mucho cada 45 minutos y NO se dice en voz alta (sería una lata). Y lo
+calcula APEX, no su cuerpo: sigue siendo un solo Roberto.
 
-Regresión 154/154. Sube el zip e instala la APK v7.47. El worker no se toca (sigue 5.125).
+⚠️ OTRO FALLO CAZADO ANTES DE ENTREGARTELO
+La línea de "última señal" leía una variable que NO EXISTE: no habría salido nunca y yo te la
+habría contado como función nueva. Lo pillé preguntándole a tu teléfono si esa variable
+existía. Ahora sale del registro de señales de la nube, con reloj, y guardada.
 
-TU PRUEBA: abre Apex una vez (para que quede viva), sal con atrás, vete a TradingView y
-pídele el aviso manteniendo su cuerpo. NO debe abrirse Apex: la tarjeta tiene que salirte
-encima de TradingView. Si esta vez tampoco, mándame captura y miro el parte: ahora dirá
-exactamente si la pantalla estaba muerta o dormida, y eso ya no deja sitio a suposiciones.
+PARA INSTALAR
+   · APEX-app-v7.51.zip → 📤 PARA SUBIR HOY
+   · Apex-Roberto-v7.51.apk → YA ESTÁ INSTALADA en tu teléfono (por cable, y comprobada ahí).
+   · worker-elitepro-v5.126.js → este lo subes tú (es el aviso del Puente).
+
+Regresión 155/155 · revisión en tu teléfono 44/44 · respaldo hecho · Roberto informado.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

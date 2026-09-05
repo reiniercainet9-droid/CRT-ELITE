@@ -525,14 +525,29 @@ function robFranja(opts) {
    la misma salía cada tres o cuatro veces. Ahora funciona como una baraja: se van sacando
    sin repetir hasta que se acaban, y entonces se baraja de nuevo. */
 var _bolsas = {};
+/* 🎒 v7.50 — LA BOLSA SE GUARDA. Rey: "las que escuché, repetidas". La bolsa (sacar sin
+   reponer hasta agotarla) vivía SOLO en memoria: cada vez que Android reiniciaba el cuerpo
+   flotante o se recargaba la página, volvía a estar llena y podían repetirse las mismas.
+   Ahora se guarda en el teléfono y la vuelta empieza donde se había quedado. */
+function _bolsaLeer(franja) {
+  try { var o = JSON.parse(localStorage.getItem("robBolsa:" + franja) || "null"); return Array.isArray(o) ? o : null; }
+  catch (_) { return null; }
+}
+function _bolsaGuardar(franja, b) {
+  try { localStorage.setItem("robBolsa:" + franja, JSON.stringify(b)); } catch (_) {}
+}
 function robFraseDe(franja, lista) {
   try {
     if (!lista || !lista.length) return "";
-    var b = _bolsas[franja];
-    if (!b || !b.length) { b = lista.slice(); _bolsas[franja] = b; }
+    var b = _bolsas[franja] || _bolsaLeer(franja);
+    /* si el paquete cambió (frases nuevas), lo que sobra de la bolsa vieja ya no vale */
+    if (b) b = b.filter(function (x) { return lista.indexOf(x) >= 0; });
+    if (!b || !b.length) { b = lista.slice(); }
+    _bolsas[franja] = b;
     var i = Math.floor(Math.random() * b.length);
     var frase = b[i];
     b.splice(i, 1);
+    _bolsaGuardar(franja, b);
     return frase;
   } catch (_) { return lista && lista[0] || ""; }
 }
@@ -721,8 +736,11 @@ const ROB_VIDA = {
    abierta) y 'posicion' (con dinero suyo dentro). Ahí necesita foco, no filosofía, y es la
    propia ley de Rey: su cuerpo no le pisa el trabajo de verdad. */
 const ROB_DICHAS = {
-  max: 6,           /* al día */
-  cadaMin: 55,      /* nunca dos seguidas antes de esto */
+  /* 🗣️ v7.50 — Rey (05-09): "me ha dicho pocas frases de crecimiento, casi ninguna, y las
+     que escuché repetidas". MEDIDO EN SU TELÉFONO: 4 en todo el día, la última 9 horas antes.
+     Con seis como techo repartidas en 17 horas le tocaba una cada casi tres horas. */
+  max: 10,          /* al día */
+  cadaMin: 45,      /* nunca dos seguidas antes de esto */
   desde: 6,         /* su día empieza a las 6:00 de Nueva York… */
   hasta: 23         /* …y se acaba a las 23:00 */
 };
@@ -752,8 +770,12 @@ function robTocaHablar(marca) {
     if (m.ts && (Date.now() - m.ts) < ROB_DICHAS.cadaMin * 60000) return { toca: false, marca: m };
     /* 📅 EL RITMO DEL DÍA: cuántas puede llevar dichas A ESTAS HORAS. */
     var f = new Date();
-    var ny = new Date(f.toLocaleString("en-US", { timeZone: "America/New_York" }));
-    var h = ny.getHours() + ny.getMinutes() / 60;
+    /* 🕐 v7.50 — CON SU RELOJ, NO CON EL DE NUEVA YORK. Se midió en su teléfono (05-09, las
+       19:00 en Brasil): llevaba 4 frases y la última era de nueve horas antes. El reparto de
+       "cuántas van tocando a estas horas" se hacía con la hora de Nueva York, que va por
+       detrás de la suya; su día empieza a las 6 de la mañana SUYAS. Las horas del MERCADO
+       siguen siendo las de Nueva York (eso es del mercado); las de hablarle a Rey son suyas. */
+    var h = f.getHours() + f.getMinutes() / 60;
     var ini = ROB_DICHAS.desde, fin = ROB_DICHAS.hasta;
     if (h >= ini && h < fin) {
       var parte = (h - ini) / (fin - ini);                 /* 0 al empezar el día, 1 al acabarlo */

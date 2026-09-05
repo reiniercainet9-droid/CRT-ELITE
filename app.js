@@ -11478,7 +11478,8 @@ function confirmarTool(tu){
         try{ robDecir("Roberto","No me contestaste la tarjeta, Rey. No hice nada — pídemelo otra vez cuando quieras.",{gesto:"espera"}); }catch(_){}
         resolve({confirmed:false, res:{ok:false,msg:"la tarjeta caducó sin respuesta"}});
       }catch(_){}
-    }, 10*60000);
+    }, 60*60000);   /* ⏳ v7.51 — una hora, no diez minutos: la tarjeta ya no se retira sola
+                        de su cuerpo y Rey pidió poder decidir a su ritmo. */
   });
 }
 /* ══════════════════════════════════════════════════════════════════════════════
@@ -11517,6 +11518,99 @@ function iaConfirmarDesdeFuera(si){
   }catch(_){}
 }
 /* la tarjeta al cuerpo (y su retirada): solo existe dentro de la APK */
+/* ══════════════════════════════════════════════════════════════════════════════
+   👀 EL VISTAZO DE ROBERTO — v7.51
+   ═════════════════════════════════════════════════════════════════════════════
+   Rey preguntó qué más podía hacer su cuerpo flotante y aprobó cuatro cosas: los avisos que
+   le quedan, el margen de riesgo, el Ejecutor y la última señal. Todo se calcula AQUÍ, con
+   los datos de siempre, y se le manda hecho a su cuerpo: él solo lo enseña. Es el mismo
+   Roberto — el cuerpo nunca calcula nada por su cuenta. */
+function robVistazoTexto(){
+  const l = [];
+  let pend = 0;
+  /* ⏰ los avisos que le quedan hoy y el próximo */
+  try{
+    const R = Array.isArray(REMINDERS) ? REMINDERS : [];
+    const ahora = new Date();
+    const hm = ahora.getHours()*60 + ahora.getMinutes();
+    const hoyDia = ahora.getDay();
+    const quedan = R.filter(r=>{
+      if(!r || !r.on || !/^\d{1,2}:\d{2}$/.test(String(r.hora||""))) return false;
+      const dias = (typeof parseDias==="function") ? parseDias(r.dias) : [];
+      if(dias.length && dias.indexOf(hoyDia) < 0) return false;
+      const p = String(r.hora).split(":");
+      return (+p[0])*60 + (+p[1]) > hm;
+    }).sort((a,b)=>String(a.hora).localeCompare(String(b.hora)));
+    pend = quedan.length;
+    if(quedan.length) l.push("⏰ Te quedan " + quedan.length + " aviso" + (quedan.length>1?"s":"") +
+      " hoy · el próximo " + quedan[0].hora + " " + String(quedan[0].tit||"").slice(0,24));
+    else l.push("⏰ No te queda ningún aviso por hoy");
+  }catch(_){}
+  /* 💰 el margen que le queda, de la cuenta más apretada */
+  try{
+    const r = (typeof riesgoResumen==="function") ? riesgoResumen() : [];
+    if(r && r.length){
+      const c = r.slice().sort((a,b)=>(b.peor||0)-(a.peor||0))[0];
+      const dia = (c.mDia==null) ? "—" : (c.mDia + "%");
+      const tot = (c.mTot==null) ? "—" : (c.mTot + "%");
+      l.push("💰 " + String(c.alias).slice(0,18) + ": te queda " + dia + " hoy y " + tot + " en total");
+    }
+  }catch(_){}
+  /* 🤖 el Ejecutor */
+  try{
+    const d = (typeof EJEC_CACHE!=="undefined" && EJEC_CACHE) ? EJEC_CACHE.d : null;
+    if(d){
+      const live = d.live || {};
+      const on = !!(d.sw && d.sw.on);
+      const abiertas = Array.isArray(live.pos) ? live.pos.length : (live.abiertas||0);
+      l.push("🤖 Ejecutor " + (on ? "encendido" : "apagado") + (live.vivo ? " · PC conectada" : " · PC sin conexión") +
+             (abiertas ? " · " + abiertas + " abierta(s)" : ""));
+    }
+  }catch(_){}
+  /* 🔔 la última señal de su indicador.
+     ⚠️ La primera versión de esto leía una variable ULTIMA_SENAL que NO EXISTE: la línea no
+     habría salido nunca y yo se lo habría entregado como una función más. Lo cazó la prueba
+     en su teléfono, preguntándole a la página si esa variable existía. Ahora sale de donde
+     está de verdad: el registro de señales de la nube (/tv/last), traído con reloj y
+     guardado, para que el vistazo no dependa nunca de la red. */
+  try{
+    if(_VISTAZO_SENAL) l.push("🔔 " + _VISTAZO_SENAL.slice(0, 48));
+  }catch(_){}
+  return { texto: l.join("\n"), pend };
+}
+
+let _VISTAZO_SENAL = "";
+let _VISTAZO_SENAL_TS = 0;
+
+async function robVistazoRefrescar(){
+  /* el Ejecutor: si su caché está vacía (Rey no ha abierto la sección), se pide */
+  try{
+    if(typeof EJEC_CACHE!=="undefined" && (!EJEC_CACHE || !EJEC_CACHE.d) && typeof ejecRefrescar==="function")
+      await ejecRefrescar();
+  }catch(_){}
+  /* la última señal: como mucho una vez cada 10 minutos, y siempre con reloj */
+  try{
+    if(Date.now() - _VISTAZO_SENAL_TS > 10*60000 && typeof traerConTiempo==="function"){
+      _VISTAZO_SENAL_TS = Date.now();
+      const r = await traerConTiempo(nubeUrl()+"/tv/last", {}, 6000);
+      const log = await r.json();
+      const u = Array.isArray(log) ? log.find(x=>x && !x.silenciada && !x.filtrada) || log[0] : null;
+      if(u) _VISTAZO_SENAL = String(u.senal || u.body || "").replace(/\s+/g," ").trim();
+    }
+  }catch(_){}
+}
+
+function robVistazoEnviar(){
+  try{
+    const P = (typeof vigiaPuente==="function") ? vigiaPuente() : null;
+    if(!P || typeof P.robertoVistazo !== "function") return;
+    /* se refresca por detrás y se manda lo que haya: el vistazo NUNCA espera a la red */
+    try{ robVistazoRefrescar(); }catch(_){}
+    const v = robVistazoTexto();
+    P.robertoVistazo({ texto: v.texto, pend: v.pend });
+  }catch(_){}
+}
+
 function iaTarjetaAlCuerpo(tu){
   try{
     const PV = vozNativa(); if(!PV || !PV.robertoTarjeta) return;
@@ -12376,6 +12470,10 @@ function init(){
   /* 🧮 v7.38 — la cuenta de frases que llevó el cuerpo flotante mientras Rey estaba fuera */
   setTimeout(()=>{ try{ robMarcaRefrescar(); }catch(_){} }, 1500);
   document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible"){ try{ robMarcaRefrescar(); }catch(_){} } });
+  /* 👀 v7.51 — el vistazo para su cuerpo flotante: al arrancar, al volver y cada 5 minutos */
+  setTimeout(()=>{ try{ robVistazoEnviar(); }catch(_){} }, 3000);
+  setInterval(()=>{ try{ robVistazoEnviar(); }catch(_){} }, 5*60000);
+  document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible"){ try{ robVistazoEnviar(); }catch(_){} } });
   /* 🗣️ v7.45 — si le habló a Roberto desde fuera y Apex tuvo que abrirse para poder
      contestarle, la pregunta está esperando: se recoge aquí, con la página ya viva. */
   setTimeout(()=>{ try{ preguntaDeFueraPendiente(); }catch(_){} }, 1200);
