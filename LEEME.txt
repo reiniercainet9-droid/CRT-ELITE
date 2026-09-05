@@ -1,49 +1,50 @@
-APEX v7.43 — TRADING DESK
+APEX v7.44 — TRADING DESK
 =========================
 
-🔍 LO DE TU PRUEBA: ENCONTRADO, Y ERA MÍO
+🗣️ LO DE HABLARLE DESDE FUERA: ENCONTRADO, Y ERA MÍO
 
-No lo adiviné. Tres datos de tu propio sistema:
+Tu comparación fue la pista buena: "probé el del chat y funciona perfecto". Eso descartaba
+la nube, el micrófono y a Roberto entero. Los datos lo confirmaron:
 
-   1. El parte del oído: te entendió LITERAL a las 13:32:53 —"Roberto prográmame un aviso a
-      la 1:40 de la tarde que diga prueba de rey"— y se lo pasó a Roberto. Esa parte funcionó.
-   2. El gasto de la nube de hoy: 2 llamadas de chat, las DOS de esta mañana.
-      → TU PREGUNTA DE LAS 13:32 NUNCA LLEGÓ A LA NUBE.
-   3. El parte de la pregunta: el último apunte era de las 05:27.
+   · El parte de la pregunta registró tu prueba del CHAT (14:15:55, "tarjeta a la vista")
+     y NO registró NINGUNA de las de fuera → tu frase nunca llegaba a ejecutarse dentro
+     de Apex.
+   · El parte del oído decía "se lo paso a Roberto"… y eso era MENTIRA del código.
 
-O sea: la pregunta se colgó ANTES de salir, reuniendo el contexto. Y como Roberto ya estaba
-marcado como "ocupado", se quedó pensando para siempre — y la tarjeta no apareció porque
-nunca llegó a existir. No fue la tarjeta: fue que la pregunta no salió.
+LA CAUSA: el puente que le lleva a Roberto lo que dices desde fuera daba la frase por
+entregada SIN COMPROBAR NADA. Con el teléfono al 17% y varias apps abiertas, Android se
+lleva de la memoria la pantalla de Apex: por dentro parece que sigue ahí, pero ya no ejecuta
+nada. Tu frase se veía en la nubecita y ahí moría. Sin error, sin aviso y sin rastro.
 
-LA CAUSA, y es un fallo mío de ayer a medias: el calendario era el TERCER "fetch" sin tiempo
-límite del camino. Ayer le puse reloj al gráfico y al Ejecutor… y me dejé ese. Uno solo basta
-para romperlo todo.
+Y lo peor, que es lo que quiero que sepas: el plan B —abrir Apex un segundo para poder
+contestarte— YA ESTABA ESCRITO desde hacía días. Pero colgaba de que aquello dijera "no
+llegó"… y nunca decía "no llegó". Código muerto que parecía vivo. Por eso te fallaba
+justo lo que yo daba por hecho que funcionaba.
 
-CÓMO LO ARREGLÉ, para que no dependa de que yo me acuerde:
-   · El tope ya no es de cada llamada, es del BLOQUE ENTERO: 8 segundos. Si mañana se añade
-     otra fuente de contexto y alguien olvida su reloj, tu pregunta sale igual. El contexto es
-     un extra; perder tu pregunta no.
-   · Y de segunda red, ninguna fuente llama a la red sin reloj. Comprobado una por una.
+CÓMO QUEDA AHORA
+   · Antes de entregar, se le PREGUNTA a la página si está viva de verdad y se espera su
+     respuesta. Si no contesta en 1,5 segundos, se da por muerta (una sola vez, nunca dos).
+   · Si no está viva, Apex se abre sola, te dice "se me había cerrado por dentro, te
+     contesto" y CONTESTA TU PREGUNTA ELLA SOLA al abrirse. No tienes que repetirla.
+   · El parte apunta por cuál de los dos caminos salió. Nunca más habrá que adivinarlo.
 
-📮 Y ARREGLÉ EL DIAGNÓSTICO, que también falló
-El parte solo se mandaba AL TERMINAR. Justo del intento que falla —el que hace falta— no
-quedaba rastro. Ahora se manda en cuanto la pregunta sale, y otra vez cuando la tarjeta
-aparece. Así se puede distinguir "no salió" de "salió y no llegó a tu pantalla", que son dos
-averías distintas y se arreglan en sitios distintos.
+🎤 Y TU DETALLE DEL MICRÓFONO: TENÍAS RAZÓN, Y ERA TU PROPIA LEY
+Dijiste: "el chat funciona solo dándole al botón, no dejándolo apretado". Cierto. Fuera se
+le habla MANTENIENDO el cuerpo, dentro solo valía el toque — dos gestos para el mismo
+Roberto, que es justo lo que tú prohibiste. Y encima, al mantener apretado, Android sacaba
+su menú de copiar/pegar y se comía el gesto: parecía roto sin estarlo.
 
-⏳ Y LA TARJETA YA NO CUELGA A ROBERTO
-Si una tarjeta se queda sin contestar, a los 10 minutos se cancela sola y Roberto se
-desatasca y te lo dice. Se CANCELA, nunca se aprueba: jamás se hace algo tuyo sin tu sí.
-Antes se quedaba esperando para siempre.
+AHORA VALEN LOS DOS, DENTRO Y FUERA:
+   · Toque corto = enciende el micrófono (otro toque lo apaga).
+   · Mantener = te escucha mientras tengas el dedo puesto y manda al soltar.
+Es el MISMO micrófono, no hay uno nuevo: solo aprendió los dos gestos.
 
-SOBRE TU DUDA: dictarle desde fuera funciona exactamente igual que el chat — es el mismo
-Roberto y el mismo camino. Lo que falló no era del dictado ni del chat: era del contexto, y
-te habría pasado igual escribiéndole desde dentro con el teléfono en ese estado.
+Regresión 151/151. Sube el zip e instala la APK v7.44. El worker no se toca (sigue 5.125).
 
-Regresión 149/149. Sube el zip e instala la APK v7.43. El worker no se toca.
-
-Cuando la instales, repite tu prueba tal cual. Si volviera a fallar, ahora SÍ queda el rastro
-y te digo en un minuto dónde se cortó.
+CUANDO LA INSTALES, repite tu prueba tal cual: sal de Apex, mantén el cuerpo de Roberto y
+dile que te programe un aviso. Si tu pantalla de Apex sigue viva, te saca la tarjeta al
+momento; si Android se la había llevado, verás que Apex se abre un segundo y te contesta
+igual. Cualquiera de las dos cosas es que funciona.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

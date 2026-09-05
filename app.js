@@ -8187,7 +8187,7 @@ function iaInit(){
   $("#iaCamBtn").onclick=()=>$("#iaCam").click();
   // Hablarle a Roberto con el micrófono
   const mic=$("#iaMicBtn");
-  if(mic){ if(!iaMicSoportado()){ mic.disabled=true; mic.title="Tu teléfono no permite dictado por voz"; } else { mic.onclick=iaEscuchar; } }
+  if(mic){ if(!iaMicSoportado()){ mic.disabled=true; mic.title="Tu teléfono no permite dictado por voz"; } else { micDosGestos(mic); } }
   /* 📎 ADJUNTAR para NUTRIR a Roberto: imágenes (capturas del gráfico), PDF (documentos, clases,
      reglas de firmas) y texto (.txt/.md/.csv, apuntes). El PDF viaja como documento REAL: Roberto
      lo LEE entero. Rey también puede pegarle ENLACES en el chat (los abre y los lee con web_fetch). */
@@ -8618,6 +8618,42 @@ function iaDictarSoltar(){
     if(RECon && REC){ REC.stop(); }
     _dictadoDesdeBurbuja = false;
   }catch(_){}
+}
+
+/* 🎤 EL MISMO GESTO EN TODAS PARTES — v7.44
+   ───────────────────────────────────────────────────────────────────────
+   Rey (05-09): "un detalle: el chat funciona solo dándole al botón del micrófono, no
+   dejándolo apretado; no sé si se deberían cambiar los comandos u otra cosa."
+   Tenía razón y además choca con su ley: es el MISMO Roberto en todas partes, así que
+   también debe ser el mismo gesto. Fuera de Apex se le habla MANTENIENDO el cuerpo; dentro
+   del chat el botón solo entendía el toque — y encima, al mantenerlo apretado, Android
+   sacaba su menú de copiar/pegar y se comía el toque: por eso parecía que no hacía nada.
+   AHORA VALEN LOS DOS, AQUÍ Y FUERA: toque corto = enciende (y otro toque apaga);
+   mantener = escucha mientras el dedo esté puesto y manda al soltar.
+   ⚠️ No hay micrófono nuevo: se usan las MISMAS iaDictarEmpezar/iaDictarSoltar/iaEscuchar
+   que ya usa el cuerpo de Roberto por fuera. Solo cambia quién avisa. */
+function micDosGestos(b){
+  let manten=false, dedo=false, reloj=0;
+  const limpiar=()=>{ if(reloj){ clearTimeout(reloj); reloj=0; } };
+  /* al mantener, Android quiere sacar su menú de texto: se le quita de en medio */
+  b.addEventListener("contextmenu", e=>{ try{ e.preventDefault(); }catch(_){} });
+  b.addEventListener("pointerdown", ()=>{
+    dedo=true; manten=false; limpiar();
+    reloj=setTimeout(()=>{
+      if(!dedo) return;
+      manten=true;
+      try{ iaDictarEmpezar("chat"); }catch(_){}
+    }, 400);
+  });
+  const soltar=()=>{
+    if(!dedo) return;
+    dedo=false; limpiar();
+    if(manten){ manten=false; try{ iaDictarSoltar(); }catch(_){} return; }
+    try{ iaEscuchar(); }catch(_){}      /* toque corto: como siempre */
+  };
+  b.addEventListener("pointerup", soltar);
+  b.addEventListener("pointercancel", soltar);
+  b.addEventListener("pointerleave", soltar);
 }
 
 /* ══════════════════════════════════════════════════════════════════════════════
