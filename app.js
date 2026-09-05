@@ -9120,6 +9120,58 @@ async function ejecRefrescar(){
    AHORA: los últimos 7 días, agrupados por día y con HOY y AYER nombrados; entradas y
    salidas con sus precios, los rechazos con su motivo, las señales que murieron sin
    llegarle y los ratos que estuvo ciego (que también son parte de la verdad). */
+/* ══════════════════════════════════════════════════════════════════════════════
+   🗄️ EL EXPEDIENTE LARGO DEL EJECUTOR — v7.36
+   ═════════════════════════════════════════════════════════════════════════════
+   Rey (05-09): "Roberto no tiene vista en Apex, cuando eso era una regla principal: ojos y
+   manos en todo mi sistema… Roberto es mi gerente, mi manager".
+   El bloque de arriba le da los últimos 7 días, que es el detalle. Pero el ARCHIVO de
+   verdad —el que guarda cada operación del Ejecutor desde el primer día, con su entrada,
+   su salida, su R y su motivo— vive en el teléfono de Rey y NO le llegaba. O sea que
+   Roberto no podía juzgar semanas ni meses: justo lo que se le pide a un gerente.
+   Aquí va el RESUMEN de ese archivo: cuántas van, cómo cerraron, cuánto R, y cómo le está
+   yendo a cada regla de salida. Resumen y no lista: el detalle está arriba, y cada línea
+   de más se paga en cada pregunta que Rey le hace. */
+function iaEjecutorArchivo(){
+  try{
+    const a = load(K.ejec, {trades:{}});
+    const t = Object.values(a.trades||{}).filter(x => x && x.tsOut);
+    if(!t.length) return "";
+    t.sort((x,y)=> (x.tsOut||0) - (y.tsOut||0));
+    const n = t.length;
+    const gana = t.filter(x=>Number(x.pl)>0).length;
+    const rTot = t.reduce((c,x)=> c + (Number(x.r)||0), 0);
+    const plTot = t.reduce((c,x)=> c + (Number(x.pl)||0), 0);
+    const f = (ts)=>{ try{ return new Date(ts).toLocaleDateString("es",{day:"2-digit",month:"2-digit",year:"2-digit"}); }catch(_){ return "?"; } };
+    /* por qué cerró cada una: es lo que dice si la regla de salida sirve o no */
+    const porMotivo = {};
+    for(const x of t){
+      const m = String(x.motivo||"?").replace(/\s+/g," ").trim().slice(0,34);
+      const c = porMotivo[m] = porMotivo[m] || { n:0, r:0 };
+      c.n++; c.r += (Number(x.r)||0);
+    }
+    const motivos = Object.keys(porMotivo).sort((p,q)=>porMotivo[q].n-porMotivo[p].n).slice(0,6)
+      .map(m => "    · " + m + " → " + porMotivo[m].n + " op(s), " + (porMotivo[m].r>=0?"+":"") + porMotivo[m].r.toFixed(2) + "R en total").join("\n");
+    /* y por par, que es donde Rey decide en cuál confiar */
+    const porPar = {};
+    for(const x of t){
+      const p = String(x.sym||"?");
+      const c = porPar[p] = porPar[p] || { n:0, r:0, g:0 };
+      c.n++; c.r += (Number(x.r)||0); if(Number(x.pl)>0) c.g++;
+    }
+    const pares = Object.keys(porPar).map(p => "    · " + p + ": " + porPar[p].n + " op(s), " +
+      Math.round(porPar[p].g*100/porPar[p].n) + "% ganadoras, " + (porPar[p].r>=0?"+":"") + porPar[p].r.toFixed(2) + "R").join("\n");
+
+    return "\n[🗄️ EXPEDIENTE COMPLETO DEL EJECUTOR — desde el primer día, guardado en el teléfono de Rey]\n" +
+      "  " + n + " operación(es) cerradas entre el " + f(t[0].tsOut) + " y el " + f(t[n-1].tsOut) + " · " +
+      Math.round(gana*100/n) + "% ganadoras · " + (rTot>=0?"+":"") + rTot.toFixed(2) + "R acumulados · " +
+      (plTot>=0?"+$":"-$") + Math.abs(plTot).toFixed(2) + "\n" +
+      "  POR QUÉ CERRÓ CADA UNA (aquí se ve si la regla de salida sirve):\n" + motivos + "\n" +
+      "  POR PAR:\n" + pares + "\n" +
+      "  ⚠️ Este es el historial LARGO y es el que vale para juzgar si el sistema funciona. El bloque de los últimos 7 días trae el detalle reciente. Si Rey te pregunta cómo va el Ejecutor, cuántas lleva o si su método funciona, contesta con ESTOS números — no digas nunca que no tienes historial.\n";
+  }catch(_){ return ""; }
+}
+
 function iaEjecutorHoy(){
   try{
     const d = EJEC_CACHE.d;
@@ -9246,8 +9298,54 @@ function robCaraRato(emo,ms,txt){
   _robTimer=setTimeout(()=>{ robCara("presenta","a tus órdenes"); }, ms||4000);
 }
 /* Adivina el gesto por lo que Roberto acaba de decir (roberto.js trae las pistas) */
-function robReacciona(texto){
-  try{ if(typeof Roberto!=="undefined") robCara(Roberto.gestoDe(texto)); }catch(_){}
+/* ══════════════════════════════════════════════════════════════════════════════
+   🎭 ROBERTO ELIGE SU PROPIA CARA — v7.36
+   ═════════════════════════════════════════════════════════════════════════════
+   Rey (05-09): "Roberto dice una cosa y su cuerpo otra, no hay coordinación, no sabe de su
+   cuerpo, no lo sabe manejar… ¿no se supone que Roberto y su cuerpo son uno solo?".
+   TENÍA RAZÓN Y ERA DE RAÍZ: Roberto escribía su respuesta y DESPUÉS un código mío la leía
+   buscando palabras clave (Roberto.gestoDe) para adivinar qué cara ponerle. O sea que su
+   cuerpo lo manejaba yo desde fuera, a ciegas: él ni sabía que lo tenía. Si decía algo que
+   mis palabras clave no reconocían, salía la cara por defecto — y de ahí que dijera una
+   cosa y su cuerpo hiciera otra.
+   AHORA LO MANDA ÉL. Su cerebro (en la nube) sabe que tiene 36 gestos y termina cada
+   respuesta eligiendo el suyo, igual que ya elige cuándo usar sus manos. Aquí solo se lee
+   y se retira del texto ANTES de que nada más lo toque.
+   ⚠️ POR QUÉ SE LEE EN UN SOLO SITIO: su respuesta va a seis destinos (el chat, la voz, la
+   nubecita, el cuerpo flotante, el aviso del teléfono y su memoria). Si se limpiara en cada
+   uno, bastaría olvidar uno para que a Rey le apareciera la etiqueta escrita en la cara.
+   Se limpia aquí, en la puerta, y todos los demás reciben el texto ya limpio.
+   Y si algún día no viene marca —un modelo distinto, una respuesta cortada— se sigue
+   adivinando como antes: nunca se queda sin cara. */
+const ROB_GESTOS_OK = ["saluda","presenta","ensena","analiza","audita","idea","apunta","tiempo",
+  "tetoca","aprueba","rechaza","alerta","frena","celebra","felicita","preocupa","serio","vigila",
+  "shhh","espera","animo","carcajada","guino","burla","lengua","chocalas","carino","orgulloso",
+  "presumido","sorprende","confundido","apenado","ojala","siesta","huele","olfatea"];
+
+/* Saca la marca de gesto del texto de Roberto y devuelve { texto, gesto }.
+   La marca va al final y con esta forma: [[gesto:analiza]] */
+function robLeerGesto(txt){
+  const bruto = String(txt == null ? "" : txt);
+  let gesto = "";
+  const limpio = bruto.replace(/\[\[\s*gesto\s*:\s*([a-zA-Z]+)\s*\]\]/g, function(_, g){
+    const q = String(g||"").toLowerCase();
+    if(ROB_GESTOS_OK.indexOf(q) >= 0) gesto = q;
+    return "";
+  }).replace(/[ \t]+\n/g, "\n").trim();
+  return { texto: limpio, gesto: gesto };
+}
+
+function robReacciona(texto, gesto){
+  try{
+    if(typeof Roberto === "undefined") return;
+    const g = (gesto && ROB_GESTOS_OK.indexOf(gesto) >= 0) ? gesto : Roberto.gestoDe(texto);
+    robCara(g);
+    /* y el cuerpo de fuera se pone lo MISMO: es el mismo Roberto (ley de Rey, 02-09) */
+    try{
+      const P = vigiaPuente();
+      if(P && P.robertoGesto) P.robertoGesto({ gesto: g });
+    }catch(_){}
+  }catch(_){}
 }
 function pintarIAChat(){
   const m=$("#iaMsgs"); if(!m) return;
@@ -9258,7 +9356,7 @@ function pintarIAChat(){
     if(IA.busy) robCara("analiza","pensando…");
     else{
       const ult=[...(c.msgs||[])].reverse().find(x=>x.role==="assistant");
-      if(ult && ult.content) robReacciona(ult.content);
+      if(ult && ult.content) robReacciona(ult.content, IA.gestoSuyo);
     }
   }catch(_){}
   if(!c.msgs.length && !IA.busy){
@@ -10830,7 +10928,12 @@ async function iaBgResuelto(jobId, d){
     return;
   }
   IA.busy=false;
-  const txt=(d.text||"").trim();
+  /* 🎭 v7.36 — AQUÍ, Y SOLO AQUÍ, se le quita la marca del gesto que él eligió. A partir de
+     esta línea el texto ya está limpio para el chat, la voz, la nubecita, el cuerpo de
+     fuera, el aviso del teléfono y su memoria. */
+  const _rg = robLeerGesto(d.text || "");
+  const txt = _rg.texto;
+  IA.gestoSuyo = _rg.gesto || "";
   /* 🔒 v6.28 cinturón extra: si ESTE texto ya está pintado en la conversación (trabajos de
      antes de estrenar el candado), no se repite. */
   if(txt && c.msgs.some(m=>m.role==="assistant" && m.content===txt)){ iaGuardarConvs(); pintarIAChat(); return; }
@@ -10843,6 +10946,7 @@ async function iaBgResuelto(jobId, d){
      que es el momento en que Rey le está mirando esperando. Un Roberto que contesta con la
      boca cerrada no parece que conteste él. */
   try{ if(txt) robBocaRato(txt); }catch(_){}
+  try{ robReacciona(txt, IA.gestoSuyo); }catch(_){}
   if(IA.voz.on || IA.autoHablarUna){ const ult=c.msgs[c.msgs.length-1]; if(ult && ult.role==="assistant" && ult.content && !/^⚠️|^💳|^🚫|^✅/.test(ult.content)) iaHablar(ult.content, c.msgs.length-1); IA.autoHablarUna=false; }
   iaRespuestaFuera(txt);        /* 🎤 v7.24: si preguntó desde fuera, a su nubecita */
 }
@@ -10995,7 +11099,7 @@ async function iaEnviar(textoForzado, promptExtra){
      viaja en su bloque ESTABLE (idéntico byte a byte al que luego va en el historial) con la
      marca de caché puesta AQUÍ MISMO, y el contexto vivo va DETRÁS de la marca, en su propio
      bloque, a precio normal (1×). El worker v5.68 respeta esta marca y no la pisa. */
-  const inj="=== CONTEXTO VIVO DE LA APP (datos de AHORA MISMO; el mensaje de Rey es el bloque anterior) ===\n"+iaReloj()+"\n"+grafTxt+calTxt+iaContexto()+"\n"+iaEstrategiaDef()+"\n"+guardianRiesgo()+"\n"+iaPlan()+"\n"+iaAciertos()+"\n"+(estadoRecuperacionFreno().block||"")+iaFugas()+"\n"+iaRacha()+"\n"+iaPatrones()+"\n"+iaDatosSueltos()+"\n"+iaHitos()+"\n"+iaChats()+"\n"+iaPendientes()+"\n"+iaPlanSemanal()+"\n"+iaAvisos()+"\n"+iaEntradasAbiertas()+iaEjecutorHoy()+marco+"\n=== FIN DEL CONTEXTO — responde al mensaje de Rey del bloque anterior ===";
+  const inj="=== CONTEXTO VIVO DE LA APP (datos de AHORA MISMO; el mensaje de Rey es el bloque anterior) ===\n"+iaReloj()+"\n"+grafTxt+calTxt+iaContexto()+"\n"+iaEstrategiaDef()+"\n"+guardianRiesgo()+"\n"+iaPlan()+"\n"+iaAciertos()+"\n"+(estadoRecuperacionFreno().block||"")+iaFugas()+"\n"+iaRacha()+"\n"+iaPatrones()+"\n"+iaDatosSueltos()+"\n"+iaHitos()+"\n"+iaChats()+"\n"+iaPendientes()+"\n"+iaPlanSemanal()+"\n"+iaAvisos()+"\n"+iaEntradasAbiertas()+iaEjecutorArchivo()+iaEjecutorHoy()+marco+"\n=== FIN DEL CONTEXTO — responde al mensaje de Rey del bloque anterior ===";
   const last=msgs[msgs.length-1];
   const textoMsg=c.msgs[c.msgs.length-1].content;   /* EXACTAMENTE lo guardado (texto + nota del doc) */
   let bloquesMsg = Array.isArray(last.content) ? last.content.filter(b=>b.type==="image") : [];   /* la foto va delante */

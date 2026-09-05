@@ -1,65 +1,37 @@
-APEX v7.35 — TRADING DESK
+APEX v7.36 — TRADING DESK
 =========================
 
-Tenías razón en todo lo que dijiste esta mañana. Fui a mirarlo y aquí está lo que había.
+Primero lo primero. Los tres puntos que abrían la lista, hechos y comprobados.
 
-👀 POR QUÉ ROBERTO NO SABÍA LO DE AYER — y no era que le faltara el dato
-El dato ESTABA entero en la nube: la entrada y la salida del viernes con sus precios, 6
-rechazos y 4 señales que murieron sin llegarle. Lo que le pasaba a Roberto es que el bloque
-de información que recibe se llama literalmente "EL EJECUTOR HOY" y filtraba solo el día de
-hoy. Tú preguntaste un sábado por el viernes: para él, ayer no existía. Ni podía sospecharlo.
-Ahora recibe los ÚLTIMOS 7 DÍAS, día por día, con HOY y AYER nombrados: cada entrada con su
-precio, cada salida con su motivo y su resultado, los rechazos, las señales que murieron y
-hasta los ratos en que estuvo ciego. Y lleva escrito que mire ahí ANTES de decirte que no
-tiene un dato.
+🎭 1 · ROBERTO YA MANEJA SU CUERPO — era el hueco de raíz
+Hasta hoy Roberto escribía su respuesta y DESPUÉS un código mío la leía buscando palabras
+clave para adivinarle la cara. Su cuerpo lo manejaba yo desde fuera, a ciegas: él ni sabía
+que lo tenía. Por eso decía una cosa y su cuerpo hacía otra.
+Ahora su cerebro sabe que tiene 36 gestos y elige el suyo con cada respuesta, igual que ya
+elige cuándo usar sus manos. Le enseñé cuál va con qué: frena cuando te frena, celebra
+cuando ganaste, vigila cuando cuida una posición, serio cuando habla de dinero.
+La etiqueta con la que lo manda se lee y se borra en UN solo sitio, antes de que nada más
+la toque: tú nunca la vas a ver escrita. Y si algún día no la pusiera, se sigue adivinando
+como antes — nunca se queda sin cara.
 
-🤖 Y BUSCANDO ESO ENCONTRÉ ALGO PEOR
-El Ejecutor llevaba corriendo desde el viernes a las 7:34 de la mañana, pero el fichero se
-arregló a las 19:59. Estaba ejecutando el código VIEJO en memoria. Por eso el viernes:
-  · salió por "extremo H1" — la regla vieja, la que te sacaba demasiado pronto
-  · y entró DOS veces en EURUSD, cuando tu regla de un gatillo por par ya estaba escrita
-Lo reinicié a las 05:41 con el mercado cerrado y sin nada abierto. Ya corre tu regla.
-⚠️ El aviso "🤖 Ejecutor conectado" que te llegó NO era un aviso atrasado: salió a las
-05:41:23 y lo generé yo con ese reinicio. Ese no era un fallo.
+🗄️ 2 · ROBERTO VE TU EXPEDIENTE COMPLETO DEL EJECUTOR
+La ventana de 7 días que te puse ayer era el detalle reciente. Pero el ARCHIVO de verdad
+—cada operación desde el primer día, con su entrada, su salida, su R y su motivo— vive en
+tu teléfono y no le llegaba. Sin eso no podía juzgar semanas ni meses, que es justo lo que
+se le pide a un gerente.
+Ahora recibe el resumen entero: cuántas van, cuántas ganaron, R acumulado, y —esto es lo
+importante— POR QUÉ cerró cada una, agrupado. Ahí se ve de un vistazo si la regla de salida
+te sirve o te está cortando los trades. Y por par, que es donde decides en cuál confiar.
 
-🤔 EL CUERPO Y ROBERTO, POR FIN COORDINADOS
-El culpable de que el cuerpo bailara mientras él te respondía tiene nombre: cada 45 segundos
-un vigilante le repintaba la cara con la killzone de turno — es el "Concéntrate ahora" que
-sale en tu captura — y borraba el "pensando". Ahora:
-  · Le hablas y se queda con cara de estar pensando, quieto en eso, SIN bailar y sin soltar
-    frases, hasta que la respuesta llega. Dentro de Apex y fuera, el mismo Roberto.
-  · Cuando contesta, MUEVE LA BOCA. Antes solo la movía con los avisos, no con su respuesta.
-Así ves que está trabajando sin tener que entrar al chat, que es justo lo que pediste.
+⚠️ 3 · EL EJECUTOR AVISA SI ESTÁ CORRIENDO CON CÓDIGO VIEJO
+Lo de esta madrugada no puede repetirse. Python lee su fichero UNA vez al arrancar: mientras
+el proceso viva, un arreglo en el disco no existe para él. Así estuvo el jueves y el viernes
+—saliendo por la regla vieja y entrando dos veces en el mismo par— sin que nadie lo dijera.
+Ahora se mira solo cada 5 minutos: si le cambiaron el fichero, te avisa UNA vez y sigue
+trabajando (callarse sería peor). Ya está reiniciado y corriendo la v2.7.
 
-💬 LAS FRASES DE CRECIMIENTO: por eso no habías oído ninguna
-De las once franjas de tu día, solo CUATRO tenían frases de crecimiento: fin de semana,
-madrugada, tarde y noche. Las que cubren tu jornada —espera, Londres, Nueva York, cierre,
-antes de la ventana— tenían CERO. No fallaba la voz: no había ninguna que decir.
-Ahora hay 39 repartidas por todo el día. Dos momentos siguen sin ellas a propósito: con la
-killzone abierta y con una posición tuya viva. Ahí necesitas foco, no filosofía.
-
-🧹 Y UNA TRAMPA DE FONDO, que es la que hace que los problemas vuelvan
-La tabla de frases tenía cuatro franjas definidas DOS veces. En programación gana la última,
-así que las primeras eran código muerto que parecía vivo. Lo comprobé en carne propia: al
-meter tus frases nuevas fueron a parar a la copia muerta — el arreglo se aplicó, todo
-compiló, y en tu teléfono no habría pasado NADA. Quitadas las cuatro, comprobando que lo que
-Roberto dice y hace no cambia ni una coma.
-
-
-📓 Y LA OTRA MITAD DE AQUELLA RESPUESTA
-Roberto se apoyó en tu Diario para negarlo: "ni en el Diario, sigue en cero trades
-registrados". Son DOS LIBROS distintos: el Diario es donde TÚ apuntas a mano; lo que hace
-el Ejecutor va en su propio bloque. Ahora, cuando tu Diario está vacío, a Roberto le llega
-escrito que eso NO significa que no se haya operado, y que no use ese dato para negarte
-nada.
-
-🔇 LO QUE SE HABLA Y LO QUE NO
-Lo comprobé camino por camino: solo hay DOS sitios que producen voz — los avisos/alarmas y
-las frases de crecimiento. Las frases genéricas ("aquí estaré el lunes, fresquito") salen a
-la nube MUDAS, y así se queda. Ahora hay un banco que lo vigila: si algún día alguien hace
-hablar una genérica, la regresión se planta antes de que llegue a tu teléfono.
-
-Regresión 143/143. Sube el zip e instala la APK v7.35. El worker no se toca.
+Regresión 144/144. Sube el zip e instala la APK v7.36. El worker no se toca — el cerebro de
+Roberto ya está actualizado en la nube.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
