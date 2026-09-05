@@ -47,6 +47,11 @@ de leyes" o "¿esto es folclore?" — son sus frases gatillo.
 Un fallo mío que cazó la prueba: la vía que usa cuando le adjuntas capturas o material NO
 recibía las leyes. Arreglado: ahora van por las dos.
 
+👋 Y un último detalle que salió al comprobar que nada se hubiera roto: «buenos días» le
+metía una ley (la de los hábitos, por la palabra «días») — y Roberto te saluda así cada
+mañana. Eran tokens pagados por nada y una lección de hábitos como respuesta a un saludo.
+Arreglado: los saludos no gastan ley; «buenos días, voy a subir el lote» sí la trae entera.
+
 Regresión 146/146. Sube el zip e instala la APK v7.39. El worker no se toca, y el cerebro ya
 está actualizado en la nube.
 

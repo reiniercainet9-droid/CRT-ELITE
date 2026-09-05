@@ -9282,6 +9282,19 @@ async function ejecRefrescar(){
 function iaLeyes(mensaje){
   try{
     if(typeof contextoLeyes !== "function") return "";
+    /* 👋 UN SALUDO NO LLEVA LEY. Cazado al comprobar que nada se hubiera roto: "buenos días"
+       hacía entrar la ley 64 (formación de hábitos) por la palabra "días" — y Roberto le da
+       los buenos días a Rey CADA MAÑANA. Eran ~426 tokens pagados por nada y, peor, una
+       lección de hábitos como respuesta a un saludo.
+       La tabla del documento solo probaba "hola". Aquí se cubre la cortesía entera, y solo
+       cuando el mensaje es SOLO eso: si dice "buenos días, voy a subir el lote", sigue
+       entrando lo que tiene que entrar. */
+    const limpio = String(mensaje || "").toLowerCase()
+      .replace(/[¿?¡!.,;:()"'\u00b7\u2014-]/g, " ").replace(/\s+/g, " ").trim();
+    if(!limpio) return "";
+    if(limpio.split(" ").length <= 5 &&
+       /^(hola|holi|buenas|buenos dias|buenos días|buenas tardes|buenas noches|buen dia|buen día|hey|ey|que tal|qué tal|como estas|cómo estás|como andas|cómo andas|gracias|muchas gracias|ok|vale|listo|dale|perfecto|adios|adiós|hasta luego|nos vemos|chao|saludos|roberto)( roberto| rey| amigo| jefe| socio)*$/.test(limpio))
+      return "";
     /* el estado de verdad, para que las leyes se elijan por los hechos y no por las palabras */
     const trozos = [];
     try{
