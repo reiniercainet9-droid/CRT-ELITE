@@ -1,49 +1,57 @@
-APEX v7.52 — TRADING DESK
+APEX v7.56 — TRADING DESK
 =========================
 
-🌙 AHORA SÍ SÉ POR QUÉ SE ABRÍA APEX, Y NO ERA LO QUE YO CREÍA
+🤟 v7.56 — ROBERTO HABLA CON LAS MANOS (y v7.55: la ropa le queda puesta, no encima)
 
-Tu parte del oído de las 20:50 traía por fin el dato que faltaba:
+Rey (06-09): "ahora que le pusiste sus dedos, Roberto también me hace señas y gestos con
+ellos: me señala, me apunta con el pulgar bien definido, me pone el pulgar para arriba cuando
+todo está bien o yo voy bien, o el pulgar para abajo cuando estoy haciendo las cosas mal…
+¿agregarle más señales y gestos con las manos y dedos según corresponda?" Y después:
+"Roberto debe usarlas según corresponda en su momento, y saber todo de su cuerpo y aprender a
+usarlo cada día más".
 
-   "apexPantallaMuerta": true
+LO QUE YA HACÍA (y se le confirmó, en vez de inventarle novedades): catorce señas, incluidas
+las tres que él nombró — 👍 pulgar arriba (aprueba), 👎 pulgar abajo (rechaza) y 👉 apuntarle
+a ÉL atravesando la pantalla (tetoca).
 
-Traducido: **Android estaba DESTRUYENDO la pantalla de Apex**, aunque el proceso siguiera
-vivo. El vigía protege el proceso, no la pantalla. Por eso no bastó con que la ventana no se
-durmiera (7.46) ni con que el botón atrás no la matara (7.47): cuando tú le hablabas desde
-fuera, muchas veces no había NADIE dentro que pensara. Y entonces sí o sí había que abrir
-Apex… y encima se quedaba delante, obligándote al chat. Exactamente lo que me dijiste.
+SEIS SEÑAS NUEVAS, elegidas porque DICEN algo en su operativa, no por adornar:
+· 👌 ok — el círculo de pulgar e índice: "ejecución IMPECABLE". No es "ganaste": es "lo
+  hiciste bien". Se lo gana el plan cumplido al 100%, no una operación que salió de suerte.
+· 🤏 poquito — el pellizco: "te faltó ESTO para el TP", "un pelín más de paciencia".
+· 🫱 asiAsi — la mano meneándose: "ni bien ni mal". Antes solo podía aprobar o rechazar, y
+  hay muchas operaciones que no son ninguna de las dos.
+· 🤲 explica — las dos palmas abiertas: "¿y bien? cuéntame", para entender antes de juzgar.
+· 👀 teVigilo — dos dedos a sus ojos y luego a él: sin regañar, pero mirando.
+· 👇 senalaAbajo — el nivel está POR DEBAJO del precio. Con "ensena" (que apunta al frente),
+  ya puede decirle DÓNDE.
 
-QUÉ CAMBIA, Y LOS DOS ESTÁN MEDIDOS CON EL CABLE
+Y LAS TRES CAPAS, porque con una sola no sirve de nada:
+  1) que la seña EXISTA dibujada — y que SE LEA: la primera versión se renderizó y se miró, y
+     solo UNA de las seis se leía ("asiAsi" parecía una barra blanca, "poquito" era diminuto).
+     A tamaño de burbuja, una mano sin hueco entre los dedos es una mancha. Se rehicieron.
+  2) que SALGA SOLA cuando toca — cada una con su disparador por lo que se está diciendo.
+     Probado en su teléfono con ocho frases: las ocho sacaron su seña.
+  3) que ÉL LO SEPA — su manual le nombra las 21 señas de manos con la regla dura: "úsalas
+     cuando toquen, no de adorno; no le des el pulgar arriba a algo que solo salió bien de
+     suerte". Un gesto que no sabe que tiene es un gesto que no usa nunca.
 
-1️⃣ SE DESPIERTA AL EMPEZAR A HABLAR, NO AL TERMINAR
-   En cuanto pones el dedo en Roberto para dictarle, si no hay página se manda a levantar por
-   detrás. Mientras dices tus dos o tres frases, Apex se pone en pie. Cuando sueltas el dedo
-   ya hay quien piense: tu respuesta y tu tarjeta salen en el cuerpo de Roberto.
+📈 Y EL ENCARGO QUE PIDIÓ REY, escrito como misión suya: fijarse en las veces que le faltó una
+seña para decir exactamente lo que quería, o en las que usó una que no encajaba del todo, y
+proponérsela con su nombre, qué expresaría y cuándo. Su cuerpo no es un catálogo cerrado.
 
-2️⃣ Y SE LEVANTA EN SILENCIO: SE APARTA SOLA
-   Apex ya no se queda delante. Se levanta y en menos de un segundo se va al fondo, tú te
-   quedas donde estabas. Lo probé con el cable estando la página muerta de verdad: quedó viva
-   y el foco se quedó en la app que había delante, no en Apex.
+TOTAL: 52 gestos · 56 posturas dibujadas · 21 señas con las manos.
 
-Puede que veas un parpadeo cortito de Apex al empezar a dictar. Es eso: levantándose. Es el
-precio de que Android te mate la pantalla; lo he dejado en menos de un segundo.
-
-LO QUE YA ESTABA COMPROBADO Y SIGUE (de la entrega anterior)
-   · La tarjeta se queda hasta que tú decidas: nada la cierra por tiempo.
-   · Aprobar desde fuera FUNCIONA: probé el "✓ Sí" del cuerpo y la orden se ejecutó.
-   · El vistazo (avisos, riesgo, Ejecutor, última señal) y la insignia, con tus datos reales.
-
-PARA INSTALAR
-   · APEX-app-v7.52.zip → 📤 PARA SUBIR HOY
-   · Apex-Roberto-v7.52.apk → YA ESTÁ INSTALADA en tu teléfono (por cable y comprobada ahí).
-   · worker-elitepro-v5.126.js → este lo subes tú.
-
-Regresión 156/156 · revisión en tu teléfono 44/44 · respaldo hecho.
-
-TU PRUEBA: quédate en TradingView, mantén a Roberto, dile "prográmame un aviso a las X que
-diga Y" y suelta. Debe salirte la tarjeta EN SU CUERPO, sin que Apex te tape nada. Si ves el
-parpadeo del principio, es normal. Si algo falla, dímelo y miro el parte: ahora dice si la
-pantalla estaba muerta, así que ya no hay que adivinar.
+────────────────────────────────────────────────────────────────────────────
+👕 Y EN LA v7.55, del mismo día: LA ROPA LE QUEDA PUESTA, NO ENCIMA.
+Rey vio "bordes blancos" en la foto de su pantalla de inicio. Eran tres capas y solo la
+primera se veía: (1) las bandas del chándal iban pegadas al canto y se leían como contorno;
+(2) debajo había algo peor y en LAS 27 MUDAS — la silueta era un trapecio de esquinas rectas
+más ancho que el lápiz, y en los hombros sobresalía casi 5 px por lado, como una caja pegada
+encima; (3) y al comprobar el arreglo en su teléfono se vio que el TRAJE y la SUDADERA se
+habían quedado fuera, porque las cinco mudas originales están escritas a mano y no heredaron
+la silueta nueva. Las 27 medidas una a una: ninguna sobresale.
+Lo que NO era: su cabeza rectangular. Se probó redondeársela y no se ve — la virola le tapa
+las esquinas. Se revirtió.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

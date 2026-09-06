@@ -224,6 +224,26 @@
   /* ── las 33 poses, cada una con brazos + manos propios (ninguna repetida) ── */
   function brazo(d) { return '<path d="' + d + '" stroke="var(--rj)" stroke-width="16" fill="none" stroke-linecap="round"/>'; }
   function mano(id, t) { return '<use href="#' + id + '" transform="' + t + '"/>'; }
+  /* 📱 EL MÓVIL AGARRADO — el teléfono más los cuatro dedos cruzando el canto (con hueco
+     entre ellos, que es lo que los hace leerse como dedos) y el pulgar en la pantalla.
+     Se dibuja en su propio sistema de coordenadas y se coloca con un transform, así el
+     mismo dibujo sirve para cualquier gesto que lo use. */
+  function movilEnMano(t) {
+    return '<g transform="' + t + '">' +
+      '<path d="M232 274 Q226 274 226 281 Q226 288 232 288 L242 288 L242 274 Z" fill="var(--rgu2)" opacity=".35"/>' +
+      '<rect x="238" y="264" width="36" height="62" rx="7" fill="#15161c" stroke="var(--rgu2)" stroke-width="2"/>' +
+      '<rect x="243" y="272" width="26" height="46" rx="3" fill="var(--rteal)" class="rob-pantalla"/>' +
+      '<path d="M246 308 L252 296 L258 302 L266 284" stroke="#0d3a33" stroke-width="2.6" fill="none" stroke-linecap="round"/>' +
+      '<circle cx="256" cy="322" r="2.4" fill="var(--rgu2)"/>' +
+      '<path d="M231 270 L250 270 Q255 270 255 275.5 Q255 281 250 281 L231 281 Q226 281 226 275.5 Q226 270 231 270 Z" fill="var(--rgu)" stroke="var(--rgu2)" stroke-width="2.2"/>' +
+      '<path d="M230 284 L251 284 Q256 284 256 289.5 Q256 295 251 295 L230 295 Q225 295 225 289.5 Q225 284 230 284 Z" fill="var(--rgu)" stroke="var(--rgu2)" stroke-width="2.2"/>' +
+      '<path d="M231 298 L249 298 Q254 298 254 303 Q254 308 249 308 L231 308 Q226 308 226 303 Q226 298 231 298 Z" fill="var(--rgu)" stroke="var(--rgu2)" stroke-width="2.2"/>' +
+      '<path d="M233 311 L245 311 Q249 311 249 315.5 Q249 320 245 320 L233 320 Q229 320 229 315.5 Q229 311 233 311 Z" fill="var(--rgu)" stroke="var(--rgu2)" stroke-width="2.2"/>' +
+      '<path d="M240 272.5 L240 278.5 M239 286.5 L239 292.5 M240 300.5 L240 305.5" stroke="var(--rgu2)" stroke-width="1.6" opacity=".65" stroke-linecap="round"/>' +
+      '<path d="M247 328 Q243 315 252 311 Q262 307 266 316 Q269 325 261 329 Q253 333 247 328 Z" fill="var(--rgu)" stroke="var(--rgu2)" stroke-width="2.2"/>' +
+      '<path d="M254 318 Q259 315 262 319" stroke="var(--rgu2)" stroke-width="1.5" fill="none" opacity=".7"/>' +
+      '</g>';
+  }
 
   /* ══ 👔 EL ARMARIO (v6.90, pedido de Rey) ═══════════════════════════════════════════
      "que use la corbata mientras está en el horario del mercado, Wall Street, y fuera de
@@ -232,13 +252,116 @@
      del dibujo. Ahora es una prenda más del armario: "wallstreet" es EXACTAMENTE el traje
      de siempre, sacado tal cual, así que por defecto no cambia nada.
      Se enseña la que toque con data-ropa, igual que las poses con data-pose. */
+  /* ══ 🎨 CÓMO SE DIBUJA UNA PRENDA (v7.54) ═════════════════════════════════════════
+     Rey (06-09) pidió muchísima más ropa y colores. Dibujar veinte prendas a mano habría
+     sido veinte sitios donde equivocarse y veinte que retocar cada vez que cambie algo.
+     Así que las prendas se CONSTRUYEN: una silueta común y unos pocos moldes (traje,
+     sudadera, bata, polo, chándal, camisa, pijama), y cada muda es ese molde con SUS
+     colores. Añadir una camisa nueva es una línea, no un dibujo.
+     🎨 LA REGLA DEL COLOR, que es suya: Roberto es AMARILLO. Así que la ropa va en tonos
+     que contrastan con él —negros, azules, granates, verdes profundos, grises— y los
+     detalles claros (camisa, cordones, ribetes) le separan la ropa del cuerpo. Nada de
+     amarillos ni naranjas en la ropa: se le fundirían con la madera del lápiz. */
+  /* 👕 v7.55 — LA SILUETA DE TODA SU ROPA.
+     El lápiz va de 144,6 a 215,4 a la altura del pecho. La ropa lleva un vuelo de 2 px por
+     lado (que es lo que hace que parezca ropa y no pintura sobre el cuerpo) y los HOMBROS
+     REDONDEADOS, para que abrace su cabeza rectangular en vez de montarse encima como una
+     caja. Antes iba de 140 a 220 con esquinas rectas: sobresalía casi 5 px por lado. */
+  var _SIL = 'M151 266 H209 Q217 266 217.4 274 L215 376 H145 L142.6 274 Q143 266 151 266 Z';
+  function _cuerpo(tela) { return '<path d="' + _SIL + '" fill="' + tela + '"/>'; }
+
+  /* 👔 TRAJE — chaqueta, solapas, camisa y corbata. El molde de su ropa de trabajo. */
+  function _traje(o) {
+    return _cuerpo(o.tela) +
+      '<path d="M160 270 L200 270 L192 306 L180 322 L168 306 Z" fill="' + o.camisa + '"/>' +
+      '<path d="M147 269 L166 269 L152 314 L144.5 306 Z" fill="' + o.tela2 + '"/>' +
+      '<path d="M213 269 L194 269 L208 314 L215.5 306 Z" fill="' + o.tela2 + '"/>' +
+      '<path d="M166 270 L180 292 L163 288 Z" fill="' + o.camisa + '"/>' +
+      '<path d="M194 270 L180 292 L197 288 Z" fill="' + o.camisa + '"/>' +
+      '<path d="M172 286 L188 286 L191 300 L180 306 L169 300 Z" fill="' + o.corb + '" stroke="var(--rtz)" stroke-width="2.6" stroke-linejoin="round"/>' +
+      '<path d="M172 286 L180 292 L188 286" fill="none" stroke="' + o.corb2 + '" stroke-width="2"/>' +
+      '<path class="rob-corbata" d="M180 306 L193 314 L186 352 L180 360 L174 352 L167 314 Z" fill="' + o.corb + '" stroke="var(--rtz)" stroke-width="2.6" stroke-linejoin="round"/>' +
+      (o.raya ? '<path d="M172 322 L188 330 M170 336 L186 344" stroke="' + o.corb2 + '" stroke-width="3.4" opacity=".85"/>' : '') +
+      '<circle cx="180" cy="368" r="3.4" fill="' + o.corb + '"/>' +
+      (o.panuelo ? '<path d="M199 316 L209 316 L204 308 Z" fill="' + o.panuelo + '" opacity=".92"/>' : '');
+  }
+
+  /* 👕 SUDADERA con capucha y cordones. Su ropa de la tarde. */
+  function _sudadera(o) {
+    return _cuerpo(o.tela) +
+      '<path d="M143 274 L217 274 L215 292 L145 292 Z" fill="' + o.tela2 + '"/>' +
+      '<path d="M158 266 Q180 298 202 266 Q180 256 158 266 Z" fill="' + o.tela2 + '"/>' +
+      '<path class="rob-cordon" d="M172 286 L172 322" stroke="' + o.cordon + '" stroke-width="4" stroke-linecap="round"/>' +
+      '<path class="rob-cordon" d="M188 286 L188 318" stroke="' + o.cordon + '" stroke-width="4" stroke-linecap="round"/>' +
+      '<circle cx="172" cy="324" r="3.2" fill="' + o.cordon + '"/><circle cx="188" cy="320" r="3.2" fill="' + o.cordon + '"/>' +
+      '<path d="M152 330 Q180 342 208 330 L208 348 Q180 358 152 348 Z" fill="' + o.tela2 + '" opacity=".7"/>' +
+      (o.pecho ? '<text x="180" y="318" font-size="26" text-anchor="middle">' + o.pecho + '</text>' : '');
+  }
+
+  /* 🥼 BATA de casa con su cinturón. Su ropa de noche. */
+  function _bata(o) {
+    return _cuerpo(o.tela) +
+      '<path d="M162 270 L180 316 L198 270 L212 270 L192 330 L168 330 L148 270 Z" fill="' + o.tela2 + '"/>' +
+      '<path d="M180 292 L180 330" stroke="' + o.tela2 + '" stroke-width="2.4" opacity=".6"/>' +
+      '<rect x="146" y="330" width="68" height="13" rx="5" fill="' + o.tela2 + '"/>' +
+      '<path class="rob-cinto" d="M186 336 Q206 344 200 362" stroke="' + o.tela2 + '" stroke-width="6" fill="none" stroke-linecap="round"/>';
+  }
+
+  /* 👟 POLO con su cuello y sus dos botones. */
+  function _polo(o) {
+    return _cuerpo(o.tela) +
+      '<path d="M162 270 L180 292 L198 270 L206 274 L192 300 L168 300 L154 274 Z" fill="' + o.cuello + '"/>' +
+      '<path d="M180 292 L180 328" stroke="' + o.cuello + '" stroke-width="2.6" opacity=".8"/>' +
+      '<circle cx="180" cy="304" r="2.8" fill="' + o.cuello + '"/><circle cx="180" cy="318" r="2.8" fill="' + o.cuello + '"/>' +
+      '<rect x="149" y="360" width="62" height="8" rx="3" fill="' + o.cuello + '" opacity=".5"/>';
+  }
+
+  /* 🏃 CHÁNDAL con sus bandas laterales. Fin de semana por la mañana. */
+  /* 🏃 CHÁNDAL — v7.55: las bandas van METIDAS HACIA DENTRO, con tela por fuera. Antes
+     iban pegadas al canto y Rey las vio como "bordes blancos": una raya en el borde mismo
+     no se lee como raya, se lee como contorno. */
+  function _chandal(o) {
+    return _cuerpo(o.tela) +
+      '<path d="M151 282 L156 282 L153.5 368 L148.5 368 Z" fill="' + o.banda + '" opacity=".8"/>' +
+      '<path d="M204 282 L209 282 L206.5 368 L201.5 368 Z" fill="' + o.banda + '" opacity=".8"/>' +
+      '<path d="M158 268 Q180 288 202 268 L202 282 Q180 300 158 282 Z" fill="' + o.tela2 + '"/>' +
+      '<path d="M180 300 L180 336" stroke="' + o.banda + '" stroke-width="4" stroke-linecap="round" opacity=".85"/>' +
+      '<path d="M150 330 L210 330" stroke="' + o.banda + '" stroke-width="5" opacity=".55"/>';
+  }
+
+  /* 🪵 CAMISA de cuadros — la de leñador, con su bolsillo. */
+  function _cuadros(o) {
+    return _cuerpo(o.tela) +
+      '<path d="M145 286 L216 286 M145 310 L216 310 M145 334 L215 334 M145 358 L215 358" stroke="' + o.linea + '" stroke-width="3.4" opacity=".75"/>' +
+      '<path d="M158 272 L157 374 M180 272 L180 374 M202 272 L203 374" stroke="' + o.linea + '" stroke-width="3.4" opacity=".75"/>' +
+      '<path d="M162 270 L180 300 L198 270 L208 272 L192 314 L168 314 L152 272 Z" fill="' + o.tela2 + '"/>' +
+      '<rect x="192" y="322" width="20" height="18" rx="3" fill="' + o.tela2 + '" opacity=".9"/>';
+  }
+
+  /* 🌴 CAMISA HAWAIANA — la del domingo por la tarde. */
+  function _hawaiana(o) {
+    return _cuerpo(o.tela) +
+      '<path d="M162 270 L180 300 L198 270 L208 272 L192 314 L168 314 L152 272 Z" fill="' + o.tela2 + '"/>' +
+      '<text x="158" y="336" font-size="19">🌴</text><text x="192" y="330" font-size="16">🌺</text>' +
+      '<text x="152" y="368" font-size="15">🌺</text><text x="196" y="366" font-size="17">🌴</text>' +
+      '<path d="M180 314 L180 376" stroke="' + o.tela2 + '" stroke-width="2.4" opacity=".7"/>';
+  }
+
+  /* 🛏️ PIJAMA de rayas con su bolsillo. La otra ropa de dormir. */
+  function _pijama(o) {
+    return _cuerpo(o.tela) +
+      '<path d="M145 282 L216 282 M145 300 L216 300 M145 318 L216 318 M145 336 L215 336 M145 354 L215 354 M146 372 L214 372" stroke="' + o.raya + '" stroke-width="6" opacity=".85"/>' +
+      '<path d="M162 270 L180 302 L198 270 L208 273 L192 316 L168 316 L152 273 Z" fill="' + o.tela2 + '"/>' +
+      '<circle cx="180" cy="330" r="3" fill="' + o.tela2 + '"/><circle cx="180" cy="348" r="3" fill="' + o.tela2 + '"/>';
+  }
+
   var ROPAS = {
     /* 👔 la de trabajar: traje, camisa, pajarita y corbata. La de siempre. */
     wallstreet:
-      '<path d="M140 270 L220 270 L215 376 L145 376 Z" fill="var(--rj)"/>' +
+      '<path d="M151 266 H209 Q217 266 217.4 274 L215 376 H145 L142.6 274 Q143 266 151 266 Z" fill="var(--rj)"/>' +
       '<path d="M160 270 L200 270 L192 306 L180 322 L168 306 Z" fill="var(--rcam)"/>' +
-      '<path d="M140 270 L166 270 L152 314 L142 306 Z" fill="var(--rj2)"/>' +
-      '<path d="M220 270 L194 270 L208 314 L218 306 Z" fill="var(--rj2)"/>' +
+      '<path d="M147 269 L166 269 L152 314 L144.5 306 Z" fill="var(--rj2)"/>' +
+      '<path d="M213 269 L194 269 L208 314 L215.5 306 Z" fill="var(--rj2)"/>' +
       '<path d="M166 270 L180 292 L163 288 Z" fill="#fff"/><path d="M194 270 L180 292 L197 288 Z" fill="#fff"/>' +
       '<path d="M172 286 L188 286 L191 300 L180 306 L169 300 Z" fill="var(--roro)" stroke="var(--rtz)" stroke-width="2.6" stroke-linejoin="round"/>' +
       '<path d="M172 286 L180 292 L188 286" fill="none" stroke="var(--roro2)" stroke-width="2"/>' +
@@ -249,9 +372,9 @@
     /* 👕 la de fuera del mercado: sudadera con capucha y cordones. Sin corbata: cuando el
        mercado cierra, Roberto también se afloja. */
     casual:
-      '<path d="M140 270 L220 270 L215 376 L145 376 Z" fill="var(--rsud)"/>' +
-      '<path d="M140 270 L220 270 L215 292 L145 292 Z" fill="var(--rsud2)"/>' +
-      '<path d="M158 268 Q180 300 202 268 Q180 258 158 268 Z" fill="var(--rsud2)"/>' +
+      '<path d="M151 266 H209 Q217 266 217.4 274 L215 376 H145 L142.6 274 Q143 266 151 266 Z" fill="var(--rsud)"/>' +
+      '<path d="M143 274 L217 274 L215 292 L145 292 Z" fill="var(--rsud2)"/>' +
+      '<path d="M158 266 Q180 298 202 266 Q180 256 158 266 Z" fill="var(--rsud2)"/>' +
       '<path d="M172 286 L172 322" stroke="var(--rgu)" stroke-width="4" stroke-linecap="round" class="rob-cordon"/>' +
       '<path d="M188 286 L188 318" stroke="var(--rgu)" stroke-width="4" stroke-linecap="round" class="rob-cordon"/>' +
       '<circle cx="172" cy="324" r="3.2" fill="var(--rgu)"/><circle cx="188" cy="320" r="3.2" fill="var(--rgu)"/>' +
@@ -259,31 +382,64 @@
 
     /* 🏠 la de casa: bata de estar por casa con su cinturón. Fines de semana y madrugada. */
     casa:
-      '<path d="M140 270 L220 270 L215 376 L145 376 Z" fill="var(--rbata)"/>' +
+      '<path d="M151 266 H209 Q217 266 217.4 274 L215 376 H145 L142.6 274 Q143 266 151 266 Z" fill="var(--rbata)"/>' +
       '<path d="M162 270 L180 316 L198 270 L212 270 L192 330 L168 330 L148 270 Z" fill="var(--rbata2)"/>' +
       '<path d="M180 292 L180 330" stroke="var(--rbata2)" stroke-width="2.4" opacity=".6"/>' +
-      '<rect x="141" y="330" width="78" height="13" rx="5" fill="var(--rbata2)"/>' +
+      '<rect x="146" y="330" width="68" height="13" rx="5" fill="var(--rbata2)"/>' +
       '<path d="M186 336 Q206 344 200 362" stroke="var(--rbata2)" stroke-width="6" fill="none" stroke-linecap="round" class="rob-cinto"/>',
 
     /* 🎄 diciembre: traje rojo con ribete blanco y su cinturón */
     navidad:
-      '<path d="M140 270 L220 270 L215 376 L145 376 Z" fill="#c0392b"/>' +
-      '<path d="M140 270 L220 270 L217 288 L143 288 Z" fill="#fbf7ec"/>' +
+      '<path d="M151 266 H209 Q217 266 217.4 274 L215 376 H145 L142.6 274 Q143 266 151 266 Z" fill="#c0392b"/>' +
+      '<path d="M143 274 L217 274 L216 288 L144 288 Z" fill="#fbf7ec"/>' +
       '<path d="M160 288 Q180 312 200 288 Q180 280 160 288 Z" fill="#fbf7ec"/>' +
-      '<rect x="141" y="326" width="78" height="16" rx="4" fill="#2b2b2b"/>' +
+      '<rect x="146" y="326" width="68" height="16" rx="4" fill="#2b2b2b"/>' +
       '<rect x="170" y="326" width="20" height="16" rx="3" fill="var(--roro)"/>' +
       '<circle cx="180" cy="356" r="4" fill="#fbf7ec"/><circle cx="180" cy="368" r="4" fill="#fbf7ec"/>',
 
     /* 🎉 días de celebrar: esmoquin con pajarita dorada */
     fiesta:
-      '<path d="M140 270 L220 270 L215 376 L145 376 Z" fill="#1b1b28"/>' +
+      '<path d="M151 266 H209 Q217 266 217.4 274 L215 376 H145 L142.6 274 Q143 266 151 266 Z" fill="#1b1b28"/>' +
       '<path d="M160 270 L200 270 L192 306 L180 322 L168 306 Z" fill="var(--rcam)"/>' +
-      '<path d="M140 270 L166 270 L152 314 L142 306 Z" fill="#2a2a3d"/>' +
-      '<path d="M220 270 L194 270 L208 314 L218 306 Z" fill="#2a2a3d"/>' +
+      '<path d="M147 269 L166 269 L152 314 L144.5 306 Z" fill="#2a2a3d"/>' +
+      '<path d="M213 269 L194 269 L208 314 L215.5 306 Z" fill="#2a2a3d"/>' +
       '<path d="M166 288 L180 300 L166 312 Z" fill="var(--roro)" stroke="var(--rtz)" stroke-width="2.2"/>' +
       '<path d="M194 288 L180 300 L194 312 Z" fill="var(--roro)" stroke="var(--rtz)" stroke-width="2.2"/>' +
       '<circle cx="180" cy="300" r="4.4" fill="var(--roro2)"/>' +
       '<circle cx="180" cy="336" r="3.2" fill="var(--roro)"/><circle cx="180" cy="352" r="3.2" fill="var(--roro)"/>',
+
+    /* ══ 👔 SUS TRAJES DE TRABAJO (v7.54) — el mismo molde, cinco caracteres distintos.
+       Rey los pidió por color: "uno negro, otro rojo, otro azul, según el contraste". */
+    trajeNegro:   _traje({ tela:"#1c1c24", tela2:"#2b2b38", camisa:"#f4f6fb", corb:"#c0392b", corb2:"#8e2a20", raya:true, panuelo:"#f4f6fb" }),
+    trajeAzul:    _traje({ tela:"#1d3461", tela2:"#2a4a86", camisa:"#dfeaff", corb:"#8e2a3f", corb2:"#6a1f2f", panuelo:"#dfeaff" }),
+    trajeGranate: _traje({ tela:"#6b1f2b", tela2:"#8a2b39", camisa:"#f7f2ec", corb:"#20303f", corb2:"#16222d", raya:true, panuelo:"#f7f2ec" }),
+    trajeGris:    _traje({ tela:"#454a56", tela2:"#5a606f", camisa:"#ffffff", corb:"#2f7d6b", corb2:"#20594d", panuelo:"#cfe4de" }),
+    trajeVerde:   _traje({ tela:"#1f4034", tela2:"#2d5a48", camisa:"#f2efe4", corb:"#c9a227", corb2:"#9c7d1c", raya:true }),
+
+    /* ══ 👕 SU ROPA DE TARDE — cuando el mercado cierra, se afloja. */
+    sudaderaAzul:    _sudadera({ tela:"#24406b", tela2:"#1a3054", cordon:"#dfe6f2" }),
+    sudaderaVerde:   _sudadera({ tela:"#2b5d4a", tela2:"#1f4638", cordon:"#e6f0e9" }),
+    sudaderaGranate: _sudadera({ tela:"#7a2b34", tela2:"#5d1f27", cordon:"#f2e3e3" }),
+    sudaderaApex:    _sudadera({ tela:"#1b2233", tela2:"#131826", cordon:"#e8b93b", pecho:"📈" }),
+    camisaCuadros:   _cuadros({ tela:"#8c3b32", tela2:"#6d2c25", linea:"#2a1a17" }),
+    poloBlanco:      _polo({ tela:"#eef1f5", cuello:"#39506e" }),
+
+    /* ══ 🌙 SU ROPA DE NOCHE Y DE CASA. */
+    bataVino:    _bata({ tela:"#5c2333", tela2:"#7d3247" }),
+    bataVerde:   _bata({ tela:"#25473c", tela2:"#356354" }),
+    pijamaRayas: _pijama({ tela:"#2b3a63", raya:"#4a5f96", tela2:"#dfe6f2" }),
+    pijamaGris:  _pijama({ tela:"#3b3f4a", raya:"#565c6b", tela2:"#e2e5ea" }),
+    chandalGris: _chandal({ tela:"#3a3f47", tela2:"#4a5058", banda:"#b9c0ca" }),
+
+    /* ══ 🌞 SUS FINES DE SEMANA — ropa que NO se pone entre semana, para que se note
+       que es sábado. Rey (06-09): "los fines de semana, sábado y domingo, igual: tres
+       cambios de ropa distintas". */
+    chandalAzul:  _chandal({ tela:"#1f3b73", tela2:"#2a4f95", banda:"#cfdcf5" }),
+    chandalVerde: _chandal({ tela:"#204b3b", tela2:"#2c6650", banda:"#e8b93b" }),
+    poloVerde:    _polo({ tela:"#2f6f5c", cuello:"#f2efe4" }),
+    poloVino:     _polo({ tela:"#7c2f3d", cuello:"#f7f2ec" }),
+    hawaiana:     _hawaiana({ tela:"#0f6f7a", tela2:"#e8f4f2" }),
+    hawaianaRoja: _hawaiana({ tela:"#a63b2f", tela2:"#f9ece1" }),
   };
 
   /* ══ 🎩 LOS ACCESORIOS ═══════════════════════════════════════════════════════════════
@@ -310,11 +466,6 @@
       '<rect x="223" y="166" width="27" height="48" rx="12" fill="#2b2b3a"/>' +
       '<rect x="116" y="175" width="15" height="31" rx="7" fill="var(--rteal)" class="rob-auri"/>' +
       '<rect x="229" y="175" width="15" height="31" rx="7" fill="var(--rteal)" class="rob-auri"/>',
-    movil:
-      '<rect x="238" y="238" width="36" height="62" rx="7" fill="#15161c" stroke="var(--rgu2)" stroke-width="2"/>' +
-      '<rect x="243" y="246" width="26" height="46" rx="3" fill="var(--rteal)" class="rob-pantalla"/>' +
-      '<path d="M246 282 L252 270 L258 276 L266 258" stroke="#0d3a33" stroke-width="2.6" fill="none" stroke-linecap="round"/>' +
-      '<circle cx="256" cy="296" r="2.4" fill="var(--rgu2)"/>',
     bufanda:
       '<path d="M138 262 Q180 284 222 262 L222 280 Q180 300 138 280 Z" fill="var(--rcor)"/>' +
       '<path d="M206 288 Q216 320 206 348 L190 344 Q200 316 192 286 Z" fill="var(--rcor)" class="rob-fleco"/>',
@@ -343,6 +494,10 @@
               '<path d="M250 178 Q256 172 264 172" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round" opacity=".85"/></g>',
     indice:   brazo("M145 296 Q118 322 126 352") + mano("rgMano", "translate(127,356)") +
               '<g class="rob-indice">' + brazo("M215 296 Q256 280 258 226") + mano("rgIndice", "translate(259,220)") + '</g>',
+    /* 📱 v7.54 — MIRANDO SU MÓVIL. El brazo sube, la mano lo agarra y con la otra lo señala.
+       Antes esto era un accesorio suelto y salía como una tercera mano flotando. */
+    movil:    brazo("M215 298 Q256 306 264 274") + movilEnMano("translate(30,-22) scale(.92)") +
+              brazo("M145 296 Q120 296 156 280") + mano("rgIndice", "translate(160,278) rotate(46) scale(.88)"),
     escribe:  brazo("M145 296 Q104 300 86 316") + mano("rgMano", "translate(82,320) rotate(-40)") +
               '<rect x="60" y="316" width="62" height="46" rx="6" fill="var(--rcam)" stroke="var(--rgu2)" stroke-width="2.5"/>' +
               '<path d="M70 330 H112 M70 340 H112 M70 350 H98" stroke="var(--rgu2)" stroke-width="3" stroke-linecap="round"/>' +
@@ -434,6 +589,147 @@
               brazo("M215 290 Q256 268 234 208") + mano("rgMano", "translate(228,200) rotate(140) scale(1.2)"),
     reza:     brazo("M145 294 Q124 300 166 274") + mano("rgPalma", "translate(170,268) rotate(-64) scale(.95)") +
               brazo("M215 294 Q236 300 194 274") + mano("rgPalma", "translate(190,268) rotate(64) scale(.95)"),
+
+    /* ══ 🎭 GESTOS NUEVOS (v7.54, pedido de Rey el 06-09) ═══════════════════════════════
+       Cada uno con su postura propia, como manda la regla del fichero. */
+
+    /* 👂 te escucha: mano en la oreja, inclinado hacia ti */
+    escucha:  brazo("M145 296 Q116 316 122 348") + mano("rgMano", "translate(123,352)") +
+              brazo("M215 292 Q246 262 232 224") + mano("rgPalma", "translate(230,214) rotate(128) scale(.9)"),
+
+    /* 🔭 vigilando el mercado: los prismáticos en los ojos */
+    vigila:   brazo("M145 292 Q126 258 152 214") + mano("rgMano", "translate(150,206) rotate(-24) scale(.85)") +
+              brazo("M215 292 Q234 258 208 214") + mano("rgMano", "translate(210,206) rotate(24) scale(.85)") +
+              '<rect x="126" y="176" width="44" height="34" rx="9" fill="#2b3550" stroke="var(--rtz)" stroke-width="2.6"/>' +
+              '<rect x="190" y="176" width="44" height="34" rx="9" fill="#2b3550" stroke="var(--rtz)" stroke-width="2.6"/>' +
+              '<rect x="168" y="186" width="24" height="12" rx="4" fill="#1c2235"/>' +
+              '<circle cx="148" cy="193" r="9" fill="#7fd7c8" opacity=".8"/><circle cx="212" cy="193" r="9" fill="#7fd7c8" opacity=".8"/>',
+
+    /* ✌️ victoria: los dos dedos en alto */
+    victoria: brazo("M145 296 Q112 314 106 346") + mano("rgMano", "translate(105,350) rotate(-12)") +
+              brazo("M215 294 Q254 268 258 222") + mano("rgIndice", "translate(258,214) rotate(-14) scale(1.02)") +
+              '<path d="M268 214 L282 178" stroke="var(--rgu)" stroke-width="13" stroke-linecap="round"/>' +
+              '<path d="M268 214 L282 178" stroke="var(--rgu2)" stroke-width="13" stroke-linecap="round" opacity=".18"/>',
+
+    /* 🏆 campeón: levanta el trofeo */
+    trofeo:   brazo("M145 296 Q118 310 126 344") + mano("rgMano", "translate(127,348)") +
+              brazo("M215 292 Q252 254 240 206") + mano("rgPalma", "translate(238,198) rotate(150) scale(.92)") +
+              '<path d="M216 150 L268 150 L262 178 Q242 190 222 178 Z" fill="var(--roro)" stroke="var(--rtz)" stroke-width="2.6" stroke-linejoin="round"/>' +
+              '<rect x="236" y="184" width="12" height="14" fill="var(--roro2)"/>' +
+              '<rect x="226" y="196" width="32" height="8" rx="3" fill="var(--roro2)"/>' +
+              '<path d="M216 156 Q202 162 212 172" stroke="var(--roro2)" stroke-width="5" fill="none"/>' +
+              '<path d="M268 156 Q282 162 272 172" stroke="var(--roro2)" stroke-width="5" fill="none"/>',
+
+    /* 💰 contando el dinero: los billetes en la mano */
+    dinero:   brazo("M145 296 Q120 302 158 288") + mano("rgPalma", "translate(162,284) rotate(-58) scale(.9)") +
+              brazo("M215 296 Q244 300 214 274") + mano("rgIndice", "translate(210,268) rotate(126) scale(.86)") +
+              '<rect x="150" y="248" width="56" height="30" rx="4" fill="#5aa06f" stroke="var(--rtz)" stroke-width="2.4"/>' +
+              '<rect x="156" y="242" width="56" height="30" rx="4" fill="#6cb682" stroke="var(--rtz)" stroke-width="2.4"/>' +
+              '<circle cx="184" cy="257" r="8" fill="#f0e3b0" stroke="var(--rtz)" stroke-width="1.8"/>',
+
+    /* 📈 el mercado sube: señala la flecha hacia arriba */
+    sube:     brazo("M145 296 Q116 320 124 350") + mano("rgMano", "translate(125,354)") +
+              brazo("M215 292 Q258 276 268 238") + mano("rgIndice", "translate(270,232) rotate(-34) scale(.94)") +
+              '<path d="M236 246 L262 208 L286 226 L316 178" stroke="#31c46a" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"/>' +
+              '<path d="M300 176 L320 172 L316 192 Z" fill="#31c46a"/>',
+
+    /* 📉 el mercado cae: la flecha hacia abajo y él tenso */
+    baja:     brazo("M145 296 Q114 306 108 336") + mano("rgMano", "translate(107,340) rotate(-16)") +
+              brazo("M215 296 Q258 306 268 336") + mano("rgIndice", "translate(270,342) rotate(150) scale(.94)") +
+              '<path d="M236 300 L262 336 L286 316 L316 366" stroke="#ff6b6b" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"/>' +
+              '<path d="M300 368 L320 372 L316 352 Z" fill="#ff6b6b"/>',
+
+    /* 🛑 alto con las dos manos: cuando te frena de verdad */
+    frena:    brazo("M145 292 Q120 268 138 236") + mano("rgPalma", "translate(136,228) rotate(-16) scale(1.02)") +
+              brazo("M215 292 Q240 268 222 236") + mano("rgPalma", "translate(224,228) rotate(16) scale(1.02)"),
+
+    /* 🤝 te da la mano: el brazo cruzado hacia ti */
+    apreton:  brazo("M145 296 Q118 312 126 344") + mano("rgMano", "translate(127,348)") +
+              brazo("M215 300 Q246 314 244 336") + mano("rgPulgar", "translate(246,340) rotate(-28) scale(1.05)"),
+
+    /* 🥱 bostezo: se tapa la boca */
+    bosteza:  brazo("M145 296 Q112 306 104 338") + mano("rgMano", "translate(103,342) rotate(-14)") +
+              brazo("M215 292 Q238 268 200 244") + mano("rgPalma", "translate(196,238) rotate(96) scale(.88)"),
+
+    /* 🫡 se cuadra ante ti (distinto del militar: este junta los pies y baja la otra) */
+    firme:    brazo("M145 298 Q136 330 144 360") + mano("rgMano", "translate(145,364) scale(.94)") +
+              brazo("M215 292 Q246 262 214 226") + mano("rgIndice", "translate(210,220) rotate(112) scale(.86)"),
+
+    /* 👌 PERFECTO — el círculo de pulgar e índice. No es "vale": es "impecable".
+       Se lo gana la ejecución que sigue el plan al 100%, no cualquier operación ganada. */
+    ok:       brazo("M145 296 Q114 312 108 344") + mano("rgMano", "translate(107,348) rotate(-12)") +
+              brazo("M215 294 Q250 274 252 236") +
+              '<g transform="translate(252,232)">' +
+                '<path d="M-4 -22 L-4 -6 Q-4 -2 0 -2 Q4 -2 4 -6 L4 -24 Z" fill="var(--rgu)" stroke="var(--rgu2)" stroke-width="2.2"/>' +
+                '<path d="M6 -20 L6 -6 Q6 -2 10 -2 Q14 -2 14 -6 L14 -22 Z" fill="var(--rgu)" stroke="var(--rgu2)" stroke-width="2.2"/>' +
+                '<path d="M16 -17 L16 -6 Q16 -2 20 -2 Q23 -2 23 -6 L23 -18 Z" fill="var(--rgu)" stroke="var(--rgu2)" stroke-width="2.2"/>' +
+                '<circle cx="-11" cy="4" r="12" fill="none" stroke="var(--rgu)" stroke-width="8"/>' +
+                '<circle cx="-11" cy="4" r="12" fill="none" stroke="var(--rgu2)" stroke-width="2.2"/>' +
+                '<path d="M-4 -2 L-4 8 Q-4 14 2 14 L18 14 Q24 14 24 8 L24 -2 Z" fill="var(--rgu)" stroke="var(--rgu2)" stroke-width="2.2"/>' +
+              '</g>',
+
+    /* 🤏 POQUITO — el pellizco. "Te faltó ESTO para el TP", "un pelín más de paciencia".
+       Es el gesto que dice una cantidad pequeña sin tener que escribir un número. */
+    poquito:  brazo("M145 296 Q118 310 126 344") + mano("rgMano", "translate(127,348)") +
+              brazo("M215 294 Q248 276 250 244") +
+              '<g transform="translate(250,238) scale(1.5)">' +
+                /* el índice, curvado hacia abajo */
+                '<path d="M2 -2 Q-12 -14 -4 -22 Q4 -28 8 -12 L9 -2 Z" fill="var(--rgu)" stroke="var(--rgu2)" stroke-width="1.9"/>' +
+                /* el pulgar, curvado hacia arriba: entre los dos queda EL HUECO, que es el gesto */
+                '<path d="M2 8 Q-12 2 -6 -6 Q1 -12 8 0 L9 8 Z" fill="var(--rgu)" stroke="var(--rgu2)" stroke-width="1.9"/>' +
+                /* la mano */
+                '<path d="M4 -2 L18 -2 Q24 -2 24 5 L24 14 Q24 21 17 21 L6 21 Q0 21 0 14 Z" fill="var(--rgu)" stroke="var(--rgu2)" stroke-width="1.9"/>' +
+                '<path d="M7 4 L20 4 M7 11 L20 11" stroke="var(--rgu2)" stroke-width="1.2" opacity=".6"/>' +
+              '</g>',
+
+    /* 🫱 ASÍ ASÍ — la mano plana que se menea. Ni bien ni mal: es lo que le falta a Roberto
+       para decir "regular" sin tener que elegir entre aprobar y rechazar. Se MUEVE. */
+    asiAsi:   brazo("M145 296 Q116 316 122 348") + mano("rgMano", "translate(123,352)") +
+              brazo("M215 296 Q246 292 254 268") +
+              '<g class="rob-corbata" style="transform-origin:252px 266px">' +
+                /* los cuatro dedos, uno a uno y con hueco entre ellos */
+                '<path d="M258 250 L284 250 Q290 250 290 256 Q290 262 284 262 L258 262 Z" fill="var(--rgu)" stroke="var(--rgu2)" stroke-width="2.2"/>' +
+                '<path d="M258 264 L286 264 Q292 264 292 270 Q292 276 286 276 L258 276 Z" fill="var(--rgu)" stroke="var(--rgu2)" stroke-width="2.2"/>' +
+                '<path d="M258 278 L282 278 Q288 278 288 284 Q288 290 282 290 L258 290 Z" fill="var(--rgu)" stroke="var(--rgu2)" stroke-width="2.2"/>' +
+                /* la palma */
+                '<path d="M236 248 L262 248 Q268 248 268 256 L268 284 Q268 292 260 292 L238 292 Q230 292 230 284 L230 256 Q230 248 236 248 Z" fill="var(--rgu)" stroke="var(--rgu2)" stroke-width="2.4"/>' +
+                /* y el pulgar por debajo, que es lo que dice "es una mano" */
+                '<path d="M234 288 Q226 296 232 302 Q238 308 246 298 L248 292 Z" fill="var(--rgu)" stroke="var(--rgu2)" stroke-width="2.2"/>' +
+              '</g>',
+
+    /* 🤲 ¿Y BIEN? — la palma abierta hacia arriba, pidiéndole explicación.
+       Para cuando rompió una regla y él quiere que se lo cuente antes de juzgar. */
+    explica:  brazo("M145 296 Q112 300 122 274") + mano("rgPalma", "translate(124,270) rotate(-150) scale(1.15)") +
+              brazo("M215 296 Q248 300 238 274") + mano("rgPalma", "translate(236,270) rotate(150) scale(1.15)"),
+
+    /* 👀 TE VIGILO — dos dedos a sus ojos y luego a ti. Cuando tiene una posición abierta
+       suya en la mano, o cuando Rey está a punto de saltarse algo. */
+    teVigilo: brazo("M145 296 Q112 306 104 338") + mano("rgMano", "translate(103,342) rotate(-14)") +
+              brazo("M215 292 Q244 256 208 214") +
+              '<g transform="translate(206,212) rotate(104) scale(1.15)">' +
+                /* dos dedos en V, con hueco de verdad entre ellos */
+                '<path d="M-12 -2 L-16 -30 Q-17 -37 -10 -38 Q-3 -39 -2 -32 L0 -2 Z" fill="var(--rgu)" stroke="var(--rgu2)" stroke-width="2.2"/>' +
+                '<path d="M8 -2 L14 -29 Q15 -36 22 -34 Q29 -33 27 -26 L20 -2 Z" fill="var(--rgu)" stroke="var(--rgu2)" stroke-width="2.2"/>' +
+                '<path d="M-14 0 L22 0 Q29 0 29 8 L29 16 Q29 24 20 24 L-6 24 Q-14 24 -14 16 Z" fill="var(--rgu)" stroke="var(--rgu2)" stroke-width="2.2"/>' +
+              '</g>',
+
+    /* 👇 MIRA ABAJO — señala hacia abajo, al nivel de debajo del precio.
+       Complementa a "senala" (que apunta al frente): con estos dos ya puede decirle DÓNDE. */
+    senalaAbajo: brazo("M145 296 Q118 312 126 344") + mano("rgMano", "translate(127,348)") +
+              brazo("M215 298 Q256 306 262 344") +
+              '<g transform="translate(262,348) rotate(178) scale(1.25)">' +
+                '<path d="M-3 -8 L-3 -36 Q-3 -43 3 -43 Q10 -43 10 -36 L10 -8 Z" fill="var(--rgu)" stroke="var(--rgu2)" stroke-width="2"/>' +
+                '<path d="M-14 -6 Q-14 -15 -4 -15 L11 -15 Q21 -15 21 -5 L21 7 Q21 18 9 18 L-3 18 Q-14 18 -14 6 Z" fill="var(--rgu)" stroke="var(--rgu2)" stroke-width="2"/>' +
+                '<path d="M-6 -2 L14 -2 M-6 6 L14 6" stroke="var(--rgu2)" stroke-width="1.4" opacity=".6"/>' +
+              '</g>',
+
+    /* 🧮 con la calculadora: cuando te echa las cuentas */
+    calcula:  brazo("M145 296 Q118 300 152 292") + mano("rgPalma", "translate(156,288) rotate(-52) scale(.88)") +
+              brazo("M215 296 Q240 298 212 282") + mano("rgIndice", "translate(208,276) rotate(120) scale(.84)") +
+              '<rect x="146" y="238" width="52" height="58" rx="6" fill="#2b3550" stroke="var(--rtz)" stroke-width="2.4"/>' +
+              '<rect x="152" y="244" width="40" height="14" rx="3" fill="#7fd7c8"/>' +
+              '<circle cx="158" cy="268" r="3.6" fill="#dfe6f2"/><circle cx="172" cy="268" r="3.6" fill="#dfe6f2"/><circle cx="186" cy="268" r="3.6" fill="#dfe6f2"/>' +
+              '<circle cx="158" cy="282" r="3.6" fill="#dfe6f2"/><circle cx="172" cy="282" r="3.6" fill="#dfe6f2"/><circle cx="186" cy="282" r="3.6" fill="var(--roro)"/>',
   };
 
   /* 🩹 FIX (31-08, lo cazó Rey mirando la demo: "Roberto no tiene brazos ni manos"):
@@ -445,6 +741,38 @@
    Los accesorios usan ~= porque se pueden llevar VARIOS a la vez (data-acc="gorra movil"). */
 ROB_CSS += "\n.rob-ropa,.rob-acc{display:none}\n";
 ROB_CSS += Object.keys(ROPAS).map(function (k) { return '[data-ropa="' + k + '"] .rob-r-' + k; }).join(",") + "{display:block}\n";
+
+/* 👔 v7.54 — LAS MANGAS SON DE LA PRENDA, NO DEL PERSONAJE.
+   Los brazos se pintan con var(--rj) (la función brazo()). Antes era un azul fijo: daba
+   igual porque solo había tres mudas y una era azul. Con el armario nuevo, un traje negro
+   con mangas azules se ve roto — se descubrió mirando el dibujo, no el código.
+   Cada muda dice de qué color son sus mangas y aquí se genera su regla. Lo que no esté en
+   esta lista se queda con el azul de siempre, así nada se rompe por olvido. */
+var MANGAS = {
+  wallstreet: "#22305f", casual: "#3d6bb5", casa: "#7a5aa8", navidad: "#c0392b", fiesta: "#1b1b28",
+  trajeNegro: "#1c1c24", trajeAzul: "#1d3461", trajeGranate: "#6b1f2b", trajeGris: "#454a56", trajeVerde: "#1f4034",
+  sudaderaAzul: "#24406b", sudaderaVerde: "#2b5d4a", sudaderaGranate: "#7a2b34", sudaderaApex: "#1b2233",
+  camisaCuadros: "#8c3b32", poloBlanco: "#dfe3ea",
+  bataVino: "#5c2333", bataVerde: "#25473c", pijamaRayas: "#2b3a63", pijamaGris: "#3b3f4a", chandalGris: "#3a3f47",
+  chandalAzul: "#1f3b73", chandalVerde: "#204b3b", poloVerde: "#2f6f5c", poloVino: "#7c2f3d",
+  hawaiana: "#0f6f7a", hawaianaRoja: "#a63b2f"
+};
+/* 🔄 v7.54 — EL GIRO. De frente por defecto (data-vista no puesto o "frente"); con
+   data-vista="espalda" se ve por detrás. La clase rob-girando lo achata medio segundo:
+   ese achatado es lo que hace que el ojo lea "se ha dado la vuelta" en vez de "lo han
+   cambiado por otro dibujo". Todo con display, como la ropa y las posturas, así que no
+   hay dos verdades que puedan descuadrarse. */
+ROB_CSS += `
+  .rob-atras{display:none}
+  .rob-svg[data-vista="espalda"] .rob-todo{display:none}
+  .rob-svg[data-vista="espalda"] .rob-atras{display:block}
+  .rob-svg.rob-girando .rob-todo,.rob-svg.rob-girando .rob-atras{
+    transform-box:view-box; transform-origin:180px 300px; animation:robGira .52s ease-in-out!important}
+  @keyframes robGira{0%{transform:scaleX(1)}46%{transform:scaleX(.06)}100%{transform:scaleX(1)}}
+`;
+ROB_CSS += Object.keys(MANGAS).map(function (k) {
+  return '[data-ropa="' + k + '"]{--rj:' + MANGAS[k] + '}';
+}).join("\n") + "\n";
 ROB_CSS += Object.keys(ACCS).map(function (k) { return '[data-acc~="' + k + '"] .rob-a-' + k; }).join(",") + "{display:block}\n";
 /* que la ropa VIVA: la corbata se mece, los cordones cuelgan, el móvil parpadea, el vapor
    de la taza sube. Con !important, como el resto: la app tiene un "menos movimiento"
@@ -463,6 +791,33 @@ ROB_CSS += `
   @keyframes robVapor{0%{opacity:0;transform:translateY(4px)}35%{opacity:.85}100%{opacity:0;transform:translateY(-12px)}}
 `;
 ROB_CSS += "\n" + Object.keys(POSES).map(function (k) { return '[data-pose="' + k + '"] .rob-p-' + k; }).join(",") + "{display:block}\n";
+
+  /* ── 🔄 SU ESPALDA (v7.54) ────────────────────────────────────────────────────────
+     El mismo lápiz, sin cara: desde atrás no se le ven los ojos ni la boca. La ropa va con
+     var(--rj) (el color de la muda del día) y lleva su costura y su cuello, que es lo que
+     hace que se lea "espalda" y no "un lápiz sin cara". Los brazos cuelgan por los lados. */
+  function espaldaHTML() {
+    return '<g class="rob-atras">' +
+      /* goma y virola, iguales */
+      '<path d="M144 64 Q180 40 216 64 L216 106 L144 106 Z" fill="var(--rcor)"/>' +
+      '<path d="M144 64 Q180 40 216 64 L216 78 Q180 56 144 78 Z" fill="#ff9086"/>' +
+      '<rect x="138" y="104" width="84" height="27" rx="8" fill="var(--roro)"/>' +
+      '<rect x="138" y="111" width="84" height="3.6" fill="var(--roro2)"/><rect x="138" y="121" width="84" height="3.6" fill="var(--roro2)"/>' +
+      /* la madera, un pelín más oscura: es la cara que no le da la luz */
+      '<path d="M142 131 L218 131 L213 394 L147 394 Z" fill="var(--rmad2)"/>' +
+      '<path d="M142 131 L166 131 L162 394 L147 394 Z" fill="var(--rmad)" opacity=".45"/>' +
+      '<path d="M147 394 L213 394 L180 472 Z" fill="#e8cd9e"/><path d="M167 424 L193 424 L180 472 Z" fill="#33302a"/>' +
+      /* su nuca: la sombra bajo la virola */
+      '<path d="M142 131 L218 131 L216 148 L144 148 Z" fill="#00000022"/>' +
+      /* la ropa por detrás, del color de la muda de hoy */
+      '<path d="M151 266 H209 Q217 266 217.4 274 L215 376 H145 L142.6 274 Q143 266 151 266 Z" fill="var(--rj)"/>' +
+      '<path d="M151 266 H209 Q217 266 217.4 274 L216.8 284 H143.2 L142.6 274 Q143 266 151 266 Z" fill="#00000026"/>' +
+      '<path d="M180 284 L180 376" stroke="#00000033" stroke-width="3"/>' +
+      /* los brazos, colgando */
+      brazo("M145 296 Q126 326 130 358") + mano("rgMano", "translate(131,362) scale(.96)") +
+      brazo("M215 296 Q234 326 230 358") + mano("rgMano", "translate(229,362) scale(.96)") +
+      '</g>';
+  }
 
   /* ── EL PERSONAJE ── */
   function svgHTML() {
@@ -542,7 +897,7 @@ ROB_CSS += "\n" + Object.keys(POSES).map(function (k) { return '[data-pose="' + 
          pintan todas las prendas y el CSS enseña la que toca (data-ropa / data-acc), igual
          que con las poses. Van antes de los brazos para que las manos queden por encima. */
       ropas + accs +
-      poses + "</g></svg>";
+      poses + "</g>" + espaldaHTML() + "</svg>";
   }
 
   /* ── LOS 33 ESTADOS (pose ÚNICA cada uno) ── */
@@ -551,7 +906,7 @@ ROB_CSS += "\n" + Object.keys(POSES).map(function (k) { return '[data-pose="' + 
     saluda:   {c:1, chip:"👋🏾 Saluda",       ojos:"normales", cejas:"alegres", boca:"sonrisa",   pose:"saluda",  cuerpo:"flota",  ico:"👋🏾", lbl:"¡Buenos días, Rey!",   frase:"Te saluda apenas abres Apex."},
     presenta: {c:1, chip:"🫡 A tus órdenes",  ojos:"normales", cejas:"altas",   boca:"sonrisa",   pose:"militar", cuerpo:"firme",  ico:"🫡", lbl:"A tus órdenes",         frase:"Su pose de mayordomo: firme y listo."},
     ensena:   {c:1, chip:"📚 Enseñando",      ojos:"normales", cejas:"altas",   boca:"sonrisota", pose:"senala",  cuerpo:"flota",  ico:"📚", lbl:"Mira este nivel",       frase:"Señala el dato del que te habla."},
-    analiza:  {c:1, chip:"🤔 Analizando",     ojos:"lado",     cejas:"duda",    boca:"hmm",       pose:"piensa",  cuerpo:"lento",  piensa:1, ico:"🤔", lbl:"Cruzando tus datos…", frase:"Dedo en la barbilla y mirada arriba."},
+    analiza:  {c:1, chip:"🤔 Analizando",     ojos:"lado",     cejas:"duda",    boca:"hmm",       pose:"movil",   cuerpo:"lento",  piensa:1, ico:"🤔", lbl:"Cruzando tus datos…", frase:"Dedo en la barbilla y mirada arriba."},
     audita:   {c:1, chip:"🔍 Auditando",      ojos:"grandes",  cejas:"duda",    boca:"recta",     pose:"lupa",    cuerpo:"lento",  piensa:1, ico:"🔍", lbl:"Revisando al Ejecutor", frase:"Su lupa rebusca sola."},
     idea:     {c:1, chip:"💡 ¡Idea!",         ojos:"brillo",   cejas:"muyaltas",boca:"sonrisota", pose:"indice",  cuerpo:"flota",  fx:"chispa", piensa:1, ico:"💡", lbl:"¡Se me ocurrió algo!", frase:"Lo que pensó de madrugada en su Pensadero."},
     apunta:   {c:1, chip:"✍️ Lo apunto",      ojos:"lado",     cejas:"altas",   boca:"hmm",       pose:"escribe", cuerpo:"lento",  ico:"✍️", lbl:"Lo anoto en tu diario", frase:"Es un lápiz: cuando registra algo, lo escribe de verdad."},
@@ -561,12 +916,12 @@ ROB_CSS += "\n" + Object.keys(POSES).map(function (k) { return '[data-pose="' + 
     aprueba:  {c:2, chip:"👍 GO",             ojos:"felices",  cejas:"alegres", boca:"sonrisota", pose:"pulgar",  cuerpo:"flota",  ico:"👍", lbl:"Vía libre",             frase:"Tu setup pasó todos los filtros."},
     rechaza:  {c:2, chip:"👎 No cuadra",      ojos:"entrecerrados",cejas:"serias",boca:"recta",   pose:"pulgarNo",cuerpo:"firme",  ico:"👎", lbl:"Esa no la tomo",        frase:"El veto en gesto: pulgar abajo y cara de nada."},
     alerta:   {c:2, chip:"🔔 ¡Señal!",        ojos:"grandes",  cejas:"muyaltas",boca:"o",         pose:"alarma",  cuerpo:"tiembla",urgente:1, ico:"🔔", lbl:"¡Señal en GBPUSD!", frase:"Un brazo arriba, el otro al gráfico. Imposible no verlo."},
-    frena:    {c:2, chip:"✋ NO ENTRES",      ojos:"grandes",  cejas:"serias",  boca:"recta",     pose:"alto",    cuerpo:"firme",  urgente:1, ico:"✋", lbl:"NO ENTRES",       frase:"Palma enorme al frente. No hay que leer nada más."},
+    frena:    {c:2, chip:"✋ NO ENTRES",      ojos:"grandes",  cejas:"serias",  boca:"recta",     pose:"frena",   cuerpo:"firme",  urgente:1, ico:"✋", lbl:"NO ENTRES",       frase:"Palma enorme al frente. No hay que leer nada más."},
     celebra:  {c:2, chip:"🔥 ¡TP cazado!",    ojos:"felices",  cejas:"muyaltas",boca:"grito",     pose:"arriba",  cuerpo:"brinca", fx:"confeti", ico:"🔥", lbl:"+1.85R ¡CAZADO!", frase:"Brinca con los brazos arriba y te cae confeti."},
     felicita: {c:2, chip:"👏 Bien hecho",     ojos:"felices",  cejas:"alegres", boca:"dientes",   pose:"aplaude", cuerpo:"flota",  ico:"👏", lbl:"¡Bien jugado!",         frase:"Te aplaude cuando respetas tus reglas."},
     preocupa: {c:2, chip:"😬 Cuidado",        ojos:"tristes",  cejas:"tristes", boca:"triste",    pose:"reposo",  cuerpo:"inclina",ico:"😬", lbl:"Esto no me gusta",      frase:"Cejas caídas: algo en tu cuenta le preocupa."},
     serio:    {c:2, chip:"🛡️ Se acabó",      ojos:"entrecerrados",cejas:"serias",boca:"recta",   pose:"jarras",  cuerpo:"firme",  ico:"🛡️", lbl:"Cerramos el día",      frase:"El guardián de riesgo diciendo basta."},
-    vigila:   {c:2, chip:"👁️ Vigilando",     ojos:"lado",     cejas:"duda",    boca:"recta",     pose:"visor",   cuerpo:"lento",  piensa:1, ico:"👁️", lbl:"Te cuido la posición", frase:"Mano de visera mientras tienes un trade abierto."},
+    vigila:   {c:2, chip:"👁️ Vigilando",     ojos:"lado",     cejas:"duda",    boca:"recta",     pose:"vigila",  cuerpo:"lento",  piensa:1, ico:"👁️", lbl:"Te cuido la posición", frase:"Mano de visera mientras tienes un trade abierto."},
     shhh:     {c:2, chip:"🤫 Silencio",       ojos:"grandes",  cejas:"altas",   boca:"o",         pose:"shh",     cuerpo:"firme",  ico:"🤫", lbl:"Concéntrate ahora",     frase:"Killzone abierta: dedo en los labios, a operar."},
     /* ⏳ Rey (31-08): "él NO puede estar durmiendo en mi pantalla" — este es su reposo
        de guardia: brazos cruzados pero OJOS ABIERTOS, mirándote, listo. */
@@ -576,6 +931,29 @@ ROB_CSS += "\n" + Object.keys(POSES).map(function (k) { return '[data-pose="' + 
        brazos cruzados, que a la larga se lee como desganado o a la defensiva. Se le pone la
        postura de REPOSO: de pie, brazos sueltos y atento. Sigue siendo "aquí sigo, listo",
        pero con la actitud que Rey quiere ver todo el día en su pantalla. */
+    /* ══ 🎭 ESTADOS NUEVOS (v7.54, pedido de Rey el 06-09) ═══════════════════════════
+       Cada gesto nuevo con su cara, su postura y CUÁNDO le toca salir. */
+    escucha:  {c:1, chip:"👂 Te escucho",     ojos:"grandes",  cejas:"altas",   boca:"son",       pose:"escucha", cuerpo:"lento",  ico:"👂", lbl:"Te escucho",           frase:"Mano en la oreja, inclinado hacia ti: te está oyendo de verdad."},
+    trofeo:   {c:2, chip:"🏆 ¡Objetivo!",     ojos:"felices",  cejas:"muyaltas",boca:"carc",      pose:"trofeo",  cuerpo:"brinca", fx:"confeti", ico:"🏆", lbl:"¡Objetivo cumplido!", frase:"Levanta el trofeo: esto no es un trade, es una meta tuya."},
+    victoria: {c:2, chip:"✌️ Racha viva",     ojos:"felices",  cejas:"altas",   boca:"sonta",     pose:"victoria",cuerpo:"brinca", ico:"✌️", lbl:"Dos seguidas",         frase:"Los dos dedos en alto: la racha está viva."},
+    dinero:   {c:2, chip:"💰 Las cuentas",    ojos:"grandes",  cejas:"altas",   boca:"son",       pose:"dinero",  cuerpo:"flota",  ico:"💰", lbl:"Hablemos de dinero",   frase:"Contando los billetes: aquí se habla de lo que entra y sale."},
+    sube:     {c:2, chip:"📈 Va a favor",     ojos:"felices",  cejas:"altas",   boca:"son",       pose:"sube",    cuerpo:"flota",  ico:"📈", lbl:"El precio te acompaña", frase:"Señala la flecha verde: va contigo."},
+    baja:     {c:2, chip:"📉 Va en contra",   ojos:"grandes",  cejas:"duda",    boca:"hmm",       pose:"baja",    cuerpo:"lento",  ico:"📉", lbl:"El precio va en contra", frase:"Señala la flecha roja, sin dramatizar."},
+    apreton:  {c:1, chip:"🤝 Trato hecho",    ojos:"normales", cejas:"alegres", boca:"son",       pose:"apreton", cuerpo:"flota",  ico:"🤝", lbl:"Trato hecho",          frase:"Te da la mano: lo acordado queda acordado."},
+    bosteza:  {c:1, chip:"🥱 Es tarde",       ojos:"dormidos", cejas:"neutral", boca:"o",         pose:"bosteza", cuerpo:"lento",  ico:"🥱", lbl:"Se hace tarde",        frase:"Se tapa el bostezo: te está diciendo que descanses tú también."},
+    firme:    {c:2, chip:"🫡 A la orden",     ojos:"normales", cejas:"serias",  boca:"recta",     pose:"firme",   cuerpo:"firme",  ico:"🫡", lbl:"A la orden",           frase:"Se cuadra: recibido y en marcha."},
+    calcula:  {c:1, chip:"🧮 Echando cuentas",ojos:"lado",     cejas:"duda",    boca:"hmm",       pose:"calcula", cuerpo:"lento",  piensa:1, ico:"🧮", lbl:"Echando tus cuentas",  frase:"Con la calculadora: números, no impresiones."},
+    /* 📱 no hay estado "movil" aparte: el gesto del móvil ES el de analiza (cruzar datos
+       mirando su teléfono). Dos estados con la misma postura rompen la regla del fichero. */
+
+    /* ══ 🤟 SEÑAS NUEVAS (v7.56, pedido de Rey el 06-09) ═══════════════════════════ */
+    ok:       {c:2, chip:"👌 Impecable",      ojos:"felices",  cejas:"altas",   boca:"sonta",     pose:"ok",         cuerpo:"flota",  ico:"👌", lbl:"Ejecución impecable",  frase:"El círculo de los dedos: esto no es que ganaras, es que lo hiciste BIEN."},
+    poquito:  {c:1, chip:"🤏 Por poco",       ojos:"lado",     cejas:"duda",    boca:"hmm",       pose:"poquito",    cuerpo:"lento",  ico:"🤏", lbl:"Te faltó poco",        frase:"El pellizco: dice una cantidad pequeña sin números."},
+    asiAsi:   {c:1, chip:"🫱 Ni bien ni mal", ojos:"lado",     cejas:"duda",    boca:"tri",       pose:"asiAsi",     cuerpo:"lento",  ico:"🫱", lbl:"Regular",              frase:"La mano meneándose: ni te aprueba ni te rechaza, y eso también es una respuesta."},
+    explica:  {c:1, chip:"🤲 Cuéntame",       ojos:"grandes",  cejas:"altas",   boca:"o",         pose:"explica",    cuerpo:"flota",  ico:"🤲", lbl:"¿Y bien? Explícame",   frase:"Las dos palmas abiertas: quiere entender antes de juzgar."},
+    teVigilo: {c:2, chip:"👀 Te vigilo",      ojos:"grandes",  cejas:"serias",  boca:"recta",     pose:"teVigilo",   cuerpo:"firme",  ico:"👀", lbl:"Te estoy mirando",     frase:"Dos dedos a sus ojos y luego a ti: sin regañar, pero mirando."},
+    senalaAbajo:{c:2, chip:"👇 Mira abajo",   ojos:"lado",     cejas:"altas",   boca:"son",       pose:"senalaAbajo",cuerpo:"flota",  ico:"👇", lbl:"El nivel de abajo",    frase:"Señala hacia abajo: el nivel está por debajo del precio."},
+
     espera:   {c:2, chip:"⏳ En guardia",     ojos:"normales", cejas:"neutral", boca:"recta",     pose:"atento",  cuerpo:"lento",  ico:"⏳", lbl:"Aquí sigo, listo",      frase:"De pie, con los brazos sueltos y los ojos bien abiertos: el mercado descansa, él no."},
     animo:    {c:2, chip:"💪🏾 ¡Vamos!",       ojos:"felices",  cejas:"alegres", boca:"dientes",   pose:"musculo", cuerpo:"brinca", ico:"💪🏾", lbl:"¡Tú puedes, Rey!",   frase:"Cuando necesitas que alguien crea en ti."},
     /* carisma, bromas y sentimiento */
@@ -604,6 +982,28 @@ ROB_CSS += "\n" + Object.keys(POSES).map(function (k) { return '[data-pose="' + 
   /* ── palabras → gesto (para que reaccione solo a los avisos) ── */
   var PISTAS = [
     [/no entres|no entrar|fren|abst[eé]n/i, "frena"],
+    /* 🎭 v7.54 — los gestos nuevos. Van ARRIBA de los generales para que ganen ellos
+       cuando la frase es concreta (dinero, racha, objetivo…), que si no se los come
+       "celebra" o "ensena", que son los cajones de sastre. */
+    [/objetivo cumplid|fase superad|cuenta fondead|meta alcanzad|lo lograste|🏆/i, "trofeo"],
+    /* 🤟 v7.56 — las señas nuevas, arriba de las generales para que ganen cuando la frase
+       es concreta. Un gesto que dice lo mismo que la frase le ahorra a Rey leerla entera. */
+    [/impecable|de manual|perfecta ejecuci|clavad|👌/i, "ok"],
+    [/por poco|casi lo|te falt[óo] poco|un pel[ií]n|a punto de|🤏/i, "poquito"],
+    [/ni bien ni mal|regular|as[ií] as[ií]|a medias|discreto|🫱/i, "asiAsi"],
+    [/cu[eé]ntame|expl[ií]came|qu[eé] pas[óo]|por qu[eé] lo hiciste|🤲/i, "explica"],
+    [/te vigilo|te estoy mirando|ojo con|no te despistes|👀/i, "teVigilo"],
+    [/por debajo|m[aá]s abajo|nivel inferior|soporte en|abajo tienes|👇/i, "senalaAbajo"],
+    [/dos seguidas|racha de|van \d+ seguid|✌️/i, "victoria"],
+    [/\$\d|d[oó]lar|beneficio|ganancia neta|retirar|capital|balance|lotaje|💰/i, "dinero"],
+    [/a favor|acompa[ñn]a|va subiendo|al alza|📈/i, "sube"],
+    [/en contra|va bajando|a la baja|retrocede|📉/i, "baja"],
+    [/te escucho|cu[eé]ntame|dime|estoy oyendo|👂/i, "escucha"],
+    [/trato hecho|de acuerdo|acordado|hecho el pacto|🤝/i, "apreton"],
+    [/es tarde|a dormir|desconecta ya|descansa|🥱/i, "bosteza"],
+    [/a la orden|recibido|en marcha|entendido, rey|🫡/i, "firme"],
+    [/calcul|cuentas|n[uú]meros dicen|expectancy|profit factor|🧮/i, "calcula"],
+    [/mirando tus datos|reviso el gr[aá]fico|consultando|📱/i, "analiza"],
     /* 👉 te está mandando hacer algo A TI ⇒ te señala a la cara (Rey, 31-08) */
     [/\bt[uú] (tienes|debes|puedes|vas a)|te toca|h[aá]zlo|hazlo t[uú]|reg[ií]stral|an[oó]tal|s[uú]bel|revisa t[uú]|ahora t[uú]|dep[eé]nde de ti|est[aá] en tus manos/i, "tetoca"],
     [/se[ñn]al|alarma|🔔|entrada confirmada/i, "alerta"],
@@ -706,8 +1106,9 @@ ROB_CSS += "\n" + Object.keys(POSES).map(function (k) { return '[data-pose="' + 
      cambiar. Si esto se guardara junto a su ropa, al terminar de analizar se quedaría con
      el móvil en la mano para siempre. */
   var ACC_GESTO = {
-    analiza: "movil",     /* cruzando datos: mira su móvil */
-    audita:  "movil",     /* revisando al Ejecutor: lo mismo */
+    /* 📱 v7.54 — analiza y audita YA NO cogen el móvil como accesorio: ahora el móvil es un
+       gesto suyo (pose "movil"), con su brazo sujetándolo. Un accesorio no puede parecer
+       agarrado cuando el gesto ya está dibujando sus dos manos. */
     celebra: "gafasSol",  /* +1.85R cazado: se pone las gafas de sol */
     presumido: "gafasSol",
     siesta:  "taza",      /* nunca duerme; si está de guardia a deshora, con su café */
@@ -760,29 +1161,43 @@ ROB_CSS += "\n" + Object.keys(POSES).map(function (k) { return '[data-pose="' + 
     if (t.mes === 12 && t.num >= 24 && t.num <= 26) return { ropa: "navidad", acc: "" };
     if ((t.mes === 12 && t.num === 31) || (t.mes === 1 && t.num === 1)) return { ropa: "fiesta", acc: "" };
     var finde = (t.dia === "Sat" || t.dia === "Sun");
-    /* 👔 v7.15 — QUE VARÍE, NO SOLO QUE ACIERTE.
-       Rey (02-09): "también debe cambiarse más de ropa, es la misma sudadera de todos los
-       días, debe variar cada x tiempo".
-       Tenía razón: la ropa se elegía SOLO por la hora, así que dentro de cada tramo salía
-       siempre exactamente lo mismo. De tarde-noche entre semana: sudadera, sudadera y
-       sudadera. La ropa acertaba con el momento pero no tenía vida.
-       Ahora, DENTRO de cada tramo, los accesorios rotan por DÍA (no al azar: al azar se
-       cambiaría de gorra cada 20 segundos y parecería un disfraz, no una persona). El mismo
-       día lleva lo mismo de la mañana a la noche, y mañana lleva otra cosa. */
     var acc = accDelDia(t);
-    if (finde) return { ropa: "casa", acc: mezcla("taza", acc) };
-    /* 👔 v7.27 — EL TRAJE SOLO MIENTRAS TRABAJA DE VERDAD.
-       Rey (04-09): "Roberto está con el traje todavía, no se cambió a una ropa distinta…
-       diversificar la ropa y los accesorios para que no sea monótono".
-       Tenía razón y la causa era el tramo: el traje iba de 2:00 a 17:00 NY — o sea de las
-       3 de la mañana a las 6 de la tarde en su hora, casi todo su día despierto. Su
-       operativa termina a las 13:00 NY (así lo tiene configurado el Ejecutor), y a partir
-       de ahí ya no está trabajando: no tiene por qué seguir de corbata.
-       AHORA: traje de 2:00 a 13:00 NY (su ventana), casual de 13:00 a 22:00, y de casa de
-       22:00 a 2:00. Tres ropas distintas en un día normal, no una. */
-    if (t.h >= 2 && t.h < 13) return { ropa: "wallstreet", acc: acc };
-    if (t.h >= 22 || t.h < 2) return { ropa: "casa", acc: mezcla("taza", acc) };
-    return { ropa: "casual", acc: acc };
+    var m = momentoDelDia(t);              /* 0 madrugada · 1 mercado · 2 tarde · 3 noche */
+
+    /* ══ 👕 TRES MUDAS AL DÍA, Y OTRAS TRES EL FIN DE SEMANA (v7.54) ═══════════════════
+       Rey (06-09): "tiene la misma ropa de ayer, no ha cambiado de ropa; lo único que
+       cambió fue el sombrero y continúa con la misma tacita de ayer al lado… quiero tres
+       mudas: el traje en horario de trabajo, por la tarde, las de casa y en la noche… y
+       los fines de semana, sábado y domingo, igual: tres cambios de ropa distintas".
+       Tenía razón dos veces:
+         · sus mudas del día a día eran TRES Y SOLO TRES (wallstreet, casual, casa) y
+           nunca cambiaban de color: lo único capaz de variar era el accesorio;
+         · y el fin de semana era una sola línea —bata de casa MÁS TAZA, todo el sábado y
+           todo el domingo— así que veía la misma bata y la misma tacita dos días seguidos.
+       AHORA cada momento del día tiene su CAJÓN de mudas y se saca una por FECHA: el mismo
+       día lleva lo mismo de la mañana a la noche (no se disfraza delante de él) pero mañana
+       le toca otra. Con cajones de 4-6 prendas y saltos distintos por momento, no repite
+       conjunto ni de un día para otro ni al pasar de la mañana a la tarde. */
+    var CAJONES = finde ? {
+      man: ["chandalAzul", "poloVerde", "sudaderaGranate", "chandalVerde", "poloVino"],
+      tar: ["hawaiana", "camisaCuadros", "hawaianaRoja", "poloBlanco", "sudaderaVerde"],
+      noc: ["pijamaRayas", "bataVino", "pijamaGris", "bataVerde", "casa"]
+    } : {
+      man: ["wallstreet", "trajeNegro", "trajeAzul", "trajeGranate", "trajeGris", "trajeVerde"],
+      tar: ["casual", "sudaderaAzul", "sudaderaVerde", "camisaCuadros", "poloBlanco", "sudaderaApex", "sudaderaGranate"],
+      noc: ["casa", "bataVino", "pijamaRayas", "chandalGris", "bataVerde", "pijamaGris"]
+    };
+    var fecha = (t.num || 1) + (t.mes || 1) * 31;
+    function delCajon(lista, salto) { return lista[(fecha + salto) % lista.length]; }
+
+    /* ☕ LA TAZA, SOLO DE MADRUGADA. Rey (06-09): "continúa con la misma tacita de ayer al
+       lado". Y era verdad: la llevaba pegada TODA la noche y TODO el fin de semana, así que
+       la veía siempre. De madrugada sí cuenta algo de él (está en pie cuando abre Londres);
+       a partir de ahí, que decida la rotación como con lo demás. */
+    if (m === 0) return { ropa: delCajon(CAJONES.noc, 0), acc: mezcla("taza", acc) };
+    if (m === 3) return { ropa: delCajon(CAJONES.noc, 0), acc: acc };
+    if (m === 2)            return { ropa: delCajon(CAJONES.tar, 2), acc: acc };
+    return { ropa: delCajon(CAJONES.man, 5), acc: acc };
   }
 
   /* El accesorio del MOMENTO. Cambia con el día Y con el tramo del día.
@@ -807,9 +1222,11 @@ ROB_CSS += "\n" + Object.keys(POSES).map(function (k) { return '[data-pose="' + 
          no se repita ninguno ni al pasar de momento ni al pasar de día.
          ⚠️ SOLO se usan prendas y accesorios QUE YA EXISTEN (ACCS, arriba): aquí no se
          diseña nada nuevo — se combina lo que Rey ya aprobó. */
-      var TURNOS = ["gorra", "movil", "gafasSol", "auriculares", "sombrero",
-                    "gorra movil", "bufanda", "auriculares movil", "taza",
-                    "sombrero gafasSol", "gorra auriculares", "movil taza"];
+      /* 📱 v7.54 — el móvil sale de esta rotación: era lo que hacía que apareciera flotando
+         al lado del cuerpo a cualquier hora. Ahora solo aparece cuando lo COGE (pose movil). */
+      var TURNOS = ["gorra", "bufanda", "gafasSol", "auriculares", "sombrero",
+                    "gorra bufanda", "taza", "auriculares gorra", "sombrero gafasSol",
+                    "gorra auriculares", "bufanda gafasSol", "sombrero auriculares"];
       var tramo = momentoDelDia(t);
       var n = (t.num || 1) + (t.mes || 1) * 31 + tramo * 7;
       /* si lo que toca no pega con el momento, se pasa al siguiente turno — NO se queda sin
@@ -884,6 +1301,22 @@ ROB_CSS += "\n" + Object.keys(POSES).map(function (k) { return '[data-pose="' + 
     vivas().forEach(function (i) { ponerEn(i, k); });
     return e;
   }
+  /* 🔄 v7.54 — girarse. Ver el comentario de espaldaHTML(): esto no es un 3D de verdad
+     (no lo hay ni puede haberlo con cincuenta posturas dibujadas de frente), es el giro
+     sobre el eje de los dibujos animados, que es lo que se lee bien en pantalla. */
+  var _vista = "frente";
+  function mirar(v) {
+    v = (v === "espalda") ? "espalda" : "frente";
+    if (v === _vista) return v;
+    _vista = v;
+    vivas().forEach(function (i) {
+      var s = i.svg;
+      s.classList.remove("rob-girando"); void s.offsetWidth; s.classList.add("rob-girando");
+      setTimeout(function () { s.dataset.vista = v; }, 240);
+      setTimeout(function () { s.classList.remove("rob-girando"); }, 560);
+    });
+    return v;
+  }
   function gestoDe(txt) {
     var t = String(txt || "");
     for (var i = 0; i < PISTAS.length; i++) if (PISTAS[i][0].test(t)) return PISTAS[i][1];
@@ -913,6 +1346,10 @@ ROB_CSS += "\n" + Object.keys(POSES).map(function (k) { return '[data-pose="' + 
   }
 
   raiz.Roberto = {
+    /* 🔄 Roberto.mirar("espalda"|"frente") — se gira sobre su eje. El cambio de vista se
+       hace EN MITAD del achatado (a los 240 ms), que es cuando está de canto y no se ve:
+       si se cambiara antes o después, se vería el salto. */
+    mirar: mirar, deEspaldas: function () { mirar("espalda"); }, deFrente: function () { mirar("frente"); },
     montar: montar, poner: poner, hablar: hablar, callar: callar, gestoDe: gestoDe,
     vestir: vestir, vestirSolo: vestirSolo, ropaDeAhora: ropaDeAhora,
     ropas: function () { return Object.keys(ROPAS); }, accesorios: function () { return Object.keys(ACCS); },
