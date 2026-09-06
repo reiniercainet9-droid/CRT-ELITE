@@ -9348,6 +9348,26 @@ function robCara(emo,txt){
     const e=Roberto.poner(emo);
     const s=$("#iaRobEstado"); if(s&&e) s.textContent=(txt||e.lbl||"").slice(0,34);
     const f=$("#fab"); if(f&&e) f.classList.toggle("alerta", !!e.urgente);
+    /* 🟢 v7.59 — DESPUÉS DEL ROJO, EL VERDE. Rey (06-09): "agrégale que después del rojo por
+       la alerta de noticias o etc, poner también la verde cuando todo pase y haya pasado el
+       peligro". El rojo avisaba del peligro, pero NADA decía cuándo había pasado: Rey tenía
+       que deducirlo de que el rojo ya no estaba, y lo que no está no se ve.
+       Se dispara solo en el PASO de urgente a no urgente —que es exactamente el momento en
+       que el peligro pasó—, así que no hay que acordarse de llamarlo desde ningún sitio. */
+    try{
+      if(f && e){
+        const urge = !!e.urgente;
+        if(_robEraUrgente && !urge){
+          f.classList.add("despejado");
+          const g0=$("#robGlobo"); if(g0) g0.classList.add("ok");
+          clearTimeout(_robTDespeja);
+          _robTDespeja = setTimeout(()=>{ try{ f.classList.remove("despejado"); const g1=$("#robGlobo"); if(g1) g1.classList.remove("ok"); }catch(_){}
+          }, 3200);
+        }
+        if(urge){ clearTimeout(_robTDespeja); f.classList.remove("despejado"); const g2=$("#robGlobo"); if(g2) g2.classList.remove("ok"); }
+        _robEraUrgente = urge;
+      }
+    }catch(_){}
     /* 🧍 v7.13 — Y EL DE FUERA HACE LO MISMO, EN EL MISMO INSTANTE.
        Rey (02-09), viéndolos a la vez en su pantalla: "el Roberto de dentro de Apex debe ser
        el mismo que está afuera… nada de eso debe ser independiente, mientras uno hace un
@@ -9625,6 +9645,86 @@ async function burbujaUI(){
    · se calla si hay algo importante en marcha o si Rey está escribiéndole
    ═══════════════════════════════════════════════════════════════════════════ */
 let _vidaT = null, _vidaUlt = "", _vidaFrase = 0;
+let _robEraUrgente = false, _robTDespeja = null;   /* 🟢 v7.59 — para el paso de rojo a verde */
+
+/* ══ 🚦 EL SEMÁFORO DE ROBERTO (v7.60) ═══════════════════════════════════════════════════
+   Rey (06-09): "las señales rojas deben durar MIENTRAS todavía esté en peligro… los 15
+   minutos antes de la noticia y los 15 después, y al terminar la verde diciéndome «ya tienes
+   luz verde»… así, de verlo y oírlo, ya saber cómo va la cosa".
+   ⚠️ Corrige un fallo mío de la v7.59: el rojo era un DESTELLO que salía y se iba con el
+   gesto. El peligro no es un instante, es un rato — la ventana de una noticia dura 30 min.
+   Un aviso que dura menos que el peligro no sirve para saber cómo va la cosa.
+   AQUÍ el rojo es un ESTADO: se mantiene aunque cambie de gesto, aunque hable y aunque Rey
+   abra y cierre Apex. Y al acabarse, verde Y VOZ.
+   ⚖️ Se enciende con DATOS REALES, nunca con una suposición: la misma ventana de ±15 min que
+   usa su Ejecutor para vetar, sobre las noticias de alto y medio impacto de SUS pares. */
+const ROB_SEM = { activo:false, motivo:"", hasta:0, avisado:false };
+const ROB_SEM_MIN = 15;          /* los mismos ±15 min del veto del Ejecutor */
+
+/* ¿Estamos AHORA dentro de una ventana de peligro? Devuelve {motivo, hasta} o null.
+   Aquí se añaden motivos nuevos el día que hagan falta: es el único sitio que hay que tocar. */
+function robPeligroAhora(){
+  try{
+    if(!Array.isArray(HOY_EV) || !HOY_EV.length) return null;
+    const t = horaNY();
+    const ahoraMin = t.h*60 + t.m;
+    for(const e of HOY_EV){
+      const iso = String(e.date||"");
+      const hh = parseInt(iso.slice(11,13),10), mm = parseInt(iso.slice(14,16),10);
+      if(isNaN(hh)||isNaN(mm)) continue;
+      const evMin = hh*60+mm;
+      if(ahoraMin >= evMin-ROB_SEM_MIN && ahoraMin <= evMin+ROB_SEM_MIN){
+        const alto = /High/i.test(e.impact||"");
+        return { motivo: (alto?"noticia de alto impacto":"noticia de impacto medio")
+                        + (e.title?(": "+String(e.title).slice(0,54)):""),
+                 corto: alto?"noticia fuerte":"noticia",
+                 hasta: evMin+ROB_SEM_MIN, ahoraMin };
+      }
+    }
+    return null;
+  }catch(_){ return null; }
+}
+
+/* El latido del semáforo. Cada 20 s mira si hay peligro y pinta a los DOS Roberto. */
+function robSemaforo(){
+  try{
+    const p = robPeligroAhora();
+    const f = $("#fab");
+    if(p && !ROB_SEM.activo){
+      /* 🔴 EMPIEZA EL PELIGRO */
+      ROB_SEM.activo = true; ROB_SEM.motivo = p.motivo; ROB_SEM.hasta = p.hasta; ROB_SEM.avisado = false;
+      if(f){ f.classList.add("alerta"); f.classList.remove("despejado"); }
+      robSemaforoFuera("rojo");
+      const min = Math.max(1, p.hasta - p.ahoraMin);
+      const frase = "Atención, Rey: " + p.motivo + ". Estás en zona de peligro durante los próximos " + min + " minutos.";
+      try{ robDecir("Roberto", frase, {gesto:"frena"}); }catch(_){}
+    } else if(!p && ROB_SEM.activo){
+      /* 🟢 PASÓ EL PELIGRO — y se lo DICE, que es lo que él pidió: verlo Y oírlo */
+      ROB_SEM.activo = false;
+      if(f){ f.classList.remove("alerta"); f.classList.add("despejado"); }
+      robSemaforoFuera("verde");
+      try{ robDecir("Roberto", "Ya tienes luz verde, Rey: pasó " + (ROB_SEM.motivo||"el peligro") + ". Puedes operar con normalidad.", {gesto:"aprueba"}); }catch(_){}
+      clearTimeout(_robTDespeja);
+      _robTDespeja = setTimeout(()=>{ try{ const g=$("#fab"); if(g) g.classList.remove("despejado"); robSemaforoFuera(""); }catch(_){} }, 6000);
+    } else if(p && ROB_SEM.activo && f && !f.classList.contains("alerta")){
+      /* sigue el peligro pero algo le quitó el rojo (un gesto, un repintado): se repone */
+      f.classList.add("alerta"); robSemaforoFuera("rojo");
+    }
+  }catch(_){}
+}
+/* y el de FUERA, que es el mismo (ley de Rey del 02-09) */
+function robSemaforoFuera(luz){
+  try{
+    if(window.Apex && Apex.semaforo) { Apex.semaforo({ luz: luz }); return; }
+    if(typeof burbujaSemaforo === "function") burbujaSemaforo(luz);
+  }catch(_){}
+}
+let _robSemT = null;
+function robSemaforoArrancar(){
+  if(_robSemT) return;
+  robSemaforo();
+  _robSemT = setInterval(robSemaforo, 20000);
+}
 
 /* cada situación tiene SUS gestos y SUS frases: así lo que hace concuerda con lo
    que ocurre, que es la regla que Rey selló ("el cuerpo y la mente son uno solo") */
@@ -9860,7 +9960,10 @@ async function robMarcaRefrescar(){
     if(r && r.marca){ try{ _robMarcaDichas = JSON.parse(r.marca) || {}; }catch(_){} }
   }catch(_){}
 }
+/* 🚦 el semáforo arranca con su vida: son la misma persona */
+function robVidaYSemaforo(){ try{ robSemaforoArrancar(); }catch(_){} }
 function robVida(){
+  robVidaYSemaforo();
   try{
     clearTimeout(_vidaT);
     /* 🎭 v7.29 — el gesto vuelve a 12–30 s (Rey: "se queda parado como estatua") y lo que

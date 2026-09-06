@@ -1,51 +1,58 @@
-APEX v7.58 — TRADING DESK
+APEX v7.60 — TRADING DESK
 =========================
 
-🧊 v7.58 — LO MÁS PARECIDO A 3D SIN REHACER NADA (y v7.57: el giro ya significa algo)
+🚦🌑 v7.60 — EL SEMÁFORO QUE DURA LO QUE DURA EL PELIGRO, Y SU SOMBRA EN EL SUELO
 
-Rey (06-09): "¿por qué Roberto no es tridimensional en 3D, como yo te propuse, de giros
-completos? ¿Es muy difícil o no puedes hacerlo, agregándolo a lo que ya está creado?"
+Rey (06-09), tres peticiones seguidas y dos de ellas corrigiendo fallos MÍOS de hace un rato:
 
-LA VERDAD QUE SE LE DIJO: un 3D de verdad NO es añadir, es REHACERLO. Sus 56 posturas están
-dibujadas de frente con coordenadas fijas, su cara es plana (8 bocas, 9 ojos, cejas), sus 27
-mudas son formas 2D — en 3D harían falta un esqueleto y 56 animaciones nuevas. Y hay un
-motivo que no es técnico sino suyo: su cuerpo flotante está SIEMPRE en pantalla, y un render
-3D continuo ahí le come la batería. Eligió la opción A: "los saltitos se quedan, agregarle
-más realidad, y lo más parecido a 3D sin rehacer nada, sin romper nada".
+1) 🚦 "LAS SEÑALES ROJAS DEBEN DURAR MIENTRAS TODAVÍA ESTÉ EN PELIGRO. Ejemplo: al comienzo
+   de los 15 minutos antes de la noticia de alto impacto me dice peligro, y los 15 minutos
+   después; y al terminar, la verde diciéndome «ya tienes luz verde». Así, de verlo y oírlo,
+   ya saber cómo va la cosa."
+   ⚠️ CORRIGE UN FALLO DE CONCEPTO MÍO DE LA v7.59: puse el rojo como un DESTELLO que salía
+   con el gesto urgente y se iba con él. Pero el peligro no es un instante, es un RATO: la
+   ventana de una noticia dura 30 minutos. Un aviso que dura menos que el peligro no sirve
+   para saber "cómo va la cosa", que es exactamente lo que él pidió.
+   AHORA es un ESTADO: 🔴 mientras dure la ventana (se mantiene aunque cambie de gesto,
+   aunque hable y aunque Rey abra y cierre Apex) y 🟢 al terminar, DICIÉNDOSELO en voz alta.
+   Con DOS motores y una sola luz: la app lo calcula con su calendario real (±15 min sobre
+   las noticias de alto y medio impacto de SUS pares — el mismo veto que usa su Ejecutor), y
+   EL VIGÍA lo lleva con Apex cerrada, que es la mayor parte del día.
+   ⚖️ El verde se PROGRAMA al encender el rojo, no espera a que llegue otro aviso: si
+   dependiera de que pase algo más podría no llegar nunca y Rey se quedaría con el rojo
+   puesto sin saber si el peligro pasó. Una luz que no se apaga sola es peor que no tener luz.
 
-LO AÑADIDO, TODO ENCIMA DE LO QUE HABÍA:
+2) 🌑 "FALTA LA SOMBRA DE ABAJO, y la sombra es alrededor del cuerpo y debajo no; que se ve
+   CUADRADO alrededor de él, toda la zona a su alrededor, y cuando hace un gesto se ve más."
+   ⚠️ OTRO FALLO MÍO DE LA v7.59, y lo cazó en la primera foto. Al igualar su halo con el del
+   Roberto de dentro lo agrandé de 14 px a ~10vh (≈23 dp). Pero su ventana medía 132 dp y su
+   cuerpo 124: CUATRO dp de margen por lado. Un halo de 23 dp en 4 dp de sitio no se difumina:
+   SE CORTA. Y un halo cortado en recto es el cuadrado que él fotografió — y "cuando hace un
+   gesto se ve más" porque al levantar el brazo ocupa más y el recorte queda más a la vista.
+   ARREGLO EN DOS PARTES: (a) SITIO — su ventana pasa de 132×231 a 176×264 dp y su CUERPO NO
+   CAMBIA DE TAMAÑO (sigue en 124×216 dp: por eso --rob-alto baja de 94vh a 82vh, que de
+   264 dp son los mismos dp de antes); lo que crece es el margen: 26 dp por lado y 24 debajo,
+   donde había 4 y 2. (b) SOMBRA DEBAJO — una sombra ovalada en el SUELO, bajo su punta, que
+   es lo que de verdad asienta a un personaje; y RESPIRA con él: al flotar se encoge y se
+   aclara. El halo dorado se queda pero pequeño, solo para despegarlo de fondos oscuros.
 
-· SU CANTO. Al girar se ve su PERFIL DE LÁPIZ: estrecho, con sus dos caras de madera (una a
-  la luz y otra en sombra, que es lo que lo hace prisma), su goma, su virola, su punta y la
-  ropa del día en franja — se pone sola, igual que la espalda. Es UN dibujo, no 56 posturas.
-· EL GIRO EN TRES FASES (190 → 410 → 610 ms): se estrecha de frente → SE VE SU CANTO → se
-  abre ya de espaldas. Antes era un salto (se achataba a nada y aparecía del otro lado).
-· LA LUZ DE CILINDRO en su cuerpo, su goma, su virola y su punta: la luz entra por la
-  izquierda, brilla, y la sombra cae a la derecha — y POR DETRÁS VA VOLTEADA, porque si no
-  el giro se notaría plano. Esto es lo que más 3D aporta en un dibujo plano, y no cambia ni
-  una forma: ni una postura, ni una prenda, ni una animación.
-· AL FLOTAR SE INCLINA Y SE ESTRECHA un pelín, como algo que gira. Sus SALTITOS siguen
-  intactos: fue condición suya.
+3) 🎭 "TANTO EL DE AFUERA COMO EL DE ADENTRO DEBE DARME TODAS LAS SEÑALES POSIBLES para
+   mantenerme al día y avisarme con su cuerpo, gestos y señales, y al hablar."
+   Se comprobó donde podía fallar —con Apex cerrada el gesto lo elige el vigía de Android, no
+   la app— y salió: los AVISOS sí usan `robSitua`, la tabla compartida (bien), pero la CARA de
+   la notificación la elegía una lista de Java con SOLO 13 caras… y Roberto tiene 19
+   DIBUJADAS. Seis existían y no salían JAMÁS: aprueba, carino, saluda, sorprende y tetoca. Y
+   "buenos días" caía en `idea` — la cara de saludar no se usaba ni para saludar. Ya están las
+   19 conectadas con los mismos disparadores que usa Apex por dentro.
 
-⚠️ UNA IDEA MÍA QUE SE DESCARTÓ ANTES DE LLEGAR A SU TELÉFONO: hacer PARALAJE (que el
-sombrero flotara a distinta velocidad que la cabeza). Está mal pensado — el paralaje sirve
-cuando se mueve la CÁMARA, no cuando se mueve el personaje entero: su sombrero va SOBRE su
-cabeza y se le habría despegado. Queda escrito en el banco para no repetirlo.
+BANCOS: test-mismo-roberto pasa a 10 comprobaciones (ahora vigila que su halo QUEPA en su
+ventana, que es lo que impide que vuelva el cuadrado, y que la sombra vaya DEBAJO). Y
+test-fase2-cuerpo se corrigió: medía la VENTANA llamándola "el cuerpo" — hasta hoy daba igual
+porque eran lo mismo, y desde que hay margen ya no; ahora mide el cuerpo Y exige que la
+ventana sea más grande que él.
 
-Y DE LA v7.57, del mismo rato: EL GIRO YA SIGNIFICA ALGO. Antes salía cada nueve gestos sin
-motivo. Ahora se gira POR MOTIVOS (cierra el día y se va · se retira a esperar · en guardia
-sin nada, mira detrás) y solo una de cada tres veces. Con la LEY DE REY en DOS CIERRES:
-(1) en su cuerpo, cualquier cosa que le haga gesticular o hablar le pone de frente EN EL
-ACTO, aunque esté a mitad de giro; (2) en la app, no se gira con alarma o aviso reciente,
-pensando, con tarjeta pendiente, con Rey escribiendo, con la nubecita puesta o con Apex
-fuera de la vista. Y JAMÁS se gira enseñándole algo: eso lo corrigió él —"me va a mostrar el
-gráfico pero DE FRENTE, hablándome"— y se quitó de la lista.
-
-COMPROBADO EJECUTÁNDOLO EN SU moto g54, fase por fase: 90 ms de frente · 270 ms SU CANTO ·
-470 ms de espaldas. Y en el peor caso: alarma JUSTO cuando estaba de canto → de frente en el
-acto, con todas las clases de animación limpias.
-
-Bancos nuevos: test-volumen-3d (5) y test-giro-no-pisa (7).
+COMPROBADO EN SU moto g54: ventana de 440×660 px (= 176×264 dp exactos), y en la foto de su
+pantalla ya NO hay zona clara rectangular a su alrededor, con la sombra visible bajo su punta.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

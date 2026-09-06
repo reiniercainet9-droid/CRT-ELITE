@@ -58,15 +58,60 @@
      necesite la frase sin que Roberto ni su nubecita cambien un pelo de tamaño.
      El valor de aquí abajo es solo el de emergencia (si el guion no llegara a correr, todo
      se comporta como antes en vez de quedarse en blanco). */
+  /* 📐 v7.60 — su ventana pasó a 176×264 dp para que quepa su sombra sin cortarse. Su cuerpo
+     NO cambia de tamaño: 82vh de 264 dp son los mismos 217 dp que antes eran 94vh de 231. */
   :root{ --u:1vh; --globo-max:52vw;
-         --rob-alto:calc(94 * var(--u)); --rob-ancho:calc(calc(94 * var(--u)) * 0.571); }
+         --rob-alto:calc(82 * var(--u)); --rob-ancho:calc(calc(82 * var(--u)) * 0.571); }
 
   /* 🧍 el cuerpo: pegado al borde donde Rey lo haya dejado */
-  #robCuerpo{position:fixed;bottom:calc(1 * var(--u));width:var(--rob-ancho);height:var(--rob-alto);transition:none}
-  body[data-lado="der"] #robCuerpo{right:calc(1.5 * var(--u))}
-  body[data-lado="izq"] #robCuerpo{left:calc(1.5 * var(--u))}
+  /* 🧍 v7.59 — Y SE MUEVE DE LADO COMO EL DE DENTRO. Antes tenía transition:none y cambiaba
+     de borde DE GOLPE; el de dentro de Apex se desplaza y da un empujoncito de escala.
+     Rey lo vio: "la forma de moverse hacia los lados". Solo se anima el desplazamiento
+     lateral — nunca el alto ni el ancho, que eso sí daría tirones. */
+  #robCuerpo{position:fixed;bottom:calc(9 * var(--u));width:var(--rob-ancho);height:var(--rob-alto);
+             transition:left .26s cubic-bezier(.34,1.2,.64,1), right .26s cubic-bezier(.34,1.2,.64,1)}
+  /* 🌑 v7.60 — SU SOMBRA EN EL SUELO, debajo y no rodeándole. Rey: "falta la sombra de abajo,
+     y la sombra es alrededor del cuerpo y debajo no". Es lo que de verdad asienta a un
+     personaje: sin ella parece un recorte pegado a la pantalla.
+     Y RESPIRA con él: al flotar hacia arriba se encoge y se aclara, como pasa de verdad. */
+  #robSombra{position:fixed;bottom:calc(3.5 * var(--u));width:calc(var(--rob-ancho) * 0.52);
+             height:calc(3.2 * var(--u));border-radius:50%;
+             background:radial-gradient(ellipse at center, rgba(0,0,0,.55) 0%, rgba(0,0,0,.30) 45%, rgba(0,0,0,0) 72%);
+             pointer-events:none; animation:robSombraRespira 3.6s ease-in-out infinite}
+  body[data-lado="der"] #robSombra{right:calc(10 * var(--u) + var(--rob-ancho) * 0.24)}
+  body[data-lado="izq"] #robSombra{left:calc(10 * var(--u) + var(--rob-ancho) * 0.24)}
+  @keyframes robSombraRespira{0%,100%{transform:scaleX(1);opacity:1}50%{transform:scaleX(.86);opacity:.62}}
+  #robCuerpo.cambiando{animation:robPaso .3s ease-in-out}
+  @keyframes robPaso{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+  /* 📐 v7.60 — separado del borde de SU ventana para que la sombra tenga sitio a los dos
+     lados. Su ventana sigue pegada al borde de la pantalla: lo que se aparta es él dentro. */
+  body[data-lado="der"] #robCuerpo{right:calc(10 * var(--u))}
+  body[data-lado="izq"] #robCuerpo{left:calc(10 * var(--u))}
   /* que se despegue del fondo de cualquier app, clara u oscura */
-  #robCuerpo .rob-svg{filter:drop-shadow(0 2px 5px rgba(0,0,0,.55)) drop-shadow(0 0 14px rgba(240,201,92,.28))}
+  /* 🌑 v7.59 — LA MISMA SOMBRA Y EL MISMO HALO QUE DENTRO DE APEX.
+     Dentro: drop-shadow(0 6px 12px rgba(0,0,0,.65)) sobre un cuerpo de 148 px → 4% y 8%.
+     Aquí el cuerpo mide 94vh, así que 4% y 8% son 3.8vh y 7.6vh. Las medidas no se copian
+     a lo bruto (allí son píxeles, aquí vh): se copia la PROPORCIÓN. */
+  /* 🌑 v7.60 — la sombra propia sigue la FORMA de su cuerpo (drop-shadow respeta la silueta),
+     y el halo dorado baja a 5vh: con 26 dp de margen cabe entero y ya no se corta en cuadrado.
+     La sombra del SUELO va aparte, en #robSombra, porque esa es la que él pidió. */
+  #robCuerpo .rob-svg{filter:drop-shadow(0 calc(2.6 * var(--u)) calc(5 * var(--u)) rgba(0,0,0,.5))
+                             drop-shadow(0 0 calc(5 * var(--u)) rgba(240,201,92,.2))}
+  /* ✋🔔 v7.59 — EL LATIDO ROJO CON UNA ALERTA, que aquí fuera NO EXISTÍA. Dentro de Apex el
+     cuerpo late y se pone el halo rojo cuando el gesto es urgente (alerta y frena). Fuera,
+     que es donde Rey lo tiene delante todo el día, no pasaba nada de nada. */
+  #robCuerpo.urge .rob-svg{filter:drop-shadow(0 calc(2.6 * var(--u)) calc(5 * var(--u)) rgba(0,0,0,.5))
+                                  drop-shadow(0 0 calc(6.5 * var(--u)) rgba(255,90,90,.8))}
+  #robCuerpo.urge{animation:robLatir .8s ease-in-out infinite}
+  @keyframes robLatir{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
+  /* 🟢 v7.59 — DESPUÉS DEL ROJO, EL VERDE, también aquí fuera (que es donde Rey lo tiene
+     delante todo el día). Al salir de un estado urgente: verde unos segundos y a su dorado. */
+  #robCuerpo.despejado .rob-svg{filter:drop-shadow(0 calc(2.6 * var(--u)) calc(5 * var(--u)) rgba(0,0,0,.5))
+                                       drop-shadow(0 0 calc(6.5 * var(--u)) rgba(49,196,106,.8))}
+  #robCuerpo.despejado{animation:robDespeja 1.5s ease-in-out 2}
+  @keyframes robDespeja{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
+  #globo.ok{border-color:#31c46a; box-shadow:0 0 0 calc(1.6 * var(--u)) rgba(49,196,106,.3), 0 8px 24px rgba(0,0,0,.55)}
+  #globo.ok b{color:#5fe08c}
 
   /* 💬 la nubecita: SIEMPRE al lado contrario del cuerpo, para no taparlo */
   /* 💬 LA NUBECITA — v7.13, CALCADA A LA DE DENTRO DE APEX
@@ -95,6 +140,11 @@
          border-radius:calc(9 * var(--u)) calc(9 * var(--u)) calc(9 * var(--u)) calc(3.5 * var(--u));
          padding:calc(3.5 * var(--u)) calc(5 * var(--u));font-size:calc(7.2 * var(--u));line-height:1.28;font-weight:600;
          box-shadow:0 8px 24px rgba(0,0,0,.5)}
+  /* 🔴 v7.59 — LA NUBECITA URGENTE, calcada de `.rob-globo.urge` de index.html: borde rojo
+     y su anillo. Aquí fuera no existía, así que un "NO ENTRES" salía con el mismo borde
+     dorado que un "buenos días" — que es justo lo contrario de lo que hace falta. */
+  #globo.urge{border-color:#ff5a5a; box-shadow:0 0 0 calc(1.6 * var(--u)) rgba(255,90,90,.3), 0 8px 24px rgba(0,0,0,.55)}
+  #globo.urge b{color:#ff8a8a}
   /* 🎈 A LA ALTURA DE SU BOCA, NO DE SUS PIES. Su cuerpo mide 94vh desde 1vh del suelo, y
      la boca le cae al 47% de arriba — o sea a ~51vh del suelo. El rabito CUELGA de la nube
      y baja 7,5vh, así que la nube se pone a 58vh: la bolita pequeña muere justo en su boca.
@@ -156,6 +206,7 @@
 <body data-lado="der">
   <div id="globo"></div>
   <div id="pulso"></div>
+  <div id="robSombra"></div>
   <div id="robCuerpo"></div>
 
 <script src="situaciones.js"></script>
@@ -304,14 +355,77 @@
   /* 🤔 ¿está pensando la respuesta de Rey? (v7.35 — ver burbujaPensando) */
   var PENSANDO = false;
 
+  /* 🔔 v7.59 — ¿ES URGENTE ESTE GESTO? Se lo pregunta a Roberto, no a una lista aparte:
+     la marca `urgente` vive en ROB_EMO (hoy: alerta y frena). Si mañana se marca otro,
+     el de fuera se entera solo — que es lo que evita que vuelvan a separarse. */
+  function esUrgente(g){
+    try { return !!(Roberto.emociones[g] && Roberto.emociones[g].urgente); } catch(_){ return false; }
+  }
+  /* 🟢 v7.59 — y el VERDE cuando pasó el peligro. Se dispara solo en el PASO de urgente a
+     no urgente, que es exactamente el momento en que el peligro pasó: no hay que acordarse
+     de llamarlo desde ningún sitio. */
+  var _erUrgente = false, _tDespeja = null;
+  function pintarUrgencia(g){
+    try {
+      var urge = esUrgente(g);
+      var c = document.getElementById("robCuerpo");
+      var n = document.getElementById("globo");
+      /* 🚦 v7.60 — si hay SEMÁFORO puesto, manda él: su luz dura lo que dura el peligro y
+         no se la puede llevar por delante un gesto que pasa. */
+      if (LUZ) { pintarLuz(); _erUrgente = urge; return; }
+      if (c) c.classList.toggle("urge", urge);
+      if (n) n.classList.toggle("urge", urge);
+      if (_erUrgente && !urge) {
+        if (c) { c.classList.add("despejado"); }
+        if (n) { n.classList.add("ok"); }
+        clearTimeout(_tDespeja);
+        _tDespeja = setTimeout(function(){
+          try { if (c) c.classList.remove("despejado"); if (n) n.classList.remove("ok"); } catch(_){}
+        }, 3200);
+      }
+      if (urge) { clearTimeout(_tDespeja); if (c) c.classList.remove("despejado"); if (n) n.classList.remove("ok"); }
+      _erUrgente = urge;
+    } catch(_){}
+  }
   function gesto(g){
     try { if (Roberto.emociones[g]) Roberto.poner(g); } catch(_){}
+    pintarUrgencia(g);
   }
 
   window.burbujaGesto = function(g){ gesto(g); };
 
+  /* 🚦 v7.60 — LA LUZ DEL SEMÁFORO, que DURA lo que dura el peligro.
+     Rey (06-09): "las señales rojas deben durar mientras todavía esté en peligro… y al
+     terminar la verde diciéndome «ya tienes luz verde»".
+     ⚠️ Esto es distinto del rojo que sale con un gesto urgente (ese es un instante). Esta
+     luz es un ESTADO: se queda puesta aunque cambie de gesto, aunque hable y aunque Rey
+     abra y cierre Apex. Por eso manda sobre la otra: si hay semáforo, gana el semáforo. */
+  var LUZ = "";
+  window.burbujaSemaforo = function(luz){
+    LUZ = (luz === "rojo" || luz === "verde") ? luz : "";
+    pintarLuz();
+  };
+  function pintarLuz(){
+    try{
+      var c = document.getElementById("robCuerpo");
+      var n = document.getElementById("globo");
+      if(!c) return;
+      c.classList.toggle("urge", LUZ === "rojo");
+      c.classList.toggle("despejado", LUZ === "verde");
+      if(n){ n.classList.toggle("urge", LUZ === "rojo"); n.classList.toggle("ok", LUZ === "verde"); }
+    }catch(_){}
+  }
+
   window.burbujaLado = function(lado){
-    document.body.dataset.lado = (lado === "izq") ? "izq" : "der";
+    var nuevo = (lado === "izq") ? "izq" : "der";
+    if (document.body.dataset.lado === nuevo) return;
+    document.body.dataset.lado = nuevo;
+    /* 🧍 el empujoncito de escala al cambiar de borde, como el de dentro cuando Rey lo mueve */
+    try {
+      var c = document.getElementById("robCuerpo");
+      if (c) { c.classList.remove("cambiando"); void c.offsetWidth; c.classList.add("cambiando");
+               setTimeout(function(){ c.classList.remove("cambiando"); }, 340); }
+    } catch(_){}
   };
 
   /* ══════════════════════════════════════════════════════════════════════════
