@@ -48,7 +48,16 @@
   [data-cuerpo="chulo"]   .rob-todo{animation:robChulo 2.6s ease-in-out infinite!important}
   [data-cuerpo="firme"]   .rob-todo{animation:none!important}
   [data-cuerpo="salto"]   .rob-todo{animation:robSalto .5s ease-out!important}
-  @keyframes robFlota{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+  @keyframes robFlota{0%,100%{transform:translateY(0) rotate(0deg) scaleX(1)}50%{transform:translateY(-9px) rotate(1.1deg) scaleX(.984)}}
+  /* 🧊 v7.58 — QUE EL FLOTAR SE VEA EN VOLUMEN, NO EN PLANO.
+     ⚠️ Aquí primero probé PARALAJE (que el sombrero flotara a distinta velocidad que la
+     cabeza) y está MAL PENSADO: el paralaje funciona cuando se mueve la cámara, no cuando
+     se mueve el personaje entero — su sombrero va SOBRE su cabeza, y moverlo a otro ritmo
+     se lo despega. Se descartó antes de que llegara a su teléfono.
+     Lo que SÍ da volumen sin despegar nada: que al subir se incline un poco y se estreche
+     un pelín (menos de un 2%), como se estrecha cualquier cosa que gira levemente hacia un
+     lado. Es el mismo cuerpo, la misma animación y los mismos saltitos: solo que ahora el
+     movimiento tiene tres dimensiones en vez de dos. */
   @keyframes robBrinca{0%,100%{transform:translateY(0) rotate(-2.5deg)}50%{transform:translateY(-18px) rotate(2.5deg)}}
   @keyframes robTiembla{0%,100%{transform:translate(-2px,0)}50%{transform:translate(2px,-1px)}}
   @keyframes robInclina{0%,100%{transform:rotate(-3deg)}50%{transform:rotate(2deg)}}
@@ -763,12 +772,21 @@ var MANGAS = {
    cambiado por otro dibujo". Todo con display, como la ropa y las posturas, así que no
    hay dos verdades que puedan descuadrarse. */
 ROB_CSS += `
-  .rob-atras{display:none}
+  .rob-atras,.rob-canto{display:none}
   .rob-svg[data-vista="espalda"] .rob-todo{display:none}
   .rob-svg[data-vista="espalda"] .rob-atras{display:block}
-  .rob-svg.rob-girando .rob-todo,.rob-svg.rob-girando .rob-atras{
-    transform-box:view-box; transform-origin:180px 300px; animation:robGira .52s ease-in-out!important}
-  @keyframes robGira{0%{transform:scaleX(1)}46%{transform:scaleX(.06)}100%{transform:scaleX(1)}}
+  .rob-svg[data-vista="canto"] .rob-todo{display:none}
+  .rob-svg[data-vista="canto"] .rob-canto{display:block}
+  /* 🔄 v7.58 — EL GIRO DE TRES FASES. Antes era un solo achatado a nada (un salto). Ahora:
+     se estrecha de frente → se ve su CANTO → se abre ya de espaldas. Cada fase tiene su
+     animación y su duración, y el JS cambia de vista justo en el paso de una a otra. */
+  .rob-svg .rob-todo,.rob-svg .rob-atras,.rob-svg .rob-canto{transform-box:view-box; transform-origin:180px 300px}
+  .rob-svg.rob-g1 .rob-todo{animation:robG1 .19s ease-in forwards!important}
+  .rob-svg.rob-g2 .rob-canto{animation:robG2 .22s ease-in-out!important}
+  .rob-svg.rob-g3 .rob-atras,.rob-svg.rob-g3 .rob-todo{animation:robG3 .19s ease-out!important}
+  @keyframes robG1{0%{transform:scaleX(1)}100%{transform:scaleX(.12)}}
+  @keyframes robG2{0%{transform:scaleX(.4)}45%{transform:scaleX(1)}100%{transform:scaleX(.4)}}
+  @keyframes robG3{0%{transform:scaleX(.12)}100%{transform:scaleX(1)}}
 `;
 ROB_CSS += Object.keys(MANGAS).map(function (k) {
   return '[data-ropa="' + k + '"]{--rj:' + MANGAS[k] + '}';
@@ -806,6 +824,9 @@ ROB_CSS += "\n" + Object.keys(POSES).map(function (k) { return '[data-pose="' + 
       /* la madera, un pelín más oscura: es la cara que no le da la luz */
       '<path d="M142 131 L218 131 L213 394 L147 394 Z" fill="var(--rmad2)"/>' +
       '<path d="M142 131 L166 131 L162 394 L147 394 Z" fill="var(--rmad)" opacity=".45"/>' +
+      /* 🧊 la luz también por detrás, pero VOLTEADA: desde atrás le da por el otro lado.
+         Si fuera igual que de frente, el giro se notaría plano. */
+      '<path d="M142 131 L218 131 L213 394 L147 394 Z" fill="url(#robLuz)" transform="translate(360,0) scale(-1,1)"/>' +
       '<path d="M147 394 L213 394 L180 472 Z" fill="#e8cd9e"/><path d="M167 424 L193 424 L180 472 Z" fill="#33302a"/>' +
       /* su nuca: la sombra bajo la virola */
       '<path d="M142 131 L218 131 L216 148 L144 148 Z" fill="#00000022"/>' +
@@ -819,6 +840,36 @@ ROB_CSS += "\n" + Object.keys(POSES).map(function (k) { return '[data-pose="' + 
       '</g>';
   }
 
+  /* ── 🔄 SU CANTO (v7.58) ──────────────────────────────────────────────────────────
+     El lápiz visto de LADO, mientras gira. Estrecho (26 px de ancho contra los 76 de
+     frente), con su goma, su virola, su madera, su punta y la ropa como una franja del
+     color de la muda del día — así que se pone solo, igual que la espalda.
+     No lleva cara ni brazos: de canto no se le verían, y fingirlos sería peor.
+     Se ve 220 ms en mitad del giro. Es lo que hace que el ojo lea "se está dando la
+     vuelta" en vez de "lo han cambiado por otro dibujo". */
+  function cantoHTML() {
+    return '<g class="rob-canto">' +
+      /* goma */
+      '<path d="M167 64 Q180 40 193 64 L193 106 L167 106 Z" fill="var(--rcor)"/>' +
+      '<path d="M167 64 Q180 40 193 64 L193 78 Q180 56 167 78 Z" fill="#ff9086"/>' +
+      /* virola */
+      '<rect x="165" y="104" width="30" height="27" rx="5" fill="var(--roro)"/>' +
+      '<rect x="165" y="111" width="30" height="3.6" fill="var(--roro2)"/>' +
+      '<rect x="165" y="121" width="30" height="3.6" fill="var(--roro2)"/>' +
+      /* la madera: dos caras del prisma, una a la luz y otra a la sombra — eso es el volumen */
+      '<path d="M166 131 L181 131 L179 394 L168 394 Z" fill="var(--rmad)"/>' +
+      '<path d="M181 131 L194 131 L192 394 L179 394 Z" fill="var(--rmad2)"/>' +
+      /* punta */
+      '<path d="M168 394 L192 394 L180 472 Z" fill="#e8cd9e"/>' +
+      '<path d="M175 424 L186 424 L180 472 Z" fill="#33302a"/>' +
+      /* la ropa, del color de la muda de hoy */
+      '<path d="M164 268 L196 268 L194 376 L166 376 Z" fill="var(--rj)"/>' +
+      '<path d="M181 268 L196 268 L194 376 L179 376 Z" fill="#00000030"/>' +
+      /* la nariz, que de canto SÍ se nota y es lo que dice hacia dónde mira */
+      '<path d="M194 206 Q206 216 194 224 Z" fill="var(--rgu2)" opacity=".9"/>' +
+      '</g>';
+  }
+
   /* ── EL PERSONAJE ── */
   function svgHTML() {
     var poses = "";
@@ -828,15 +879,43 @@ ROB_CSS += "\n" + Object.keys(POSES).map(function (k) { return '[data-pose="' + 
     for (var a in ACCS)  accs  += '<g class="rob-acc rob-a-' + a + '">' + ACCS[a] + "</g>";
     return '<svg class="rob-svg" viewBox="0 0 360 520" data-ojos="normales" data-cejas="alegres" data-boca="sonrisa"' +
       ' data-pose="saluda" data-cuerpo="flota" data-fx="" data-ropa="wallstreet" data-acc="" role="img" aria-label="Roberto, tu mentor">' +
-      "<defs>" + MANOS + "</defs><g class=\"rob-todo\">" +
+      "<defs>" + MANOS +
+        /* 🧊 v7.58 — LA LUZ QUE LE DA VOLUMEN. Rey (06-09): "agregarle más realidad… lo más
+           parecido a 3D sin rehacer nada". Lo que más 3D aporta en un dibujo plano no es
+           girarlo: es la LUZ. Su cuerpo es un cilindro y hasta ahora era un color liso con
+           una franja oscura a la derecha. Con la luz entrando por la izquierda, su brillo y
+           la sombra cayendo a la derecha, el ojo lo lee REDONDO sin haber cambiado una sola
+           forma: ni una postura, ni una prenda, ni una animación. */
+        '<linearGradient id="robLuz" x1="0" y1="0" x2="1" y2="0">' +
+          '<stop offset="0%" stop-color="#000" stop-opacity=".22"/>' +
+          '<stop offset="14%" stop-color="#000" stop-opacity="0"/>' +
+          '<stop offset="34%" stop-color="#fff" stop-opacity=".30"/>' +
+          '<stop offset="52%" stop-color="#fff" stop-opacity="0"/>' +
+          '<stop offset="78%" stop-color="#000" stop-opacity=".14"/>' +
+          '<stop offset="100%" stop-color="#000" stop-opacity=".34"/>' +
+        '</linearGradient>' +
+        '<linearGradient id="robLuzGoma" x1="0" y1="0" x2="1" y2="0">' +
+          '<stop offset="0%" stop-color="#000" stop-opacity=".18"/>' +
+          '<stop offset="32%" stop-color="#fff" stop-opacity=".34"/>' +
+          '<stop offset="60%" stop-color="#fff" stop-opacity="0"/>' +
+          '<stop offset="100%" stop-color="#000" stop-opacity=".30"/>' +
+        '</linearGradient>' +
+      "</defs><g class=\"rob-todo\">" +
       /* lápiz */
       '<path d="M144 64 Q180 40 216 64 L216 106 L144 106 Z" fill="var(--rcor)"/>' +
       '<path d="M144 64 Q180 40 216 64 L216 78 Q180 56 144 78 Z" fill="#ff9086"/>' +
+      '<path d="M144 64 Q180 40 216 64 L216 106 L144 106 Z" fill="url(#robLuzGoma)"/>' +
       '<rect x="138" y="104" width="84" height="27" rx="8" fill="var(--roro)"/>' +
+      '<rect x="138" y="104" width="84" height="27" rx="8" fill="url(#robLuzGoma)"/>' +
       '<rect x="138" y="111" width="84" height="3.6" fill="var(--roro2)"/><rect x="138" y="121" width="84" height="3.6" fill="var(--roro2)"/>' +
       '<path d="M142 131 L218 131 L213 394 L147 394 Z" fill="var(--rmad)"/>' +
-      '<path d="M197 131 L218 131 L213 394 L194 394 Z" fill="var(--rmad2)" opacity=".5"/>' +
-      '<path d="M147 394 L213 394 L180 472 Z" fill="#fae2b4"/><path d="M167 424 L193 424 L180 472 Z" fill="#33302a"/>' +
+      '<path d="M197 131 L218 131 L213 394 L194 394 Z" fill="var(--rmad2)" opacity=".35"/>' +
+      /* 🧊 la luz del cilindro sobre su madera: va encima del color y por debajo de la cara,
+         la ropa y los brazos, para que le dé volumen sin ensuciar nada de lo de delante */
+      '<path d="M142 131 L218 131 L213 394 L147 394 Z" fill="url(#robLuz)"/>' +
+      '<path d="M147 394 L213 394 L180 472 Z" fill="#fae2b4"/>' +
+      '<path d="M147 394 L213 394 L180 472 Z" fill="url(#robLuz)" opacity=".75"/>' +
+      '<path d="M167 424 L193 424 L180 472 Z" fill="#33302a"/>' +
       /* cejas */
       '<g class="rob-ci"><path d="M130 152 Q150 139 169 149" stroke="var(--rtz)" stroke-width="7.5" fill="none" stroke-linecap="round"/></g>' +
       '<g class="rob-cd"><path d="M191 149 Q210 139 230 152" stroke="var(--rtz)" stroke-width="7.5" fill="none" stroke-linecap="round"/></g>' +
@@ -897,7 +976,7 @@ ROB_CSS += "\n" + Object.keys(POSES).map(function (k) { return '[data-pose="' + 
          pintan todas las prendas y el CSS enseña la que toca (data-ropa / data-acc), igual
          que con las poses. Van antes de los brazos para que las manos queden por encima. */
       ropas + accs +
-      poses + "</g>" + espaldaHTML() + "</svg>";
+      poses + "</g>" + espaldaHTML() + cantoHTML() + "</svg>";
   }
 
   /* ── LOS 33 ESTADOS (pose ÚNICA cada uno) ── */
@@ -1296,6 +1375,7 @@ ROB_CSS += "\n" + Object.keys(POSES).map(function (k) { return '[data-pose="' + 
 
   /* Un solo Roberto: el gesto cambia en TODOS sus cuerpos a la vez */
   function poner(k) {
+    deFrenteYa();                 /* 🔒 gesticular = mirar a Rey. Sin excepciones. */
     var e = ROB_EMO[k]; if (!e) return null;
     estado.emo = k;
     vivas().forEach(function (i) { ponerEn(i, k); });
@@ -1305,17 +1385,42 @@ ROB_CSS += "\n" + Object.keys(POSES).map(function (k) { return '[data-pose="' + 
      (no lo hay ni puede haberlo con cincuenta posturas dibujadas de frente), es el giro
      sobre el eje de los dibujos animados, que es lo que se lee bien en pantalla. */
   var _vista = "frente";
-  function mirar(v) {
+  /* @param yaMismo — de frente EN EL ACTO, sin el achatado. Se usa cuando llega algo
+     importante: no se le puede pedir a Rey que espere medio segundo a que su mentor
+     termine de girarse para leerle una alarma. */
+  function mirar(v, yaMismo) {
     v = (v === "espalda") ? "espalda" : "frente";
     if (v === _vista) return v;
     _vista = v;
     vivas().forEach(function (i) {
       var s = i.svg;
-      s.classList.remove("rob-girando"); void s.offsetWidth; s.classList.add("rob-girando");
-      setTimeout(function () { s.dataset.vista = v; }, 240);
-      setTimeout(function () { s.classList.remove("rob-girando"); }, 560);
+      var limpia = function () { s.classList.remove("rob-g1", "rob-g2", "rob-g3"); };
+      if (yaMismo) { limpia(); s.dataset.vista = v; return; }
+      /* 🔄 v7.58 — TRES FASES: se estrecha → se ve su canto → se abre del otro lado.
+         Los relojes van en cadena para que el cambio de dibujo caiga justo en el paso de
+         una fase a la siguiente; si se cambiara antes o después, se vería el salto. */
+      limpia(); void s.offsetWidth; s.classList.add("rob-g1");
+      setTimeout(function () {                       /* 190 ms: ya está de canto */
+        s.classList.remove("rob-g1"); s.dataset.vista = "canto"; void s.offsetWidth; s.classList.add("rob-g2");
+      }, 190);
+      setTimeout(function () {                       /* 410 ms: sale por el otro lado */
+        s.classList.remove("rob-g2"); s.dataset.vista = v; void s.offsetWidth; s.classList.add("rob-g3");
+      }, 410);
+      setTimeout(limpia, 610);
     });
     return v;
+  }
+  /* 🔒 LEY DE REY (06-09): "que no interfiera con ninguna alarma ni aviso importante… debe
+     mostrarme el gráfico DE FRENTE, hablándome, notificándome las alarmas y respondiéndome".
+     Este es el cierre de abajo: pase lo que pase y venga de donde venga, si Roberto va a
+     gesticular o a hablar, PRIMERO se pone de frente. No hay forma de que se le quede la
+     espalda puesta mientras le dice algo. */
+  function deFrenteYa() {
+    /* 🔒 y también si está a MITAD de giro: si llega una alarma mientras se da la vuelta,
+       se corta el giro en seco y se pone de frente. Su ley no admite "espera a que acabe". */
+    var aMedias = false;
+    try { aMedias = vivas().some(function (i) { return /rob-g[123]/.test(i.svg.className.baseVal || i.svg.getAttribute("class") || ""); }); } catch (_) {}
+    if (_vista !== "frente" || aMedias) { _vista = "espalda"; mirar("frente", true); }
   }
   function gestoDe(txt) {
     var t = String(txt || "");
@@ -1323,6 +1428,7 @@ ROB_CSS += "\n" + Object.keys(POSES).map(function (k) { return '[data-pose="' + 
     return "ensena";
   }
   function hablar(texto, op) {
+    deFrenteYa();                 /* 🔒 hablar = mirar a Rey. Sin excepciones. */
     op = op || {};
     if (!vivas().length) return;
     callar();
@@ -1349,7 +1455,8 @@ ROB_CSS += "\n" + Object.keys(POSES).map(function (k) { return '[data-pose="' + 
     /* 🔄 Roberto.mirar("espalda"|"frente") — se gira sobre su eje. El cambio de vista se
        hace EN MITAD del achatado (a los 240 ms), que es cuando está de canto y no se ve:
        si se cambiara antes o después, se vería el salto. */
-    mirar: mirar, deEspaldas: function () { mirar("espalda"); }, deFrente: function () { mirar("frente"); },
+    mirar: mirar, deEspaldas: function () { mirar("espalda"); }, deFrente: function () { mirar("frente", true); },
+    vista: function () { return _vista; },
     montar: montar, poner: poner, hablar: hablar, callar: callar, gestoDe: gestoDe,
     vestir: vestir, vestirSolo: vestirSolo, ropaDeAhora: ropaDeAhora,
     ropas: function () { return Object.keys(ROPAS); }, accesorios: function () { return Object.keys(ACCS); },
