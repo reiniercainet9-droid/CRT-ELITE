@@ -61,7 +61,15 @@
   /* 📐 v7.60 — su ventana pasó a 176×264 dp para que quepa su sombra sin cortarse. Su cuerpo
      NO cambia de tamaño: 82vh de 264 dp son los mismos 217 dp que antes eran 94vh de 231. */
   :root{ --u:1vh; --globo-max:52vw;
-         --rob-alto:calc(82 * var(--u)); --rob-ancho:calc(calc(82 * var(--u)) * 0.571); }
+         /* 📐 v7.61 — UN SOLO SITIO PARA CADA MEDIDA. La v7.60 metió el cuerpo hacia dentro
+            para que cupiera su sombra, pero la nubecita y el pulso siguieron anclados al
+            sitio de antes y se le montaban encima. Ahora todo lo que se coloca al lado de
+            Roberto suma este mismo --rob-borde: si un día cambia, cambian todos a la vez. */
+         --rob-hh:0.82; --rob-alto:calc(82 * var(--u));
+         --rob-ancho:calc(calc(82 * var(--u)) * 0.571);
+         --rob-borde:calc(10 * var(--u));
+         /* lo que ocupa Roberto contado desde el borde de la pantalla: su cuerpo + su margen */
+         --rob-hueco:calc(var(--rob-ancho) + var(--rob-borde)); }
 
   /* 🧍 el cuerpo: pegado al borde donde Rey lo haya dejado */
   /* 🧍 v7.59 — Y SE MUEVE DE LADO COMO EL DE DENTRO. Antes tenía transition:none y cambiaba
@@ -78,15 +86,15 @@
              height:calc(3.2 * var(--u));border-radius:50%;
              background:radial-gradient(ellipse at center, rgba(0,0,0,.55) 0%, rgba(0,0,0,.30) 45%, rgba(0,0,0,0) 72%);
              pointer-events:none; animation:robSombraRespira 3.6s ease-in-out infinite}
-  body[data-lado="der"] #robSombra{right:calc(10 * var(--u) + var(--rob-ancho) * 0.24)}
-  body[data-lado="izq"] #robSombra{left:calc(10 * var(--u) + var(--rob-ancho) * 0.24)}
+  body[data-lado="der"] #robSombra{right:calc(var(--rob-borde) + var(--rob-ancho) * 0.24)}
+  body[data-lado="izq"] #robSombra{left:calc(var(--rob-borde) + var(--rob-ancho) * 0.24)}
   @keyframes robSombraRespira{0%,100%{transform:scaleX(1);opacity:1}50%{transform:scaleX(.86);opacity:.62}}
   #robCuerpo.cambiando{animation:robPaso .3s ease-in-out}
   @keyframes robPaso{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
   /* 📐 v7.60 — separado del borde de SU ventana para que la sombra tenga sitio a los dos
      lados. Su ventana sigue pegada al borde de la pantalla: lo que se aparta es él dentro. */
-  body[data-lado="der"] #robCuerpo{right:calc(10 * var(--u))}
-  body[data-lado="izq"] #robCuerpo{left:calc(10 * var(--u))}
+  body[data-lado="der"] #robCuerpo{right:var(--rob-borde)}
+  body[data-lado="izq"] #robCuerpo{left:var(--rob-borde)}
   /* que se despegue del fondo de cualquier app, clara u oscura */
   /* 🌑 v7.59 — LA MISMA SOMBRA Y EL MISMO HALO QUE DENTRO DE APEX.
      Dentro: drop-shadow(0 6px 12px rgba(0,0,0,.65)) sobre un cuerpo de 148 px → 4% y 8%.
@@ -149,8 +157,21 @@
      la boca le cae al 47% de arriba — o sea a ~51vh del suelo. El rabito CUELGA de la nube
      y baja 7,5vh, así que la nube se pone a 58vh: la bolita pequeña muere justo en su boca.
      (Con 51vh el rabito le quedaba por el pecho — se ve, y se ve mal.) */
-  body[data-lado="der"] #globo{right:calc(var(--rob-ancho) + calc(2 * var(--u))); bottom:calc(58 * var(--u))}
-  body[data-lado="izq"] #globo{left:calc(var(--rob-ancho) + calc(2 * var(--u)));  bottom:calc(58 * var(--u))}
+  /* 🩹 v7.61 — +var(--rob-borde): sin esto la nube empezaba 10 unidades más adentro de donde
+     empieza Roberto y se le montaba encima del cuerpo. */
+  body[data-lado="der"] #globo{right:calc(var(--rob-hueco) + calc(2 * var(--u))); bottom:calc(58 * var(--u))}
+  body[data-lado="izq"] #globo{left:calc(var(--rob-hueco) + calc(2 * var(--u)));  bottom:calc(58 * var(--u))}
+  /* 📋 v7.67 — EL REPASO DEL DÍA NO ES UNA FRASE HABLADA, Y NO SE PINTA IGUAL.
+     Rey (06-09, con la foto): la nubecita del vistazo le salía como una COLUMNA de 50 renglones
+     que le tapaba la pantalla entera. Se midió: la letra de la nubecita son 54 píxeles —está
+     pensada para leer de una ojeada una frase corta— y al lado de Roberto solo quedan ~300 de
+     ancho: dentro caben CUATRO LETRAS por renglón, y el repaso son tres líneas de cuarenta.
+     El repaso es un PANEL, no un globo de habla: va como una tira a lo ancho, con letra más
+     pequeña, y respetando sus tres renglones. Así cabe sin ensanchar nada. */
+  #globo.repaso{left:calc(2 * var(--u)) !important; right:calc(2 * var(--u)) !important;
+                max-width:none; font-size:calc(3.2 * var(--u)); line-height:1.42;
+                white-space:pre-line; text-align:left;
+                padding:calc(2.6 * var(--u)) calc(3.2 * var(--u))}
   #globo.hay{display:block; animation:robGloboPop .34s cubic-bezier(.34,1.56,.64,1) both}
   /* 🤏 v7.25 — plan B: si la ventana no creció a tiempo, la nubecita se pone ENCIMA del
      cuerpo en vez de quedarse fuera de la ventana (donde solo se veía su borde: la raya) */
@@ -192,14 +213,21 @@
   /* la nubecita se mide ANTES de enseñarse: ocupa su sitio pero todavía no se ve, así
      Android puede agrandar la ventana y solo entonces sale. Sin esto, Rey vería la
      nubecita cortada durante un instante y luego saltando a su sitio. */
-  #globo.midiendo{display:block;visibility:hidden;animation:none}
+  /* 📏 v7.72 — AL MEDIR, LA NUBECITA SE SUELTA DEL BORDE. Era una pescadilla que se mordía la
+     cola: se medía DENTRO de la ventana de reposo, pegada a la derecha, así que sólo podía
+     medir el hueco que quedaba a su izquierda (unos 50 px). Con esa medida se pedía una ventana
+     pequeña, y en esa ventana pequeña la frase volvía a partirse en renglones cortos: la
+     columna que fotografió Rey. Midiéndola suelta y con su ancho máximo real (652), se pide la
+     ventana que de verdad necesita — y entonces la frase entra en tres renglones. */
+  #globo.midiendo{display:block;visibility:hidden;animation:none;
+                  left:0 !important;right:auto !important;max-width:var(--globo-max) !important}
 
   /* un punto discreto que indica que está de guardia (nunca dormido) */
   #pulso{position:fixed;bottom:calc(2 * var(--u));width:calc(1.6 * var(--u));height:calc(1.6 * var(--u));border-radius:50%;
          background:#4fe0c0;box-shadow:0 0 calc(1.8 * var(--u)) #4fe0c0;opacity:.85;
          animation:latido 2.8s ease-in-out infinite}
-  body[data-lado="der"] #pulso{right:calc(var(--rob-ancho) + calc(1 * var(--u)))}
-  body[data-lado="izq"] #pulso{left:calc(var(--rob-ancho) + calc(1 * var(--u)))}
+  body[data-lado="der"] #pulso{right:calc(var(--rob-hueco) + calc(1 * var(--u)))}
+  body[data-lado="izq"] #pulso{left:calc(var(--rob-hueco) + calc(1 * var(--u)))}
   @keyframes latido{0%,100%{transform:scale(1);opacity:.5}50%{transform:scale(1.5);opacity:1}}
 </style>
 </head>
@@ -249,10 +277,39 @@
     congelarAnchoMaximo();
     return true;
   }
+  /* 📏 v7.61 — LO QUE OCUPA ROBERTO CONTADO DESDE EL BORDE: su cuerpo MÁS el margen que se
+     le dejó en la v7.60 para que su sombra no se cortara. Antes esto estaba escrito tres
+     veces a mano y con el alto viejo (0.94 en vez de 0.82), así que las cuentas creían que
+     era más ancho de lo que es y le robaban sitio a su nube. Una sola función, un solo
+     número, y sale del mismo 0.82 que usa el CSS. */
+  function anchoDesdeElBorde(){
+    return BASE.alto * 0.82 * 0.571 + BASE.u * 10;
+  }
+  /* 📏 EL ANCHO DE LA PANTALLA, EN LAS MISMAS UNIDADES QUE TODO LO DEMÁS — v7.71.
+     ⚠️ AQUÍ ESTABA EL FALLO QUE HACÍA DE LA NUBECITA UNA COLUMNA. Rey (07-09, con la foto):
+     "la nube cortada". Se midió: salía de 297 de ancho por 687 de alto, una tira vertical.
+     LA CAUSA ERA MEZCLAR DOS UNIDADES. `window.screen.width` devuelve 432 (píxeles CSS), pero
+     `innerWidth` y todo lo que se calcula aquí van en píxeles de PANTALLA (la ventana de reposo
+     mide 440 y son 440 píxeles reales de sus 1080). Al restar 432 − 375 salían 4 píxeles de
+     sitio, se caía al suelo de 45 unidades = 297, y con una letra de 54 píxeles ahí solo caben
+     ocho letras por renglón.
+     La pantalla de verdad son 432 × 2,5 = 1080, así que el sitio real es 1080 − 375 − 53 = 652:
+     MÁS DEL DOBLE. Con eso la frase entra en tres renglones en vez de en diez.
+     Es el mismo error de unidades por el que yo mismo dije que la ventana "se salía de la
+     pantalla" y era falso: aquí no se comparan medidas de dos sistemas distintos sin traducir. */
+  function anchoDeLaPantalla(){
+    try {
+      var w = (window.screen && window.screen.width) ? window.screen.width : 0;
+      var d = window.devicePixelRatio || 1;
+      var real = Math.round(w * d);
+      /* nunca menos que la propia ventana: si algo devuelve una cifra rara, no se estrecha */
+      return Math.max(real, window.innerWidth || 0, BASE.ancho || 0);
+    } catch (_) { return Math.max(window.innerWidth || 0, (BASE.ancho || 0) * 2); }
+  }
   function congelarAnchoMaximo(){
     var raiz = document.documentElement;
-    var pantalla = (window.screen && window.screen.width) ? window.screen.width : (BASE.ancho * 3);
-    var cuerpoAncho = BASE.alto * 0.94 * 0.571;
+    var pantalla = anchoDeLaPantalla();
+    var cuerpoAncho = anchoDesdeElBorde();
     var max = Math.max(BASE.u * 45, pantalla - cuerpoAncho - BASE.u * 8);
     raiz.style.setProperty("--globo-max", Math.round(max) + "px");
   }
@@ -277,7 +334,7 @@
       /* el rabito cuelga por debajo de la nube: entra en la cuenta */
       var rabito = BASE.u * 8;
       pedidoAlto = Math.ceil((suelo - r.top) + BASE.u * 4);
-      pedidoAncho = Math.ceil(r.width + BASE.alto * 0.94 * 0.571 + BASE.u * 5);
+      pedidoAncho = Math.ceil(r.width + anchoDesdeElBorde() + BASE.u * 5);
       if (r.bottom + rabito > suelo) pedidoAlto += Math.ceil(r.bottom + rabito - suelo);
       if (pedidoAlto < BASE.alto) pedidoAlto = BASE.alto;
       if (pedidoAncho < BASE.ancho) pedidoAncho = BASE.ancho;
@@ -314,7 +371,7 @@
   function apretarEnLaVentana(){
     try {
       var raiz = document.documentElement;
-      var libre = (window.innerWidth || BASE.ancho) - (BASE.alto * 0.94 * 0.571) - BASE.u * 5;
+      var libre = (window.innerWidth || BASE.ancho) - anchoDesdeElBorde() - BASE.u * 5;
       if (libre < BASE.u * 20) {                       /* no cabe al lado: va encima */
         document.body.classList.add("apretada");
         libre = (window.innerWidth || BASE.ancho) - BASE.u * 4;
@@ -473,21 +530,42 @@
      MUDA. Solo suenan las alarmas del mercado y los avisos que él se programó,
      que es lo que pidió. Y encima de eso sigue mandando su interruptor de siempre
      (🔊 Que Roberto me hable): si lo apaga, no suena ni eso. */
-  window.burbujaDecir = function(texto, g, hablar){
+  window.burbujaDecir = function(texto, g, hablar, modo){
     texto = String(texto || "").trim();
     if (!texto) return;
+    /* 📋 v7.67 — el repaso del día se pinta como panel (ver #globo.repaso) */
+    var esRepaso = (modo === "repaso");
+    try { globo.classList.remove("repaso"); if (esRepaso) globo.classList.add("repaso"); } catch(_){}
     /* ✅ v7.25 — una pregunta a medio contestar NO se pisa con una frase suelta: sería
-       quitarle a Rey la tarjeta de las manos. La vida de fondo se calla mientras decide. */
-    if (tarjetaViva && !PISAR_TARJETA) return;
+       quitarle a Rey la tarjeta de las manos. La vida de fondo se calla mientras decide.
+       🔊 v7.66 — PERO UNA ALARMA O UN AVISO SUYO SÍ SE DICEN, AUNQUE LA TARJETA SIGA PUESTA.
+       Rey (06-09, de noche): "Roberto ni me habló con el aviso de ahora". Se midió en su
+       teléfono y la causa era ESTA LÍNEA: había una tarjeta «¿Lo hago, Rey?» atascada en el
+       cuerpo flotante —dibujada y sin contestar— y con ella puesta se tragaba TODO lo que él
+       intentaba decir, en silencio y sin dejar rastro. Su aviso «🌙 Reflexión de la noche»
+       de las 21:31 murió aquí.
+       La regla de Rey sigue en pie —la tarjeta NO se le quita de las manos— pero lo que tiene
+       que oír, lo oye: la nubecita no se toca y la voz sale igual. */
+    if (tarjetaViva && !PISAR_TARJETA) {
+      if (hablar) {
+        try { console.log("BURBUJA-VOZ " + texto); } catch(_){}
+        try { console.log("BURBUJA-TRAGADO con-tarjeta-pero-dicho"); } catch(_){}
+      } else {
+        try { console.log("BURBUJA-TRAGADO callado-por-la-tarjeta"); } catch(_){}
+      }
+      return;
+    }
     /* 🛟 SEGURO DE ÚLTIMA HORA: una nubecita no es una carta. Aunque alguien mande un
        texto larguísimo por otro camino, aquí se corta a lo que se puede LEER de un
        vistazo — que es para lo que sirve.
        📏 v7.20: el tope sube de 95 a 140 porque la ventana ya crece con la frase, así que
        lo que antes no CABÍA ahora sí cabe. Sigue habiendo tope: el límite ya no lo pone el
        marco, lo pone lo que un ojo lee de una pasada. */
-    if (texto.length > 140) {
-      var c = texto.lastIndexOf(" ", 140);
-      texto = texto.slice(0, c > 90 ? c : 140).trim() + "…";
+    /* el repaso tiene su propio tope (son tres renglones, no una frase) */
+    var tope = esRepaso ? TOPE_VISTAZO : TOPE_FRASE;
+    if (texto.length > tope) {
+      var c = texto.lastIndexOf(" ", tope);
+      texto = texto.slice(0, c > 90 ? c : tope).trim() + "…";
     }
     /* 💬 v7.13 — PEDIR SITIO ANTES DE HABLAR.
        Rey: "hay un error en la nube, no se ve, solo sale una línea recta". La ventana
@@ -507,7 +585,14 @@
     globo.textContent = texto;
     globo.classList.add("midiendo");
     gesto(g || Roberto.gestoDe(texto));
-    pedirSitio(function(){
+    /* 📋 v7.67 — el repaso NO le pide sitio a Android: va a lo ancho de la ventana que ya hay,
+       con su letra pequeña. Pedir sitio era justo lo que lo convertía en una torre: se medía
+       estrecho (cabía poco al lado del cuerpo), se pedía una ventana altísima para esa columna,
+       y salía la tira vertical que Rey fotografió. */
+    if (esRepaso) {
+      globo.classList.remove("midiendo");
+      globo.classList.add("hay");
+    } else pedirSitio(function(){
       globo.classList.remove("midiendo");
       globo.classList.add("hay");
     });
@@ -553,6 +638,14 @@
      VISTAZO es ese resumen escrito en su nubecita; NO lo dice en voz alta (sería una lata) y
      sale como mucho una vez cada 45 minutos. */
   var _vistazoUlt = 0;
+  /* 📏 v7.62 — LOS TOPES DE LA NUBECITA, CON NOMBRE. Estaban escritos como números sueltos en
+     tres sitios, y un banco que buscaba "el tope" cogía el primero que encontraba: al añadir
+     el techo del vistazo se creyó que la nubecita admitía 3 letras. Con nombre, cada uno se
+     puede leer sin adivinar. */
+  var TOPE_FRASE   = 140;   /* lo que Roberto puede DECIR de una vez */
+  var TOPE_TARJETA = 160;   /* la tarjeta de "¿lo hago, Rey?" */
+  var TOPE_VISTAZO = 150;   /* el repaso del día */
+  var LINEAS_VISTAZO = 3;   /* y en cuántas líneas */
   window.burbujaInsignia = function(n){
     try{
       n = parseInt(n, 10) || 0;
@@ -573,9 +666,18 @@
     try{
       texto = String(texto || "").trim();
       if (!texto) return false;
+      /* 📏 v7.62 — UN TECHO, COMO YA LO TIENE LA TARJETA. Rey (06-09, con la nube delante):
+         "es un mensaje demasiado largo, la nube se pone casi la pantalla completa". La
+         tarjeta lleva su tope de 160 desde siempre; el vistazo nació sin ninguno y soltaba
+         lo que le echaran. Tres líneas y 150 letras: lo que se lee de una ojeada. */
+      var LF = String.fromCharCode(10);
+      var filas = texto.split(LF).filter(function(x){ return x.trim(); });
+      if (filas.length > LINEAS_VISTAZO) filas = filas.slice(0, LINEAS_VISTAZO);
+      texto = filas.join(LF);
+      if (texto.length > TOPE_VISTAZO) texto = texto.slice(0, TOPE_VISTAZO - 3).trim() + "…";
       if (!forzado && Date.now() - _vistazoUlt < 45 * 60000) return false;
       _vistazoUlt = Date.now();
-      window.burbujaDecir(texto, "ensena", false);   /* escrito, NO hablado */
+      window.burbujaDecir(texto, "ensena", false, "repaso");   /* escrito, NO hablado, y como panel */
       return true;
     }catch(_){ return false; }
   };
@@ -583,7 +685,7 @@
   window.burbujaTarjeta = function(texto){
     texto = String(texto || "").trim();
     if (!texto) return;
-    if (texto.length > 160) texto = texto.slice(0, 157).trim() + "…";
+    if (texto.length > TOPE_TARJETA) texto = texto.slice(0, TOPE_TARJETA - 3).trim() + "…";
     clearTimeout(tVuelta); clearTimeout(tTarjeta);
     tarjetaViva = true;
     globo.classList.remove("va");
@@ -606,8 +708,21 @@
        hasta que yo apruebe o desapruebe". SE MIDIÓ: se retiraba sola a los 90 segundos. Si
        estaba conduciendo, mirando el gráfico o hablando con alguien, la perdía.
        Ahora no se retira por su cuenta: solo se va cuando él toca Sí o No, o cuando la
-       propia acción caduca en Apex (una hora), y entonces Roberto se lo dice. */
-    tTarjeta = 0;
+       propia acción caduca en Apex (una hora), y entonces Roberto se lo dice.
+       🛟 v7.66 — RED DE SEGURIDAD, porque esa segunda salida DEPENDE DE QUE APEX SIGA VIVA.
+       El 06-09 quedó una tarjeta atascada en el cuerpo flotante: Apex se había recreado (una
+       reinstalación) y con ella se perdió el temporizador de la hora que debía retirarla, así
+       que nadie la quitó nunca. La tarjeta se quedó puesta y Roberto se quedó mudo.
+       Ahora, si a los 70 minutos nadie la ha resuelto —10 más que el plazo de Apex, para que
+       Apex siga ganando cuando está viva— se retira sola y él lo dice. Una pregunta que ya no
+       lleva a ninguna parte no puede costarle la voz. */
+    tTarjeta = setTimeout(function(){
+      try {
+        if (!tarjetaViva) return;
+        console.log("BURBUJA-TRAGADO tarjeta-caducada-a-los-70-min");
+        window.burbujaTarjetaFuera("Esa pregunta caducó, Rey. Si la quieres, pídemela otra vez.");
+      } catch(_){}
+    }, 70 * 60000);
   };
 
   window.burbujaTarjetaFuera = function(remate){

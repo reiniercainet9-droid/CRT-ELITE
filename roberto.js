@@ -475,15 +475,85 @@
       '<rect x="223" y="166" width="27" height="48" rx="12" fill="#2b2b3a"/>' +
       '<rect x="116" y="175" width="15" height="31" rx="7" fill="var(--rteal)" class="rob-auri"/>' +
       '<rect x="229" y="175" width="15" height="31" rx="7" fill="var(--rteal)" class="rob-auri"/>',
+    /* 🧣 v7.65 — LA BUFANDA, REHECHA. Rey (06-09): "no me gustó esa bufanda ni el color, parece
+       un paño tirado en el cuello, y la parte del cuello es demasiado ancho".
+       Tenía las dos razones medidas: iba de x=138 a x=222 (84 de ancho) cuando SU CUERPO mide
+       75 —o sea, le sobresalía por los dos lados como una tabla— y era del mismo coral que su
+       goma de borrar, así que no se leía como prenda sino como un trapo del mismo material que
+       él. Ahora: 56 de ancho (le entra dentro de los hombros), verde de punto, con su vuelta
+       al cuello, su NUDO y el flequillo del extremo — que es lo que la hace bufanda y no paño. */
     bufanda:
-      '<path d="M138 262 Q180 284 222 262 L222 280 Q180 300 138 280 Z" fill="var(--rcor)"/>' +
-      '<path d="M206 288 Q216 320 206 348 L190 344 Q200 316 192 286 Z" fill="var(--rcor)" class="rob-fleco"/>',
+      /* la vuelta al cuello, por detrás */
+      '<path d="M154 258 Q180 274 206 258 L209 276 Q180 294 151 276 Z" fill="#2e7d6b"/>' +
+      /* el punto: las rayas del tejido */
+      '<path d="M162 266 L165 284" stroke="#49a08b" stroke-width="3" stroke-linecap="round" opacity=".85"/>' +
+      '<path d="M177 271 L177 290" stroke="#49a08b" stroke-width="3" stroke-linecap="round" opacity=".85"/>' +
+      '<path d="M192 268 L190 287" stroke="#49a08b" stroke-width="3" stroke-linecap="round" opacity=".85"/>' +
+      /* el nudo, que es lo que dice "está anudada y no tirada encima" */
+      '<path d="M189 274 Q203 271 206 283 Q208 294 196 294 Q186 293 187 283 Z" fill="#256a5a"/>' +
+      /* el extremo que cae: estrecho y largo, que un extremo gordo vuelve a parecer un paño */
+      '<path d="M194 292 Q201 316 197 340 L207 342 Q211 316 207 290 Z" fill="#2e7d6b" class="rob-fleco"/>' +
+      '<path d="M198 340 L196 352 M202 341 L201 353 M206 342 L207 354" stroke="#256a5a" stroke-width="2.4" stroke-linecap="round" class="rob-fleco"/>',
     taza:
       '<rect x="232" y="306" width="34" height="32" rx="4" fill="var(--rgu)" stroke="var(--rtz)" stroke-width="2.4"/>' +
       '<path d="M266 314 Q280 322 266 330" stroke="var(--rtz)" stroke-width="3.4" fill="none"/>' +
       '<rect x="234" y="312" width="30" height="6" fill="var(--rcor)"/>' +
       '<path d="M242 300 Q238 290 244 282" stroke="var(--rgu2)" stroke-width="3" fill="none" stroke-linecap="round" class="rob-vapor"/>' +
       '<path d="M254 300 Q250 288 256 280" stroke="var(--rgu2)" stroke-width="3" fill="none" stroke-linecap="round" class="rob-vapor" style="animation-delay:.9s"/>',
+
+    /* ══ 🌙 LOS DE LA NOCHE (v7.64) ══════════════════════════════════════════════════════
+       Rey (06-09): "en vez de nada en la noche sería bueno agregar nuevos accesorios para cada
+       ocasión, si la necesita, para no repetir la misma todo el tiempo".
+       Antes, al quitarle la gorra y los auriculares del pijama, la noche se quedaba entre la
+       bufanda y no llevar nada — o sea, la bufanda todas las noches. Estos tres son SUYOS de
+       esa hora: dicen "se está acabando el día" igual que la taza dice "está en pie temprano". */
+
+    /* 🎩 el gorro de dormir, caído hacia un lado y con su borla */
+    gorroDormir:
+      '<path d="M141 90 Q176 26 226 62 Q256 84 246 122 L230 116 Q244 88 214 72 Q182 54 154 94 Z" fill="var(--rcor)"/>' +
+      '<rect x="133" y="82" width="94" height="14" rx="7" fill="var(--rgu)"/>' +
+      '<circle cx="242" cy="126" r="13" fill="var(--rgu)"/>',
+
+    /* 😴 el antifaz, subido a la frente: se lo acaba de quitar, no está dormido
+       (⚠️ va en la FRENTE, entre la gorra y los ojos — nunca sobre los ojos: la regla sellada
+        de Rey es que en su pantalla Roberto NUNCA aparece durmiendo) */
+    antifaz:
+      /* ⚠️ EN NEGRO NO SE LEÍA: sobre su cabeza parecía pelo, y las gomas gruesas a los lados
+         parecían dos bigotes. Se dibujó, se miró y se cambió — en un azul suave, con la goma
+         fina y pegada a la cabeza, ya se entiende que es un antifaz subido a la frente. */
+      '<path d="M136 142 Q120 140 118 152" stroke="#454f7a" stroke-width="4.5" fill="none" stroke-linecap="round"/>' +
+      '<path d="M224 142 Q240 140 242 152" stroke="#454f7a" stroke-width="4.5" fill="none" stroke-linecap="round"/>' +
+      '<path d="M136 122 H224 Q236 122 236 134 V150 Q236 162 223 162 H197 Q189 162 185 156 L180 149 L175 156 Q171 162 163 162 H137 Q124 162 124 150 V134 Q124 122 136 122 Z" fill="#6a76ad"/>' +
+      '<path d="M136 122 H224 Q236 122 236 134 V139 H124 V134 Q124 122 136 122 Z" fill="#7f8bc0"/>' +
+      '<path d="M145 131 L166 128" stroke="#fff" stroke-width="3.6" opacity=".55" stroke-linecap="round"/>',
+
+    /* 🧣 la manta por los hombros, como quien se sienta a terminar el día.
+       ⚠️ La primera versión se dibujó y PARECÍA UN BABERO: la tela bajaba en el centro y los
+       lados quedaban como dos alas verdes. Se redibujó al revés — la tela sube por detrás del
+       cuello y cae por FUERA de los brazos, con sus pliegues — y ya se lee como una manta. */
+    manta:
+      '<path d="M120 300 Q118 256 180 248 Q242 256 240 300 Q180 274 120 300 Z" fill="#b8735a"/>' +
+      '<path d="M120 292 Q112 332 122 362 Q140 356 156 358 Q148 322 150 286 Z" fill="#b8735a"/>' +
+      '<path d="M240 292 Q248 332 238 362 Q220 356 204 358 Q212 322 210 286 Z" fill="#b8735a"/>' +
+      '<path d="M136 300 Q142 330 138 354" stroke="#8f5340" stroke-width="3.2" fill="none" opacity=".7" stroke-linecap="round"/>' +
+      '<path d="M224 300 Q218 330 222 354" stroke="#8f5340" stroke-width="3.2" fill="none" opacity=".7" stroke-linecap="round"/>',
+
+    /* ✏️ y uno de TRABAJO: su lápiz en la oreja. Él es un lápiz, así que llevar el suyo
+       encima mientras opera es su manera de decir "estoy anotando". */
+    lapizOreja:
+      /* ⚠️ 06-09 — REY: "el lápiz lo tiene en los ojos, no en la oreja". Tenía razón y era
+         geometría: con el origen en (230,144) y 22° de inclinación, la PUNTA caía en (214,201)
+         — o sea, DENTRO de la cabeza y justo a la altura de los ojos (que van de 176 a 212).
+         Ahora nace más arriba y más afuera, así que el lápiz entero queda por fuera del
+         costado de la cabeza (x≥233, y el borde de la cabeza está en 222) y la punta baja a la
+         altura de la oreja, que es donde se lleva un lápiz. */
+      '<g transform="translate(243,120) rotate(15)">' +
+      '<rect x="0" y="0" width="13" height="44" fill="var(--rmad)"/>' +
+      '<rect x="0" y="-11" width="13" height="11" rx="3.5" fill="var(--rcor)"/>' +
+      '<rect x="0" y="0" width="13" height="7" fill="var(--roro)"/>' +
+      '<path d="M0 44 L6.5 59 L13 44 Z" fill="var(--rmad2)"/>' +
+      '<path d="M3.2 54 L6.5 59 L9.8 54 Z" fill="#2b2b3a"/>' +
+      "</g>",
   };
 
   var POSES = {
@@ -551,6 +621,25 @@
        por delante, a la altura de la cintura. Disponible, no cerrado. */
     atento:   brazo("M145 296 Q132 330 166 356") + mano("rgMano", "translate(170,360)") +
               brazo("M215 296 Q228 330 194 356") + mano("rgMano", "translate(190,360)"),
+    /* 🧍 v7.65 — LAS OTRAS CUATRO MANERAS DE ESTAR DE PIE SIN HACER NADA.
+       Rey (06-09): "que no quede solo con las manos juntas cuando está sin hacer nada".
+       `atento` (las manos juntas por delante) es la postura de su estado «⏳ En guardia», que
+       es el que MÁS TIEMPO lleva puesto — o sea que Rey lo veía siempre exactamente igual.
+       Ahora la guardia tiene cinco posturas y va rotando, como rota la ropa.
+       ⚠️ Ninguna reaprovecha las que ya usan otros gestos (`reposo` es de `preocupa`,
+       `jarras` de `presumido`, `cruzados` de `serio`): si dos gestos comparten postura dejan
+       de distinguirse de cuerpo, y hay un banco que lo exige desde hace versiones. */
+    /* ⚠️ se dibujó primero con las manos pegadas al cuerpo y salía CASI IGUAL que `reposo`
+       (las manos caían a 5 píxeles unas de otras). Se separan del tronco y se giran hacia
+       fuera: así se lee "relajado, abierto" y no se confunde con "preocupado". */
+    sueltos:  brazo("M145 296 Q126 322 132 354") + mano("rgMano", "translate(133,358) rotate(-26)") +
+              brazo("M215 296 Q234 322 228 354") + mano("rgMano", "translate(227,358) rotate(26)"),
+    unaCadera: brazo("M145 296 Q107 316 143 341") + mano("rgMano", "translate(147,343) rotate(-32)") +
+              brazo("M215 296 Q222 330 218 362") + mano("rgMano", "translate(216,366) rotate(12)"),
+    bolsillos: brazo("M145 296 Q133 320 153 337") + mano("rgMano", "translate(157,339) rotate(-44) scale(.92)") +
+              brazo("M215 296 Q227 320 207 337") + mano("rgMano", "translate(203,339) rotate(44) scale(.92)"),
+    codo:     brazo("M215 296 Q198 330 154 331") + mano("rgMano", "translate(150,331) rotate(-72)") +
+              brazo("M145 296 Q137 318 143 336") + mano("rgMano", "translate(145,340) rotate(-8)"),
     visor:    brazo("M145 296 Q122 324 132 356") + mano("rgMano", "translate(134,360)") +
               brazo("M215 296 Q264 280 230 158") + mano("rgPalma", "translate(206,150) rotate(176) scale(1.35)"),
     /* — carisma, bromas y sentimiento — */
@@ -1156,15 +1245,28 @@ ROB_CSS += "\n" + Object.keys(POSES).map(function (k) { return '[data-pose="' + 
     /* 👔 v6.90 — un cuerpo nuevo nace con la ropa que Roberto lleva puesta ahora mismo:
        es uno solo, no puede estar de traje en el chat y en pijama en la pantalla */
     pintarVestido(inst);
-    ponerEn(inst, op.emo || estado.emo || "saluda");
+    ponerEn(inst, op.emo || estado.emo || "saluda", poseDe(op.emo || estado.emo || "saluda"));
     return inst;
   }
-  function ponerEn(inst, k) {
+  /* 🧍 v7.65 — LA GUARDIA VA CAMBIANDO DE POSTURA. Rey (06-09): "que no quede solo con las
+     manos juntas cuando está sin hacer nada". La postura se elige UNA VEZ (en poner) y se le
+     pasa a todos sus cuerpos, para que el Roberto de dentro de Apex y el que flota estén
+     SIEMPRE igual — que son el mismo. */
+  var GUARDIA = ["atento", "sueltos", "unaCadera", "bolsillos", "codo"];
+  var _guardia = 0;
+  function poseDe(k) {
+    var e = ROB_EMO[k];
+    if (!e) return null;
+    if (k !== "espera") return e.pose;
+    _guardia = (_guardia + 1) % GUARDIA.length;
+    return GUARDIA[_guardia];
+  }
+  function ponerEn(inst, k, pose) {
     var e = ROB_EMO[k], s = inst && inst.svg;
     if (!e || !s) return null;
     s.classList.remove("rob-hablando");
     s.dataset.ojos = e.ojos; s.dataset.cejas = e.cejas || "neutral"; s.dataset.boca = e.boca;
-    s.dataset.pose = e.pose; s.dataset.fx = e.fx || "";
+    s.dataset.pose = pose || e.pose; s.dataset.fx = e.fx || "";
     /* 🎬 v7.15 — REINICIAR LA ANIMACIÓN SIN QUE SE LE BORRE EL CUERPO.
        Rey (02-09): "hace un gesto extraño cuando va a salir la nube, como que aparece y
        desaparece en ese momento; debería salir con naturalidad".
@@ -1230,8 +1332,14 @@ ROB_CSS += "\n" + Object.keys(POSES).map(function (k) { return '[data-pose="' + 
         hour: "2-digit", minute: "2-digit", hour12: false, month: "2-digit", day: "2-digit" }).formatToParts(new Date());
       var o = {}; p.forEach(function (x) { o[x.type] = x.value; });
       var h = parseInt(o.hour, 10); if (h === 24) h = 0;
+      /* 🕗 v7.63 — TAMBIÉN LA HORA DE REY, y sale de aquí a propósito: cuando la noche pasó a
+         medirse con SU reloj, la decisión empezó a depender de DOS relojes, y las pruebas que
+         solo fingían el de Nueva York se volvieron impredecibles (dos bancos se pusieron rojos
+         según la hora a la que se corrieran). Con las dos horas saliendo del MISMO sitio,
+         fingir el momento vuelve a ser una sola cosa. */
       return { dia: o.weekday, h: h, min: parseInt(o.minute, 10),
-               mes: parseInt(o.month, 10), num: parseInt(o.day, 10) };
+               mes: parseInt(o.month, 10), num: parseInt(o.day, 10),
+               hRey: new Date().getHours() };
     } catch (_) { return null; }
   }
   function ropaDeAhora() {
@@ -1240,7 +1348,7 @@ ROB_CSS += "\n" + Object.keys(POSES).map(function (k) { return '[data-pose="' + 
     if (t.mes === 12 && t.num >= 24 && t.num <= 26) return { ropa: "navidad", acc: "" };
     if ((t.mes === 12 && t.num === 31) || (t.mes === 1 && t.num === 1)) return { ropa: "fiesta", acc: "" };
     var finde = (t.dia === "Sat" || t.dia === "Sun");
-    var acc = accDelDia(t);
+    /* el accesorio se elige más abajo, cuando ya se sabe QUÉ ROPA lleva puesta (v7.64) */
     var m = momentoDelDia(t);              /* 0 madrugada · 1 mercado · 2 tarde · 3 noche */
 
     /* ══ 👕 TRES MUDAS AL DÍA, Y OTRAS TRES EL FIN DE SEMANA (v7.54) ═══════════════════
@@ -1269,14 +1377,18 @@ ROB_CSS += "\n" + Object.keys(POSES).map(function (k) { return '[data-pose="' + 
     var fecha = (t.num || 1) + (t.mes || 1) * 31;
     function delCajon(lista, salto) { return lista[(fecha + salto) % lista.length]; }
 
-    /* ☕ LA TAZA, SOLO DE MADRUGADA. Rey (06-09): "continúa con la misma tacita de ayer al
-       lado". Y era verdad: la llevaba pegada TODA la noche y TODO el fin de semana, así que
-       la veía siempre. De madrugada sí cuenta algo de él (está en pie cuando abre Londres);
-       a partir de ahí, que decida la rotación como con lo demás. */
-    if (m === 0) return { ropa: delCajon(CAJONES.noc, 0), acc: mezcla("taza", acc) };
-    if (m === 3) return { ropa: delCajon(CAJONES.noc, 0), acc: acc };
-    if (m === 2)            return { ropa: delCajon(CAJONES.tar, 2), acc: acc };
-    return { ropa: delCajon(CAJONES.man, 5), acc: acc };
+    /* 👕 v7.64 — PRIMERO LA ROPA Y DESPUÉS EL ACCESORIO, y es el orden lo que arregla el
+       defecto: antes el accesorio se elegía a ciegas, sin saber qué prenda iba a llevar, y
+       por eso podía acabar una gorra sobre un pijama. Ahora se sabe lo que lleva puesto y
+       se le pone lo que le pega.
+       ☕ LA TAZA, SOLO DE MADRUGADA: ahí cuenta algo de él (está en pie cuando abre Londres);
+       a cualquier otra hora Rey acababa viéndole "la misma tacita" de siempre. */
+    var ropa = (m === 0 || m === 3) ? delCajon(CAJONES.noc, 0)
+             : (m === 2)            ? delCajon(CAJONES.tar, 2)
+                                    : delCajon(CAJONES.man, 5);
+    var acc = accDelDia(t, ropa);
+    if (m === 0) acc = mezcla("taza", acc);
+    return { ropa: ropa, acc: acc };
   }
 
   /* El accesorio del MOMENTO. Cambia con el día Y con el tramo del día.
@@ -1286,7 +1398,7 @@ ROB_CSS += "\n" + Object.keys(POSES).map(function (k) { return '[data-pose="' + 
      de las 3 de la mañana a las 11 de la noche. Ahora el día tiene TRES momentos (mañana
      de mercado, tarde y noche) y en cada uno se arregla distinto — sin llegar a cambiarse
      cada veinte segundos, que eso parecería un disfraz y no una persona. */
-  function accDelDia(t) {
+  function accDelDia(t, ropa) {
     try {
       /* 👕 v7.31 — SE ARREGLA SIEMPRE, Y NUNCA IGUAL QUE HACE UN RATO.
          Rey (04-09): "diversificar la ropa y los accesorios… nada de él sea aburrido, debe
@@ -1303,19 +1415,89 @@ ROB_CSS += "\n" + Object.keys(POSES).map(function (k) { return '[data-pose="' + 
          diseña nada nuevo — se combina lo que Rey ya aprobó. */
       /* 📱 v7.54 — el móvil sale de esta rotación: era lo que hacía que apareciera flotando
          al lado del cuerpo a cualquier hora. Ahora solo aparece cuando lo COGE (pose movil). */
-      var TURNOS = ["gorra", "bufanda", "gafasSol", "auriculares", "sombrero",
-                    "gorra bufanda", "taza", "auriculares gorra", "sombrero gafasSol",
-                    "gorra auriculares", "bufanda gafasSol", "sombrero auriculares"];
+      /* 🎩 v7.64 — CADA MOMENTO TIENE SUS ACCESORIOS, Y CADA PRENDA LOS SUYOS.
+         Rey (06-09): "las combinaciones son fatales: pijama con audífonos y gorra, o sea esos
+         accesorios para un pijama y en horario de sueño y descanso está fuera de lugar… si no
+         va a salir en gorra y audífonos con los trajes. Los accesorios de la madrugada son una
+         cosa, los del horario de trabajo otra, los de la tarde otra y los de la noche otra.
+         Ropas y accesorios en su momento, hora y lugar."
+         TENÍA RAZÓN: había UNA SOLA rueda de 12 turnos para todo el día, y solo se descartaban
+         dos cosas sueltas (gafas de sol de noche, bufanda de día). Todo lo demás entraba en
+         cualquier momento y con cualquier prenda — de ahí el pijama con gorra y auriculares.
+         AHORA cada momento tiene SU PROPIA rueda, y encima se filtra por la CLASE de prenda:
+         con traje no se lleva gorra; en pijama no se llevan auriculares. */
       var tramo = momentoDelDia(t);
+      var RUEDAS = {
+        /* 0 · madrugada: en pie cuando abre Londres, en bata o pijama. Su taza y poco más. */
+        0: ["taza", "taza bufanda"],
+        /* 1 · su ventana de trabajo: lo que pega con un traje (y también con un polo el finde) */
+        /* ⚠️ las GAFAS DE SOL salen POCO aquí a propósito: en su manual son para celebrar una
+           operación cazada o para ponerse chulo, y si las llevara puestas media jornada
+           dejarían de significar eso. Y un traje sin nada encima también es una pinta. */
+        /* ⚠️ v7.68 — SIN RANURA VACÍA EN HORARIO DE TRABAJO. Rey (07-09): "desde el comienzo de
+           Londres él debería estar con traje, corbata y SUS ACCESORIOS correspondientes". Con
+           el traje se le van los auriculares y la gorra (no pegan), así que si además le tocaba
+           la ranura vacía se pasaba la jornada entera sin nada encima. */
+        1: ["sombrero", "lapizOreja", "sombrero lapizOreja", "gafasSol",
+            "lapizOreja auriculares", "auriculares", "gafasSol lapizOreja"],
+        /* 2 · la tarde, ya de calle: aquí sí cabe la gorra */
+        2: ["gorra", "gafasSol", "gorra gafasSol", "auriculares", "sombrero", "gorra auriculares"],
+        /* 3 · la noche: se acaba el día y está en casa. Rey (06-09): "EN VEZ DE NADA en la
+           noche sería bueno agregar nuevos accesorios para cada ocasión, para no repetir la
+           misma todo el tiempo". Se lo pidió literalmente: en vez de nada, algo — así que la
+           noche tiene ahora LO SUYO (gorro de dormir, antifaz en la frente, manta por los
+           hombros, bufanda) y SIETE maneras distintas, una por día de la semana, sin repetir
+           y sin ninguna noche vacía. */
+        /* 🧣 v7.67 — FUERA LA MANTA. Rey se quejó DOS VECES de lo mismo con distinta prenda:
+           primero de la bufanda ("parece un paño tirado en el cuello") y luego, ya con la
+           bufanda rehecha, de la manta ("el trapo"). Una tela echada por encima no le gusta
+           sobre este cuerpo, y no vale la pena insistir: se retira. Le quedan cuatro maneras
+           de arreglarse por la noche y ninguna se repite en la semana. */
+        3: ["gorroDormir", "bufanda", "antifaz", "gorroDormir bufanda", "antifaz bufanda",
+            "gorroDormir", "antifaz"]
+      };
+      var rueda = RUEDAS[tramo] || RUEDAS[2];
       var n = (t.num || 1) + (t.mes || 1) * 31 + tramo * 7;
-      /* si lo que toca no pega con el momento, se pasa al siguiente turno — NO se queda sin
-         nada, que ese era justo el defecto de antes */
-      for (var i = 0; i < TURNOS.length; i++) {
-        var a = quitaLoQueNoPega(TURNOS[(n + i) % TURNOS.length], tramo);
+      for (var i = 0; i < rueda.length; i++) {
+        var cruda = rueda[(n + i) % rueda.length];
+        /* ⚠️ IR SIN NADA ES UNA DECISIÓN, NO UN HUECO. En la rueda de la noche hay ranuras
+           vacías a propósito, y si se saltaran (como se salta lo que no pega) acabaría con la
+           bufanda puesta TODAS las noches — el mismo defecto de "la misma tacita" con otro
+           nombre. Así que una ranura vacía se respeta y se devuelve tal cual. */
+        if (cruda === "") return "";
+        var a = quitaLoQueNoPega(cruda, tramo, ropa);
         if (a) return a;
       }
-      return "gorra";
+      /* y si en este momento no le pega NADA de la rueda, va sin nada: forzarle una gorra a
+         un pijama es justo el defecto que Rey señaló. */
+      return "";
     } catch (_) { return ""; }
+  }
+
+  /* 👔 LA CLASE DE CADA PRENDA, para que el accesorio le pegue a lo que lleva puesto.
+     No se adivina por el nombre: se dice pieza a pieza, que es lo único que no se rompe
+     cuando mañana se añada una muda nueva. */
+  var CLASE_ROPA = {
+    wallstreet: "formal", trajeNegro: "formal", trajeAzul: "formal", trajeGranate: "formal",
+    trajeGris: "formal", trajeVerde: "formal", navidad: "formal", fiesta: "formal",
+    casa: "dormir", bataVino: "dormir", bataVerde: "dormir",
+    pijamaRayas: "dormir", pijamaGris: "dormir"
+    /* todo lo demás (sudaderas, polos, camisas, chándals, hawaianas) es "calle" */
+  };
+  function claseDe(ropa) { return CLASE_ROPA[ropa] || "calle"; }
+  /* qué pieza le pega a qué clase de ropa */
+  function pegaConLaRopa(pieza, ropa) {
+    var c = claseDe(ropa);
+    /* CON TRAJE solo lo que le pega a un traje. Rey (06-09): "vi el traje con audífonos, eso
+       está fuera de lugar; que combine con cada cosa, momento, hora y lugar". Los auriculares
+       son de calle y de tarde: con traje no. Le quedan el sombrero, su lápiz en la oreja, las
+       gafas (poco, que son de celebrar) o el traje limpio, que también es una pinta. */
+    if (c === "formal")
+      return ["gorra", "taza", "auriculares", "gorroDormir", "antifaz"].indexOf(pieza) < 0;
+    /* en bata o pijama: solo lo que pega con estar en casa */
+    if (c === "dormir") return ["taza", "bufanda", "gorroDormir", "antifaz", "manta"].indexOf(pieza) >= 0;
+    /* de calle: ni la taza ni las cosas de dormir */
+    return ["taza", "gorroDormir", "antifaz"].indexOf(pieza) < 0;
   }
 
   /* Los cuatro momentos de su día: 0 Londres (madrugada) · 1 Nueva York · 2 tarde · 3 noche.
@@ -1323,23 +1505,51 @@ ROB_CSS += "\n" + Object.keys(POSES).map(function (k) { return '[data-pose="' + 
      diferencia que arregló el defecto: si una regla mira la hora cruda, a las 17:59 lleva
      gafas y a las 18:01 no — o sea, se cambia solo delante de Rey, que es justo lo que él
      llamó "disfrazarse". Colgando de los momentos, se arregla UNA vez y así sigue. */
+  /* 🕑 v7.68 — SU JORNADA EMPIEZA CUANDO ABRE LONDRES, NO CUANDO ABRE NUEVA YORK.
+     Rey (07-09, en plena sesión de Londres): "Roberto todavía está con pijama y taza, y desde
+     el comienzo de Londres él debería estar con traje, corbata y sus accesorios".
+     ERA UN FALLO CLARO Y SE VE EN UNA LÍNEA: la madrugada llegaba hasta las 08:00 de Nueva
+     York, así que las killzones de Londres (02:00 NY) y de Pre-NY (07:30 NY) —su jornada
+     entera de la mañana— caían dentro de "madrugada" y le tocaba pijama.
+     Su ventana operativa de verdad es la del Ejecutor: 01:00–13:00 de Nueva York, y Londres
+     abre a las 02:00. A partir de ahí es horario de trabajo y va de traje. */
+  var TRABAJO_ABRE = 2;    /* 02:00 NY = apertura de Londres (03:00 de Rey) */
+  var TRABAJO_CIERRA = 13; /* 13:00 NY = cierre de su ventana (14:00 de Rey) */
   function momentoDelDia(t) {
-    var h = t && typeof t.h === "number" ? t.h : 12;
-    return (h < 8) ? 0 : (h < 13 ? 1 : (h < 20 ? 2 : 3));
+    var h = t && typeof t.h === "number" ? t.h : 12;   /* la hora de NUEVA YORK */
+    if (h >= TRABAJO_ABRE && h < TRABAJO_CIERRA) return 1;   /* de traje: es su jornada */
+    if (h < TRABAJO_ABRE) return 0;   /* en pie antes de que abra Londres: cómodo y con su taza */
+    /* 🌆 v7.63 — LA TARDE Y LA NOCHE SON DE SU VIDA, NO DEL MERCADO, ASÍ QUE VAN CON SU RELOJ.
+       Rey (06-09, 19:31 de Timbó): "¿ya es de noche y Roberto sigue con la misma ropa?".
+       Y tenía razón: la frontera estaba puesta a las 20:00 de NUEVA YORK, que son las 21:00
+       suyas. Con el sol puesto desde hacía casi dos horas, Roberto seguía en camisa hawaiana
+       y auriculares. Que lleve traje en horario de mercado sí depende de Nueva York —esa parte
+       se queda—, pero si es de noche o no, lo dice la ventana de Rey, no la de Wall Street. */
+    var hl = (t && typeof t.hRey === "number") ? t.hRey : h;
+    return (hl >= 19 || hl < 5) ? 3 : 2;
   }
 
   /* Las dos reglas de sentido común que ya tenía, ahora por momento y pieza a pieza (un
      turno puede llevar dos accesorios y antes se caía entero por culpa de uno). */
-  function quitaLoQueNoPega(combo, tramo) {
+  function quitaLoQueNoPega(combo, tramo, ropa) {
     var fuera = [];
     var piezas = String(combo || "").split(" ");
     for (var i = 0; i < piezas.length; i++) {
       var p = piezas[i];
       if (!p) continue;
+      /* 👔 v7.64 — y que le pegue a LO QUE LLEVA PUESTO, no solo a la hora: gorra con traje no,
+         auriculares con pijama tampoco. Era lo que Rey llamó "combinaciones fatales". */
+      if (ropa && !pegaConLaRopa(p, ropa)) continue;
       /* las gafas de sol de noche no, que no es un videoclip: solo con el sol arriba */
       if (p === "gafasSol" && (tramo === 0 || tramo === 3)) continue;
       /* la bufanda solo de madrugada y de noche, que es cuando refresca */
       if (p === "bufanda" && (tramo === 1 || tramo === 2)) continue;
+      /* ☕ v7.63 — LA TAZA, SOLO DE MADRUGADA, DE VERDAD. La regla estaba escrita y se cumplía
+         en un sitio (el armario la añade a mano a las horas de Londres), pero la rotación de
+         accesorios la seguía sacando a media mañana y por la tarde — o sea que Rey volvía a
+         verle la tacita a cualquier hora, que es justo de lo que se quejó. De madrugada dice
+         algo suyo (está en pie cuando abre Londres); a las tres de la tarde no dice nada. */
+      if (p === "taza" && tramo !== 0) continue;
       fuera.push(p);
     }
     return fuera.join(" ");
@@ -1378,7 +1588,8 @@ ROB_CSS += "\n" + Object.keys(POSES).map(function (k) { return '[data-pose="' + 
     deFrenteYa();                 /* 🔒 gesticular = mirar a Rey. Sin excepciones. */
     var e = ROB_EMO[k]; if (!e) return null;
     estado.emo = k;
-    vivas().forEach(function (i) { ponerEn(i, k); });
+    var p = poseDe(k);
+    vivas().forEach(function (i) { ponerEn(i, k, p); });
     return e;
   }
   /* 🔄 v7.54 — girarse. Ver el comentario de espaldaHTML(): esto no es un 3D de verdad

@@ -1,58 +1,51 @@
-APEX v7.60 — TRADING DESK
+APEX v7.74 — TRADING DESK
 =========================
 
-🚦🌑 v7.60 — EL SEMÁFORO QUE DURA LO QUE DURA EL PELIGRO, Y SU SOMBRA EN EL SUELO
+💻 UN AVISO DEL SISTEMA YA NO SE LEE CON LAS REGLAS DEL MERCADO
 
-Rey (06-09), tres peticiones seguidas y dos de ellas corrigiendo fallos MÍOS de hace un rato:
+⚠️ ESTA VEZ HAY QUE SUBIR DOS COSAS: la web v7.74 Y el worker v5.128
+   (el worker está en esta misma carpeta: worker-elitepro-v5.128.js)
 
-1) 🚦 "LAS SEÑALES ROJAS DEBEN DURAR MIENTRAS TODAVÍA ESTÉ EN PELIGRO. Ejemplo: al comienzo
-   de los 15 minutos antes de la noticia de alto impacto me dice peligro, y los 15 minutos
-   después; y al terminar, la verde diciéndome «ya tienes luz verde». Así, de verlo y oírlo,
-   ya saber cómo va la cosa."
-   ⚠️ CORRIGE UN FALLO DE CONCEPTO MÍO DE LA v7.59: puse el rojo como un DESTELLO que salía
-   con el gesto urgente y se iba con él. Pero el peligro no es un instante, es un RATO: la
-   ventana de una noticia dura 30 minutos. Un aviso que dura menos que el peligro no sirve
-   para saber "cómo va la cosa", que es exactamente lo que él pidió.
-   AHORA es un ESTADO: 🔴 mientras dure la ventana (se mantiene aunque cambie de gesto,
-   aunque hable y aunque Rey abra y cierre Apex) y 🟢 al terminar, DICIÉNDOSELO en voz alta.
-   Con DOS motores y una sola luz: la app lo calcula con su calendario real (±15 min sobre
-   las noticias de alto y medio impacto de SUS pares — el mismo veto que usa su Ejecutor), y
-   EL VIGÍA lo lleva con Apex cerrada, que es la mayor parte del día.
-   ⚖️ El verde se PROGRAMA al encender el rojo, no espera a que llegue otro aviso: si
-   dependiera de que pase algo más podría no llegar nunca y Rey se quedaría con el rojo
-   puesto sin saber si el peligro pasó. Una luz que no se apaga sola es peor que no tener luz.
+LO QUE VISTE: a las 14:06 te saltó "😴 PC en reposo" con el emoji roto, y Roberto
+te dijo "se abre tu ventana de Londres, ponte delante del gráfico" — justo cuando
+la PC se acababa de dormir.
 
-2) 🌑 "FALTA LA SOMBRA DE ABAJO, y la sombra es alrededor del cuerpo y debajo no; que se ve
-   CUADRADO alrededor de él, toda la zona a su alrededor, y cuando hace un gesto se ve más."
-   ⚠️ OTRO FALLO MÍO DE LA v7.59, y lo cazó en la primera foto. Al igualar su halo con el del
-   Roberto de dentro lo agrandé de 14 px a ~10vh (≈23 dp). Pero su ventana medía 132 dp y su
-   cuerpo 124: CUATRO dp de margen por lado. Un halo de 23 dp en 4 dp de sitio no se difumina:
-   SE CORTA. Y un halo cortado en recto es el cuadrado que él fotografió — y "cuando hace un
-   gesto se ve más" porque al levantar el brazo ocupa más y el recorte queda más a la vista.
-   ARREGLO EN DOS PARTES: (a) SITIO — su ventana pasa de 132×231 a 176×264 dp y su CUERPO NO
-   CAMBIA DE TAMAÑO (sigue en 124×216 dp: por eso --rob-alto baja de 94vh a 82vh, que de
-   264 dp son los mismos dp de antes); lo que crece es el margen: 26 dp por lado y 24 debajo,
-   donde había 4 y 2. (b) SOMBRA DEBAJO — una sombra ovalada en el SUELO, bajo su punta, que
-   es lo que de verdad asienta a un personaje; y RESPIRA con él: al flotar se encoge y se
-   aclara. El halo dorado se queda pero pequeño, solo para despegarlo de fondos oscuros.
+ERAN TRES FALLOS ENCADENADOS, y ninguno era de Roberto:
 
-3) 🎭 "TANTO EL DE AFUERA COMO EL DE ADENTRO DEBE DARME TODAS LAS SEÑALES POSIBLES para
-   mantenerme al día y avisarme con su cuerpo, gestos y señales, y al hablar."
-   Se comprobó donde podía fallar —con Apex cerrada el gesto lo elige el vigía de Android, no
-   la app— y salió: los AVISOS sí usan `robSitua`, la tabla compartida (bien), pero la CARA de
-   la notificación la elegía una lista de Java con SOLO 13 caras… y Roberto tiene 19
-   DIBUJADAS. Seis existían y no salían JAMÁS: aprueba, carino, saluda, sorprende y tetoca. Y
-   "buenos días" caía en `idea` — la cara de saludar no se usaba ni para saludar. Ya están las
-   19 conectadas con los mismos disparadores que usa Apex por dentro.
+1. EL WORKER TIRABA LA ETIQUETA. En la puerta por donde tu PC manda sus avisos,
+   el worker rehacía el mensaje con solo título, cuerpo y etiqueta de grupo, y
+   perdía el campo que dice "esto es un aviso del sistema". Sin ese campo,
+   Roberto lee el aviso con las reglas del MERCADO.
 
-BANCOS: test-mismo-roberto pasa a 10 comprobaciones (ahora vigila que su halo QUEPA en su
-ventana, que es lo que impide que vuelva el cuadrado, y que la sombra vaya DEBAJO). Y
-test-fase2-cuerpo se corrigió: medía la VENTANA llamándola "el cuerpo" — hasta hoy daba igual
-porque eran lo mismo, y desde que hay margen ya no; ahora mide el cuerpo Y exige que la
-ventana sea más grande que él.
+2. Y EL AVISO DE LA SIESTA ERA UNA TRAMPA PERFECTA. Su texto nombra "ventana
+   operativa", "Londres" y "Pre-NY"... para explicarte CUÁNDO DESPIERTA. Roberto
+   vio esas tres palabras y sacó su regla de killzone.
 
-COMPROBADO EN SU moto g54: ventana de 440×660 px (= 176×264 dp exactos), y en la foto de su
-pantalla ya NO hay zona clara rectangular a su alrededor, con la sombra visible bajo su punta.
+3. Y EL TEXTO LLEGABA ROTO. Los guiones de tu PC no tenían la marca de
+   codificación, así que Windows los leía con el juego de caracteres antiguo y el
+   😴 se partía en cuatro caracteres basura. Ese era el "ðY~´".
+
+Y AL REVISAR TUS 32 AVISOS APARECIERON DOS MÁS QUE DECÍAN ALGO FALSO:
+
+· "🛑 Ejecutor APAGADO (freno diario)" te decía "saltó el stop". No: es tu freno
+  de pérdida diaria, que apaga al Ejecutor por la CUENTA, no por una operación.
+
+· "🛡️ Stop a breakeven" te decía "saltó el stop en GBPUSD". Es LO CONTRARIO: ese
+  aviso significa que moví tu stop a la entrada y esa operación YA NO PUEDE
+  PERDER. La mejor noticia contada como la peor.
+
+Y UNO QUE LLEVABA TIEMPO ROTO EN SILENCIO: la etiqueta "rem" la usan tanto tus
+avisos personales como los del sistema, así que la rama de "esto es tu rutina" se
+estaba tragando las lecturas buenas del Ejecutor. Tu "🤖 ENTRÉ · COMPRA EURUSD"
+salía como el título pelado con el reloj, en vez de "el Ejecutor entró en compra
+en EURUSD, lote 3. Yo te la vigilo". Eran CINCO avisos así.
+
+AHORA: cero avisos con frases falsas. Y tus avisos de ⏰ Mis avisos siguen siendo
+TUYOS —tu propio título, sin sustos que tú no pusiste—, que era la ley de antes y
+no se podía romper al arreglar esto.
+
+Detalle pequeño de propina: tu "🏋️ Backtesting obligatorio" te manda hacer algo,
+así que ahora Roberto te señala con el dedo en vez de sacar el reloj.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

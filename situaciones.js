@@ -40,7 +40,14 @@ const ROB_SITUA = [
     re:/límite|limite|drawdown|\bdd\b|peligro/,
     di:()=>"Rey, tu cuenta está cerca del límite. Para hoy y protégela." },
 
-  { id:"roto",     gesto:"apenado",
+  /* 😟 v7.74 — de "apenado" a "preocupa". Cuando se cae el Ejecutor o el Puente, Roberto
+     NO se equivocó: algo se rompió. "apenado" es su cara de «me equivoqué…», y le hacía
+     pedir perdón por una avería que no era suya; "preocupa" es «esto no me gusta», que es
+     lo que toca. Lo cazó test-alarma-no-es-aviso al quedar esta lectura al descubierto:
+     antes venía tapada por la rama de rutina, que ya le ponía «preocupa». La cara que ve
+     Rey en la notificación y la de su cuerpo salen de aquí, así que era la misma en las
+     dos y ahora también. (Se deja "perdida" en apenado: ahí sí se le escapó una señal.) */
+  { id:"roto",     gesto:"preocupa",
     re:/no puedo arrancar|no responde|no arranca|ca[íi]d[oa]|se cayó|sin conexión|desconect/,
     di:(d)=>(/ejecutor/.test(d.b) ? "Rey, el Ejecutor no arranca. No va a tomar ninguna entrada hasta que lo mires."
            : /puente/.test(d.b)   ? "Rey, se cayó el Puente. Me quedé sin ver tu gráfico."
@@ -244,6 +251,75 @@ const ROB_AVISOS = [
     lee:(b)=>({ frase:"Rey, aviso: se acerca " + (/Pre-NY/i.test(b) ? "tu ventana Pre-NY" : "Londres") + ". Enciende la PC y toca el aviso, y te hago el análisis del día." }) },
   { id:"analisis_sem", gesto:"tiempo",  re:/^🗓️ Análisis semanal/,
     lee:()=>({ frase:"Rey, aviso: el mercado abre pronto. Enciende la PC y toca el aviso, y te hago el análisis semanal." }) },
+  /* 💻 v7.74 — LOS AVISOS DE SU PROPIA PC. Rey, 07-09, enseñando el de las 14:06: «me saltó
+     esta notificación y Roberto me dijo "se abre tu ventana de Londres", totalmente mal».
+     Y era literal: las DOS siestas (la de Londres y la de las 14:05) caían en la regla del
+     MERCADO "ventana", porque su cuerpo nombra «ventana operativa», «Londres» y «Pre-NY»
+     para explicar CUÁNDO DESPIERTA. Resultado: la PC se acababa de dormir y Roberto le
+     mandaba ponerse delante del gráfico — lo contrario de lo que pasaba.
+     Se leen por su TÍTULO, que es su ley para los avisos del sistema, y por las PALABRAS y
+     NO por el emoji: el 07-09 el emoji llegaba roto (los .ps1 no tenían BOM) y una regla
+     anclada al 😴 habría fallado igual. */
+  { id:"pc_duerme", gesto:"siesta", re:/PC en reposo|Siesta de Londres/i,
+    lee:(b,t)=>{
+      const h = (String(b||"").match(/Despierto solo a las ([\d:]+)/) || [])[1] || "";
+      const londres = /Siesta de Londres/i.test(String(t||""));
+      return { frase: "Rey, " + (londres ? "cerró Londres" : "cerró tu ventana")
+             + " y no había nada abierto: dormí la PC para ahorrar."
+             + (h ? " Despierto a las " + h + "." : "") };
+    } },
+  { id:"pc_levanta", gesto:"audita", re:/Levant\S* tu sistema/i,
+    lee:()=>({ frase:"Rey, algo se había parado en tu PC y lo levanté yo. Ya está todo en pie." }) },
+
+  /* 🛡️ v7.74 — EL STOP MOVIDO A SU ENTRADA NO ES QUE SALTARA EL STOP: ES LO CONTRARIO.
+     Al barrer TODOS sus avisos con el fallo del 07-09 salieron tres que decían algo FALSO,
+     y este era el peor: "🛡️ Stop a breakeven · GBPUSD" acababa en «Rey, saltó el stop en
+     GBPUSD. Respira y sigue tu plan» — le daban una mala noticia cuando la noticia era
+     buena (esa operación ya NO puede perder). Es la misma familia del susto del 03-09 con
+     el "🤖 ENTRÉ" leído como un stop saltado. */
+  { id:"be", gesto:"vigila", re:/Stop a breakeven/i,
+    lee:(b,t)=>{
+      const par = (String(t||"").match(/·\s*([A-Z]{6})/) || [])[1] || "";
+      const r = (String(b||"").match(/\+([\d.]+)R/) || [])[1];
+      return { frase:"Rey, tu operación" + (par ? " en " + par : "") + " llegó a +" + (r || "1")
+             + "R y moví el stop a tu entrada: esta ya no puede perder." };
+    } },
+  /* 🛑 el freno diario apaga al Ejecutor por la CUENTA, no por una operación */
+  { id:"freno_dia", gesto:"serio", re:/Ejecutor APAGADO/i,
+    lee:()=>({ frase:"Rey, llegaste a tu pérdida máxima del día y apagué el Ejecutor. Hoy ya no se opera." }) },
+  /* 👁️ el vigía habla de una posición que YA está abierta */
+  { id:"vigia_noticia", gesto:"vigila", re:/VIG[ÍI]A\s*·\s*noticia/i,
+    lee:()=>({ frase:"Rey, sale una noticia fuerte y tienes posición abierta. Míralo tú y decide si la proteges." }) },
+  { id:"vigia_inval", gesto:"frena", re:/VIG[ÍI]A\s*·\s*invalidaci/i,
+    lee:(b)=>{
+      const par = (String(b||"").match(/\b([A-Z]{6})\b/) || [])[1] || "";
+      return { frase:"Rey, se rompió tu invalidación" + (par ? " en " + par : "") + ": la idea de esa entrada ya no vale." };
+    } },
+  /* 🔌 v7.74 — LO QUE SE CAYÓ Y LO QUE VOLVIÓ. No decían nada falso, pero salían con la
+     cara del RELOJ, que es la de "algo empieza": el "🔌 Puente DESCONECTADO" y el "🤖
+     Ejecutor CAÍDO" tienen que salir preocupados, y los "✅ ...reconectado", tranquilos.
+     La frase es su propio título, que ya es claro: aquí lo que faltaba era la CARA. */
+  /* ⚠️ SOLO los que NO tenían ya una lectura buena abajo. La primera versión de esta regla
+     era más gruesa y le robó el sitio a "perdida" («hubo una señal y el Ejecutor no llegó a
+     recogerla») y a "roto" («el Ejecutor no arranca; no va a tomar ninguna entrada»), que
+     dicen bastante más que un título repetido. El banco test-engranaje681 lo cazó. */
+  { id:"sist_caido", gesto:"preocupa",
+    re:/sin cr[ée]ditos|No puedo operar/i,
+    lee:(b,t)=>({ frase:"Rey, " + String(t||"").replace(/^[^\wÁÉÍÓÚÑáéíóúñ]+/,"").trim() + ". Míralo cuando puedas." }) },
+  /* 🛑 v7.74 — POR QUÉ NO ENTRÓ. Justo hoy Rey descubrió que el Ejecutor descartaba señales
+     por una regla mal puesta (el gatillo por par en vez de por sesión) y se enteró MIRANDO
+     el diario. El motivo va en el cuerpo del aviso: que se lo diga en la cara. */
+  { id:"no_entre", gesto:"audita", re:/^\s*🛑 No entr[ée]/i,
+    lee:(b,t)=>{
+      const par = (String(t||"").match(/·\s*([A-Z]{6})/) || [])[1] || "";
+      const razon = String(b||"").trim().replace(/^[A-Z]{6}\s*[·:-]\s*/, "").replace(/\s+/g," ");
+      return { frase:"Rey, no entré" + (par ? " en " + par : "") + (razon ? ": " + razon.slice(0,90) : ".") };
+    } },
+  { id:"recuperacion", gesto:"serio", re:/MODO RECUPERACI[ÓO]N/i,
+    lee:()=>({ frase:"Rey, la cuenta va justa y entré en modo recuperación: solo una entrada más hasta que se recomponga." }) },
+  { id:"sist_vuelve", gesto:"audita",
+    re:/Ejecutor reconectado|Ejecutor recuperado|Puente reconectado|PC conectada|Ejecutor conectado|Lo arregl[ée] yo/i,
+    lee:(b,t)=>({ frase:"Rey, " + String(t||"").replace(/^[^\wÁÉÍÓÚÑáéíóúñ]+/,"").trim() + ". Ya está todo en pie otra vez." }) },
   { id:"noche",        gesto:"carino",  re:/^🌙/,
     lee:()=>({ frase:"Rey, cierra el día conmigo cuando puedas: cómo te fue y el foco de mañana." }) },
   { id:"cierre_ejec",  gesto:"audita",  re:/^🤖 Cierre (del día|de semana)/,
@@ -346,7 +422,10 @@ const ROB_RUTINA = [
   /* algo se cierra o se acaba: se pone serio */
   { re:/cerrada|se acab|almuerzo|no m[áa]s entradas|fin de (la )?sesi|descanso/, gesto:"serio" },
   /* le manda hacer algo A ÉL: se lo señala con el dedo */
-  { re:/reset|corre[rn]?|revisa|repasa|anota|cierra|cerrar|prepar|calcul|actualiza|no abras|h[aá]zlo/, gesto:"tetoca" },
+  /* 🏋️ v7.74 — entran "backtest", "gimnasio" y "entrena": su aviso real
+     "🏋️ Backtesting obligatorio" le MANDA hacer algo y salía con el reloj (el de "algo
+     empieza"). Su ley dice que si el aviso le pide algo, Roberto le señala con el dedo. */
+  { re:/reset|corre[rn]?|revisa|repasa|anota|cierra|cerrar|prepar|calcul|actualiza|no abras|h[aá]zlo|backtest|gimnasio|entrena/, gesto:"tetoca" },
   /* algo se abre o falta poco: saca el reloj */
   { re:/abierta|abre|activa|apertura|open|en \d+ ?min|empieza|arranca/, gesto:"tiempo" },
 ];
@@ -365,8 +444,23 @@ const CARAS_HAY = ["alerta","analiza","apenado","aprueba","audita","carino","cel
    aquí salen los tres (cara, cuerpo y nubecita) — por eso no pueden contradecirse. */
 function robSitua(titulo, cuerpo, tipo){
   /* ⏰ v6.82 — SI ES UN AVISO DE SU RUTINA, se lee como lo que es. Antes entraba por las
-     reglas del mercado y su "Reset de disciplina" salía como "saltó el stop". */
-  if(String(tipo||"")==="rem"){
+     reglas del mercado y su "Reset de disciplina" salía como "saltó el stop".
+     💻 v7.74 — ...PERO SOLO SI ES SUYO DE VERDAD. El worker manda kind "rem" tanto en los
+     avisos que Rey se programa como en los del SISTEMA — comprobado en su registro real de
+     notificaciones el 07-09: "✅ Ejecutor reconectado" y "🔌 Puente DESCONECTADO" llegan
+     los dos con k:"rem". Así que "rem" a secas mandaba TODO por esta puerta y se tragaba
+     en silencio las lecturas buenas de la tabla ROB_AVISOS: su "🤖 ENTRÉ · COMPRA EURUSD"
+     salía como un aviso de rutina —el título pelado y el reloj— en vez de "el Ejecutor
+     entró en compra en EURUSD, lote 3. Yo te la vigilo". Cinco avisos del sistema estaban
+     así (entrada, cierre, breakeven, cuenta al límite y noticia cerca).
+     CÓMO SE DISTINGUEN, y es exacto: los avisos de Rey llevan "⏰" DELANTE, y se lo ponen
+     los DOS caminos por los que puede llegarle — el worker (title: "⏰ " + su título) y el
+     despertador del propio teléfono (DespertadorApex: "⏰ " + tit). Ninguna otra cosa lo
+     lleva. Se comprueba en el banco test-avisos-de-su-pc: si algún día alguien quitara ese
+     "⏰", el banco lo canta ANTES de que a Rey le vuelva a saltar un susto que él no puso. */
+  const tSit = String(titulo||"");
+  const esSuyo = /^\s*⏰/.test(tSit);
+  if(String(tipo||"")==="rem" && esSuyo){
     const tit = String(titulo||"").replace(/^[^\wÁÉÍÓÚÑáéíóúñ]+/,"").trim();
     const bt = tit.toLowerCase(), bc = String(cuerpo||"").toLowerCase();
     let g = "tiempo";                                  /* por defecto: es un aviso a su hora */
