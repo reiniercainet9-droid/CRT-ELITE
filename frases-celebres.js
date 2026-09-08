@@ -92,6 +92,34 @@ var FC_CRECIMIENTO = [
   "Rey, Booker T. Washington: el éxito se mide por los obstáculos que superaste para llegar.",
   "Rey, Napoleon Hill: la paciencia, la persistencia y el sudor forman una combinación imbatible.",
   "Rey, Paulo Coelho: la posibilidad de realizar un sueño es lo que hace que la vida sea interesante.",
+  /* 💼 v7.80 — Rey (08-09): "no vi entre las celebridades a los de las inversiones: Warren
+     Buffett, George Soros, Ray Dalio, Peter Lynch, Benjamin Graham, y otros que han escrito
+     libros importantes de inversión, inteligencia financiera y emocional".
+     Entran por su TEMPLE y su forma de pensar —paciencia, error, ego, decisiones—, que es
+     lo que sirve para toda la vida. Su regla de que no sean del trading sigue en pie: aquí
+     no hay ni una sola instrucción de qué comprar ni cuándo. */
+  "Rey, Warren Buffett: se tardan veinte años en construir una reputación y cinco minutos en arruinarla.",
+  "Rey, Warren Buffett: la diferencia entre la gente exitosa y la MUY exitosa es que la segunda dice que no a casi todo.",
+  "Rey, Warren Buffett lo tiene claro: la mejor inversión que puedes hacer es en ti mismo.",
+  "Rey, Charlie Munger: dime dónde voy a morir y no iré nunca allí. Piensa al revés y verás la salida.",
+  "Rey, Charlie Munger: gran parte de nuestra ventaja vino de intentar ser consistentemente no estúpidos.",
+  "Rey, Benjamin Graham: el principal problema del inversor, y hasta su peor enemigo, suele ser él mismo.",
+  "Rey, Peter Lynch: el órgano que más decide no es el cerebro, es el estómago. Entrénalo.",
+  "Rey, George Soros: reconocer un error a tiempo no es una humillación, es motivo de orgullo.",
+  "Rey, George Soros: si lo que haces te resulta emocionante y divertido, probablemente lo estés haciendo mal.",
+  "Rey, Ray Dalio lo resume en tres palabras: dolor más reflexión es igual a progreso.",
+  "Rey, Ray Dalio: si no te avergüenza quien eras hace un año, es que no has aprendido lo suficiente.",
+  "Rey, Ray Dalio insiste en lo mismo: el error no es fallar, es no ver la realidad como es.",
+  "Rey, John Templeton avisaba: las cuatro palabras más caras del mundo son «esta vez es distinto».",
+  "Rey, Howard Marks: no puedes predecir lo que viene, pero sí puedes estar preparado.",
+  "Rey, Daniel Kahneman lo demostró: la confianza que sientes no mide lo cerca que estás de acertar.",
+  "Rey, Daniel Kahneman: nada en la vida es tan importante como te parece mientras estás pensando en ello.",
+  "Rey, Daniel Goleman: la inteligencia emocional empieza por saber qué estás sintiendo mientras lo sientes.",
+  "Rey, Daniel Goleman: el coeficiente te consigue el puesto; la inteligencia emocional te hace crecer en él.",
+  "Rey, Nassim Taleb: hay cosas que se rompen con el golpe y otras que se fortalecen. Elige ser de las segundas.",
+  "Rey, Brené Brown: la vulnerabilidad no es debilidad, es de donde nacen el coraje y el cambio.",
+  "Rey, Oscar Wilde definió al cínico: el que sabe el precio de todo y el valor de nada. No seas ese.",
+  "Rey, Philip Fisher: el mayor error no es pagar de más, es no haber estudiado lo suficiente antes de decidir.",
 ];
 
 /* ── 2 · ABUNDANCIA Y PROSPERIDAD ──────────────────────────────────────────── */
@@ -156,6 +184,29 @@ var FC_ABUNDANCIA = [
   "Rey, Vicki Robin: cuando gastas dinero estás gastando horas de tu vida. Míralo así antes de soltarlo.",
   "Rey, Morgan Housel: hacerse rico y seguir siéndolo son dos habilidades distintas; la segunda es humildad.",
   "Rey, Napoleon Hill: una meta es un sueño con fecha. Ponle fecha y deja de soñar en el aire.",
+  /* 💼 v7.80 — los que Rey pidió por su nombre, y los autores de los libros de inversión e
+     inteligencia financiera. Aquí hablan de dinero, pero de la MANERA de pensarlo: paciencia,
+     ego, ahorro, tiempo. Ninguna dice qué comprar ni cuándo — eso no es cosa suya ni mía. */
+  "Rey, Warren Buffett: el precio es lo que pagas; el valor es lo que recibes. No los confundas nunca.",
+  "Rey, Warren Buffett: el mercado transfiere el dinero del impaciente al paciente. Y eso vale para casi todo.",
+  "Rey, Warren Buffett: sé temeroso cuando los demás son codiciosos, y codicioso cuando los demás tienen miedo.",
+  "Rey, Warren Buffett: solo cuando baja la marea se sabe quién estaba nadando desnudo.",
+  "Rey, Warren Buffett: la regla número uno es no perder; la número dos es no olvidar la número uno.",
+  "Rey, Benjamin Graham: a corto plazo el mercado vota; a largo plazo, pesa. Trabaja para el que pesa.",
+  "Rey, Benjamin Graham: el que de verdad entiende vende a los optimistas y compra a los pesimistas.",
+  "Rey, Peter Lynch: sabes más de lo que crees. Empieza por lo que ya conoces bien.",
+  "Rey, Peter Lynch: se ha perdido mucho más dinero preparándose para las caídas que en las caídas mismas.",
+  "Rey, George Soros: no importa si aciertas o fallas; importa cuánto ganas al acertar y cuánto pierdes al fallar.",
+  "Rey, Ray Dalio: los principios son la forma de tratar la realidad para conseguir lo que quieres de ella.",
+  "Rey, John Bogle: el tiempo es tu amigo y el impulso es tu enemigo. Casi todo se decide ahí.",
+  "Rey, Charlie Munger: el dinero grande no está en comprar ni en vender, está en esperar.",
+  "Rey, Morgan Housel: el mayor dividendo que paga el dinero es poder ser dueño de tu tiempo.",
+  "Rey, Morgan Housel: ahorrar es la distancia que hay entre tu ego y tus ingresos.",
+  "Rey, Robert Kiyosaki: los ricos compran cosas que les dan de comer; los demás compran cosas que se las comen.",
+  "Rey, Robert Kiyosaki: la educación financiera no te la va a dar la escuela; te la das tú.",
+  "Rey, Thomas Stanley, que estudió a los millonarios de verdad: la riqueza casi nunca es lo que se ve.",
+  "Rey, Jesse Livermore: el dinero no se hace moviéndose todo el rato, se hace sabiendo esperar sentado.",
+  "Rey, Howard Marks: para tener un resultado distinto al de todos hay que hacer algo distinto a todos.",
 ];
 
 /* ── 3 · AFIRMACIONES ("Rey, repite conmigo…") ─────────────────────────────── */
@@ -220,6 +271,13 @@ var FC_AFIRMACION = [
   "Rey, repite conmigo: mi futuro se está construyendo con lo que hago en esta hora.",
   "Rey, repite conmigo: tengo derecho a prosperar, y ejerzo ese derecho con trabajo.",
   "Rey, repite conmigo: soy imparable cuando soy paciente.",
+  /* 💼 v7.80 — y unas cuantas apoyadas en los mismos autores que pidió */
+  "Rey, repite conmigo, con Ray Dalio: el dolor más la reflexión me dan progreso, y hoy lo aplico.",
+  "Rey, repite conmigo, con Warren Buffett: la mejor inversión que hago es en mí mismo.",
+  "Rey, repite conmigo, con Benjamin Graham: mi mayor rival soy yo, y hoy lo tengo de mi lado.",
+  "Rey, repite conmigo, con Daniel Goleman: reconozco lo que siento, y por eso decido mejor.",
+  "Rey, repite conmigo, con Morgan Housel: mi mayor riqueza es ser dueño de mi tiempo.",
+  "Rey, repite conmigo, con Peter Lynch: sé más de lo que creo, y hoy lo pongo a trabajar.",
 ];
 
 /* ── EL RELOJ ──────────────────────────────────────────────────────────────────
@@ -228,7 +286,9 @@ var FC_AFIRMACION = [
    que tocar nada nativo: lo que uno dice, el otro lo sabe y no lo repite. */
 var FC = {
   cadaMin: 30,        /* lo que pidió Rey */
-  desde: 6,           /* su día empieza a las 6:00 de su reloj */
+  /* 🌅 v7.81 — Rey (08-09): "¿por qué de 6 am a 23 si yo me levanto a las 4 am y necesito
+     desde que me levanto afirmaciones y frases?". Su día empieza a las 4, no a las 6. */
+  desde: 4,           /* su día empieza a las 4:00 de su reloj: se levanta a esa hora */
   hasta: 23,          /* y termina a las 23:00 */
   esperaTrasAvisoSeg: 60,   /* si coincide con una alarma o un aviso: un minuto después */
   /* el orden de la rueda; se avanza una posición cada vez que dice una */

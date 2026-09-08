@@ -8047,6 +8047,14 @@ function iaInit(){
           <button data-pitch="0.8">Grave</button>
           <button data-pitch="1.0">Normal</button>
         </div>
+        <div class="fl">🐢 Ritmo al hablar (más pausado = se entiende mejor)</div>
+        <div class="seg c4" id="iaVozRitmo" style="margin-bottom:6px">
+          <button data-ritmo="0.75">Muy pausado</button>
+          <button data-ritmo="0.85">Pausado</button>
+          <button data-ritmo="0.92">Normal</button>
+          <button data-ritmo="1.12">Rápido</button>
+        </div>
+        <div class="note" style="text-align:left;margin:0 0 8px">Este ritmo manda sobre el de los ajustes del teléfono: Apex fija la velocidad en cada frase, así que el de Android no le afecta. Cámbialo aquí.</div>
         <div class="note" style="text-align:left;margin:0 0 8px">Si tu teléfono solo trae voz de mujer, baja el tono (Grave++). Para una voz de HOMBRE real hay que instalarla en Ajustes del teléfono → "Texto a voz" (no en el Asistente de Google).</div>
         <button class="btn" id="iaVozTest" style="margin-bottom:14px">▶️ Probar voz</button>
         <button class="btn" id="iaVozAjustes" style="margin-bottom:14px;display:none">🔧 Ajustes de voz de Android</button>
@@ -8293,6 +8301,17 @@ function iaInit(){
     if(tn) tn.querySelectorAll("[data-pitch]").forEach(b=>{
       b.onclick=()=>{ IA.voz.pitch=parseFloat(b.dataset.pitch); iaGuardarVoz(); iaVozRefrescarUI();
         iaHablar("Así sueno con este tono, Rey.", -1); }; });
+    /* 🐢 v7.81 — EL RITMO, QUE ANTES NO SE PODÍA TOCAR DESDE NINGÚN SITIO.
+       Rey (08-09): "quiero bajarle un poquito el ritmo al hablar… ya lo intenté desde mi
+       teléfono pero no cambia nada". Y no cambiaba porque Apex fija la velocidad EN CADA
+       FRASE, pisando siempre la de los ajustes de Android. Ahora la elige él aquí, y el
+       valor viaja también al vigía nativo (iaGuardarVoz → vozContarleAlVigia), que es quien
+       habla cuando Apex está detrás. La frase de prueba lleva comas a propósito: así oye
+       las pausas del ritmo que acaba de elegir. */
+    { const rt=$("#iaVozRitmo");
+      if(rt) rt.querySelectorAll("[data-ritmo]").forEach(b=>{
+        b.onclick=()=>{ IA.voz.ritmo=parseFloat(b.dataset.ritmo); iaGuardarVoz(); iaVozRefrescarUI();
+          iaHablar("Así hablo con este ritmo, Rey. Escucha las pausas, las comas, y los puntos.", -1); }; }); }
     if(vp){ vp.style.display=""; vp.disabled=false;
       vp.onclick=()=>iaHablar("Hola Rey, soy Roberto, tu mentor de trading. Estoy listo para ayudarte a pasar tus fondeos y escalar tu capital.", -1); }
   }
@@ -8568,6 +8587,14 @@ function iaVozEspanol(){
    tal cual "1.85R", "-8.7%", "4H", "GBPUSD" — y cualquier motor lee eso deletreando.
    Aquí se traduce a lo que diría una persona en voz alta. */
 const PARA_LA_VOZ = [
+  /* 🗣️ v7.81 — LA PAUSA DESPUÉS DE SU NOMBRE. Rey (08-09): "quiero que las frases no se digan
+     rápido para salir de eso; pausado, con entonaciones, con todas sus puntos y comas".
+     Una coma detrás de "Rey" la pasa cualquier motor casi de largo; un punto obliga a parar y
+     a bajar la entonación, que es lo que hace que suene a alguien dirigiéndose a él y no a una
+     máquina leyendo. Solo afecta a la VOZ: en pantalla la frase sigue con su coma. */
+  [/^Rey,\s+/, "Rey. "],
+  /* y dos puntos después de un nombre propio: se dicen con pausa, no de corrido */
+  [/^(Rey\.\s+[^:.]{2,40}):\s+/, "$1. "],
   /* los pares, por su nombre — "gebeepeeuese" era lo que salía */
   [/\bEUR\s*\/?\s*USD\b/gi, "euro dólar"],
   [/\bGBP\s*\/?\s*USD\b/gi, "libra dólar"],
@@ -9234,10 +9261,14 @@ function iaHablar(texto, idx, yaLimpio){
        grave es suyo y se respeta tal cual; la naturalidad se arregla por donde de verdad
        fallaba, que es CÓMO se le da el texto (ver iaTextoParaVoz). */
     const tono = (typeof IA.voz.pitch==="number") ? Math.max(0.4, Math.min(1.6, IA.voz.pitch)) : 0.6;
-    /* 🎙️ v6.95 — la voz que eligió Rey y un ritmo algo más vivo. Iba fijo a 1.0 y con el
-       motor básico de Android sonaba arrastrado ("muy pausada", dijo él). 1.12 es hablar
-       normal, no correr. */
-    const ritmo = (typeof IA.voz.ritmo==="number") ? Math.max(0.7, Math.min(1.6, IA.voz.ritmo)) : 1.12;
+    /* 🎙️ v7.81 — MÁS PAUSADO, Y AHORA LO ELIGE ÉL. Rey (08-09): "a veces habla tan rápido
+       que ni entiendo lo que dijo… quiero bajarle un poquito el ritmo; ya lo intenté desde mi
+       teléfono pero no cambia nada".
+       POR QUÉ NO LE CAMBIABA NADA: Apex fija la velocidad EN CADA FRASE (setSpeechRate), así
+       que la de los ajustes de Android quedaba pisada siempre — y no había ningún control de
+       velocidad dentro de Apex. Ahora sí lo hay (🐢 Ritmo al hablar) y el valor de fábrica
+       baja de 1.12 a 0.92: por debajo de hablar normal, que es lo que pidió. */
+    const ritmo = (typeof IA.voz.ritmo==="number") ? Math.max(0.6, Math.min(1.6, IA.voz.ritmo)) : 0.92;
     IA.hablandoIdx = (idx==null?-1:idx); try{ pintarIAChat(); }catch(_){}
     /* ⏸ v7.11 — POR TROZOS, PARA PODER PAUSARLO. Android no tiene pausa: su voz solo sabe
        hablar y callarse del todo. La única pausa real es trocear y recordar por dónde iba.
@@ -9373,7 +9404,7 @@ function vozContarleAlVigia(){
     PV.vozAjuste({
       on: !!(IA.voz && IA.voz.on), motor: (IA.voz && IA.voz.motor) || "", voz: (IA.voz && IA.voz.nativa) || "",
       tono: (IA.voz && typeof IA.voz.pitch==="number") ? IA.voz.pitch : 0.6,
-      ritmo: (IA.voz && typeof IA.voz.ritmo==="number") ? IA.voz.ritmo : 1.12,
+      ritmo: (IA.voz && typeof IA.voz.ritmo==="number") ? IA.voz.ritmo : 0.92,
     });
     return true;
   }catch(_){ return false; }
@@ -9393,6 +9424,11 @@ function iaVozRefrescarUI(){
   const tono=$("#iaVozTono");
   if(tono){ tono.querySelectorAll("[data-pitch]").forEach(b=>{
     b.classList.toggle("on", Math.abs(parseFloat(b.dataset.pitch)-(IA.voz.pitch||0.6))<0.01); }); }
+  /* 🐢 v7.81 — y que se vea marcado el ritmo que tiene puesto */
+  const rit=$("#iaVozRitmo");
+  if(rit){ const r=(typeof IA.voz.ritmo==="number") ? IA.voz.ritmo : 0.92;
+    rit.querySelectorAll("[data-ritmo]").forEach(b=>{
+      b.classList.toggle("on", Math.abs(parseFloat(b.dataset.ritmo)-r)<0.01); }); }
   iaPintarVoces();
 }
 

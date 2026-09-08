@@ -1,84 +1,66 @@
-APEX v7.79 — TRADING DESK
+APEX v7.81 — TRADING DESK
 =========================
 
-🗣️ UNA CITA CADA 30 MINUTOS, DE GENTE DE VERDAD
+🐢 MÁS PAUSADO, CON PAUSAS DE VERDAD, Y DESDE LAS 4 DE LA MAÑANA
 
-⚠️ HAY QUE SUBIR: la web v7.79 (el worker 5.129 ya lo subiste, está en vivo ✅)
+⚠️ HAY QUE SUBIR: la web v7.81 (el worker 5.129 ya está en vivo ✅)
 
-═══ LO QUE ME DIJISTE ════════════════════════════════════════════
+═══ 1 · POR QUÉ NO TE CAMBIABA NADA LA VELOCIDAD ═════════════════
 
-"En todo el día Roberto no me dijo ni una sola frase de crecimiento personal, de
-abundancia, ni nada. No lo oí."
+Me dijiste: "quiero bajarle un poquito el ritmo al hablar; ya lo intenté desde mi
+teléfono pero no cambia nada, a veces habla tan rápido que ni entiendo lo que dijo".
 
-MEDIDO EN TU TELÉFONO ANTES DE TOCAR NADA, no leyendo código: llevabas 3 frases en
-toda la jornada y la última era de HACE 15 HORAS — sobre las 5:30 de la mañana.
-Tenías razón entera.
+LA CAUSA, y no era cosa tuya: Apex FIJA la velocidad justo antes de cada frase
+(setSpeechRate). Lo que tú pusieras en los ajustes de Android quedaba pisado
+siempre, en cada frase. Y dentro de Apex no había NINGÚN control de velocidad —
+solo el del tono. O sea que no tenías por dónde cambiarlo.
 
-LA CAUSA: las frases colgaban de la vida de fondo de Roberto DENTRO de Apex, y ese
-mecanismo se rinde en su primera línea si la pantalla de Apex no está VISIBLE. Tu
-Apex está detrás de otras apps todo el día repartiendo. O sea que el sitio donde
-estaban puestas era el único donde no podían sonar.
+LO QUE HAY AHORA:
+· La velocidad de fábrica baja de 1,12 a 0,92 — por debajo de hablar normal.
+· Y en LOS TRES SITIOS donde estaba escrita: dentro de Apex, en lo que se le manda
+  a su cuerpo flotante, y en el vigía nativo (el que habla con Apex cerrada). Con
+  cambiarla en uno solo, habrías seguido oyéndolo rápido la mitad del tiempo.
+· Y tienes tu control: Ajustes → 🐢 Ritmo al hablar
+     Muy pausado · Pausado · Normal · Rápido
+  Al tocarlo te dice una frase de prueba con comas y puntos, para que oigas las
+  pausas del ritmo que acabas de elegir.
 
-Y una segunda causa, más de fondo: estaban colgadas de un mecanismo hecho para que
-Roberto PAREZCA vivo (un gesto cada 12-30 segundos, una frase cada seis gestos, de
-una bolsa). Eso sirve para que no parezca una estatua. No sirve para cumplir un
-horario. Un compromiso de horario necesita un reloj propio.
+═══ 2 · LAS PAUSAS Y LA ENTONACIÓN ═══════════════════════════════
 
-═══ LO QUE HAY AHORA ═════════════════════════════════════════════
+"Quiero que las frases no se digan rápido para salir de eso: pausado, con
+entonaciones, con todas sus puntos y comas."
 
-SU PROPIO RELOJ, independiente de todo lo demás:
+Una coma detrás de tu nombre la pasa cualquier motor de voz casi de largo. Un punto
+le obliga a parar y a bajar el tono. Así que ahora, SOLO PARA LA VOZ, la frase se
+dice con dos paradas de verdad:
 
-· Una cada 30 MINUTOS, de las 6:00 a las 23:00, mires Apex o no.
-· Rotando en este orden: CRECIMIENTO PERSONAL → ABUNDANCIA → AFIRMACIÓN.
-· 180 frases en el catálogo: 60 + 60 + 60.
-· NINGUNA se repite en el mismo día (comprobado simulando un día entero minuto a
-  minuto: salen 34 y las 34 son distintas).
-· Y JAMÁS pisan una alarma ni un aviso importante: si coinciden, esperan a que
-  termine, cuentan UN MINUTO, y entonces la dicen. Tu regla, al pie de la letra.
+   escrito:  Rey, Warren Buffett: se tardan veinte años en construir una reputación…
+   hablado:  Rey.  Warren Buffett.  Se tardan veinte años en construir una reputación…
 
-DE QUIÉN SON LAS FRASES: Séneca, Marco Aurelio, Epicteto, Confucio, Lao Tsé,
-Aristóteles, Sócrates, Buda, Rumi · Mandela, Maya Angelou, Marie Curie, Helen
-Keller, Eleanor Roosevelt, Martin Luther King, Gandhi · Edison, Ford, da Vinci,
-Miguel Ángel, Franklin, Steve Jobs, Peter Drucker, Charlie Munger · Napoleon Hill,
-Wallace Wattles, George Clason (Babilonia), Joseph Murphy, Bob Proctor, Earl
-Nightingale, James Allen, T. Harv Eker, Louise Hay, Florence Scovel Shinn, Émile
-Coué · Jim Rohn, Zig Ziglar, Tony Robbins, John Wooden, James Clear, Angela
-Duckworth, Carol Dweck, Stephen Covey, Robin Sharma · Muhammad Ali, Michael Jordan,
-Kobe Bryant, Vince Lombardi · y José Martí, Machado y Cervantes.
+En la nubecita la sigues leyendo con sus comas de siempre. Y va en los dos cuerpos,
+para que suenen igual estés donde estés.
 
-NINGUNA ES DE TRADING. Son de la vida entera, como pediste. Hay un banco que lo
-comprueba: si algún día se cuela una que hable de pips o de velas, salta.
+═══ 3 · DESDE LAS 4 DE LA MAÑANA ═════════════════════════════════
 
-Y NINGUNA ES INVENTADA. Las frases famosas de origen dudoso —las "de Einstein" que
-Einstein nunca dijo— se quedaron fuera a propósito. Pediste personalidades
-reconocidas: ponerles en la boca algo que no dijeron sería lo contrario.
+"¿Por qué de 6 am a 23 si yo me levanto a las 4 am y necesito desde que me levanto
+afirmaciones y frases?"
 
-LAS AFIRMACIONES son del tipo que pediste: "Rey, repite conmigo: el dinero llega a
-mí como un imán, porque estoy enfocado en crecer". Y varias se apoyan en el método
-de quien lo creó — la fórmula de Coué, el subconsciente de Murphy, la palabra de
-Florence Scovel Shinn.
+Tenías razón: las 6 eran una hora mía, no tuya. Ahora empieza a las 4:00 y termina
+a las 23:00. Son 38 frases al día en vez de 34, y las 38 siguen siendo distintas
+(comprobado simulando el día entero minuto a minuto).
 
-═══ UNA DECISIÓN QUE TOMÉ, Y TE LA CUENTO ════════════════════════
+═══ LO QUE LA REGRESIÓN ME CAZÓ ANTES DE ENTREGARLO ══════════════
 
-APAGUÉ EL SISTEMA VIEJO DE FRASES. Si dejaba los dos vivos, oirías las genéricas
-mezcladas con las buenas, y eso es justo lo que no quieres. No se ha borrado nada:
-las frases viejas y su regla siguen guardadas en el código; lo que cambia es quién
-manda el turno.
+1) MIS EDICIONES CAMBIARON EL FORMATO DE LOS ARCHIVOS (finales de línea de Windows).
+   Un cambio invisible que toca cada línea de cada archivo y que reventó 4 bancos.
+   Se supo con seguridad porque el único archivo que no toqué así seguía bien.
+   Devueltos a su formato original.
 
-═══ UN FALLO QUE CACÉ ANTES DE QUE LLEGARA A TU TELÉFONO ═════════
+2) TAL COMO LO ESCRIBÍ, SI LA PAUSA FALLABA ROBERTO SE QUEDABA MUDO: se tragaba la
+   frase en silencio. Eso choca con tu ley de que nada puede dejarle sin voz. Ahora,
+   si la pausa fallara, dice la frase tal cual. Un adorno no puede callarle.
 
-El cuerpo flotante de Roberto no puede cargar archivos sueltos dentro de la APK: el
-constructor se los INCRUSTA al compilar. Mi catálogo nuevo no estaba en esa lista,
-así que en tu teléfono habría quedado mudo — el mismo fallo de hoy, otra vez.
-Arreglado, y el constructor ahora comprueba que quedó dentro de verdad.
-
-═══ Y EL TURNO REPARTIDO ═════════════════════════════════════════
-
-Con Apex delante habla el Roberto de dentro; con Apex detrás —tu día entero— habla
-su cuerpo flotante. Nunca los dos: Android apaga la vida del cuerpo cuando Apex está
-delante. Y la cuenta del día la comparten, así que ninguno repite lo del otro.
-
-Regresión: 191 bancos. Banco nuevo `test-frases-cada-30`: 12/12.
+Regresión: 191/191. Banco `test-frases-cada-30`: 15/15.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

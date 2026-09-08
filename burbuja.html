@@ -449,6 +449,17 @@
      nubecita, ningún gesto espontáneo puede quitárselo. */
   var AVISO_URGE = false;
   var ULTIMO_AVISO_TS = 0;   /* 🔔 v7.79 — cuándo sonó el último aviso: las frases no lo pisan */
+  /* 🗣️ v7.81 — LA PAUSA DESPUÉS DE SU NOMBRE, SOLO PARA LA VOZ. Rey (08-09): "quiero que las
+     frases no se digan rápido para salir de eso; pausado, con entonaciones, con todas sus
+     puntos y comas". Una coma detrás de "Rey" la pasa cualquier motor casi de largo; un punto
+     obliga a parar. En la nubecita el texto sigue con su coma: esto solo toca lo que se dice.
+     Es la MISMA regla que aplica Apex en PARA_LA_VOZ — los dos cuerpos suenan igual. */
+  function paraLaVoz(t){
+    try{
+      var x = String(t || "").replace(/^Rey,\s+/, "Rey. ");
+      return x.replace(/^(Rey\.\s+[^:.]{2,40}):\s+/, "$1. ");
+    }catch(_){ return t; }
+  }
   var _erUrgente = false, _tDespeja = null;
   function pintarUrgencia(g){
     try {
@@ -582,7 +593,7 @@
        que oír, lo oye: la nubecita no se toca y la voz sale igual. */
     if (tarjetaViva && !PISAR_TARJETA) {
       if (hablar) {
-        try { console.log("BURBUJA-VOZ " + texto); } catch(_){}
+        try { console.log("BURBUJA-VOZ " + (typeof paraLaVoz === "function" ? paraLaVoz(texto) : texto)); } catch(_){}
         try { console.log("BURBUJA-TRAGADO con-tarjeta-pero-dicho"); } catch(_){}
       } else {
         try { console.log("BURBUJA-TRAGADO callado-por-la-tarjeta"); } catch(_){}
@@ -641,7 +652,7 @@
     /* 🔇 y SOLO si esto es una alarma o un aviso programado se le pide a Android que lo
        DIGA. Su vida de fondo pasa por aquí sin `hablar`, así que mueve la boca y saca su
        nubecita pero no suena — que es exactamente lo que pidió Rey. */
-    if (hablar) { try { console.log("BURBUJA-VOZ " + texto); } catch(_){} }
+    if (hablar) { try { console.log("BURBUJA-VOZ " + (typeof paraLaVoz === "function" ? paraLaVoz(texto) : texto)); } catch(_){} }
     clearTimeout(tVuelta);
     /* vuelve solo a estar de guardia: no se queda con cara de nada */
     tVuelta = setTimeout(window.burbujaCallar, 9000);
