@@ -253,6 +253,7 @@
   <div id="robCuerpo"></div>
 
 <script src="situaciones.js"></script>
+<script src="frases-celebres.js"></script>   <!-- 🗣️ las citas de cada 30 min (v7.79) -->
 <script src="roberto.js"></script>
 <script>
 (function(){
@@ -447,6 +448,7 @@
      AHORA el rojo dura lo que dura el AVISO: mientras haya un mensaje urgente en la
      nubecita, ningún gesto espontáneo puede quitárselo. */
   var AVISO_URGE = false;
+  var ULTIMO_AVISO_TS = 0;   /* 🔔 v7.79 — cuándo sonó el último aviso: las frases no lo pisan */
   var _erUrgente = false, _tDespeja = null;
   function pintarUrgencia(g){
     try {
@@ -535,6 +537,10 @@
     /* 🔴 v7.78 — se marca que ESTE aviso es urgente, y el rojo se queda mientras esté en
        pantalla aunque el cuerpo cambie de gesto por su cuenta (ver pintarUrgencia). */
     try { AVISO_URGE = esUrgente(g); } catch(_){ AVISO_URGE = false; }
+    /* 🔔 v7.79 — se apunta CUÁNDO fue el último aviso de verdad. Es la regla de Rey para las
+       frases de cada 30 minutos: no pueden pisar una alarma del mercado ni un aviso suyo; si
+       coinciden, esperan a que termine, cuentan un minuto, y entonces se dicen. */
+    try { ULTIMO_AVISO_TS = Date.now(); } catch(_){}
     /* 🗣️ ESTO SÍ SE DICE EN VOZ ALTA: es una alarma del mercado o un aviso que Rey se
        programó. Es lo ÚNICO que suena — ver la regla en burbujaDecir.
        🔊 v7.41 — salvo que Rey haya apagado la voz de ESE aviso concreto: entonces sale la
@@ -865,26 +871,13 @@
         try{ if (window.burbujaVistazo(window.__VISTAZO || "")) return; }catch(_){}
       }
       if (vidaFrase % 6 === 0 && pack.frases && pack.frases.length){
-        /* 🗣️ ¿toca una de crecimiento, de las que se DICEN en voz alta? */
-        var dicha = "";
-        try{
-          if (pack.dichas && pack.dichas.length && typeof robTocaHablar === "function"){
-            /* 🧮 v7.38 — LA CUENTA ES DE LOS DOS CUERPOS, y la guarda Android.
-               Esta ventana y la página de Apex viven en orígenes distintos, así que cada una
-               tenía su propio almacén y su propia cuenta: el tope "6 al día" era en realidad
-               "6 por cuerpo". Ahora Android deja aquí la cuenta compartida y aquí se le
-               devuelve al usarla. La REGLA de cuántas y cada cuánto sigue siendo una sola,
-               la de situaciones.js. */
-            var marca = {};
-            try{ marca = window.__ROB_MARCA || {}; }catch(_){}
-            var t = robTocaHablar(marca);
-            if (t.toca){
-              try{ window.__ROB_MARCA = t.marca; console.log("BURBUJA-DICHA " + JSON.stringify(t.marca)); }catch(_){}
-              dicha = robFraseDe("dichas-" + situacionAhora(), pack.dichas);
-            }
-          }
-        }catch(_){}
-        if (dicha){ window.burbujaDecir(dicha, "carino", true); return; }   /* true = la dice */
+        /* 🗣️ v7.79 — LAS DE CRECIMIENTO YA NO SALEN DE AQUÍ: tienen su propio reloj (fcTick),
+           porque Rey las pidió CADA 30 MINUTOS y con autor. Colgadas de la vida de fondo
+           dependían del sexto gesto y de la bolsa: medido en su teléfono el 08-09, 3 en todo
+           el día y la última 15 horas antes. No se ha borrado nada: `pack.dichas` y
+           `robTocaHablar` siguen ahí; simplemente ya no son quienes deciden cuándo hablar.
+           Aquí abajo queda solo la frase CALLADA de su vida de fondo, que es lo que le da
+           aspecto de estar vivo entre cita y cita. */
         window.burbujaDecir(robFraseDe(situacionAhora(), pack.frases), emo);
         return;                       /* la nubecita ya devuelve el gesto de guardia sola */
       }
@@ -912,8 +905,51 @@
   }
   vida();
 
+  /* ══════════════════════════════════════════════════════════════════════════
+     🗣️ EL RELOJ DE LAS FRASES CÉLEBRES — v7.79
+     ═════════════════════════════════════════════════════════════════════════
+     Rey (08-09): "en todo el día Roberto no me dijo ni una sola frase de crecimiento
+     personal ni de abundancia… las quiero cada 30 minutos en todo el día, intercalando
+     crecimiento, abundancia y afirmaciones, de personalidades célebres, y que no pisen
+     ninguna alarma ni aviso importante".
+     ESTE es el que va a hablarle casi siempre: con Apex detrás —su día entero— la página de
+     Apex no está visible y el que queda vivo es este cuerpo.
+     ⚠️ NO CUELGA DE `vida()` A PROPÓSITO: la vida de fondo saca frase una de cada seis
+     veces y con su propio ritmo irregular; eso servía para parecer vivo, no para cumplir un
+     horario. El fallo que Rey midió hoy nació justo de colgar las frases importantes de un
+     mecanismo pensado para otra cosa. */
+  var fcT = null;
+  function fcTick(){
+    try{
+      if (typeof fcToca !== "function" || typeof fcSiguiente !== "function") return;
+      if (PENSANDO) return;                       /* si está pensando su respuesta, no le pisa */
+      if (globo.classList.contains("hay")) return; /* ya hay algo suyo en pantalla */
+      var marca = {}; try{ marca = window.__ROB_MARCA || {}; }catch(_){ marca = {}; }
+      var t = fcToca(marca, ULTIMO_AVISO_TS);
+      if (!t.toca) return;
+      var r = fcSiguiente(marca);
+      if (!r || !r.frase) return;
+      /* la cuenta del día es de los DOS cuerpos: Android la guarda y se la pasa al otro */
+      try{ window.__ROB_MARCA = r.marca; console.log("BURBUJA-DICHA " + JSON.stringify(r.marca)); }catch(_){}
+      window.burbujaDecir(r.frase, "carino", true);   /* true = SE DICE en voz alta */
+    }catch(_){}
+  }
+  /* ⏱️ SE REPROGRAMA SOLO, COMO `vida()`. Es una regla vieja de esta página y me la salté en
+     el primer intento: un temporizador que se REPITE aquí cuelga los bancos que abren
+     navegador y deja procesos de Node vivos para siempre. Lo cazó `test-fase2-cuerpo` antes
+     de que llegara al teléfono de Rey. (Y ese banco mira el archivo entero, así que aquí ni
+     se escribe el nombre de lo prohibido: un comentario no puede saltar su propia alarma.) */
+  function fcReloj(on){
+    try{
+      clearTimeout(fcT); fcT = null;
+      /* se mira cada minuto; quien decide si toca es fcToca, con los 30 minutos de Rey */
+      if (on) fcT = setTimeout(function(){ fcTick(); fcReloj(true); }, 60000);
+    }catch(_){}
+  }
+  fcReloj(true);
+
   /* Android la para cuando la esconde, para no gastar batería moviendo a nadie */
-  window.burbujaVida = function(on){ if(on) vida(); else clearTimeout(vidaT); };
+  window.burbujaVida = function(on){ if(on) vida(); else clearTimeout(vidaT); fcReloj(!!on); };
 
   /* ══════════════════════════════════════════════════════════════════════════
      🤔 MIENTRAS PIENSA TU RESPUESTA, EL GESTO SE MANTIENE — v7.35

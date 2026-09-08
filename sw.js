@@ -1,5 +1,5 @@
-const CACHE = "crt-elite-v7-78";
-const FILES = ["./","./index.html","./data.js","./app.js","./roberto.js","./situaciones.js","./manifest.json","./icon-192.png","./icon-512.png"];
+const CACHE = "crt-elite-v7-79";
+const FILES = ["./","./index.html","./data.js","./app.js","./roberto.js","./situaciones.js","./frases-celebres.js","./manifest.json","./icon-192.png","./icon-512.png"];
 const WORKER = "https://elitepro-worker.reiniercainet9.workers.dev";
 /* Web Push: al llegar un aviso (con la app CERRADA), muestra la notificación.
    El push viaja sin datos; el texto real se pide a la nube.

@@ -9915,23 +9915,21 @@ function robVidaUnGesto(){
          atención le presta— las frases de crecimiento salían mudas. Y como él pidió
          expresamente que fueran habladas, aquí no valía "es que las dice el otro".
          No hay riesgo de oírlas dobladas: los dos nunca están vivos a la vez. */
-      let dicha = "";
-      try{
-        if(pack.dichas && pack.dichas.length && typeof robTocaHablar === "function" && IA.voz && IA.voz.on){
-          const marca = robMarcaLeer();
-          const t = robTocaHablar(marca);
-          if(t.toca){
-            robMarcaGuardar(t.marca);
-            dicha = (typeof robFraseDe === "function") ? robFraseDe("dichas-"+sit, pack.dichas)
-                                                      : pack.dichas[Math.floor(Math.random()*pack.dichas.length)];
-          }
-        }
-      }catch(_){}
-      if(dicha){
-        try{ robDecir("Roberto", dicha, {gesto:"carino"}); }catch(_){}
-        try{ iaHablar(dicha, -1); }catch(_){}
-        return;
-      }
+      /* 🗣️ v7.79 — LAS DE CRECIMIENTO YA NO SALEN DE AQUÍ: TIENEN SU PROPIO RELOJ.
+         Rey (08-09): "en todo el día Roberto no me dijo ni una sola frase de crecimiento
+         personal ni de abundancia… las quiero cada 30 minutos… y no quiero frases genéricas
+         mal hechas, quiero frases de personalidades célebres".
+         DOS RAZONES PARA SACARLAS DE AQUÍ, y las dos son suyas:
+         1) EL HORARIO. Colgadas de la vida de fondo dependían de que tocara el sexto gesto,
+            de que la pantalla estuviera visible y de la bolsa de frases. Medido en su
+            teléfono ese mismo día: 3 en toda la jornada, la última 15 HORAS antes. Un
+            mecanismo hecho para parecer vivo no puede sostener un compromiso de horario.
+         2) EL MATERIAL. Las de aquí (`pack.dichas`) las escribí yo; él pidió citas de
+            personas reales. Ahora salen de `frases-celebres.js`, con su autor.
+         ⚠️ NO SE HA BORRADO NADA: `ROB_DICHAS`, `robTocaHablar` y las listas `dichas` de
+         cada franja siguen enteras en situaciones.js. Lo que cambia es quién manda el turno,
+         que ahora es `fcRelojTick` — y la cuenta del día la siguen compartiendo los dos
+         cuerpos por la misma marca de Android. */
       const f = (typeof robFraseDe === "function")
         ? robFraseDe(sit, pack.frases)
         : pack.frases[Math.floor(Math.random() * pack.frases.length)];
@@ -10087,6 +10085,47 @@ function robVida(){
     _vidaT = setTimeout(()=>{ robVidaUnGesto(); robVida(); }, espera);
   }catch(_){}
 }
+/* ══════════════════════════════════════════════════════════════════════════════
+   🗣️ EL RELOJ DE LAS FRASES CÉLEBRES — v7.79
+   ═════════════════════════════════════════════════════════════════════════════
+   Rey (08-09): "en todo el día Roberto no me dijo ni una sola frase de crecimiento personal
+   ni de abundancia… las quiero cada 30 minutos en todo el día".
+   SE MIDIÓ EN SU TELÉFONO ANTES DE TOCAR NADA: 3 frases en todo el día, la última 15 HORAS
+   antes. LA CAUSA: las frases colgaban de `robVidaUnGesto`, que se rinde en la primera línea
+   si la pantalla de Apex no está VISIBLE — y su Apex está detrás de otras apps todo el día.
+   Por eso este reloj es SUYO: un temporizador propio que no depende de gestos ni de bolsas.
+   EL TURNO ESTÁ REPARTIDO Y NO SE PISAN: con Apex delante, Android apaga la vida del cuerpo
+   flotante y lo esconde (`apexDelante` → `burbujaVida(false)` + View.GONE), así que manda
+   este de aquí; con Apex detrás, esta página no está visible y manda el cuerpo flotante.
+   Y la cuenta del día es la MISMA para los dos (la marca compartida que guarda Android),
+   así que ninguno repite lo que ya dijo el otro. */
+let _fcT = null;
+function fcRelojTick(){
+  try{
+    if(typeof fcToca !== "function" || typeof fcSiguiente !== "function") return;
+    /* con Apex detrás manda su cuerpo flotante: aquí no se dice nada */
+    if(document.visibilityState !== "visible") return;
+    if(typeof IA !== "undefined" && IA.busy) return;         /* está trabajando: no se le pisa */
+    const caja = $("#iaText");                                /* Rey escribiéndole: tampoco */
+    if(caja && (caja.value||"").trim()) return;
+    /* 🔔 LA REGLA DE REY: una frase JAMÁS pisa una alarma ni un aviso importante. Si acaba de
+       llegar uno, `fcToca` dice que no, y en la vuelta siguiente (un minuto después) ya sí. */
+    const t = fcToca(robMarcaLeer(), _robEvTs);
+    if(!t.toca) return;
+    const r = fcSiguiente(robMarcaLeer());
+    if(!r || !r.frase) return;
+    robMarcaGuardar(r.marca);
+    robDecir("Roberto", r.frase, {gesto:"carino"});
+    try{ if(IA.voz && IA.voz.on) iaHablar(r.frase, -1); }catch(_){}
+  }catch(_){}
+}
+function fcReloj(){
+  try{
+    clearInterval(_fcT);
+    /* se mira cada minuto; quien decide si toca es fcToca, con los 30 minutos de Rey */
+    _fcT = setInterval(fcRelojTick, 60000);
+  }catch(_){}
+}
 
 function robAnimUI(){
   try{
@@ -10106,6 +10145,7 @@ function robCuerpoMontar(){
     robVigilante();
     setInterval(robVigilante,45000);
     robVida();                       /* 🎭 y su vida propia entre tarea y tarea */
+    fcReloj();                       /* 🗣️ y el reloj de las frases célebres (v7.79) */
     robPensandoVigilante();          /* 🤔 y que se le note cuando está pensando (v7.35) */
     document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible") robVigilante(); });
   }catch(_){}

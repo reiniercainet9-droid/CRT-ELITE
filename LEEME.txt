@@ -1,59 +1,84 @@
-APEX v7.78 — TRADING DESK
+APEX v7.79 — TRADING DESK
 =========================
 
-🔴 TU "NO ENTRES" SE QUEDA EN ROJO · 🗂️ Y LA NUBE YA NO SE ESCONDE DETRÁS
+🗣️ UNA CITA CADA 30 MINUTOS, DE GENTE DE VERDAD
 
-⚠️ HAY QUE SUBIR DOS COSAS: la web v7.78 Y el worker v5.129
-   (el worker está en esta misma carpeta)
+⚠️ HAY QUE SUBIR: la web v7.79 (el worker 5.129 ya lo subiste, está en vivo ✅)
 
-═══ LOS DOS FALLOS QUE ME ENSEÑASTE ══════════════════════════════
+═══ LO QUE ME DIJISTE ════════════════════════════════════════════
 
-1) EL ROJO SE IBA Y LA FRASE SE QUEDABA.
+"En todo el día Roberto no me dijo ni una sola frase de crecimiento personal, de
+abundancia, ni nada. No lo oí."
 
-Tu captura sobre la app de entregas: "Rey, no entres en GBPUSD todavía: aún no
-hay setup" con el borde dorado de siempre y sin rojo alrededor.
+MEDIDO EN TU TELÉFONO ANTES DE TOCAR NADA, no leyendo código: llevabas 3 frases en
+toda la jornada y la última era de HACE 15 HORAS — sobre las 5:30 de la mañana.
+Tenías razón entera.
 
-LA CAUSA — y por qué mi prueba de la mañana NO la vio: el rojo se ponía al poner
-un gesto urgente, y se quitaba al poner CUALQUIER otro gesto. Roberto tiene vida
-de fondo y va cambiando de gesto solo. Tu aviso dura 9 segundos: si en esos
-segundos le tocaba un gesto normal, el rojo se iba. En mi prueba no le tocó
-ninguno; a ti sí — y se ve en tu foto, que ya no tenía las dos palmas.
+LA CAUSA: las frases colgaban de la vida de fondo de Roberto DENTRO de Apex, y ese
+mecanismo se rinde en su primera línea si la pantalla de Apex no está VISIBLE. Tu
+Apex está detrás de otras apps todo el día repartiendo. O sea que el sitio donde
+estaban puestas era el único donde no podían sonar.
 
-AHORA EL ROJO ES DEL MENSAJE, NO DEL GESTO. Mientras tu aviso esté en pantalla,
-ningún gesto puede quitárselo. Arreglado dentro de Apex y en el cuerpo flotante.
+Y una segunda causa, más de fondo: estaban colgadas de un mecanismo hecho para que
+Roberto PAREZCA vivo (un gesto cada 12-30 segundos, una frase cada seis gestos, de
+una bolsa). Eso sirve para que no parezca una estatua. No sirve para cumplir un
+horario. Un compromiso de horario necesita un reloj propio.
 
-2) LA NUBE SALÍA POR DETRÁS DE ROBERTO.
+═══ LO QUE HAY AHORA ═════════════════════════════════════════════
 
-Era estructural: en la página, la nube está escrita ANTES que el cuerpo y ninguno
-tenía orden de capas. Con dos elementos así, el navegador los apila por el orden
-en que están escritos — o sea que EL CUERPO SIEMPRE se dibujaba encima.
+SU PROPIO RELOJ, independiente de todo lo demás:
 
-No se notaba con la nubecita corta, que sale al lado. Pero el panel del VISTAZO
-ocupa el ancho entero y pasaba por debajo de él: su sombrero y su cara tapaban el
-texto. Eso es exactamente tu foto.
+· Una cada 30 MINUTOS, de las 6:00 a las 23:00, mires Apex o no.
+· Rotando en este orden: CRECIMIENTO PERSONAL → ABUNDANCIA → AFIRMACIÓN.
+· 180 frases en el catálogo: 60 + 60 + 60.
+· NINGUNA se repite en el mismo día (comprobado simulando un día entero minuto a
+  minuto: salen 34 y las 34 son distintas).
+· Y JAMÁS pisan una alarma ni un aviso importante: si coinciden, esperan a que
+  termine, cuentan UN MINUTO, y entonces la dicen. Tu regla, al pie de la letra.
 
-Ahora manda la capa: sombra abajo, cuerpo encima, y LA NUBE SIEMPRE DELANTE —
-porque si no se lee, no sirve. (Dentro de Apex ya estaba bien, lo que confirma
-cuál era la intención desde el principio.)
+DE QUIÉN SON LAS FRASES: Séneca, Marco Aurelio, Epicteto, Confucio, Lao Tsé,
+Aristóteles, Sócrates, Buda, Rumi · Mandela, Maya Angelou, Marie Curie, Helen
+Keller, Eleanor Roosevelt, Martin Luther King, Gandhi · Edison, Ford, da Vinci,
+Miguel Ángel, Franklin, Steve Jobs, Peter Drucker, Charlie Munger · Napoleon Hill,
+Wallace Wattles, George Clason (Babilonia), Joseph Murphy, Bob Proctor, Earl
+Nightingale, James Allen, T. Harv Eker, Louise Hay, Florence Scovel Shinn, Émile
+Coué · Jim Rohn, Zig Ziglar, Tony Robbins, John Wooden, James Clear, Angela
+Duckworth, Carol Dweck, Stephen Covey, Robin Sharma · Muhammad Ali, Michael Jordan,
+Kobe Bryant, Vince Lombardi · y José Martí, Machado y Cervantes.
 
-═══ 🧪 Y EL INDICADOR ════════════════════════════════════════════
+NINGUNA ES DE TRADING. Son de la vida entera, como pediste. Hay un banco que lo
+comprueba: si algún día se cuela una que hable de pips o de velas, salta.
 
-Diste aprobación para el Pine. Está hecho y probado, PERO SIN COMPILAR TODAVÍA,
-y te explico por qué en el chat: el editor de TradingView tiene abierta una copia
-VIEJA de tu indicador (sin el SL mínimo ni la casilla 🏃). Tu GRÁFICO está bien
-—corre la v3.8.1 completa, se lo pregunté a él—, pero pegar encima de esa copia
-vieja habría sido un destrozo. Lo compilamos cuando estés delante.
+Y NINGUNA ES INVENTADA. Las frases famosas de origen dudoso —las "de Einstein" que
+Einstein nunca dijo— se quedaron fuera a propósito. Pediste personalidades
+reconocidas: ponerles en la boca algo que no dijeron sería lo contrario.
 
-EL CAMBIO, que es mínimo a propósito: un interruptor APAGADO de fábrica. Con él
-en false tu indicador se comporta EXACTAMENTE igual que hoy. Solo se sustituyeron
-2 líneas, y el banco compara con la copia de antes para exigir que no se tocó
-nada más.
+LAS AFIRMACIONES son del tipo que pediste: "Rey, repite conmigo: el dinero llega a
+mí como un imán, porque estoy enfocado en crecer". Y varias se apoyan en el método
+de quien lo creó — la fórmula de Coué, el subconsciente de Murphy, la palabra de
+Florence Scovel Shinn.
 
-Regresión: 190/190 en verde.
-📌 APK v7.78 compilada pero NO instalada: tienes el teléfono contigo.
-📌 El Ejecutor: interruptor 🔴 APAGADO como lo dejaste, pero le reinicié el
-   programa para que cargue el código v2.9 del Auditor (te había avisado él solo
-   DOS VECES de que corría con el código viejo — esa pieza funciona).
+═══ UNA DECISIÓN QUE TOMÉ, Y TE LA CUENTO ════════════════════════
+
+APAGUÉ EL SISTEMA VIEJO DE FRASES. Si dejaba los dos vivos, oirías las genéricas
+mezcladas con las buenas, y eso es justo lo que no quieres. No se ha borrado nada:
+las frases viejas y su regla siguen guardadas en el código; lo que cambia es quién
+manda el turno.
+
+═══ UN FALLO QUE CACÉ ANTES DE QUE LLEGARA A TU TELÉFONO ═════════
+
+El cuerpo flotante de Roberto no puede cargar archivos sueltos dentro de la APK: el
+constructor se los INCRUSTA al compilar. Mi catálogo nuevo no estaba en esa lista,
+así que en tu teléfono habría quedado mudo — el mismo fallo de hoy, otra vez.
+Arreglado, y el constructor ahora comprueba que quedó dentro de verdad.
+
+═══ Y EL TURNO REPARTIDO ═════════════════════════════════════════
+
+Con Apex delante habla el Roberto de dentro; con Apex detrás —tu día entero— habla
+su cuerpo flotante. Nunca los dos: Android apaga la vida del cuerpo cuando Apex está
+delante. Y la cuenta del día la comparten, así que ninguno repite lo del otro.
+
+Regresión: 191 bancos. Banco nuevo `test-frases-cada-30`: 12/12.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
