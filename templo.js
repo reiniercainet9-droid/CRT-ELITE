@@ -468,8 +468,20 @@
       return { que: "descarga", pct, por: "marcaste " + (avisos.dolor ? "dolor" : "mal descanso") + ": esta semana baja el volumen. Forzar aquí es como operar cansado." };
     if (semanaNum > 0 && semanaNum % ADAPTA.cadaDescarga === 0)
       return { que: "descarga", pct, por: "toca semana suave (cada " + ADAPTA.cadaDescarga + "): es lo que evita la lesión y el abandono." };
+    /* 🏋️ v7.77 — LO QUE HIZO DE VERDAD MANDA SOBRE CUÁNTAS MARCÓ. Rey (08-09): «si hoy me
+       sentí mal e hice menos, o bien e hice más… en base a eso mi entrenador trabajar».
+       Antes solo se contaban las sesiones MARCADAS: podía hacer las tres a medias, salir
+       al 100% y que el plan le SUBIERA. Ahora, si en la mayoría hizo MENOS, el plan es
+       demasiado grande aunque las marcara todas; y si hizo MÁS, se le ha quedado corto.
+       Una vez no dice nada — hace falta la MITAD de las sesiones de la semana. */
+    const menos = (avisos && avisos.menos) || 0, mas = (avisos && avisos.mas) || 0;
+    if (total && menos >= Math.ceil(total / 2) && menos > mas)
+      return { que: "recorta", pct, por: "las marcaste, pero en " + menos + " hiciste MENOS de lo puesto: el plan es demasiado grande y se recorta. Se adapta él a ti, no tú a él." };
     if (pct >= ADAPTA.sube)
-      return { que: "sube", pct, por: "cumpliste el " + Math.round(pct * 100) + "%: se progresa." };
+      return { que: "sube", pct, por: "cumpliste el " + Math.round(pct * 100) + "%"
+             + (mas >= Math.ceil(total / 2) ? " y en " + mas + " hiciste MÁS: se te quedó corto, subimos." : ": se progresa.") };
+    if (total && mas >= Math.ceil(total / 2) && pct >= ADAPTA.repite)
+      return { que: "sube", pct, por: "no las hiciste todas, pero en " + mas + " hiciste MÁS de lo puesto: el plan se te quedó corto." };
     if (pct >= ADAPTA.repite)
       return { que: "repite", pct, por: "cumpliste el " + Math.round(pct * 100) + "%: se repite la semana. No se progresa sobre lo que no se hizo." };
     return { que: "recorta", pct, por: "cumpliste el " + Math.round(pct * 100) + "%: el plan es demasiado grande y se recorta. Se adapta él a ti, no tú a él." };

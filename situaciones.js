@@ -251,6 +251,33 @@ const ROB_AVISOS = [
     lee:(b)=>({ frase:"Rey, aviso: se acerca " + (/Pre-NY/i.test(b) ? "tu ventana Pre-NY" : "Londres") + ". Enciende la PC y toca el aviso, y te hago el análisis del día." }) },
   { id:"analisis_sem", gesto:"tiempo",  re:/^🗓️ Análisis semanal/,
     lee:()=>({ frase:"Rey, aviso: el mercado abre pronto. Enciende la PC y toca el aviso, y te hago el análisis semanal." }) },
+  /* 🕐 v7.76 — SUS KILLZONES, QUE DECÍAN LO CONTRARIO DE LO QUE PASABA.
+     Rey, 08-09, con la captura del aviso delante: «me saltó este aviso y Roberto me dijo
+     "no entres todavía, aún no hay setup". No corresponde con la notificación, y eso ha
+     pasado en varias ocasiones: no hay coherencia entre lo que sale en el aviso y lo que
+     él me dice».
+     EL AVISO DECÍA: «⭐ Pre-NY Kill Zone abierta (7:30 NY). Tu MEJOR ventana del día.
+     Espera SIEMPRE la vela de confirmación, NO ENTRES EN EL TOQUE».
+     Roberto vio ese «no entres» perdido en el cuerpo, sacó su regla del VETO y le contestó
+     «no entres, aún no hay setup» — justo lo contrario: se le abría su mejor ventana.
+     Es la MISMA familia que la lección con la palabra «veto» y el semáforo: una palabra
+     suelta del cuerpo mandando sobre el título. Por eso van aquí, con título fijo.
+     ⚠️ Y llegan con DOS prefijos: la mejor ventana con «⭐» y las demás con «⏰» (worker:
+     title = (z.best ? "⭐ " : "⏰ ") + z.n), así que la regla acepta los dos. */
+  { id:"killzone", gesto:"tiempo", re:/^\s*[⭐⏰]\s*(Londres|Pre-NY Kill Zone|NY Apertura|NY Lunch)\s*$/i,
+    lee:(b,t)=>{
+      const n = (String(t||"").match(/(Londres|Pre-NY Kill Zone|NY Apertura|NY Lunch)/i)||[])[1]||"";
+      const cual = n.toLowerCase();
+      if(/lunch/.test(cual))
+        return { gesto:"frena", frase:"Rey, entra el NY Lunch: baja liquidez y trampas. No abras entradas nuevas." };
+      /* ⚠️ 95 letras es el tope (regla de Rey): tiene que leerse de un vistazo en la
+         nubecita Y oírse de un tirón con el teléfono en el bolsillo. */
+      if(/pre-ny/.test(cual))
+        return { frase:"Rey, se abre tu MEJOR ventana, la Pre-NY. Espera la vela de confirmación." };
+      return { frase:"Rey, se abre tu ventana de " + (/londres/.test(cual) ? "Londres" : "Nueva York")
+             + ". Repasa el checklist antes de operar." };
+    } },
+
   /* 💻 v7.74 — LOS AVISOS DE SU PROPIA PC. Rey, 07-09, enseñando el de las 14:06: «me saltó
      esta notificación y Roberto me dijo "se abre tu ventana de Londres", totalmente mal».
      Y era literal: las DOS siestas (la de Londres y la de las 14:05) caían en la regla del
@@ -458,8 +485,14 @@ function robSitua(titulo, cuerpo, tipo){
      despertador del propio teléfono (DespertadorApex: "⏰ " + tit). Ninguna otra cosa lo
      lleva. Se comprueba en el banco test-avisos-de-su-pc: si algún día alguien quitara ese
      "⏰", el banco lo canta ANTES de que a Rey le vuelva a saltar un susto que él no puso. */
+  /* ⚠️ v7.76 — EL "⏰" SOLO NO BASTA, y lo enseñó su killzone. El worker también le pone
+     "⏰" a las ventanas que NO son la mejor (title = (best ? "⭐ " : "⏰ ") + nombre), así que
+     «⏰ Londres» y «⏰ NY Lunch» se colaban por aquí como si fueran avisos suyos y salían con
+     el título pelado. Un aviso es SUYO cuando lleva su reloj Y ADEMÁS no es uno de los de
+     título fijo del sistema (ROB_AVISOS). Los suyos los escribe él y nunca coinciden con
+     esos títulos, que están anclados. */
   const tSit = String(titulo||"");
-  const esSuyo = /^\s*⏰/.test(tSit);
+  const esSuyo = /^\s*⏰/.test(tSit) && !ROB_AVISOS.some((a) => a.re.test(tSit));
   if(String(tipo||"")==="rem" && esSuyo){
     const tit = String(titulo||"").replace(/^[^\wÁÉÍÓÚÑáéíóúñ]+/,"").trim();
     const bt = tit.toLowerCase(), bc = String(cuerpo||"").toLowerCase();

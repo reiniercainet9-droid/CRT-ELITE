@@ -76,7 +76,21 @@
      de borde DE GOLPE; el de dentro de Apex se desplaza y da un empujoncito de escala.
      Rey lo vio: "la forma de moverse hacia los lados". Solo se anima el desplazamiento
      lateral — nunca el alto ni el ancho, que eso sí daría tirones. */
+  /* 🗂️ v7.78 — EL ORDEN DE LAS CAPAS, que hasta ahora no lo mandaba nadie.
+     Rey (08-09), con la foto delante: «la nube sale por detrás de Roberto; hay dos, una
+     sale por delante y otra por detrás de él».
+     LA CAUSA: en la página, #globo está escrito ANTES que #robCuerpo y ninguno tenía capa
+     asignada. Con dos elementos `position:fixed` sin z-index, CSS los apila por el ORDEN
+     DEL DOCUMENTO — así que el cuerpo SIEMPRE se dibujaba encima de la nube.
+     No se notaba porque la nubecita normal sale al lado y no le pisa. Pero el panel del
+     VISTAZO (#globo.repaso) ocupa el ancho entero y se metía debajo de él: su sombrero y su
+     cara tapaban el texto, que es justo lo que Rey fotografió.
+     Ahora manda la capa y no el orden: el suelo abajo, el cuerpo encima, y lo que TIENE
+     ALGO QUE DECIR siempre delante — porque si no se lee, no sirve. */
+  #robSombra{z-index:1}
+  #pulso{z-index:2}
   #robCuerpo{position:fixed;bottom:calc(9 * var(--u));width:var(--rob-ancho);height:var(--rob-alto);
+             z-index:3;
              transition:left .26s cubic-bezier(.34,1.2,.64,1), right .26s cubic-bezier(.34,1.2,.64,1)}
   /* 🌑 v7.60 — SU SOMBRA EN EL SUELO, debajo y no rodeándole. Rey: "falta la sombra de abajo,
      y la sombra es alrededor del cuerpo y debajo no". Es lo que de verdad asienta a un
@@ -141,6 +155,7 @@
      la nubecita acababa 33 px más ancha de lo que se había calculado — justo lo suficiente
      para no caber en la pantalla junto al cuerpo. */
   #globo{position:fixed;max-width:var(--globo-max);box-sizing:border-box;display:none;
+         z-index:4;   /* 🗂️ v7.78 — SIEMPRE DELANTE del cuerpo: lo que dice se tiene que leer */
          overflow-wrap:break-word;
          background:#1B2145;color:#f4efe2;
          border:calc(0.9 * var(--u)) solid #f0c95c;
@@ -421,25 +436,35 @@
   /* 🟢 v7.59 — y el VERDE cuando pasó el peligro. Se dispara solo en el PASO de urgente a
      no urgente, que es exactamente el momento en que el peligro pasó: no hay que acordarse
      de llamarlo desde ningún sitio. */
+  /* 🔴 v7.78 — EL ROJO ES DEL MENSAJE, NO DEL GESTO. Rey, 08-09, con la captura sobre su
+     app de entregas: su «Rey, no entres en GBPUSD todavía: aún no hay setup» salía con el
+     borde DORADO de siempre y sin rojo alrededor.
+     LA CAUSA, y por eso mi prueba de la mañana no la vio: el rojo se pintaba al PONER un
+     gesto urgente… y se quitaba al poner CUALQUIER otro gesto. Roberto tiene vida de fondo
+     y va cambiando de gesto solo — así que si mientras su aviso estaba en pantalla (9 s) le
+     tocaba un gesto normal, EL ROJO SE IBA Y LA FRASE SE QUEDABA. En mi prueba no le tocó
+     ninguno en esos segundos; a él sí, y encima con la postura ya cambiada en la foto.
+     AHORA el rojo dura lo que dura el AVISO: mientras haya un mensaje urgente en la
+     nubecita, ningún gesto espontáneo puede quitárselo. */
+  var AVISO_URGE = false;
   var _erUrgente = false, _tDespeja = null;
   function pintarUrgencia(g){
     try {
-      var urge = esUrgente(g);
+      var urge = esUrgente(g) || AVISO_URGE;
       var c = document.getElementById("robCuerpo");
       var n = document.getElementById("globo");
       /* 🚦 v7.60 — si hay SEMÁFORO puesto, manda él: su luz dura lo que dura el peligro y
          no se la puede llevar por delante un gesto que pasa. */
       if (LUZ) { pintarLuz(); _erUrgente = urge; return; }
+      /* 🔴🟢 v7.76 — AQUÍ ESTABA INVERTIDO. Rey (08-09, en plena sesión): «cuando me dice
+         no entres en tal moneda, en vez de rojo me pone verde y viceversa».
+         Este verde no decía «pasó el peligro»: decía «el gesto urgente ya no está», y
+         saltaba al pasar de un gesto urgente a CUALQUIER otro. Como la frase de la nubecita
+         dura más que el gesto, Rey veía su «NO ENTRES» rodeado de VERDE.
+         El verde de verdad lo da el SEMÁFORO (arriba, `LUZ`), que sí sabe cuándo termina
+         una ventana de peligro. Aquí el rojo se enciende con el gesto y se apaga con él. */
       if (c) c.classList.toggle("urge", urge);
       if (n) n.classList.toggle("urge", urge);
-      if (_erUrgente && !urge) {
-        if (c) { c.classList.add("despejado"); }
-        if (n) { n.classList.add("ok"); }
-        clearTimeout(_tDespeja);
-        _tDespeja = setTimeout(function(){
-          try { if (c) c.classList.remove("despejado"); if (n) n.classList.remove("ok"); } catch(_){}
-        }, 3200);
-      }
       if (urge) { clearTimeout(_tDespeja); if (c) c.classList.remove("despejado"); if (n) n.classList.remove("ok"); }
       _erUrgente = urge;
     } catch(_){}
@@ -507,6 +532,9 @@
     } catch(_){}
     /* si por lo que sea no hubiera frase corta, se usa el título, que él ya escribió corto */
     if (!frase) frase = String(titulo || cuerpo || "").replace(/\s+/g, " ").trim();
+    /* 🔴 v7.78 — se marca que ESTE aviso es urgente, y el rojo se queda mientras esté en
+       pantalla aunque el cuerpo cambie de gesto por su cuenta (ver pintarUrgencia). */
+    try { AVISO_URGE = esUrgente(g); } catch(_){ AVISO_URGE = false; }
     /* 🗣️ ESTO SÍ SE DICE EN VOZ ALTA: es una alarma del mercado o un aviso que Rey se
        programó. Es lo ÚNICO que suena — ver la regla en burbujaDecir.
        🔊 v7.41 — salvo que Rey haya apagado la voz de ESE aviso concreto: entonces sale la
@@ -766,6 +794,9 @@
        Ahora, con una tarjeta puesta, esto solo calla la voz: la pregunta se queda hasta que
        él toque Sí o No. */
     if (tarjetaViva && !PISAR_TARJETA) return;
+    /* 🔴 v7.78 — el aviso se va, y con él su rojo: se suelta ANTES de poner el gesto de
+       fondo, para que ese gesto ya pinte con la urgencia apagada. */
+    AVISO_URGE = false;
     gesto(GESTO_FONDO);
     if (!globo.classList.contains("hay") && !globo.classList.contains("midiendo")) return;
     /* 🌬️ v7.20 — QUE SE VAYA, NO QUE DESAPAREZCA.

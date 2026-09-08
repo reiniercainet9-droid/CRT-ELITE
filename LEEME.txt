@@ -1,44 +1,59 @@
-APEX v7.75 — TRADING DESK
+APEX v7.78 — TRADING DESK
 =========================
 
-🚦 EL SEMÁFORO YA NO SE ENCIENDE POR UNA PALABRA SUELTA
+🔴 TU "NO ENTRES" SE QUEDA EN ROJO · 🗂️ Y LA NUBE YA NO SE ESCONDE DETRÁS
 
-⚠️ EL ARREGLO YA ESTÁ EN TU TELÉFONO (APK v7.75 instalada por cable y comprobada).
-   Esta web es para que tu respaldo no se quede atrás — súbela cuando puedas.
+⚠️ HAY QUE SUBIR DOS COSAS: la web v7.78 Y el worker v5.129
+   (el worker está en esta misma carpeta)
 
-LO QUE VISTE a las 20:31: Roberto te dijo "Ya tienes luz verde, Rey. Pasó la
-ventana de la noticia" — con tu ventana cerrada desde hacía 6 horas y sin que
-hubiera existido ninguna noticia.
+═══ LOS DOS FALLOS QUE ME ENSEÑASTE ══════════════════════════════
 
-LA CADENA, comprobada al minuto en tu propio registro:
-  20:00:39  te llegó "🎓 Aprendí solo de hoy — …mi VETO de mañana ya las lleva
-            dentro". El vigía de tu teléfono vio la palabra "veto" suelta en el
-            cuerpo y abrió una ventana de peligro de 30 minutos.
-  20:30:39  saltó el verde. Tu captura es de las 20:31. Cuadra clavado.
+1) EL ROJO SE IBA Y LA FRASE SE QUEDABA.
 
-O sea: una lección que Roberto escribió sobre sí mismo abrió una ventana de
-peligro falsa y luego te anunció que había pasado una noticia inexistente.
+Tu captura sobre la app de entregas: "Rey, no entres en GBPUSD todavía: aún no
+hay setup" con el borde dorado de siempre y sin rojo alrededor.
 
-Y NO ERA SOLO RUIDO NOCTURNO. Los avisos del Ejecutor cuando RECHAZA una señal
-llevan la palabra "veto". En plena sesión te pintaban 30 minutos de rojo falso
-—que puede frenarte una entrada buena— y después un verde que suena a permiso
-para operar.
+LA CAUSA — y por qué mi prueba de la mañana NO la vio: el rojo se ponía al poner
+un gesto urgente, y se quitaba al poner CUALQUIER otro gesto. Roberto tiene vida
+de fondo y va cambiando de gesto solo. Tu aviso dura 9 segundos: si en esos
+segundos le tocaba un gesto normal, el rojo se iba. En mi prueba no le tocó
+ninguno; a ti sí — y se ve en tu foto, que ya no tenía las dos palmas.
 
-ES EL MISMO FALLO QUE APEX YA TENÍA ARREGLADO, pero del otro lado del puente.
-Apex tiene un cortafuegos desde la v7.32: "un aviso de charla no es un hecho del
-mercado". El vigía nativo no lo tenía. Se revisó un lado y no el otro.
+AHORA EL ROJO ES DEL MENSAJE, NO DEL GESTO. Mientras tu aviso esté en pantalla,
+ningún gesto puede quitárselo. Arreglado dentro de Apex y en el cuerpo flotante.
 
-LO QUE SE ARREGLÓ:
-1. Los avisos de charla (tus lecciones, el repaso, las respuestas de Roberto) ya
-   NO pueden tocar el semáforo. El cortafuegos es lo primero que se mira.
-2. El peligro se reconoce por el TÍTULO del aviso —la noticia de verdad y el
-   vigía sobre tu posición—, nunca por una palabra suelta perdida en el cuerpo.
+2) LA NUBE SALÍA POR DETRÁS DE ROBERTO.
 
-COMPROBADO EN TU TELÉFONO, EJECUTÁNDOLO: se te mandó un aviso de charla con la
-palabra "veto" a propósito, y el rojo NO se encendió. Sin rojo no hay verde
-falso. La prueba se borró después.
+Era estructural: en la página, la nube está escrita ANTES que el cuerpo y ninguno
+tenía orden de capas. Con dos elementos así, el navegador los apila por el orden
+en que están escritos — o sea que EL CUERPO SIEMPRE se dibujaba encima.
 
-Banco nuevo: test-semaforo-no-miente (5/5). Regresión: 182/182 en verde.
+No se notaba con la nubecita corta, que sale al lado. Pero el panel del VISTAZO
+ocupa el ancho entero y pasaba por debajo de él: su sombrero y su cara tapaban el
+texto. Eso es exactamente tu foto.
+
+Ahora manda la capa: sombra abajo, cuerpo encima, y LA NUBE SIEMPRE DELANTE —
+porque si no se lee, no sirve. (Dentro de Apex ya estaba bien, lo que confirma
+cuál era la intención desde el principio.)
+
+═══ 🧪 Y EL INDICADOR ════════════════════════════════════════════
+
+Diste aprobación para el Pine. Está hecho y probado, PERO SIN COMPILAR TODAVÍA,
+y te explico por qué en el chat: el editor de TradingView tiene abierta una copia
+VIEJA de tu indicador (sin el SL mínimo ni la casilla 🏃). Tu GRÁFICO está bien
+—corre la v3.8.1 completa, se lo pregunté a él—, pero pegar encima de esa copia
+vieja habría sido un destrozo. Lo compilamos cuando estés delante.
+
+EL CAMBIO, que es mínimo a propósito: un interruptor APAGADO de fábrica. Con él
+en false tu indicador se comporta EXACTAMENTE igual que hoy. Solo se sustituyeron
+2 líneas, y el banco compara con la copia de antes para exigir que no se tocó
+nada más.
+
+Regresión: 190/190 en verde.
+📌 APK v7.78 compilada pero NO instalada: tienes el teléfono contigo.
+📌 El Ejecutor: interruptor 🔴 APAGADO como lo dejaste, pero le reinicié el
+   programa para que cargue el código v2.9 del Auditor (te había avisado él solo
+   DOS VECES de que corría con el código viejo — esa pieza funciona).
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
