@@ -1,51 +1,44 @@
-APEX v7.74 — TRADING DESK
+APEX v7.75 — TRADING DESK
 =========================
 
-💻 UN AVISO DEL SISTEMA YA NO SE LEE CON LAS REGLAS DEL MERCADO
+🚦 EL SEMÁFORO YA NO SE ENCIENDE POR UNA PALABRA SUELTA
 
-⚠️ ESTA VEZ HAY QUE SUBIR DOS COSAS: la web v7.74 Y el worker v5.128
-   (el worker está en esta misma carpeta: worker-elitepro-v5.128.js)
+⚠️ EL ARREGLO YA ESTÁ EN TU TELÉFONO (APK v7.75 instalada por cable y comprobada).
+   Esta web es para que tu respaldo no se quede atrás — súbela cuando puedas.
 
-LO QUE VISTE: a las 14:06 te saltó "😴 PC en reposo" con el emoji roto, y Roberto
-te dijo "se abre tu ventana de Londres, ponte delante del gráfico" — justo cuando
-la PC se acababa de dormir.
+LO QUE VISTE a las 20:31: Roberto te dijo "Ya tienes luz verde, Rey. Pasó la
+ventana de la noticia" — con tu ventana cerrada desde hacía 6 horas y sin que
+hubiera existido ninguna noticia.
 
-ERAN TRES FALLOS ENCADENADOS, y ninguno era de Roberto:
+LA CADENA, comprobada al minuto en tu propio registro:
+  20:00:39  te llegó "🎓 Aprendí solo de hoy — …mi VETO de mañana ya las lleva
+            dentro". El vigía de tu teléfono vio la palabra "veto" suelta en el
+            cuerpo y abrió una ventana de peligro de 30 minutos.
+  20:30:39  saltó el verde. Tu captura es de las 20:31. Cuadra clavado.
 
-1. EL WORKER TIRABA LA ETIQUETA. En la puerta por donde tu PC manda sus avisos,
-   el worker rehacía el mensaje con solo título, cuerpo y etiqueta de grupo, y
-   perdía el campo que dice "esto es un aviso del sistema". Sin ese campo,
-   Roberto lee el aviso con las reglas del MERCADO.
+O sea: una lección que Roberto escribió sobre sí mismo abrió una ventana de
+peligro falsa y luego te anunció que había pasado una noticia inexistente.
 
-2. Y EL AVISO DE LA SIESTA ERA UNA TRAMPA PERFECTA. Su texto nombra "ventana
-   operativa", "Londres" y "Pre-NY"... para explicarte CUÁNDO DESPIERTA. Roberto
-   vio esas tres palabras y sacó su regla de killzone.
+Y NO ERA SOLO RUIDO NOCTURNO. Los avisos del Ejecutor cuando RECHAZA una señal
+llevan la palabra "veto". En plena sesión te pintaban 30 minutos de rojo falso
+—que puede frenarte una entrada buena— y después un verde que suena a permiso
+para operar.
 
-3. Y EL TEXTO LLEGABA ROTO. Los guiones de tu PC no tenían la marca de
-   codificación, así que Windows los leía con el juego de caracteres antiguo y el
-   😴 se partía en cuatro caracteres basura. Ese era el "ðY~´".
+ES EL MISMO FALLO QUE APEX YA TENÍA ARREGLADO, pero del otro lado del puente.
+Apex tiene un cortafuegos desde la v7.32: "un aviso de charla no es un hecho del
+mercado". El vigía nativo no lo tenía. Se revisó un lado y no el otro.
 
-Y AL REVISAR TUS 32 AVISOS APARECIERON DOS MÁS QUE DECÍAN ALGO FALSO:
+LO QUE SE ARREGLÓ:
+1. Los avisos de charla (tus lecciones, el repaso, las respuestas de Roberto) ya
+   NO pueden tocar el semáforo. El cortafuegos es lo primero que se mira.
+2. El peligro se reconoce por el TÍTULO del aviso —la noticia de verdad y el
+   vigía sobre tu posición—, nunca por una palabra suelta perdida en el cuerpo.
 
-· "🛑 Ejecutor APAGADO (freno diario)" te decía "saltó el stop". No: es tu freno
-  de pérdida diaria, que apaga al Ejecutor por la CUENTA, no por una operación.
+COMPROBADO EN TU TELÉFONO, EJECUTÁNDOLO: se te mandó un aviso de charla con la
+palabra "veto" a propósito, y el rojo NO se encendió. Sin rojo no hay verde
+falso. La prueba se borró después.
 
-· "🛡️ Stop a breakeven" te decía "saltó el stop en GBPUSD". Es LO CONTRARIO: ese
-  aviso significa que moví tu stop a la entrada y esa operación YA NO PUEDE
-  PERDER. La mejor noticia contada como la peor.
-
-Y UNO QUE LLEVABA TIEMPO ROTO EN SILENCIO: la etiqueta "rem" la usan tanto tus
-avisos personales como los del sistema, así que la rama de "esto es tu rutina" se
-estaba tragando las lecturas buenas del Ejecutor. Tu "🤖 ENTRÉ · COMPRA EURUSD"
-salía como el título pelado con el reloj, en vez de "el Ejecutor entró en compra
-en EURUSD, lote 3. Yo te la vigilo". Eran CINCO avisos así.
-
-AHORA: cero avisos con frases falsas. Y tus avisos de ⏰ Mis avisos siguen siendo
-TUYOS —tu propio título, sin sustos que tú no pusiste—, que era la ley de antes y
-no se podía romper al arreglar esto.
-
-Detalle pequeño de propina: tu "🏋️ Backtesting obligatorio" te manda hacer algo,
-así que ahora Roberto te señala con el dedo en vez de sacar el reloj.
+Banco nuevo: test-semaforo-no-miente (5/5). Regresión: 182/182 en verde.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
