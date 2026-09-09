@@ -512,6 +512,87 @@
      ayunas prolongado si eso le sienta mal. Su killzone es a las 8:30-10:30 de Brasil, y ahí
      necesita cabeza. Por eso cada escalón dice cuándo abrir la ventana, y si choca con su
      operativa se le avisa. */
+  /* ── 🧘 LA ESCALERA DE LA CALMA ───────────────────────────────────────────────
+     Rey (09-09): "no vi una guía clara en la meditación y respiración como en el ayuno
+     intermitente; no vi un programa con su escalabilidad, horarios recomendados y
+     programados, aunque sean también configurables".
+     TENÍA RAZÓN Y ERA UN HUECO REAL: había SIETE prácticas con su guion, su duración y su
+     evidencia — un catálogo excelente— pero ningún PROGRAMA. Él tenía que adivinar cuál
+     hacer, cuándo, cuántas veces y cuándo pasar a la siguiente. El ayuno sí tenía su
+     escalera; esto no.
+     MISMO PATRÓN QUE EL AYUNO Y QUE EL ENTRENAMIENTO: escalones, se sube por MÉRITO (no por
+     tiempo), y cada escalón dice exactamente qué hacer, cuándo y con qué criterio se sube.
+     ⚠️ LAS HORAS SON SUGERENCIAS, NO JAULAS. Están puestas sobre el día real de Rey (se
+     levanta a las 4:00, su ventana operativa va de las 2:00 a las 14:00 de Brasil) y se
+     cambian una a una, que es su ley: nada fijo, todo configurable.
+     ⚠️ Y NO SE EMPIEZA POR LA MEDITACIÓN LARGA. Se empieza por la respiración, que hace
+     efecto en minutos y no pide fe: es lo que sostiene el hábito las dos primeras semanas. */
+  const CALMA = [
+    { n: 0, n2: "Encontrar el freno", semanas: 2,
+      q: "una sola práctica, la más corta y la que más rápido se nota. Nada más.",
+      practicas: [
+        { id: "coherencia", cuando: "antes de tu ventana operativa", hora: "04:30", dias: "D" },
+      ],
+      reglas: [
+        "5 minutos, todos los días, a la misma hora. La hora fija es la que crea el hábito.",
+        "No busques 'poner la mente en blanco': solo alarga la exhalación. Es fisiología, no fe.",
+        "Si un día se te pasa, no lo recuperas por la noche. Mañana otra vez y ya.",
+      ],
+      sube: "10 días de 14 hechos." },
+
+    { n: 1, n2: "Abrir y cerrar el día", semanas: 3,
+      q: "la misma de antes, y una para cerrar. El día operativo empieza y termina de forma consciente.",
+      practicas: [
+        { id: "coherencia", cuando: "antes de tu ventana operativa", hora: "04:30", dias: "D" },
+        { id: "gratitud",   cuando: "al cerrar el día operativo",    hora: "14:15", dias: "LV" },
+      ],
+      reglas: [
+        "El cierre va DESPUÉS de apuntar en el Diario, no antes: primero los números, luego la calma.",
+        "El día que pierdas, el cierre no se salta. Ese es justo el día que más vale.",
+      ],
+      sube: "3 semanas con 5 de 7 días cumplidos." },
+
+    { n: 2, n2: "La cabeza quieta", semanas: 4,
+      q: "entra el escaneo corporal antes de dormir. Aquí se empieza a dormir mejor, y el sueño sostiene todo lo demás.",
+      practicas: [
+        { id: "coherencia", cuando: "antes de tu ventana operativa", hora: "04:30", dias: "D" },
+        { id: "gratitud",   cuando: "al cerrar el día operativo",    hora: "14:15", dias: "LV" },
+        { id: "escaneo",    cuando: "antes de dormir",               hora: "21:00", dias: "D" },
+      ],
+      reglas: [
+        "El escaneo se hace tumbado y da igual si te duermes: dormirse es un éxito, no un fallo.",
+        "Con tu horario de madrugada, el sueño es tu suplemento más caro. Protégelo.",
+      ],
+      sube: "4 semanas con 5 de 7 días, y notando que te duermes antes." },
+
+    { n: 3, n2: "Atención entrenada", semanas: 4,
+      q: "ahora sí, la meditación de verdad: 10 minutos de atención a la respiración. Es el músculo que usas cuando el precio va en tu contra.",
+      practicas: [
+        { id: "atencion",   cuando: "nada más levantarte",           hora: "04:10", dias: "D" },
+        { id: "coherencia", cuando: "antes de tu ventana operativa", hora: "04:40", dias: "D" },
+        { id: "escaneo",    cuando: "antes de dormir",               hora: "21:00", dias: "D" },
+      ],
+      reglas: [
+        "La cabeza se va a ir mil veces. Devolverla es el ejercicio: eso ES la práctica.",
+        "10 minutos de verdad valen más que 30 a medias. No alargues por quedar bien contigo.",
+      ],
+      sube: "4 semanas con 5 de 7 días, sin saltarte dos días seguidos." },
+
+    { n: 4, n2: "Con el mercado en contra", semanas: 0,
+      q: "el escalón que no se acaba. Ya tienes el hábito; ahora se usa como herramienta EN CALIENTE.",
+      practicas: [
+        { id: "atencion",   cuando: "nada más levantarte",              hora: "04:10", dias: "D" },
+        { id: "prekz",      cuando: "justo antes de la killzone",       hora: "04:45", dias: "LV" },
+        { id: "escaneo",    cuando: "antes de dormir",                  hora: "21:00", dias: "D" },
+      ],
+      reglas: [
+        "🚨 El SUSPIRO FISIOLÓGICO no se programa: es tu botón de emergencia. Dos inhalaciones y una exhalación larga, justo DESPUÉS de una pérdida y ANTES de tocar el ratón otra vez.",
+        "🚨 La RESPIRACIÓN EN CAJA tampoco: úsala cuando notes que quieres 'recuperar' lo perdido.",
+        "Aquí ya no se sube más. Se sostiene. Y si un mes se cae, se baja un escalón sin drama.",
+      ],
+      sube: "no hay más escalones: este se mantiene." },
+  ];
+
   const NUTRI = [
     { n: 0, n2: "Ordenar", semanas: 2, deficit: 0, ayuno: 0,
       q: "todavía NO se toca la cantidad. Se ordena lo que ya come.",
@@ -591,7 +672,7 @@
   /* se cuelga de donde toque, igual que situaciones.js y roberto-leyes.js */
   raiz.TEMPLO = {
     imc, imcQueEs, pesoSano, gastoEnReposo, gastoDiario, calcular, edadDe, tendencia,
-    ACTIVIDAD, OBJETIVOS, SUPLEMENTOS, PILARES, PRACTICAS,
+    ACTIVIDAD, OBJETIVOS, SUPLEMENTOS, PILARES, PRACTICAS, CALMA,
     NIVELES, PRUEBAS, nivelDePrueba, ADAPTA, cerrarSemana, semanaDe,
     NUTRI, nutriDe, chocaConOperativa,
   };
