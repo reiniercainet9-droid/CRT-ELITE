@@ -3104,9 +3104,52 @@ function renderTemplo(){
               '<span class="cuando">'+esc(nom)+' '+esc(d.hora||"")+'</span></div>';
           }).join(""); })()}
       </div>
+      <!-- 🗓️ v7.82 — POR QUÉ SON 3 SI ÉL MARCÓ 5. Rey (08-09 noche): "si yo marqué 5 días para
+           entrenar, ¿por qué solo tengo 3 días puestos ahí, y los otros dos que faltan?".
+           NO ERA UN FALLO, pero tampoco se le explicaba en ningún sitio: sus días son un TECHO
+           (lo máximo que puede), no un objetivo, y su escalón manda 3. Marcaba 5, veía 3 y se
+           quedaba con la duda. Ahora se lo dice la propia pantalla, con el porqué. -->
+      ${(function(){ try{
+        const puede = parseInt(TEMPLO_PLAN.dias,10)||0, pone = sem.sesiones.length;
+        const libres = Math.max(0, puede - pone);
+        if(!libres) return "";
+        return '<div class="note" style="text-align:left;margin-top:8px">'
+          + '🗓️ Dijiste que puedes <b>'+puede+' días</b> y tu escalón pide <b>'+pone+'</b>. '
+          + 'Los otros <b>'+libres+'</b> son <b>descanso, y el descanso también entrena</b>: es cuando el músculo se rehace. '
+          + 'Tus días son un <b>techo</b> (nunca se te pone más de lo que dijiste), no un objetivo. '
+          + 'El programa no pasa de 4 sesiones por semana en ningún escalón.'
+          + '</div>';
+      }catch(_){ return ""; } })()}
+      <!-- ➕ v7.82 — Y SI QUIERE USAR ESOS DÍAS, QUE PUEDA. Sesiones LIGERAS (caminar, movilidad),
+           aparte del plan de fuerza. Van en su propia lista: NUNCA entran en las sesiones del
+           escalón, así que no pueden cambiar el juicio de la semana ni bajarle de nivel.
+           ⚠️ OJO AL EDITAR AQUÍ: esto vive dentro de una plantilla de texto, y un acento grave
+           la corta en seco. Nada de acentos graves en estos comentarios. -->
+      ${(function(){ try{
+        const puede = parseInt(TEMPLO_PLAN.dias,10)||0;
+        const libres = Math.max(0, puede - sem.sesiones.length);
+        const ex = Array.isArray(TEMPLO_PLAN.extras) ? TEMPLO_PLAN.extras : [];
+        if(!libres && !ex.length) return "";
+        const filas = ex.map((e,i)=>{
+          const nom=(TEMPLO_DIAS.find(z=>z[0]===String(e.dia))||["","?"])[1];
+          return '<div class="tmp-dia" data-extra="'+i+'"><span class="ic">🚶</span>'
+            + '<span class="n">'+esc(e.n)+'</span>'
+            + '<span class="cuando">'+esc(nom)+' '+esc(e.hora||"")+'</span></div>';
+        }).join("");
+        return '<div class="nt-head" style="margin-top:10px">'
+          + '<div class="nt-htxt"><div class="nt-tt" style="font-size:15px">🚶 Tus días libres</div>'
+          + '<div class="nt-sub">'+(ex.length ? ex.length+' sesión(es) ligera(s) · no cuentan para subir de escalón'
+                                              : 'Te sobran '+libres+' día(s). Puedes usarlos sin tocar tu plan de fuerza.')+'</div></div>'
+          + (libres > ex.length ? '<button class="btn nt-ff" id="tmpExtraMas">➕ Añadir</button>' : '')
+          + '</div>'
+          + (ex.length ? '<div class="tmp-sem">'+filas+'</div>'
+              + '<div class="note" style="text-align:left;margin-top:6px">Son tuyas y opcionales: '
+              + '<b>no suman ni restan</b> al 80% que te sube de escalón. Toca una para quitarla.</div>' : "");
+      }catch(_){ return ""; } })()}
       <div class="note" style="text-align:left;margin-top:8px">
         Al acabar la semana el plan se ajusta solo: si cumples el 80% subes, si cumples la mitad la repites,
         y si cumples menos <b>se recorta</b> — se adapta él a ti, no tú a él. Cada 5 semanas toca una suave.
+        <br>Solo cuentan las <b>sesiones de tu escalón</b>: las ligeras de tus días libres no entran en esa cuenta.
       </div>
       ${(TEMPLO_PLAN.historia||[]).length ? ('<div class="tmp-lista">'+TEMPLO_PLAN.historia.slice(-4).reverse().map(h=>
         '<div class="tmp-fila"><span>'+new Date(h.lunes).toLocaleDateString("es",{day:"2-digit",month:"short"})+'</span><b>'+h.hechas+'/'+h.total+'</b><span>'+esc(h.que)+'</span></div>').join("")+'</div>') : ""}
@@ -3206,6 +3249,9 @@ function renderTemplo(){
   const hb=$("#tmpHorario"); if(hb) hb.onclick=()=>temploHorarioModal();
   const hb2=$("#tmpHorario2"); if(hb2) hb2.onclick=()=>temploHorarioModal();   /* v7.77: el mismo, donde se ven los días */
   const pr=$("#tmpPrueba"); if(pr) pr.onclick=()=>temploPruebaModal();
+  /* 🚶 v7.82 — los días libres: añadir una ligera, o tocarla para quitarla */
+  const xm=$("#tmpExtraMas"); if(xm) xm.onclick=()=>temploExtraAnadir();
+  b.querySelectorAll("[data-extra]").forEach(x=>{ x.onclick=()=>temploExtraQuitar(+x.dataset.extra); });
   b.querySelectorAll("[data-hecha]").forEach(x=>{ x.onclick=()=>temploMarcar(+x.dataset.hecha, true); });
   b.querySelectorAll("[data-nohecha]").forEach(x=>{ x.onclick=()=>temploMarcar(+x.dataset.nohecha, false); });
   b.querySelectorAll("[data-ses]").forEach(x=>{ x.onclick=()=>temploVerSesion(+x.dataset.ses); });
@@ -3339,6 +3385,56 @@ function temploHorario(nSesiones){
 
 const TEMPLO_DIAS = [["1","Lunes"],["2","Martes"],["3","Miércoles"],["4","Jueves"],["5","Viernes"],["6","Sábado"],["7","Domingo"]];
 
+/* ══════════════════════════════════════════════════════════════════════════════
+   🚶 SUS DÍAS LIBRES — v7.82
+   ═════════════════════════════════════════════════════════════════════════════
+   Rey (08-09 noche): "si yo marqué 5 días para entrenar, ¿por qué solo tengo 3 días puestos
+   ahí, y los otros dos que faltan?".
+   NO ERA UN FALLO: sus días son el TECHO (nunca se le pone más de lo que dijo que puede) y su
+   escalón manda 3. Pero él los puso esperando entrenar 5, y eso no se le explicaba en ninguna
+   parte. Además el programa no pasa de 4 sesiones en ningún escalón, así que sus 5 días no se
+   iban a usar NUNCA tal cual.
+   LO QUE SE HACE: la pantalla se lo explica, y si quiere usar esos días sobrantes puede — pero
+   con sesiones LIGERAS (caminar, movilidad), que es lo que corresponde empezando desde 96 kg.
+   ⚠️ LO IMPORTANTE, Y POR ESO VAN EN LISTA APARTE: `TEMPLO_PLAN.extras` NUNCA entra en
+   `sem.sesiones`. El juicio de la semana (`TEMPLO.cerrarSemana`) recibe `ses.length` como
+   total, así que si las extras se mezclaran ahí le bajarían el porcentaje y podrían HACERLE
+   BAJAR DE ESCALÓN por hacer MÁS ejercicio. Eso sería exactamente al revés de lo que quiere. */
+const TEMPLO_LIGERAS = [
+  { n:"Caminata rápida", d:"30-40 min a buen paso, sin correr. Debes poder hablar pero no cantar." },
+  { n:"Movilidad y respiración", d:"15 min: cadera, hombros y columna, con respiración lenta." },
+  { n:"Paseo suave", d:"20-30 min tranquilo. Cuenta: mover el cuerpo es mejor que no moverlo." },
+];
+function temploExtraAnadir(){
+  try{
+    const sem = temploSemanaAhora(); if(!sem) return;
+    const puede = parseInt(TEMPLO_PLAN.dias,10)||0;
+    const libres = Math.max(0, puede - sem.sesiones.length);
+    if(!Array.isArray(TEMPLO_PLAN.extras)) TEMPLO_PLAN.extras = [];
+    if(TEMPLO_PLAN.extras.length >= libres){ toast("Ya usaste tus días libres"); return; }
+    /* el día: uno que no esté ocupado ni por el plan ni por otra ligera */
+    const hor = temploHorario(sem.sesiones.length);
+    const ocupados = {};
+    hor.forEach(h=>{ if(h && h.dia) ocupados[String(h.dia)] = 1; });
+    TEMPLO_PLAN.extras.forEach(e=>{ if(e && e.dia) ocupados[String(e.dia)] = 1; });
+    let dia = (TEMPLO_DIAS.find(d=>!ocupados[d[0]])||["6"])[0];
+    const hora = (/^\d{1,2}:\d{2}$/.test(String(TEMPLO_PLAN.horaBase||""))) ? TEMPLO_PLAN.horaBase : "18:00";
+    const cual = TEMPLO_LIGERAS[TEMPLO_PLAN.extras.length % TEMPLO_LIGERAS.length];
+    TEMPLO_PLAN.extras.push({ n: cual.n, d: cual.d, dia: dia, hora: hora });
+    temploPlanGuardar(); temploAvisosDelPlan(); renderTemplo();
+    toast("🚶 "+cual.n+" añadida. Cámbiale el día y la hora en ⏰ Cambiar días y horas");
+  }catch(_){ toast("No pude añadirla"); }
+}
+function temploExtraQuitar(i){
+  try{
+    if(!Array.isArray(TEMPLO_PLAN.extras) || !TEMPLO_PLAN.extras[i]) return;
+    const n = TEMPLO_PLAN.extras[i].n;
+    TEMPLO_PLAN.extras.splice(i,1);
+    temploPlanGuardar(); temploAvisosDelPlan(); renderTemplo();
+    toast("Quitada: "+n);
+  }catch(_){}
+}
+
 function temploHorarioModal(){
   const sem = temploSemanaAhora(); if(!sem) return;
   const h = temploHorario(sem.sesiones.length);
@@ -3353,6 +3449,14 @@ function temploHorarioModal(){
       <div style="display:flex;gap:8px">
         <select class="inp" id="thD${i}" style="flex:1">${TEMPLO_DIAS.map(d=>'<option value="'+d[0]+'"'+((h[i]&&h[i].dia)===d[0]?" selected":"")+'>'+d[1]+'</option>').join("")}</select>
         <input class="inp" id="thH${i}" type="time" value="${esc((h[i]&&h[i].hora)||"18:00")}" style="flex:1">
+      </div>`).join("")}
+    <!-- 🚶 v7.82 — y las ligeras de sus días libres, aquí mismo: un solo sitio para todo lo
+         que suena, que es lo que Rey pide siempre. -->
+    ${(Array.isArray(TEMPLO_PLAN.extras)?TEMPLO_PLAN.extras:[]).map((e,i)=>`
+      <label class="lbl">🚶 ${esc(e.n)} <span style="opacity:.7">(día libre)</span></label>
+      <div style="display:flex;gap:8px">
+        <select class="inp" id="txD${i}" style="flex:1">${TEMPLO_DIAS.map(d=>'<option value="'+d[0]+'"'+(String(e.dia)===d[0]?" selected":"")+'>'+d[1]+'</option>').join("")}</select>
+        <input class="inp" id="txH${i}" type="time" value="${esc(e.hora||"18:00")}" style="flex:1">
       </div>`).join("")}
     <!-- 🗓️ v7.73 — LOS DÍAS QUE PUEDE, TAMBIÉN AQUÍ. Rey (07-09): "habíamos acordado que nada
          era fijo, todo configurable, porque debo adaptar mis horarios según los días de mi
@@ -3383,6 +3487,19 @@ function temploHorarioModal(){
       const diasNuevos = parseInt((($("#thDias")||{}).value),10);
       if(diasNuevos > 0) TEMPLO_PLAN.dias = diasNuevos;
       TEMPLO_PLAN.horario = (diasNuevos > 0) ? nuevo.slice(0, diasNuevos) : nuevo;
+      /* 🚶 v7.82 — las ligeras de sus días libres también se guardan aquí. Y si baja los días
+         que puede, las que sobren se retiran solas: no puede quedarle un aviso de un día que
+         acaba de decir que no tiene. */
+      try{
+        const ex = Array.isArray(TEMPLO_PLAN.extras) ? TEMPLO_PLAN.extras : [];
+        ex.forEach((e,i)=>{
+          const d=$("#txD"+i), hh=$("#txH"+i);
+          if(d && d.value) e.dia = d.value;
+          if(hh && hh.value) e.hora = hh.value;
+        });
+        const sitio = Math.max(0, (parseInt(TEMPLO_PLAN.dias,10)||0) - sem.sesiones.length);
+        if(ex.length > sitio) TEMPLO_PLAN.extras = ex.slice(0, sitio);
+      }catch(_){}
       /* 👑 MANDA LO QUE ACABA DE DECIDIR AQUÍ. Se midió en su teléfono (06-09): puso 06:30 del
          martes, la ventana lo leyó bien, pulsó Guardar… y se quedó en 18:00 del lunes, con un
          "Horarios guardados" encima. La ventana era usable UNA vez y luego mentía. */
@@ -3444,6 +3561,27 @@ function temploAvisosDelPlan(mandaElHorario){
       if(!mandaElHorario && ya && horario[i] && (ya.hora!==horario[i].hora || ya.dias!==horario[i].dia)){
         horario[i].hora = ya.hora; horario[i].dia = String(ya.dias||horario[i].dia);
       }
+    });
+    /* 🚶 v7.82 — y las LIGERAS de sus días libres, con el mismo mecanismo de siempre (sus
+       avisos), para que hereden el despertador exacto, la voz y ⏰ Mis avisos. Van marcadas
+       como del plan para que se limpien y se regeneren igual, pero NO cuentan para subir de
+       escalón: eso lo decide `sem.sesiones`, donde estas nunca entran. */
+    (Array.isArray(TEMPLO_PLAN.extras) ? TEMPLO_PLAN.extras : []).forEach((e,i)=>{
+      const id = "textra"+i;
+      const ya = suyo[id];
+      const suHora = mandaElHorario ? null : ya;
+      REMINDERS.push({
+        id, temploPlan:true,
+        hora: (suHora && suHora.hora) || e.hora || "18:00",
+        dias: (suHora && suHora.dias) || e.dia || "6",
+        tipo: (ya && ya.tipo) || "normal",
+        on:   ya ? ya.on !== false : true,
+        voz:  ya ? ya.voz !== false : true,
+        tit:"🚶 "+e.n,
+        msg:(e.d||"")+" Es de tus días libres: suma salud, y no cuenta para subir de escalón.",
+        ir:"tab:templo",
+      });
+      if(!mandaElHorario && ya){ e.hora = ya.hora || e.hora; e.dia = String(ya.dias || e.dia); }
     });
     if(TEMPLO_PLAN) TEMPLO_PLAN.horario = horario;
     temploPlanGuardar();

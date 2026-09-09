@@ -1,66 +1,69 @@
-APEX v7.81 — TRADING DESK
+APEX v7.82 — TRADING DESK
 =========================
 
-🐢 MÁS PAUSADO, CON PAUSAS DE VERDAD, Y DESDE LAS 4 DE LA MAÑANA
+🗓️ POR QUÉ SON 3 DÍAS SI MARCASTE 5 — Y CÓMO USAR LOS OTROS DOS
 
-⚠️ HAY QUE SUBIR: la web v7.81 (el worker 5.129 ya está en vivo ✅)
+⚠️ HAY QUE SUBIR: la web v7.82 (el worker 5.129 ya está en vivo ✅)
+📌 LA APK v7.82 ESTÁ COMPILADA PERO **SIN INSTALAR**: desconectaste el cable antes.
+   Cuando lo conectes, se instala y se comprueba en un minuto.
 
-═══ 1 · POR QUÉ NO TE CAMBIABA NADA LA VELOCIDAD ═════════════════
+═══ TU PREGUNTA ══════════════════════════════════════════════════
 
-Me dijiste: "quiero bajarle un poquito el ritmo al hablar; ya lo intenté desde mi
-teléfono pero no cambia nada, a veces habla tan rápido que ni entiendo lo que dijo".
+"Si yo marqué 5 días para entrenar, ¿por qué solo tengo 3 días puestos ahí, y los
+otros dos que faltan?"
 
-LA CAUSA, y no era cosa tuya: Apex FIJA la velocidad justo antes de cada frase
-(setSpeechRate). Lo que tú pusieras en los ajustes de Android quedaba pisado
-siempre, en cada frase. Y dentro de Apex no había NINGÚN control de velocidad —
-solo el del tono. O sea que no tenías por dónde cambiarlo.
+MIRÉ TUS DATOS DE VERDAD, no el código:
+   días que puedes:    5   ← lo que marcaste tú
+   sesiones que toca:  3   ← lo que manda tu escalón
+   horario: miércoles · jueves · viernes, 05:00
 
-LO QUE HAY AHORA:
-· La velocidad de fábrica baja de 1,12 a 0,92 — por debajo de hablar normal.
-· Y en LOS TRES SITIOS donde estaba escrita: dentro de Apex, en lo que se le manda
-  a su cuerpo flotante, y en el vigía nativo (el que habla con Apex cerrada). Con
-  cambiarla en uno solo, habrías seguido oyéndolo rápido la mitad del tiempo.
-· Y tienes tu control: Ajustes → 🐢 Ritmo al hablar
-     Muy pausado · Pausado · Normal · Rápido
-  Al tocarlo te dice una frase de prueba con comas y puntos, para que oigas las
-  pausas del ritmo que acabas de elegir.
+NO ERA UN FALLO. Tus 5 días son un TECHO ("puedo hasta 5"), no un objetivo
+("quiero 5"). Y hay una razón fuerte: antes pasaba lo contrario y tenía consecuencia
+real — al cerrar la semana se te juzgaba contra sesiones que tú habías avisado que no
+podías hacer, y el sistema te bajaba de escalón por eso.
 
-═══ 2 · LAS PAUSAS Y LA ENTONACIÓN ═══════════════════════════════
+PERO SÍ HABÍA ALGO MAL: no se te explicaba en ninguna parte. Marcabas 5, veías 3, y
+te quedabas con la duda. Eso es lo que se arregla.
 
-"Quiero que las frases no se digan rápido para salir de eso: pausado, con
-entonaciones, con todas sus puntos y comas."
+Y un dato que cambia la pregunta: EL PROGRAMA NO LLEGA A 5 SESIONES EN NINGÚN
+ESCALÓN. Lo comprobé sobre el archivo: 3, 4, 4, 4, 4. Tus 5 días no se iban a usar
+nunca tal cual.
 
-Una coma detrás de tu nombre la pasa cualquier motor de voz casi de largo. Un punto
-le obliga a parar y a bajar el tono. Así que ahora, SOLO PARA LA VOZ, la frase se
-dice con dos paradas de verdad:
+═══ 1 · LA PANTALLA TE LO EXPLICA ════════════════════════════════
 
-   escrito:  Rey, Warren Buffett: se tardan veinte años en construir una reputación…
-   hablado:  Rey.  Warren Buffett.  Se tardan veinte años en construir una reputación…
+Debajo de tus sesiones, ahora pone:
 
-En la nubecita la sigues leyendo con sus comas de siempre. Y va en los dos cuerpos,
-para que suenen igual estés donde estés.
+  🗓️ Dijiste que puedes 5 días y tu escalón pide 3. Los otros 2 son descanso, y el
+  descanso también entrena: es cuando el músculo se rehace. Tus días son un techo
+  (nunca se te pone más de lo que dijiste), no un objetivo. El programa no pasa de
+  4 sesiones por semana en ningún escalón.
 
-═══ 3 · DESDE LAS 4 DE LA MAÑANA ═════════════════════════════════
+═══ 2 · Y PUEDES USAR ESOS DÍAS ══════════════════════════════════
 
-"¿Por qué de 6 am a 23 si yo me levanto a las 4 am y necesito desde que me levanto
-afirmaciones y frases?"
+Bloque nuevo: 🚶 TUS DÍAS LIBRES. Añades sesiones LIGERAS —caminata rápida,
+movilidad y respiración, paseo suave— con su día y su hora, y te suenan como
+cualquier otro aviso. Se cambian en ⏰ Cambiar días y horas, junto a las demás.
 
-Tenías razón: las 6 eran una hora mía, no tuya. Ahora empieza a las 4:00 y termina
-a las 23:00. Son 38 frases al día en vez de 34, y las 38 siguen siendo distintas
-(comprobado simulando el día entero minuto a minuto).
+LO QUE MÁS CUIDÉ, Y ESTÁ DEMOSTRADO EJECUTÁNDOLO:
+esas sesiones NO CUENTAN para subir de escalón.
+   · cumplir tus 3 de 3        → SUBES
+   · si se colaran en la cuenta → 3 de 5 = 60% → solo repetirías
+O sea: si se mezclaran, HACER MÁS EJERCICIO TE BAJARÍA EL NIVEL. Justo al revés de
+lo que quieres. Por eso van en lista aparte, y hay un banco que lo vigila para
+siempre.
 
-═══ LO QUE LA REGRESIÓN ME CAZÓ ANTES DE ENTREGARLO ══════════════
+Y si algún día bajas los días que puedes entrenar, las ligeras que sobren se retiran
+solas: no te va a sonar un aviso de un día que ya no tienes.
 
-1) MIS EDICIONES CAMBIARON EL FORMATO DE LOS ARCHIVOS (finales de línea de Windows).
-   Un cambio invisible que toca cada línea de cada archivo y que reventó 4 bancos.
-   Se supo con seguridad porque el único archivo que no toqué así seguía bien.
-   Devueltos a su formato original.
+═══ LO QUE NO HICE, Y POR QUÉ ════════════════════════════════════
 
-2) TAL COMO LO ESCRIBÍ, SI LA PAUSA FALLABA ROBERTO SE QUEDABA MUDO: se tragaba la
-   frase en silencio. Eso choca con tu ley de que nada puede dejarle sin voz. Ahora,
-   si la pausa fallara, dice la frase tal cual. Un adorno no puede callarle.
+No puse el programa a repartirte 5 días de fuerza. Empezando desde 96 kg y 111 de
+cintura, eso es la vía rápida a una lesión o a abandonar en tres semanas. Tres
+sesiones de cuerpo entero con descanso entre medias es exactamente como se empieza.
+Cuando subas de escalón pasarás a 4. El quinto seguirá siendo descanso, y eso es una
+decisión del programa, no un olvido.
 
-Regresión: 191/191. Banco `test-frases-cada-30`: 15/15.
+Regresión: 192/192. Banco nuevo `test-templo-dias-libres`: 6/6.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
