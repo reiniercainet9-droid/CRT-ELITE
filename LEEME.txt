@@ -1,67 +1,56 @@
-APEX v7.87 — TRADING DESK
+APEX v7.89 — TRADING DESK
 =========================
 
-🎈 LA NUBE SALE DE SU BOCA, NO LE PISA Y NO SE CORTA
+📤 AHORA SÍ COMPARTE Y GUARDA · Y LA VISTA DE LADO ARREGLADA
 
-⚠️ HAY QUE SUBIR: la web v7.87 · Y EL WORKER 5.134
-📱 APK v7.87 construida — se instala y verifica cuando conectes el cable.
+⚠️ HAY QUE SUBIR: la web v7.89 · Y EL WORKER 5.134 si aún no lo subiste
+📱 APK v7.89 instalada y comprobada por cable.
 
 ═══ LO QUE ME DIJISTE ════════════════════════════════════════════
 
-"Todavía hay nubes saliendo por detrás y por delante de Roberto… hay nubes que
-salen cortadas todavía… lo de la nube es viejo, eso debería ya haber estado
-resuelto y me lo diste como que ya estaba resuelto."
+"Todo mal. No sirve ningún botón, no comparte, no descarga, y la vista con el
+teléfono horizontal es un desastre."
 
-TENÍAS RAZÓN EN EL REPROCHE. En la v7.78 arreglé LAS CAPAS (que la nube no
-quedara debajo de su cuerpo) y te lo di por resuelto. Lo que tú seguías viendo
-era OTRA cosa, y llevaba semanas ahí.
+Las tres eran ciertas, y eran TRES fallos distintos.
 
-═══ LOS DOS FALLOS DE VERDAD ═════════════════════════════════════
+═══ 1 · LA VISTA DE LADO ═════════════════════════════════════════
 
-1) EL RABITO NO SEGUÍA A LA NUBE.
-   La nube se recorta contra el borde de la pantalla para no salirse — o sea,
-   SE MUEVE. Pero el rabito estaba clavado a 12 px de su borde.
-   Medido en un navegador: llegaba a quedarse a 180 PX de su cuerpo.
-   Apuntando al aire por un lado, cayéndole encima por el otro.
-   Eso es exactamente tu "por detrás y por delante".
+CAUSA: en Apex TODO botón (.btn) es "ancho completo" — perfecto en un formulario,
+un desastre en una barra de herramientas. Cada botón del visor se convertía en
+una BANDA del ancho de la pantalla, y de lado te tapaban la foto entera.
 
-2) LA FRASE SE ESCRIBE DESPUÉS DE COLOCAR LA NUBE.
-   La frase aparece palabra a palabra. La nube se colocaba con dos palabras…
-   y acababa con quince, creciendo sin que nadie la recolocara.
+ARREGLO: la barra del visor tiene sus propios botones, compactos.
+   de pie   97 / 87 / 75 / 54 px  (antes: 432 px cada uno)
+   de lado  la barra se pone EN COLUMNA a un lado — girado sobra ancho, no alto
 
-Y lo "cortado": el rebotito de salida se pasa de tamaño (1.06) y crecía desde el
-CENTRO. Junto al borde de la pantalla, ese sobrante es lo que se veía cortado.
+Y de paso: los botones Día/Semana/Mes/Año de la galería estaban apilados en cuatro
+bandas porque les faltaba la clase de 4 columnas. Ya van en fila.
 
-═══ EL ARREGLO ═══════════════════════════════════════════════════
+═══ 2 · COMPARTIR Y DESCARGAR ════════════════════════════════════
 
-· el rabito se calcula con la nube YA colocada y medida de verdad
-· se recoloca a CADA PALABRA mientras se escribe la frase
-· si no cabe a los lados, la nube se sube ENTERA sobre su cabeza — no le pisa
-· el rebotito nace de su boca, no del centro, y se da la vuelta si va debajo
+CAUSA: tu APK NO TENÍA forma nativa de hacerlo. La app lo intentaba como una
+página web:
+   · navigator.share → en este WebView dice que NO puede con ficheros
+     (de ahí tu cartel "tu teléfono no permite compartir la imagen directa")
+   · y el plan B era un enlace <a download> con una dirección "data:" —
+     ESO EN ANDROID NO HACE NADA. Ni descarga, ni avisa. Nada.
 
-COMPROBADO EN LOS 6 SITIOS donde puedes dejarlo, midiendo en un navegador de
-verdad: a la derecha, a la izquierda, pegado a los dos bordes, arriba del todo,
-y en una pantalla estrecha donde no cabe a ningún lado.
+ARREGLO: las hace el propio teléfono, por Java (ApexPlugin):
+   📤 Compartir → escribe la foto y abre el menú de compartir de Android
+   ⬇️ Guardar   → la mete en tus Fotos, carpeta "Apex", como una foto más
+   y si algo falla, TE LO DICE. Nunca se queda callado.
 
-Y comprobé que el banco caza el fallo viejo antes de fiarme: le devolví el
-rabito clavado y saltó con 180 px de desvío.
+COMPROBADO EN TU TELÉFONO: se guardó de verdad en "Fotos › Apex" (y borré mi
+foto de prueba para no dejarte basura).
 
-═══ EL DISEÑO ════════════════════════════════════════════════════
+═══ 3 · EL VISOR ═════════════════════════════════════════════════
 
-Degradado suave en vez de color plano, un filo de luz arriba y sombra en dos
-capas — en la nube y en las dos bolitas del rabito. Las dos nubes, la de dentro
-de Apex y la del cuerpo flotante, quedan iguales.
+   pantalla completa · zoom con dos dedos · doble toque amplía 3×
+   arrastrar para recorrerla · girado también se abre entera
 
-NO toqué la forma, el borde dorado ni la esquina viva: eso lo decidiste tú antes
-y hay un banco que lo protege.
+Banco nuevo con 9 comprobaciones que lo miden de pie Y de lado.
 
-═══ Y ROBERTO YA NO PUEDE DARTE EL PARTE POR TU SISTEMA ══════════
-
-Worker 5.134: cuando preguntas por tu maquinaria, MIRAR NO ES OPCIONAL — el
-worker le obliga a mirar antes de contestar. Deja de depender de que él lo
-decida. Y no se dispara si preguntas por el EURUSD o pides el parte del día.
-
-Regresión: 167/167
+Revisión completa: 168/168
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

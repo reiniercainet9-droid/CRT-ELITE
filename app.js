@@ -142,9 +142,9 @@ async function nubeMirar(){
 async function nubeVerInforme(){
   toast("Mirando la nube…");
   const n=await nubeMirar();
-  if(!n.ok){ alert(n.err==="vacío" ? "☁️ Con ese código NO hay ningún respaldo en la nube todavía."
+  if(!n.ok){ avisar(n.err==="vacío" ? "☁️ Con ese código NO hay ningún respaldo en la nube todavía."
     : n.err==="sin código" ? "Primero pon tu código de respaldo." : "No pude conectar con la nube. Mira tu internet e inténtalo otra vez."); return; }
-  alert("☁️ ESTO ES LO QUE HAY GUARDADO EN LA NUBE AHORA MISMO\n\n"+
+  avisar("☁️ ESTO ES LO QUE HAY GUARDADO EN LA NUBE AHORA MISMO\n\n"+
     "Fecha: "+(n.ts?new Date(n.ts).toLocaleString("es"):"—")+"\n"+
     "Tamaño: "+Math.round(n.bytes/1024)+" KB · "+n.claves+" de "+(n.deberian||n.claves)+" apartados\n\n"+
     /* 🔎 v7.03 — QUÉ FALTA, Y POR SU NOMBRE. A Rey le costó horas descubrir que su respaldo
@@ -188,7 +188,7 @@ async function nubeSubir(callado){
         /* si esto viene del guardado automático, NI SE PREGUNTA: se deja intacta la nube.
            Preguntar sin que Rey haya tocado nada sería asustarlo por la espalda. */
         if(callado){ try{ localStorage.setItem(NUBE_FRENO_KEY,String(Date.now())); }catch(_){} nubePintarEstado(); return {ok:false, err:"frenado"}; }
-        const seguro = confirm(
+        const seguro = await preguntar(
           "⚠️ CUIDADO: en la nube tienes un respaldo MUCHO más grande que lo que hay en esta app.\n\n"+
           "En la nube: "+(g.claves||0)+" apartados ("+Math.round((g.bytes||0)/1024)+" KB), guardado "+cuando+"\n"+
           "En esta app: "+(n.claves||0)+" apartados ("+Math.round((n.bytes||0)/1024)+" KB)\n\n"+
@@ -216,7 +216,7 @@ async function nubeRescatar(){
     const d=await r.json(); const bk=d && d.backup;
     if(!bk || !bk.data || !bk.ts){ toast("No hay copia anterior guardada con ese código"); return; }
     const claves=Object.keys(bk.data).length;
-    if(!confirm("Copia ANTERIOR encontrada: "+claves+" apartados, del "+new Date(bk.ts).toLocaleString("es")+".\n\n¿La traigo a esta app? (reemplaza lo que hay aquí ahora)")) return;
+    if(!await preguntar("Copia ANTERIOR encontrada: "+claves+" apartados, del "+new Date(bk.ts).toLocaleString("es")+".\n\n¿La traigo a esta app? (reemplaza lo que hay aquí ahora)")) return;
     NUBE_RESTAURANDO=true;
     Object.keys(bk.data).forEach(k=>{ if(k.indexOf("crtelite_")===0){ try{ localStorage.setItem(k, bk.data[k]); }catch(_){}} });
     localStorage.setItem(NUBE_TS_KEY,String(bk.ts));
@@ -244,7 +244,7 @@ async function nubeRestaurar(auto){
       NUBE_KEYS.forEach(k=>{ const v=localStorage.getItem(k); if(v!=null){ aquiClaves++; aquiBytes+=v.length; } });
       let nubeBytes=0; try{ nubeBytes=JSON.stringify(bk.data).length; }catch(_){}
       const nubeManda = nubeBytes > aquiBytes*1.5 || Object.keys(bk.data).length > aquiClaves;
-      if(!nubeManda && !confirm(
+      if(!nubeManda && !await preguntar(
         "Aquí tienes cambios más recientes que en la nube.\n\n"+
         "En esta app: "+aquiClaves+" apartados ("+Math.round(aquiBytes/1024)+" KB)\n"+
         "En la nube: "+Object.keys(bk.data).length+" apartados ("+Math.round(nubeBytes/1024)+" KB), del "+new Date(bk.ts).toLocaleString("es")+"\n\n"+
@@ -279,34 +279,168 @@ async function nubeShotDel(ids){ try{ await fetch(nubeUrl()+"/shot/del",{method:
 function dataURLtoBlob(u){ const parts=String(u).split(","); const mime=(parts[0].match(/:(.*?);/)||[])[1]||"image/jpeg"; const bin=atob(parts[1]||""); const arr=new Uint8Array(bin.length); for(let k=0;k<bin.length;k++)arr[k]=bin.charCodeAt(k); return new Blob([arr],{type:mime}); }
 /* Visor de foto DENTRO de Apex (no abre pestaña) con compartir/descargar/borrar */
 async function abrirFoto(id, meta){
+  /* ══════════════════════════════════════════════════════════════════════════
+     🔍 EL VISOR DE CAPTURAS — v7.88
+     ══════════════════════════════════════════════════════════════════════════
+     Rey (10-09): «debo poder verlas a pantalla completa, hasta virando el telefono de lado y
+     con buena definicion, sin tener que ir al grafico poder revisar desde esa captura todos
+     los detalles de esos momentos sin omitir nada».
+     Antes la foto salia a `max-height:70vh` —o sea, media pantalla— sin forma de ampliarla:
+     imposible leer una vela de 5M o una cifra del panel del indicador.
+     AHORA: ocupa toda la pantalla, se amplia con dos dedos o con doble toque, se arrastra
+     para recorrerla, y los botones flotan encima sin robarle sitio. Al girar el telefono se
+     recoloca sola. La foto ademas viene al doble de resolucion desde el Puente (v4.10). */
   const ov=el("div","foto-ov");
-  ov.style.cssText="position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.93);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px";
-  ov.innerHTML=`<div style="color:#ccc">Cargando…</div>`;
+  ov.style.cssText="position:fixed;inset:0;z-index:9999;background:#000;display:flex;align-items:center;justify-content:center;overflow:hidden;touch-action:none";
+  ov.innerHTML='<div style="color:#ccc;font-size:13px">Cargando…</div>';
   document.body.appendChild(ov);
-  const cerrar=()=>ov.remove();
+  const cerrar=()=>{ try{ window.removeEventListener("resize",ajustar); }catch(_){} ov.remove(); };
   const img=await nubeShotGet(id);
-  ov.innerHTML=(img?`<img src="${img}" style="max-width:100%;max-height:70vh;border-radius:10px;object-fit:contain">`:`<div style="color:#fff;text-align:center">No pude cargar la imagen.<br><span style="font-size:12px;color:#aaa">(Puede que aún se esté subiendo — reintenta en unos segundos.)</span></div>`)+
-    `<div style="color:#bbb;font-size:12px;margin-top:8px">${esc(meta||"")}</div>
-     <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:14px">
-       <button class="btn" id="fShare">📤 Compartir</button>
-       <button class="btn" id="fDown">⬇️ Descargar</button>
-       <button class="btn danger" id="fDel">🗑️ Borrar</button>
-       <button class="btn gold" id="fClose">Cerrar</button>
-     </div>`;
-  ov.onclick=(e)=>{ if(e.target===ov) cerrar(); };
-  ov.querySelector("#fClose").onclick=cerrar;
-  const down=()=>{ if(!img) return; const a=document.createElement("a"); a.href=img; a.download="apex_"+id+".jpg"; document.body.appendChild(a); a.click(); a.remove(); };
-  ov.querySelector("#fDown").onclick=down;
-  ov.querySelector("#fShare").onclick=async()=>{
-    if(!img) return;
-    try{
-      const file=new File([dataURLtoBlob(img)],"apex_"+id+".jpg",{type:"image/jpeg"});
-      if(navigator.canShare && navigator.canShare({files:[file]})) await navigator.share({files:[file], title:"Captura Apex", text:meta||"Captura de operación"});
-      else { down(); toast("Tu teléfono no permite compartir la imagen directa; la descargué."); }
-    }catch(_){}
+
+  if(!img){
+    ov.innerHTML='<div style="color:#fff;text-align:center;padding:20px">No pude cargar la imagen.<br>'+
+      '<span style="font-size:12px;color:#aaa">(Puede que aún se esté subiendo — reintenta en unos segundos.)</span></div>';
+    ov.onclick=cerrar; return;
+  }
+
+  ov.innerHTML=
+    '<img id="fImg" src="'+img+'" style="position:absolute;left:50%;top:50%;transform-origin:center center;'+
+      'max-width:none;max-height:none;image-rendering:auto;will-change:transform;user-select:none;-webkit-user-drag:none">'+
+    '<div id="fBar" class="fbar">'+
+      '<span class="fmeta">'+esc(meta||"")+' · <span id="fZoom">100%</span> — dos dedos o doble toque</span>'+
+      '<button class="fbtn" id="fShare">📤 Compartir</button>'+
+      '<button class="fbtn" id="fDown">⬇️ Guardar</button>'+
+      '<button class="fbtn danger" id="fDel">🗑️ Borrar</button>'+
+      '<button class="fbtn gold" id="fClose">Cerrar</button>'+
+    '</div>';
+
+  const im=$("#fImg"), zTxt=$("#fZoom");
+  /* ⚠️ esc0 EMPIEZA EN 0 A PROPOSITO. Con esc0=1 la foto se abria al 314% —recortada— porque
+     la condicion de abajo solo la recolocaba si era MENOR que la escala de encaje, y 1 es
+     mucho MAYOR (una captura de 1358 px en una pantalla de 432 encaja al 0,318).
+     Medido en el telefono de Rey: abria al 314%. Empezando en 0, la primera pasada la deja
+     siempre ENTERA, que es lo que el pidio: ver toda la captura y luego ampliar donde quiera. */
+  let esc0=0, base=1, x=0, y=0;      /* escala actual, escala de encaje, y el paseo */
+
+  /* la escala que hace que la foto quepa ENTERA en la pantalla, sea cual sea la orientación */
+  function ajustar(){
+    const W=ov.clientWidth, H=ov.clientHeight;
+    const iw=im.naturalWidth||1, ih=im.naturalHeight||1;
+    base=Math.min(W/iw, H/ih);
+    if(!esc0 || esc0 <= base*1.02){ esc0=base; x=0; y=0; }   /* recien abierta o sin ampliar: entera */
+    pintar();
+  }
+  function limites(){
+    const W=ov.clientWidth, H=ov.clientHeight;
+    const w=(im.naturalWidth||1)*esc0, h=(im.naturalHeight||1)*esc0;
+    const mx=Math.max(0,(w-W)/2), my=Math.max(0,(h-H)/2);
+    x=Math.max(-mx,Math.min(mx,x)); y=Math.max(-my,Math.min(my,y));
+  }
+  function pintar(){
+    limites();
+    im.style.transform="translate(-50%,-50%) translate("+x+"px,"+y+"px) scale("+esc0+")";
+    if(zTxt) zTxt.textContent=Math.round(esc0/base*100)+"%";
+  }
+  im.onload=ajustar;
+  if(im.complete) ajustar();
+  try{ window.addEventListener("resize",ajustar); }catch(_){}
+
+  /* ── dos dedos para ampliar, un dedo para pasear ─────────────────────────── */
+  const dedos=new Map(); let d0=0, e0=1, cx=0, cy=0, movido=false;
+  const dist=()=>{ const p=[...dedos.values()]; return Math.hypot(p[0].x-p[1].x, p[0].y-p[1].y); };
+  ov.addEventListener("pointerdown",(e)=>{
+    if(e.target.closest("#fBar")) return;
+    dedos.set(e.pointerId,{x:e.clientX,y:e.clientY}); movido=false;
+    try{ ov.setPointerCapture(e.pointerId); }catch(_){}
+    if(dedos.size===2){ d0=dist(); e0=esc0; }
+  });
+  ov.addEventListener("pointermove",(e)=>{
+    if(!dedos.has(e.pointerId)) return;
+    const p=dedos.get(e.pointerId), dx=e.clientX-p.x, dy=e.clientY-p.y;
+    dedos.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    if(Math.abs(dx)>2||Math.abs(dy)>2) movido=true;
+    if(dedos.size===2 && d0>0){ esc0=Math.max(base*0.9, Math.min(base*8, e0*(dist()/d0))); pintar(); }
+    else if(dedos.size===1 && esc0>base*1.02){ x+=dx; y+=dy; pintar(); }
+  });
+  const soltar=(e)=>{
+    if(!dedos.has(e.pointerId)) return;
+    dedos.delete(e.pointerId);
+    if(dedos.size<2) d0=0;
+    /* toque limpio en el fondo = cerrar (solo si no estaba ampliada ni arrastrando) */
+    if(dedos.size===0 && !movido && esc0<=base*1.02 && !e.target.closest("#fBar")) cerrar();
   };
-  ov.querySelector("#fDel").onclick=()=>{ if(!confirm("¿Borrar esta captura? Se quita de Apex y de la nube.")) return; borrarCaptura(id); cerrar(); };
+  ov.addEventListener("pointerup",soltar);
+  ov.addEventListener("pointercancel",soltar);
+
+  /* doble toque: amplía a 3× sobre el punto tocado, o vuelve a la vista entera */
+  let ultTap=0;
+  ov.addEventListener("pointerup",(e)=>{
+    if(e.target.closest("#fBar")) return;
+    const t=Date.now();
+    if(t-ultTap<320 && !movido){
+      if(esc0>base*1.02){ esc0=base; x=0; y=0; }
+      else{
+        esc0=base*3;
+        const W=ov.clientWidth, H=ov.clientHeight;
+        x=(W/2-e.clientX)*2; y=(H/2-e.clientY)*2;   /* lleva lo tocado al centro */
+      }
+      pintar();
+    }
+    ultTap=t;
+  });
+
+  /* ── los botones ─────────────────────────────────────────────────────────── */
+  $("#fClose").onclick=cerrar;
+  /* 📤 COMPARTIR Y GUARDAR — v7.89, POR LA VÍA NATIVA.
+     Rey (10-09): «no comparte, no descarga». Y era verdad: dentro de la APK
+     `navigator.canShare` dice que NO, así que caía al plan B… y el plan B era un enlace
+     <a download> con una dirección `data:`, que EN ANDROID NO HACE NADA. Ni descarga ni
+     avisa. Ahora las dos cosas las hace el propio teléfono (ApexPlugin), y si algo falla
+     SE DICE — nunca se queda callado. En la web (fuera de la APK) sigue el camino de antes,
+     que ahí sí funciona. */
+  const nombreFoto = "apex_" + id + ".jpg";
+  /* el mismo ayudante que usa toda la app para hablar con el telefono: no se duplica */
+  const nativo = () => { try{ return vigiaPuente(); }catch(_){ return null; } };
+
+  const guardar = async ()=>{
+    const P = nativo();
+    if(P && P.guardarImagen){
+      try{
+        const r = await P.guardarImagen({ img, nombre: nombreFoto });
+        if(r && r.ok) toast("⬇️ Guardada en " + (r.donde || "tus fotos"));
+        else toast("No pude guardarla" + (r && r.porque ? ": " + r.porque : ""));
+      }catch(e){ toast("No pude guardarla: " + (e && e.message ? e.message : e)); }
+      return;
+    }
+    /* navegador: el enlace de siempre, que fuera de la APK sí descarga */
+    try{
+      const a=document.createElement("a"); a.href=img; a.download=nombreFoto;
+      document.body.appendChild(a); a.click(); a.remove();
+    }catch(e){ toast("No pude descargarla: " + (e && e.message ? e.message : e)); }
+  };
+  $("#fDown").onclick=guardar;
+
+  $("#fShare").onclick=async()=>{
+    const P = nativo();
+    if(P && P.compartirImagen){
+      try{
+        const r = await P.compartirImagen({ img, nombre: nombreFoto, texto: meta || "Captura de operación" });
+        if(!(r && r.ok)) toast("No pude compartirla" + (r && r.porque ? ": " + r.porque : ""));
+      }catch(e){ toast("No pude compartirla: " + (e && e.message ? e.message : e)); }
+      return;
+    }
+    try{
+      const file=new File([dataURLtoBlob(img)],nombreFoto,{type:"image/jpeg"});
+      if(navigator.canShare && navigator.canShare({files:[file]})) await navigator.share({files:[file], title:"Captura Apex", text:meta||"Captura de operación"});
+      else { await guardar(); toast("Aquí no se puede compartir directo; te la guardé."); }
+    }catch(e){ toast("No pude compartirla: " + (e && e.message ? e.message : e)); }
+  };
+  $("#fDel").onclick=async()=>{
+    if(!await preguntar("Se quita de Apex y de la nube.",{titulo:"🗑️ ¿Borrar esta captura?",si:"Borrar",peligro:true})) return;
+    borrarCaptura(id); cerrar();
+  };
 }
+
 function borrarCaptura(id){
   let cambio=false;
   const n=SHOTS.length; SHOTS=SHOTS.filter(s=>s.id!==id); if(SHOTS.length!==n){ save(K.shots,SHOTS); cambio=true; }
@@ -1234,7 +1368,7 @@ async function ejecGuardarCfg(body){
   }catch(_){ toast("⚠️ Sin internet"); return false; }
 }
 async function ejecSwitchSet(on){
-  if(on && !confirm("🟢 ¿ENCENDER el Ejecutor?\n\nQueda EN GUARDIA: solo entrará cuando tu indicador dispare una señal 🔔 que pase tus reglas y el veto. Puedes detenerlo cuando quieras con el botón rojo.")) return false;
+  if(on && !await preguntar("🟢 ¿ENCENDER el Ejecutor?\n\nQueda EN GUARDIA: solo entrará cuando tu indicador dispare una señal 🔔 que pase tus reglas y el veto. Puedes detenerlo cuando quieras con el botón rojo.")) return false;
   try{
     const r=await fetch(nubeUrl()+"/ejec/switch",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({on})});
     const x=await r.json().catch(()=>({}));
@@ -1244,7 +1378,7 @@ async function ejecSwitchSet(on){
 }
 async function ejecCmdCerrar(ticket){
   const todo=ticket==null;
-  if(!confirm(todo?"✖ ¿Cerrar TODAS las posiciones del Ejecutor ahora?":"✖ ¿Cerrar esta posición ahora, al precio de mercado?")) return false;
+  if(!await preguntar(todo?"✖ ¿Cerrar TODAS las posiciones del Ejecutor ahora?":"✖ ¿Cerrar esta posición ahora, al precio de mercado?")) return false;
   try{
     await fetch(nubeUrl()+"/ejec/cmd",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(todo?{action:"cerrar_todo"}:{action:"cerrar",ticket})});
     toast("Orden de cierre enviada — te aviso al cerrar"); return true;
@@ -1566,7 +1700,7 @@ async function revisionCadena(){
   else if(dudas.length) cabeza = "🟡 LA CADENA FUNCIONA, PERO HAY "+dudas.length+" AVISO"+(dudas.length===1?"":"S")+" QUE MIRAR";
   else cabeza = "🟢 LA CADENA ESTÁ ENTERA: te llega el aviso, Roberto lo hace con el cuerpo y te lo dice en voz alta";
 
-  alert("🩺 ¿ME LLEGA TODO? — REVISIÓN DE LA CADENA\n"
+  avisar("🩺 ¿ME LLEGA TODO? — REVISIÓN DE LA CADENA\n"
       + cabeza + "\n\n" + L.join("\n")
       + "\n\n" + (rotos.length
           ? "Arregla primero lo 🔴: mientras eso siga así, hay avisos que NO te van a llegar."
@@ -1584,7 +1718,7 @@ async function libroSenales(){
   toast("Abriendo tu libro de señales…");
   let d=null;
   try{ const r=await fetch(nubeUrl()+"/libro?dias=60",{cache:"no-store"}); d=await r.json(); }catch(_){}
-  if(!d || !d.ok){ alert("No pude leer tu libro de señales. Mira tu internet e inténtalo otra vez."); return; }
+  if(!d || !d.ok){ avisar("No pude leer tu libro de señales. Mira tu internet e inténtalo otra vez."); return; }
   const R=d.resumen||{}, S=d.senales||[];
   /* 🎂 v7.19 — desde cuándo cuenta, en cristiano. Sin esto Rey ve un cero y piensa que algo
      se rompió, que es exactamente lo que pasó el 03-09 con la auditoría de Roberto. */
@@ -1592,7 +1726,7 @@ async function libroSenales(){
     ? ("Empezó a contar el "+d.nacido+(typeof d.nacidoHaceDias==="number"?(" (hace "+d.nacidoHaceDias+" día"+(d.nacidoHaceDias===1?"":"s")+")"):"")+".")
     : "";
   if(!R.vistas){
-    alert("📊 TU LIBRO DE SEÑALES\n\nTodavía está vacío: aún no ha pasado ninguna señal 🔔 de entrada por él.\n\n"+
+    avisar("📊 TU LIBRO DE SEÑALES\n\nTodavía está vacío: aún no ha pasado ninguna señal 🔔 de entrada por él.\n\n"+
       (nacTxt ? (nacTxt+" Lo de antes de esa fecha no está aquí, y no puede estarlo: el libro no existía.\n"+
                  "Si en el registro del Ejecutor ves señales más viejas, no es un fallo — es que él lleva más tiempo contando.\n\n") : "")+
       "A partir de ahora se apunta SOLA cada señal de tu indicador — la tome el Ejecutor o no — con sus condiciones "+
@@ -1714,7 +1848,7 @@ async function libroSenales(){
   });
   t+="\n\nLas señales y el Ejecutor se apuntan solos. Lo tuyo sale de tu Diario:\n"+
      "cuanto mejor lo lleves, mejor te podré medir.";
-  alert(t);
+  avisar(t);
 }
 /* ══════════════════════════════════════════════════════════════════════════════
    🌙 LA REVISIÓN DE ANTES DE DORMIR — v7.10
@@ -1741,7 +1875,7 @@ async function revisionNoche(){
   try{ const r=await fetch(nubeUrl()+"/salud",{cache:"no-store"}); S=await r.json(); }catch(_){}
   try{ const r=await fetch(nubeUrl()+"/ejec/estado",{cache:"no-store"}); E=await r.json(); }catch(_){}
 
-  if(!S){ alert("🌙 REVISIÓN DE ANTES DE DORMIR\n\n❌ No pude hablar con la nube, así que NO puedo\nrevisarte nada. Mira tu internet y vuelve a intentarlo.\n\nNo te digo que está todo bien: es que no lo sé."); return; }
+  if(!S){ avisar("🌙 REVISIÓN DE ANTES DE DORMIR\n\n❌ No pude hablar con la nube, así que NO puedo\nrevisarte nada. Mira tu internet y vuelve a intentarlo.\n\nNo te digo que está todo bien: es que no lo sé."); return; }
   bien.push("La nube responde (worker "+(S.version||"?")+")");
 
   /* ── 1) EL EJECUTOR — lo que de verdad decide si mañana se opera ── */
@@ -1803,7 +1937,7 @@ async function revisionNoche(){
   t+="   botón de Algo Trading estuviera apagado, el Ejecutor lo\n";
   t+="   enciende él y te lo dice.\n";
   if(mal.length) t+="\n⚠️ Arregla lo rojo ANTES de suspender. Dormido no lo vas a poder tocar.";
-  alert(t);
+  avisar(t);
 }
 async function auditoriaEjecutor(){
   try{ hitosMarcar("ejecutor"); }catch(_){}
@@ -2019,13 +2153,13 @@ async function renderEjecutor(){
   cont.querySelectorAll(".ej-shot").forEach(b=>{ b.onclick=()=>ejecVerShot(b.dataset.id); });
   /* 🗑️ borrar un MES del archivo (decisión de Rey, con confirmación; Roberto también puede
      con la herramienta limpiar_diario_ejecutor, que siempre pasa por la tarjeta de aprobación) */
-  cont.querySelectorAll(".ej-delmes").forEach(b=>{ b.onclick=(e)=>{
+  cont.querySelectorAll(".ej-delmes").forEach(b=>{ b.onclick=async(e)=>{
     e.preventDefault(); e.stopPropagation();
     const y=parseInt(b.dataset.y,10), m=parseInt(b.dataset.m,10);
     const a=load(K.ejec,{trades:{}});
     const keys=Object.keys(a.trades||{}).filter(k=>{ const t=a.trades[k]; const ts=t.tsOut||t.tsIn||0; const d0=new Date(ts); return t.tsOut && d0.getFullYear()===y && d0.getMonth()===m; });
     if(!keys.length){ toast("Ese mes no tiene operaciones"); return; }
-    if(!confirm("🗑️ ¿Borrar del archivo del Ejecutor las "+keys.length+" operación(es) de "+["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"][m]+" "+y+"?\n\nEs definitivo (tu Diario personal NO se toca).")) return;
+    if(!await preguntar("🗑️ ¿Borrar del archivo del Ejecutor las "+keys.length+" operación(es) de "+["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"][m]+" "+y+"?\n\nEs definitivo (tu Diario personal NO se toca).")) return;
     keys.forEach(k=>delete a.trades[k]); save(K.ejec,a);
     toast("🗑️ Mes borrado del archivo del Ejecutor");
     renderEjecutor();
@@ -4966,37 +5100,37 @@ function barraContexto(onChange){
   return c;
 }
 
-function definirEstrategia(nombre){
+async function definirEstrategia(nombre){
   const def=ESTR_DEFS[nombre]||{};
-  const inst=prompt("Instrumento(s) de \""+nombre+"\" (ej. Forex EUR/USD-GBP/USD, Oro XAU/USD, Índices US30/NAS100, Acciones):", def.instrumento||"");
+  const inst=await pedirTexto("Instrumento(s) de \""+nombre+"\" (ej. Forex EUR/USD-GBP/USD, Oro XAU/USD, Índices US30/NAS100, Acciones):", def.instrumento||"");
   if(inst===null) return; // canceló
-  const aj=prompt("Reglas / ajustes / aprendizajes de \""+nombre+"\" (lo que Roberto debe respetar y adaptar en esta estrategia — escribe libre, se puede editar cuando quieras):", def.ajustes||"");
+  const aj=await pedirTexto("Reglas / ajustes / aprendizajes de \""+nombre+"\" (lo que Roberto debe respetar y adaptar en esta estrategia — escribe libre, se puede editar cuando quieras):", def.ajustes||"");
   if(aj===null) return;
   ESTR_DEFS[nombre]={ ...(ESTR_DEFS[nombre]||{}), instrumento:inst.trim(), ajustes:aj.trim() };   /* v6.32: conserva el estado del laboratorio */
   guardarEstrDefs();
   toast("Definición guardada ✓");
 }
-function menuEstrategias(){
-  const acc=prompt(
+async function menuEstrategias(){
+  const acc=await pedirTexto(
     "GESTIÓN DE ESTRATEGIAS\n\nEstrategias actuales:\n· "+ESTRATEGIAS.map(e=>e+" — "+estrBadge(e)).join("\n· ")+
     "\n\nEscribe:\n  N = nueva estrategia\n  D = definir/editar la actual ("+CTX.estrategia+")\n  R = renombrar la actual\n  X = borrar la actual (y sus trades)\n\n(Los ESTADOS del laboratorio y la ⭐ VIGENTE se trabajan con Roberto: chip 📚 Mis estrategias.)\nDeja vacío para cancelar."
   );
   if(!acc) return;
   const a=acc.trim().toUpperCase();
   if(a==="N"){
-    const nom=prompt("Nombre de la nueva estrategia:");
+    const nom=await pedirTexto("Escribe el nombre de la estrategia nueva:", "", "➕ Nueva estrategia");
     if(nom && nom.trim()){
       const nn=nom.trim();
       if(ESTRATEGIAS.includes(nn)){ toast("Ya existe esa estrategia"); return; }
       ESTRATEGIAS.push(nn); guardarEstrategias();
       CTX.estrategia=nn; guardarCtx();
       refrescarDiarioCtx(); toast("Estrategia creada ✓");
-      definirEstrategia(nn);   // pide instrumento + reglas de la nueva
+      await definirEstrategia(nn);   // pide instrumento + reglas de la nueva
     }
   }else if(a==="D"){
-    definirEstrategia(CTX.estrategia);
+    await definirEstrategia(CTX.estrategia);
   }else if(a==="R"){
-    const nom=prompt("Nuevo nombre para \""+CTX.estrategia+"\":", CTX.estrategia);
+    const nom=await pedirTexto("Nuevo nombre para \""+CTX.estrategia+"\":", CTX.estrategia, "✏️ Renombrar");
     if(nom && nom.trim() && nom.trim()!==CTX.estrategia){
       const nn=nom.trim(), viejo=CTX.estrategia;
       if(ESTRATEGIAS.includes(nn)){ toast("Ya existe ese nombre"); return; }
@@ -5011,7 +5145,7 @@ function menuEstrategias(){
   }else if(a==="X"){
     if(ESTRATEGIAS.length<=1){ toast("Debe quedar al menos una estrategia"); return; }
     const nT=TRADES.filter(t=>t.estrategia===CTX.estrategia).length;
-    if(confirm("¿Borrar la estrategia \""+CTX.estrategia+"\" y sus "+nT+" trades (real + backtest)? No se puede deshacer.")){
+    if(await preguntar("Se borra la estrategia \""+CTX.estrategia+"\" y sus "+nT+" trades (real + backtest). No se puede deshacer.",{titulo:"🗑️ ¿Borrar la estrategia?",si:"Borrar",peligro:true})){
       const viejo=CTX.estrategia;
       TRADES=TRADES.filter(t=>t.estrategia!==viejo); save(K.trades,TRADES);
       ESTRATEGIAS=ESTRATEGIAS.filter(e=>e!==viejo); guardarEstrategias();
@@ -5173,9 +5307,9 @@ function viewDiario(){
   fi.onchange=importJSON; ex.appendChild(fi);
   ex.appendChild(el("div","note","Guardado en este teléfono. Se borra si limpias los datos del navegador — haz un respaldo JSON cada semana."));
   const b4=el("button","btn danger","Borrar los trades de este contexto"); b4.style.marginTop="14px";
-  b4.onclick=()=>{ const n=tradesCtx().length;
+  b4.onclick=async()=>{ const n=tradesCtx().length;
     if(!n){ toast("No hay trades en este contexto"); return; }
-    if(confirm("¿Borrar los "+n+" trades de "+(CTX.modo==="real"?"Real":"Backtest")+" · "+CTX.estrategia+"?")){
+    if(await preguntar("¿Borrar los "+n+" trades de "+(CTX.modo==="real"?"Real":"Backtest")+" · "+CTX.estrategia+"?")){
       TRADES=TRADES.filter(t=>!(t.modo===CTX.modo&&t.estrategia===CTX.estrategia)); save(K.trades,TRADES);
       refrescarDiarioCtx(); toast("Contexto borrado"); } };
   ex.append(b4);
@@ -5302,7 +5436,7 @@ function pintarSelCuentaTrade(){
   if(prev) s.value=prev;
 }
 
-function guardarTrade(){
+async function guardarTrade(){
   const rTxt=$("#fR").value.trim();
   if(rTxt===""){ toast("Falta el R obtenido"); $("#fR").focus(); return; }
   const R=parseFloat(rTxt);
@@ -5324,7 +5458,7 @@ function guardarTrade(){
   let fueraLimite=false;
   if(!bt && !EDIT_ID){
     const delDia=tradesCtx().filter(t=>t.fecha===fecha).length;
-    if(delDia>=2 && !confirm("Ya tienes 2 trades hoy (R6). ¿Registrarlo igual? Quedará marcado como regla rota.")) return;
+    if(delDia>=2 && !await preguntar("Ya tienes 2 trades hoy (R6). ¿Registrarlo igual? Quedará marcado como regla rota.")) return;
     fueraLimite = delDia>=2;
   }
 
@@ -5481,12 +5615,12 @@ function renderDiario(){
             <button class="ta danger" data-a="del">Borrar</button>
           </div>`;
         d.querySelectorAll(".ta").forEach(btn=>{
-          btn.onclick=(e)=>{ e.stopPropagation();
+          btn.onclick=async(e)=>{ e.stopPropagation();
             const a=btn.dataset.a;
             if(a==="ver") verTrade(t.id);
             else if(a==="edit") editarTrade(t.id);
             else if(a==="exp") exportarUno(t.id);
-            else if(a==="del"){ if(confirm("¿Borrar este trade?")){ TRADES=TRADES.filter(x=>x.id!==t.id); save(K.trades,TRADES); refrescarDiarioCtx(); toast("Trade borrado"); } }
+            else if(a==="del"){ if(await preguntar("Se borra del Diario y no se puede deshacer.",{titulo:"🗑️ ¿Borrar este trade?",si:"Borrar",peligro:true})){ TRADES=TRADES.filter(x=>x.id!==t.id); save(K.trades,TRADES); refrescarDiarioCtx(); toast("Trade borrado"); } }
           };
         });
         d.onclick=()=>verTrade(t.id);
@@ -5568,7 +5702,7 @@ function viewGaleria(){
     <div class="card">
       <div class="card-h"><span class="ic">🖼️</span><h2>Galería de capturas</h2></div>
       <p class="desc">Todas las fotos de tus operaciones. Agrúpalas por día, semana, mes o año. Tócalas para verlas grandes.</p>
-      <div class="seg" id="galSeg" style="margin-top:8px"></div>
+      <div class="seg c4" id="galSeg" style="margin-top:8px"></div>
     </div>
     <div id="galBody"></div>`;
   return v;
@@ -5678,6 +5812,87 @@ function abrirModal(html, botones, botonesSiHayTitulo){
   document.body.appendChild(ov);
   requestAnimationFrame(()=>ov.classList.add("show"));
 }
+/* ══════════════════════════════════════════════════════════════════════════════
+   ❓ PREGUNTAR SIN CONGELAR APEX — el reemplazo de confirm()
+   ══════════════════════════════════════════════════════════════════════════════
+   Rey (10-09): «la seccion de galeria no esta funcionando ningun boton, ni el de compartir
+   ni el de descargar ni el de borrar, o sea nada… eso es grave porque me hice la idea de que
+   habias comprobado que todas las secciones estaban completas y funcionales».
+
+   NO ERA LA GALERIA. Era Apex ENTERA, congelada. Se midio en su moto g54 por cable:
+
+       confirm('prueba')  →  no contesta NUNCA
+       y despues 1+1      →  tampoco contesta
+
+   `confirm()` del navegador DETIENE EL HILO de JavaScript de toda la app. Y en Android hay
+   algo peor: **si Apex no esta delante, el dialogo NI SIQUIERA SE VE**. Se comprobo con una
+   foto de su pantalla: el dialogo solo aparecio al traer Apex al frente. O sea que el boton
+   🗑️ de la galeria congelaba la app entera y dejaba a Rey sin ninguna pista de por que.
+   Despues de eso, ningun boton de ninguna seccion vuelve a responder.
+
+   ⚠️ Y ES LA SEGUNDA VEZ. El 06-09 esto mismo dejo a Roberto mudo una noche entera; lo
+   arregle en UN sitio (la pregunta del motor) y di el problema por cerrado. Quedaban 17.
+   Arreglar una instancia de un fallo no es arreglar el fallo.
+
+   `preguntar()` usa la ventana propia de Apex, que no bloquea nada y se ve siempre.
+   Devuelve una promesa: los sitios que la usan tienen que ESPERARLA (await). */
+/* 📢 AVISAR — el reemplazo de alert(). Mismo problema, misma cura: la ventana propia de
+   Apex no bloquea el hilo y se ve aunque Apex no este delante. Los avisos son informativos,
+   asi que NO hace falta esperarlos: se llaman igual que antes y se sigue. */
+function avisar(texto, titulo){
+  try{
+    abrirModal((titulo ? '<div class="modal-t">'+esc(titulo)+'</div>' : '') +
+      '<p class="desc" style="text-align:left;white-space:pre-wrap;font-size:12.5px;line-height:1.45">'
+      + esc(String(texto==null?"":texto)) + '</p>',
+      [{t:"Entendido", cls:"gold", fn:cerrarModal}]);
+  }catch(_){ try{ toast(String(texto).slice(0,120)); }catch(__){} }
+}
+
+/* ✏️ PEDIR TEXTO — el reemplazo de prompt(). Devuelve una promesa con lo que Rey escriba,
+   o null si cancela. Los sitios que la usan tienen que ESPERARLA (await). */
+function pedirTexto(texto, valor, titulo){
+  return new Promise((resolve)=>{
+    let ya=false;
+    const responder=(v)=>{ if(ya) return; ya=true; try{ cerrarModal(); }catch(_){} resolve(v); };
+    try{
+      abrirModal((titulo ? '<div class="modal-t">'+esc(titulo)+'</div>' : '') +
+        '<p class="desc" style="text-align:left;white-space:pre-line">'+esc(String(texto==null?"":texto))+'</p>'+
+        '<textarea id="pedirTxt" rows="3" style="width:100%;box-sizing:border-box;margin-top:8px;padding:8px;'+
+        'border-radius:10px;border:1px solid var(--line);background:var(--card2);color:var(--fg);font-size:13px">'+
+        esc(String(valor==null?"":valor))+'</textarea>',
+        [{t:"Cancelar", fn:()=>responder(null)},
+         {t:"Guardar", cls:"gold", fn:()=>{ const t=$("#pedirTxt"); responder(t?t.value:null); }}]);
+      const ov=$("#modalOv");
+      if(ov && window.MutationObserver){
+        const obs=new MutationObserver(()=>{ if(!document.body.contains(ov)){ obs.disconnect(); responder(null); } });
+        obs.observe(document.body,{childList:true});
+      }
+      setTimeout(()=>{ try{ const t=$("#pedirTxt"); if(t){ t.focus(); } }catch(_){} }, 220);
+    }catch(_){ responder(null); }
+  });
+}
+
+function preguntar(texto, opts){
+  const o = opts || {};
+  return new Promise((resolve)=>{
+    let ya=false;
+    const responder=(v)=>{ if(ya) return; ya=true; try{ cerrarModal(); }catch(_){} resolve(v); };
+    try{
+      abrirModal(
+        (o.titulo ? '<div class="modal-t">'+esc(o.titulo)+'</div>' : '') +
+        '<p class="desc" style="text-align:left;white-space:pre-line">'+esc(String(texto==null?"":texto))+'</p>',
+        [{t:(o.no||"Cancelar"), fn:()=>responder(false)},
+         {t:(o.si||"Sí"), cls:(o.peligro?"danger":"gold"), fn:()=>responder(true)}]);
+      /* si cierra la ventana tocando fuera, cuenta como NO: jamas se hace nada sin su sí */
+      const ov=$("#modalOv");
+      if(ov && window.MutationObserver){
+        const obs=new MutationObserver(()=>{ if(!document.body.contains(ov)){ obs.disconnect(); responder(false); } });
+        obs.observe(document.body,{childList:true});
+      }
+    }catch(_){ responder(false); }
+  });
+}
+
 /* 🪟 v7.84 — cierra TODAS las que hubiera, no solo la primera que encuentre: si por lo que sea
    quedaran dos, cerrar una dejaba la otra viva y sin forma de quitarla. */
 function cerrarModal(){
@@ -5731,11 +5946,11 @@ function exportJSON(){
 function importJSON(e){
   const f=e.target.files[0]; if(!f) return;
   const r=new FileReader();
-  r.onload=ev=>{
+  r.onload=async ev=>{
     try{
       const d=JSON.parse(ev.target.result);
       if(!Array.isArray(d.trades)) throw 0;
-      if(!confirm("Se importarán "+d.trades.length+" trades. ¿Reemplazar TODOS los datos actuales ("+TRADES.length+" trades)?")) return;
+      if(!await preguntar("Se importarán "+d.trades.length+" trades. ¿Reemplazar TODOS los datos actuales ("+TRADES.length+" trades)?")) return;
       // migrar por si el respaldo es viejo
       d.trades.forEach(t=>{ if(!t.modo)t.modo="real"; if(!t.estrategia)t.estrategia="CRT Elite"; });
       TRADES=d.trades; save(K.trades,TRADES);
@@ -5773,12 +5988,12 @@ async function compartirRespaldo(){
 }
 
 /* Respalda y borra los trades anteriores a una fecha, en el contexto activo */
-function archivarLimpiar(){
+async function archivarLimpiar(){
   const f=$("#archFecha")?.value;
   if(!f){ toast("Elige una fecha primero"); return; }
   const viejos=tradesCtx().filter(t=>t.fecha<f);
   if(!viejos.length){ toast("No hay trades anteriores a esa fecha aquí"); return; }
-  if(!confirm("Se descargará un respaldo COMPLETO y luego se borrarán "+viejos.length+" trade(s) anteriores a "+f+" de "+(CTX.modo==="real"?"Real":"Backtest")+" · "+CTX.estrategia+".\n\nGuarda ese respaldo en tu Drive. ¿Continuar?")) return;
+  if(!await preguntar("Se descargará un respaldo COMPLETO y luego se borrarán "+viejos.length+" trade(s) anteriores a "+f+" de "+(CTX.modo==="real"?"Real":"Backtest")+" · "+CTX.estrategia+".\n\nGuarda ese respaldo en tu Drive. ¿Continuar?")) return;
   exportJSON();
   const ids=new Set(viejos.map(t=>t.id));
   TRADES=TRADES.filter(t=>!ids.has(t.id)); save(K.trades,TRADES);
@@ -7486,20 +7701,20 @@ function tarjetaCuenta(c){
   return card;
 }
 
-function avanzarFase(id){
+async function avanzarFase(id){
   const c=CUENTAS.find(x=>x.id===id); if(!c) return;
   if(FASES_SIN_AVANCE.includes(c.fase)){ toast(c.fase==="Demo"?"Una demo no avanza de fase":"El capital propio no avanza de fase"); return; }
   const chain=FASES.filter(f=>!FASES_SIN_AVANCE.includes(f)); // Examen F1→F2→Fondeada→Real
   const i=chain.indexOf(c.fase);
   if(i<0 || i>=chain.length-1){ toast("Ya está en la fase final"); return; }
-  if(!confirm(`¿Pasar "${c.alias||c.firma}" de ${c.fase} a ${chain[i+1]}?`)) return;
+  if(!await preguntar(`¿Pasar "${c.alias||c.firma}" de ${c.fase} a ${chain[i+1]}?`)) return;
   c.fase=chain[i+1]; guardarCuentas(); refrescarCuentas(); toast("Fase actualizada ✓");
   robertoVigila("Avanzó de fase la cuenta "+(c.alias||c.firma)+": ahora en "+c.fase+".");
 }
-function borrarCuenta(id){
+async function borrarCuenta(id){
   const c=CUENTAS.find(x=>x.id===id); if(!c) return;
   const nT=TRADES.filter(t=>t.cuenta===id).length;
-  if(!confirm(`¿Borrar la cuenta "${c.alias||c.firma}"?`+(nT?` Sus ${nT} trades NO se borran, solo quedan sin cuenta.`:""))) return;
+  if(!await preguntar(`¿Borrar la cuenta "${c.alias||c.firma}"?`+(nT?` Sus ${nT} trades NO se borran, solo quedan sin cuenta.`:""))) return;
   CUENTAS=CUENTAS.filter(x=>x.id!==id); guardarCuentas(); refrescarCuentas(); toast("Cuenta borrada");
 }
 
@@ -8169,8 +8384,8 @@ function iaNuevaConv(){
   pintarIAChat();
 }
 function iaSelConv(id){ IA.actId=id; iaGuardarConvs(); $("#iaConvsBox").style.display="none"; pintarIAChat(); }
-function iaDelConv(id){
-  if(!confirm("¿Borrar esta conversación?")) return;
+async function iaDelConv(id){
+  if(!await preguntar("Se borra de tu historial y no se puede deshacer.",{titulo:"🗑️ ¿Borrar esta conversación?",si:"Borrar",peligro:true})) return;
   IA.convs=IA.convs.filter(x=>x.id!==id);
   if(IA.actId===id) IA.actId = IA.convs[0]?IA.convs[0].id:null;
   iaGuardarConvs(); renderConvList(); pintarIAChat();
@@ -8606,7 +8821,7 @@ function iaInit(){
     }
   }
   $("#iaSaveUrl").onclick=()=>{ IA.url=$("#iaUrl").value.trim()||IA_URL_DEFAULT; save(K.iaurl,IA.url); $("#iaCfgBox").style.display="none"; toast("Puente guardado ✓"); };
-  $("#iaClear").onclick=()=>{ if(confirm("¿Borrar la conversación actual?")){ const c=iaConvAct(); c.msgs=[]; c.t=""; iaGuardarConvs(); $("#iaCfgBox").style.display="none"; pintarIAChat(); } };
+  $("#iaClear").onclick=async()=>{ if(await preguntar("Se vacía la conversación que tienes abierta.",{titulo:"🗑️ ¿Borrar la conversación actual?",si:"Borrar",peligro:true})){ const c=iaConvAct(); c.msgs=[]; c.t=""; iaGuardarConvs(); $("#iaCfgBox").style.display="none"; pintarIAChat(); } };
   { const ci=$("#nubeCodeInp"); if(ci) ci.value=nubeCode(); nubePintarEstado(); }
   /* 🛟 v6.60 — este botón MENTÍA: decía "☁️ Respaldo guardado ✓" pasara lo que pasara, porque
      nubeSubir() se tragaba los errores en silencio. Y peor: marcaba la fecha local como NUEVA
@@ -8617,9 +8832,9 @@ function iaInit(){
       localStorage.setItem(NUBE_CODE_KEY,c); toast("Subiendo a la nube…");
       const res=await nubeSubir(); nubePintarEstado();
       if(res && res.ok){ try{ localStorage.setItem(NUBE_TS_KEY,String(Date.now())); }catch(_){}
-        alert("☁️ SUBIDO ✓\n\n"+(res.claves||0)+" apartados · "+Math.round((res.bytes||0)/1024)+" KB\n\nTus datos están guardados en la nube. Puedes comprobarlo cuando quieras con \"🔎 Ver qué hay en la nube\"."); }
+        avisar("☁️ SUBIDO ✓\n\n"+(res.claves||0)+" apartados · "+Math.round((res.bytes||0)/1024)+" KB\n\nTus datos están guardados en la nube. Puedes comprobarlo cuando quieras con \"🔎 Ver qué hay en la nube\"."); }
       else if(res && res.err==="cancelado"){ /* ya avisado */ }
-      else alert("⚠️ NO se pudo subir ("+((res&&res.err)||"desconocido")+").\n\nLo que ya tenías en la nube sigue INTACTO. Vuelve a intentarlo."); }; }
+      else avisar("⚠️ NO se pudo subir ("+((res&&res.err)||"desconocido")+").\n\nLo que ya tenías en la nube sigue INTACTO. Vuelve a intentarlo."); }; }
   { const bv=$("#nubeVer"); if(bv) bv.onclick=async()=>{ const c=($("#nubeCodeInp").value||"").trim(); if(c.length>=4) localStorage.setItem(NUBE_CODE_KEY,c); await nubeVerInforme(); }; }
   { const br=$("#nubeRestore"); if(br) br.onclick=async()=>{ const c=($("#nubeCodeInp").value||"").trim(); if(c.length>=4) localStorage.setItem(NUBE_CODE_KEY,c); await nubeRestaurar(false); }; }
   { const rs=$("#nubeRescate"); if(rs) rs.onclick=async()=>{ const c=($("#nubeCodeInp").value||"").trim(); if(c.length>=4) localStorage.setItem(NUBE_CODE_KEY,c); await nubeRescatar(); }; }
@@ -10028,7 +10243,7 @@ async function burbujaUI(){
       pq.onclick = async ()=>{
         try{
           const d = (typeof P.burbujaDiagnostico==="function") ? await P.burbujaDiagnostico() : st;
-          alert("🔎 PARTE DE LA BURBUJA\n\n"+
+          avisar("🔎 PARTE DE LA BURBUJA\n\n"+
             "Permiso: "+(d.permiso?"sí":"NO")+"\n"+
             "Encendida: "+(d.encendida?"sí":"no")+"\n"+
             "Ventana creada: "+(d.enPantalla?"sí":"NO")+"\n"+
@@ -10039,7 +10254,7 @@ async function burbujaUI(){
             "Dentro de la burbuja:\n"+(d.informe||"(no contestó)")+"\n\n"+
             "Fallo: "+(d.error||"ninguno")+"\n\n"+
             "Mándame esta pantalla y lo arreglo con esto, sin adivinar.");
-        }catch(e){ alert("No pude sacar el parte: "+(e&&e.message?e.message:e)); }
+        }catch(e){ avisar("No pude sacar el parte: "+(e&&e.message?e.message:e)); }
       };
     }
     const enFoto = !!(st && st.respaldo);

@@ -220,6 +220,33 @@ button{cursor:pointer;border:none;background:none}
 
 /* ===== SEGMENTED ===== */
 .seg{display:grid;gap:9px;margin-bottom:14px}
+
+/* ══ 🖼️ EL VISOR DE CAPTURAS — v7.89 ═══════════════════════════════════════════
+   Rey (10-09), con la foto de lado delante: «la vista con el teléfono horizontal es un
+   desastre… no comparte, no descarga».
+   LA CAUSA DEL DESASTRE: la barra del visor usaba `.btn`, y en Apex TODO `.btn` es
+   `display:block; width:100%` — pensado para los formularios, donde eso está bien. En una
+   barra de herramientas convierte cada botón en una BANDA del ancho de la pantalla, y de
+   lado le tapaban la foto entera. Aquí los botones son compactos y van a su aire.
+   Y girado, la barra se pone en COLUMNA A LA DERECHA: de lado lo que sobra es ancho, no alto. */
+.foto-ov .fbar{position:absolute;left:0;right:0;bottom:0;display:flex;gap:8px;align-items:center;
+  justify-content:center;flex-wrap:wrap;padding:10px 12px calc(10px + var(--safe-b));
+  background:linear-gradient(0deg,rgba(0,0,0,.88),rgba(0,0,0,.55) 60%,rgba(0,0,0,0))}
+.foto-ov .fbtn{display:inline-flex;align-items:center;gap:5px;width:auto;padding:9px 13px;
+  border-radius:11px;font-size:13.5px;font-weight:700;line-height:1;
+  background:rgba(30,36,66,.94);border:1px solid rgba(255,255,255,.15);color:#f4efe2}
+.foto-ov .fbtn:active{background:rgba(52,60,104,.96)}
+.foto-ov .fbtn.gold{background:var(--gold);color:#1A1200;border-color:var(--gold)}
+.foto-ov .fbtn.danger{background:rgba(242,109,109,.16);border-color:rgba(242,109,109,.5);color:#ff8a8a}
+.foto-ov .fmeta{color:#d0d0d0;font-size:11px;flex:1 1 100%;text-align:center;margin-bottom:2px}
+@media (orientation:landscape){
+  .foto-ov .fbar{left:auto;top:0;bottom:0;width:auto;max-width:34vw;flex-direction:column;
+    justify-content:center;align-items:stretch;flex-wrap:nowrap;
+    padding:10px 12px 10px 22px;
+    background:linear-gradient(270deg,rgba(0,0,0,.88),rgba(0,0,0,.55) 60%,rgba(0,0,0,0))}
+  .foto-ov .fmeta{flex:0 0 auto;max-width:30vw;margin-bottom:8px}
+  .foto-ov .fbtn{justify-content:center}
+}
 .seg.c2{grid-template-columns:1fr 1fr}
 .seg.c3{grid-template-columns:1fr 1fr 1fr}
 .seg.c4{grid-template-columns:repeat(4,1fr)}
