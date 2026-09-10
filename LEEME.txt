@@ -1,56 +1,83 @@
-APEX v7.89 — TRADING DESK
+APEX v7.90 — TRADING DESK
 =========================
 
-📤 AHORA SÍ COMPARTE Y GUARDA · Y LA VISTA DE LADO ARREGLADA
+🏦 PREPARADO PARA PONER UNA CUENTA DE FUNDEDNEXT A TRABAJAR
 
-⚠️ HAY QUE SUBIR: la web v7.89 · Y EL WORKER 5.134 si aún no lo subiste
-📱 APK v7.89 instalada y comprobada por cable.
+⚠️ HAY QUE SUBIR: la web v7.90 · Y EL WORKER 5.135
+📱 APK v7.90 — se instala y verifica por cable.
 
-═══ LO QUE ME DIJISTE ════════════════════════════════════════════
+═══ 1 · EL RIESGO YA NO SE RECORTA "A OJO" ═══════════════════════
 
-"Todo mal. No sirve ningún botón, no comparte, no descarga, y la vista con el
-teléfono horizontal es un desastre."
+Cuestionaste con razón que el Ejecutor bajara el riesgo a la mitad tras UNA pérdida:
+"¿con qué datos se basa para ese fundamento?". Con NINGUNO — era un número redondo
+aprobado el 30-08 y nunca medido.
 
-Las tres eran ciertas, y eran TRES fallos distintos.
+Pero sí hay un fundamento, y es aritmético. Tus números del 10-09:
 
-═══ 1 · LA VISTA DE LADO ═════════════════════════════════════════
+   tope del día     501,30
+   ya gastado       273,78
+   TE QUEDAN        227,52
+   una entrada normal a 0,5% arriesga 250,65  →  YA NO CABE
 
-CAUSA: en Apex TODO botón (.btn) es "ancho completo" — perfecto en un formulario,
-un desastre en una barra de herramientas. Cada botón del visor se convertía en
-una BANDA del ancho de la pantalla, y de lado te tapaban la foto entera.
+Si perdiera, el día cerraría en 1,046%: te habrías pasado de TU PROPIO tope.
 
-ARREGLO: la barra del visor tiene sus propios botones, compactos.
-   de pie   97 / 87 / 75 / 54 px  (antes: 432 px cada uno)
-   de lado  la barra se pone EN COLUMNA a un lado — girado sobra ancho, no alto
+AHORA la regla es: nunca arriesgar más de lo que CABE HASTA LA PARED, descontando el
+deslizamiento medido (tu stop de hoy costó 1,09R, no 1,00R).
 
-Y de paso: los botones Día/Semana/Mes/Año de la galería estaban apilados en cuatro
-bandas porque les faltaba la clase de 4 columnas. Ya van en fila.
+   la regla vieja   125,32   ← te castigaba de más
+   la regla nueva   208,73   ← lo que de verdad cabe
 
-═══ 2 · COMPARTIR Y DESCARGAR ════════════════════════════════════
+Y en cuenta de firma manda lo que queda hasta el DD MÁXIMO, no solo el día.
+Si no cabe nada, NO ENTRA. Si el día está limpio, no te recorta nada.
 
-CAUSA: tu APK NO TENÍA forma nativa de hacerlo. La app lo intentaba como una
-página web:
-   · navigator.share → en este WebView dice que NO puede con ficheros
-     (de ahí tu cartel "tu teléfono no permite compartir la imagen directa")
-   · y el plan B era un enlace <a download> con una dirección "data:" —
-     ESO EN ANDROID NO HACE NADA. Ni descarga, ni avisa. Nada.
+═══ 2 · VETO LARGO PARA RUEDAS DE PRENSA ═════════════════════════
 
-ARREGLO: las hace el propio teléfono, por Java (ApexPlugin):
-   📤 Compartir → escribe la foto y abre el menú de compartir de Android
-   ⬇️ Guardar   → la mete en tus Fotos, carpeta "Apex", como una foto más
-   y si algo falla, TE LO DICE. Nunca se queda callado.
+Un dato se publica en un instante: ±15 min. Una rueda de prensa DURA y deja cola.
 
-COMPROBADO EN TU TELÉFONO: se guardó de verdad en "Fotos › Apex" (y borré mi
-foto de prueba para no dejarte basura).
+   rueda del BCE   08:45 NY
+   tu entrada      09:55 NY  →  70 min después
+   con ±15 pasó · con la regla nueva (90 min) NO habría pasado
 
-═══ 3 · EL VISOR ═════════════════════════════════════════════════
+⚠️ Es una regla de CRITERIO aprobada por ti, NO medida en el laboratorio. Queda
+anotada como próxima pregunta para el laboratorio, y así se lo dije a Roberto.
 
-   pantalla completa · zoom con dos dedos · doble toque amplía 3×
-   arrastrar para recorrerla · girado también se abre entera
+═══ 3 · EL CANDADO YA NO ES "SOLO DEMO": ES TU LISTA ═════════════
 
-Banco nuevo con 9 comprobaciones que lo miden de pie Y de lado.
+   📁 Escritorio › EjecutorApex › cuentas-autorizadas.json
 
-Revisión completa: 168/168
+   demo             → se opera siempre
+   NO demo          → SOLO si está en esa lista con  confirmo: true
+   cualquier otra   → modo observador, ni una orden
+
+Tu FundedNext 13679261 está PREPARADA pero NO autorizada. El "true" no lo pongo yo:
+autorizar que un robot opere tu cuenta es tuyo, y la carta va antes.
+El Ejecutor relee la lista en cada vuelta — no hay que reiniciar nada.
+
+Y así tu sistema sigue adaptándose a cualquier cuenta, como pediste.
+
+═══ 4 · SELLO DE PROPIEDAD ═══════════════════════════════════════
+
+   📁 Escritorio › 📄 FUNDEDNEXT › SELLO DE PROPIEDAD.md
+
+Huella SHA-256 de las 5 piezas (indicador, Ejecutor, worker, app, Puente) — si alguien
+cambia una coma, la huella cambia entera. Más tu historial verificable:
+
+   repositorio desde  16-03-2026   ← seis meses de trabajo fechado
+   respaldos cifrados diarios
+
+═══ 5 · LA CARTA ═════════════════════════════════════════════════
+
+   📁 Escritorio › 📄 FUNDEDNEXT › CARTA para FundedNext.md
+
+En inglés (la que se manda) y español. Declara tu autoría, describe la estrategia, y
+desmonta una por una sus prácticas prohibidas (HFT, tick scalping, latencia, grid).
+NO lleva número de cuenta clavado: sirve para cualquier cuenta tuya de FundedNext.
+
+Comprobado en su web el 10-09: los robots SÍ están permitidos en MT4/MT5, pero exigen
+CONSISTENCIA (prohíben pasar de manual a EA entre fases) y UNA SOLA cuenta por
+estrategia. Por eso la carta va antes de la primera operación.
+
+Revisión completa: 172/172
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
