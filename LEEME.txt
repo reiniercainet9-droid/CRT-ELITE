@@ -1,52 +1,67 @@
-APEX v7.86 — TRADING DESK
+APEX v7.87 — TRADING DESK
 =========================
 
-🪟 LA TARJETA DEL MOTOR VUELVE A SALIR DENTRO DEL CHAT
+🎈 LA NUBE SALE DE SU BOCA, NO LE PISA Y NO SE CORTA
 
-⚠️ HAY QUE SUBIR: la web v7.86 · Y EL WORKER 5.132 (que sigue pendiente de esta mañana)
-📱 APK v7.86 construida — se instala y verifica cuando conectes el cable.
+⚠️ HAY QUE SUBIR: la web v7.87 · Y EL WORKER 5.134
+📱 APK v7.87 construida — se instala y verifica cuando conectes el cable.
 
 ═══ LO QUE ME DIJISTE ════════════════════════════════════════════
 
-"Roberto me pregunta sacando una tarjeta con qué motor responder, pero esa tarjeta
-sale FUERA del chat: tuve que salir del chat para elegir. Antes salía dentro."
+"Todavía hay nubes saliendo por detrás y por delante de Roberto… hay nubes que
+salen cortadas todavía… lo de la nube es viejo, eso debería ya haber estado
+resuelto y me lo diste como que ya estaba resuelto."
 
-TENÍAS RAZÓN, Y ERA UN FALLO MÍO. Las dos capas estaban así:
+TENÍAS RAZÓN EN EL REPROCHE. En la v7.78 arreglé LAS CAPAS (que la nube no
+quedara debajo de su cuerpo) y te lo di por resuelto. Lo que tú seguías viendo
+era OTRA cosa, y llevaba semanas ahí.
 
-   el chat de Roberto    z-index 210
-   la tarjeta            z-index 200   ← siempre por DEBAJO
+═══ LOS DOS FALLOS DE VERDAD ═════════════════════════════════════
 
-═══ DE DÓNDE SALIÓ ═══════════════════════════════════════════════
+1) EL RABITO NO SEGUÍA A LA NUBE.
+   La nube se recorta contra el borde de la pantalla para no salirse — o sea,
+   SE MUEVE. Pero el rabito estaba clavado a 12 px de su borde.
+   Medido en un navegador: llegaba a quedarse a 180 PX de su cuerpo.
+   Apuntando al aire por un lado, cayéndole encima por el otro.
+   Eso es exactamente tu "por detrás y por delante".
 
-Del 06-09, cuando arreglé el congelamiento de Apex. Aquella pregunta se hacía con un
-diálogo del NAVEGADOR, y eso paralizaba Apex entera (tu "se quedó pensando sin
-respuesta"). Lo cambié por la ventana propia de Apex — eso arregló el congelamiento —
-pero NO MIRÉ EL ORDEN DE LAS CAPAS.
+2) LA FRASE SE ESCRIBE DESPUÉS DE COLOCAR LA NUBE.
+   La frase aparece palabra a palabra. La nube se colocaba con dos palabras…
+   y acababa con quince, creciendo sin que nadie la recolocara.
 
-Y lo peor: esa pregunta SOLO se hace con el chat delante. Así que estaba condenada a
-salir detrás del chat el 100% de las veces. No era intermitente: era siempre.
-
-Le pasaba lo mismo a cualquier ventana abierta desde el chat (el historial de Roberto,
-ver una captura).
+Y lo "cortado": el rebotito de salida se pasa de tamaño (1.06) y crecía desde el
+CENTRO. Junto al borde de la pantalla, ese sobrante es lo que se veía cortado.
 
 ═══ EL ARREGLO ═══════════════════════════════════════════════════
 
-Una ventana va SIEMPRE encima de lo que la abrió: ahora z-index 260.
+· el rabito se calcula con la nube YA colocada y medida de verdad
+· se recoloca a CADA PALABRA mientras se escribe la frase
+· si no cabe a los lados, la nube se sube ENTERA sobre su cabeza — no le pisa
+· el rebotito nace de su boca, no del centro, y se da la vuelta si va debajo
 
-   por encima del chat (210) ✓   por encima del menú (180) ✓
-   por DEBAJO del banner de avisos de Roberto (300) — un aviso urgente
-   nunca se puede quedar escondido detrás de una ventana
+COMPROBADO EN LOS 6 SITIOS donde puedes dejarlo, midiendo en un navegador de
+verdad: a la derecha, a la izquierda, pegado a los dos bordes, arriba del todo,
+y en una pantalla estrecha donde no cabe a ningún lado.
 
-Y sigue igual lo que importaba: no congela nada, no pregunta si el chat está cerrado
-(ahí usa el Rendidor y sigue), y si cierras la tarjeta sin elegir se va con el
-Rendidor — jamás se gasta de más sin tu sí.
+Y comprobé que el banco caza el fallo viejo antes de fiarme: le devolví el
+rabito clavado y saltó con 180 px de desvío.
 
-═══ COMPROBADO ROMPIÉNDOLO A PROPÓSITO ═══════════════════════════
+═══ EL DISEÑO ════════════════════════════════════════════════════
 
-Devolví la capa al 200 y el banco nuevo saltó; la puse en 260 y pasa. O sea que el
-banco caza este fallo de verdad, no solo dice que sí.
+Degradado suave en vez de color plano, un filo de luz arriba y sombra en dos
+capas — en la nube y en las dos bolitas del rabito. Las dos nubes, la de dentro
+de Apex y la del cuerpo flotante, quedan iguales.
 
-Regresión: 163/163
+NO toqué la forma, el borde dorado ni la esquina viva: eso lo decidiste tú antes
+y hay un banco que lo protege.
+
+═══ Y ROBERTO YA NO PUEDE DARTE EL PARTE POR TU SISTEMA ══════════
+
+Worker 5.134: cuando preguntas por tu maquinaria, MIRAR NO ES OPCIONAL — el
+worker le obliga a mirar antes de contestar. Deja de depender de que él lo
+decida. Y no se dispara si preguntas por el EURUSD o pides el parte del día.
+
+Regresión: 167/167
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

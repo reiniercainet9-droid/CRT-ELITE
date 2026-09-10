@@ -157,12 +157,22 @@
   #globo{position:fixed;max-width:var(--globo-max);box-sizing:border-box;display:none;
          z-index:4;   /* 🗂️ v7.78 — SIEMPRE DELANTE del cuerpo: lo que dice se tiene que leer */
          overflow-wrap:break-word;
-         background:#1B2145;color:#f4efe2;
+         /* 🎈 v7.87 — el MISMO acabado que la de dentro de Apex: un degradado suave en vez de
+            un color plano, un filo de luz arriba y la sombra en dos capas. Rey lo pidio asi:
+            "dale un diseno mas realista y bonito". La forma, el borde dorado y la esquina viva
+            no se tocan: eso ya lo habia decidido el antes. */
+         background:linear-gradient(180deg,#232a52 0%,#1B2145 62%,#171d3c 100%);color:#f4efe2;
+         /* el rebotito nace del rabito, no del centro: junto al borde de la ventana era el
+            sobrante del rebote lo que se veia CORTADO */
+         transform-origin:50% 100%;
          border:calc(0.9 * var(--u)) solid #f0c95c;
          /* la esquina de abajo VIVA, del lado por el que sale: igual que dentro de Apex */
          border-radius:calc(9 * var(--u)) calc(9 * var(--u)) calc(9 * var(--u)) calc(3.5 * var(--u));
          padding:calc(3.5 * var(--u)) calc(5 * var(--u));font-size:calc(7.2 * var(--u));line-height:1.28;font-weight:600;
-         box-shadow:0 8px 24px rgba(0,0,0,.5)}
+         box-shadow:0 1px 0 rgba(255,255,255,.07) inset, 0 2px 6px rgba(0,0,0,.35), 0 10px 26px rgba(0,0,0,.5)}
+  /* el rebotito sale del lado por el que esta Roberto, no del centro */
+  body[data-lado="der"] #globo{transform-origin:88% 100%}
+  body[data-lado="izq"] #globo{transform-origin:12% 100%}
   /* 🔴 v7.59 — LA NUBECITA URGENTE, calcada de `.rob-globo.urge` de index.html: borde rojo
      y su anillo. Aquí fuera no existía, así que un "NO ENTRES" salía con el mismo borde
      dorado que un "buenos días" — que es justo lo contrario de lo que hace falta. */
@@ -201,8 +211,10 @@
   #tarjNo{background:#3a1d24;color:#ffb4b4;border-color:#7a2b3a !important}
   #tarjSi{background:#f0c95c;color:#1B2145}
   /* 🫧 EL RABITO: dos bolitas que van menguando hacia su boca, como en Apex — no un pico */
-  #globo::before,#globo::after{content:"";position:absolute;background:#1B2145;
-         border:calc(0.9 * var(--u)) solid #f0c95c;border-radius:50%;pointer-events:none}
+  #globo::before,#globo::after{content:"";position:absolute;
+         background:linear-gradient(180deg,#1B2145 0%,#171d3c 100%);
+         border:calc(0.9 * var(--u)) solid #f0c95c;border-radius:50%;pointer-events:none;
+         box-shadow:0 2px 5px rgba(0,0,0,.35)}
   #globo::before{width:calc(4.6 * var(--u));height:calc(4.6 * var(--u));bottom:calc(-3 * var(--u))}
   #globo::after{width:calc(2.9 * var(--u));height:calc(2.9 * var(--u));bottom:calc(-7.5 * var(--u))}
   body[data-lado="der"] #globo::before{right:calc(7 * var(--u))}

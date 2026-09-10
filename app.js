@@ -10508,6 +10508,11 @@ function robDecir(titulo,texto,op){
     robGloboSitio();
     g.style.visibility="visible";
     requestAnimationFrame(()=>g.classList.add("ver"));
+    /* 🎈 v7.87 — Y SE RECOLOCA CUANDO EL NAVEGADOR HA TERMINADO DE PINTARLA.
+       La primera colocacion se hace con las medidas de ANTES de pintar; el navegador acaba de
+       repartir el texto un instante despues y la nube cambia de tamano. Sin esta segunda
+       pasada, la nube acababa donde no tocaba y el rabito apuntando al aire. */
+    try{ requestAnimationFrame(robGloboSitio); }catch(_){ setTimeout(robGloboSitio, 16); }
     robGloboEscribe(_tx, _txt);   /* ⌨️ y la frase se escribe sola, al ritmo de su boca */
     if(_robGloboT) clearTimeout(_robGloboT);
     _robGloboT=setTimeout(robGloboFuera, op.urge?14000:7000);
@@ -10534,22 +10539,58 @@ function robGloboSitio(){
     const g=$("#robGlobo"), fab=$("#fab");
     if(!g || !fab || g.style.display!=="block") return;
     const r=fab.getBoundingClientRect();
-    const gw=g.offsetWidth||220, gh=g.offsetHeight||60;
-    /* de qué lado: siempre al lado libre, para no taparlo */
-    const izq = r.left < window.innerWidth/2;
+    const W=window.innerWidth, H=window.innerHeight;
+    const bocaX = r.left + r.width/2;                 /* el centro de su cara */
+    const bocaY = r.top + r.height*0.47;              /* su boca, al 47% del cuerpo */
+    /* de que lado: siempre al lado libre, para no taparlo */
+    const izq = r.left < W/2;
     g.classList.remove("izq","der"); g.classList.add(izq?"izq":"der");
-    g.style.left = Math.max(8, Math.min(window.innerWidth-gw-8, izq ? r.right+10 : r.left-gw-10)) + "px";
-    /* a qué altura: el rabito cae en su boca (47% de su cuerpo), 12 px por debajo */
-    const bocaY = r.top + r.height*0.47;
-    const arriba = bocaY - gh - 12;
-    if(arriba >= 8){
-      g.classList.remove("abajo");
-      g.style.top = arriba + "px";
-    }else{
-      /* no cabe encima: debajo de él, y el rabito del revés */
-      g.classList.add("abajo");
-      g.style.top = Math.min(window.innerHeight-gh-8, bocaY + 12) + "px";
-    }
+
+    /* 🎈 v7.87 — SE COLOCA, SE VUELVE A MEDIR, Y SE RECOLOCA. Y AL FINAL EL RABITO VA A BUSCARLE.
+       Rey (10-09): «todavia hay nubes saliendo por detras y por delante de Roberto… hay nubes
+       que salen cortadas». Habia DOS trampas encadenadas:
+       (1) el rabito estaba CLAVADO al borde de la nube, pero la nube SI se mueve al recortarla
+           contra el borde de la pantalla: se quedaba apuntando al vacio o encima de el;
+       (2) el ancho se media ANTES de colocarla — y al pegarla a un borde le queda menos sitio,
+           el texto se reparte distinto y la nube ENCOGE (medido: 184 px antes, 166 despues).
+           Con el ancho viejo, la cuenta salia mal y se le montaba encima.
+       Por eso ahora se coloca DOS VECES: la segunda ya con el ancho de verdad. Es barato y
+       converge siempre. Y solo entonces se calcula donde cae el rabito. */
+    const colocar = (ancho, alto) => {
+      let x = Math.max(8, Math.min(W-ancho-8, izq ? r.right+8 : r.left-ancho-8));
+      /* ¿aun asi se le monta encima? entonces va ENTERA sobre su cabeza, no le pisa la cara */
+      let encima = false;
+      if(x < r.right && x+ancho > r.left){
+        x = Math.max(8, Math.min(W-ancho-8, bocaX - ancho/2));
+        encima = true;
+      }
+      g.style.left = x + "px";
+      /* a que altura: el rabito cuelga hacia su boca; si va sobre su cabeza, por encima del todo */
+      const arriba = (encima ? r.top : bocaY) - alto - 12;
+      if(arriba >= 8){
+        g.classList.remove("abajo");
+        g.style.top = arriba + "px";
+      }else{
+        /* no cabe encima: debajo de el, y el rabito del reves */
+        g.classList.add("abajo");
+        g.style.top = Math.min(H-alto-8, (encima ? r.bottom : bocaY) + 12) + "px";
+      }
+    };
+
+    /* ⚠️ EL TAMANO SE MIDE CON offsetWidth/offsetHeight, NUNCA con getBoundingClientRect:
+       la nube lleva un `scale()` en su animacion de salida, y el rect devuelve la caja YA
+       ESCALADA (al 90% durante el rebote). Mezclar las dos medidas hacia bailar la cuenta y
+       la nube acababa montandosele encima. offsetWidth da la caja de maquetacion, sin escalar. */
+    colocar(g.offsetWidth||220, g.offsetHeight||60);
+    colocar(g.offsetWidth||220, g.offsetHeight||60);   /* segunda pasada: el texto ya repartido */
+
+    /* 🎯 EL RABITO, con la nube definitivamente puesta.
+       Margen 6: es justo el radio de la esquina viva de abajo —la que "sale" de el—, asi que
+       la bolita se apoya en esa esquina en vez de quedarse a medio camino. */
+    const gr = g.getBoundingClientRect();
+    const ancho = g.offsetWidth || gr.width;
+    const rabo = Math.max(6, Math.min(ancho-6, bocaX - (gr.left + (gr.width-ancho)/2)));
+    g.style.setProperty("--rabo", rabo + "px");
   }catch(_){}
 }
 /* si Rey gira el teléfono o cambia el tamaño, la nubecita se recoloca sola */
@@ -10568,6 +10609,9 @@ function robGloboEscribe(nodo, frase){
     nodo.textContent = "";
     _robEscT = setInterval(()=>{
       nodo.textContent = palabras.slice(0, ++i).join(" ");
+      /* 🎈 v7.87 — la nube CRECE mientras se escribe la frase, asi que se recoloca a cada
+         palabra: si no, se coloca con dos palabras y acaba con quince, con el rabito perdido. */
+      try{ robGloboSitio(); }catch(__){}
       if(i >= palabras.length){ clearInterval(_robEscT); _robEscT=null; }
     }, 55);
   }catch(_){ try{ nodo.textContent = frase||""; }catch(__){} }

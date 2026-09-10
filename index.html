@@ -648,22 +648,47 @@ html.rob-anim-min .fab.rob-cuerpo.alerta{animation:none!important}
 .aviso-rojo{background:rgba(255,90,90,.12);border:1px solid rgba(255,90,90,.5);border-radius:10px;
   padding:10px 12px;margin:10px 0;font-size:13px;line-height:1.45;color:var(--fg)}
 .aviso-rojo b{color:#ff8a8a}
-.rob-globo{position:fixed;z-index:61;max-width:min(46vw,162px);background:var(--card);color:var(--fg);
+/* 🎈 v7.87 — EL RABITO SIGUE A ROBERTO, Y LA NUBE NACE DE SU BOCA.
+   Rey (10-09): «todavía hay nubes saliendo por detrás y por delante de Roberto… hay nubes que
+   salen cortadas todavía… dale un diseño más realista y bonito».
+   LAS DOS CAUSAS, y las dos eran de verdad:
+   (1) el rabito estaba CLAVADO a 12 px del borde de la nube (`.der::before{right:12px}`),
+       pero la nube SÍ se mueve: `robGloboSitio` recorta su posición para que no se salga de
+       la pantalla. Cuando eso pasaba, la nube se deslizaba y el rabito se quedaba atrás —
+       apuntando al vacío por un lado, o cayéndole encima por el otro. Eso es lo que él vio
+       como «por detrás y por delante».
+   (2) el rebotito crecía desde el CENTRO y se pasa de tamaño (1.06). Junto al borde de la
+       pantalla, ese sobrante es justo lo que se veía «cortado».
+   AHORA: `--rabo` lleva la X EXACTA de su boca dentro de la nube (la calcula el JS después de
+   recortar), las dos bolitas se centran ahí, y la nube CRECE DESDE ESE PUNTO — como si le
+   saliera de la boca de verdad. Lo que Rey ya había pedido antes se respeta entero: bordes
+   dorados definidos, la esquina de abajo viva, y dos bolitas que menguan hacia él. */
+.rob-globo{position:fixed;z-index:61;max-width:min(46vw,162px);color:var(--fg);
   overflow-wrap:break-word;
-  border:1.5px solid var(--gold);border-radius:16px 16px 16px 6px;padding:6px 9px;font-size:12px;line-height:1.28;
-  box-shadow:0 8px 24px rgba(0,0,0,.5);opacity:0;transform:translateY(6px) scale(.9);
+  background:linear-gradient(180deg,#232a52 0%,var(--card) 62%,#171d3c 100%);
+  border:1.5px solid var(--gold);border-radius:16px 16px 16px 6px;padding:7px 10px;font-size:12px;line-height:1.3;
+  box-shadow:0 1px 0 rgba(255,255,255,.07) inset, 0 2px 6px rgba(0,0,0,.35), 0 10px 26px rgba(0,0,0,.5);
+  opacity:0;transform:translateY(6px) scale(.9);
+  transform-origin:var(--rabo,50%) 100%;
   transition:opacity .2s,transform .2s;pointer-events:auto;cursor:pointer}
-/* el rabito y su bolita: se colocan solos del lado por el que esté Roberto */
-.rob-globo::before,.rob-globo::after{content:"";position:absolute;background:var(--card);
-  border:1.5px solid var(--gold);border-radius:50%;pointer-events:none}
-.rob-globo::before{width:8px;height:8px;bottom:-5px}
-.rob-globo::after{width:5px;height:5px;bottom:-12px}
-.rob-globo.der::before{right:12px} .rob-globo.der::after{right:5px}
+/* el rabito y su bolita: se centran en --rabo, que es donde está su boca de verdad */
+.rob-globo::before,.rob-globo::after{content:"";position:absolute;
+  background:linear-gradient(180deg,var(--card) 0%,#171d3c 100%);
+  border:1.5px solid var(--gold);border-radius:50%;pointer-events:none;
+  box-shadow:0 2px 5px rgba(0,0,0,.35)}
+.rob-globo::before{width:8px;height:8px;bottom:-5px;left:var(--rabo,12px);margin-left:-4px}
+.rob-globo::after{width:5px;height:5px;bottom:-12px;left:var(--rabo,5px);margin-left:-2.5px}
+/* si por lo que sea no llegara --rabo, se cae al comportamiento de siempre y no se rompe nada */
+.rob-globo.der:not([style*="--rabo"])::before{left:auto;right:12px;margin-left:0}
+.rob-globo.der:not([style*="--rabo"])::after{left:auto;right:5px;margin-left:0}
 /* 🎈 v6.81 — si Roberto está arriba del todo, la nubecita va DEBAJO de él y el rabito
    se da la vuelta para seguir saliendo de su boca (antes apuntaba al techo). */
 .rob-globo.abajo::before{bottom:auto;top:-5px}
 .rob-globo.abajo::after{bottom:auto;top:-12px}
-.rob-globo.izq::before{left:12px}  .rob-globo.izq::after{left:5px}
+/* si la nube va DEBAJO de él, nace por arriba: el origen del rebotito se da la vuelta */
+.rob-globo.abajo{transform-origin:var(--rabo,50%) 0%}
+.rob-globo.izq:not([style*="--rabo"])::before{left:12px}
+.rob-globo.izq:not([style*="--rabo"])::after{left:5px}
 /* al salir, un rebotito de cómic */
 .rob-globo.ver{animation:robGloboPop .34s cubic-bezier(.34,1.56,.64,1) both}
 @keyframes robGloboPop{0%{opacity:0;transform:translateY(8px) scale(.8)}60%{transform:translateY(0) scale(1.06)}100%{opacity:1;transform:none}}
