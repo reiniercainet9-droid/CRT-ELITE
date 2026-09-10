@@ -1,71 +1,70 @@
-APEX v7.84 — TRADING DESK
+APEX v7.85 — TRADING DESK
 =========================
 
-🪟 LA VENTANA QUE SE TE QUEDABA PEGADA · Y TU PUNTO DE RETORNO
+☁️ TU TEMPLO NO ESTABA EN LA NUBE · Y LOS ICONOS
 
-⚠️ HAY QUE SUBIR: la web v7.84 (el worker 5.129 sigue igual)
-✅ APK v7.84 YA INSTALADA Y VERIFICADA en tu teléfono.
+⚠️ HAY QUE SUBIR: la web v7.85 (el worker 5.130 ya está en vivo ✅)
+✅ APK v7.85 YA INSTALADA Y VERIFICADA en tu teléfono.
 
-═══ EL FALLO QUE APARECIÓ POR TU MIEDO ═══════════════════════════
+═══ LO QUE ME DIJISTE ════════════════════════════════════════════
 
-Me pediste: "asegúrate de que no se haya roto nada de lo que hoy ya está
-funcionando bien ANTES de instalar la nueva actualización".
+"Lo de la sección nueva del templo no está subiendo; intenté actualizar la web y la
+sección del templo se quedó intacta."
 
-Se hizo. Y la revisión de tu teléfono, con la versión que YA tenías puesta, cantó:
-"la forma con título no funciona: el templo volvería a estar muerto".
+NO ERA LA ACTUALIZACIÓN. El archivo publicado sí llevaba la escalera — lo comprobé.
 
-ERA UN FALLO DE VERDAD, y llevaba ahí tiempo:
+LO QUE PASABA: la web y la APK tienen almacenes SEPARADOS y se hablan por la nube. Y
+NINGUNA de las 5 claves de tu templo viajaba:
 
-   cerrarModal()  →  quita la ventana 200 milisegundos DESPUÉS (para que se
-                     desvanezca bonito)
-   abrirModal()   →  la llamaba y añadía la nueva EN EL MISMO INSTANTE
+   crtelite_templo_ficha    tu peso, estatura, nacimiento y objetivo
+   crtelite_templo_peso     tu historial de pesadas
+   crtelite_templo_plan     tu escalón, tus días y tus horarios
+   crtelite_templo_hechos   las sesiones que marcaste
+   crtelite_templo_marcas   flexiones, plancha, sentadillas, km
 
-Durante esos 200 ms había DOS ventanas con el mismo identificador en pantalla, y
-quien buscara esa ventana encontraba LA VIEJA, la que se estaba muriendo.
+Por eso en la web tu templo estaba VACÍO: no había plan que enseñar.
 
-MEDIDO EN TU TELÉFONO, abriendo tres seguidas:
-   1ª vez → SIN título
-   2ª y 3ª → con el título ANTERIOR, no el nuevo
+Y LO GRAVE DE VERDAD: esos datos vivían SOLO dentro de tu teléfono. Fuera del
+respaldo y fuera de la nube. Si perdías el móvil, perdías todo eso.
 
-Y lo peor, que es lo que te habría pasado a ti: si cerrabas y abrías rápido,
-cerrarModal cerraba la muerta y LA NUEVA SE TE QUEDABA PEGADA EN PANTALLA, sin
-forma de quitarla.
+Es tu pregunta de esta mañana otra vez ("¿confío en que no voy a perder nada?"), y
+en el templo la respuesta era NO.
 
-ARREGLADO: la vieja se va al instante, y cerrar cierra TODAS las que hubiera.
-COMPROBADO EJECUTÁNDOLO en tu teléfono después de instalar:
-   antes → 1ª sin título, las demás con el anterior
-   ahora → UNA sola ventana viva, y cada una con SU título
+Y ES LA SEGUNDA VEZ: en la v6.96 pasó lo mismo con tu PLAN. El comentario del código
+lo dice con estas palabras: "su progreso vivía en un solo aparato… y si perdía el
+teléfono, en ninguno". Ahora hay un banco que vigila que no haya una tercera.
 
-Y la revisión de funciones pasó de 20 bien / 1 MAL a 21 bien / 0 MAL.
+COMPROBADO EJECUTÁNDOLO, no prometido. Se forzó una subida desde tu teléfono y se
+leyó de vuelta desde la nube:
 
-═══ TU PUNTO DE RETORNO, QUE NO EXISTÍA ══════════════════════════
+   en la nube: 31 claves · las 5 del templo dentro
+   tu plan:    5 días · escalón 0 · 3 horarios
+   tu ficha:   96 kg · 1,76 m · objetivo grasa
 
-Me pediste guardar la APK que estaba corriendo "por si algo falla, para tener un
-respaldo con el que comparar y devolverla a esta versión".
+═══ Y AUDITÉ LAS 54 CLAVES, NO SOLO LAS DEL TEMPLO ═══════════════
 
-Tenías razón y era un agujero: el constructor de la APK BORRABA las viejas, así que
-NO HABÍA A DÓNDE VOLVER.
+   31 viajan a la nube   (las 26 de antes + las 5 del templo)
+   23 son de cada aparato, con su motivo escrito una a una
 
-AHORA:
-· La que tenías corriendo (7.82) está guardada, sacada de tu propio teléfono.
-· Cada versión nueva se archiva antes de retirarse.
-· Y todo eso vive dentro de tu proyecto, o sea DENTRO DE TU RESPALDO CIFRADO.
+Las 23 que se quedan DEBEN quedarse: el tema oscuro, las carpetas abiertas, los
+avisos ya mostrados EN ESE aparato, los trabajos en vuelo y la propia maquinaria de
+sincronizar. Copiarlas causaría problemas en vez de resolverlos.
 
-═══ Y LO DE LOS BANCOS, POR SI QUEDA DUDA ════════════════════════
+Y el banco lo vigila para siempre: si mañana aparece una clave nueva que ni sube ni
+está justificada como local, salta.
 
-Lo tuyo SIEMPRE estuvo respaldado y lo sigue estando: tu app, tu worker, tu
-indicador, tu Ejecutor, el cerebro de Roberto, sus recuerdos, tus entregas y la
-configuración de tu PC. Si mañana se muere tu PC o tu teléfono, no pierdes NADA de
-tu sistema.
+═══ LOS ICONOS ═══════════════════════════════════════════════════
 
-Lo que se perdió eran MIS herramientas de prueba, que yo dejé fuera de esa carpeta.
-Se pudo saber qué protegían: el worker 5.86-5.90, la app 6.17-6.22, el Diario 6.14 y
-un par de comprobaciones de la era 6.2x. Todo código de agosto. Lo construido desde
-el 1 de septiembre sigue protegido por sus bancos.
+Tu petición: el templo tenía 🏛️ y en pequeño se confundía con el 🏦 de Cuentas.
+Ahora es ⛩️ — que además significa templo.
 
-Ya viven dentro del proyecto y dentro del respaldo (creció 517 KB).
+Y encontré otro que no me habías dicho: 🎯 estaba repetido en "Hoy" y en
+"Confluencias". Confluencias pasa a 🔗.
 
-Regresión: 155/155 · En tu teléfono: 44/44 y 21/21.
+Ahora los 19 iconos son distintos entre sí, y el banco comprueba también que el
+icono de la sección y el del menú de avisos sean el mismo.
+
+Regresión: 157/157 · En tu teléfono: 44/44 y 21/21.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

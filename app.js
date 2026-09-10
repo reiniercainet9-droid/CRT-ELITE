@@ -51,7 +51,22 @@ const NUBE_KEYS = ["crtelite_trades_v2","crtelite_cuentas_v3","crtelite_reminder
      Quedan fuera a propósito: `crtelite_notiflog_v3` (el "esto ya te lo avisé hoy" es de
      CADA aparato: copiarlo callaría avisos que en el otro nunca salieron) y
      `crtelite_iachat_v3` (rastro de una migración vieja, no guarda nada vivo). */
-  "crtelite_plan_v1", "crtelite_vered_v1", "crtelite_robertolog_v3", "crtelite_iaurl_v3"];
+  "crtelite_plan_v1", "crtelite_vered_v1", "crtelite_robertolog_v3", "crtelite_iaurl_v3",
+  /* 🏛️ v7.85 — EL TEMPLO ENTERO, QUE SE HABÍA QUEDADO FUERA. Rey (09-09): "lo de la sección
+     nueva del templo no está subiendo… intenté actualizar la web y la sección se quedó
+     intacta". No era la actualización: la web y la APK tienen almacenes SEPARADOS, y como
+     NINGUNA clave del templo viajaba, en la web su templo estaba vacío y no había plan que
+     enseñar. Y lo grave detrás: sus datos del templo vivían SOLO dentro de su teléfono —
+     fuera del respaldo, fuera de la nube. Si perdía el móvil, perdía su ficha, sus pesadas,
+     su escalón y sus marcas.
+     ES EL MISMO FALLO DE LA v6.96 CON OTRA ROPA (allí fue su PLAN: «su progreso vivía en un
+     solo aparato… y si perdía el teléfono, en ninguno»). Segunda vez: cuando se crea una
+     sección con datos SUYOS, sus claves entran aquí el mismo día.
+     ⚠️ Se auditaron las 54 claves del código contra esta lista: las otras 27 que no suben son
+     técnicas de CADA aparato (el tema, las carpetas abiertas, los avisos ya mostrados, la
+     propia maquinaria de sincronizar) y deben seguir fuera. */
+  "crtelite_templo_ficha", "crtelite_templo_peso", "crtelite_templo_plan",
+  "crtelite_templo_hechos", "crtelite_templo_marcas"];
 /* 🏷️ v7.05 — LOS 26 APARTADOS, CADA UNO CON SU NOMBRE EN CRISTIANO.
    El informe 🔎 de la v7.03 solo sabía nombrar siete, y a Rey le salieron justo los otros:
    leyó "crtelite_conf_v2, crtelite_reglas_v2, crtelite_estrategias_v3, crtelite_estrdefs_v1"
@@ -79,6 +94,11 @@ const NUBE_NOMBRES = {
   "crtelite_iaconvs_v3":"vuestros chats",
   "crtelite_iaact_v3":"el chat abierto",
   "crtelite_ejectrades_v1":"las operaciones del Ejecutor",
+  "crtelite_templo_ficha":"tu ficha del templo (peso, estatura, objetivo)",
+  "crtelite_templo_peso":"tu historial de pesadas y medidas",
+  "crtelite_templo_plan":"tu plan de entreno (escalón, días y horarios)",
+  "crtelite_templo_hechos":"las sesiones de entreno que marcaste",
+  "crtelite_templo_marcas":"tus marcas físicas (flexiones, plancha, sentadillas, km)",
   "crtelite_plan_v1":"tu PLAN de arranque",
   "crtelite_vered_v1":"los veredictos de Roberto",
   "crtelite_robertolog_v3":"el historial de Roberto",
@@ -2822,7 +2842,7 @@ const IR_DESTINOS = [
   { v:"tab:noticias",  t:"📰 Noticias" },
   { v:"tab:almanaque", t:"📅 Almanaque" },
   { v:"tab:reglas",    t:"⛔ Reglas" },
-  { v:"tab:conf",      t:"🎯 Confluencias" },
+  { v:"tab:conf",      t:"🔗 Confluencias" },
   { v:"tab:rutina",    t:"🗺️ Rutina" },
   { v:"tab:plan",      t:"📋 Plan" },
   { v:"tab:ejecutor",  t:"🤖 Ejecutor (sección)" },
@@ -2834,7 +2854,7 @@ const IR_DESTINOS = [
      templo sí llegaban ahí porque el destino va escrito a mano en el código; lo que faltaba
      era poder ELEGIRLO. Se comparó la lista de secciones contra la de destinos y salían
      estas tres. */
-  { v:"tab:templo",    t:"🏛️ Mi templo" },
+  { v:"tab:templo",    t:"⛩️ Mi templo" },
   { v:"tab:mentor",    t:"🧠 Mentor" },
   { v:"tab:avisos",    t:"⏰ Mis avisos" },
   /* Acciones de Roberto */
@@ -4003,10 +4023,10 @@ const TABS=[
   {id:"almanaque", ic:"📅", n:"Almanaque"},
   {id:"avisos",    ic:"⏰", n:"Avisos"},
   /* ── El templo: cuerpo y mente (no es trading, y a propósito) ── */
-  {id:"templo",    ic:"🏛️", n:"Mi templo"},
+  {id:"templo",    ic:"⛩️", n:"Mi templo"},
   /* ── Consulta ── */
   {id:"reglas",    ic:"⛔", n:"Reglas"},
-  {id:"conf",      ic:"🎯", n:"Confluencias"},
+  {id:"conf",      ic:"🔗", n:"Confluencias"},
   {id:"rutina",    ic:"🗺️", n:"Rutina"},
   {id:"plan",      ic:"📋", n:"Plan"},
   {id:"mentor",    ic:"🧠", n:"Mentor"}
