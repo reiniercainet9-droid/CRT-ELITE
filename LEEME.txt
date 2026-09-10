@@ -1,70 +1,52 @@
-APEX v7.85 — TRADING DESK
+APEX v7.86 — TRADING DESK
 =========================
 
-☁️ TU TEMPLO NO ESTABA EN LA NUBE · Y LOS ICONOS
+🪟 LA TARJETA DEL MOTOR VUELVE A SALIR DENTRO DEL CHAT
 
-⚠️ HAY QUE SUBIR: la web v7.85 (el worker 5.130 ya está en vivo ✅)
-✅ APK v7.85 YA INSTALADA Y VERIFICADA en tu teléfono.
+⚠️ HAY QUE SUBIR: la web v7.86 · Y EL WORKER 5.132 (que sigue pendiente de esta mañana)
+📱 APK v7.86 construida — se instala y verifica cuando conectes el cable.
 
 ═══ LO QUE ME DIJISTE ════════════════════════════════════════════
 
-"Lo de la sección nueva del templo no está subiendo; intenté actualizar la web y la
-sección del templo se quedó intacta."
+"Roberto me pregunta sacando una tarjeta con qué motor responder, pero esa tarjeta
+sale FUERA del chat: tuve que salir del chat para elegir. Antes salía dentro."
 
-NO ERA LA ACTUALIZACIÓN. El archivo publicado sí llevaba la escalera — lo comprobé.
+TENÍAS RAZÓN, Y ERA UN FALLO MÍO. Las dos capas estaban así:
 
-LO QUE PASABA: la web y la APK tienen almacenes SEPARADOS y se hablan por la nube. Y
-NINGUNA de las 5 claves de tu templo viajaba:
+   el chat de Roberto    z-index 210
+   la tarjeta            z-index 200   ← siempre por DEBAJO
 
-   crtelite_templo_ficha    tu peso, estatura, nacimiento y objetivo
-   crtelite_templo_peso     tu historial de pesadas
-   crtelite_templo_plan     tu escalón, tus días y tus horarios
-   crtelite_templo_hechos   las sesiones que marcaste
-   crtelite_templo_marcas   flexiones, plancha, sentadillas, km
+═══ DE DÓNDE SALIÓ ═══════════════════════════════════════════════
 
-Por eso en la web tu templo estaba VACÍO: no había plan que enseñar.
+Del 06-09, cuando arreglé el congelamiento de Apex. Aquella pregunta se hacía con un
+diálogo del NAVEGADOR, y eso paralizaba Apex entera (tu "se quedó pensando sin
+respuesta"). Lo cambié por la ventana propia de Apex — eso arregló el congelamiento —
+pero NO MIRÉ EL ORDEN DE LAS CAPAS.
 
-Y LO GRAVE DE VERDAD: esos datos vivían SOLO dentro de tu teléfono. Fuera del
-respaldo y fuera de la nube. Si perdías el móvil, perdías todo eso.
+Y lo peor: esa pregunta SOLO se hace con el chat delante. Así que estaba condenada a
+salir detrás del chat el 100% de las veces. No era intermitente: era siempre.
 
-Es tu pregunta de esta mañana otra vez ("¿confío en que no voy a perder nada?"), y
-en el templo la respuesta era NO.
+Le pasaba lo mismo a cualquier ventana abierta desde el chat (el historial de Roberto,
+ver una captura).
 
-Y ES LA SEGUNDA VEZ: en la v6.96 pasó lo mismo con tu PLAN. El comentario del código
-lo dice con estas palabras: "su progreso vivía en un solo aparato… y si perdía el
-teléfono, en ninguno". Ahora hay un banco que vigila que no haya una tercera.
+═══ EL ARREGLO ═══════════════════════════════════════════════════
 
-COMPROBADO EJECUTÁNDOLO, no prometido. Se forzó una subida desde tu teléfono y se
-leyó de vuelta desde la nube:
+Una ventana va SIEMPRE encima de lo que la abrió: ahora z-index 260.
 
-   en la nube: 31 claves · las 5 del templo dentro
-   tu plan:    5 días · escalón 0 · 3 horarios
-   tu ficha:   96 kg · 1,76 m · objetivo grasa
+   por encima del chat (210) ✓   por encima del menú (180) ✓
+   por DEBAJO del banner de avisos de Roberto (300) — un aviso urgente
+   nunca se puede quedar escondido detrás de una ventana
 
-═══ Y AUDITÉ LAS 54 CLAVES, NO SOLO LAS DEL TEMPLO ═══════════════
+Y sigue igual lo que importaba: no congela nada, no pregunta si el chat está cerrado
+(ahí usa el Rendidor y sigue), y si cierras la tarjeta sin elegir se va con el
+Rendidor — jamás se gasta de más sin tu sí.
 
-   31 viajan a la nube   (las 26 de antes + las 5 del templo)
-   23 son de cada aparato, con su motivo escrito una a una
+═══ COMPROBADO ROMPIÉNDOLO A PROPÓSITO ═══════════════════════════
 
-Las 23 que se quedan DEBEN quedarse: el tema oscuro, las carpetas abiertas, los
-avisos ya mostrados EN ESE aparato, los trabajos en vuelo y la propia maquinaria de
-sincronizar. Copiarlas causaría problemas en vez de resolverlos.
+Devolví la capa al 200 y el banco nuevo saltó; la puse en 260 y pasa. O sea que el
+banco caza este fallo de verdad, no solo dice que sí.
 
-Y el banco lo vigila para siempre: si mañana aparece una clave nueva que ni sube ni
-está justificada como local, salta.
-
-═══ LOS ICONOS ═══════════════════════════════════════════════════
-
-Tu petición: el templo tenía 🏛️ y en pequeño se confundía con el 🏦 de Cuentas.
-Ahora es ⛩️ — que además significa templo.
-
-Y encontré otro que no me habías dicho: 🎯 estaba repetido en "Hoy" y en
-"Confluencias". Confluencias pasa a 🔗.
-
-Ahora los 19 iconos son distintos entre sí, y el banco comprueba también que el
-icono de la sección y el del menú de avisos sean el mismo.
-
-Regresión: 157/157 · En tu teléfono: 44/44 y 21/21.
+Regresión: 163/163
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
