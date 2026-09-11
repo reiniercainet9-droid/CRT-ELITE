@@ -1,57 +1,58 @@
-APEX v7.95 — TRADING DESK
+APEX v7.96 — TRADING DESK
 =========================
 
-🔧 LOS ARREGLOS DE LA AUDITORÍA MAGISTRAL
+📐 ¿ESTO GANA, O SOLO EMPATA? — el panel que faltaba
 
-Cinco fallos encontrados ejecutando —no leyendo— y arreglados. Ninguno lo encontró un
-detector automático: salieron de pulsar botones en tu teléfono, simular el Ejecutor con tus
-números y seguir el rastro de una señal concreta.
+Lo pediste tú, y tenías razón en lo que sospechabas. Está en 🤖 Ejecutor y en tu 📒 Diario,
+debajo de los cierres por período.
 
-📄 EL INFORME MENSUAL YA NO TE SECUESTRA LA APP
-  Antes: tocabas «📄 Informe mensual» y el informe REEMPLAZABA Apex entera. Solo quedaba
-  «🖨️ Guardar como PDF», sin botón de volver, y el atrás de Android tampoco servía: había
-  que cerrar Apex y abrirla de nuevo.
-  La causa: en el WebView de Android, window.open("","_blank") devuelve LA MISMA ventana.
-  Leyendo el código no se ve — parece que abre otra.
-  Ahora: el informe se abre DENTRO de Apex, a pantalla completa, con «← Volver a Apex» y
-  con el atrás de Android funcionando. El 🖨️ PDF sigue ahí (y si tu teléfono no deja
-  imprimir, te lo descarga en vez de dejarte sin nada).
+EL VEREDICTO, ARRIBA DEL TODO
+  Dos números enfrentados, que es lo único que hay que mirar:
+      ACIERTAS  33,3%    vs    NECESITAS PARA EMPATAR  52,1%
+  Ese segundo número NO EXISTÍA en ninguna pantalla de tu sistema. Sin él puedes ver un 50%
+  de aciertos y creer que vas bien, cuando te hace falta un 52%.
 
-🛟 AVISAR YA NO PUEDE TUMBAR NADA
-  toast() —la función que te enseña los avisos de la app— reventaba si no encontraba su
-  sitio, y esa excepción abortaba la acción que solo quería avisarte. Ahora crea su sitio si
-  falta, y si ni eso puede, calla. El aviso es lo accesorio; lo que estás haciendo, no.
+LA BALANZA
+  Dos barras enfrentadas: lo que ganas de media contra lo que pierdes de media.
+      ganas de media    0,99R
+      pierdes de media  1,08R
+      ⚠️ Pierdes 9% más de lo que ganas en cada operación. Ese es el bucle.
+  Ahí se VE el problema sin leer un solo número.
 
-🧨 EL SUELO DEL DD DE LA FIRMA YA NO SE APAGA SOLO
-  La protección que impide que te revienten una cuenta fondeada solo se aplicaba si le
-  pasaban el equity. Si faltaba, DESAPARECÍA sin decir una palabra.
-  Comprobado con tus números: cuenta de 6000 al 6% (suelo 5640), con equity 5640 devolvía
-  $51,27 de hueco y DEJABA ENTRAR con la cuenta ya rota.
-  Ahora: sin equity usa el balance y deja aviso. Y aparecieron DOS sitios con el mismo
-  fallo, no uno — el segundo lo cazó el banco de pruebas.
+LOS NÚMEROS DE GESTIÓN
+  · Esperanza: lo que deja CADA operación de media, contando las perdedoras. Hoy: −0,39R.
+    Si es negativa, más operaciones = más pérdida. Y escalar una esperanza negativa solo
+    pierde más rápido — por eso este número manda sobre cualquier plan de crecimiento.
+  · Profit factor: cuánto ganas por cada unidad perdida. Hoy 0,46 (por debajo de 1 = pierde).
+  · Rachas y operaciones.
 
-🎬💵 EL LIBRO LO ELIGES TÚ, NO UN INTERRUPTOR
-  Lo preguntaste: al detectar tu posición, ¿la apunta en backtest o en real? La respuesta
-  era incómoda: si Roberto no te preguntaba, mandaba el interruptor del Diario — que arranca
-  en REAL. Un trade de entrenamiento podía contaminar tus estadísticas reales en silencio.
-  Ahora: cuando detecte una posición tuya, te espera una TARJETA en el 📒 Diario:
-      «✍️ Detecté tu VENTA en EURUSD — ¿en qué libro la apunto?»
-      [🎬 Backtest]  [💵 Real]  [✕ No la registres]
-  Hasta que toques, NO está registrada en ninguno. Y el botón REAL te pide confirmación.
-  (No se hizo con botones en la notificación: se comprobó y tu Android no los soporta —
-  habrían sido botones invisibles.)
+POR DÓNDE SALIÓ CADA UNA — el diagnóstico
+      ❌ tocó el stop        2   66,7%   −1,08R
+      ⏱ salida por tiempo   1   33,3%   +0,99R
+      🎯 llegó al objetivo   0
+  ⚠️ NINGUNA salió por el objetivo. Si el precio nunca llega al TP, el TP está puesto donde
+  no toca: tus ganadoras se cortan por tiempo cerca de 1R mientras las pérdidas van enteras.
+  ESA asimetría es exactamente el bucle de break-even que me describiste.
 
-⚠️ SI PONES FIRMA SIN TOPES, TE LO DICE
-  Se podía escribir la empresa y dejar el capital o el DD en cero, y el sistema callaba —
-  aunque eso apaga el freno del DD total. Ahora sale un aviso rojo en ⚙️ Tus reglas
-  explicando QUÉ protección te falta.
+Y abajo, un desplegable que explica qué significa cada número, sin jerga.
 
-🕵️ Y EL DEL EJECUTOR, QUE NO SE OLVIDÓ
-  El «⚠️ Señal PERDIDA» que te mandó a revisar el internet de tu PC estando perfecta. La
-  señal no se perdió: el Ejecutor la rechazó él mismo 38 segundos después por tu cupo
-  diario (2/2). Dos fallos arreglados: la marca «entregada» se perdía en una carrera de la
-  nube (ahora hay dos caminos para ponerla), y el aviso inventaba la causa (ahora mira el
-  latido del Ejecutor y su bitácora, y distingue cuatro casos — incluido «no lo sé»).
+🎓 Y ROBERTO YA LO VE
+  Antes solo recibía CUÁNTO cerró cada período — y con el cuánto no se ve un bucle. Ahora
+  recibe la FORMA: ganancia media, pérdida media, acierto necesario, esperanza, profit factor
+  y por dónde salió cada operación. Con dos órdenes nuevas:
+    · avisarte si aciertas menos de lo que necesitas, aunque el mes cierre en verde
+    · frenarte si le pides escalar con la esperanza en negativo
+
+🎓 Y EL BOTÓN «QUE LO JUZGUE ROBERTO» YA FUNCIONA
+  Lo que pasaba: la sección 🤖 se repinta sola cada 25 segundos, y Roberto tarda más en
+  escribir sus cuatro bloques. A los 25 s el repintado borraba el hueco donde iba su
+  respuesta, así que cuando llegaba se escribía en un sitio que ya no estaba en pantalla.
+  Su respuesta SÍ llegaba: caía en el vacío. Ahora el refresco se para mientras él piensa, y
+  su juicio se guarda — si la sección se repinta, sigue ahí.
+
+⚠️ AVISO HONESTO: son 3 operaciones. Con menos de 30 esto es un INDICIO, no una conclusión
+(tu Ley 37). Pero la FORMA de las salidas sí se lee desde el primer día, y es la forma —no la
+suerte— la que crea el bucle.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

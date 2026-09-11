@@ -2304,6 +2304,199 @@ function apexResumen(ops, periodo){
   return filas;
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════════
+   📐 ESPERANZA — ¿ESTO GANA, O SOLO EMPATA?   (app v7.96, 11-09)
+   ───────────────────────────────────────────────────────────────────────────────
+   Rey, después de ver que su día cerró en positivo con la primera y en negativo con la
+   segunda:
+
+     «yo hasta hoy era lo que se le llama un trader break-even: gana, pierde lo mismo o más,
+      y termina en negativo o en break-even, en un ciclo que no evoluciona… y estoy viendo
+      eso en las operaciones del Ejecutor… al final, por no gestionar bien, se estanca sin
+      escalabilidad ninguna… es uno de los motivos por los que mis cuentas están así y no
+      quiero repetir ese bucle»
+
+   TENÍA RAZÓN, Y SE PUEDE DEMOSTRAR SIN ESTADÍSTICA. Con sus tres operaciones cerradas:
+
+        ganancia media   +0,99R    ← topada por la salida por tiempo
+        pérdida media    −1,075R   ← el SL entero, más el deslizamiento
+
+        acierto necesario SOLO PARA EMPATAR = 1,075 / (0,99 + 1,075) = 52,1%
+
+   Ganar menos de 1R y perder más de 1R es una máquina de break-even POR DISEÑO: aunque
+   aciertes la mitad de las veces, pierdes. Eso no depende de la suerte ni de cuántos casos
+   haya — es una propiedad de la FORMA de las salidas, y la forma se mide desde el primer día.
+
+   EL NÚMERO QUE FALTABA EN TODO EL SISTEMA es «acierto necesario para empatar». Sin él se
+   puede mirar un 50% de aciertos y creer que se va bien, cuando hace falta un 52%.
+
+   ⚠️ LO QUE ESTE PANEL NO HACE: decir si el sistema gana dinero. Eso son 30 casos y sale del
+   laboratorio (Ley 37 de Rey). Esto mide la FORMA, no el resultado.
+   ═══════════════════════════════════════════════════════════════════════════════ */
+function apexEsperanza(ops){
+  const l = (ops||[]).filter(o=>o && o.ts && (o.r!=null || o.pl!=null));
+  const val = (o)=> (o.r!=null ? o.r : o.pl);
+  const gan = l.filter(o=>val(o) > 0.0001);
+  const per = l.filter(o=>val(o) < -0.0001);
+  const emp = l.filter(o=>Math.abs(val(o)) <= 0.0001);
+  const med = (arr, f)=> arr.length ? arr.reduce((s,o)=>s+f(o),0)/arr.length : null;
+
+  /* en R si lo hay (comparable entre cuentas distintas); si no, en dinero */
+  const hayR = l.some(o=>o.r!=null);
+  const v = (o)=> hayR ? (o.r!=null?o.r:0) : (o.pl!=null?o.pl:0);
+  const rGan = med(gan, v), rPer = med(per, v);          /* rPer sale NEGATIVO */
+  const decididas = gan.length + per.length;
+  const wr = decididas ? gan.length/decididas : null;
+
+  /* 🎯 EL NÚMERO: cuánto hay que acertar solo para no perder.
+     Si ganas G y pierdes P (los dos en positivo): acierto de empate = P / (G + P). */
+  const G = rGan!=null ? Math.abs(rGan) : null;
+  const P = rPer!=null ? Math.abs(rPer) : null;
+  const wrEmpate = (G!=null && P!=null && (G+P)>0) ? P/(G+P) : null;
+
+  /* esperanza: lo que deja CADA operación, de media, contando las perdedoras */
+  const esperanza = l.length ? l.reduce((s,o)=>s+v(o),0)/l.length : null;
+  /* profit factor: cuánto ganas por cada unidad que pierdes */
+  const sumG = gan.reduce((s,o)=>s+Math.abs(v(o)),0);
+  const sumP = per.reduce((s,o)=>s+Math.abs(v(o)),0);
+  const pf = sumP>0 ? sumG/sumP : (sumG>0 ? Infinity : null);
+
+  /* rachas, en el orden en que pasaron */
+  let rachaG=0, rachaP=0, cg=0, cp=0;
+  l.slice().sort((a,b)=>a.ts-b.ts).forEach(o=>{
+    const x=val(o);
+    if(Math.abs(x)<=0.0001){ cg=0; cp=0; return; }
+    if(x>0){ cg++; cp=0; if(cg>rachaG) rachaG=cg; } else { cp++; cg=0; if(cp>rachaP) rachaP=cp; }
+  });
+
+  /* 🚪 POR DÓNDE SALIÓ CADA UNA — el diagnóstico que explica la forma.
+     Si ninguna sale por TP, el TP está donde el precio no llega y el verdadero objetivo es
+     otro: hay que medirlo como tal en vez de fingir que se busca el TP. */
+  const PUERTAS = [
+    ["TP",    /\bTP\b|take.?profit|objetivo/i,  "🎯 llegó al objetivo"],
+    ["SL",    /\bSL\b|stop/i,                    "❌ tocó el stop"],
+    ["tiempo",/tiempo|extremo H4|⏱/i,            "⏱ salida por tiempo"],
+    ["BE",    /break.?even|\bBE\b/i,            "🛡️ break-even"],
+  ];
+  const porSalida = {};
+  l.forEach(o=>{
+    const m = String(o.motivo||"");
+    let k = m ? "otras" : "sin dato";
+    for(const [id,re] of PUERTAS) if(re.test(m)){ k=id; break; }
+    (porSalida[k] = porSalida[k] || {n:0, suma:0, etiqueta:(PUERTAS.find(x=>x[0]===k)||[,,k])[2]||k}).n++;
+    porSalida[k].suma += v(o);
+  });
+  Object.keys(porSalida).forEach(k=>{ porSalida[k].medio = porSalida[k].suma/porSalida[k].n; });
+
+  return { n:l.length, hayR, gan:gan.length, per:per.length, emp:emp.length,
+           wr, rGan, rPer, wrEmpate, esperanza, pf, rachaG, rachaP, porSalida,
+           /* ¿hay ventaja? = acierta más de lo que necesita para empatar */
+           ventaja: (wr!=null && wrEmpate!=null) ? (wr - wrEmpate) : null };
+}
+
+/* ── EL PANEL ──────────────────────────────────────────────────────────────
+   Orden a propósito: primero EL VEREDICTO (la pregunta que trae es «¿esto gana?»), luego
+   LA BALANZA (que es donde se VE el bucle sin leer un número), luego la tabla, y al final
+   las puertas de salida, que es el diagnóstico. */
+function espPct(x){ return x==null ? "—" : (Math.round(x*1000)/10).toFixed(1)+"%"; }
+function espR(x, hayR){ if(x==null) return '<span style="opacity:.45">—</span>';
+  const c = Math.abs(x)<0.005 ? "inherit" : (x>0?"#26a269":"#e0483d");
+  return '<b style="color:'+c+'">'+(x>0?"+":x<0?"−":"")+(hayR?"":"$")+Math.abs(x).toFixed(2)+(hayR?"R":"")+'</b>'; }
+
+function espPanelHTML(e, titulo, subtitulo){
+  if(!e || !e.n) return '<div class="card"><b>'+titulo+'</b><div class="desc" style="margin-top:6px;font-size:12px">Todavía no hay operaciones cerradas. En cuanto cierre la primera, aquí aparece si esto gana o solo empata.</div></div>';
+
+  /* ── el veredicto ── */
+  const pocos = e.n < 30;
+  const v = e.ventaja;
+  const col = v==null ? "#9aa6bf" : v>0.02 ? "#26a269" : v<-0.02 ? "#e0483d" : "#e2b341";
+  const frase = v==null ? "Faltan datos para saberlo"
+    : v>0.02  ? "Aciertas MÁS de lo que necesitas: hay ventaja"
+    : v<-0.02 ? "Aciertas MENOS de lo que necesitas: esto pierde"
+    :           "Estás justo en el filo: esto EMPATA";
+
+  /* ── la balanza: es donde se VE el problema sin leer nada ── */
+  const G = e.rGan!=null ? Math.abs(e.rGan) : 0;
+  const P = e.rPer!=null ? Math.abs(e.rPer) : 0;
+  const M = Math.max(G, P, 0.0001);
+  const barra = (val, color, lado) =>
+    '<div style="display:flex;align-items:center;gap:8px;margin:5px 0">'+
+      '<span style="width:88px;font-size:11.5px;opacity:.8;text-align:right">'+lado+'</span>'+
+      '<div style="flex:1;height:18px;background:rgba(128,140,170,.12);border-radius:4px;overflow:hidden">'+
+        '<div style="width:'+Math.max(2,(val/M*100)).toFixed(1)+'%;height:100%;background:'+color+';opacity:.85;border-radius:4px"></div>'+
+      '</div>'+
+      '<b style="width:62px;font-size:12.5px;color:'+color+';font-variant-numeric:tabular-nums">'+(e.hayR?"":"$")+val.toFixed(2)+(e.hayR?"R":"")+'</b>'+
+    '</div>';
+
+  const desequilibrio = (G>0 && P>0)
+    ? (P>G ? '<div style="font-size:11.5px;color:#e0483d;margin-top:4px">⚠️ Pierdes <b>'+((P/G-1)*100).toFixed(0)+'% más</b> de lo que ganas en cada operación. Ese es el bucle.</div>'
+           : '<div style="font-size:11.5px;color:#26a269;margin-top:4px">✅ Ganas <b>'+((G/P-1)*100).toFixed(0)+'% más</b> de lo que pierdes en cada operación.</div>')
+    : "";
+
+  /* ── las puertas de salida ── */
+  const puertas = Object.keys(e.porSalida).sort((a,b)=>e.porSalida[b].n-e.porSalida[a].n);
+  const filasP = puertas.map(k=>{ const x=e.porSalida[k];
+    return '<tr style="border-bottom:1px solid rgba(128,140,170,.14)">'+
+      '<td style="padding:6px 5px">'+esc(x.etiqueta)+'</td>'+
+      '<td style="padding:6px 5px;text-align:right">'+x.n+'</td>'+
+      '<td style="padding:6px 5px;text-align:right">'+espPct(x.n/e.n)+'</td>'+
+      '<td style="padding:6px 5px;text-align:right">'+espR(x.medio, e.hayR)+'</td></tr>'; }).join("");
+
+  const td=(a,b)=>'<tr style="border-bottom:1px solid rgba(128,140,170,.14)"><td style="padding:6px 5px">'+a+'</td><td style="padding:6px 5px;text-align:right">'+b+'</td></tr>';
+
+  return '<div class="card">'+
+    '<div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap">'+
+      '<b style="font-size:1.05em">'+titulo+'</b>'+
+      (subtitulo?('<span class="desc" style="font-size:11.5px">'+subtitulo+'</span>'):"")+
+    '</div>'+
+
+    /* EL VEREDICTO */
+    '<div style="margin-top:10px;border:2px solid '+col+';border-radius:10px;padding:10px 12px;background:'+col+'14">'+
+      '<div style="font-size:1.02em;font-weight:700;color:'+col+'">'+frase+'</div>'+
+      '<div style="display:flex;gap:18px;flex-wrap:wrap;margin-top:8px;font-variant-numeric:tabular-nums">'+
+        '<div><div style="font-size:10.5px;opacity:.7;text-transform:uppercase;letter-spacing:.04em">aciertas</div><div style="font-size:1.35em;font-weight:700">'+espPct(e.wr)+'</div></div>'+
+        '<div style="font-size:1.35em;opacity:.5;align-self:flex-end">vs</div>'+
+        '<div><div style="font-size:10.5px;opacity:.7;text-transform:uppercase;letter-spacing:.04em">necesitas para empatar</div><div style="font-size:1.35em;font-weight:700;color:'+col+'">'+espPct(e.wrEmpate)+'</div></div>'+
+      '</div>'+
+      (pocos?'<div style="font-size:11.5px;margin-top:8px;opacity:.9">⚠️ Son <b>'+e.n+'</b> operación(es). Con menos de 30 esto es un <b>indicio</b>, no una conclusión — tu Ley 37. Pero la <b>forma</b> de las salidas sí se lee desde el primer día.</div>':"")+
+    '</div>'+
+
+    /* LA BALANZA */
+    '<div style="margin-top:12px">'+
+      '<div style="font-size:11px;opacity:.7;text-transform:uppercase;letter-spacing:.05em;font-weight:700">la balanza de cada operación</div>'+
+      barra(G, "#26a269", "ganas de media")+
+      barra(P, "#e0483d", "pierdes de media")+
+      desequilibrio+
+    '</div>'+
+
+    /* LOS NÚMEROS */
+    '<div style="margin-top:12px;overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:.92em;font-variant-numeric:tabular-nums">'+
+      td("Esperanza <span style='opacity:.6;font-size:.85em'>(lo que deja cada operación)</span>", espR(e.esperanza, e.hayR))+
+      td("Profit factor <span style='opacity:.6;font-size:.85em'>(ganado ÷ perdido)</span>", e.pf==null?"—":(e.pf===Infinity?"∞":e.pf.toFixed(2)))+
+      td("Operaciones", e.n+" <span style='opacity:.6'>("+e.gan+"✓ "+e.per+"✗"+(e.emp?" "+e.emp+"=":"")+")</span>")+
+      td("Racha ganadora / perdedora", e.rachaG+" / <b style='color:#e0483d'>"+e.rachaP+"</b>")+
+    '</table></div>'+
+
+    /* LAS PUERTAS */
+    '<div style="margin-top:12px">'+
+      '<div style="font-size:11px;opacity:.7;text-transform:uppercase;letter-spacing:.05em;font-weight:700">por dónde salió cada una</div>'+
+      '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:.92em;font-variant-numeric:tabular-nums;margin-top:4px">'+
+      '<thead><tr style="border-bottom:1px solid rgba(128,140,170,.3)"><th style="text-align:left;padding:5px;font-size:.72em;opacity:.65;text-transform:uppercase">salida</th><th style="text-align:right;padding:5px;font-size:.72em;opacity:.65">nº</th><th style="text-align:right;padding:5px;font-size:.72em;opacity:.65">%</th><th style="text-align:right;padding:5px;font-size:.72em;opacity:.65">media</th></tr></thead>'+
+      '<tbody>'+filasP+'</tbody></table></div>'+
+      ((e.porSalida.TP?0:1) && e.n>=3 ? '<div style="font-size:11.5px;color:#e2b341;margin-top:6px">⚠️ <b>Ninguna salió por el objetivo (TP).</b> Si el precio nunca llega ahí, el TP está puesto donde no toca y tu objetivo real es otro: hay que medirlo como tal.</div>' : "")+
+    '</div>'+
+
+    /* QUÉ SIGNIFICA */
+    '<details style="margin-top:10px"><summary style="cursor:pointer;font-size:12px;opacity:.85">¿Qué significa cada número?</summary>'+
+    '<div style="font-size:11.8px;line-height:1.55;margin-top:6px;opacity:.92">'+
+      '<b>Necesitas para empatar</b> — si ganas G y pierdes P, el acierto de empate es P÷(G+P). Es <b>el número que destapa el bucle</b>: puedes acertar la mitad de las veces y aun así perder, si pierdes más de lo que ganas.<br><br>'+
+      '<b>Esperanza</b> — lo que deja cada operación de media, contando las perdedoras. Si es negativa, más operaciones = más pérdida. Es lo único que hace que escalar tenga sentido: escalar una esperanza negativa solo pierde más rápido.<br><br>'+
+      '<b>Profit factor</b> — cuánto ganas por cada unidad perdida. Por debajo de 1 se pierde; 1 es empate.<br><br>'+
+      '<b>Por dónde salió</b> — el diagnóstico. Si las ganadoras se cortan siempre por tiempo y ninguna llega al TP, la ganancia media queda topada mientras las pérdidas siguen enteras. Esa asimetría es lo que crea el break-even.'+
+    '</div></details>'+
+  '</div>';
+}
+
 /* ── un número con su signo y su color ─────────────────────────────────────
    El cero NO se pinta de verde ni de rojo: un break-even no es una victoria ni una
    derrota, y colorearlo haría que un día plano pareciera un día bueno. */
@@ -2568,6 +2761,7 @@ function resPinta(id, ops, dinero){
   });
   const j = caja.querySelector(".res-juez");
   if(j) j.onclick=()=>resJuicioRoberto(id, ops, dinero, per);
+  try{ resJuicioRecupera(id); }catch(_){}    /* v7.96 — si ya opinó, que siga en pantalla */
 }
 
 /* ── EL JUICIO DE ROBERTO ──────────────────────────────────────────────────
@@ -2584,7 +2778,8 @@ async function resJuicioRoberto(id, ops, dinero, per){
   const btn = caja.querySelector(".res-juez");
   if(!IA.url){ toast("Abre Roberto (✨) y configura el puente (⚙️) primero"); return; }
   if(btn){ btn.disabled=true; btn.textContent="🎓 Roberto está mirando los números…"; }
-  salida.innerHTML='<div class="desc" style="font-size:12px">Roberto está juzgando estos resultados…</div>';
+  window.__resJuzgando=true;          /* v7.96 — mientras esto esté puesto, nadie repinta */
+  salida.innerHTML='<div class="desc" style="font-size:12px">Roberto está juzgando estos resultados… (tarda unos segundos)</div>';
   /* se le mandan los CUATRO períodos, no solo el que está mirando: un mes malo dentro de
      un año bueno no significa lo mismo que un mes malo dentro de un año malo, y sin los
      cuatro no puede distinguirlos. */
@@ -2618,11 +2813,15 @@ async function resJuicioRoberto(id, ops, dinero, per){
     const d = await r.json();
     const txt = String((d && d.text) || "").trim();
     if(!txt) throw new Error("sin respuesta");
-    salida.innerHTML = '<div style="border-left:3px solid #e2b341;padding:8px 10px;background:rgba(226,179,65,.07);border-radius:0 8px 8px 0;white-space:pre-wrap;line-height:1.5;font-size:.95em">'+esc(txt)+'</div>';
+    /* v7.96 — se GUARDA, para que un repintado no se lo lleve. Un juicio que costó una
+       llamada a Roberto no puede desaparecer porque la sección se refresque sola. */
+    try{ localStorage.setItem("apex.juicio."+id, JSON.stringify({per, txt, ts:Date.now()})); }catch(_){}
+    salida.innerHTML = resJuicioHTML(txt, per, Date.now());
     try{ robertoVigila("Rey pidió a Roberto que juzgara sus resultados por "+RES_ETIQ[per]+" ("+(id==="ejec"?"Ejecutor":"su Diario")+")."); }catch(_){}
   }catch(e){
     salida.innerHTML = '<div class="desc" style="font-size:12px">No pude traer el juicio de Roberto ahora mismo. Vuelve a intentarlo, o pregúntaselo directamente en el chat.</div>';
   }finally{
+    window.__resJuzgando=false;        /* pase lo que pase, se suelta: si no, nunca refrescaría */
     if(btn){ btn.disabled=false; btn.textContent="🎓 Que lo juzgue Roberto"; }
   }
 }
@@ -2652,6 +2851,30 @@ function resTextoParaRoberto(ops, dinero, titulo){
       (x.rachaP>=3?(" · ⚠️ racha perdedora de "+x.rachaP):"")
     ).join("\n") + "\n";
   });
+  /* 📐 v7.96 — LA FORMA, NO SOLO EL CUÁNTO.
+     Rey (11-09): «yo era lo que se le llama un trader break-even: gana, pierde lo mismo o
+     más, y termina en negativo… y estoy viendo eso en las operaciones del Ejecutor… al final
+     por no gestionar bien se estanca sin escalabilidad ninguna».
+     Tenía razón, y Roberto NO PODÍA AVISARLE porque no veía estos números: solo recibía
+     cuánto se cerró cada período. Con el CUÁNTO no se ve un bucle. Con la FORMA, sí. */
+  try{
+    const e = apexEsperanza(lista);
+    if(e && e.n){
+      t += "\n**La FORMA de esas operaciones — esto revela si hay bucle de break-even**\n";
+      t += "- gana de media: "+(e.rGan!=null?((e.rGan>=0?"+":"")+e.rGan.toFixed(2)+"R"):"—")+
+           " · pierde de media: "+(e.rPer!=null?(e.rPer.toFixed(2)+"R"):"—")+"\n";
+      t += "- acierta el "+(e.wr!=null?(e.wr*100).toFixed(1):"—")+"% · NECESITA el "+
+           (e.wrEmpate!=null?(e.wrEmpate*100).toFixed(1):"—")+"% SOLO PARA EMPATAR\n";
+      t += "- esperanza: "+(e.esperanza!=null?((e.esperanza>=0?"+":"")+e.esperanza.toFixed(3)+"R por operación"):"—")+
+           " · profit factor: "+(e.pf==null?"—":(e.pf===Infinity?"∞":e.pf.toFixed(2)))+"\n";
+      t += "- salidas: "+Object.keys(e.porSalida).map(function(k){return e.porSalida[k].etiqueta+" "+e.porSalida[k].n+" ("+e.porSalida[k].medio.toFixed(2)+"R)";}).join(" · ")+"\n";
+      if(e.ventaja!=null && e.ventaja < 0)
+        t += "- 🔴 AVÍSALE: acierta MENOS de lo que necesita para empatar. Aunque un período cierre en verde, la FORMA pierde.\n";
+      if(!e.porSalida.TP && e.n>=3)
+        t += "- 🔴 AVÍSALE: NINGUNA salió por el objetivo (TP). Si el precio nunca llega ahí, el TP está donde no toca y la ganancia media queda topada mientras las pérdidas van enteras — eso ES el bucle de break-even que él te describió.\n";
+      t += "\n⚠️ Y ESTO ES LEY: escalar (subir el riesgo, componer, pasar a una cuenta mayor) sobre una esperanza NEGATIVA solo pierde más rápido. Si te pide escalar y la esperanza está en rojo, díselo ANTES de ayudarle — para eso te hizo.\n";
+    }
+  }catch(_){}
   /* el dato que más pesa a la hora de juzgar cualquier número de arriba */
   t += "\n⚠️ Son "+lista.length+" operación(es) cerradas en total. ";
   t += (lista.length < 30)
@@ -2660,13 +2883,33 @@ function resTextoParaRoberto(ops, dinero, titulo){
   return t + "\n";
 }
 
+/* v7.96 — el juicio, pintado igual venga de Roberto o de lo guardado */
+function resJuicioHTML(txt, per, ts){
+  const cuando = ts ? new Date(ts).toLocaleString("es",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"}) : "";
+  return '<div style="border-left:3px solid #e2b341;padding:8px 10px;background:rgba(226,179,65,.07);border-radius:0 8px 8px 0;line-height:1.5;font-size:.95em">'+
+    '<div style="font-size:11px;opacity:.7;margin-bottom:6px">🎓 Roberto · por '+esc(RES_ETIQ[per]||per||"")+(cuando?(" · "+esc(cuando)):"")+'</div>'+
+    '<div style="white-space:pre-wrap">'+esc(txt)+'</div></div>';
+}
+/* al pintar el bloque se recupera el último juicio: si ya opinó, que siga ahí */
+function resJuicioRecupera(id){
+  try{
+    const g=JSON.parse(localStorage.getItem("apex.juicio."+id)||"null");
+    if(!g||!g.txt) return;
+    const caja=document.getElementById("res-"+id); if(!caja) return;
+    const sal=caja.querySelector(".res-juicio");
+    if(sal && !sal.innerHTML.trim()) sal.innerHTML=resJuicioHTML(g.txt,g.per,g.ts);
+  }catch(_){}
+}
+
 /* ── de dónde salen las operaciones de cada sitio, normalizadas ────────────
    Aquí es donde se traduce cada mundo al mismo idioma {ts, pl, r}. Si esto se hiciera en
    dos sitios distintos, el Ejecutor y el Diario acabarían contando cosas distintas —y
    entonces compararlos, que es justo lo que Rey quiere hacer, sería mentira. */
 function opsDelEjecutor(){
   return (ejecCerradas()||[]).filter(t=>t && t.tsOut)
-    .map(t=>({ ts:t.tsOut, pl:(t.pl!=null?+t.pl:null), r:(t.r!=null?+t.r:null) }));
+    /* v7.96 — el MOTIVO viaja con la operación: sin él no se puede saber por dónde salió
+       cada una, que es el diagnóstico que explica la forma de las ganancias. */
+    .map(t=>({ ts:t.tsOut, pl:(t.pl!=null?+t.pl:null), r:(t.r!=null?+t.r:null), motivo:t.motivo||"" }));
 }
 function opsDelDiario(){
   return (Array.isArray(TRADES)?TRADES:[])
@@ -2794,6 +3037,11 @@ async function renderEjecutor(){
        El calendario detallado de siempre (año → mes → semana → día, con las fichas y las
        capturas) sigue intacto más abajo: esto NO lo sustituye, lo resume. */
     resBloqueHTML("ejec", "📊 Cómo cerró cada período", "Del robot · el detalle operación por operación sigue abajo")+
+    /* 📐 v7.96 — Y DEBAJO, LA PREGUNTA QUE DE VERDAD IMPORTA.
+       Los cierres por período dicen CUÁNTO. Esto dice SI ESTO GANA O SOLO EMPATA, que es
+       otra cosa: se puede cerrar el mes en verde y seguir metido en un bucle de break-even
+       que no escala nunca. Rey lo describió mejor que yo el 11-09. */
+    '<div id="espEjec"></div>'+
     /* posiciones abiertas */
     (poss.length?('<div class="card"><b>📌 Posiciones abiertas</b>'+
       poss.map(p=>'<div style="display:flex;align-items:center;gap:8px;margin-top:8px"><span style="flex:1">'+esc(p.dir+" "+p.sym)+' · lote '+p.lote+' @ '+p.entrada+' · SL '+p.sl+' · TP '+p.tp+' · <b>$'+p.pl+'</b></span><button class="btn ej-cerrar" data-tk="'+esc(String(p.ticket))+'">✖ Cerrar</button></div>').join("")+
@@ -2819,6 +3067,7 @@ async function renderEjecutor(){
   ejecFormWire($("#ejForm"));   /* v7.92 — el MISMO enchufe que el chip del chat */
   /* 📊 v7.93 — la tabla y la gráfica se pintan aquí, con el DOM ya puesto */
   try{ resPinta("ejec", opsDelEjecutor(), true); }catch(e){ console.log("[apex] resultados ejec:", e.message); }
+  try{ const c=$("#espEjec"); if(c) c.innerHTML=espPanelHTML(apexEsperanza(opsDelEjecutor()), "📐 ¿Esto gana, o solo empata?", "Del robot · medido en R"); }catch(e){ console.log("[apex] esperanza ejec:", e.message); }
   /* 🔐 v7.92 — un toque, y ya. Ni ficheros, ni pedírmelo a mí. */
   if($("#ejCtaSi")) $("#ejCtaSi").onclick=async()=>{
     const cta=String(d.cuentaPend.cuenta);
@@ -5961,6 +6210,9 @@ function viewDiario(){
   const pendBox=el("div"); pendBox.id="posPendWrap";
   v.appendChild(pendBox);
 
+  const espBox=el("div"); espBox.id="espDiario";     /* 📐 v7.96 — el mismo panel, para él */
+  v.appendChild(espBox);
+
   const resBox=el("div"); resBox.id="resWrapDiario";
   resBox.innerHTML = resBloqueHTML("diario", "📊 Cómo cerró cada período", "Tus operaciones · medidas en R");
   v.appendChild(resBox);
@@ -6322,6 +6574,7 @@ function renderDiario(){
   /* 📊 v7.93 — se repinta con cada refresco del Diario: si acaba de registrar un trade,
      la tabla tiene que reflejarlo en el acto y no al volver a entrar en la sección. */
   try{ resPinta("diario", opsDelDiario(), false); }catch(e){ console.log("[apex] resultados diario:", e.message); }
+  try{ const c=$("#espDiario"); if(c) c.innerHTML=espPanelHTML(apexEsperanza(opsDelDiario()), "📐 ¿Tus operaciones ganan, o solo empatan?", "Tuyas · medidas en R"); }catch(e){ console.log("[apex] esperanza diario:", e.message); }
   const hoy=hoyISO();
   const esReal = CTX.modo==="real";
   const hoyT = esReal ? tradesCtx().filter(t=>t.fecha===hoy) : [];
@@ -14256,7 +14509,15 @@ function init(){
   const c=$("#views");
   c.append(viewNoticias(),viewAvisos(),viewHoy(),viewArranque(),viewChecklist(),viewConf(),viewRutina(),viewReglas(),viewRiesgo(),viewGatillo(),viewDiario(),viewGaleria(),viewCuentas(),viewEjecutor(),viewAlmanaque(),viewAnalisis(),viewMentor(),viewPlan(),viewTemplo());
   /* 🤖 la pestaña Ejecutor se refresca sola mientras la miras (cada 25 s) */
-  setInterval(()=>{ try{ if(TAB==="ejecutor" && document.visibilityState==="visible") renderEjecutor(); }catch(_){} }, 25000);
+  /* 🎓 v7.96 — NO REPINTAR MIENTRAS ROBERTO ESTÁ JUZGANDO.
+     Rey (11-09): «le di al botón para que juzgara las operaciones y me puso "Roberto
+     juzgando" pero ya no sucedió más nada, no habló nada».
+     Su respuesta SÍ llegaba. Caía en el vacío: esta línea repinta la sección 🤖 ENTERA cada
+     25 segundos, y Roberto tarda más que eso en escribir sus cuatro bloques. A los 25 s el
+     repintado borraba el mensaje de espera Y el hueco donde iba la respuesta, así que cuando
+     llegaba se escribía en un nodo que ya no estaba en pantalla.
+     Refrescar es útil, pero JAMÁS por encima de algo que Rey está esperando. */
+  setInterval(()=>{ try{ if(TAB==="ejecutor" && document.visibilityState==="visible" && !window.__resJuzgando) renderEjecutor(); }catch(_){} }, 25000);
   buildNav();
   fillPlanDinamico();
   initDiarioControles();
