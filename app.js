@@ -1375,6 +1375,14 @@ function ejecFormHTML(cfg){
     '<label style="grid-column:1/3;font-size:.85em">🧱 Margen por deslizamiento (tu stop del 10-09 costó 1,09R)<input class="inp ia-ejec-desliz" type="number" step="0.01" min="1" max="2" value="'+esc(String(cfg.deslizamiento!=null?cfg.deslizamiento:1.10))+'"></label>'+
     '<label style="font-size:.85em">Capital inicial de la cuenta ($)<input class="inp ia-ejec-capital" type="number" step="100" min="0" value="'+esc(String(cfg.capitalInicial!=null?cfg.capitalInicial:0))+'"></label>'+
     '<label style="font-size:.85em">🧨 Tope TOTAL: DD máximo de toda la cuenta % (el que la rompe)<input class="inp ia-ejec-ddmax" type="number" step="0.5" min="0" max="50" value="'+esc(String(cfg.ddMaxPct!=null?cfg.ddMaxPct:0))+'"></label>'+
+    /* ⚠️ v7.95 (B2) — SI HAY FIRMA Y NO HAY TOPES, SE DICE.
+       Encontrado en la auditoría del 11-09: se podía escribir la empresa y dejar el capital o
+       el DD en cero, y el sistema no decía nada — aunque eso APAGA el freno del DD total,
+       que es la protección que más importa justo en una cuenta de firma. Un formulario que
+       deja armar media protección en silencio es peor que uno que no la tenga. */
+    ((cfg.firma||"").trim() && (!(+cfg.capitalInicial>0) || !(+cfg.ddMaxPct>0))
+      ? '<div style="grid-column:1/3;border-left:3px solid #e0483d;background:rgba(224,72,61,.09);padding:8px 10px;border-radius:0 8px 8px 0;font-size:12px;line-height:1.45;margin:2px 0"><b>⚠️ Tienes firma («'+esc(cfg.firma)+'») pero '+(!(+cfg.capitalInicial>0)?"el <b>capital inicial</b> está en 0":"")+((!(+cfg.capitalInicial>0)&&!(+cfg.ddMaxPct>0))?" y ":"")+(!(+cfg.ddMaxPct>0)?"el <b>DD máximo</b> está en 0":"")+'.</b><br>Con eso, el freno del DD total <b>no existe</b>: el Ejecutor solo mira tu tope del día. Rellénalos antes de que opere esa cuenta.</div>'
+      : "")+
     '<div class="desc" style="grid-column:1/3;font-size:11.5px;line-height:1.4;margin:-2px 0 2px">Los dos topes son <b>distintos</b>: el de arriba es lo máximo que puedes perder <b>en un día</b>; este es lo máximo que puede caer <b>la cuenta entera</b> antes de que la firma te la cierre. El Ejecutor nunca arriesga más de lo que <b>cabe hasta la pared más cercana</b> de las dos, menos el margen de deslizamiento. Si no cabe, no entra. <b>Deja capital y DD en 0 si la cuenta no es de firma.</b></div>'+
     /* 🔐 v7.92 — EL CANDADO, AQUÍ Y NO EN UN FICHERO DE LA PC.
        Rey (10-09): «en el candado siempre tengo que depender de poner true, o sea de autorizar
@@ -3028,9 +3036,24 @@ const r2 = n => (Math.round(n*100)/100).toFixed(2);
 const r0 = n => Math.round(n||0).toLocaleString("en-US");
 const pct= n => Math.round(n)+"%";
 
+/* 🛟 v7.95 — AVISAR ES LO ÚLTIMO QUE PUEDE TUMBAR ALGO.
+   Encontrado en la auditoría del 11-09, pulsando «📄 Informe mensual» en su teléfono: esa
+   pantalla no tiene el sitio del toast, así que `t.textContent` lanzaba un TypeError… y esa
+   excepción ABORTA la función que solo quería avisarle. Una acción se quedaba a medias por
+   culpa del aviso, que es lo más tonto que puede pasar.
+   Ahora, si no encuentra su sitio, lo crea. Y si ni eso puede, calla y deja pasar: el aviso
+   es lo accesorio, lo que estaba haciendo Rey es lo importante. */
 function toast(msg){
-  const t=$("#toast"); t.textContent=msg; t.classList.add("show");
-  clearTimeout(t._x); t._x=setTimeout(()=>t.classList.remove("show"),2400);
+  try{
+    let t=$("#toast");
+    if(!t){
+      t=document.createElement("div");
+      t.id="toast"; t.className="toast";
+      document.body.appendChild(t);
+    }
+    t.textContent=msg; t.classList.add("show");
+    clearTimeout(t._x); t._x=setTimeout(()=>{ try{ t.classList.remove("show"); }catch(_){} },2400);
+  }catch(_){ /* nunca, jamás, tumbar lo que se estaba haciendo por un aviso */ }
 }
 
 /* Fecha "hoy" en formato YYYY-MM-DD (hora local de Timbó) */
@@ -5874,6 +5897,49 @@ function actualizarFormLabel(){
   if(bs && !EDIT_ID) bs.textContent = bt ? "+ Guardar trade de backtest" : "+ Guardar trade del día";
 }
 
+/* 🎬 v7.95 — la tarjeta de la entrada detectada: dos botones y se acabó la duda */
+async function posPendPinta(){
+  const caja=$("#posPendWrap"); if(!caja) return;
+  let pend=null;
+  try{ const r=await fetch(nubeUrl()+"/pos/pend",{cache:"no-store"}); const d=await r.json(); pend=d&&d.pend; }catch(_){ return; }
+  if(!pend || !pend.sym){ caja.innerHTML=""; return; }
+  const dir = pend.dir==="LONG" ? "COMPRA" : "VENTA";
+  caja.innerHTML='<div class="card" style="border:2px solid #e2b341">'+
+    '<b>✍️ Detecté tu '+esc(dir)+' en '+esc(pend.sym)+'</b>'+
+    '<div style="margin-top:6px;font-size:.92em;line-height:1.45">'+
+      'entrada '+esc(String(pend.entry))+(pend.sl!=null?(' · SL '+esc(String(pend.sl))):"")+(pend.tp!=null?(' · TP '+esc(String(pend.tp))):"")+(pend.rr?(' · RR 1:'+esc(String(pend.rr))):"")+
+      '<br><b>¿En qué libro la apunto?</b> Hasta que lo digas, no está registrada en ninguno.'+
+    '</div>'+
+    '<div style="display:flex;gap:8px;margin-top:10px">'+
+      '<button class="btn" id="ppBack" style="flex:1">🎬 Backtest</button>'+
+      '<button class="btn gold" id="ppReal" style="flex:1">💵 Real</button>'+
+    '</div>'+
+    '<div style="margin-top:8px"><button class="btn" id="ppNo" style="width:100%;font-size:.9em">✕ No la registres</button></div>'+
+  '</div>';
+  const cerrar=async()=>{ try{ await fetch(nubeUrl()+"/pos/pend",{method:"POST"}); }catch(_){} caja.innerHTML=""; };
+  const meter=async(modo)=>{
+    const f=hoyISO();
+    const t={ id:Date.now(), modo, estrategia:CTX.estrategia, fecha:f, dia:diaSemana(f),
+      hora:new Date().toTimeString().slice(0,5), par:pend.sym, dir:(dir==="COMPRA"?"Compra":"Venta"),
+      setup:"", res:"Abierta", r:0, abierta:true,
+      entrada:pend.entry!=null?+pend.entry:null, sl:pend.sl!=null?+pend.sl:null, tp:pend.tp!=null?+pend.tp:null,
+      rr:pend.rr!=null?+pend.rr:null, riesgoPct:"", ventana:"", momento:"En confirmación",
+      bias:"", nconf:0, zona:(dir==="VENTA"?"Premium":"Discount"), poi:"FVG", disp:"FVG 50%", gtf:"5M",
+      plan:"Sí", emo:"", nota:"Detectada en el gráfico", cuenta:"", fueraLimite:false, confs:[] };
+    TRADES.push(t); save(K.trades,TRADES);
+    try{ veredEnlazar(t); }catch(_){}
+    await cerrar();
+    toast(modo==="real"?"💵 Apuntada en tu libro REAL":"🎬 Apuntada en BACKTEST");
+    robertoVigila("Rey registró la entrada detectada de "+pend.sym+" en el libro "+(modo==="real"?"REAL":"BACKTEST")+".");
+    if(typeof refrescarDiarioCtx==="function") refrescarDiarioCtx();
+    renderDiario();
+  };
+  const b1=$("#ppBack"), b2=$("#ppReal"), b3=$("#ppNo");
+  if(b1) b1.onclick=()=>meter("backtest");
+  if(b2) b2.onclick=async()=>{ if(await preguntar("💵 ¿Apuntarla en tu libro REAL?\n\nEntra en tus estadísticas de verdad — las que Roberto usa para evaluarte.")) meter("real"); };
+  if(b3) b3.onclick=cerrar;
+}
+
 function viewDiario(){
   const v=el("div","view"); v.id="v-diario";
 
@@ -5888,6 +5954,13 @@ function viewDiario(){
      o las rachas a su manera, la comparación sería mentira.
      Aquí NO hay columna de dinero: su Diario mide en R, y poner un dinero inventado a
      partir de un riesgo supuesto sería darle un número que no es suyo. */
+  /* 🎬 v7.95 (B1) — LA ENTRADA QUE DETECTÓ, ESPERANDO SU LIBRO.
+     Lo primero de la sección porque, mientras esté ahí, ese trade NO está registrado en
+     ninguna parte. Y los dos botones dicen exactamente dónde va a caer: nunca más lo decide
+     un interruptor que él puso hace tres días y no recuerda. */
+  const pendBox=el("div"); pendBox.id="posPendWrap";
+  v.appendChild(pendBox);
+
   const resBox=el("div"); resBox.id="resWrapDiario";
   resBox.innerHTML = resBloqueHTML("diario", "📊 Cómo cerró cada período", "Tus operaciones · medidas en R");
   v.appendChild(resBox);
@@ -6245,6 +6318,7 @@ function tradesFiltrados(){
 }
 
 function renderDiario(){
+  try{ posPendPinta(); }catch(_){}          /* 🎬 v7.95 — la entrada detectada, si la hay */
   /* 📊 v7.93 — se repinta con cada refresco del Diario: si acaba de registrar un trade,
      la tabla tiene que reflejarlo en el acto y no al volver a entrar en la sección. */
   try{ resPinta("diario", opsDelDiario(), false); }catch(e){ console.log("[apex] resultados diario:", e.message); }
@@ -14088,13 +14162,45 @@ async function informeMensual(ym){
       return;
     }
   }catch(e){ if(e && e.name==="AbortError") return; }
-  /* 2) si no puede compartir, lo abre para imprimir/guardar como PDF */
-  try{
-    const w=window.open("","_blank");
-    if(w){ w.document.write(html); w.document.close(); toast("Toca 🖨️ para guardarlo como PDF"); return; }
-  }catch(_){}
+  /* 2) si no puede compartir, SE VE DENTRO DE APEX.
+     🔴 ANTES ESTO LE SECUESTRABA LA APP. Usaba window.open("","_blank") + document.write, y
+     en el WebView de Android `window.open` devuelve LA MISMA ventana: el informe machacaba
+     Apex entera. Quedaba una pantalla con un solo botón («🖨️ Guardar como PDF»), sin vuelta,
+     y con history.length = 1 — o sea que el botón atrás de Android tampoco servía. Para
+     recuperar Apex había que cerrarla y volver a abrirla.
+     Se encontró en la auditoría del 11-09 PULSÁNDOLO en su moto g54. Leyendo el código no
+     se ve: `window.open` parece que abre otra ventana. */
+  try{ informeDentro(html, ym, nombre); return; }catch(_){}
   bajar(nombre,html,"text/html");
   toast("Informe descargado 📄");
+}
+
+/* 📄 el informe, a pantalla completa y DENTRO de Apex, con su vuelta */
+function informeDentro(html, ym, nombre){
+  const ov=document.createElement("div");
+  ov.className="modal-ov";
+  ov.style.cssText="position:fixed;inset:0;z-index:300;background:var(--bg,#0e1420);display:flex;flex-direction:column";
+  ov.innerHTML=
+    '<div style="display:flex;gap:8px;padding:10px;border-bottom:1px solid rgba(128,140,170,.25);align-items:center">'+
+      '<button class="btn" id="infVolver" style="flex:0 0 auto">← Volver a Apex</button>'+
+      '<b style="flex:1;text-align:center;font-size:.95em">📄 '+esc(nombreMes(ym))+'</b>'+
+      '<button class="btn gold" id="infPDF" style="flex:0 0 auto">🖨️ PDF</button>'+
+    '</div>'+
+    '<iframe id="infMarco" style="flex:1;width:100%;border:0;background:#fff"></iframe>';
+  document.body.appendChild(ov);
+  const marco=ov.querySelector("#infMarco");
+  try{ marco.srcdoc=html; }catch(_){ marco.src="data:text/html;charset=utf-8,"+encodeURIComponent(html); }
+  /* la vuelta, por los DOS caminos: su botón y el atrás de Android */
+  const cerrar=()=>{ try{ ov.remove(); }catch(_){} window.removeEventListener("popstate",cerrar); };
+  ov.querySelector("#infVolver").onclick=cerrar;
+  try{ history.pushState({inf:1},""); window.addEventListener("popstate",cerrar,{once:true}); }catch(_){}
+  ov.querySelector("#infPDF").onclick=()=>{
+    /* imprimir desde un WebView no siempre se puede; si no, se descarga el archivo, que es
+       peor pero NO es quedarse sin nada */
+    try{ marco.contentWindow.focus(); marco.contentWindow.print(); }
+    catch(_){ bajar(nombre,html,"text/html"); toast("Tu teléfono no deja imprimir aquí — te lo descargué 📄"); }
+  };
+  toast("📄 Informe abierto — «← Volver a Apex» cuando acabes");
 }
 
 /* ============================================================

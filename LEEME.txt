@@ -1,30 +1,57 @@
-APEX v7.94 — TRADING DESK
+APEX v7.95 — TRADING DESK
 =========================
 
-📈 LA GRÁFICA, AHORA SÍ: CON EJES, ESCALA Y VIDA
+🔧 LOS ARREGLOS DE LA AUDITORÍA MAGISTRAL
 
-Tenías razón y no era un detalle: una gráfica sin ejes no es una gráfica, es un dibujo.
-Sin saber qué día es cada barra ni cuánto vale su altura, la forma se puede mirar pero no
-LEER. Te había entregado la mitad del trabajo.
+Cinco fallos encontrados ejecutando —no leyendo— y arreglados. Ninguno lo encontró un
+detector automático: salieron de pulsar botones en tu teléfono, simular el Ejecutor con tus
+números y seguir el rastro de una señal concreta.
 
-  · DEBAJO DE CADA BARRA, SU FECHA — el día, la semana, el mes o el año según la pestaña.
-    Cuando no caben todas se muestran salteadas, nunca encimadas, y la ÚLTIMA siempre lleva
-    la suya en negrita: es la que te importa.
-  · A LA DERECHA, LA ESCALA — el techo en verde, el cero y el suelo en rojo, con su valor.
-    Sin escala, una barra del doble de alta podría ser diez veces más dinero y no se notaría.
-  · SE TOCA. Toca cualquier barra y justo debajo salen sus números exactos: período, cierre,
-    en R, operaciones, ✓/✗, acierto y acumulado. Eso es lo que convierte el dibujo en un
-    instrumento. Al abrir, sale ya marcado el último período — un panel que empieza vacío
-    parece roto.
-  · Y TIENE VIDA: las barras suben desde el cero y la línea se dibuja sola, una vez, en menos
-    de un segundo. Contenido a propósito: esto es el panel de control de tu dinero, no un
-    juguete. Si tu teléfono pide menos movimiento, no se mueve nada.
-  · La columna elegida se resalta con una banda vertical, como en cualquier gráfico serio.
-    (La primera versión la resaltaba con un borde y la barra se veía HUECA — se vio mirándola
-    a 412 px, que es el ancho real de tu pantalla.)
+📄 EL INFORME MENSUAL YA NO TE SECUESTRA LA APP
+  Antes: tocabas «📄 Informe mensual» y el informe REEMPLAZABA Apex entera. Solo quedaba
+  «🖨️ Guardar como PDF», sin botón de volver, y el atrás de Android tampoco servía: había
+  que cerrar Apex y abrirla de nuevo.
+  La causa: en el WebView de Android, window.open("","_blank") devuelve LA MISMA ventana.
+  Leyendo el código no se ve — parece que abre otra.
+  Ahora: el informe se abre DENTRO de Apex, a pantalla completa, con «← Volver a Apex» y
+  con el atrás de Android funcionando. El 🖨️ PDF sigue ahí (y si tu teléfono no deja
+  imprimir, te lo descarga en vez de dejarte sin nada).
 
-Todo lo demás de la v7.93 sigue igual: las cuatro pestañas, la tabla que cabe entera, el
-mejor y peor período, el aviso de racha, y Roberto informado y juzgando en las dos secciones.
+🛟 AVISAR YA NO PUEDE TUMBAR NADA
+  toast() —la función que te enseña los avisos de la app— reventaba si no encontraba su
+  sitio, y esa excepción abortaba la acción que solo quería avisarte. Ahora crea su sitio si
+  falta, y si ni eso puede, calla. El aviso es lo accesorio; lo que estás haciendo, no.
+
+🧨 EL SUELO DEL DD DE LA FIRMA YA NO SE APAGA SOLO
+  La protección que impide que te revienten una cuenta fondeada solo se aplicaba si le
+  pasaban el equity. Si faltaba, DESAPARECÍA sin decir una palabra.
+  Comprobado con tus números: cuenta de 6000 al 6% (suelo 5640), con equity 5640 devolvía
+  $51,27 de hueco y DEJABA ENTRAR con la cuenta ya rota.
+  Ahora: sin equity usa el balance y deja aviso. Y aparecieron DOS sitios con el mismo
+  fallo, no uno — el segundo lo cazó el banco de pruebas.
+
+🎬💵 EL LIBRO LO ELIGES TÚ, NO UN INTERRUPTOR
+  Lo preguntaste: al detectar tu posición, ¿la apunta en backtest o en real? La respuesta
+  era incómoda: si Roberto no te preguntaba, mandaba el interruptor del Diario — que arranca
+  en REAL. Un trade de entrenamiento podía contaminar tus estadísticas reales en silencio.
+  Ahora: cuando detecte una posición tuya, te espera una TARJETA en el 📒 Diario:
+      «✍️ Detecté tu VENTA en EURUSD — ¿en qué libro la apunto?»
+      [🎬 Backtest]  [💵 Real]  [✕ No la registres]
+  Hasta que toques, NO está registrada en ninguno. Y el botón REAL te pide confirmación.
+  (No se hizo con botones en la notificación: se comprobó y tu Android no los soporta —
+  habrían sido botones invisibles.)
+
+⚠️ SI PONES FIRMA SIN TOPES, TE LO DICE
+  Se podía escribir la empresa y dejar el capital o el DD en cero, y el sistema callaba —
+  aunque eso apaga el freno del DD total. Ahora sale un aviso rojo en ⚙️ Tus reglas
+  explicando QUÉ protección te falta.
+
+🕵️ Y EL DEL EJECUTOR, QUE NO SE OLVIDÓ
+  El «⚠️ Señal PERDIDA» que te mandó a revisar el internet de tu PC estando perfecta. La
+  señal no se perdió: el Ejecutor la rechazó él mismo 38 segundos después por tu cupo
+  diario (2/2). Dos fallos arreglados: la marca «entregada» se perdía en una carrera de la
+  nube (ahora hay dos caminos para ponerla), y el aviso inventaba la causa (ahora mira el
+  latido del Ejecutor y su bitácora, y distingue cuatro casos — incluido «no lo sé»).
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
