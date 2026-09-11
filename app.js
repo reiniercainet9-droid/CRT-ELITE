@@ -1600,9 +1600,13 @@ async function verEjecutor(){
        robot y él— porque mezclarlos sería justo el error que Rey lleva meses evitando:
        «Roberto evalúa a REY con las de Rey». */
     try{
-      txt += resTextoParaRoberto(opsDelEjecutor(), true, "EL EJECUTOR (el robot)");
+      /* cada uno con el total de SU libro: el del robot con el archivo del robot, el de Rey
+         con sus propios trades cerrados */
+      const delRobot = opsDelEjecutor();
+      txt += resTextoParaRoberto(delRobot, true, "EL EJECUTOR (el robot)", (typeof ejecCerradas==="function") ? (ejecCerradas()||[]).length : delRobot.length);
       const mios = opsDelDiario();
-      if(mios.length) txt += resTextoParaRoberto(mios, false, "REY a mano (su Diario, medido en R)");
+      if(mios.length) txt += resTextoParaRoberto(mios, false, "REY a mano (su Diario, medido en R)",
+        (Array.isArray(TRADES)?TRADES:[]).filter(t=>t && !t.abierta && t.modo!=="backtest").length);
     }catch(_){}
     const rech=lg.filter(x=>x.tipo==="rechazo").slice(0,4);
     if(rech.length){
@@ -2885,7 +2889,7 @@ async function resJuicioRoberto(id, ops, dinero, per){
    Se le da MASTICADO y con las mismas cuentas que ve Rey en la tabla: si Roberto sumara por
    su cuenta podría decirle un número distinto del que tiene delante, y eso destruye la
    confianza en los dos. */
-function resTextoParaRoberto(ops, dinero, titulo){
+function resTextoParaRoberto(ops, dinero, titulo, totalReal){
   const lista = (ops||[]).filter(o=>o && o.ts);
   if(!lista.length) return "";
   let t = "\n### 📊 "+titulo+" — cómo cerró cada período (calculado por la app; usa ESTOS números, no los recalcules)\n";
@@ -2932,7 +2936,13 @@ function resTextoParaRoberto(ops, dinero, titulo){
      dice cuántas hay de verdad, y si no las tiene todas, tiene ORDEN de decirlo antes de
      opinar — igual que tiene orden de decir "no lo sé" en vez de inventarse una causa. */
   try{
-    const dentro = (typeof ejecCerradas==="function") ? (ejecCerradas()||[]).length : lista.length;
+    /* 🩹 11-09 — EL TOTAL TIENE QUE SER EL DE SU PROPIO LIBRO.
+       La primera versión miraba SIEMPRE el archivo del Ejecutor, también en el bloque del
+       Diario de Rey. Le habría dicho a Roberto «estás viendo 3 de 10 operaciones» sobre las
+       de REY comparándolas con las del ROBOT — un aviso falso, y de los peores: el que
+       nació justamente para que nadie analizara un trozo creyendo que era el todo.
+       Lo cazó Rey preguntando si los arreglos valían también para sus entradas. */
+    const dentro = (totalReal != null) ? totalReal : lista.length;
     if(dentro > lista.length){
       t += "\n\u26a0\ufe0f ESTÁS VIENDO " + lista.length + " DE " + dentro + " OPERACIONES. Tu lectura es PARCIAL: dilo antes de opinar y no des un veredicto como si vieras la historia entera.\n";
     } else {

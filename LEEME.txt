@@ -1,50 +1,37 @@
-APEX v7.97 — TRADING DESK
+APEX v7.98 — TRADING DESK
 =========================
 
-🗄️ NADA PUEDE FALTAR EN SILENCIO — el agujero que encontraste tú
+🩹 CADA LIBRO SE COMPARA CON SU PROPIO TOTAL
 
-Tenías razón, y era peor de lo que parecía. Lo que pasaba, con nombres:
+Lo destapó tu pregunta: «¿estos arreglos valen también para mis entradas?».
 
-  · La bitácora de la nube (ejec:log) está topada a 40 EVENTOS.
-  · Cada operación gasta CUATRO (entrada + break-even + salida + repaso), más rechazos,
-    arranques y avisos.
-  · /ejec/estado sirve 25 de esos 40.
-  · Cuando fui a mirar, en esas 25 entradas había SOLO 3 SALIDAS. Tu teléfono tenía 10.
-  · Te di un diagnóstico con un tercio de tu historia — y ni tú ni yo teníamos forma de
-    saberlo, porque FALTABAN EN SILENCIO.
+El aviso de «estás viendo un trozo» —el que acabábamos de construir para que Roberto no
+opine sobre datos incompletos— miraba SIEMPRE el archivo del Ejecutor, también cuando
+hablaba de TU Diario. Le habría dicho: «estás viendo 3 de 10 operaciones» sobre las TUYAS,
+comparándolas con las del ROBOT.
 
-Y un segundo daño del mismo agujero: esas 10 operaciones vivían SOLO en tu móvil, contra tu
-propia ley de que nada tuyo puede estar en un solo aparato.
+Un aviso falso, y del peor tipo: ese aviso nació justamente para que nadie analizara un
+trozo creyendo que era el todo.
 
-LO QUE SE ARREGLÓ
+Arreglado: cada libro se compara con su propio total. El del robot con el archivo del robot,
+el tuyo con tus trades cerrados. Con su prueba dentro del banco.
 
-  1. LA HISTORIA YA NO SE RECORTA
-     Las operaciones cerradas tienen su propio archivo en la nube, con todo lo que hace falta
-     para medir (P&L, R, motivo, precios, grado) y sitio para 1000 — más de dos años a dos
-     operaciones al día. Cada cierre entra una sola vez (se comprueba el ticket: nunca
-     duplica, que torcería todas las estadísticas).
+── Y DE PASO, LA RESPUESTA A TU PREGUNTA ──
 
-  2. EL TELÉFONO Y LA NUBE SE IGUALAN, EN LOS DOS SENTIDOS
-     Al abrir 🤖 Ejecutor: SUBE lo que tú tienes y la nube no (así Roberto lo ve y queda
-     respaldado) y BAJA lo que la nube tiene y tú no (teléfono nuevo, app reinstalada).
-     Fusiona por ticket, así que da igual cuántas veces corra.
-     Y se iguala ANTES de pintar el panel: si no, verías un trozo sin saberlo.
+VALE IGUAL PARA TUS ENTRADAS:
+  · los cierres por período (día/semana/mes/año, tabla y gráfica)
+  · el panel 📐 de esperanza (acierto necesario, balanza, por dónde salió cada una)
+  · el botón «🎓 Que lo juzgue Roberto»
+  · Roberto recibe la FORMA de tus operaciones, por separado de las del robot
+  · la tarjeta 🎬/💵 — esa es SOLO tuya, el robot no la necesita
+  · el respaldo en la nube: tus trades ya viajaban desde hace tiempo
 
-  3. 🔴 Y SI ALGUNA VEZ SE VE UN TROZO, SE DICE
-     Esto es lo más importante de todo. El fallo de fondo no fue que faltaran datos: fue que
-     faltaban CALLANDO. Ahora cada bloque que le llega a Roberto dice cuántas hay de verdad:
-         «⚠️ ESTÁS VIENDO 10 DE 47 OPERACIONES. Tu lectura es PARCIAL: dilo antes de
-           opinar y no des un veredicto como si vieras la historia entera.»
-     o, cuando las tiene todas:
-         «✅ Aquí están TODAS las operaciones cerradas que existen (47). No falta ninguna.»
-     Es la misma ley que ya tenía para las causas: mejor «no lo sé» que un veredicto seguro
-     construido sobre un agujero.
+NO ES PARA TI, Y ESTÁ BIEN ASÍ:
+  · el archivo permanente de la nube es del robot. Tú no lo necesitas porque tus trades ya
+    se respaldan enteros; el robot sí, porque su historia vivía en una bitácora topada a 40.
 
-  · La bitácora de eventos sigue topada a 40, y está bien: son avisos de diagnóstico del
-    momento, no historia. Queda escrito en el código por qué esa sí se puede recortar.
-
-⚠️ IMPORTANTE AL INSTALAR: la primera vez que abras 🤖 Ejecutor, la app subirá a la nube las
-operaciones que solo tenía tu teléfono. A partir de ahí, Roberto las ve todas.
+UNA DIFERENCIA A PROPÓSITO: tu Diario mide en R, no en dinero. Su panel no inventa un dinero
+que no le has dado — un cero ahí diría «no ganaste nada», y sería falso.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
