@@ -1586,6 +1586,16 @@ async function verEjecutor(){
          La ficha completa solo va en las 3 más recientes (las viejas, en 1 línea compacta). */
       txt+="\n### 📓 Diario del Ejecutor ("+ops.length+" operación(es), con fecha para filtrar por período)\n"+ops.map((x,i)=>"- "+ejecFmtTs(x.ts)+" · **"+(x.dir==="buy"?"COMPRA":x.dir==="sell"?"VENTA":x.dir)+" "+(x.sym||"")+"** → "+(x.motivo||"")+" "+((x.pl||0)>=0?"🟢 +$":"🔴 −$")+Math.abs(x.pl||0).toFixed(2)+(x.r!=null?" ("+x.r+"R)":"")+(i<3&&x.ficha?("\n  - "+x.ficha):"")+(i<3&&x.lectura?("\n  - 🎓 _"+x.lectura+"_"):"")).join("\n")+"\n";
     }
+    /* 📊 v7.93 — LOS CIERRES POR PERÍODO, EN SU EXPEDIENTE.
+       Va DESPUÉS de la lista de operaciones y antes de los descartes, a propósito: primero
+       el detalle que ya tenía, luego la cuenta hecha. Y los dos mundos por separado —el
+       robot y él— porque mezclarlos sería justo el error que Rey lleva meses evitando:
+       «Roberto evalúa a REY con las de Rey». */
+    try{
+      txt += resTextoParaRoberto(opsDelEjecutor(), true, "EL EJECUTOR (el robot)");
+      const mios = opsDelDiario();
+      if(mios.length) txt += resTextoParaRoberto(mios, false, "REY a mano (su Diario, medido en R)");
+    }catch(_){}
     const rech=lg.filter(x=>x.tipo==="rechazo").slice(0,4);
     if(rech.length){
       txt+="\n### 🚫 Señales que descartó (tus reglas mandan)\n"+rech.map(x=>"- "+ejecFmtTs(x.ts)+" · "+(x.sym||"")+": "+(x.motivo||"")).join("\n")+"\n";
@@ -2183,6 +2193,486 @@ async function auditoriaEjecutor(){
 }
 /* ── 🤖 LA SECCIÓN EJECUTOR (v6.09) — pestaña propia con TODO el control.
    Lee y guarda EXACTAMENTE en el mismo sitio que el chip del chat (la nube). ── */
+/* ═══════════════════════════════════════════════════════════════════════════════
+   📊 RESULTADOS POR PERÍODO — la tabla y la gráfica de cómo cerró cada día,
+   semana, mes y año. (app v7.93, 11-09)
+   ───────────────────────────────────────────────────────────────────────────────
+   Rey:
+     «quiero que esa sección, al final de cada día, cada semana, cada mes, cada año, me
+      haga una tablita con los números de cómo cerró… una tabla bien organizada y fácil de
+      entender, que pueda ver con facilidad los cierres en positivo y negativo… una
+      evaluación con una tabla y una gráfica de cómo va yendo cada sección… y eso también
+      aplicarlo a mis registros… muy profesional, cómo van mis resultados y los del
+      Ejecutor… y Roberto informado, con criterio, juzgar, opinión y sugerencias»
+
+   UN SOLO MOTOR PARA LOS DOS, Y ESO NO ES POR AHORRAR CÓDIGO: si el Ejecutor y su Diario
+   contaran las rachas o el acierto con reglas distintas, cualquier comparación entre «cómo
+   voy yo» y «cómo va el robot» sería mentira. Aquí se cuentan igual o no se cuentan.
+
+   LO QUE ENTRA: una lista de operaciones CERRADAS normalizada a {ts, pl, r}.
+     · ts = cuándo cerró (ahí es donde cuenta el resultado, no cuándo se abrió)
+     · pl = dinero, si lo hay (el Ejecutor sí; el Diario de Rey mide en R)
+     · r  = múltiplo del riesgo, si lo hay
+   Lo que no hay va como null y NO se inventa: una columna vacía es honesta, un cero no.
+
+   ⚠️ EL EMPATE NO ES UNA VICTORIA. Una salida en 0,00 R (break-even) no cuenta como
+   ganada ni como perdida: va aparte. Meterla con las ganadas infla el porcentaje de
+   acierto, que es justo el número con el que uno se engaña.
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+const RES_PERIODOS = ["dia", "semana", "mes", "ano"];
+
+/* la clave y la etiqueta de cada período, a partir de una fecha */
+function resClave(ts, periodo){
+  const d = new Date(ts);
+  const y = d.getFullYear(), m = d.getMonth(), dd = d.getDate();
+  if(periodo === "ano")  return { k: String(y), ini: new Date(y,0,1).getTime() };
+  if(periodo === "mes")  return { k: y+"-"+String(m+1).padStart(2,"0"), ini: new Date(y,m,1).getTime() };
+  if(periodo === "semana"){
+    /* la semana empieza el LUNES: es como él mira el mercado (Londres abre el lunes) */
+    const off = (d.getDay()+6)%7;
+    const ini = new Date(y,m,dd-off).getTime();
+    return { k: "s"+ini, ini };
+  }
+  const ini = new Date(y,m,dd).getTime();
+  return { k: "d"+ini, ini };
+}
+function resEtiqueta(ini, periodo){
+  const d = new Date(ini);
+  if(periodo === "ano") return String(d.getFullYear());
+  /* mes CORTO («sept 2026», no «septiembre de 2026»): con el nombre largo la última
+     columna de la tabla se salía de su pantalla. Se vio mirándola a 412 px. */
+  if(periodo === "mes"){ const t=d.toLocaleDateString("es",{month:"short",year:"numeric"}).replace(/\sde\s/," ").replace(".",""); return t.charAt(0).toUpperCase()+t.slice(1); }
+  if(periodo === "semana"){
+    const f = new Date(ini+6*86400000);
+    return d.toLocaleDateString("es",{day:"2-digit",month:"2-digit"})+" – "+f.toLocaleDateString("es",{day:"2-digit",month:"2-digit"});
+  }
+  return d.toLocaleDateString("es",{weekday:"short",day:"2-digit",month:"2-digit"});
+}
+
+/* el resumen de UN grupo de operaciones */
+function resFila(ops, ini, periodo){
+  let g=0, p=0, e=0, pl=0, r=0, conPL=0, conR=0, mejor=null, peor=null;
+  let rachaG=0, rachaP=0, gSeguidas=0, pSeguidas=0;
+  /* las rachas se cuentan en orden cronológico, que es como pasaron */
+  const orden = ops.slice().sort((a,b)=>a.ts-b.ts);
+  orden.forEach(o=>{
+    const val = (o.r != null) ? o.r : (o.pl != null ? o.pl : null);
+    if(o.pl != null){ pl += o.pl; conPL++; }
+    if(o.r  != null){ r  += o.r;  conR++;  }
+    if(val == null){ return; }
+    if(Math.abs(val) < 1e-9){ e++; gSeguidas=0; pSeguidas=0; return; }   /* el empate corta la racha */
+    if(val > 0){ g++; gSeguidas++; pSeguidas=0; if(gSeguidas>rachaG) rachaG=gSeguidas; }
+    else       { p++; pSeguidas++; gSeguidas=0; if(pSeguidas>rachaP) rachaP=pSeguidas; }
+    const m = (o.pl != null) ? o.pl : val;
+    if(mejor==null || m>mejor) mejor=m;
+    if(peor ==null || m<peor ) peor =m;
+  });
+  const decididas = g+p;
+  return {
+    ini, periodo, etiqueta: resEtiqueta(ini, periodo), n: ops.length,
+    ganadas:g, perdidas:p, empates:e,
+    pct: decididas ? Math.round(g/decididas*100) : null,
+    pl: conPL ? pl : null, r: conR ? r : null,
+    mejor, peor, rachaG, rachaP,
+    /* el valor con el que se pinta la barra: dinero si lo hay, si no R */
+    valor: conPL ? pl : (conR ? r : 0),
+  };
+}
+
+/* el resumen COMPLETO: una lista de filas por período, de la más reciente a la más vieja */
+function apexResumen(ops, periodo){
+  const lista = (ops||[]).filter(o=>o && o.ts);
+  const grupos = {};
+  lista.forEach(o=>{
+    const c = resClave(o.ts, periodo);
+    (grupos[c.k] = grupos[c.k] || { ini:c.ini, ops:[] }).ops.push(o);
+  });
+  const filas = Object.keys(grupos).map(k=>resFila(grupos[k].ops, grupos[k].ini, periodo))
+    .sort((a,b)=>b.ini-a.ini);
+  /* el acumulado se calcula del más VIEJO al más nuevo, que es como se vive */
+  let acum = 0;
+  filas.slice().reverse().forEach(f=>{ acum += f.valor; f.acum = acum; });
+  return filas;
+}
+
+/* ── un número con su signo y su color ─────────────────────────────────────
+   El cero NO se pinta de verde ni de rojo: un break-even no es una victoria ni una
+   derrota, y colorearlo haría que un día plano pareciera un día bueno. */
+function resNum(v, dinero, conSigno){
+  if(v == null) return '<span style="opacity:.45">—</span>';
+  const cero = Math.abs(v) < 0.005;
+  const col = cero ? "inherit" : (v > 0 ? "#26a269" : "#e0483d");
+  const sg = cero ? "" : (v > 0 ? "+" : "−");
+  const txt = sg + (dinero ? "$" : "") + Math.abs(v).toFixed(2) + (dinero ? "" : "R");
+  return '<b style="color:' + col + (cero ? ";opacity:.6" : "") + '">' + esc(txt) + '</b>';
+}
+
+/* ── LA TABLA ──────────────────────────────────────────────────────────────
+   Pensada para leerse de un vistazo en su teléfono: la franja de color y el ▲/▼ dicen
+   cómo cerró ANTES de que haya que leer ningún número. Los números van con tabular-nums
+   para que las columnas queden alineadas —un dinero desalineado se lee mal aunque sea
+   correcto— y la tabla vive dentro de su propio contenedor con scroll horizontal, así
+   la página nunca se mueve de lado. */
+function resTablaHTML(filas, dinero){
+  if(!filas.length) return '<div class="desc" style="padding:12px 2px;font-size:12px">Todavía no hay operaciones cerradas aquí. En cuanto cierre la primera, esta tabla se llena sola.</div>';
+  /* 📏 CINCO COLUMNAS, NI UNA MÁS — y esto se decidió MIRÁNDOLA en una pantalla de 412 px,
+     no calculándolo. Con ocho columnas, «En R» salía cortada por la mitad y «Mejor/Peor» ni
+     aparecían: una tabla que hay que arrastrar de lado para leer lo importante no es una
+     tabla organizada, es una tabla escondida.
+     · «Ops» se fusionó con «✓/✗»: el total se ve sumando, no hace falta su propia columna.
+     · «Mejor/Peor» salen DEBAJO, y respondiendo a algo más útil: cuál fue el mejor período
+       y cuál el peor — un dato que antes no estaba en ninguna parte. */
+  const th=(t,al)=>'<th style="text-align:'+(al||"right")+';padding:6px 5px;font-size:.7em;letter-spacing:.04em;text-transform:uppercase;opacity:.65;font-weight:700;white-space:nowrap">'+t+'</th>';
+  const td=(t,al)=>'<td style="text-align:'+(al||"right")+';padding:7px 5px;white-space:nowrap">'+t+'</td>';
+  const T={n:0,g:0,p:0,e:0,pl:0,r:0,conPL:false,conR:false};
+  filas.forEach(f=>{ T.n+=f.n; T.g+=f.ganadas; T.p+=f.perdidas; T.e+=f.empates;
+    if(f.pl!=null){ T.pl+=f.pl; T.conPL=true; } if(f.r!=null){ T.r+=f.r; T.conR=true; } });
+  const Tdec=T.g+T.p;
+  const marcas=(f)=>'<span style="color:#26a269">'+f.ganadas+'✓</span> <span style="color:#e0483d">'+f.perdidas+'✗</span>'+(f.empates?('<span style="opacity:.55"> '+f.empates+'=</span>'):"");
+  const fila=(f)=>{
+    const pos=f.valor>0.005, neg=f.valor<-0.005;
+    const franja=pos?"#26a269":neg?"#e0483d":"rgba(150,160,180,.35)";
+    return '<tr style="border-bottom:1px solid rgba(128,140,170,.16)">'+
+      '<td style="padding:7px 5px;white-space:nowrap"><span style="display:inline-block;width:3px;height:15px;border-radius:2px;background:'+franja+';vertical-align:-3px;margin-right:6px"></span>'+esc(f.etiqueta)+'</td>'+
+      td((pos?'<span style="color:#26a269">▲</span> ':neg?'<span style="color:#e0483d">▼</span> ':'<span style="opacity:.5">=</span> ')+resNum(dinero?f.pl:f.r, dinero))+
+      (dinero?td(resNum(f.r,false)):"")+
+      td(marcas(f))+
+      td(f.pct==null?'<span style="opacity:.45">—</span>':(f.pct+"%"))+
+    '</tr>';
+  };
+  /* el mejor y el peor PERÍODO (no la mejor operación: eso ya está en el detalle de abajo) */
+  const conValor = filas.filter(f=>f.n>0);
+  let mejorP=null, peorP=null;
+  conValor.forEach(f=>{ if(mejorP==null||f.valor>mejorP.valor) mejorP=f; if(peorP==null||f.valor<peorP.valor) peorP=f; });
+  const pie = (conValor.length>1 && mejorP && peorP && mejorP!==peorP)
+    ? '<div style="display:flex;gap:14px;flex-wrap:wrap;font-size:11.5px;opacity:.85;margin-top:8px">'+
+        '<span>🏆 mejor: <b>'+esc(mejorP.etiqueta)+'</b> '+resNum(dinero?mejorP.pl:mejorP.r,dinero)+'</span>'+
+        '<span>🔻 peor: <b>'+esc(peorP.etiqueta)+'</b> '+resNum(dinero?peorP.pl:peorP.r,dinero)+'</span>'+
+      '</div>' : "";
+  /* la racha perdedora más larga: el número que de verdad duele y que nadie mira a tiempo */
+  const rachaMax = filas.reduce((a,f)=>Math.max(a,f.rachaP||0),0);
+  const avisoRacha = rachaMax>=3
+    ? '<div style="font-size:11.5px;margin-top:6px;color:#e0483d;opacity:.9">⚠️ la racha perdedora más larga de este período fue de <b>'+rachaMax+' seguidas</b> — tenlo presente cuando dimensiones el riesgo.</div>' : "";
+  return '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch">'+
+    '<table style="width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9em">'+
+    '<thead><tr style="border-bottom:1px solid rgba(128,140,170,.3)">'+
+      th("Período","left")+th("Cierre")+(dinero?th("En R"):"")+th("✓ ✗")+th("Acierto")+
+    '</tr></thead><tbody>'+
+    filas.map(fila).join("")+
+    '<tr style="border-top:2px solid rgba(128,140,170,.4);font-weight:700">'+
+      '<td style="padding:9px 5px">TOTAL</td>'+
+      td(resNum(dinero?(T.conPL?T.pl:null):(T.conR?T.r:null), dinero))+
+      (dinero?td(resNum(T.conR?T.r:null,false)):"")+
+      td(marcas({ganadas:T.g,perdidas:T.p,empates:T.e}))+
+      td(Tdec?(Math.round(T.g/Tdec*100)+"%"):'<span style="opacity:.45">—</span>')+
+    '</tr>'+
+    '</tbody></table></div>'+pie+avisoRacha;
+}
+
+/* ── LA GRÁFICA ────────────────────────────────────────────────────────────
+   SVG escrito a mano, sin ninguna librería: Apex tiene que funcionar en su teléfono aunque
+   no haya internet, y una gráfica que depende de una descarga es una gráfica que un día no
+   está.
+
+   🔴 v7.94 (11-09) — REY, SOBRE LA PRIMERA VERSIÓN:
+     «la gráfica solo tiene rectángulos y rayas, no tiene debajo de cada rectángulo el día,
+      período de semana, mes, año… está vacía, no tiene datos, solo es un dibujo, y parece
+      una foto sin vida, sin animación… todo mi sistema es profesional y así debe quedar
+      todo y cada cosa dentro y fuera de ella, no como si fuera de juguete»
+
+   Y tenía toda la razón, y no era un detalle: UNA GRÁFICA SIN EJES NO ES UNA GRÁFICA, ES UN
+   DIBUJO. Sin saber qué día es cada barra ni cuánto vale la altura, la forma no se puede
+   leer — solo decorar. Le entregué la mitad del trabajo otra vez.
+
+   LO QUE LLEVA AHORA, Y POR QUÉ CADA COSA:
+     · EJE DE ABAJO: la fecha de cada barra. Cuando no caben todas se muestran salteadas
+       —nunca encimadas—, y el ÚLTIMO período siempre lleva la suya: es el que le importa.
+     · EJE DE LA DERECHA: el techo, el suelo y el cero, con su valor. Sin escala, una barra
+       del doble de alta podría ser diez veces más dinero y no se notaría.
+     · SE TOCA: al tocar una barra, debajo aparecen sus números exactos. Eso es lo que
+       convierte el dibujo en un instrumento — y de paso, cada barra deja de ser un adorno.
+     · TIENE VIDA: las barras suben desde el cero y la línea se dibuja sola, una vez, en
+       menos de un segundo. Contenido a propósito: esto es el panel de control de su dinero,
+       no un juguete. Y si su teléfono pide menos movimiento, no se mueve nada.
+   ───────────────────────────────────────────────────────────────────────────── */
+function resEtiquetaCorta(f){
+  const d = new Date(f.ini);
+  if(f.periodo === "ano") return String(d.getFullYear());
+  if(f.periodo === "mes") return d.toLocaleDateString("es",{month:"short"}).replace(".","");
+  if(f.periodo === "semana") return d.toLocaleDateString("es",{day:"2-digit",month:"2-digit"});
+  return d.toLocaleDateString("es",{day:"2-digit",month:"2-digit"});
+}
+function resValorCorto(v, dinero){
+  const a = Math.abs(v);
+  const txt = a >= 1000 ? (a/1000).toFixed(a>=10000?0:1)+"k" : (dinero ? a.toFixed(0) : a.toFixed(1));
+  return (v<0?"−":"") + (dinero?"$":"") + txt + (dinero?"":"R");
+}
+
+function resGraficaSVG(filas, dinero, id){
+  if(filas.length < 2) return "";
+  const d = filas.slice().reverse();                       /* cronológico: viejo → nuevo */
+  const n = d.length;
+  const W = 340, H = 168;
+  const PT = 8, PB = 26, PR = 40, PL = 2;                  /* PR = sitio para la escala */
+  const alto = H - PT - PB;
+  const maxAbs = Math.max(0.0001, ...d.map(f=>Math.abs(f.valor)));
+  const acums = d.map(f=>f.acum);
+  const aMin = Math.min(0, ...acums), aMax = Math.max(0, ...acums);
+  const aRango = Math.max(0.0001, aMax - aMin);
+  const col = (W - PL - PR) / n;
+  const ancho = Math.max(3, Math.min(24, col * 0.6));
+  const y0 = PT + alto/2;
+  const semi = alto/2;
+  const cx = (i) => PL + col*i + col/2;
+
+  /* ── barras ── */
+  const barras = d.map((f,i)=>{
+    const x = cx(i) - ancho/2;
+    const h = Math.abs(f.valor)/maxAbs * semi * 0.9;
+    const pos = f.valor > 0.005, neg = f.valor < -0.005;
+    if(!pos && !neg) return '<rect class="rg-b" style="--i:'+i+'" x="'+x.toFixed(1)+'" y="'+(y0-1).toFixed(1)+'" width="'+ancho.toFixed(1)+'" height="2" rx="1" fill="rgba(150,160,180,.55)"></rect>';
+    return '<rect class="rg-b '+(pos?"rg-up":"rg-dn")+'" style="--i:'+i+'" x="'+x.toFixed(1)+'" y="'+((pos? y0-h : y0)).toFixed(1)+'" width="'+ancho.toFixed(1)+'" height="'+Math.max(1.5,h).toFixed(1)+'" rx="1.5" fill="'+(pos?"#26a269":"#e0483d")+'"></rect>';
+  }).join("");
+
+  /* ── línea del acumulado, con su longitud real para que se dibuje sola ── */
+  const pts = d.map((f,i)=>[cx(i), PT + alto * (1 - (f.acum - aMin)/aRango)]);
+  let largo = 0;
+  for(let i=1;i<pts.length;i++) largo += Math.hypot(pts[i][0]-pts[i-1][0], pts[i][1]-pts[i-1][1]);
+  const linea = '<polyline class="rg-l" style="--largo:'+Math.ceil(largo)+'" points="'+pts.map(p=>p[0].toFixed(1)+","+p[1].toFixed(1)).join(" ")+'" fill="none" stroke="#e2b341" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round"></polyline>'+
+    '<circle class="rg-p" cx="'+pts[n-1][0].toFixed(1)+'" cy="'+pts[n-1][1].toFixed(1)+'" r="2.6" fill="#e2b341"></circle>';
+
+  /* ── EJE DE ABAJO: las fechas, salteadas si no caben, y SIEMPRE la última ── */
+  const caben = Math.max(2, Math.floor((W-PL-PR) / 34));
+  const paso = Math.ceil(n / caben);
+  const fechas = d.map((f,i)=>{
+    const ultima = (i === n-1);
+    if(!ultima && (n-1-i) % paso !== 0) return "";
+    return '<text x="'+cx(i).toFixed(1)+'" y="'+(H-13)+'" text-anchor="middle" font-size="8.5" fill="currentColor" opacity="'+(ultima?".95":".6")+'"'+(ultima?' font-weight="700"':'')+'>'+esc(resEtiquetaCorta(f))+'</text>';
+  }).join("");
+
+  /* ── EJE DE LA DERECHA: techo, cero y suelo, con su valor ── */
+  const techo = maxAbs*0.9/maxAbs*semi;
+  const escala =
+    '<text x="'+(W-PR+5)+'" y="'+(y0-techo+3).toFixed(1)+'" font-size="8.5" fill="#26a269" opacity=".85">'+esc(resValorCorto(maxAbs,dinero))+'</text>'+
+    '<text x="'+(W-PR+5)+'" y="'+(y0+3).toFixed(1)+'" font-size="8.5" fill="currentColor" opacity=".5">0</text>'+
+    '<text x="'+(W-PR+5)+'" y="'+(y0+techo+3).toFixed(1)+'" font-size="8.5" fill="#e0483d" opacity=".85">'+esc(resValorCorto(-maxAbs,dinero))+'</text>';
+
+  /* ── zonas de toque: toda la columna, no solo la barra (dedos, no ratones) ── */
+  const toques = d.map((f,i)=>'<rect class="rg-t" data-i="'+i+'" x="'+(PL+col*i).toFixed(1)+'" y="'+PT+'" width="'+col.toFixed(1)+'" height="'+alto.toFixed(1)+'" fill="transparent" style="cursor:pointer"></rect>').join("");
+
+  /* ── la animación vive dentro del propio SVG: así viaja con él y no depende de nada ── */
+  const anim = '<style>'+
+    '.rg-b{transform-box:fill-box;animation:rgSube .55s cubic-bezier(.2,.8,.3,1) backwards;animation-delay:calc(var(--i)*24ms)}'+
+    '.rg-up{transform-origin:bottom}.rg-dn{transform-origin:top}'+
+    '@keyframes rgSube{from{transform:scaleY(.02);opacity:.35}to{transform:scaleY(1);opacity:.88}}'+
+    '.rg-b{opacity:.88}'+
+    '.rg-l{stroke-dasharray:var(--largo);stroke-dashoffset:0;animation:rgTraza .9s ease-out .15s backwards}'+
+    '@keyframes rgTraza{from{stroke-dashoffset:var(--largo)}to{stroke-dashoffset:0}}'+
+    '.rg-p{animation:rgPunto .3s ease-out 1s backwards}@keyframes rgPunto{from{r:0;opacity:0}to{opacity:1}}'+
+    '.rg-b.rg-sel{opacity:1}'+
+    '@media (prefers-reduced-motion:reduce){.rg-b,.rg-l,.rg-p{animation:none}}'+
+  '</style>';
+
+  return '<div class="rg-caja" data-id="'+esc(id||"")+'" style="margin:6px 0 2px">'+
+    '<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;display:block;font-variant-numeric:tabular-nums" role="img" aria-label="Cómo cerró cada período">'+
+      anim+
+      '<line x1="0" y1="'+y0.toFixed(1)+'" x2="'+(W-PR+2)+'" y2="'+y0.toFixed(1)+'" stroke="currentColor" stroke-width=".7" opacity=".3" stroke-dasharray="3 3"></line>'+
+      '<line x1="0" y1="'+(y0-techo).toFixed(1)+'" x2="'+(W-PR+2)+'" y2="'+(y0-techo).toFixed(1)+'" stroke="currentColor" stroke-width=".5" opacity=".12"></line>'+
+      '<line x1="0" y1="'+(y0+techo).toFixed(1)+'" x2="'+(W-PR+2)+'" y2="'+(y0+techo).toFixed(1)+'" stroke="currentColor" stroke-width=".5" opacity=".12"></line>'+
+      /* 🎯 la banda de la columna elegida va DETRÁS de las barras: resaltar la barra con
+         un borde la dejaba pareciendo hueca —se vio en la prueba a 412 px—, y una banda es
+         además como resalta cualquier gráfico serio: no toca el dato, lo enmarca. */
+      '<rect class="rg-hi" x="0" y="'+PT+'" width="'+col.toFixed(1)+'" height="'+alto.toFixed(1)+'" fill="currentColor" opacity="0" rx="3" style="transition:opacity .15s"></rect>'+
+      barras + linea + fechas + escala + toques +
+    '</svg>'+
+    '<div class="rg-det" style="min-height:1.5em;margin-top:2px;font-size:12px;line-height:1.45"></div>'+
+  '</div>'+
+  '<div style="display:flex;gap:14px;flex-wrap:wrap;font-size:11.5px;opacity:.8;margin-bottom:4px">'+
+    '<span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:#26a269"></span> cerró en verde</span>'+
+    '<span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:#e0483d"></span> cerró en rojo</span>'+
+    '<span><span style="display:inline-block;width:14px;height:2px;background:#e2b341;vertical-align:3px"></span> acumulado — hoy: <b>'+esc((dinero?"$":"")+(d[n-1].acum>=0?"+":"−")+Math.abs(d[n-1].acum).toFixed(2)+(dinero?"":"R"))+'</b></span>'+
+  '</div>';
+}
+
+/* el detalle de la barra tocada — y por defecto, la del último período, que es la que
+   está mirando cuando abre la sección: un panel que empieza vacío parece roto */
+function resGraficaTacto(caja, filas, dinero){
+  const c = caja.querySelector(".rg-caja"); if(!c) return;
+  const det = c.querySelector(".rg-det");
+  const d = filas.slice().reverse();
+  const pinta = (i)=>{
+    const f = d[i]; if(!f) return;
+    c.querySelectorAll(".rg-b").forEach((b,k)=>b.classList.toggle("rg-sel", k===i));
+    const hi = c.querySelector(".rg-hi"), zona = c.querySelector('.rg-t[data-i="'+i+'"]');
+    if(hi && zona){ hi.setAttribute("x", zona.getAttribute("x")); hi.setAttribute("opacity", ".07"); }
+    det.innerHTML = '<b>'+esc(f.etiqueta)+'</b> · '+
+      (f.valor>0.005?'<span style="color:#26a269">▲</span> ':f.valor<-0.005?'<span style="color:#e0483d">▼</span> ':'<span style="opacity:.5">=</span> ')+
+      resNum(dinero?f.pl:f.r, dinero)+
+      (dinero && f.r!=null ? ' <span style="opacity:.75">('+((f.r>=0?"+":"−")+Math.abs(f.r).toFixed(2))+'R)</span>' : "")+
+      ' · '+f.n+' op · <span style="color:#26a269">'+f.ganadas+'✓</span> <span style="color:#e0483d">'+f.perdidas+'✗</span>'+
+      (f.empates?'<span style="opacity:.55"> '+f.empates+'=</span>':"")+
+      (f.pct!=null?' · '+f.pct+'%':"")+
+      ' · <span style="opacity:.75">acumulado '+esc((dinero?"$":"")+(f.acum>=0?"+":"−")+Math.abs(f.acum).toFixed(2)+(dinero?"":"R"))+'</span>';
+  };
+  c.querySelectorAll(".rg-t").forEach(t=>{
+    const i = +t.getAttribute("data-i");
+    t.onclick = ()=>pinta(i);
+    t.onmouseenter = ()=>pinta(i);
+  });
+  pinta(d.length-1);
+}
+
+/* ── EL BLOQUE COMPLETO ────────────────────────────────────────────────────
+   Se usa IGUAL en 🤖 Ejecutor y en el Diario de Rey. `id` distingue a los dos para que
+   cada uno recuerde en qué pestaña lo dejó. */
+const RES_ETIQ = { dia:"Día", semana:"Semana", mes:"Mes", ano:"Año" };
+
+function resBloqueHTML(id, titulo, subtitulo){
+  const sel = localStorage.getItem("apex.res."+id) || "dia";
+  return '<div class="card" id="res-'+esc(id)+'">'+
+    '<div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap">'+
+      '<b style="font-size:1.05em">'+titulo+'</b>'+
+      (subtitulo?('<span class="desc" style="font-size:11.5px">'+subtitulo+'</span>'):"")+
+    '</div>'+
+    '<div class="seg c4" style="margin-top:8px">'+
+      RES_PERIODOS.map(p=>'<button type="button" class="res-tab'+(p===sel?" on":"")+'" data-per="'+p+'">'+RES_ETIQ[p]+'</button>').join("")+
+    '</div>'+
+    '<div class="res-cuerpo" style="margin-top:8px"></div>'+
+    '<div style="margin-top:10px"><button class="btn res-juez" style="width:100%">🎓 Que lo juzgue Roberto</button></div>'+
+    '<div class="res-juicio" style="margin-top:8px"></div>'+
+  '</div>';
+}
+
+/* pinta (o repinta) el cuerpo del bloque con el período elegido */
+function resPinta(id, ops, dinero){
+  const caja = document.getElementById("res-"+id); if(!caja) return;
+  const per = localStorage.getItem("apex.res."+id) || "dia";
+  const filas = apexResumen(ops, per);
+  const cuerpo = caja.querySelector(".res-cuerpo");
+  /* la gráfica ARRIBA y la tabla debajo: la pregunta «¿cómo voy?» se contesta de un
+     vistazo con la forma; los números son para cuando ya quiere el detalle. */
+  cuerpo.innerHTML = resGraficaSVG(filas, dinero, id) + resTablaHTML(filas, dinero);
+  try{ resGraficaTacto(cuerpo, filas, dinero); }catch(_){}
+  caja.querySelectorAll(".res-tab").forEach(b=>{
+    b.classList.toggle("on", b.getAttribute("data-per")===per);
+    b.onclick=()=>{ localStorage.setItem("apex.res."+id, b.getAttribute("data-per")); resPinta(id, ops, dinero); };
+  });
+  const j = caja.querySelector(".res-juez");
+  if(j) j.onclick=()=>resJuicioRoberto(id, ops, dinero, per);
+}
+
+/* ── EL JUICIO DE ROBERTO ──────────────────────────────────────────────────
+   Rey: «cada una de esas cosas, Roberto informado y con criterio, y juzgar, y opinión y
+   sugerencias». Y su LEY del 10-09: «no es solo darme datos, es razonar, juzgar y
+   comprobar si hay algo mal o bien… él no debe darme aliento, debe juzgar, proponer y dar
+   sugerencias para solucionarlo».
+   Por eso aquí NO se le pide un resumen —los números ya están en la tabla, encima, y
+   repetírselos sería el fallo del «parte diario» que él mismo señaló—: se le pide que
+   diga qué ve MAL, qué ve BIEN y QUÉ HACER. Y se le prohíbe expresamente el ánimo. */
+async function resJuicioRoberto(id, ops, dinero, per){
+  const caja = document.getElementById("res-"+id); if(!caja) return;
+  const salida = caja.querySelector(".res-juicio");
+  const btn = caja.querySelector(".res-juez");
+  if(!IA.url){ toast("Abre Roberto (✨) y configura el puente (⚙️) primero"); return; }
+  if(btn){ btn.disabled=true; btn.textContent="🎓 Roberto está mirando los números…"; }
+  salida.innerHTML='<div class="desc" style="font-size:12px">Roberto está juzgando estos resultados…</div>';
+  /* se le mandan los CUATRO períodos, no solo el que está mirando: un mes malo dentro de
+     un año bueno no significa lo mismo que un mes malo dentro de un año malo, y sin los
+     cuatro no puede distinguirlos. */
+  const tabla = RES_PERIODOS.map(pp=>{
+    const f = apexResumen(ops, pp).slice(0, pp==="dia"?14:pp==="semana"?8:pp==="mes"?6:5);
+    if(!f.length) return "";
+    return "### Por "+RES_ETIQ[pp]+"\n" + f.map(x=>
+      "- "+x.etiqueta+": "+(x.pl!=null?((x.pl>=0?"+$":"−$")+Math.abs(x.pl).toFixed(2)):"")+
+      (x.r!=null?((x.pl!=null?" · ":"")+(x.r>=0?"+":"")+x.r.toFixed(2)+"R"):"")+
+      " · "+x.n+" op ("+x.ganadas+"✓/"+x.perdidas+"✗"+(x.empates?("/"+x.empates+"="):"")+")"+
+      (x.pct!=null?(" · "+x.pct+"% acierto"):"")+
+      (x.rachaP>1?(" · racha perdedora de "+x.rachaP):"")
+    ).join("\n");
+  }).filter(Boolean).join("\n\n");
+  const quien = (id==="ejec")
+    ? "Estos son los resultados del 🤖 EJECUTOR (el bot que opera solo con las reglas de Rey en MT5)."
+    : "Estos son los resultados de las operaciones que REY registró a mano en su Diario.";
+  const sys = "Eres ROBERTO, el mentor y gerente del sistema de Rey. LEY SUYA: no le des datos ni ánimos — JUZGA. "+
+    "Los números ya los tiene delante en una tabla: repetírselos es exactamente el fallo que te señaló. "+
+    "Responde en 4 bloques cortos y en este orden, con este formato exacto:\n"+
+    "🔎 LO QUE VEO — la lectura que NO se ve sola en la tabla (un patrón, una contradicción entre períodos, algo que no cuadra). 2 frases máximo.\n"+
+    "✅ LO QUE ESTÁ BIEN — solo si de verdad lo está, y di POR QUÉ. Si no hay nada, escribe «nada destacable todavía» y sigue.\n"+
+    "⚠️ LO QUE ESTÁ MAL — sé concreto y sin rodeos. Si no hay nada mal, dilo claro.\n"+
+    "🛠️ QUÉ HARÍA — una o dos propuestas CONCRETAS y accionables (una regla, un número, una comprobación). Nada de «sigue así».\n\n"+
+    "REGLAS QUE NO SE SALTAN: (1) si hay MENOS DE 30 operaciones cerradas, dilo tú mismo en la primera línea y trata todo lo demás "+
+    "como indicio, no como conclusión — es la Ley 37 de Rey y él la hizo cumplir el 09-09 rechazando seis hipótesis suyas. "+
+    "(2) No inventes causas: si no sabes POR QUÉ pasó algo, di que hay que mirarlo y cómo. (3) Nada de frases de aliento.";
+  const msg = quien+"\n\nEstá mirando la pestaña «"+RES_ETIQ[per]+"».\n\n"+tabla;
+  try{
+    const r = await fetch(IA.url,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({system:sys,messages:[{role:"user",content:msg}]})});
+    const d = await r.json();
+    const txt = String((d && d.text) || "").trim();
+    if(!txt) throw new Error("sin respuesta");
+    salida.innerHTML = '<div style="border-left:3px solid #e2b341;padding:8px 10px;background:rgba(226,179,65,.07);border-radius:0 8px 8px 0;white-space:pre-wrap;line-height:1.5;font-size:.95em">'+esc(txt)+'</div>';
+    try{ robertoVigila("Rey pidió a Roberto que juzgara sus resultados por "+RES_ETIQ[per]+" ("+(id==="ejec"?"Ejecutor":"su Diario")+")."); }catch(_){}
+  }catch(e){
+    salida.innerHTML = '<div class="desc" style="font-size:12px">No pude traer el juicio de Roberto ahora mismo. Vuelve a intentarlo, o pregúntaselo directamente en el chat.</div>';
+  }finally{
+    if(btn){ btn.disabled=false; btn.textContent="🎓 Que lo juzgue Roberto"; }
+  }
+}
+
+/* ── EL RESUMEN, ESCRITO PARA ROBERTO ──────────────────────────────────────
+   Rey: «cada una de esas cosas, Roberto informado». INFORMADO no es «puede preguntarlo si
+   se le ocurre»: es que lo lleve encima en cada conversación. Antes solo recibía la lista
+   de operaciones sueltas, y de una lista no sale «llevas tres semanas seguidas en verde»
+   ni «ese mes fue el peor» sin ponerse a sumar — y lo que hay que sumar, se suma mal.
+   Se le da MASTICADO y con las mismas cuentas que ve Rey en la tabla: si Roberto sumara por
+   su cuenta podría decirle un número distinto del que tiene delante, y eso destruye la
+   confianza en los dos. */
+function resTextoParaRoberto(ops, dinero, titulo){
+  const lista = (ops||[]).filter(o=>o && o.ts);
+  if(!lista.length) return "";
+  let t = "\n### 📊 "+titulo+" — cómo cerró cada período (calculado por la app; usa ESTOS números, no los recalcules)\n";
+  const cuantos = { dia:10, semana:8, mes:6, ano:5 };
+  RES_PERIODOS.forEach(per=>{
+    const f = apexResumen(lista, per).slice(0, cuantos[per]);
+    if(!f.length) return;
+    t += "\n**Por "+RES_ETIQ[per]+"**\n" + f.map(x=>
+      "- "+x.etiqueta+": "+
+      (x.pl!=null ? ((x.pl>=0?"🟢 +$":"🔴 −$")+Math.abs(x.pl).toFixed(2)) : "") +
+      (x.r!=null ? ((x.pl!=null?" · ":"")+(x.r>=0?"+":"")+x.r.toFixed(2)+"R") : "") +
+      " · "+x.n+" op ("+x.ganadas+"✓/"+x.perdidas+"✗"+(x.empates?("/"+x.empates+"="):"")+")" +
+      (x.pct!=null?(" · "+x.pct+"% acierto"):"") +
+      (x.rachaP>=3?(" · ⚠️ racha perdedora de "+x.rachaP):"")
+    ).join("\n") + "\n";
+  });
+  /* el dato que más pesa a la hora de juzgar cualquier número de arriba */
+  t += "\n⚠️ Son "+lista.length+" operación(es) cerradas en total. ";
+  t += (lista.length < 30)
+    ? "MENOS DE 30: por la Ley 37 de Rey, nada de esto es una conclusión — son indicios. Dilo tú antes de opinar."
+    : "Ya hay 30 o más, así que se puede hablar de tendencia (con cuidado).";
+  return t + "\n";
+}
+
+/* ── de dónde salen las operaciones de cada sitio, normalizadas ────────────
+   Aquí es donde se traduce cada mundo al mismo idioma {ts, pl, r}. Si esto se hiciera en
+   dos sitios distintos, el Ejecutor y el Diario acabarían contando cosas distintas —y
+   entonces compararlos, que es justo lo que Rey quiere hacer, sería mentira. */
+function opsDelEjecutor(){
+  return (ejecCerradas()||[]).filter(t=>t && t.tsOut)
+    .map(t=>({ ts:t.tsOut, pl:(t.pl!=null?+t.pl:null), r:(t.r!=null?+t.r:null) }));
+}
+function opsDelDiario(){
+  return (Array.isArray(TRADES)?TRADES:[])
+    .filter(t=>t && !t.abierta && t.modo!=="backtest")
+    .map(t=>{
+      /* el Diario mide en R y guarda la fecha como texto; el cierre cuenta el día que
+         cerró, así que si hay tsOut manda él y si no, la fecha del registro */
+      const ts = t.tsOut ? +t.tsOut : (t.fecha ? new Date(t.fecha+"T12:00:00").getTime() : 0);
+      const r = (t.r!=null && !isNaN(parseFloat(t.r))) ? parseFloat(t.r) : null;
+      return { ts, pl:null, r };
+    })
+    .filter(o=>o.ts && o.r!=null);
+}
+
 function viewEjecutor(){
   const v=el("div","view"); v.id="v-ejecutor";
   v.innerHTML='<div id="ejBody"><div class="card">⏳ Cargando el Ejecutor…</div></div>';
@@ -2289,6 +2779,13 @@ async function renderEjecutor(){
         '<button class="btn" id="ejRob">💬 Roberto</button>'+
       '</div>'+
     '</div>'+
+    /* 📊 v7.93 — LOS RESULTADOS, LO SEGUNDO QUE SE VE.
+       Rey: «quiero poder ver con cada sección, muy profesional, cómo van mis resultados y
+       los del Ejecutor». Va DEBAJO del interruptor y ENCIMA de todo lo demás porque la
+       pregunta que trae cuando abre esta sección es «¿cómo voy?», no «¿qué reglas tengo?».
+       El calendario detallado de siempre (año → mes → semana → día, con las fichas y las
+       capturas) sigue intacto más abajo: esto NO lo sustituye, lo resume. */
+    resBloqueHTML("ejec", "📊 Cómo cerró cada período", "Del robot · el detalle operación por operación sigue abajo")+
     /* posiciones abiertas */
     (poss.length?('<div class="card"><b>📌 Posiciones abiertas</b>'+
       poss.map(p=>'<div style="display:flex;align-items:center;gap:8px;margin-top:8px"><span style="flex:1">'+esc(p.dir+" "+p.sym)+' · lote '+p.lote+' @ '+p.entrada+' · SL '+p.sl+' · TP '+p.tp+' · <b>$'+p.pl+'</b></span><button class="btn ej-cerrar" data-tk="'+esc(String(p.ticket))+'">✖ Cerrar</button></div>').join("")+
@@ -2312,6 +2809,8 @@ async function renderEjecutor(){
   $("#ejRef").onclick=renderEjecutor;
   $("#ejRob").onclick=()=>verEjecutor();
   ejecFormWire($("#ejForm"));   /* v7.92 — el MISMO enchufe que el chip del chat */
+  /* 📊 v7.93 — la tabla y la gráfica se pintan aquí, con el DOM ya puesto */
+  try{ resPinta("ejec", opsDelEjecutor(), true); }catch(e){ console.log("[apex] resultados ejec:", e.message); }
   /* 🔐 v7.92 — un toque, y ya. Ni ficheros, ni pedírmelo a mí. */
   if($("#ejCtaSi")) $("#ejCtaSi").onclick=async()=>{
     const cta=String(d.cuentaPend.cuenta);
@@ -5382,6 +5881,17 @@ function viewDiario(){
   ctxWrap.appendChild(barraContexto(()=>{ EDIT_ID=null; refrescarDiarioCtx(); }));
   v.appendChild(ctxWrap);
 
+  /* 📊 v7.93 — EL MISMO BLOQUE, CON SUS OPERACIONES.
+     Rey: «eso también aplicarlo, si no está, a mis registros». Es el mismo motor, la misma
+     tabla y la misma gráfica que el del Ejecutor — a propósito: es lo único que le permite
+     comparar de verdad cómo va él contra cómo va el robot. Si cada uno contara el acierto
+     o las rachas a su manera, la comparación sería mentira.
+     Aquí NO hay columna de dinero: su Diario mide en R, y poner un dinero inventado a
+     partir de un riesgo supuesto sería darle un número que no es suyo. */
+  const resBox=el("div"); resBox.id="resWrapDiario";
+  resBox.innerHTML = resBloqueHTML("diario", "📊 Cómo cerró cada período", "Tus operaciones · medidas en R");
+  v.appendChild(resBox);
+
   const hoy=el("div","card"); hoy.id="cardHoy";
   hoy.innerHTML=`<div class="card-h"><span class="ic">🚦</span><h2>Trades de hoy</h2>
     <span class="cnt" id="cnt-hoy">0/2</span></div>
@@ -5735,6 +6245,9 @@ function tradesFiltrados(){
 }
 
 function renderDiario(){
+  /* 📊 v7.93 — se repinta con cada refresco del Diario: si acaba de registrar un trade,
+     la tabla tiene que reflejarlo en el acto y no al volver a entrar en la sección. */
+  try{ resPinta("diario", opsDelDiario(), false); }catch(e){ console.log("[apex] resultados diario:", e.message); }
   const hoy=hoyISO();
   const esReal = CTX.modo==="real";
   const hoyT = esReal ? tradesCtx().filter(t=>t.fecha===hoy) : [];

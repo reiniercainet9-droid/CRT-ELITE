@@ -1,52 +1,30 @@
-APEX v7.92 — TRADING DESK
+APEX v7.94 — TRADING DESK
 =========================
 
-🔐 CAMBIAR DE CUENTA ES CONECTARLA EN MT5 Y UN TOQUE — se acabó el fichero (y se acabó tener que pedírmelo a mí)
+📈 LA GRÁFICA, AHORA SÍ: CON EJES, ESCALA Y VIDA
 
-Tenías razón: el Ejecutor no puede operar ninguna cuenta que no esté conectada en MT5, así
-que conectarla YA era tu autorización. El fichero cuentas-autorizadas.json era burocracia.
+Tenías razón y no era un detalle: una gráfica sin ejes no es una gráfica, es un dibujo.
+Sin saber qué día es cada barra ni cuánto vale su altura, la forma se puede mirar pero no
+LEER. Te había entregado la mitad del trabajo.
 
-  · El Ejecutor ve una cuenta nueva que no es demo → NO opera y te manda una tarjeta.
-  · La tarjeta sale arriba del todo en 🤖 Ejecutor: «¿Opero la cuenta X?»  [Sí] [No]
-  · Un toque y listo. Queda en la NUBE (no en la PC): si cambias de teléfono, sigue siendo tuyo.
-  · Y si no quieres ni la pregunta: «Opérala sin preguntar» en ⚙️ Tus reglas.
-  · Las cuentas autorizadas salen como fichas, con su ✕ para quitarlas cuando quieras.
+  · DEBAJO DE CADA BARRA, SU FECHA — el día, la semana, el mes o el año según la pestaña.
+    Cuando no caben todas se muestran salteadas, nunca encimadas, y la ÚLTIMA siempre lleva
+    la suya en negrita: es la que te importa.
+  · A LA DERECHA, LA ESCALA — el techo en verde, el cero y el suelo en rojo, con su valor.
+    Sin escala, una barra del doble de alta podría ser diez veces más dinero y no se notaría.
+  · SE TOCA. Toca cualquier barra y justo debajo salen sus números exactos: período, cierre,
+    en R, operaciones, ✓/✗, acierto y acumulado. Eso es lo que convierte el dibujo en un
+    instrumento. Al abrir, sale ya marcado el último período — un panel que empieza vacío
+    parece roto.
+  · Y TIENE VIDA: las barras suben desde el cero y la línea se dibuja sola, una vez, en menos
+    de un segundo. Contenido a propósito: esto es el panel de control de tu dinero, no un
+    juguete. Si tu teléfono pide menos movimiento, no se mueve nada.
+  · La columna elegida se resalta con una banda vertical, como en cualquier gráfico serio.
+    (La primera versión la resaltaba con un borde y la barra se veía HUECA — se vio mirándola
+    a 412 px, que es el ancho real de tu pantalla.)
 
-  Lo único que NO cambia: el silencio nunca autoriza. Sin respuesta tuya, sin config o sin
-  internet → no opera. El fallo cae siempre del lado seguro.
-
-🏢 EL EJECUTOR DEJA DE SER DE FUNDEDNEXT
-
-  · Campo «Empresa / firma de esta cuenta» + botón «🤖 Traer las reglas de esta firma».
-  · Escribes la firma y Roberto rellena su DD máximo y su tope diario — igual que en 💼 Cuentas,
-    reutilizando la misma tabla que ya llevaba meses funcionando ahí.
-  · Sirve para cualquier empresa, mercado y divisa. Revisa siempre lo que traiga.
-
-🔻🧨 EL DD YA NO ES AMBIGUO (lo preguntaste, y que tuvieras que preguntarlo era el fallo)
-
-  · «🔻 Tope de HOY: pérdida máx. del DÍA %»   → lo que puedes perder en una jornada
-  · «🧨 Tope TOTAL: DD máximo de toda la cuenta %» → el que te rompe la cuenta
-  Los dos nombres cambian también en la tarjeta de Roberto y en su memoria.
-
-🖐️ ROBERTO LLEGA A TODAS LAS REGLAS, NO A LAS DE HACE TRES VERSIONES
-
-  Le faltaban seis: el veto de ruedas de prensa y sus dos minutajes, el deslizamiento, el
-  capital inicial y el DD máximo. Ahora también la firma y el candado. Y cada cambio —venga
-  del formulario o de la tarjeta de la cuenta— reescribe su ficha de config: se entera de todo.
-
-  Su tarjeta de confirmación ahora nombra las reglas como las ves tú, no con mis nombres
-  internos: «🧨 Tope TOTAL (DD máximo de toda la cuenta %)», no «ddMaxPct».
-
-🎯 Y LA REGLA DEL GATILLO TAMBIÉN PASA A TUS MANOS (era el pendiente A5)
-
-  El Ejecutor la aplica desde que la corregiste el 07-09 —«el gatillo no es por par, es por
-  sesión»— y aquella madrugada te devolvió dos señales de Nueva York. Pero vivía escondida
-  dentro del programa de la PC: hacía lo correcto por casualidad, no por ley.
-
-  · «🎯 Entradas por SESIÓN (Londres y NY van aparte)» → hoy 1
-  · «Hora NY que separa Londres de NY» → hoy 6 (las 06:00 de Nueva York)
-
-  Ojo: esa hora va en hora de NUEVA YORK, la del gráfico, no la tuya de Timbó.
+Todo lo demás de la v7.93 sigue igual: las cuatro pestañas, la tabla que cabe entera, el
+mejor y peor período, el aviso de racha, y Roberto informado y juzgando en las dos secciones.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
