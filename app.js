@@ -1339,7 +1339,24 @@ function ejecFormHTML(cfg){
     '<label style="font-size:.85em">Hora de<select class="inp ia-ejec-tz"><option value="America/New_York"'+(cfg.tz!=="America/Sao_Paulo"?" selected":"")+'>Nueva York (gráfico)</option><option value="America/Sao_Paulo"'+(cfg.tz==="America/Sao_Paulo"?" selected":"")+'>Brasil (tu reloj)</option></select></label>'+
     '<label style="font-size:.85em">Lote máximo<input class="inp ia-ejec-maxlote" type="number" step="0.01" min="0.01" max="50" value="'+esc(String(cfg.maxLote!=null?cfg.maxLote:1))+'"></label>'+
     '<label style="grid-column:1/3;font-size:.85em">🛑 Veto (revisión ANTES de entrar)<select class="inp ia-ejec-veto"><option value="1"'+(cfg.veto!==false?" selected":"")+'>Activado — Roberto revisa noticias y contexto y puede frenar la entrada</option><option value="0"'+(cfg.veto===false?" selected":"")+'>Apagado — ejecuta directo con tus reglas</option></select></label>'+
-    '<label style="font-size:.85em">Sin noticias fuertes (± minutos)<input class="inp ia-ejec-vetomin" type="number" step="5" min="5" max="120" value="'+esc(String(cfg.vetoNoticiasMin!=null?cfg.vetoNoticiasMin:30))+'"></label>';
+    '<label style="font-size:.85em">Sin noticias fuertes (± minutos)<input class="inp ia-ejec-vetomin" type="number" step="5" min="5" max="120" value="'+esc(String(cfg.vetoNoticiasMin!=null?cfg.vetoNoticiasMin:15))+'"></label>'+
+    /* 🎤 v7.91 — EL VETO DE RUEDAS DE PRENSA, A LA VISTA Y EN SUS MANOS.
+       Rey (10-09): «¿dónde está la configuración del veto tras una conferencia de prensa?…
+       en la sección solo veo la de 15 minutos y la otra no sé ni dónde está… todas las reglas
+       del Ejecutor deben ser configurables, no quedar clavadas dentro… y debe poder cancelarse».
+       Tenía razón en las tres: la puse en el worker y NO le di manera de verla ni tocarla.
+       Y en el fondo también: la ventana de noticias de FundedNext es de ±5 MINUTOS. Mis 90
+       eran míos, no suyos. Aquí el antes y el después son dos números distintos, y se apaga. */
+    '<label style="grid-column:1/3;font-size:.85em">🎤 Veto tras ruedas de prensa (BCE, Fed, Powell…)<select class="inp ia-ejec-vrueda"><option value="1"'+(cfg.vetoRueda!==false?" selected":"")+'>Activado</option><option value="0"'+(cfg.vetoRueda===false?" selected":"")+'>Apagado</option></select></label>'+
+    '<label style="font-size:.85em">…minutos ANTES<input class="inp ia-ejec-vrantes" type="number" step="5" min="0" max="240" value="'+esc(String(cfg.vetoRuedaAntes!=null?cfg.vetoRuedaAntes:15))+'"></label>'+
+    '<label style="font-size:.85em">…minutos DESPUÉS<input class="inp ia-ejec-vrdesp" type="number" step="5" min="0" max="240" value="'+esc(String(cfg.vetoRuedaMin!=null?cfg.vetoRuedaMin:45))+'"></label>'+
+    '<div class="desc" style="grid-column:1/3;font-size:11.5px;line-height:1.4;margin:-2px 0 6px">Un DATO se publica en un instante (±minutos). Una RUEDA DE PRENSA dura y deja cola, por eso lleva su propia ventana. <b>FundedNext permite operar en noticias</b>: su regla es ±5 min y, en cuentas fondeadas, el 40% del beneficio de esas operaciones va al saldo. Si no lo quieres, apágalo aquí.</div>'+
+    /* 🧱 v7.91 — y las tres del freno por HUECO. Sin capital y DD máximo, el tope de la firma
+       no existe: la protección estaría muerta justo en la cuenta donde más importa. */
+    '<label style="grid-column:1/3;font-size:.85em">🧱 Margen por deslizamiento (tu stop del 10-09 costó 1,09R)<input class="inp ia-ejec-desliz" type="number" step="0.01" min="1" max="2" value="'+esc(String(cfg.deslizamiento!=null?cfg.deslizamiento:1.10))+'"></label>'+
+    '<label style="font-size:.85em">Capital inicial de la cuenta ($)<input class="inp ia-ejec-capital" type="number" step="100" min="0" value="'+esc(String(cfg.capitalInicial!=null?cfg.capitalInicial:0))+'"></label>'+
+    '<label style="font-size:.85em">DD máximo de la firma (%)<input class="inp ia-ejec-ddmax" type="number" step="0.5" min="0" max="50" value="'+esc(String(cfg.ddMaxPct!=null?cfg.ddMaxPct:0))+'"></label>'+
+    '<div class="desc" style="grid-column:1/3;font-size:11.5px;line-height:1.4;margin:-2px 0 2px">El Ejecutor nunca arriesga más de lo que <b>cabe hasta la pared</b>: lo que queda de tu tope diario y del DD máximo, menos el margen de deslizamiento. Si no cabe, no entra. <b>Deja capital y DD en 0 si la cuenta no es de firma.</b></div>';
 }
 function ejecLeerForm(root){
   const q=(c)=>root.querySelector("."+c);
@@ -1355,6 +1372,12 @@ function ejecLeerForm(root){
     maxLote:parseFloat(q("ia-ejec-maxlote").value),
     veto:q("ia-ejec-veto").value==="1",
     vetoNoticiasMin:parseInt(q("ia-ejec-vetomin").value,10),
+    vetoRueda:q("ia-ejec-vrueda").value==="1",
+    vetoRuedaAntes:parseInt(q("ia-ejec-vrantes").value,10),
+    vetoRuedaMin:parseInt(q("ia-ejec-vrdesp").value,10),
+    deslizamiento:parseFloat(q("ia-ejec-desliz").value),
+    capitalInicial:parseFloat(q("ia-ejec-capital").value),
+    ddMaxPct:parseFloat(q("ia-ejec-ddmax").value),
   };
   if(!body.pares.length){ toast("Pon al menos un par (ej: EURUSD)"); return null; }
   return body;
@@ -1427,7 +1450,7 @@ async function verEjecutor(){
       "**Estado:** "+(d.on?"🟢 ENCENDIDO (vigilando — solo entra cuando TU indicador confirme una señal que pase tus reglas)":"🔴 APAGADO (solo observa)")+"\n"+
       "**Estrategia ⭐ vigente:** "+((d.cfg&&d.cfg.estrategiaVigente)||"CRT Elite")+"\n"+
       confTxt+
-      "**Revisión previa (veto):** "+(cfgV.veto!==false?("🛑 activada — antes de cada entrada: noticias ±"+(cfgV.vetoNoticiasMin||15)+" min + contexto de Roberto"):"apagada (ejecuta directo)")+"\n"+
+      "**Revisión previa (veto):** "+(cfgV.veto!==false?("🛑 activada — antes de cada entrada: noticias ±"+(cfgV.vetoNoticiasMin||15)+" min"+(cfgV.vetoRueda!==false?(" · ruedas de prensa "+(cfgV.vetoRuedaAntes!=null?cfgV.vetoRuedaAntes:15)+"/"+(cfgV.vetoRuedaMin!=null?cfgV.vetoRuedaMin:45)+" min"):" · ruedas de prensa apagado")+" + contexto de Roberto"):"apagada (ejecuta directo)")+"\n"+
       "**Programa en la PC:** "+(d.vivo?"✅ conectado":"❌ sin conexión — abre 'Arrancar Ejecutor Apex' en la PC (con MT5 abierto)")+"\n"+
       (live.cuenta?("**Cuenta MT5:** "+live.cuenta+" · "+(live.demo?"DEMO ✅":"⚠️ NO demo (no opera)")+" · balance "+(live.balance!=null?live.balance:"?")+" "+(live.moneda||"")+"\n"):"")+
       (live.opsHoy!=null?("**Hoy:** "+live.opsHoy+" operación(es) · P&L $"+(live.plHoy!=null?live.plHoy:"0")+(live.enHorario===false?" · ⏸ fuera de tu horario":"")+"\n"):"");
@@ -2114,7 +2137,7 @@ async function renderEjecutor(){
         '<div>🖥️ Programa en la PC: '+(d.vivo?"✅ conectado":"❌ sin conexión — abre \'Arrancar Ejecutor Apex\' (con MT5 abierto)")+'</div>'+
         (live.cuenta?('<div>🏦 Cuenta MT5: '+esc(live.cuenta)+' · '+(live.demo?"DEMO ✅":"⚠️ NO demo (no opera)")+' · balance '+(live.balance!=null?live.balance:"?")+' '+esc(live.moneda||"")+'</div>'):"")+
         (live.opsHoy!=null?('<div>📊 Hoy: '+live.opsHoy+' operación(es) · P&L $'+(live.plHoy!=null?live.plHoy:"0")+(live.enHorario===false?" · ⏸ fuera de tu horario":"")+'</div>'):"")+
-        '<div>🛑 Veto previo: '+(cfg.veto!==false?("activado (noticias ±"+(cfg.vetoNoticiasMin||15)+" min + contexto de Roberto)"):"apagado")+'</div>'+
+        '<div>🛑 Veto previo: '+(cfg.veto!==false?("activado (noticias ±"+(cfg.vetoNoticiasMin||15)+" min"+(cfg.vetoRueda!==false?(" · ruedas de prensa "+(cfg.vetoRuedaAntes!=null?cfg.vetoRuedaAntes:15)+" antes / "+(cfg.vetoRuedaMin!=null?cfg.vetoRuedaMin:45)+" después"):" · ruedas de prensa APAGADO")+" + contexto de Roberto)"):"apagado")+'</div>'+
       '</div>'+
       '<div style="display:flex;gap:8px;margin-top:10px">'+
         '<button class="btn '+(d.on?"":"gold")+'" id="ejSw" style="flex:1;font-weight:700;font-size:1.05em">'+(d.on?"🔴 DETENER":"🟢 ENCENDER")+'</button>'+
