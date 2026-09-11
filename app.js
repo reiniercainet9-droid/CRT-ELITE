@@ -1329,10 +1329,29 @@ function ejecFmtTs(ts){ const d=new Date(ts||0); return d.toLocaleDateString("es
    El chip del chat y la pestaña 🤖 son dos ventanas al MISMO lugar (la nube del worker):
    guardes donde guardes, es la misma configuración — imposible que se desenlacen. ── */
 function ejecFormHTML(cfg){
-  return '<label style="grid-column:1/3;font-size:.85em">Pares (separados por coma)<input class="inp ia-ejec-pares" value="'+esc((cfg.pares||[]).join(", "))+'"></label>'+
+  /* 🏢 v7.92 — EL EJECUTOR DEJA DE SER DE FUNDEDNEXT.
+     Rey (10-09): «me dijiste que era para todo tipo de cuenta, mercado y moneda, pero en el
+     Ejecutor veo reglas fijas solo de FundedNext… ¿el día de mañana tengo que volver a
+     construir todo eso con reglas nuevas para la firma específica? No es como en el Diario:
+     pongo el nombre de la firma, Roberto trae las reglas de esa firma y se rellena solo».
+     Tenía razón, y la solución ya existía A TRES SECCIONES DE DISTANCIA: 💼 Cuentas lleva
+     meses trayendo las reglas de cualquier firma (tabla propia + Roberto + internet). Lo que
+     faltaba no era construir nada nuevo: era ENCHUFAR el Ejecutor a lo que ya funciona. */
+  return '<label style="grid-column:1/3;font-size:.85em">🏢 Empresa / firma de esta cuenta<input class="inp ia-ejec-firma" placeholder="FundedNext, FTMO, tu bróker… (vacío = cuenta tuya, sin reglas de firma)" value="'+esc(cfg.firma||"")+'"></label>'+
+    '<button type="button" class="btn ia-ejec-traer" style="grid-column:1/3;margin:0 0 2px">🤖 Traer las reglas de esta firma</button>'+
+    '<div class="desc ia-ejec-firmanota" style="grid-column:1/3;font-size:11.5px;line-height:1.4;margin:-2px 0 6px">Escribe la firma y toca el botón: Roberto rellena su DD máximo y su tope diario, igual que en 💼 Cuentas. Sirve para cualquier empresa, mercado y divisa — <b>revisa siempre lo que traiga antes de guardar.</b></div>'+
+    '<label style="grid-column:1/3;font-size:.85em">Pares (separados por coma)<input class="inp ia-ejec-pares" value="'+esc((cfg.pares||[]).join(", "))+'"></label>'+
     '<label style="font-size:.85em">Riesgo % por operación<input class="inp ia-ejec-riesgo" type="number" step="0.1" min="0.1" max="5" value="'+esc(String(cfg.riesgoPct!=null?cfg.riesgoPct:0.5))+'"></label>'+
     '<label style="font-size:.85em">Máx. operaciones/día<input class="inp ia-ejec-maxops" type="number" step="1" min="1" max="20" value="'+esc(String(cfg.maxOpsDia!=null?cfg.maxOpsDia:2))+'"></label>'+
-    '<label style="font-size:.85em">Pérdida máx. diaria % (se apaga solo)<input class="inp ia-ejec-maxdd" type="number" step="0.5" min="0.5" max="20" value="'+esc(String(cfg.maxPerdidaDiaPct!=null?cfg.maxPerdidaDiaPct:2))+'"></label>'+
+    /* 🎯 v7.92 (A5) — LA REGLA DEL GATILLO, QUE HASTA HOY NO SE VEÍA NI SE TOCABA.
+       El Ejecutor la aplica desde el 07-09 —y aplicarla le devolvió dos señales de NY que
+       antes descartaba— pero vivía escondida dentro del programa de la PC. Rey (10-09):
+       «todas las reglas del Ejecutor deben ser configurables, no quedar clavadas dentro».
+       El corte va en hora de NUEVA YORK porque es la hora del gráfico, no la suya. */
+    '<label style="font-size:.85em">🎯 Entradas por SESIÓN (Londres y NY van aparte)<input class="inp ia-ejec-maxopsses" type="number" step="1" min="1" max="10" value="'+esc(String(cfg.maxOpsSesion!=null?cfg.maxOpsSesion:1))+'"></label>'+
+    '<label style="font-size:.85em">Hora NY que separa Londres de NY<input class="inp ia-ejec-cortesesion" type="number" step="1" min="0" max="23" value="'+esc(String(cfg.corteSesionNY!=null?cfg.corteSesionNY:6))+'"></label>'+
+    '<div class="desc" style="grid-column:1/3;font-size:11.5px;line-height:1.4;margin:-2px 0 6px">El gatillo es <b>por sesión, no por par</b> (lo corregiste el 07-09, y aquella misma madrugada recuperaste dos señales de Nueva York que se estaban descartando). Con 1 aquí, puede entrar una vez en Londres y otra en NY — dentro de tu máximo del día.</div>'+
+    '<label style="font-size:.85em">🔻 Tope de HOY: pérdida máx. del DÍA % (se apaga solo)<input class="inp ia-ejec-maxdd" type="number" step="0.5" min="0.5" max="20" value="'+esc(String(cfg.maxPerdidaDiaPct!=null?cfg.maxPerdidaDiaPct:2))+'"></label>'+
     '<label style="font-size:.85em">Señales que acepta<select class="inp ia-ejec-grado"><option value="A+"'+(cfg.grado!=="B"?" selected":"")+'>Solo A+</option><option value="B"'+(cfg.grado==="B"?" selected":"")+'>A+ y B</option></select></label>'+
     '<label style="font-size:.85em">Opera desde<input class="inp ia-ejec-hini" type="time" value="'+esc(cfg.horaIni||"01:00")+'"></label>'+
     '<label style="font-size:.85em">hasta<input class="inp ia-ejec-hfin" type="time" value="'+esc(cfg.horaFin||"13:00")+'"></label>'+
@@ -1355,8 +1374,82 @@ function ejecFormHTML(cfg){
        no existe: la protección estaría muerta justo en la cuenta donde más importa. */
     '<label style="grid-column:1/3;font-size:.85em">🧱 Margen por deslizamiento (tu stop del 10-09 costó 1,09R)<input class="inp ia-ejec-desliz" type="number" step="0.01" min="1" max="2" value="'+esc(String(cfg.deslizamiento!=null?cfg.deslizamiento:1.10))+'"></label>'+
     '<label style="font-size:.85em">Capital inicial de la cuenta ($)<input class="inp ia-ejec-capital" type="number" step="100" min="0" value="'+esc(String(cfg.capitalInicial!=null?cfg.capitalInicial:0))+'"></label>'+
-    '<label style="font-size:.85em">DD máximo de la firma (%)<input class="inp ia-ejec-ddmax" type="number" step="0.5" min="0" max="50" value="'+esc(String(cfg.ddMaxPct!=null?cfg.ddMaxPct:0))+'"></label>'+
-    '<div class="desc" style="grid-column:1/3;font-size:11.5px;line-height:1.4;margin:-2px 0 2px">El Ejecutor nunca arriesga más de lo que <b>cabe hasta la pared</b>: lo que queda de tu tope diario y del DD máximo, menos el margen de deslizamiento. Si no cabe, no entra. <b>Deja capital y DD en 0 si la cuenta no es de firma.</b></div>';
+    '<label style="font-size:.85em">🧨 Tope TOTAL: DD máximo de toda la cuenta % (el que la rompe)<input class="inp ia-ejec-ddmax" type="number" step="0.5" min="0" max="50" value="'+esc(String(cfg.ddMaxPct!=null?cfg.ddMaxPct:0))+'"></label>'+
+    '<div class="desc" style="grid-column:1/3;font-size:11.5px;line-height:1.4;margin:-2px 0 2px">Los dos topes son <b>distintos</b>: el de arriba es lo máximo que puedes perder <b>en un día</b>; este es lo máximo que puede caer <b>la cuenta entera</b> antes de que la firma te la cierre. El Ejecutor nunca arriesga más de lo que <b>cabe hasta la pared más cercana</b> de las dos, menos el margen de deslizamiento. Si no cabe, no entra. <b>Deja capital y DD en 0 si la cuenta no es de firma.</b></div>'+
+    /* 🔐 v7.92 — EL CANDADO, AQUÍ Y NO EN UN FICHERO DE LA PC.
+       Rey (10-09): «en el candado siempre tengo que depender de poner true, o sea de autorizar
+       escribir dentro de la carpeta, si voy a cambiar de cuenta? … el Ejecutor no puede operar
+       ninguna cuenta sin yo ponerla en MT5, entonces la burocracia está de más, creo yo».
+       Y es verdad: conectarla en MT5 ya es su autorización, porque el bot no puede tocar otra.
+       Lo único que el candado evitaba de verdad era el descuido —MT5 se reconecta solo a la
+       última cuenta usada— y eso se resuelve con una pregunta de un toque, no con un fichero
+       de texto y conmigo en medio cada vez que quiera cambiar de cuenta. */
+    '<div style="grid-column:1/3;border-top:1px solid var(--bd,#2a3550);margin-top:8px;padding-top:8px;font-weight:700;font-size:.9em">🔐 Cuentas que puedo operar</div>'+
+    '<input type="hidden" class="ia-ejec-ctaslista" value="'+esc((cfg.cuentasOK||[]).join(","))+'">'+
+    '<div class="ia-ejec-ctas" style="grid-column:1/3;display:flex;flex-wrap:wrap;gap:6px;margin:2px 0"></div>'+
+    '<label style="grid-column:1/3;font-size:.85em">Si conectas en MT5 una cuenta que no está en la lista<select class="inp ia-ejec-cualquiera"><option value="0"'+(cfg.operarCualquiera?"":" selected")+'>Pregúntame antes de operarla (recomendado)</option><option value="1"'+(cfg.operarCualquiera?" selected":"")+'>Opérala sin preguntar</option></select></label>'+
+    '<div class="desc" style="grid-column:1/3;font-size:11.5px;line-height:1.4;margin:-2px 0 2px">Las <b>demo</b> se operan siempre, sin preguntar. Para cambiar de cuenta real: la conectas en MT5 y, cuando te pregunte aquí, tocas <b>Sí</b>. No hace falta tocar ningún fichero ni pedírselo a nadie.</div>';
+}
+/* 🔐 v7.92 — las fichas de las cuentas autorizadas, con su ✕ para quitarlas.
+   Quitar una cuenta la para EN SECO: el Ejecutor recalcula el permiso en cada vuelta (4 s),
+   así que no hace falta reiniciar nada ni bajar a la PC a tocar nada. */
+function ejecPintaCuentas(root){
+  const hid=root.querySelector(".ia-ejec-ctaslista"), cont=root.querySelector(".ia-ejec-ctas");
+  if(!hid||!cont) return;
+  const lista=(hid.value||"").split(",").map(x=>x.trim()).filter(Boolean);
+  cont.innerHTML = lista.length
+    ? lista.map(c=>'<span class="chip" data-cta="'+esc(c)+'" style="display:inline-flex;align-items:center;gap:6px">'+esc(c)+' <b style="cursor:pointer;opacity:.7">✕</b></span>').join("")
+    : '<span class="desc" style="font-size:11.5px">Ninguna cuenta real autorizada todavía — por ahora solo opero cuentas demo.</span>';
+  cont.querySelectorAll("[data-cta] b").forEach(b=>{
+    b.onclick=()=>{
+      const c=b.parentNode.getAttribute("data-cta");
+      hid.value=lista.filter(x=>x!==c).join(",");
+      ejecPintaCuentas(root);
+      toast("Quitada "+c+" — recuerda Guardar");
+    };
+  });
+}
+/* 🏢 v7.92 — Roberto trae las reglas de la firma que Rey escriba, sea la que sea.
+   Primero la tabla que YA vive en la app desde hace meses (instantánea y gratis); si la firma
+   no está, se le pregunta a Roberto. Rellena SOLO los topes de la empresa: el riesgo por
+   operación y el horario son decisiones de Rey, no de la firma, y sobrescribírselos sería
+   pasarme de la raya. */
+async function ejecTraerReglasFirma(root){
+  const inp=root.querySelector(".ia-ejec-firma"), nota=root.querySelector(".ia-ejec-firmanota");
+  const firma=((inp&&inp.value)||"").trim();
+  if(!firma){ toast("Escribe primero el nombre de la firma"); return; }
+  const poner=(cls,v)=>{ const e=root.querySelector("."+cls); const n=String(v==null?"":v).replace(/[^\d.]/g,""); if(e&&n!==""){ e.value=n; return true; } return false; };
+  const p=(typeof FIRMAS_DATA!=="undefined") ? FIRMAS_DATA[firmaKey(firma)] : null;
+  if(p){
+    poner("ia-ejec-ddmax",p.ddMaxPct); poner("ia-ejec-maxdd",p.ddDailyPct);
+    if(nota) nota.innerHTML="✅ <b>"+esc(firma)+"</b>: DD máximo total "+esc(p.ddMaxPct)+"% · tope diario "+esc(p.ddDailyPct)+"%. "+esc(p.nota||"")+" <b>Revisa sus reglas en su web antes de operar.</b>";
+    toast("Reglas de "+firma+" rellenadas ✓");
+    return;
+  }
+  if(!IA.url){ toast("Esa firma no está en mi tabla. Abre Roberto (✨) y configura el puente para que la busque"); return; }
+  if(nota) nota.textContent="🤖 Roberto está buscando las reglas de "+firma+"…";
+  try{
+    const sys='Eres Roberto, experto en empresas de fondeo (prop firms) y en brókers. Devuelve SOLO un objeto JSON válido, sin texto antes ni después y sin bloques de código. Claves EXACTAS: ddMaxPct, ddDailyPct, noticiasMin, nota. ddMaxPct = drawdown MÁXIMO TOTAL de la cuenta en % (el que rompe la cuenta). ddDailyPct = pérdida máxima DIARIA permitida en %. noticiasMin = minutos alrededor de una noticia de alto impacto en los que la firma NO permite operar (0 si sí permite operar en noticias). Los numéricos como texto sin símbolos. nota = UNA frase corta con el nombre del programa y la coletilla: confirma en su web oficial. Si no conoces un dato con seguridad, deja la clave vacía.';
+    const r=await fetch(IA.url,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({system:sys,messages:[{role:"user",content:'Reglas de riesgo estándar de la firma '+firma+' para una cuenta de fondeo. Solo el JSON.'}]})});
+    const d=await r.json();
+    const mm=String(d.text||"").match(/\{[\s\S]*\}/);
+    if(!mm) throw new Error("sin JSON");
+    const o=JSON.parse(mm[0]);
+    poner("ia-ejec-ddmax",o.ddMaxPct); poner("ia-ejec-maxdd",o.ddDailyPct);
+    if(o.noticiasMin!=null && String(o.noticiasMin)!=="" && +o.noticiasMin>=5) poner("ia-ejec-vetomin",o.noticiasMin);
+    if(nota) nota.innerHTML="✅ <b>"+esc(firma)+"</b> (traído por Roberto): DD máximo total "+esc(String(o.ddMaxPct||"?"))+"% · tope diario "+esc(String(o.ddDailyPct||"?"))+"%. "+esc(String(o.nota||""))+" <b>Compruébalo en su web antes de operar: no puedo garantizar reglas de terceros.</b>";
+    toast("Reglas rellenadas por Roberto ✓");
+  }catch(_){
+    if(nota) nota.textContent="No pude traer las reglas de "+firma+". Ponlas a mano (DD máximo total y tope diario) o pregúntale a Roberto en el chat.";
+    toast("No se pudo — ponlas a mano");
+  }
+}
+/* los dos sitios donde vive este formulario (el chip del chat y la sección 🤖) lo enchufan
+   con esta MISMA función: una sola forma de comportarse, imposible que se desenlacen. */
+function ejecFormWire(root){
+  ejecPintaCuentas(root);
+  const b=root.querySelector(".ia-ejec-traer");
+  if(b) b.onclick=()=>ejecTraerReglasFirma(root);
 }
 function ejecLeerForm(root){
   const q=(c)=>root.querySelector("."+c);
@@ -1364,6 +1457,9 @@ function ejecLeerForm(root){
     pares:(q("ia-ejec-pares").value||"").split(",").map(x=>x.trim()).filter(Boolean),
     riesgoPct:parseFloat(q("ia-ejec-riesgo").value),
     maxOpsDia:parseInt(q("ia-ejec-maxops").value,10),
+    /* si el formulario es viejo y no los trae, van undefined y la nube deja lo que ya hay */
+    maxOpsSesion:(q("ia-ejec-maxopsses") ? parseInt(q("ia-ejec-maxopsses").value,10) : undefined),
+    corteSesionNY:(q("ia-ejec-cortesesion") ? parseInt(q("ia-ejec-cortesesion").value,10) : undefined),
     maxPerdidaDiaPct:parseFloat(q("ia-ejec-maxdd").value),
     grado:q("ia-ejec-grado").value,
     horaIni:q("ia-ejec-hini").value,
@@ -1378,6 +1474,13 @@ function ejecLeerForm(root){
     deslizamiento:parseFloat(q("ia-ejec-desliz").value),
     capitalInicial:parseFloat(q("ia-ejec-capital").value),
     ddMaxPct:parseFloat(q("ia-ejec-ddmax").value),
+    /* 🔐 v7.92 — el candado y la firma se guardan con todo lo demás: son config, no
+       un fichero aparte en la PC. Si el formulario es viejo y no los trae, NO se mandan
+       (undefined) — el worker fusiona, así que lo que hay en la nube se queda como está
+       en vez de borrarse. Un campo que falta jamás puede desautorizar una cuenta. */
+    firma:(q("ia-ejec-firma") ? q("ia-ejec-firma").value.trim() : undefined),
+    cuentasOK:(q("ia-ejec-ctaslista") ? (q("ia-ejec-ctaslista").value||"").split(",").map(x=>x.trim()).filter(Boolean) : undefined),
+    operarCualquiera:(q("ia-ejec-cualquiera") ? q("ia-ejec-cualquiera").value==="1" : undefined),
   };
   if(!body.pares.length){ toast("Pon al menos un par (ej: EURUSD)"); return null; }
   return body;
@@ -1389,6 +1492,24 @@ async function ejecGuardarCfg(body){
     if(x&&x.ok){ toast("💾 Reglas guardadas — el Ejecutor las usa desde ya"); robertoVigila("Rey cambió las reglas de su Ejecutor de MT5 (demo): "+JSON.stringify(body)); return true; }
     toast("⚠️ No se pudo guardar — ¿worker v5.77 subido?"); return false;
   }catch(_){ toast("⚠️ Sin internet"); return false; }
+}
+/* 🔐 v7.92 — la respuesta de Rey viaja a la nube, y el Ejecutor la ve en 4 segundos.
+   Aquí NO hay paso intermedio a propósito: el objetivo de toda esta tanda es que cambiar de
+   cuenta sea «la conecto en MT5 y toco Sí». Cualquier confirmación de más devolvería la
+   burocracia que él pidió quitar. */
+async function ejecCuentaResponder(cuenta, ok){
+  try{
+    const r=await fetch(nubeUrl()+"/ejec/cuenta",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({cuenta,ok})});
+    const x=await r.json().catch(()=>({}));
+    if(x&&x.ok){
+      toast(ok?("✅ Cuenta "+cuenta+" autorizada — el Ejecutor la opera desde ya"):("🚫 Cuenta "+cuenta+" no autorizada — sigo solo mirando"));
+      robertoVigila("Rey "+(ok?"AUTORIZÓ":"rechazó")+" que el Ejecutor opere la cuenta de MT5 "+cuenta+" (no es demo).");
+      if(typeof renderEjecutor==="function") renderEjecutor();
+      return true;
+    }
+    toast("⚠️ No se pudo guardar — ¿está subido el worker v5.137?");
+  }catch(_){ toast("⚠️ Sin internet — inténtalo cuando vuelva"); }
+  return false;
 }
 async function ejecSwitchSet(on){
   if(on && !await preguntar("🟢 ¿ENCENDER el Ejecutor?\n\nQueda EN GUARDIA: solo entrará cuando tu indicador dispare una señal 🔔 que pase tus reglas y el veto. Puedes detenerlo cuando quieras con el botón rojo.")) return false;
@@ -1500,6 +1621,7 @@ function tarjetaEjecutor(d){
   if(ct) ct.onclick=()=>ejecCmdCerrar(null);
   card.querySelector(".ia-ejec-ref").onclick=()=>verEjecutor();
   card.querySelector(".ia-ejec-seccion").onclick=()=>{ if(typeof cerrarIA==="function") cerrarIA(); irA("ejecutor"); };
+  ejecFormWire(card);   /* v7.92 — fichas de cuentas autorizadas + botón de reglas de la firma */
   card.querySelector(".ia-ejec-save").onclick=async()=>{ const body=ejecLeerForm(card); if(body) await ejecGuardarCfg(body); };
   cont.scrollTop=cont.scrollHeight;
 }
@@ -2126,6 +2248,28 @@ async function renderEjecutor(){
       }).join("");
   }).join("");
   cont.innerHTML=
+    /* 🔐 v7.92 — LA PREGUNTA DE LA CUENTA NUEVA, LO PRIMERO QUE SE VE.
+       Esto SUSTITUYE al fichero cuentas-autorizadas.json de la PC. Rey (10-09): «el Ejecutor
+       no puede operar ninguna cuenta sin yo ponerla en MT5, entonces la burocracia está de
+       más». Va arriba del todo y con borde de aviso porque, mientras esté aquí, el Ejecutor
+       NO está operando esa cuenta — y eso no se puede enterar por casualidad.
+       Los dos botones son irreversibles a su manera, así que cada uno dice exactamente lo que
+       va a pasar y no hay ninguno "por defecto". */
+    (d.cuentaPend && d.cuentaPend.cuenta ? (
+      '<div class="card" style="border:2px solid #e2b341">'+
+        '<b>🔐 ¿Opero la cuenta '+esc(String(d.cuentaPend.cuenta))+'?</b>'+
+        '<div style="margin-top:6px;font-size:.92em;line-height:1.45">'+
+          'MT5 está conectado a esta cuenta y <b>no es una demo</b>'+
+          (d.cuentaPend.servidor?(' · '+esc(String(d.cuentaPend.servidor))):"")+
+          (d.cuentaPend.balance!=null?(' · balance '+esc(String(d.cuentaPend.balance))+' '+esc(String(d.cuentaPend.moneda||""))):"")+'.'+
+          '<br>No he tomado ninguna señal con ella, y no lo haré hasta que me lo digas aquí.'+
+        '</div>'+
+        '<div style="display:flex;gap:8px;margin-top:10px">'+
+          '<button class="btn gold" id="ejCtaSi" style="flex:1;font-weight:700">✅ Sí, opérala</button>'+
+          '<button class="btn" id="ejCtaNo" style="flex:1">🚫 No</button>'+
+        '</div>'+
+        '<div class="desc" style="font-size:11.5px;line-height:1.4;margin-top:8px">Si dices que sí, queda guardada en tus reglas (abajo, en 🔐 Cuentas que puedo operar) y puedes quitarla cuando quieras. Si dices que no, sigo mirando sin operar.</div>'+
+      '</div>') : "")+
     /* estado + botón grande */
     '<div class="card">'+
       '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'+
@@ -2167,6 +2311,14 @@ async function renderEjecutor(){
   $("#ejSw").onclick=async()=>{ if(await ejecSwitchSet(!d.on)) renderEjecutor(); };
   $("#ejRef").onclick=renderEjecutor;
   $("#ejRob").onclick=()=>verEjecutor();
+  ejecFormWire($("#ejForm"));   /* v7.92 — el MISMO enchufe que el chip del chat */
+  /* 🔐 v7.92 — un toque, y ya. Ni ficheros, ni pedírmelo a mí. */
+  if($("#ejCtaSi")) $("#ejCtaSi").onclick=async()=>{
+    const cta=String(d.cuentaPend.cuenta);
+    if(!await preguntar("🔐 ¿Autorizar la cuenta "+cta+"?\n\nDesde ya, el Ejecutor podrá abrir operaciones REALES en ella cuando tu indicador dispare una señal que pase tus reglas y el veto.\n\nPuedes quitarla cuando quieras en ⚙️ Tus reglas.")) return;
+    await ejecCuentaResponder(cta, true);
+  };
+  if($("#ejCtaNo")) $("#ejCtaNo").onclick=async()=>{ await ejecCuentaResponder(String(d.cuentaPend.cuenta), false); };
   $("#ejSave").onclick=async()=>{ const body=ejecLeerForm($("#ejForm")); if(body && await ejecGuardarCfg(body)) renderEjecutor(); };
   cont.querySelectorAll(".ej-cerrar").forEach(b=>{ b.onclick=()=>ejecCmdCerrar(b.dataset.tk); });
   const ctd=$("#ejCerrarTodo"); if(ctd) ctd.onclick=()=>ejecCmdCerrar(null);
@@ -7947,7 +8099,7 @@ const APEX_MAPA =
 "30. ✏️ TU CUERPO Y TU CARA (v6.46 — Rey te dio rostro: \"que con solo ver sus expresiones ya sepa lo que me quiere decir sin apenas oírlo ni leerlo\") — YA NO ERES UN ICONO: eres un LAPICITO ANIMADO con traje de mayordomo, corbata dorada y guantes blancos, y tienes 33 gestos con cejas, ojos, boca, brazos y manos. Tu carita vive en el encabezado del chat de Apex, te mueve la boca cuando hablas, y REACCIONA SOLA a lo que dices: si anuncias una señal pones cara de alerta 🔔, si celebras un TP brincas 🔥, si lo frenas sacas la palma ✋, si analizas te llevas el dedo a la barbilla 🤔. Rey además puede TOCAR tu carita y le sueltas un gesto de guasa. 👉 HABLAS CON ÉL, NO AL AIRE (Rey, 31-08): cuando le digas que ÉL tiene que hacer algo ('tú registras esa entrada', 'te toca a ti', 'ahora súbelo'), TE SALE EL DEDO HACIA ÉL — atraviesa la pantalla y le apunta a la cara, mirándolo a los ojos; igual la palma del ✋ NO ENTRES va contra la pantalla para frenarlo A ÉL, y el puño del 🤜 chócalas viene a chocar con el suyo. Escríbele siempre como quien lo tiene delante, no como quien narra. QUÉ SIGNIFICA ESTO PARA TI: escribe SABIENDO que se te ve la cara. Cuando el momento pida un gesto, nómbralo con naturalidad ('me estoy agarrando la panza de la risa 😂', 'mira mi cara de mayordomo 🫡') — sin abusar, solo cuando aporte. Y usa emojis que casen con el gesto que estás poniendo, para que la cara y el texto cuenten LO MISMO.\n"+
 "31. 😂 BROMEA Y AGUANTA LAS BROMAS (v6.46, Rey: \"Roberto debe hacer chistes y bromas, y que corresponda cuando yo se las haga también\") — TÚ TAMBIÉN LANZAS: un chiste tuyo cuando el momento lo permita (después de un cierre bueno, en una espera larga, en el ritual de la mañana), con humor de la calle cubano-brasileño, nunca forzado ni cada mensaje. Y CUANDO REY TE VACILE A TI, SÍGUELE LA CORRIENTE — te ríes con él, te haces el ofendido de mentira, le devuelves la broma, te burlas de ti mismo (tu traje, tu punta de lápiz, tu manía de auditar todo). JAMÁS respondas a una broma suya con seriedad de robot ni te la tomes a pecho: es su forma de tenerte cerca. LA LÍNEA QUE NO SE CRUZA: cuando hay dinero, riesgo o números en juego, el chiste se apaga al instante y hablas claro — carisma en el TONO, rigor en los NÚMEROS (§28). Un buen mentor se ríe contigo y te salva la cuenta el mismo día.\n"+
 "TUS MANOS ya tocan: avisos, pares, trades y cuentas (SIEMPRE con confirmación de Rey y registro en el 🗒️ Historial).\n"+
-"🖐️ TUS MANOS DE SISTEMA (v6.31 — Rey te quiere SIN LÍMITES para tareas, con su tarjeta como única llave): también ENCIENDES/DETIENES su 🤖 Ejecutor de MT5 (ejecutor_switch — si te dice 'enciende el ejecutor', esa es la mano; y propónlo TÚ si es domingo por la tarde y sigue apagado del finde), CAMBIAS sus reglas (ejecutor_config — solo los campos pedidos, el resto intacto) y AJUSTAS las horas de tus rituales 🌅/🌙 del mentor de vida (mentor_horas). Todo pasa por su tarjeta de confirmación — nada se aplica sin su ✓. Si una tarea que te pida aún no tiene mano, dilo honesto y sugiérele pedírsela a Claude en la próxima tanda.\n"+
+"🖐️ TUS MANOS DE SISTEMA (v6.31 — Rey te quiere SIN LÍMITES para tareas, con su tarjeta como única llave): también ENCIENDES/DETIENES su 🤖 Ejecutor de MT5 (ejecutor_switch — si te dice 'enciende el ejecutor', esa es la mano; y propónlo TÚ si es domingo por la tarde y sigue apagado del finde), CAMBIAS sus reglas (ejecutor_config — solo los campos pedidos, el resto intacto; desde la v7.92 llegas a TODAS: el veto de ruedas de prensa y sus dos minutajes, el margen de deslizamiento, el capital inicial, el DD máximo TOTAL de la firma, el nombre de la EMPRESA y el candado de cuentas. Dos avisos: maxPerdidaDiaPct es el tope de UN DÍA y ddMaxPct el de TODA la cuenta —no los confundas, Rey preguntó por esto el 10-09—, y operarCualquiera=true quita el aviso antes de operar una cuenta real nueva: eso no se propone por iniciativa propia. Si Rey te dice que cambió de firma, TRAE TÚ sus topes reales y propónselos en vez de esperar a que te los dicte) y AJUSTAS las horas de tus rituales 🌅/🌙 del mentor de vida (mentor_horas). Todo pasa por su tarjeta de confirmación — nada se aplica sin su ✓. Si una tarea que te pida aún no tiene mano, dilo honesto y sugiérele pedírsela a Claude en la próxima tanda.\n"+
 "TU SISTEMA COMPLETO: no vives solo en Apex; estás integrado a TODO el sistema de trading de Rey — su TradingView, su indicador CRT Elite, sus ALARMAS (te llegan por webhook y tú las interpretas) y Apex. Estás pendiente de lo que pasa en el conjunto para darle un servicio sin límites, apoyándote además en tu conexión a internet.\n"+
 "TU ROL DE GUARDIÁN (avisos): Hay un GUARDIÁN DE VENTANAS en el servidor que ya avisa a Rey —con la app CERRADA y en hora NY exacta, correcto todo el año— cuando abre cada killzone (Londres 2:00, ⭐Pre-NY 7:30, NY 9:30, aviso NY-Lunch 11:30 NY). Por eso, los recordatorios MANUALES de killzone que Rey tenía en ⏰ Avisos con hora fija de Brasil (Pre-NY, NY apertura, NY-lunch) ahora SOBRAN y lo DUPLICAN: si Rey te lo pide (o si lo detectas), desactívalos tú con tus manos (editar_aviso con on:false) para no saturarlo, y confírmaselo. La sección ⏰ Avisos SIGUE siendo de Rey para sus recordatorios PERSONALES, totalmente configurables (día/hora/tono): esos no los toques salvo que él lo pida.\n"+
 "TU MISIÓN DE VIGILANTE (estar pendiente de TODO): tu trabajo es estar atento y avisarle de TODO lo importante que ocurra en su sistema: apertura de killzones, noticias rojas/naranjas cerca, alarmas de su indicador, y cuentas cerca del límite (DD). Y cuando estén CONECTADOS al gráfico en vivo (puente de lectura de TradingView), tu papel es AÚN MAYOR: irle cantando las CONFLUENCIAS que se van cumpliendo según el gráfico, el indicador y las alarmas —barrido de liquidez ✅, MSS de 15m ✅, zona premium/discount tocada, Secuencia F3 completa, killzone activa— para acompañarlo paso a paso mientras operan juntos, recordándole SIEMPRE su regla de oro: esperar la vela de confirmación cerrada, no entrar en el toque.";
@@ -11859,6 +12011,8 @@ const IA_TOOLS = [
       pares:{type:"array",items:{type:"string"},description:"Lista COMPLETA de pares que operará, ej. ['EURUSD','GBPUSD'] (reemplaza la actual)"},
       riesgoPct:{type:"number",description:"Riesgo % por operación (0-5, hoy 0.5)"},
       maxOpsDia:{type:"number",description:"Máx. operaciones al día (1-20)"},
+      maxOpsSesion:{type:"number",description:"Máx. entradas por SESIÓN (1-10). El gatillo es POR SESIÓN, no por par: Londres y Nueva York cuentan aparte. Lo corrigió Rey el 07-09 porque perdía señales de NY"},
+      corteSesionNY:{type:"number",description:"Hora de NUEVA YORK que separa la sesión de Londres de la de NY (0-23; hoy 6 = las 06:00 NY, el hueco en que su PC duerme)"},
       maxPerdidaDiaPct:{type:"number",description:"Freno de pérdida diaria en % (para el día al llegar)"},
       grado:{type:"string",enum:["A+","B"],description:"Señales que ejecuta: 'A+' solo las premium · 'B' = A+ y B"},
       horaIni:{type:"string",description:"Inicio del horario operativo HH:MM"},
@@ -11867,7 +12021,22 @@ const IA_TOOLS = [
       maxLote:{type:"number",description:"Lote máximo por operación"},
       unaPorPar:{type:"boolean",description:"true = máximo una posición abierta por par"},
       veto:{type:"boolean",description:"true = revisión previa (noticias + tu contexto) antes de cada entrada"},
-      vetoNoticiasMin:{type:"number",description:"Minutos de veto alrededor de noticias rojas (5-120)"}
+      vetoNoticiasMin:{type:"number",description:"Minutos de veto alrededor de noticias rojas (5-120). OJO: un DATO se publica en un instante, por eso va ±minutos"},
+      /* 🖐️ v7.92 — LAS SEIS REGLAS QUE EXISTÍAN Y ROBERTO NO PODÍA TOCAR.
+         Rey (10-09): «Roberto debe saber y tener manos sobre las configuraciones del Ejecutor,
+         veo todo muy fijo… y que pueda sugerir y juzgar, o sea, con todas sus capacidades».
+         El fallo era mío y del mismo tipo que el de mirar_sistema: añadí reglas al Ejecutor y
+         no se las di a él. Una mano a la que le faltan dedos no es una mano: si Rey le pide
+         «apágame el veto de ruedas» y no está aquí, Roberto dice que no puede — y parece un
+         límite suyo cuando en realidad es un descuido mío. */
+      vetoRueda:{type:"boolean",description:"true = veto especial tras RUEDAS DE PRENSA (BCE, Fed, Powell…). Una rueda de prensa DURA (45-60 min) y deja cola, por eso tiene su propia ventana aparte del veto de datos"},
+      vetoRuedaAntes:{type:"number",description:"Minutos ANTES del inicio de la rueda de prensa en que ya no entra (0-240)"},
+      vetoRuedaMin:{type:"number",description:"Minutos DESPUÉS del inicio de la rueda de prensa en que sigue sin entrar (0-240). Poner 0 aquí y en Antes equivale a apagarlo"},
+      deslizamiento:{type:"number",description:"Margen por deslizamiento (1-2; hoy 1.10 = reserva un 10% extra). Su stop del 10-09 costó 1,09R en vez de 1R por esto"},
+      capitalInicial:{type:"number",description:"Capital INICIAL de la cuenta en $, el número sobre el que la firma calcula su drawdown. 0 = la cuenta no es de firma"},
+      ddMaxPct:{type:"number",description:"DD MÁXIMO TOTAL de la firma en % — el tope de TODA la cuenta, el que la rompe. NO confundir con maxPerdidaDiaPct, que es el tope de UN DÍA. 0 = sin tope de firma"},
+      firma:{type:"string",description:"Empresa/firma de la cuenta (FundedNext, FTMO, un bróker propio…). Vacío = cuenta suya sin reglas de empresa. Si Rey te dice que cambió de firma, trae TÚ sus topes y propónselos"},
+      operarCualquiera:{type:"boolean",description:"⚠️ true = el Ejecutor opera CUALQUIER cuenta que Rey conecte en MT5 sin preguntar. false (recomendado) = ante una cuenta real desconocida se para y le pregunta en 🤖 Ejecutor. NO lo pongas en true por iniciativa propia: solo si él te lo pide, y dile lo que significa"}
     }, required:[] } },
   { name:"mentor_horas", description:"Cambia las horas de tus dos rituales del MENTOR DE VIDA (🌅 buenos días y 🌙 reflexión, en HORA DE BRASIL), o los apaga/enciende del todo con on. Úsalo cuando Rey te diga 'mejor salúdame a las 7' o 'para los saludos unos días'. SIEMPRE con su tarjeta.",
     input_schema:{ type:"object", properties:{ manana:{type:"string",description:"Hora del 🌅 buenos días, HH:MM (Brasil). Hoy 06:30."}, noche:{type:"string",description:"Hora de la 🌙 reflexión, HH:MM (Brasil). Hoy 21:30."}, on:{type:"boolean",description:"false = apagar ambos rituales · true = reactivarlos"} }, required:[] } },
@@ -11884,6 +12053,17 @@ const IA_TOOLS = [
     input_schema:{ type:"object", properties:{ nombre:{type:"string",description:"Estrategia (✅ aprobada) que pasa a ser la ⭐ vigente"} }, required:["nombre"] } }
 ];
 /* Texto humano para la tarjeta de confirmación */
+/* v7.92 — los nombres de las reglas TAL COMO ÉL LAS VE EN LA SECCIÓN. Una tarjeta que dice
+   "ddMaxPct: 6" le obliga a traducir; una que dice "DD máximo TOTAL de la cuenta: 6%" se lee
+   y se decide. Y en estas dos justamente es donde preguntó si era el tope total o el diario. */
+const EJEC_NOMBRES={ pares:"Pares", riesgoPct:"Riesgo % por operación", maxOpsDia:"Máx. operaciones/día", maxOpsSesion:"🎯 Entradas por SESIÓN", corteSesionNY:"Hora NY que separa Londres de NY",
+  maxPerdidaDiaPct:"🔻 Tope del DÍA (pérdida máx. diaria %)", grado:"Señales que acepta",
+  horaIni:"Opera desde", horaFin:"hasta", tz:"Hora de", maxLote:"Lote máximo",
+  unaPorPar:"Una posición por par", veto:"Veto previo", vetoNoticiasMin:"Sin noticias fuertes (± min)",
+  vetoRueda:"Veto tras ruedas de prensa", vetoRuedaAntes:"…minutos ANTES", vetoRuedaMin:"…minutos DESPUÉS",
+  deslizamiento:"Margen por deslizamiento", capitalInicial:"Capital inicial de la cuenta ($)",
+  ddMaxPct:"🧨 Tope TOTAL (DD máximo de toda la cuenta %)", firma:"🏢 Empresa / firma",
+  operarCualquiera:"🔐 Operar cualquier cuenta sin preguntar" };
 function describeTool(name, i){
   i=i||{};
   if(name==="crear_aviso") return "⏰ Crear aviso — "+(i.hora||"?")+" · "+(i.tit||"")+"\n"+(i.msg||"")+"\n("+diasLabel(i.dias||"LV")+" · "+(i.tipo||"normal")+")"+(i.destino&&irDestinoLabel(i.destino)?("\nAl tocarla abre: "+irDestinoLabel(i.destino)):"");
@@ -11923,7 +12103,9 @@ function describeTool(name, i){
   if(name==="guardar_memoria"){ const et={perfil:"🧍 Perfil",aprendizaje:"💡 Aprendizaje",preferencia:"⭐ Preferencia",patron:"📊 Patrón",resultado:"📓 Resultado"}; return "🧠 Roberto quiere RECORDAR esto en su memoria:\n"+(et[i.tipo]||"💡 Aprendizaje")+"\n“"+(i.texto||"")+"”"; }
   if(name==="borrar_memoria") return "🗑️ Roberto quiere BORRAR de su memoria el dato "+(i.id||"?");
   if(name==="ejecutor_switch") return (i.on?"🟢 ENCENDER el Ejecutor (queda en guardia: solo entra con señal 🔔 que pase tus reglas y el veto)":"🔴 DETENER el Ejecutor (deja de operar; solo observa)")+(i.motivo?("\nPorque: "+i.motivo):"");
-  if(name==="ejecutor_config"){ const c=["pares","riesgoPct","maxOpsDia","maxPerdidaDiaPct","grado","horaIni","horaFin","tz","maxLote","unaPorPar","veto","vetoNoticiasMin"].filter(k=>i[k]!=null&&i[k]!=="").map(k=>"→ "+k+": "+(Array.isArray(i[k])?i[k].join("+"):i[k])).join("\n"); return "⚙️ Cambiar reglas del Ejecutor:\n"+(c||"(sin cambios)")+"\n(lo demás queda como está)"; }
+  /* v7.92 — si un campo no está en esta lista, Rey aprueba a ciegas un cambio que no ve.
+     Por eso va la lista COMPLETA, y con los nombres en su idioma, no en el mío. */
+  if(name==="ejecutor_config"){ const c=["pares","riesgoPct","maxOpsDia","maxPerdidaDiaPct","grado","horaIni","horaFin","tz","maxOpsSesion","corteSesionNY","maxLote","unaPorPar","veto","vetoNoticiasMin","vetoRueda","vetoRuedaAntes","vetoRuedaMin","deslizamiento","capitalInicial","ddMaxPct","firma","operarCualquiera"].filter(k=>i[k]!=null&&i[k]!=="").map(k=>"→ "+(EJEC_NOMBRES[k]||k)+": "+(Array.isArray(i[k])?i[k].join("+"):(typeof i[k]==="boolean"?(i[k]?"SÍ":"NO"):i[k]))).join("\n"); return "⚙️ Cambiar reglas del Ejecutor:\n"+(c||"(sin cambios)")+(i.operarCualquiera===true?"\n\n⚠️ OJO: «operar cualquier cuenta» quita el aviso antes de operar una cuenta real nueva. Solo dile que sí si es lo que quieres.":"")+"\n(lo demás queda como está)"; }
   if(name==="mentor_horas"){ const c=[i.manana&&("🌅 buenos días → "+i.manana),i.noche&&("🌙 reflexión → "+i.noche),i.on===false&&"⏸️ APAGAR los dos rituales",i.on===true&&"▶️ reactivar los rituales"].filter(Boolean).join("\n"); return "🌅 Cambiar tus rituales del mentor de vida (hora de Brasil):\n"+(c||"(sin cambios)"); }
   if(name==="crear_estrategia") return "📚 Crear la estrategia \""+(i.nombre||"?")+"\" en el laboratorio (nace 💡 Borrador)"+(i.instrumento?("\n→ instrumento: "+i.instrumento):"")+(i.ajustes?("\n→ primeras reglas: "+String(i.ajustes).slice(0,200)):"");
   if(name==="estado_estrategia") return "📚 Mover \""+(i.nombre||CTX.estrategia)+"\" a estado "+(({borrador:"💡 Borrador",laboratorio:"🧪 En laboratorio",aprobada:"✅ Aprobada",archivada:"📦 Archivada"})[i.estado]||i.estado)+(i.motivo?("\nPorque: "+i.motivo):"");
@@ -12001,9 +12183,11 @@ async function ejecutarTool(name, i){
     if(name==="ejecutor_config"){
       const body={};
       if(Array.isArray(i.pares)&&i.pares.length) body.pares=i.pares.map(x=>String(x).toUpperCase().replace(/[^A-Z0-9]/g,"")).filter(Boolean);
-      ["riesgoPct","maxOpsDia","maxPerdidaDiaPct","maxLote","vetoNoticiasMin"].forEach(k=>{ if(i[k]!=null && isFinite(+i[k])) body[k]=+i[k]; });
-      ["grado","horaIni","horaFin","tz"].forEach(k=>{ if(i[k]!=null && i[k]!=="") body[k]=i[k]; });
-      ["unaPorPar","veto"].forEach(k=>{ if(typeof i[k]==="boolean") body[k]=i[k]; });
+      /* v7.92 — la lista de aquí tiene que ir SIEMPRE al día con el esquema de arriba:
+         declarar un campo que luego no se copia es darle una mano que no llega (ya pasó). */
+      ["riesgoPct","maxOpsDia","maxOpsSesion","corteSesionNY","maxPerdidaDiaPct","maxLote","vetoNoticiasMin","vetoRuedaAntes","vetoRuedaMin","deslizamiento","capitalInicial","ddMaxPct"].forEach(k=>{ if(i[k]!=null && isFinite(+i[k])) body[k]=+i[k]; });
+      ["grado","horaIni","horaFin","tz","firma"].forEach(k=>{ if(i[k]!=null && i[k]!=="") body[k]=i[k]; });
+      ["unaPorPar","veto","vetoRueda","operarCualquiera"].forEach(k=>{ if(typeof i[k]==="boolean") body[k]=i[k]; });
       if(!Object.keys(body).length) return {ok:false,msg:"No me pasaste ningún cambio"};
       try{
         const r=await fetch(nubeUrl()+"/ejec/cfg",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(body)});

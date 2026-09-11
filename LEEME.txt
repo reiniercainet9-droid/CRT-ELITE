@@ -1,66 +1,52 @@
-APEX v7.91 — TRADING DESK
+APEX v7.92 — TRADING DESK
 =========================
 
-⚙️ TODAS LAS REGLAS DEL EJECUTOR, A LA VISTA Y EN TUS MANOS
+🔐 CAMBIAR DE CUENTA ES CONECTARLA EN MT5 Y UN TOQUE — se acabó el fichero (y se acabó tener que pedírmelo a mí)
 
-⚠️ HAY QUE SUBIR: la web v7.91 · Y EL WORKER 5.136
-📱 APK v7.91 — se instala y verifica por cable.
+Tenías razón: el Ejecutor no puede operar ninguna cuenta que no esté conectada en MT5, así
+que conectarla YA era tu autorización. El fichero cuentas-autorizadas.json era burocracia.
 
-═══ 🔴 PRIMERO: ALGO QUE TIENES QUE COMPROBAR ANTES DE OPERAR ════
+  · El Ejecutor ve una cuenta nueva que no es demo → NO opera y te manda una tarjeta.
+  · La tarjeta sale arriba del todo en 🤖 Ejecutor: «¿Opero la cuenta X?»  [Sí] [No]
+  · Un toque y listo. Queda en la NUBE (no en la PC): si cambias de teléfono, sigue siendo tuyo.
+  · Y si no quieres ni la pregunta: «Opérala sin preguntar» en ⚙️ Tus reglas.
+  · Las cuentas autorizadas salen como fichas, con su ✕ para quitarlas cuando quieras.
 
-Leí las reglas REALES de FundedNext y hay dos cosas que no sabíamos:
+  Lo único que NO cambia: el silencio nunca autoriza. Sin respuesta tuya, sin config o sin
+  internet → no opera. El fallo cae siempre del lado seguro.
 
-1) EL EA NECESITA UN COMPLEMENTO DE PAGO.
-   Cuentas por DEBAJO de 50.000: EA permitido en MT4/MT5 "with an additional EA
-   usage fee to FundedNext". NO distinguen entre EA comprado y hecho por ti.
-   Cuentas de 50.000 en adelante: hay que operar MANUALMENTE, sin EA.
-   Si detectan uso de EA sospechoso pueden pedir información y llegar a suspender.
+🏢 EL EJECUTOR DEJA DE SER DE FUNDEDNEXT
 
-   👉 COMPRUEBA SI TU CUENTA TIENE ESE COMPLEMENTO ANTES DE NADA.
-      La pregunta 1 de la carta es exactamente esa.
+  · Campo «Empresa / firma de esta cuenta» + botón «🤖 Traer las reglas de esta firma».
+  · Escribes la firma y Roberto rellena su DD máximo y su tope diario — igual que en 💼 Cuentas,
+    reutilizando la misma tabla que ya llevaba meses funcionando ahí.
+  · Sirve para cualquier empresa, mercado y divisa. Revisa siempre lo que traiga.
 
-2) SÍ SE PUEDE OPERAR EN NOTICIAS — tenías razón.
-   Su ventana es de ±5 MINUTOS. En cuentas FONDEADAS (no en los retos), el 40% del
-   beneficio de las operaciones dentro de esa ventana va al saldo de la cuenta.
-   O sea: mi veto de 90 minutos era MÍO, no suyo. Era excesivo.
+🔻🧨 EL DD YA NO ES AMBIGUO (lo preguntaste, y que tuvieras que preguntarlo era el fallo)
 
-═══ ⚙️ LO QUE CAMBIA EN LA SECCIÓN 🤖 EJECUTOR ═══════════════════
+  · «🔻 Tope de HOY: pérdida máx. del DÍA %»   → lo que puedes perder en una jornada
+  · «🧨 Tope TOTAL: DD máximo de toda la cuenta %» → el que te rompe la cuenta
+  Los dos nombres cambian también en la tarjeta de Roberto y en su memoria.
 
-Tenías razón otra vez: puse el veto de conferencias en la nube y NO te di forma de
-verlo ni tocarlo. Ahora está todo en el formulario:
+🖐️ ROBERTO LLEGA A TODAS LAS REGLAS, NO A LAS DE HACE TRES VERSIONES
 
-   🛑 Veto de noticias        ON/OFF  +  ± minutos          (ya estaba)
-   🎤 Veto de ruedas de prensa ON/OFF  +  minutos ANTES  +  minutos DESPUÉS
-   🧱 Margen por deslizamiento (el tuyo del 10-09 fue 1,09)
-   🧱 Capital inicial de la cuenta ($)
-   🧱 DD máximo de la firma (%)
+  Le faltaban seis: el veto de ruedas de prensa y sus dos minutajes, el deslizamiento, el
+  capital inicial y el DD máximo. Ahora también la firma y el candado. Y cada cambio —venga
+  del formulario o de la tarjeta de la cuenta— reescribe su ficha de config: se entera de todo.
 
-Por defecto la ventana de ruedas es 15 antes / 45 después — la rueda y poco más, no
-las dos horas de antes. Y SE PUEDE APAGAR.
+  Su tarjeta de confirmación ahora nombra las reglas como las ves tú, no con mis nombres
+  internos: «🧨 Tope TOTAL (DD máximo de toda la cuenta %)», no «ddMaxPct».
 
-⚠️ SÉ HONESTO CONMIGO: con 45 min, tu venta del 10-09 (70 min tras el BCE) VOLVERÍA
-a pasar el veto. No es un descuido: es que esa ventana ya no la decido yo. Si quieres
-cubrir ese caso, sube el "después" a 90 y ya está.
+🎯 Y LA REGLA DEL GATILLO TAMBIÉN PASA A TUS MANOS (era el pendiente A5)
 
-═══ 🧱 Y UN AGUJERO MÍO QUE ENCONTRÉ AL HACER ESTO ═══════════════
+  El Ejecutor la aplica desde que la corregiste el 07-09 —«el gatillo no es por par, es por
+  sesión»— y aquella madrugada te devolvió dos señales de Nueva York. Pero vivía escondida
+  dentro del programa de la PC: hacía lo correcto por casualidad, no por ley.
 
-El freno por "hueco hasta la pared" usa el CAPITAL INICIAL y el DD MÁXIMO de la firma
-para no pasarse... y esos dos campos NO EXISTÍAN en el formulario. O sea que en tu
-cuenta de fondeo esa protección habría estado MUERTA, justo donde más importa.
+  · «🎯 Entradas por SESIÓN (Londres y NY van aparte)» → hoy 1
+  · «Hora NY que separa Londres de NY» → hoy 6 (las 06:00 de Nueva York)
 
-Ya están. Ponlos con los datos de tu FundedNext (capital 6000 y su DD máximo) y el
-Ejecutor nunca arriesgará más de lo que quede hasta esa pared.
-Déjalos en 0 si la cuenta no es de firma.
-
-═══ 📄 LA CARTA, EN ESPAÑOL ══════════════════════════════════════
-
-   📁 Escritorio › 📄 FUNDEDNEXT › CARTA para FundedNext.md
-
-Ahora va en español primero y les pide que te respondan en español. Empieza
-preguntando por el complemento de EA, y dice claramente que NO vas a ejecutar nada
-automático hasta tener su respuesta. La inglesa queda debajo por si la piden.
-
-Revisión completa: 172/172
+  Ojo: esa hora va en hora de NUEVA YORK, la del gráfico, no la tuya de Timbó.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
