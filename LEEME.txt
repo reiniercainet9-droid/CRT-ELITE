@@ -1,58 +1,50 @@
-APEX v7.96 — TRADING DESK
+APEX v7.97 — TRADING DESK
 =========================
 
-📐 ¿ESTO GANA, O SOLO EMPATA? — el panel que faltaba
+🗄️ NADA PUEDE FALTAR EN SILENCIO — el agujero que encontraste tú
 
-Lo pediste tú, y tenías razón en lo que sospechabas. Está en 🤖 Ejecutor y en tu 📒 Diario,
-debajo de los cierres por período.
+Tenías razón, y era peor de lo que parecía. Lo que pasaba, con nombres:
 
-EL VEREDICTO, ARRIBA DEL TODO
-  Dos números enfrentados, que es lo único que hay que mirar:
-      ACIERTAS  33,3%    vs    NECESITAS PARA EMPATAR  52,1%
-  Ese segundo número NO EXISTÍA en ninguna pantalla de tu sistema. Sin él puedes ver un 50%
-  de aciertos y creer que vas bien, cuando te hace falta un 52%.
+  · La bitácora de la nube (ejec:log) está topada a 40 EVENTOS.
+  · Cada operación gasta CUATRO (entrada + break-even + salida + repaso), más rechazos,
+    arranques y avisos.
+  · /ejec/estado sirve 25 de esos 40.
+  · Cuando fui a mirar, en esas 25 entradas había SOLO 3 SALIDAS. Tu teléfono tenía 10.
+  · Te di un diagnóstico con un tercio de tu historia — y ni tú ni yo teníamos forma de
+    saberlo, porque FALTABAN EN SILENCIO.
 
-LA BALANZA
-  Dos barras enfrentadas: lo que ganas de media contra lo que pierdes de media.
-      ganas de media    0,99R
-      pierdes de media  1,08R
-      ⚠️ Pierdes 9% más de lo que ganas en cada operación. Ese es el bucle.
-  Ahí se VE el problema sin leer un solo número.
+Y un segundo daño del mismo agujero: esas 10 operaciones vivían SOLO en tu móvil, contra tu
+propia ley de que nada tuyo puede estar en un solo aparato.
 
-LOS NÚMEROS DE GESTIÓN
-  · Esperanza: lo que deja CADA operación de media, contando las perdedoras. Hoy: −0,39R.
-    Si es negativa, más operaciones = más pérdida. Y escalar una esperanza negativa solo
-    pierde más rápido — por eso este número manda sobre cualquier plan de crecimiento.
-  · Profit factor: cuánto ganas por cada unidad perdida. Hoy 0,46 (por debajo de 1 = pierde).
-  · Rachas y operaciones.
+LO QUE SE ARREGLÓ
 
-POR DÓNDE SALIÓ CADA UNA — el diagnóstico
-      ❌ tocó el stop        2   66,7%   −1,08R
-      ⏱ salida por tiempo   1   33,3%   +0,99R
-      🎯 llegó al objetivo   0
-  ⚠️ NINGUNA salió por el objetivo. Si el precio nunca llega al TP, el TP está puesto donde
-  no toca: tus ganadoras se cortan por tiempo cerca de 1R mientras las pérdidas van enteras.
-  ESA asimetría es exactamente el bucle de break-even que me describiste.
+  1. LA HISTORIA YA NO SE RECORTA
+     Las operaciones cerradas tienen su propio archivo en la nube, con todo lo que hace falta
+     para medir (P&L, R, motivo, precios, grado) y sitio para 1000 — más de dos años a dos
+     operaciones al día. Cada cierre entra una sola vez (se comprueba el ticket: nunca
+     duplica, que torcería todas las estadísticas).
 
-Y abajo, un desplegable que explica qué significa cada número, sin jerga.
+  2. EL TELÉFONO Y LA NUBE SE IGUALAN, EN LOS DOS SENTIDOS
+     Al abrir 🤖 Ejecutor: SUBE lo que tú tienes y la nube no (así Roberto lo ve y queda
+     respaldado) y BAJA lo que la nube tiene y tú no (teléfono nuevo, app reinstalada).
+     Fusiona por ticket, así que da igual cuántas veces corra.
+     Y se iguala ANTES de pintar el panel: si no, verías un trozo sin saberlo.
 
-🎓 Y ROBERTO YA LO VE
-  Antes solo recibía CUÁNTO cerró cada período — y con el cuánto no se ve un bucle. Ahora
-  recibe la FORMA: ganancia media, pérdida media, acierto necesario, esperanza, profit factor
-  y por dónde salió cada operación. Con dos órdenes nuevas:
-    · avisarte si aciertas menos de lo que necesitas, aunque el mes cierre en verde
-    · frenarte si le pides escalar con la esperanza en negativo
+  3. 🔴 Y SI ALGUNA VEZ SE VE UN TROZO, SE DICE
+     Esto es lo más importante de todo. El fallo de fondo no fue que faltaran datos: fue que
+     faltaban CALLANDO. Ahora cada bloque que le llega a Roberto dice cuántas hay de verdad:
+         «⚠️ ESTÁS VIENDO 10 DE 47 OPERACIONES. Tu lectura es PARCIAL: dilo antes de
+           opinar y no des un veredicto como si vieras la historia entera.»
+     o, cuando las tiene todas:
+         «✅ Aquí están TODAS las operaciones cerradas que existen (47). No falta ninguna.»
+     Es la misma ley que ya tenía para las causas: mejor «no lo sé» que un veredicto seguro
+     construido sobre un agujero.
 
-🎓 Y EL BOTÓN «QUE LO JUZGUE ROBERTO» YA FUNCIONA
-  Lo que pasaba: la sección 🤖 se repinta sola cada 25 segundos, y Roberto tarda más en
-  escribir sus cuatro bloques. A los 25 s el repintado borraba el hueco donde iba su
-  respuesta, así que cuando llegaba se escribía en un sitio que ya no estaba en pantalla.
-  Su respuesta SÍ llegaba: caía en el vacío. Ahora el refresco se para mientras él piensa, y
-  su juicio se guarda — si la sección se repinta, sigue ahí.
+  · La bitácora de eventos sigue topada a 40, y está bien: son avisos de diagnóstico del
+    momento, no historia. Queda escrito en el código por qué esa sí se puede recortar.
 
-⚠️ AVISO HONESTO: son 3 operaciones. Con menos de 30 esto es un INDICIO, no una conclusión
-(tu Ley 37). Pero la FORMA de las salidas sí se lee desde el primer día, y es la forma —no la
-suerte— la que crea el bucle.
+⚠️ IMPORTANTE AL INSTALAR: la primera vez que abras 🤖 Ejecutor, la app subirá a la nube las
+operaciones que solo tenía tu teléfono. A partir de ahí, Roberto las ve todas.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

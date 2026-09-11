@@ -1676,6 +1676,57 @@ function ejecArchivar(lg){
     return a;
   }catch(_){ return {trades:{}}; }
 }
+/* 🔄 v7.97 — EL TELÉFONO Y LA NUBE DEJAN DE SABER COSAS DISTINTAS.
+   Rey (11-09): «si la nube, que es la que informa de todo a Roberto, solo registra las
+   últimas y no todos los datos… él no tendría o le faltarían datos para dar respuestas con
+   base sólida… a ti mismo te ocurrió».
+
+   Lo que pasaba, con nombres: la bitácora de la nube está topada a 40 EVENTOS, y cada
+   operación gasta cuatro. En las 25 que sirve /ejec/estado solo había 3 salidas — su móvil
+   tenía 10 archivadas. Y al revés también duele: esas 10 vivían SOLO en su teléfono, contra
+   su propia ley de no tener nada suyo en un solo aparato.
+
+   Esto corre al abrir 🤖 Ejecutor y arregla los dos lados de una vez:
+     · SUBE   las que él tiene y la nube no  (así Roberto las ve y quedan respaldadas)
+     · BAJA   las que la nube tiene y él no  (teléfono nuevo, app reinstalada, lo que sea)
+   Fusiona por número de ticket, así que da igual cuántas veces corra: nunca duplica. */
+async function ejecSincroHistorial(){
+  try{
+    const a = load(K.ejec, {trades:{}}); if(!a.trades) a.trades={};
+    const mias = Object.values(a.trades).filter(t=>t && t.tsOut && t.ticket!=null);
+
+    /* subir lo que falte arriba */
+    let arriba = [];
+    try{
+      const r = await fetch(nubeUrl()+"/ejec/hist",{cache:"no-store"});
+      const d = await r.json();
+      arriba = (d && d.hist) || [];
+    }catch(_){ return; }                       /* sin nube no se toca nada */
+    const tieneArriba = new Set(arriba.map(x=>String(x.ticket)));
+    const faltanArriba = mias.filter(t=>!tieneArriba.has(String(t.ticket)));
+    if(faltanArriba.length){
+      try{
+        const r = await fetch(nubeUrl()+"/ejec/hist",{method:"POST",headers:{"content-type":"application/json"},
+          body:JSON.stringify({hist:faltanArriba})});
+        const d = await r.json();
+        if(d && d.ok && d.nuevas) console.log("[apex] subí "+d.nuevas+" operación(es) al historial de la nube");
+      }catch(_){}
+    }
+
+    /* bajar lo que falte aquí */
+    const tengo = new Set(mias.map(t=>String(t.ticket)));
+    let bajadas = 0;
+    arriba.forEach(o=>{
+      const k = String(o.ticket||""); if(!k || tengo.has(k)) return;
+      a.trades[k] = { ticket:o.ticket, sym:o.sym, dir:o.dir, lote:o.lote, entrada:o.entrada,
+        salida:o.salida, sl:o.sl, tp:o.tp, pl:o.pl, r:o.r, motivo:o.motivo, grado:o.grado,
+        riesgo:o.riesgo, tsOut:o.ts, shot:"ejec"+k, shotCierre:"ejecC"+k, deLaNube:true };
+      bajadas++;
+    });
+    if(bajadas){ save(K.ejec, a); console.log("[apex] bajé "+bajadas+" operación(es) del historial de la nube"); }
+  }catch(e){ console.log("[apex] sincro historial:", e.message); }
+}
+
 function ejecCerradas(){
   const a=load(K.ejec,{trades:{}});
   return Object.values(a.trades||{}).filter(t=>t.tsOut).sort((x,y)=>(y.tsOut||0)-(x.tsOut||0));
@@ -2875,6 +2926,19 @@ function resTextoParaRoberto(ops, dinero, titulo){
       t += "\n⚠️ Y ESTO ES LEY: escalar (subir el riesgo, componer, pasar a una cuenta mayor) sobre una esperanza NEGATIVA solo pierde más rápido. Si te pide escalar y la esperanza está en rojo, díselo ANTES de ayudarle — para eso te hizo.\n";
     }
   }catch(_){}
+  /* 🔎 v7.97 — ¿ESTÁ VIENDO TODO, O UN TROZO? Y QUE LO DIGA.
+     El fallo de fondo del 11-09 no fue que faltaran datos: fue que FALTABAN EN SILENCIO.
+     Roberto analizó 3 operaciones creyendo que eran todas, y yo también. Ahora cada bloque
+     dice cuántas hay de verdad, y si no las tiene todas, tiene ORDEN de decirlo antes de
+     opinar — igual que tiene orden de decir "no lo sé" en vez de inventarse una causa. */
+  try{
+    const dentro = (typeof ejecCerradas==="function") ? (ejecCerradas()||[]).length : lista.length;
+    if(dentro > lista.length){
+      t += "\n\u26a0\ufe0f ESTÁS VIENDO " + lista.length + " DE " + dentro + " OPERACIONES. Tu lectura es PARCIAL: dilo antes de opinar y no des un veredicto como si vieras la historia entera.\n";
+    } else {
+      t += "\n\u2705 Aquí están TODAS las operaciones cerradas que existen (" + lista.length + "). No falta ninguna.\n";
+    }
+  }catch(_){}
   /* el dato que más pesa a la hora de juzgar cualquier número de arriba */
   t += "\n⚠️ Son "+lista.length+" operación(es) cerradas en total. ";
   t += (lista.length < 30)
@@ -3066,6 +3130,12 @@ async function renderEjecutor(){
   $("#ejRob").onclick=()=>verEjecutor();
   ejecFormWire($("#ejForm"));   /* v7.92 — el MISMO enchufe que el chip del chat */
   /* 📊 v7.93 — la tabla y la gráfica se pintan aquí, con el DOM ya puesto */
+  /* 🔄 v7.97 — primero se igualan teléfono y nube, después se pinta: si no, el panel
+     enseñaría un trozo de la historia sin que nadie lo sepa. */
+  try{ ejecSincroHistorial().then(()=>{ try{
+        resPinta("ejec", opsDelEjecutor(), true);
+        const c=$("#espEjec"); if(c) c.innerHTML=espPanelHTML(apexEsperanza(opsDelEjecutor()), "📐 ¿Esto gana, o solo empata?", "Del robot · medido en R");
+      }catch(_){} }); }catch(_){}
   try{ resPinta("ejec", opsDelEjecutor(), true); }catch(e){ console.log("[apex] resultados ejec:", e.message); }
   try{ const c=$("#espEjec"); if(c) c.innerHTML=espPanelHTML(apexEsperanza(opsDelEjecutor()), "📐 ¿Esto gana, o solo empata?", "Del robot · medido en R"); }catch(e){ console.log("[apex] esperanza ejec:", e.message); }
   /* 🔐 v7.92 — un toque, y ya. Ni ficheros, ni pedírmelo a mí. */
