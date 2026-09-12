@@ -3228,13 +3228,38 @@ function parteMatutino(){
   IA.autoHablarUna=true;   // este parte se LEE EN VOZ aunque el modo voz esté apagado
   setTimeout(()=>iaEnviar("🌅 Dame mi parte del día.", PARTE_PROM),300);
 }
-/* Dispara el parte automáticamente 1 vez al día si abres la app por la mañana (5:00–12:00). */
+/* 🔴 v7.99 — EL PARTE SE OFRECE, NO SE MANDA (Rey, 12-09)
+   Hasta aquí, abrir Apex entre las 5:00 y las 12:00 MANDABA el parte del día solo, a los
+   3,2 segundos, sin preguntar. Rey: «hay mensajes que se hacen obligatorio gastar y es
+   obligatorio que él me responda… aquí el que decide qué escuchar soy yo».
+   Ahora deja una TARJETA en el chat esperando. Cuesta $0 hasta que la toque. Si hoy no le
+   apetece, no pasa nada: mañana habrá otra. Roberto sigue teniendo su parte del día — lo
+   que cambia es quién aprieta el gatillo. */
 function parteMatutinoAuto(){
   try{
     const h=new Date().getHours(); if(h<5 || h>=12) return;
     const hoy=hoyISO(); if(localStorage.getItem("crtelite_partedia_v1")===hoy) return;
     localStorage.setItem("crtelite_partedia_v1", hoy);
-    parteMatutino();
+    ofrecerEnChat("parte", "🌅 Tu parte del día está listo",
+      "Cuando quieras te lo doy: ventanas de hoy, noticias, plan, cuentas y pendientes.");
+  }catch(_){}
+}
+/* 🎟️ v7.99 — DEJA UNA TARJETA QUE NO GASTA HASTA QUE REY LA TOCA.
+   Es el patrón para todo lo que antes se mandaba solo: se ofrece, no se impone.
+   Usa el mismo mecanismo que ya tienen las demás tarjetas del chat (`data-acc` +
+   IA_ACCIONES), que está probado — no uno nuevo que haya que volver a cablear. */
+function ofrecerEnChat(accion, titulo, texto){
+  try{
+    const c=iaConvAct(); if(!c) return;
+    const A=IA_ACCIONES[accion]; if(!A) return;
+    /* si ya hay una oferta igual sin tocar, no se apila otra */
+    if(c.msgs.some(m=>m && m.oferta===accion)) return;
+    c.msgs.push({ role:"assistant", oferta:accion, content:titulo+" — "+texto,
+      html:'<div class="ia-oferta"><b>'+esc(titulo)+'</b>'+
+           '<div class="desc" style="margin:6px 0 10px">'+esc(texto)+'</div>'+
+           '<button class="ia-acc" data-acc="'+esc(accion)+'">'+esc(A.t)+'</button>'+
+           '<div class="ia-mem-pie" style="margin-top:8px">No gasta nada hasta que lo toques.</div></div>' });
+    iaGuardarConvs(); pintarIAChat();
   }catch(_){}
 }
 
@@ -4057,6 +4082,31 @@ const IR_DESTINOS = [
 ];
 function irDestinoLabel(v){ const d=IR_DESTINOS.find(x=>x.v===v); return d?d.t:""; }
 /* Lleva a Rey al destino del aviso. Se usa al abrir por notificación y desde el propio aviso. */
+/* 🔴 v7.99 — UN AVISO SE ATIENDE UNA VEZ, NO EN CADA APERTURA (Rey, 12-09)
+   ─────────────────────────────────────────────────────────────────────────────────
+   Rey: «apenas abre Apex está ahí Roberto gastando nada más al abrir… y aunque no lo
+   quiera en ese momento él comienza a hablar así no quiera y eso es gasto innecesario».
+
+   EL FALLO: al tocar un aviso, Apex se abre con `?open=chat&seed=…` (o con `?ir=…`).
+   Eso lanzaba el mensaje — correcto, lo tocó él. Pero **el parámetro se quedaba pegado
+   en la dirección**. Cada vez que Apex se volvía a abrir, el mismo `seed` seguía ahí y
+   el mensaje se mandaba OTRA VEZ, y se pagaba otra vez, sin que Rey tocara nada.
+   Un aviso se atiende UNA vez. Ahora el parámetro se consume y se borra en el acto.
+
+   Su ley, dicha por él: «el que decide qué escuchar y qué no, y en qué momento, soy yo.
+   Nada puede ser obligatorio, y menos gastar créditos obligatorios». */
+function consumirParam(nombre){
+  try{
+    const u=new URL(location.href);
+    const v=u.searchParams.get(nombre);
+    if(v===null) return null;
+    u.searchParams.delete(nombre);
+    /* se borra YA, antes de usarlo: si lo que viene después falla, el parámetro
+       tampoco puede quedarse a repetirse en la próxima apertura. */
+    try{ history.replaceState(history.state, "", u.pathname + (u.searchParams.toString()?("?"+u.searchParams.toString()):"") + u.hash); }catch(_){}
+    return v;
+  }catch(_){ return null; }
+}
 function irDestino(v){
   const s=String(v||"");
   if(!s) return;
@@ -9265,7 +9315,47 @@ function evalSemana(){
   const data=ts.length?tradesTexto(ts):"(No hay trades cerrados en los últimos 7 días.)";
   iaEnviar("🤖 Hazme el CIERRE de mi semana.", EVAL_SEMANA_PROM+"\n\nSUS TRADES DE LA SEMANA (desde "+cut+"):\n"+data);
 }
-function iaProactivo(seed){ if(seed==="informe_aprendizaje") return verMemoria(); if(seed==="eval_dia") return evalDia(); if(seed==="eval_semana") return evalSemana(); if(seed==="revisar_pendientes") return revisarPendientes(); if(seed==="revisar_riesgo") return revisarRiesgo(); if(seed==="practica_replay") return practicaReplay(); if(seed==="mentor_manana") return mentorManana(); if(seed==="mentor_noche") return mentorNoche(); if(seed==="repaso") return repasoLecciones(); }
+function iaProactivo(seed){ if(seed==="informe_aprendizaje") return verMemoria(); if(seed==="eval_dia") return evalDia(); if(seed==="eval_semana") return evalSemana(); if(seed==="revisar_pendientes") return revisarPendientes(); if(seed==="revisar_riesgo") return revisarRiesgo(); if(seed==="practica_replay") return practicaReplay(); if(seed==="mentor_manana") return mentorManana(); if(seed==="mentor_noche") return mentorNoche(); if(seed==="repaso") return repasoLecciones(); if(seed==="repaso_rey") return verRepasoRey(); }
+
+/* 🧭 v7.99 — EL REPASO DE ROBERTO: lo que ya pensó, sin volver a pensarlo.
+   Roberto mira una vez al día TODO lo que Rey lleva encima (avisos, pendientes, plan,
+   Ejecutor, cuentas, lecciones, ideas) y decide callarse, dejar tarjeta o avisar. Ese trabajo
+   se hace EN LA NUBE y queda escrito.
+   💰 Por eso abrir esto cuesta CERO: aquí solo se lee lo que ya está pensado. Es la diferencia
+   con el parte del día, que se piensa al abrirlo. Rey puede abrirlo diez veces y no gasta.
+   Y sus propuestas no se ejecutan solas: cada una lleva su botón. Ejecuta Roberto, decide Rey. */
+async function verRepasoRey(){
+  if(typeof abrirIA==="function") abrirIA();
+  iaTemaChat("🧭 Mi repaso");
+  const c=iaConvAct(); if(!c) return;
+  let r=null;
+  try{
+    const ctl=new AbortController(); const tt=setTimeout(()=>ctl.abort(), 8000);
+    const q=await fetch(nubeUrl()+"/repaso-rey",{cache:"no-store",signal:ctl.signal}); clearTimeout(tt);
+    const j=await q.json(); r=j && j.repaso;
+  }catch(_){ }
+  if(!r){
+    c.msgs.push({role:"assistant",content:"🧭 Todavía no tengo el repaso de hoy. Lo hago una vez al día; si acabas de instalar esto, llega mañana."});
+    iaGuardarConvs(); pintarIAChat(); return;
+  }
+  if(r.veredicto==="callar"){
+    c.msgs.push({role:"assistant",content:"🧭 Hoy no tengo nada que merezca tu atención. Miré tus avisos, tus pendientes, tu plan y lo del Ejecutor: todo en su sitio."});
+    iaGuardarConvs(); pintarIAChat(); marcarRepasoVisto(); return;
+  }
+  const props=(r.propuestas||[]).map((p,i)=>
+    '<li style="margin-bottom:8px"><b>'+esc(p.que||"")+'</b>'+
+    (p.porque?'<div class="desc">'+esc(p.porque)+'</div>':"")+
+    '<div class="ia-mem-pie">lo haría con: '+esc(p.mano||"—")+'</div></li>').join("");
+  c.msgs.push({ role:"assistant", content:"🧭 "+(r.titulo||"Mi repaso")+" — "+(r.resumen||""),
+    html:'<div class="ia-oferta"><b>🧭 '+esc(r.titulo||"Mi repaso")+'</b>'+
+         '<div class="desc" style="margin:6px 0 10px">'+esc(r.resumen||"")+'</div>'+
+         (props?'<div class="desc" style="margin-bottom:6px"><b>Te propongo:</b></div><ul style="padding-left:18px;margin:0">'+props+'</ul>':"")+
+         '<div class="ia-mem-pie" style="margin-top:8px">Dime cuál quieres y la hago. Leer esto no gasta nada.</div></div>' });
+  iaGuardarConvs(); pintarIAChat(); marcarRepasoVisto();
+}
+function marcarRepasoVisto(){
+  try{ fetch(nubeUrl()+"/repaso-rey/visto",{method:"POST"}); }catch(_){}
+}
 
 let _iaConoc = null;
 /* Arma el bloque de conocimiento (estrategia + indicador + perfil) desde los
@@ -13888,12 +13978,18 @@ function iaMotorPara(texto, tieneDoc, tieneMarco){
       abrirModal("🧠 ¿Con cuánta potencia?", `
         <p class="desc" style="text-align:left">Esto parece <b>trabajo profundo</b>. Puedo pensarlo con el motor
         <b>Máximo</b> (razona más fino, gasta más) solo para esta consulta — tu ajuste de ⚙️ no cambia.</p>`,
-        [{t:"🏎️ Rendidor", fn:()=>responder("sonnet")},
+        [{t:"✋ Ahora no", fn:()=>responder(null)},
+         {t:"🏎️ Rendidor", fn:()=>responder("sonnet")},
          {t:"🧠 Máximo", cls:"gold", fn:()=>responder("opus")}]);
-      /* si cierra la ventana tocando fuera, se va con el económico: jamás se gasta de más sin su sí */
+      /* 🔴 v7.99 — TOCAR FUERA CANCELA, NO ABARATA (Rey, 12-09).
+         Antes, cerrar la ventana tocando fuera resolvía "sonnet": la consulta SEGUÍA y se
+         pagaba, solo que más barata. Rey: «aún así toque fuera de la tarjeta él comienza a
+         responder y es como obligatorio». Quitarse una tarjeta de encima no es decir que sí
+         a nada. Ahora tocar fuera CANCELA el envío y el texto se queda en la caja, tal cual
+         lo escribió, por si lo quiere mandar luego. */
       const ov=$("#modalOv");
       if(ov && window.MutationObserver){
-        const obs=new MutationObserver(()=>{ if(!document.body.contains(ov)){ obs.disconnect(); responder("sonnet"); } });
+        const obs=new MutationObserver(()=>{ if(!document.body.contains(ov)){ obs.disconnect(); responder(null); } });
         obs.observe(document.body,{childList:true});
       }
     }catch(_){ responder("sonnet"); }
@@ -13963,7 +14059,10 @@ const IA_ACCIONES = {
   reenviar:  { t:"🔄 Reenviar mi mensaje",     fn:()=>iaReintentar() },
   continuar: { t:"▶️ Continuar desde ahí",      fn:()=>iaContinuar() },
   recargar:  { t:"💳 Recargar créditos",        fn:()=>iaRecargar() },
-  reintentar:{ t:"↻ Probar otra vez",          fn:()=>iaReintentarEnvio() }
+  reintentar:{ t:"↻ Probar otra vez",          fn:()=>iaReintentarEnvio() },
+  /* 🎟️ v7.99 — lo que antes se mandaba solo ahora espera en una tarjeta. Estas son las
+     acciones que esas tarjetas pueden disparar, y solo las dispara el dedo de Rey. */
+  parte:     { t:"🌅 Dame el parte del día",   fn:()=>parteMatutino() }
 };
 /* Pinta los botones de un mensaje que los lleve.
    RETROCOMPATIBLE: los avisos de fallo guardados por versiones anteriores no traen el
@@ -14326,6 +14425,9 @@ async function iaEnviar(textoForzado, promptExtra){
   /* 🧠 motor sintomático: si la tarea parece profunda y el ajuste es Rendidor, pregunta.
      Se decide AQUÍ (antes de vaciar la caja) y vale solo para esta consulta. */
   const motorMsg = await iaMotorPara(texto, !!doc, !!promptExtra);
+  /* 🔴 v7.99 — «Ahora no» es que NO. Se sale antes de vaciar la caja, antes de encender
+     IA.busy y antes de gastar un solo crédito. Lo escrito se queda donde estaba. */
+  if(motorMsg===null){ try{ toast("Cancelado — tu mensaje sigue escrito"); }catch(_){} return; }
   /* 📎 v6.25 (Rey, 28-08): el reintento/reenvío PERDÍA el marco oculto (promptExtra) — al
      reenviar "Evalúa HOY de mi Ejecutor", Roberto recibía solo la frase visible SIN la lista
      de operaciones y contestaba "0 trades hoy" con 2 operaciones hechas. Ahora el último
@@ -14679,7 +14781,7 @@ function init(){
       robEvento(ev.data.title||"Roberto", ev.data.body||"", { urge:!!ev.data.strong, ir:ev.data.ir||"", kind:ev.data.kind||"" });
     }
   }); } }catch(_){}
-  try{ const sp=new URLSearchParams(location.search); const dst=sp.get("ir"); if(dst) setTimeout(()=>irDestino(dst), 600); }catch(_){}
+  try{ const dst=consumirParam("ir"); if(dst) setTimeout(()=>irDestino(dst), 600); }catch(_){}
   try{ if(navigator.serviceWorker){ navigator.serviceWorker.addEventListener("message", ev=>{ if(ev.data && ev.data.type==="apex-ir" && ev.data.ir) irDestino(ev.data.ir); }); } }catch(_){}
   /* 💬 v6.23 (Rey): respuesta de Roberto con Apex ABIERTA — sin notificación: si el chat
      está abierto, el mensaje aterriza AHÍ al instante; si estás en otra sección, sale el
@@ -14710,7 +14812,8 @@ function init(){
       if(jid) iaMostrarJob(jid);   /* deja la respuesta lista en el chat para cuando lo abras */
     }
   }); } }catch(_){}
-  try{ const sp=new URLSearchParams(location.search); if(sp.get("open")==="chat"){ const jb=sp.get("job"); const seed=sp.get("seed"); setTimeout(()=>{ if(typeof abrirIA==="function") abrirIA(); if(seed) setTimeout(()=>iaProactivo(seed),350); else if(jb) iaMostrarJob(jb); else iaResumePend(); }, 500); } }catch(_){}
+  try{ const abre=consumirParam("open"); const jb=consumirParam("job"); const seed=consumirParam("seed");
+       if(abre==="chat"){ setTimeout(()=>{ if(typeof abrirIA==="function") abrirIA(); if(seed) setTimeout(()=>iaProactivo(seed),350); else if(jb) iaMostrarJob(jb); else iaResumePend(); }, 500); } }catch(_){}
   setTimeout(syncReminders, 1800);   /* sube los avisos al vigilante (cron) */
   setTimeout(hoyCargarNoticias, 2000);  /* 📰 noticias del día dentro de la vista HOY */
   setTimeout(planCargarMem, 2400);     /* 🧭 cuenta la memoria de Roberto para las señales del plan */

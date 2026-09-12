@@ -1,37 +1,32 @@
-APEX v7.98 — TRADING DESK
+APEX v7.99 — TRADING DESK
 =========================
 
-🩹 CADA LIBRO SE COMPARA CON SU PROPIO TOTAL
+💳 NADA GASTA CRÉDITOS SIN QUE TÚ LO TOQUES (tu ley del 12-09)
 
-Lo destapó tu pregunta: «¿estos arreglos valen también para mis entradas?».
+• 🔴 EL AVISO QUE SE REPETÍA PARA SIEMPRE — arreglado. El parámetro del aviso no se borraba,
+  así que el mismo mensaje se reenviaba y se pagaba en CADA apertura de Apex. Ahora se
+  consume una vez y se borra en el acto.
+• 🌅 EL PARTE DEL DÍA ya no se manda solo: te deja una tarjeta. $0 hasta que la toques.
+• ✋ LA TARJETA DEL MOTOR ahora tiene «Ahora no», y tocar fuera CANCELA en vez de seguir
+  gastando. Lo que escribiste se queda en la caja.
 
-El aviso de «estás viendo un trozo» —el que acabábamos de construir para que Roberto no
-opine sobre datos incompletos— miraba SIEMPRE el archivo del Ejecutor, también cuando
-hablaba de TU Diario. Le habría dicho: «estás viendo 3 de 10 operaciones» sobre las TUYAS,
-comparándolas con las del ROBOT.
+🧭 EL REPASO DE ROBERTO — lo nuevo de verdad
 
-Un aviso falso, y del peor tipo: ese aviso nació justamente para que nadie analizara un
-trozo creyendo que era el todo.
+Una vez al día (15:00, y lo puedes cambiar o apagar) Roberto mira TODO junto: tus avisos,
+tus pendientes, tu plan, los cierres del Ejecutor, tus cuentas, tus lecciones y las ideas de
+su Pensadero. Y decide UNA de tres cosas:
 
-Arreglado: cada libro se compara con su propio total. El del robot con el archivo del robot,
-el tuyo con tus trades cerrados. Con su prueba dentro del banco.
+   · callar   → no hay nada que merezca tu atención hoy
+   · tarjeta  → te lo deja escrito, lo ves cuando quieras
+   · avisar   → solo si algo se te escapa HOY y no puede esperar
 
-── Y DE PASO, LA RESPUESTA A TU PREGUNTA ──
+Y te PROPONE ordenar: juntar avisos que se pisan, mover lo parado, cerrar lo que ya no
+aplica. Cada propuesta con su botón: ejecuta él, decides tú.
 
-VALE IGUAL PARA TUS ENTRADAS:
-  · los cierres por período (día/semana/mes/año, tabla y gráfica)
-  · el panel 📐 de esperanza (acierto necesario, balanza, por dónde salió cada una)
-  · el botón «🎓 Que lo juzgue Roberto»
-  · Roberto recibe la FORMA de tus operaciones, por separado de las del robot
-  · la tarjeta 🎬/💵 — esa es SOLO tuya, el robot no la necesita
-  · el respaldo en la nube: tus trades ya viajaban desde hace tiempo
+💰 Y esto es lo importante: el repaso se PIENSA UNA VEZ en la nube y queda escrito.
+   Abrirlo y releerlo cuesta CERO. Puedes mirarlo diez veces y no gastas nada.
 
-NO ES PARA TI, Y ESTÁ BIEN ASÍ:
-  · el archivo permanente de la nube es del robot. Tú no lo necesitas porque tus trades ya
-    se respaldan enteros; el robot sí, porque su historia vivía en una bitácora topada a 40.
-
-UNA DIFERENCIA A PROPÓSITO: tu Diario mide en R, no en dinero. Su panel no inventa un dinero
-que no le has dado — un cero ahí diría «no ganaste nada», y sería falso.
+Bancos nuevos: test-nada-gasta-sin-que-rey-lo-toque.cjs (6) y test-repaso-de-roberto.cjs (7).
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
