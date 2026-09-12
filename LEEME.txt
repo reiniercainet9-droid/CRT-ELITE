@@ -1,44 +1,29 @@
-APEX v7.103 — TRADING DESK
+APEX v7.104 — TRADING DESK
 =========================
 
-📱 ROBERTO CONOCE TU TELÉFONO — Y AHORA ÉL LO VE (v7.101 + v7.102)
+📍 LA UBICACIÓN Y EL CALENDARIO — ya puedes dárselos
 
-LO QUE DESTAPÓ TU PREGUNTA: había construido el sensor y los avisos, pero a Roberto NO le
-llegaba nada. Los avisos eran del teléfono, no suyos: si le preguntabas «¿cómo está mi
-batería?», no lo sabía. Arreglado y comprobado en tu moto g54.
+Rey: «todavía no vi permiso de ubicación para darle». No lo había visto porque NO
+existía: lo dejé fuera del manifiesto a propósito hasta tener construido su uso, para
+que Android no te lo enseñara al instalar sin darte nada a cambio. Ya está construido.
 
-AHORA LEE EN CADA MENSAJE, en una línea:
-  «Vive en un motorola moto g54 5G (Android 15) · batería 88% cargando por corriente, 31°C,
-   salud buena · almacenamiento 62% libre (143,6 de 230,8 GB) · memoria 35% libre de 7,4 GB ·
-   con internet por wifi»
+En ⚙️ ajustes de Roberto hay una sección nueva: 👁️ Lo que Roberto ve de tu día,
+con los dos permisos, uno a uno, diciendo qué gana Y QUÉ NO SE TE PIDE.
 
-🌞 Y APRENDE TU DÍA (sin pedir ningún permiso)
-El vigía apunta cada día, sin guardar QUÉ haces, solo CUÁNDO:
-  · a qué hora desbloqueas el teléfono la primera vez  ← ahí empieza tu jornada de verdad
-  · a qué hora lo dejas la última
-  · cuántas veces lo coges
-  · tu batería mínima y máxima, y a qué hora bajaste del 20%
+📍 UBICACIÓN — solo la APROXIMADA (barrio, no calle)
+   Para «estás fuera y Londres abre en 20 minutos», o para callarse cuando no estás
+   en casa. Lee la última posición que el teléfono YA conoce: no enciende el GPS ni
+   te gasta batería. La precisa no se pide: no hace falta para nada de esto.
 
-Eso se sube a la nube y EL REPASO lo lee junto. Con semanas, Roberto podrá decirte cosas
-que solo se ven con varios días:
-  · «llevas tres días abriendo a las 4:40: tu jornada empieza antes de lo que dice tu plan»
-  · «te quedas bajo el 20% sobre las 19:00, carga antes de Londres»
-  · «ayer lo cogiste el doble de veces que un día normal, y era día de mercado»
+📅 CALENDARIO — solo LEER
+   «Tienes cita a las 15:00 y NY abre a las 14:30». Solo mira CUÁNDO estás ocupado:
+   título y hora. Ni invitados, ni notas, ni el sitio. Escribir en él se decide aparte.
 
-Y tiene prohibido inventar un patrón si no lo ve.
+Los dos llegan a Roberto por el contexto vivo (no como mano: una mano cuesta dos
+llamadas al modelo). La posición va SIEMPRE con su antigüedad, porque una de hace seis
+horas no es dónde estás, es dónde estuviste.
 
-⚠️ Los avisos del momento (batería, disco, memoria) los sigue dando el teléfono GRATIS. El
-repaso NO los repite: lo suyo es el patrón, no el dato.
-
-Nada de lo que tenías se tocó: los 36 métodos del plugin siguen ahí (ahora 38), las 45 manos,
-los gestos, la voz y el dictado intactos.
-
-🔬 Y UN DISPARADOR PARA PROBARLO (v7.103)
-Dejaste el teléfono cargando al 88% y no llegó al 100%, así que el aviso de «desconecta el
-cable» no se disparó y esa comprobación quedó colgada. Esperar a que la batería baje del 20%
-para saber si el aviso funciona no es comprobar: es cruzar los dedos.
-Ahora hay una prueba que dispara UN aviso de verdad, por el MISMO camino que el real, con el
-estado real de tu batería. Cuando vuelvas la disparo y lo vemos los dos.
+Los dos se quitan desde Android cuando quieras: Roberto se queda sin ese dato y sigue.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

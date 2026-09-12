@@ -9453,9 +9453,47 @@ async function iaEntornoTxt(){
     if(m.librePct!=null) partes.push("memoria "+m.librePct+"% libre de "+m.totalGB+" GB"+(m.andaJusto?" — ANDROID DICE QUE ANDA JUSTA":""));
     if(n.hayInternet!=null) partes.push(n.hayInternet?("con internet por "+(n.porDonde||"?")):"SIN INTERNET");
     if(b.sinLimite===false) partes.push("⚠️ Apex TIENE límite de batería puesto (puede dejarte sin avisos de madrugada)");
-    if(!partes.length) return "";
+    /* 📍 v7.104 — DÓNDE ESTÁ, si lo ha concedido. Va con la ANTIGÜEDAD siempre: una
+       posición de hace seis horas no es dónde está, es dónde estuvo, y Roberto no puede
+       decirle "estás en el centro" si el dato es de esta mañana ([[apex-roberto-no-inventa]]). */
+    let sitioTxt = "";
+    try{
+      if(typeof P.sitio === "function"){
+        const u = await Promise.race([ P.sitio(), new Promise(r=>setTimeout(()=>r(null), 900)) ]);
+        if(u && u.hay){
+          const donde = u.sitio || "no sé el nombre del sitio";
+          const cuando = u.haceMin==null ? "" : (u.haceMin < 10 ? " (ahora mismo)"
+                        : u.haceMin < 90 ? " (de hace "+u.haceMin+" min)"
+                        : " (⚠️ de hace "+Math.round(u.haceMin/60)+" h — puede que ya no esté ahí)");
+          sitioTxt = "DÓNDE ESTÁ: "+donde+cuando+".\n";
+        }
+      }
+    }catch(_){}
+
+    /* 📅 v7.104 — y QUÉ TIENE HOY Y MAÑANA. Solo cuándo está ocupado, nunca de qué va
+       la cita con detalle: para saber si la ventana de NY es suya basta la hora. */
+    let agendaTxt = "";
+    try{
+      if(typeof P.agenda === "function"){
+        const g = await Promise.race([ P.agenda({dias:2}), new Promise(r=>setTimeout(()=>r(null), 900)) ]);
+        if(g && g.hay && Array.isArray(g.citas) && g.citas.length){
+          const hoy = new Date(); hoy.setHours(0,0,0,0);
+          const lin = g.citas.slice(0,8).map(c=>{
+            const d = new Date(c.desde);
+            const cual = d < new Date(hoy.getTime()+86400000) ? "hoy" : "mañana";
+            const hora = c.todoElDia ? "todo el día"
+                       : d.toLocaleTimeString("es",{hour:"2-digit",minute:"2-digit",hour12:false});
+            return "· "+cual+" "+hora+" — "+c.que;
+          }).join("\n");
+          agendaTxt = "SU AGENDA (hoy y mañana):\n"+lin+"\n";
+        }
+      }
+    }catch(_){}
+
+    if(!partes.length) return sitioTxt+agendaTxt;
     return "SU TELÉFONO AHORA MISMO: "+partes.join(" · ")+
-      ".\n(Esto lo ves SIEMPRE. Úsalo solo si viene al caso: si te pregunta, o si algo de aquí le va a estorbar de verdad. No se lo recites.)\n";
+      ".\n"+sitioTxt+agendaTxt+
+      "(Esto lo ves SIEMPRE. Úsalo solo si viene al caso: si te pregunta, o si algo de aquí le va a estorbar de verdad. No se lo recites.)\n";
   }catch(_){ return ""; }
 }
 
@@ -9808,6 +9846,14 @@ function iaInit(){
           <button class="btn" id="burbBtn" style="margin:0 0 6px">⏳ …</button>
           <button class="btn" id="burbPorque" style="margin:0 0 6px;display:none">🔎 No lo veo — ¿por qué?</button>
           <div class="note" style="text-align:left" id="burbNota"></div>
+        </div>
+        <div class="fl" id="ojosCaja" style="display:none">👁️ Lo que Roberto ve de tu día</div>
+        <div id="ojosBox" style="display:none;margin-bottom:14px">
+          <button class="btn" id="ojoSitioBtn" style="margin:0 0 6px">⏳ …</button>
+          <div class="note" style="text-align:left;margin:0 0 10px" id="ojoSitioNota"></div>
+          <button class="btn" id="ojoAgendaBtn" style="margin:0 0 6px">⏳ …</button>
+          <div class="note" style="text-align:left" id="ojoAgendaNota"></div>
+          <div class="note" style="text-align:left;margin:10px 0 0;opacity:.8">Los dos se pueden <b>quitar cuando quieras</b> desde los ajustes de Android. Roberto se queda sin ese dato y sigue funcionando igual — nunca se cuelga por falta de un permiso.</div>
         </div>
         <div class="fl">🎬 Movimiento de Roberto</div>
         <div class="seg c3" id="iaRobAnimSeg" style="margin-bottom:6px">
@@ -11430,6 +11476,7 @@ async function vigiaUI(){
       vigiaUI();
     };
     burbujaUI();
+    ojosUI();
   }catch(_){}
 }
 /* ══════════════════════════════════════════════════════════════════════════
@@ -11442,6 +11489,87 @@ async function vigiaUI(){
    esto va en DOS pasos y el botón dice en cuál está.
    Solo existe dentro de la APK: en la web ni aparece.
    ══════════════════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════════════
+   👁️ LO QUE ROBERTO VE DE SU DÍA — ubicación y calendario (v7.104)
+   Rey (12-09): «todavía no vi permiso de ubicación para darle». No lo había visto porque
+   NO existía: lo dejé fuera del manifiesto a propósito hasta tener construido su uso, para
+   que Android no se lo enseñara al instalar sin darle nada a cambio. Ya está construido.
+   Cada uno dice QUÉ GANA y QUÉ NO SE LE PIDE: un permiso que no explica sus límites se
+   concede a ciegas, y eso no es concederlo.
+   Solo aparece dentro de la APK; en la web ni se dibuja.
+   ══════════════════════════════════════════════════════════════════════ */
+async function ojosUI(){
+  try{
+    const P = vigiaPuente();
+    const caja=$("#ojosCaja"), box=$("#ojosBox");
+    if(!caja||!box) return;
+    if(!P || typeof P.sitioHay!=="function"){ caja.style.display="none"; box.style.display="none"; return; }
+    caja.style.display=""; box.style.display="";
+
+    /* 📍 dónde está */
+    (async()=>{
+      const btn=$("#ojoSitioBtn"), nota=$("#ojoSitioNota");
+      if(!btn||!nota) return;
+      let tiene=false;
+      try{ const h=await P.sitioHay(); tiene=!!(h&&h.permiso); }catch(_){}
+      if(!tiene){
+        btn.className="btn gold";
+        btn.textContent="📍 Dejar que Roberto sepa dónde estás";
+        nota.innerHTML="Para decirte cosas como <b>«estás fuera y Londres abre en 20 minutos»</b>, o para callarse cuando no estás en casa. "
+          + "Es la <b>aproximada</b>: el barrio, no tu calle — la precisa no se pide, porque no hace falta para nada de esto. "
+          + "Lee la última posición que ya conoce el teléfono: <b>no enciende el GPS</b> ni te gasta batería. Y no cuesta créditos.";
+        btn.onclick=async()=>{ btn.disabled=true;
+          try{ await P.sitioPermiso(); }catch(e){ toast("No pude abrirlo: "+(e&&e.message?e.message:e)); }
+          btn.disabled=false; setTimeout(ojosUI, 1200); };
+        return;
+      }
+      let d=null; try{ d=await P.sitio(); }catch(_){}
+      btn.className="btn";
+      btn.textContent="📍 ¿Dónde cree que estoy?";
+      nota.innerHTML="✅ Concedido — la <b>aproximada</b>. Roberto sabe si estás en casa o fuera, nunca tu calle."
+        + (d&&d.hay ? " Ahora mismo: <b>"+esc(d.sitio||"sabe dónde, pero no el nombre del sitio")+"</b>"
+            + (d.haceMin!=null ? " (de hace "+d.haceMin+" min)" : "")+"."
+          : " <b>Todavía no tiene una posición guardada</b>; la tendrá en cuanto uses el mapa o salgas a la calle.");
+      btn.onclick=async()=>{
+        let x=null; try{ x=await P.sitio(); }catch(_){}
+        toast(x&&x.hay ? (x.sitio||"Sabe dónde, pero no el nombre")+(x.haceMin!=null?" · hace "+x.haceMin+" min":"")
+                       : "Todavía no tiene una posición guardada");
+        ojosUI(); };
+    })();
+
+    /* 📅 su agenda */
+    (async()=>{
+      const btn=$("#ojoAgendaBtn"), nota=$("#ojoAgendaNota");
+      if(!btn||!nota) return;
+      let tiene=false;
+      try{ const h=await P.agendaHay(); tiene=!!(h&&h.permiso); }catch(_){}
+      if(!tiene){
+        btn.className="btn gold";
+        btn.textContent="📅 Dejar que Roberto vea tu calendario";
+        nota.innerHTML="Es lo que le falta para <b>planificar de verdad</b>: «tienes cita a las 15:00 y NY abre a las 14:30», o «mañana lo tienes lleno: hoy conviene cerrar el plan». "
+          + "Solo <b>lee</b>, no apunta nada. Y solo mira <b>cuándo estás ocupado</b>: el título y la hora. Ni invitados, ni notas, ni el sitio. No cuesta créditos.";
+        btn.onclick=async()=>{ btn.disabled=true;
+          try{ await P.agendaPermiso(); }catch(e){ toast("No pude abrirlo: "+(e&&e.message?e.message:e)); }
+          btn.disabled=false; setTimeout(ojosUI, 1200); };
+        return;
+      }
+      let g=null; try{ g=await P.agenda({dias:7}); }catch(_){}
+      const n = (g&&g.hay&&Array.isArray(g.citas)) ? g.citas.length : 0;
+      btn.className="btn";
+      btn.textContent="📅 ¿Qué tengo esta semana?";
+      nota.innerHTML="✅ Concedido — solo lectura. Ve <b>"+n+"</b> cita(s) en los próximos 7 días. "
+        + "Mira cuándo estás ocupado, no de qué va cada cita.";
+      btn.onclick=async()=>{
+        let x=null; try{ x=await P.agenda({dias:7}); }catch(_){}
+        const c=(x&&x.hay&&Array.isArray(x.citas))?x.citas:[];
+        if(!c.length){ toast("No tienes nada apuntado en 7 días"); return; }
+        toast(c.slice(0,3).map(y=>{
+          const f=new Date(y.desde);
+          return (y.todoElDia?"todo el día":f.toLocaleString("es",{weekday:"short",hour:"2-digit",minute:"2-digit",hour12:false}))+" — "+y.que;
+        }).join(" · ")); };
+    })();
+  }catch(_){}
+}
 async function burbujaUI(){
   try{
     const P = vigiaPuente();
