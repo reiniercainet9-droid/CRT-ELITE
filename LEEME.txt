@@ -1,30 +1,44 @@
-APEX v7.100 — TRADING DESK
+APEX v7.103 — TRADING DESK
 =========================
 
-🖐️ MENOS ZONA DE CONTACTO ALREDEDOR DE ROBERTO (tu queja del 12-09)
+📱 ROBERTO CONOCE TU TELÉFONO — Y AHORA ÉL LO VE (v7.101 + v7.102)
 
-Tú: «casi no puedo tocar nada en mi teléfono alrededor de él porque inevitablemente lo toca
-a él… que sea solo alrededor de su cuerpo y la nube, no más allá».
+LO QUE DESTAPÓ TU PREGUNTA: había construido el sensor y los avisos, pero a Roberto NO le
+llegaba nada. Los avisos eran del teléfono, no suyos: si le preguntabas «¿cómo está mi
+batería?», no lo sabía. Arreglado y comprobado en tu moto g54.
 
-LO MEDÍ en tu moto g54, leyendo su propia página:
-    ventana que capturaba toques : 440 × 660 px
-    su cuerpo                    : 309 × 541 px
+AHORA LEE EN CADA MENSAJE, en una línea:
+  «Vive en un motorola moto g54 5G (Android 15) · batería 88% cargando por corriente, 31°C,
+   salud buena · almacenamiento 62% libre (143,6 de 230,8 GB) · memoria 35% libre de 7,4 GB ·
+   con internet por wifi»
 
-PRIMERO INTENTÉ ESTRECHAR LA VENTANA y un banco tuyo me paró: ese hueco NO es zona muerta
-inútil, es SU HALO (17 dp). Recortarlo le deja el cuadrado que fotografiaste una vez, y solo
-daba un 9 %.
+🌞 Y APRENDE TU DÍA (sin pedir ningún permiso)
+El vigía apunta cada día, sin guardar QUÉ haces, solo CUÁNDO:
+  · a qué hora desbloqueas el teléfono la primera vez  ← ahí empieza tu jornada de verdad
+  · a qué hora lo dejas la última
+  · cuántas veces lo coges
+  · tu batería mínima y máxima, y a qué hora bajaste del 20%
 
-EL ARREGLO DE VERDAD — DOS VENTANAS:
-  · la grande solo DIBUJA (cuerpo, halo, sombra, nubecita) y ya NO capta ningún toque
-  · encima va otra pequeña, invisible, del tamaño EXACTO de su cuerpo (124 × 217 dp):
-    esa es la única que responde
+Eso se sube a la nube y EL REPASO lo lee junto. Con semanas, Roberto podrá decirte cosas
+que solo se ven con varios días:
+  · «llevas tres días abriendo a las 4:40: tu jornada empieza antes de lo que dice tu plan»
+  · «te quedas bajo el 20% sobre las 19:00, carga antes de Londres»
+  · «ayer lo cogiste el doble de veces que un día normal, y era día de mercado»
 
-Resultado: puedes tocar tu pantalla al lado de Roberto, o debajo de su nube, y el toque
-llega a la app que tengas debajo. Y él se ve IDÉNTICO: no se le cambió ni un píxel.
+Y tiene prohibido inventar un patrón si no lo ve.
 
-⚠️ Una excepción a propósito: cuando Roberto te saca una TARJETA con botones, esos botones
-se dibujan fuera de su cuerpo, así que mientras hay tarjeta manda la ventana grande. Si no,
-no podrías pulsarlos.
+⚠️ Los avisos del momento (batería, disco, memoria) los sigue dando el teléfono GRATIS. El
+repaso NO los repite: lo suyo es el patrón, no el dato.
+
+Nada de lo que tenías se tocó: los 36 métodos del plugin siguen ahí (ahora 38), las 45 manos,
+los gestos, la voz y el dictado intactos.
+
+🔬 Y UN DISPARADOR PARA PROBARLO (v7.103)
+Dejaste el teléfono cargando al 88% y no llegó al 100%, así que el aviso de «desconecta el
+cable» no se disparó y esa comprobación quedó colgada. Esperar a que la batería baje del 20%
+para saber si el aviso funciona no es comprobar: es cruzar los dedos.
+Ahora hay una prueba que dispara UN aviso de verdad, por el MISMO camino que el real, con el
+estado real de tu batería. Cuando vuelvas la disparo y lo vemos los dos.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

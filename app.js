@@ -9399,6 +9399,66 @@ function iaConocimiento(){
 /* System prompt completo = personalidad + dossier */
 function iaSystemFull(){ return IA_SYSTEM_BASE+"\n\n"+iaConocimiento(); }
 
+/* 📱 v7.101 — EL TELÉFONO DONDE ROBERTO VIVE, EN SUS PALABRAS
+   ─────────────────────────────────────────────────────────────────────────────────
+   Rey (12-09) preguntó si Roberto ya sabía de su batería, su almacenamiento y su teléfono.
+   El sensor estaba y los avisos salían, pero a ÉL no le llegaba nada: los avisos eran del
+   teléfono, no suyos. Si Rey le preguntaba «¿cómo está mi batería?», no lo sabía.
+
+   Sale corto a propósito (~150 tokens): lo que cuesta va detrás del corte del caché y se
+   paga entero en cada mensaje. Aquí solo va lo que le sirve para DECIDIR algo, no el volcado.
+   ⚠️ Con reloj propio de 1,2 s y a prueba de fallos: en la web no existe el plugin y se
+   devuelve vacío. Perder este dato es una molestia; retrasar su pregunta, no
+   ([[apex-nada-bloquea-el-hilo]]). Y lo que no se sabe NO se inventa: simplemente no sale. */
+/* 📱 v7.102 — SUBIR SU TELÉFONO Y SU RITMO, PARA QUE ROBERTO APRENDA
+   Con una foto no se aprende nada; con veinte días, sí. El vigía apunta cada día a qué hora
+   Rey coge el teléfono y cómo va su batería, y esto lo sube a la nube para que el repaso lo
+   vea junto. Una vez al abrir Apex, y a lo sumo una vez cada 6 h: ni gasta créditos (es
+   guardar, no pensar) ni pesa nada.
+   ⚠️ Con reloj propio y a prueba de fallos: si no hay internet o no hay plugin, se calla y ya
+   está — nunca puede estorbar al arranque de Apex ([[apex-nada-bloquea-el-hilo]]). */
+async function subirEntorno(){
+  try{
+    const P = (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Apex) || null;
+    if(!P || typeof P.entorno !== "function") return;
+    const ult = parseInt(localStorage.getItem("crtelite_entorno_subido")||"0",10);
+    if(Date.now()-ult < 6*3600*1000) return;
+    const ahora = await Promise.race([ P.entorno(), new Promise(r=>setTimeout(()=>r(null),2500)) ]);
+    let dias = null;
+    if(typeof P.entornoDias === "function"){
+      const d = await Promise.race([ P.entornoDias(), new Promise(r=>setTimeout(()=>r(null),2500)) ]);
+      dias = d && d.dias ? d.dias : null;
+    }
+    if(!ahora && !dias) return;
+    const ctl=new AbortController(); const tt=setTimeout(()=>ctl.abort(), 6000);
+    await fetch(nubeUrl()+"/entorno",{method:"POST",headers:{"content-type":"application/json"},
+      body:JSON.stringify({ahora, dias}), signal:ctl.signal});
+    clearTimeout(tt);
+    localStorage.setItem("crtelite_entorno_subido", String(Date.now()));
+  }catch(_){}
+}
+
+async function iaEntornoTxt(){
+  try{
+    const P = (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Apex) || null;
+    if(!P || typeof P.entorno !== "function") return "";
+    const e = await Promise.race([ P.entorno(), new Promise(r=>setTimeout(()=>r(null), 1200)) ]);
+    if(!e) return "";
+    const t=e.telefono||{}, b=e.bateria||{}, a=e.almacenamiento||{}, m=e.ram||{}, n=e.red||{};
+    const partes=[];
+    if(t.modelo) partes.push("Vive en un "+(t.fabricante||"")+" "+t.modelo+" (Android "+(t.android||"?")+")");
+    if(b.nivel!=null) partes.push("batería "+b.nivel+"%"+(b.cargando?(" cargando"+(b.porDonde&&b.porDonde!=="nada"?" por "+b.porDonde:"")):" sin cargar")+
+      (b.grados!=null?", "+b.grados+"°C":"")+(b.salud?", salud "+b.salud:"")+(b.modoAhorro?", MODO AHORRO ENCENDIDO":""));
+    if(a.librePct!=null) partes.push("almacenamiento "+a.librePct+"% libre ("+a.libreGB+" de "+a.totalGB+" GB)");
+    if(m.librePct!=null) partes.push("memoria "+m.librePct+"% libre de "+m.totalGB+" GB"+(m.andaJusto?" — ANDROID DICE QUE ANDA JUSTA":""));
+    if(n.hayInternet!=null) partes.push(n.hayInternet?("con internet por "+(n.porDonde||"?")):"SIN INTERNET");
+    if(b.sinLimite===false) partes.push("⚠️ Apex TIENE límite de batería puesto (puede dejarte sin avisos de madrugada)");
+    if(!partes.length) return "";
+    return "SU TELÉFONO AHORA MISMO: "+partes.join(" · ")+
+      ".\n(Esto lo ves SIEMPRE. Úsalo solo si viene al caso: si te pregunta, o si algo de aquí le va a estorbar de verdad. No se lo recites.)\n";
+  }catch(_){ return ""; }
+}
+
 /* ---- ESTADO: varias conversaciones con memoria ---- */
 let IA = { url:"", convs:[], actId:null, busy:false, pendImg:null,
            voz:{on:false, name:null, pitch:0.6}, hablandoIdx:null };
@@ -14473,11 +14533,19 @@ async function iaEnviar(textoForzado, promptExtra){
      fuente de contexto y alguien olvida su reloj, la pregunta sale igual. El contexto es un
      extra — perder el dato del calendario es una molestia; perder la pregunta es lo que Rey
      lleva dos días sufriendo. */
-  let calTxt="", grafTxt="";
+  let calTxt="", grafTxt="", entTxt="";
   await Promise.race([
     (async()=>{
       try{ const ev=await cargarCalendarioCache(); calTxt=iaCalendarioContexto(ev)+"\n"; }catch(_){ calTxt=""; }
       try{ grafTxt=await iaGrafico()+"\n"; }catch(_){ grafTxt=""; }
+      /* 📱 v7.101 — Y EL TELÉFONO DONDE VIVE. Rey (12-09) preguntó si Roberto ya sabía de su
+         batería y su teléfono: el sensor estaba puesto y los avisos salían, pero a ÉL no le
+         llegaba nada — o sea que los avisos eran del teléfono, no suyos, y si Rey le
+         preguntaba «¿cómo está mi batería?» no lo sabía. Un trabajo a medias.
+         Va en el CONTEXTO y no como mano a propósito: una mano cuesta DOS llamadas al modelo
+         (pide y responde); esto son ~150 tokens en la que ya se hace. Y así lo sabe siempre,
+         sin tener que acordarse de preguntar. */
+      try{ entTxt=await iaEntornoTxt(); }catch(_){ entTxt=""; }
       /* 🤖 v7.28 — y una foto FRESCA de lo que hizo el Ejecutor, para que Roberto no vuelva a
          decirle a Rey que hoy no operó cuando sí operó (04-09: "es todo basura"). */
       try{ await ejecRefrescar(); }catch(_){}
@@ -14493,7 +14561,7 @@ async function iaEnviar(textoForzado, promptExtra){
      viaja en su bloque ESTABLE (idéntico byte a byte al que luego va en el historial) con la
      marca de caché puesta AQUÍ MISMO, y el contexto vivo va DETRÁS de la marca, en su propio
      bloque, a precio normal (1×). El worker v5.68 respeta esta marca y no la pisa. */
-  const inj="=== CONTEXTO VIVO DE LA APP (datos de AHORA MISMO; el mensaje de Rey es el bloque anterior) ===\n"+iaReloj()+"\n"+grafTxt+calTxt+iaContexto()+"\n"+iaEstrategiaDef()+"\n"+guardianRiesgo()+"\n"+iaPlan()+"\n"+iaAciertos()+"\n"+(estadoRecuperacionFreno().block||"")+iaFugas()+"\n"+iaRacha()+"\n"+iaPatrones()+"\n"+iaDatosSueltos()+"\n"+iaHitos()+"\n"+iaChats()+"\n"+iaPendientes()+"\n"+iaPlanSemanal()+"\n"+iaAvisos()+"\n"+iaEntradasAbiertas()+iaEjecutorArchivo()+iaEjecutorHoy()+iaTemplo()+iaLeyes(texto)+marco+"\n=== FIN DEL CONTEXTO — responde al mensaje de Rey del bloque anterior ===";
+  const inj="=== CONTEXTO VIVO DE LA APP (datos de AHORA MISMO; el mensaje de Rey es el bloque anterior) ===\n"+entTxt+iaReloj()+"\n"+grafTxt+calTxt+iaContexto()+"\n"+iaEstrategiaDef()+"\n"+guardianRiesgo()+"\n"+iaPlan()+"\n"+iaAciertos()+"\n"+(estadoRecuperacionFreno().block||"")+iaFugas()+"\n"+iaRacha()+"\n"+iaPatrones()+"\n"+iaDatosSueltos()+"\n"+iaHitos()+"\n"+iaChats()+"\n"+iaPendientes()+"\n"+iaPlanSemanal()+"\n"+iaAvisos()+"\n"+iaEntradasAbiertas()+iaEjecutorArchivo()+iaEjecutorHoy()+iaTemplo()+iaLeyes(texto)+marco+"\n=== FIN DEL CONTEXTO — responde al mensaje de Rey del bloque anterior ===";
   const last=msgs[msgs.length-1];
   const textoMsg=c.msgs[c.msgs.length-1].content;   /* EXACTAMENTE lo guardado (texto + nota del doc) */
   let bloquesMsg = Array.isArray(last.content) ? last.content.filter(b=>b.type==="image") : [];   /* la foto va delante */
@@ -14815,6 +14883,7 @@ function init(){
   try{ const abre=consumirParam("open"); const jb=consumirParam("job"); const seed=consumirParam("seed");
        if(abre==="chat"){ setTimeout(()=>{ if(typeof abrirIA==="function") abrirIA(); if(seed) setTimeout(()=>iaProactivo(seed),350); else if(jb) iaMostrarJob(jb); else iaResumePend(); }, 500); } }catch(_){}
   setTimeout(syncReminders, 1800);   /* sube los avisos al vigilante (cron) */
+  setTimeout(subirEntorno, 4200);   /* 📱 v7.102: su teléfono y su ritmo, para que el repaso aprenda (no gasta) */
   setTimeout(hoyCargarNoticias, 2000);  /* 📰 noticias del día dentro de la vista HOY */
   setTimeout(planCargarMem, 2400);     /* 🧭 cuenta la memoria de Roberto para las señales del plan */
   setTimeout(hoyCargarCtx, 2600);      /* 📡 último contexto del indicador para la vista 🎯 HOY */
