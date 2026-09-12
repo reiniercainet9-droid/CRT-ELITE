@@ -67,6 +67,16 @@
             Roberto suma este mismo --rob-borde: si un día cambia, cambian todos a la vez. */
          --rob-hh:0.82; --rob-alto:calc(82 * var(--u));
          --rob-ancho:calc(calc(82 * var(--u)) * 0.571);
+         /* 🖐️ v7.100 (Rey, 12-09) — EL HUECO AL BORDE SE SACA DE LA VENTANA.
+            Rey: «el área alrededor de él es muy amplia, casi no puedo tocar nada en mi
+            teléfono alrededor de él porque inevitablemente lo toca a él».
+            MEDIDO en su moto g54: la ventana que se come los toques era 440×660 px para un
+            cuerpo de 309×541 — o sea 66 px de zona MUERTA a un lado, un 30 % del ancho.
+            Esos 66 px eran este --rob-borde: el hueco entre su cuerpo y el borde de la
+            pantalla, que vivía DENTRO de la ventana y por tanto capturaba toques.
+            Ahora el hueco lo pone la POSICIÓN de la ventana (HUECO_BORDE_DP en el lado
+            nativo) y aquí queda solo lo justo para que no se roce con su propio marco.
+            Él se ve EXACTAMENTE igual: no se toca --u ni --rob-alto ni --rob-ancho. */
          --rob-borde:calc(10 * var(--u));
          /* lo que ocupa Roberto contado desde el borde de la pantalla: su cuerpo + su margen */
          --rob-hueco:calc(var(--rob-ancho) + var(--rob-borde)); }

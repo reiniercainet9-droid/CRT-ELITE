@@ -1,32 +1,30 @@
-APEX v7.99 — TRADING DESK
+APEX v7.100 — TRADING DESK
 =========================
 
-💳 NADA GASTA CRÉDITOS SIN QUE TÚ LO TOQUES (tu ley del 12-09)
+🖐️ MENOS ZONA DE CONTACTO ALREDEDOR DE ROBERTO (tu queja del 12-09)
 
-• 🔴 EL AVISO QUE SE REPETÍA PARA SIEMPRE — arreglado. El parámetro del aviso no se borraba,
-  así que el mismo mensaje se reenviaba y se pagaba en CADA apertura de Apex. Ahora se
-  consume una vez y se borra en el acto.
-• 🌅 EL PARTE DEL DÍA ya no se manda solo: te deja una tarjeta. $0 hasta que la toques.
-• ✋ LA TARJETA DEL MOTOR ahora tiene «Ahora no», y tocar fuera CANCELA en vez de seguir
-  gastando. Lo que escribiste se queda en la caja.
+Tú: «casi no puedo tocar nada en mi teléfono alrededor de él porque inevitablemente lo toca
+a él… que sea solo alrededor de su cuerpo y la nube, no más allá».
 
-🧭 EL REPASO DE ROBERTO — lo nuevo de verdad
+LO MEDÍ en tu moto g54, leyendo su propia página:
+    ventana que capturaba toques : 440 × 660 px
+    su cuerpo                    : 309 × 541 px
 
-Una vez al día (15:00, y lo puedes cambiar o apagar) Roberto mira TODO junto: tus avisos,
-tus pendientes, tu plan, los cierres del Ejecutor, tus cuentas, tus lecciones y las ideas de
-su Pensadero. Y decide UNA de tres cosas:
+PRIMERO INTENTÉ ESTRECHAR LA VENTANA y un banco tuyo me paró: ese hueco NO es zona muerta
+inútil, es SU HALO (17 dp). Recortarlo le deja el cuadrado que fotografiaste una vez, y solo
+daba un 9 %.
 
-   · callar   → no hay nada que merezca tu atención hoy
-   · tarjeta  → te lo deja escrito, lo ves cuando quieras
-   · avisar   → solo si algo se te escapa HOY y no puede esperar
+EL ARREGLO DE VERDAD — DOS VENTANAS:
+  · la grande solo DIBUJA (cuerpo, halo, sombra, nubecita) y ya NO capta ningún toque
+  · encima va otra pequeña, invisible, del tamaño EXACTO de su cuerpo (124 × 217 dp):
+    esa es la única que responde
 
-Y te PROPONE ordenar: juntar avisos que se pisan, mover lo parado, cerrar lo que ya no
-aplica. Cada propuesta con su botón: ejecuta él, decides tú.
+Resultado: puedes tocar tu pantalla al lado de Roberto, o debajo de su nube, y el toque
+llega a la app que tengas debajo. Y él se ve IDÉNTICO: no se le cambió ni un píxel.
 
-💰 Y esto es lo importante: el repaso se PIENSA UNA VEZ en la nube y queda escrito.
-   Abrirlo y releerlo cuesta CERO. Puedes mirarlo diez veces y no gastas nada.
-
-Bancos nuevos: test-nada-gasta-sin-que-rey-lo-toque.cjs (6) y test-repaso-de-roberto.cjs (7).
+⚠️ Una excepción a propósito: cuando Roberto te saca una TARJETA con botones, esos botones
+se dibujan fuera de su cuerpo, así que mientras hay tarjeta manda la ventana grande. Si no,
+no podrías pulsarlos.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
