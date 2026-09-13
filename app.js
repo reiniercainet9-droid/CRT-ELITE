@@ -3252,6 +3252,58 @@ function parteMatutinoAuto(){
    Es el patrón para todo lo que antes se mandaba solo: se ofrece, no se impone.
    Usa el mismo mecanismo que ya tienen las demás tarjetas del chat (`data-acc` +
    IA_ACCIONES), que está probado — no uno nuevo que haya que volver a cablear. */
+/* 📺 v7.122 — LO QUE SE OYÓ TRAS LLAMARLE, OFRECIDO Y NO MANDADO.
+   Rey, con el televisor encendido: «oye cualquier cosa no solo a mí y además respondió eso
+   gastando crédito». En su chat apareció un mensaje SUYO que él nunca dijo — «primero que
+   ustedes me voy», un diálogo de la tele — y Roberto contestó. Eso es dinero suyo pagando
+   por la televisión.
+   Ahora lo que se oye y no resuelve el cerebro local se queda AQUÍ, en una tarjeta con un
+   botón. Si fue la tele, Rey no la toca y no cuesta un céntimo. Es su ley del 12-09: nada
+   gasta sin que él lo decida. */
+let _oidoPendiente = "";
+/* quita la tarjeta del chat, tanto si la manda como si la descarta */
+function quitarLoOido(){
+  try{
+    const c=iaConvAct(); if(!c) return;
+    for(let i=c.msgs.length-1;i>=0;i--){ if(c.msgs[i] && c.msgs[i].oferta==="oido"){ c.msgs.splice(i,1); break; } }
+    iaGuardarConvs(); pintarIAChat();
+  }catch(_){}
+}
+function ofrecerLoOido(texto){
+  try{
+    const t = String(texto||"").trim();
+    if(!t) return;
+    _oidoPendiente = t;
+    const c = iaConvAct(); if(!c) return;
+    /* si ya había una oferta sin tocar, se sustituye: la tele habla mucho y no puede
+       llenarle el chat de tarjetas */
+    for(let i=c.msgs.length-1; i>=0; i--){ if(c.msgs[i] && c.msgs[i].oferta==="oido"){ c.msgs.splice(i,1); break; } }
+    c.msgs.push({ role:"assistant", oferta:"oido", content:"Te oí: «"+t+"»",
+      /* ⚠️ DOS salidas, no una. Rey: «la tarjeta me salió así, no para yo elegir» — y tenía
+         razón: con un solo botón, si fue la tele se le quedaba ahí para siempre. Elegir es
+         poder decir que no.
+         Y los botones van con la clase `ia-acc-b`, que es la del botón: `ia-acc` es la CAJA
+         que los contiene (display:flex) y por eso se pintaba como texto suelto. */
+      html:'<div class="ia-oferta"><b>🗣️ Te oí esto</b>'+
+           '<div class="desc" style="margin:6px 0 4px">«'+esc(t)+'»</div>'+
+           '<div class="desc" style="margin:0 0 10px;opacity:.75">Si no lo dijiste tú (la tele, alguien hablando), dale a <b>No era yo</b>.</div>'+
+           '<div class="ia-acc">'+
+             '<button class="ia-acc-b gold" data-acc="oido">📨 Sí, mándaselo</button>'+
+             '<button class="ia-acc-b" data-acc="oidono">🗑️ No era yo</button>'+
+           '</div>'+
+           '<div class="ia-mem-pie" style="margin-top:8px">No gasta nada hasta que toques «sí».</div></div>' });
+    iaGuardarConvs(); pintarIAChat();
+    /* 🧧 v7.123 — Y QUE SE ENTERE AUNQUE APEX ESTÉ CERRADA.
+       Rey preguntó: «si Apex está cerrada, ¿dónde sale la tarjeta?». Salía SOLO dentro de
+       Apex, o sea que no la veía nunca. Ahora su cuerpo flotante se lo dice: corto, una
+       vez, y sin sonar a urgencia — si fue la tele, que no le asuste. */
+    try{
+      if(document.hidden || !document.querySelector("#iaMsgs"))
+        robDecir("Roberto","Te oí algo, Rey. Te dejé la tarjeta en el chat por si eras tú.",{gesto:"espera"});
+    }catch(_){}
+  }catch(_){}
+}
+
 function ofrecerEnChat(accion, titulo, texto){
   try{
     const c=iaConvAct(); if(!c) return;
@@ -3261,7 +3313,11 @@ function ofrecerEnChat(accion, titulo, texto){
     c.msgs.push({ role:"assistant", oferta:accion, content:titulo+" — "+texto,
       html:'<div class="ia-oferta"><b>'+esc(titulo)+'</b>'+
            '<div class="desc" style="margin:6px 0 10px">'+esc(texto)+'</div>'+
-           '<button class="ia-acc" data-acc="'+esc(accion)+'">'+esc(A.t)+'</button>'+
+           /* ⚠️ v7.123 — era `ia-acc`, que es la CAJA (display:flex), no el botón. Desde la
+              v7.99 TODAS estas ofertas (el parte del día, el repaso) le salían a Rey como
+              texto plano, sin pinta de tocables. No daba error: solo parecía que no se podía
+              tocar, que es peor. */
+           '<div class="ia-acc"><button class="ia-acc-b gold" data-acc="'+esc(accion)+'">'+esc(A.t)+'</button></div>'+
            '<div class="ia-mem-pie" style="margin-top:8px">No gasta nada hasta que lo toques.</div></div>' });
     iaGuardarConvs(); pintarIAChat();
   }catch(_){}
@@ -9907,6 +9963,12 @@ function iaInit(){
           <button class="btn" id="burbPorque" style="margin:0 0 6px;display:none">🔎 No lo veo — ¿por qué?</button>
           <div class="note" style="text-align:left" id="burbNota"></div>
         </div>
+        <div class="fl" id="oyeCaja" style="display:none">🗣️ «Oye Roberto»</div>
+        <div id="oyeBox" style="display:none;margin-bottom:14px">
+          <button class="btn" id="oyeBtn" style="margin:0 0 6px">⏳ …</button>
+          <div class="note" style="text-align:left" id="oyeNota"></div>
+          <button class="btn" id="oyeQueBtn" style="margin:8px 0 0;display:none">🎧 ¿Qué oíste?</button>
+        </div>
         <div class="fl" id="ojosCaja" style="display:none">👁️ Lo que Roberto ve de tu día</div>
         <div id="ojosBox" style="display:none;margin-bottom:14px">
           <button class="btn" id="ojoSitioBtn" style="margin:0 0 6px">⏳ …</button>
@@ -10733,7 +10795,61 @@ function micDosGestos(b){
    código para los dos.
    ═════════════════════════════════════════════════════════════════════════════ */
 let _oidoListo = false;
-const OIDO = { on:false, base:"", desdeBurbuja:false };
+const OIDO = { on:false, base:"", desdeBurbuja:false, desdeOye:false };
+
+/* ════════════════════════════════════════════════════════════════════
+   🗣️ EL OÍDO DE SU NOMBRE SE REGISTRA SOLO — v7.117
+   ⚠️ Esto vivía dentro de micNativo(), que solo corre la PRIMERA VEZ que Rey toca el
+   botón del micrófono. Medido en su teléfono: no había NADIE escuchando. O sea que Rey
+   encendía «Oye Roberto», el vigía oía su nombre, mandaba el aviso… y se perdía en el
+   aire. Él diría su nombre, no pasaría nada, y pensaría que el detector no funciona.
+   Ahora se registra al arrancar y no depende de que él toque nada.
+   ══════════════════════════════════════════════════════════════════ */
+let _oyeListo = false;
+function oyeEscuchar(){
+  try{
+    if(_oyeListo) return true;
+    const P = (typeof vigiaPuente==="function") ? vigiaPuente() : null;
+    if(!P || typeof P.addListener !== "function") return false;
+    _oyeListo = true;
+  /* 🗣️ v7.116 — «OYE ROBERTO». El vigía oyó su nombre y avisa por aquí.
+     Si Rey dijo la orden en la MISMA frase («oye Roberto, pon música») se hace
+     directamente: tener que repetirse es lo que más cansa de hablarle a una máquina.
+     Si solo dijo su nombre, se abre el oído y se espera.
+     ⚠️ Despertar NO gasta nada: lo que Rey diga pasa primero por el cerebro local. */
+  P.addListener("oyeRoberto", (ev)=>{
+    try{
+      const resto = String((ev && ev.resto) || "").trim();
+      try{ if(navigator.vibrate) navigator.vibrate(40); }catch(_){}
+      try{ robCara("escucha","¿sí, Rey?"); }catch(_){}
+      oidoTraza("«oye Roberto»"+(resto?(" + «"+resto+"»"):""));
+      if(resto && resto.length >= 2){
+        /* 📺 v7.122 — dijo su nombre Y algo más en la misma frase. Tampoco se manda a
+           ciegas: la tele también puede decir su nombre seguido de cualquier cosa. Primero
+           el cerebro local (gratis), y si no lo coge, tarjeta. */
+        OIDO.desdeOye = false;
+        (async()=>{
+          let ya=null;
+          try{ ya = await cerebroLocal(resto); }catch(_){ ya=null; }
+          if(ya && ya.txt){ localResponder(resto, ya.txt); return; }
+          ofrecerLoOido(resto);
+          try{ robCara("espera","¿te lo mando?"); }catch(_){}
+        })();
+        return;
+      }
+      /* solo su nombre: se abre el oído para la orden.
+         ⚠️ Se marca DE DÓNDE viene: si esto salió de su nombre y no de que Rey pulsara el
+         micrófono, lo que se oiga NO puede mandarse solo — la primera vez que lo probó,
+         decir «Oye Roberto» le costó un mensaje entero al modelo. */
+      OIDO.desdeBurbuja = true;
+      OIDO.desdeOye = true;
+      try{ oidoEmpezar(); }catch(_){}
+    }catch(_){}
+  });
+
+    return true;
+  }catch(_){ return false; }
+}
 
 function micNativo(){
   try{
@@ -10781,9 +10897,57 @@ function oidoPintar(texto, esFinal){
      ocupado con la pregunta anterior, aquí se salía sin decir nada — y Rey se quedaba con
      "te escucho" y ningún porqué. */
   if(!dicho){ oidoTraza("vacío"); toast("No te oí nada, Rey — prueba otra vez"); try{ robCaraRato("confundido",3000,"no te oí"); }catch(_){} oidoParteAlaNube(); return; }
+
+  /* 🗣️ v7.121 — LLAMARLE POR SU NOMBRE NO CUESTA UN CÉNTIMO.
+     La primera vez que Rey lo probó, decir «Oye Roberto» le mandó un informe entero: su
+     plan, sus dos FundedNext, el GBPUSD. Un mensaje completo al modelo POR LLAMARLE.
+     El camino era: la palabra despierta → se abre el dictado → el dictado vuelve a oír
+     «Oye Roberto» (sigue en el aire) → y el dictado manda solo al terminar. Mandar solo está
+     bien cuando Rey pulsa el micrófono y habla; está MAL cuando lo único que dijo fue el
+     nombre. Va contra su ley: nada gasta sin que él lo decida.
+     Ahora se le quita el nombre del principio, y si no queda nada, se le contesta GRATIS y
+     se vuelve a escuchar — que es lo que hace un asistente cuando le llamas. */
+  const SU_NOMBRE = /^\s*(?:¡|¿)?\s*(?:oye|olle|oyes|hoy)\s*,?\s*(?:roberto|robert|roverto|rroberto|ro)\s*[,.!?]*\s*/i;
+  let paraRoberto = dicho;
+  if(OIDO.desdeOye){
+    const sinNombre = dicho.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(SU_NOMBRE, "").trim();
+    if(sinNombre.length < 2){
+      /* solo dijo su nombre: se le contesta y se vuelve a escuchar. CERO créditos. */
+      oidoTraza("solo su nombre — no se manda nada");
+      OIDO.desdeOye = false;
+      if(ta){ ta.value=""; ta.style.height="auto"; }
+      try{ robCara("escucha","dime, Rey"); }catch(_){}
+      try{ if(IA.voz && IA.voz.on && typeof iaHablar==="function") iaHablar("Dime, Rey."); }catch(_){}
+      toast("🗣️ Dime, Rey…");
+      oidoParteAlaNube();
+      setTimeout(()=>{ try{ OIDO.desdeOye = true; oidoEmpezar(); }catch(_){} }, 1200);
+      return;
+    }
+    /* 📺 v7.122 — Y AQUÍ ESTÁ LO QUE FALTABA. Antes esto seguía hacia abajo y el
+       dictado lo mandaba SOLO al terminar — así fue como la tele le escribió a Roberto
+       «primero que ustedes me voy» y él pagó la respuesta.
+       Ahora: primero el cerebro local, que es GRATIS (pon música, qué hora es, pausa,
+       cuelga, dónde estoy… o sea casi todo lo que se dice sin manos). Y lo que el cerebro
+       local NO coja se queda en una tarjeta con un botón: si fue la tele, Rey no la toca. */
+    paraRoberto = dicho.replace(SU_NOMBRE, "").trim();
+    OIDO.desdeOye = false;
+    if(ta){ ta.value=""; ta.style.height="auto"; }
+    oidoTraza("tras su nombre: "+paraRoberto);
+    (async()=>{
+      let ya=null;
+      try{ ya = await cerebroLocal(paraRoberto); }catch(_){ ya=null; }
+      if(ya && ya.txt){ localResponder(paraRoberto, ya.txt); return; }   /* gratis y al momento */
+      if(oidoOrden(paraRoberto)) return;                                  /* una orden de la app: tampoco cuesta */
+      ofrecerLoOido(paraRoberto);                                         /* lo demás: se ofrece, no se manda */
+      try{ robCara("espera","¿te lo mando?"); }catch(_){}
+    })();
+    oidoParteAlaNube();
+    return;
+  }
+  OIDO.desdeOye = false;
   /* 🎛️ ¿era una ORDEN o una pregunta? Las órdenes no pasan por Roberto: ni esperan,
      ni cuestan un céntimo. */
-  if(oidoOrden(dicho)){ oidoTraza("orden: "+dicho); if(ta){ ta.value=""; ta.style.height="auto"; } oidoParteAlaNube(); return; }
+  if(oidoOrden(paraRoberto)){ oidoTraza("orden: "+paraRoberto); if(ta){ ta.value=""; ta.style.height="auto"; } oidoParteAlaNube(); return; }
   if(IA.busy){ oidoTraza("ocupado, se queda escrito: "+dicho); toast("Roberto sigue con lo anterior; tu frase quedó escrita, mándala en un momento"); oidoParteAlaNube(); return; }
   oidoTraza("a Roberto: "+dicho); oidoParteAlaNube();
   setTimeout(()=>iaEnviar(), 150);        /* al terminar de hablar, Roberto responde solo */
@@ -11549,6 +11713,7 @@ async function vigiaUI(){
     };
     burbujaUI();
     ojosUI();
+    oyeUI();
   }catch(_){}
 }
 /* ══════════════════════════════════════════════════════════════════════════
@@ -11570,6 +11735,85 @@ async function vigiaUI(){
    concede a ciegas, y eso no es concederlo.
    Solo aparece dentro de la APK; en la web ni se dibuja.
    ══════════════════════════════════════════════════════════════════════ */
+/* ════════════════════════════════════════════════════════════════════
+   🗣️ «OYE ROBERTO» — v7.116. La palabra la eligió Rey.
+   Por defecto está APAGADO, y no por prudencia: escuchar todo el día GASTA BATERÍA de
+   verdad. Alexa no la gasta porque tiene un chip aparte que solo hace esto; un teléfono lo
+   hace con el procesador de todo lo demás. Eso Rey tiene que saberlo ANTES de encenderlo,
+   no descubrirlo el martes con el móvil al 30 % a mediodía.
+   ════════════════════════════════════════════════════════════════════ */
+async function oyeUI(){
+  try{
+    const P = vigiaPuente();
+    const caja=$("#oyeCaja"), box=$("#oyeBox"), btn=$("#oyeBtn"), nota=$("#oyeNota");
+    if(!caja||!box||!btn||!nota) return;
+    if(!P || typeof P.oyeHay!=="function"){ caja.style.display="none"; box.style.display="none"; return; }
+    caja.style.display=""; box.style.display="";
+
+    let h=null; try{ h=await P.oyeHay(); }catch(_){}
+    const hay = !!(h && h.hay), on = !!(h && h.encendido), paquete = !(h && h.paquete===false);
+
+    if(!hay){
+      btn.style.display="none";
+      nota.innerHTML="⚠️ Este teléfono no trae reconocimiento de voz, así que no puedo escuchar tu nombre.";
+      return;
+    }
+    btn.style.display="";
+    btn.className = on ? "btn" : "btn gold";
+    btn.textContent = on ? "🔇 Dejar de escuchar mi nombre" : "🗣️ Que Roberto escuche «Oye Roberto»";
+    nota.innerHTML = on
+      ? "✅ <b>Escuchando.</b> Di <b>«Oye Roberto»</b> y te responde, aunque Apex esté cerrada. "
+        + "Puedes decirlo todo de una vez: <b>«Oye Roberto, pon música»</b>."
+        + (paquete ? "" : "<br>⚠️ <b>Te falta el paquete de voz sin conexión en español.</b> Sin él tiene que preguntarle a internet cada vez: gasta datos y va lento. Se baja en los ajustes del teléfono, en Google → Voz → Reconocimiento sin conexión.")
+        + "<br><b>Para apagarlo</b>, este mismo botón."
+      : "Para llamarle sin tocar nada: dices <b>«Oye Roberto»</b> y te escucha."
+        + "<br>⚠️ <b>Gasta batería, y quiero que lo sepas antes:</b> escuchar todo el día tira del procesador. "
+        + "Alexa no la gasta porque lleva un chip aparte solo para esto; un teléfono lo hace con el mismo procesador de todo lo demás. "
+        + "Pruébalo un día y mira tu batería: si te sale caro, lo apagas con un toque."
+        + "<br>Oye <b>en el teléfono</b>, no en la nube: no cuesta créditos, funciona sin cobertura, y lo que se oye en tu casa no sale de tu casa hasta que dices su nombre.";
+
+    /* 🎧 v7.119 — QUÉ OYÓ. Rey preguntó «¿tiene reconocimiento de voz?» y no tenía forma
+       de saberlo: decía su nombre, no pasaba nada, y no sabía si no le oían o si entendieron
+       otra cosa. Ahora lo ve. Y es la prueba que yo NO puedo hacer por él: su voz a tres
+       metros con ruido de fondo es el caso que importa, y el teléfono diciéndose su propio
+       nombre no dispara nada porque Android cancela el eco de su altavoz. */
+    const q=$("#oyeQueBtn");
+    if(q){
+      q.style.display = on ? "" : "none";
+      q.onclick=async()=>{
+        let l=[]; try{ const x=await P.oyeQueOiste(); l=(x&&x.oido)||[]; }catch(_){}
+        /* ⚠️ el emoji va literal: «\U…» NO es un escape válido en JavaScript y se pintaba
+           tal cual («U0001F3A7 Lo último que oí»). Se me coló al generar este trozo. */
+        abrirModal('<div class="modal-t">🎧 Lo último que oí</div>'
+          + '<p class="desc" style="margin-bottom:10px">Di <b>«Oye Roberto»</b> en voz alta y vuelve a tocar aquí. '
+          + 'Lo que lleva ✅ es que te reconoció y despertó. '
+          + 'Lo que lleva ❓ es que oyó <b>algo parecido a su nombre y NO lo reconoció</b>: eso es justo lo que necesito — '
+          + '<b>mándamelo tal cual sale</b> y lo añado a las formas que sabe reconocer, y queda arreglado para siempre.</p>'
+          + '<p class="desc" style="margin-bottom:10px;opacity:.8">Lo demás es lo que se oye alrededor (la tele, una conversación). Que aparezca significa que te oye bien.</p>'
+          + (l.length
+              ? '<div class="hist-box">'+l.map(x=>'<div class="hist-row"><div class="hist-t">'+esc(x)+'</div></div>').join("")+'</div>'
+              : '<p class="desc">Todavía no he oído nada. Habla cerca y vuelve a tocar.</p>')
+          + '<p class="desc" style="margin-top:10px;opacity:.75">Esto vive solo en la memoria del teléfono mientras esté encendido: no se guarda en ningún sitio ni sale de aquí.</p>',
+          [{t:"Cerrar", cls:"gold", fn:cerrarModal}]);
+      };
+    }
+    btn.onclick=async()=>{
+      btn.disabled=true;
+      try{
+        if(on){ await P.oyeApagar(); toast("Ya no escucha tu nombre"); }
+        else {
+          try{ oyeEscuchar(); }catch(_){}   /* nunca encender el oído sin nadie que lo recoja */
+          const r = await P.oyeEncender();
+          if(r && r.encendido) toast("🗣️ Di «Oye Roberto»");
+          else toast((r && r.falta) ? ("Falta "+r.falta) : "No pude encenderlo");
+        }
+      }catch(e){ toast("No pude cambiarlo"); }
+      btn.disabled=false;
+      setTimeout(oyeUI, 900);
+    };
+  }catch(_){}
+}
+
 async function ojosUI(){
   try{
     const P = vigiaPuente();
@@ -14535,6 +14779,11 @@ async function iaBgStart(msgs, c, motor){
    créditos con el enlace directo. Vale para CUALQUIER corte, sea el motivo que sea.
    ============================================================ */
 const IA_ACCIONES = {
+  /* 📺 v7.122 — mandar lo que se oyó, SOLO si Rey toca. Si fue la tele, no toca. */
+  oido: { t:"📨 Sí, mándaselo", fn:()=>{ const t=_oidoPendiente; _oidoPendiente=""; quitarLoOido(); if(t) iaEnviar(t); } },
+  /* 🗑️ v7.123 — «no era yo». Sin esto, una tarjeta de la tele se le quedaba puesta y
+     Rey no tenía cómo quitarla: eso no es elegir, es esperar a que ceda. */
+  oidono: { t:"🗑️ No era yo", fn:()=>{ _oidoPendiente=""; quitarLoOido(); try{ toast("Borrado — no gastó nada"); }catch(_){} } },
   reenviar:  { t:"🔄 Reenviar mi mensaje",     fn:()=>iaReintentar() },
   continuar: { t:"▶️ Continuar desde ahí",      fn:()=>iaContinuar() },
   recargar:  { t:"💳 Recargar créditos",        fn:()=>iaRecargar() },
@@ -15472,7 +15721,10 @@ function init(){
        if(abre==="chat"){ setTimeout(()=>{ if(typeof abrirIA==="function") abrirIA(); if(seed) setTimeout(()=>iaProactivo(seed),350); else if(jb) iaMostrarJob(jb); else iaResumePend(); }, 500); } }catch(_){}
   setTimeout(syncReminders, 1800);   /* sube los avisos al vigilante (cron) */
   setTimeout(subirEntorno, 4200);
-setTimeout(refrescarSitio, 5200);   /* 📍 v7.107 — un arreglo fresco desde que abre */   /* 📱 v7.102: su teléfono y su ritmo, para que el repaso aprenda (no gasta) */
+setTimeout(refrescarSitio, 5200);
+/* 🗣️ v7.117 — el oído de su nombre, desde que Apex abre. Se reintenta un par de veces
+   por si el puente nativo todavía no está listo: mejor tres intentos que un «no me oye». */
+setTimeout(()=>{ if(!oyeEscuchar()) setTimeout(()=>{ if(!oyeEscuchar()) setTimeout(oyeEscuchar, 6000); }, 3000); }, 1500);   /* 📍 v7.107 — un arreglo fresco desde que abre */   /* 📱 v7.102: su teléfono y su ritmo, para que el repaso aprenda (no gasta) */
   setTimeout(hoyCargarNoticias, 2000);  /* 📰 noticias del día dentro de la vista HOY */
   setTimeout(planCargarMem, 2400);     /* 🧭 cuenta la memoria de Roberto para las señales del plan */
   setTimeout(hoyCargarCtx, 2600);      /* 📡 último contexto del indicador para la vista 🎯 HOY */
