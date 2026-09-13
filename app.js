@@ -14890,6 +14890,158 @@ function iaCancelarEspera(){
   pintarIAChat();
   toast("Espera cancelada — ya puedes escribir");
 }
+/* ═════════════════════════════════════════════════════════════════════
+   ⚡ EL CEREBRO LOCAL — v7.115
+   Lo que no hace falta pensar, no se piensa: se contesta aquí, en menos de un segundo, sin
+   internet y sin gastar un céntimo.
+
+   POR QUÉ EXISTE. Alexa contesta en menos de un segundo, siempre, hasta una tonería. Roberto
+   tardaba entre 8 y 15 segundos y necesitaba internet. Y si preguntarle la hora tarda diez
+   segundos, Rey deja de preguntarle cosas pequeñas — y un asistente al que solo acudes para
+   lo grande ya no es un asistente, es una herramienta. La costumbre diaria se la lleva quien
+   resuelve lo pequeño.
+
+   ⚠️ LA REGLA QUE LO GOBIERNA: EN LA DUDA, AL MODELO.
+   Un cerebro rápido que contesta mal es peor que uno lento: lento molesta, equivocado
+   engaña. Por eso solo entran frases CORTAS con patrones EXACTOS, y JAMÁS nada de trading,
+   dinero, riesgo o de cómo se siente — eso es justo para lo que Rey tiene a Roberto, y
+   contestarlo con un patrón sería una estafa.
+   La respuesta lleva un ⚡ para que Rey SEPA que eso no lo pensó nadie.
+   ════════════════════════════════════════════════════════════════════ */
+
+/* lo que NUNCA se contesta aquí, pase lo que pase */
+const LOCAL_JAMAS = /(oper|trad|posici[óo]n|entrada|salida|riesgo|lote|sl\b|tp\b|stop|p[ée]rdida|ganancia|d[óo]lar|cuenta|saldo|fondeo|se[ñn]al|gr[áa]fico|sesgo|killzone|estrategia|plan|diario|opinas|piensas|crees|por qu[ée]|porqu[ée]|deber[íi]a|fall|me siento|estoy mal|ansiedad|miedo|explica|c[óo]mo hago|ay[úu]dame|qu[ée] tal)/i;
+
+function localReloj(){
+  const d = new Date();
+  const hh = d.toLocaleTimeString("es",{hour:"2-digit",minute:"2-digit",hour12:false,timeZone:"America/Sao_Paulo"});
+  return hh;
+}
+
+async function cerebroLocal(texto){
+  try{
+    const t = String(texto||"").trim();
+    if(!t || t.length > 70) return null;              /* lo largo es conversación */
+    if(LOCAL_JAMAS.test(t)) return null;              /* eso es para lo que existe Roberto */
+    /* ⚠️ SOLO se cuentan los signos de CIERRE. En español una pregunta bien escrita lleva
+       DOS signos (¿ y ?), así que contarlos todos rechazaba absolutamente todas — el banco
+       lo cazó en la primera pasada: no cogeía ni «¿qué hora es?». */
+    if((t.match(/\?/g)||[]).length > 1) return null;   /* dos preguntas ya no es una orden */
+    /* y SIN ACENTOS: Rey escribe «avísame» y dicta «avisame», y las dos son lo mismo */
+    const l = t.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"")
+               .replace(/[¿?¡!.,]/g," ").replace(/\s+/g," ").trim();
+    const P = (typeof vigiaPuente==="function") ? vigiaPuente() : null;
+    const hayManos = !!(P && typeof P.apps==="function");
+
+    /* ⏰ la hora y el día */
+    if(/^(que|qu[ée]|k) hora (es|son)$/.test(l) || l==="la hora" || l==="hora")
+      return {txt:"Son las "+localReloj()+"."};
+    if(/^(que|qu[ée]) (dia|d[íi]a) (es|es hoy|estamos)$/.test(l) || l==="que dia es hoy"){
+      const d=new Date();
+      return {txt:"Hoy es "+d.toLocaleDateString("es",{weekday:"long",day:"numeric",month:"long",timeZone:"America/Sao_Paulo"})+"."};
+    }
+
+    /* 🔋 su teléfono */
+    /* ⚠️ ANCLADO. Antes bastaba con que la frase CONTUVIERA «batería», y su banco cazó
+       «¿cómo está la batería de mi plan de trading?» contestada con el % del teléfono. La
+       frase tiene que SER la pregunta, no contenerla — el mismo fallo de los botones. */
+    if(/^(?:como (?:esta|va|anda)|cuanta|cuanto)?\s*(?:la|mi|de)?\s*bateria(?:\s*(?:del telefono|me queda|tengo|le queda))?$/.test(l) && hayManos){
+      const e = await P.entorno();
+      const b = (e&&e.bateria)||{};
+      if(b.nivel==null) return null;
+      return {txt:"🔋 "+b.nivel+"%"+(b.cargando?", cargando":", sin cargar")
+        +(b.grados!=null?" · "+b.grados+"°C":"")+(b.salud?" · salud "+b.salud:"")+"."};
+    }
+    if(/^(?:cuanto\s+)?(?:me\s+)?(?:queda\s+)?(?:de\s+)?(?:espacio|almacenamiento)(?:\s+(?:me\s+)?(?:queda|tengo|libre))?$|^cuanto espacio me queda$|^tengo espacio$/.test(l) && hayManos){
+      const e = await P.entorno();
+      const a2=(e&&e.almacenamiento)||{};
+      if(a2.libreGB==null) return null;
+      return {txt:"💾 Te quedan "+a2.libreGB+" GB libres de "+a2.totalGB+" ("+a2.librePct+"%)."};
+    }
+
+    /* 🌦️ el tiempo */
+    if(/^(?:que tiempo (?:hace|va a hacer)(?: hoy| manana)?|como esta el (?:tiempo|clima)|va a llover(?: hoy| manana)?|esta lloviendo|el clima|el tiempo|dime el tiempo)$/.test(l)){
+      const c = await iaClimaTxt();
+      if(!c) return null;
+      return {txt:c.trim()};
+    }
+
+    /* 📍 dónde está */
+    /* ⚠️ ANCLADO. «dónde estoy» vive dentro de «¿dónde estoy FALLANDO?», y su banco cogió
+       esa segunda contestando con su calle. Son dos preguntas que no se parecen en nada. */
+    if(/^(?:donde estoy|en donde estoy|que calle es esta|en que calle estoy|mi ubicacion|donde me encuentro)$/.test(l) && hayManos){
+      const r = (typeof P.sitioAhora==="function") ? await P.sitioAhora() : await P.sitio();
+      if(!r||!r.hay) return null;
+      const margen = r.precisionM>=1000 ? " (aprox., solo la ciudad)" : "";
+      return {txt:"📍 "+(r.direccion||r.sitio)+margen+"."};
+    }
+
+    /* ⏯️ la música */
+    if(hayManos){
+      const mando = /^(pausa|pausala|para la musica|parala|detén la musica|deten la musica|silencio)$/.test(l) ? "pausa"
+                  : /^(sigue|continua|reanuda|play|dale play)$/.test(l) ? "play"
+                  : /^(siguiente|otra|pasa|siguiente cancion)$/.test(l) ? "siguiente"
+                  : /^(anterior|atras|la de antes)$/.test(l) ? "anterior" : null;
+      if(mando){
+        const r = await P.mandoMedia({que:mando});
+        return r&&r.hecho ? {txt:"⏯️ "+mando+"."} : null;
+      }
+      const pon = l.match(/^pon (?:la cancion |musica de |algo de )?(.{2,40})$/) || l.match(/^ponme (.{2,40})$/);
+      if(pon && !/musica$/.test(pon[1])){
+        const r = await P.musica({que:pon[1]});
+        return r&&r.hecho ? {txt:"🎵 Poniendo "+pon[1]+"."} : null;
+      }
+      if(/^pon (musica|m[úu]sica)$/.test(l)){
+        const r = await P.musica({});
+        return r&&r.hecho ? {txt:"🎵 Ahí va."} : null;
+      }
+
+      /* 📴 colgar */
+      if(/^(cuelga|cuelgala|corta|cortala|termina la llamada|colgar)$/.test(l)){
+        const r = await P.colgar();
+        return {txt: r&&r.hecho ? "📴 Colgado." : ("No pude colgar: "+((r&&r.motivo)||"?"))};
+      }
+
+      /* 📱 abrir una app */
+      /* ⚠️ Un nombre de aplicación es corto y de una o dos palabras. Antes entraba
+         cualquier cosa y su banco cogió «abre una posición en GBPUSD» como si «una posición
+         en GBPUSD» fuera una app. Abrir la que no es, es peor que no abrir nada. */
+      const ab = l.match(/^(?:abre|abreme|abrir) (?:la (?:app|aplicacion) )?([a-z0-9][a-z0-9 .+-]{1,22})$/);
+      if(ab && ab[1].trim().split(" ").length <= 3){
+        const r = await P.abrirApp({nombre:ab[1]});
+        if(r&&r.abierta) return {txt:"📱 Abierta."};
+        return null;   /* si no la encuentra, que lo resuelva Roberto: quizá se llama de otra forma */
+      }
+
+      /* ⏲️ un temporizador — lo que Alexa hace mil veces al día */
+      if(typeof P.temporizador==="function"){
+        const tm = l.match(/(?:temporizador|cuenta atras|avisame|despiertame|recuerdame)(?:\s+(?:de|en|dentro de))?\s+(\d{1,3})\s*(segundo|minuto|hora)s?/);
+        if(tm){
+          const n2=parseInt(tm[1],10);
+          const seg = tm[2]==="hora" ? n2*3600 : tm[2]==="minuto" ? n2*60 : n2;
+          if(seg>0 && seg<=12*3600){
+            const r = await P.temporizador({segundos:seg, que:"Roberto"});
+            if(r&&r.hecho) return {txt:"⏲️ Temporizador de "+n2+" "+tm[2]+(n2>1?"s":"")+" puesto."};
+          }
+        }
+      }
+    }
+    return null;
+  }catch(_){ return null; }
+}
+
+/* Pinta la respuesta local como un mensaje suyo más, y la dice en voz alta si la voz está
+   encendida. El ⚡ delante no es un adorno: es Rey sabiendo que eso salió del teléfono y no
+   de Roberto pensando — si quería que pensara, vuelve a preguntar con más palabras. */
+function localResponder(pregunta, txt){
+  const c = iaConvAct();
+  c.msgs.push({role:"user", content:pregunta});
+  c.msgs.push({role:"assistant", content:"⚡ "+txt, local:true});
+  if(!c.t) c.t=iaTit(c);
+  iaGuardarConvs(); pintarIAChat();
+  try{ if(IA.voz && IA.voz.on && typeof iaHablar==="function") iaHablar(txt); }catch(_){}
+}
+
 async function iaEnviar(textoForzado, promptExtra){
   const ta=$("#iaText");
   let texto=(textoForzado!=null?textoForzado:(ta?ta.value:"")).trim();
@@ -14898,6 +15050,19 @@ async function iaEnviar(textoForzado, promptExtra){
   if((!texto && !img && !doc) || IA.busy) return;
   if(!IA.url){ toast("Configura el puente (⚙️)"); $("#iaCfg").click(); return; }
   if(!texto && img) texto="Analiza este gráfico según mi estrategia CRT: par/temporalidad, bias, sweep, MSS y zona. Dime si hay un setup válido (A+/B/C) y qué harías.";
+  /* ⚡ v7.115 — EL CEREBRO LOCAL, LO PRIMERO DE TODO.
+     Va aquí a propósito: antes de preguntar por el motor, antes de vaciar la caja y antes
+     de gastar un solo céntimo. Si Apex ya sabe la respuesta, Rey la tiene en menos de un
+     segundo y sin internet. Si duda, devuelve null y sigue el camino de siempre. */
+  if(texto && !img && !doc){
+    let ya=null;
+    try{ ya = await cerebroLocal(texto); }catch(_){ ya=null; }
+    if(ya && ya.txt){
+      if(ta){ ta.value=""; ta.style.height="auto"; }
+      localResponder(texto, ya.txt);
+      return;
+    }
+  }
   if(!texto && doc) texto="Te comparto este documento para que APRENDAS de él: analízalo a fondo, dime qué aporta a mi método, qué confirma, qué mejoraría o cambiaría — y GUARDA sus 3-8 ideas más valiosas en tu biblioteca con guardar_saber (una por una, con su fuente), para que lo estudiado quede tuyo PARA SIEMPRE.";
   /* 🧭 cuenta el material que Rey le comparte (documentos y enlaces): es la señal de la fase 02 */
   try{ if(doc || /https?:\/\//i.test(texto)){ PLAN_ARR.docs=(PLAN_ARR.docs||0)+1; guardarPlan(); } }catch(_){}

@@ -1,37 +1,36 @@
-APEX v7.114 — TRADING DESK
+APEX v7.115 — TRADING DESK
 =========================
 
-🖐️ ROBERTO YA SABE QUE TIENE MANOS · 🌦️ EL TIEMPO · 🕒 DOS REPASOS
+⚡ EL CEREBRO LOCAL — lo que no hace falta pensar, ya no se piensa
 
-1) LAS MANOS ENCHUFADAS (45 → 53)
-   Existían en tu teléfono desde ayer y él NO SABÍA que las tenía: si le decías «abre
-   WhatsApp» te contestaba que no podía, siendo mentira. Ya no.
-   Ahora puede: abrir apps · buscar un contacto · llamar · WhatsApp (chat, voz,
-   videollamada) · colgar · poner música · pausa/parar/siguiente · decirte dónde estás.
+Medido en TU teléfono:
+    ⚡   3 ms  ·  ¿qué hora es?
+    ⚡ 238 ms  ·  ¿cómo está mi batería?   → 🔋 74%, cargando · 24°C
+    ⚡ 321 ms  ·  ¿dónde estoy?            → tu calle y tu número
+    ⚡ 225 ms  ·  pausa
+Antes: entre 8 y 15 segundos y con internet. Ahora: menos de medio segundo, sin internet
+y SIN GASTAR UN CÉNTIMO.
 
-   QUÉ LLEVA TARJETA Y QUÉ NO, y el criterio:
-    · SIN tarjeta lo instantáneo e inofensivo: abrir una app, la música, colgar, dónde
-      estás. Pedirte que confirmes para PAUSAR la música sería hacerte más lento lo que
-      venía a hacerte más rápido.
-    · CON tarjeta lo que le suena a OTRA PERSONA: llamar y WhatsApp. Ahí no es burocracia:
-      buscando «Sonia» salen DIEZ contactos y el primero no eres tú quien lo eligió.
+Esto era lo más urgente, y no por el dinero: si preguntarte la hora tarda diez segundos,
+dejas de preguntarle cosas pequeñas — y un asistente al que solo acudes para lo grande ya
+no es un asistente. La costumbre se la lleva quien resuelve lo pequeño.
 
-2) 🕒 DOS REPASOS EN VEZ DE UNO, y a tus horas
-   Tenías razón: las 15:00 «ya pasa de la mitad del día útil». El fallo era mío de origen —
-   puse esa hora sin preguntarte, y a esa hora el repaso solo podía LAMENTARSE.
-    · 21:00 · antes de dormir → mira hacia MAÑANA: tu agenda, lo que quedó a medias, tus
-      avisos de mañana y si alguno te va a caer mal. Cierra el día y lo deja armado.
-    · 06:00 · al levantarte → mira hacia HOY: lo que tienes, el tiempo, las sesiones, y te
-      propone cambios ANTES de empezar, que después ya no sirven.
-   No son el mismo repaso con otra hora, y hay un banco que impide que lo sean.
+LA REGLA QUE LO GOBIERNA: EN LA DUDA, AL MODELO. Un cerebro rápido que contesta mal es peor
+que uno lento: lento molesta, equivocado engaña. Así que JAMÁS coge nada de trading, dinero,
+riesgo o de cómo te sientes — eso es para lo que tienes a Roberto.
+Y toda respuesta local lleva un ⚡ delante, para que sepas que eso no lo pensó nadie.
 
-3) 🌦️ EL TIEMPO, SIEMPRE
-   Ahora, hoy, mañana y la semana. Roberto lo tiene en cada mensaje sin que lo pidas.
-   Sale de Open-Meteo: gratis y SIN CLAVE — una cosa menos que se te puede caducar un
-   martes y dejarlo mudo sin que nadie se entere.
-   Va en el contexto vivo y NO en el bloque cacheado, a propósito: el tiempo cambia cada
-   media hora y meterlo ahí tiraría la caché de 1 h en cada mensaje. Eso ya te costó dinero
-   una vez.
+⏱️ Y DOS MANOS QUE TE DEBÍA: temporizador y alarma de verdad del reloj del teléfono («ponme
+un temporizador de 10 minutos»). No necesitan permiso, suenan aunque Apex esté cerrada o sin
+internet, y las ves y las borras en tu reloj de siempre.
+
+EL BANCO QUE LO VIGILA ME ENCONTRÓ CINCO FALLOS antes de que llegara a tu teléfono. Dos de
+ellos graves de verdad:
+  · «¿dónde estoy fallando?»                        → te contestaba tu calle
+  · «¿cómo está la batería de mi plan de trading?»  → te contestaba el % del móvil
+  · «abre una posición en GBPUSD»                   → buscaba una app con ese nombre
+El fallo de fondo era el mismo de siempre: busqué CONTIENE en vez de ES EXACTAMENTE. Ya
+está todo anclado.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
