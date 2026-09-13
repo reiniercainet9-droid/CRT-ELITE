@@ -42,7 +42,7 @@ const save = (k,v)=>{ try{ localStorage.setItem(k,JSON.stringify(v)); nubeMarcar
    En otro móvil, con el mismo código, restaura todo intacto (nada se pierde).
    No usa claves del sistema (el repo es público): el código ES la llave.
    ============================================================ */
-const NUBE_KEYS = ["crtelite_trades_v2","crtelite_cuentas_v3","crtelite_reminders_v3","crtelite_chk_v2","crtelite_conf_v2","crtelite_reglas_v2","crtelite_balance_v2","crtelite_ctx_v3","crtelite_estrategias_v3","crtelite_estrdefs_v1","crtelite_pares_v3","crtelite_calpares_v3","crtelite_notif_v3","crtelite_vigila_v3","crtelite_fabpos_v3","crtelite_iavoz_v3","crtelite_shots_v1","crtelite_ventanas_v1","crtelite_plansem_v1","crtelite_iaconvs_v3","crtelite_iaact_v3","crtelite_ejectrades_v1",
+const NUBE_KEYS = ["crtelite_trades_v2","crtelite_cuentas_v3","crtelite_reminders_v3","crtelite_chk_v2","crtelite_conf_v2","crtelite_reglas_v2","crtelite_balance_v2","crtelite_ctx_v3","crtelite_estrategias_v3","crtelite_estrdefs_v1","crtelite_pares_v3","crtelite_calpares_v3","crtelite_notif_v3","crtelite_vigila_v3","crtelite_fabpos_v3","crtelite_iavoz_v3","crtelite_shots_v1","crtelite_ventanas_v1","crtelite_plansem_v1","crtelite_iaconvs_v3","crtelite_iaact_v3","crtelite_ejectrades_v1","crtelite_llamamodo",
   /* 🧭 v6.96 — LO QUE FALTABA, y lo descubrió Rey: "en la APK no me deja pasar a la fase 3
      cuando en la web ya estoy en ella". Su PLAN no viajaba, así que su progreso vivía en
      un solo aparato… y si perdía el teléfono, en ninguno. Con él van los VEREDICTOS de
@@ -99,6 +99,10 @@ const NUBE_NOMBRES = {
   "crtelite_templo_plan":"tu plan de entreno (escalón, días y horarios)",
   "crtelite_templo_hechos":"las sesiones de entreno que marcaste",
   "crtelite_templo_marcas":"tus marcas físicas (flexiones, plancha, sentadillas, km)",
+  /* 📞 v7.108 — cómo quiere Rey que Roberto llame (marcador o marcar solo). Es una
+     DECISIÓN suya, no un ajuste de esta pantalla: si cambia de teléfono le tiene que
+     seguir ([[apex-nada-en-un-solo-aparato]]). */
+  "crtelite_llamamodo":"si Roberto abre el marcador o marca él solo al llamar",
   "crtelite_plan_v1":"tu PLAN de arranque",
   "crtelite_vered_v1":"los veredictos de Roberto",
   "crtelite_robertolog_v3":"el historial de Roberto",
@@ -9438,6 +9442,25 @@ async function subirEntorno(){
   }catch(_){}
 }
 
+/* 📍 v7.107 — PEDIR UNA POSICIÓN NUEVA SIN ESPERARLA.
+   Rey quiere poder preguntar «¿qué calle es ésta?», y para eso la posición tiene que ser de
+   ahora, no de donde estuvo hace media hora. Pero pedir un arreglo de GPS tarda segundos y
+   el contexto de cada mensaje solo espera 1,2 s: si se esperase, Rey se quedaría sin
+   contexto por una calle.
+   Se pide en segundo plano y NO se espera. Para cuando acaba de escribir, el teléfono ya
+   tiene el arreglo fresco y la lectura instantánea lo recoge.
+   Topado a una vez por minuto: el GPS no puede quedarse encendido gastándole la batería. */
+let _sitioUlt = 0;
+function refrescarSitio(){
+  try{
+    if(Date.now() - _sitioUlt < 60000) return;
+    const P = (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Apex) || null;
+    if(!P || typeof P.sitioAhora !== "function") return;
+    _sitioUlt = Date.now();
+    P.sitioAhora().catch(()=>{});   /* a propósito sin await */
+  }catch(_){}
+}
+
 async function iaEntornoTxt(){
   try{
     const P = (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Apex) || null;
@@ -9461,11 +9484,19 @@ async function iaEntornoTxt(){
       if(typeof P.sitio === "function"){
         const u = await Promise.race([ P.sitio(), new Promise(r=>setTimeout(()=>r(null), 900)) ]);
         if(u && u.hay){
-          const donde = u.sitio || "no sé el nombre del sitio";
+          /* 📍 v7.107 — la dirección TAL CUAL si la hay (calle y número); si el margen es
+             grande el plugin ya la ha callado y llega solo la ciudad. */
+          const donde = u.direccion || u.sitio || "no sé el nombre del sitio";
+          /* 📏 v7.105 — y CON QUÉ MARGEN. Es la ubicación aproximada: Android la
+             difumina a kilómetros. Sin el margen, Roberto diría "estás en Timbó" con la
+             misma seguridad con la que diría "estás en tu casa", y no son lo mismo. */
+          const margen = u.precisionM == null ? ""
+                       : u.precisionM >= 1000 ? " (aprox., margen de "+Math.round(u.precisionM/1000)+" km)"
+                       : " (margen de "+u.precisionM+" m)";
           const cuando = u.haceMin==null ? "" : (u.haceMin < 10 ? " (ahora mismo)"
                         : u.haceMin < 90 ? " (de hace "+u.haceMin+" min)"
                         : " (⚠️ de hace "+Math.round(u.haceMin/60)+" h — puede que ya no esté ahí)");
-          sitioTxt = "DÓNDE ESTÁ: "+donde+cuando+".\n";
+          sitioTxt = "DÓNDE ESTÁ: "+donde+margen+cuando+".\n";
         }
       }
     }catch(_){}
@@ -9477,10 +9508,17 @@ async function iaEntornoTxt(){
       if(typeof P.agenda === "function"){
         const g = await Promise.race([ P.agenda({dias:2}), new Promise(r=>setTimeout(()=>r(null), 900)) ]);
         if(g && g.hay && Array.isArray(g.citas) && g.citas.length){
+          /* 📅 v7.106 — EL DÍA DE VERDAD, no "hoy o mañana y ya".
+             Con dos días de ventana entran cosas de PASADO mañana, y yo solo tenía dos
+             etiquetas: a la sesión de fuerza del lunes la llamaba "mañana". Roberto le
+             habría dicho a Rey que entrena mañana cuando es el lunes — y un dato así no
+             se nota hasta que ya le fastidió el día. */
           const hoy = new Date(); hoy.setHours(0,0,0,0);
           const lin = g.citas.slice(0,8).map(c=>{
             const d = new Date(c.desde);
-            const cual = d < new Date(hoy.getTime()+86400000) ? "hoy" : "mañana";
+            const cuantos = Math.floor((new Date(d.getFullYear(),d.getMonth(),d.getDate()) - hoy)/86400000);
+            const cual = cuantos<=0 ? "hoy" : cuantos===1 ? "mañana"
+                       : d.toLocaleDateString("es",{weekday:"long"});
             const hora = c.todoElDia ? "todo el día"
                        : d.toLocaleTimeString("es",{hour:"2-digit",minute:"2-digit",hour12:false});
             return "· "+cual+" "+hora+" — "+c.que;
@@ -9853,6 +9891,15 @@ function iaInit(){
           <div class="note" style="text-align:left;margin:0 0 10px" id="ojoSitioNota"></div>
           <button class="btn" id="ojoAgendaBtn" style="margin:0 0 6px">⏳ …</button>
           <div class="note" style="text-align:left" id="ojoAgendaNota"></div>
+          <button class="btn" id="ojoContactosBtn" style="margin:10px 0 6px">⏳ …</button>
+          <div class="note" style="text-align:left" id="ojoContactosNota"></div>
+          <div id="ojoLlamadaCaja" style="display:none;margin:8px 0 0">
+            <div class="seg c2" id="ojoLlamadaSeg" style="margin-bottom:6px">
+              <button data-modo="marcador">☎️ Abre el marcador y toco yo</button>
+              <button data-modo="solo">📞 Que marque él solo</button>
+            </div>
+            <div class="note" style="text-align:left" id="ojoLlamadaNota"></div>
+          </div>
           <div class="note" style="text-align:left;margin:10px 0 0;opacity:.8">Los dos se pueden <b>quitar cuando quieras</b> desde los ajustes de Android. Roberto se queda sin ese dato y sigue funcionando igual — nunca se cuelga por falta de un permiso.</div>
         </div>
         <div class="fl">🎬 Movimiento de Roberto</div>
@@ -11515,9 +11562,10 @@ async function ojosUI(){
       if(!tiene){
         btn.className="btn gold";
         btn.textContent="📍 Dejar que Roberto sepa dónde estás";
-        nota.innerHTML="Para decirte cosas como <b>«estás fuera y Londres abre en 20 minutos»</b>, o para callarse cuando no estás en casa. "
-          + "Es la <b>aproximada</b>: el barrio, no tu calle — la precisa no se pide, porque no hace falta para nada de esto. "
-          + "Lee la última posición que ya conoce el teléfono: <b>no enciende el GPS</b> ni te gasta batería. Y no cuesta créditos.";
+        nota.innerHTML="Para poder preguntarle <b>«¿qué calle es ésta?»</b> y que te diga la calle y el número, no la ciudad. "
+          + "También para saber si estás en casa o fuera y decidir si te molesta o se calla. "
+          + "En el diálogo de Android elige <b>Ubicación precisa</b>: con la aproximada el margen es de kilómetros y solo podría decirte la ciudad. "
+          + "No cuesta créditos, y el GPS solo se enciende un momento cuando hace falta.";
         btn.onclick=async()=>{ btn.disabled=true;
           try{ await P.sitioPermiso(); }catch(e){ toast("No pude abrirlo: "+(e&&e.message?e.message:e)); }
           btn.disabled=false; setTimeout(ojosUI, 1200); };
@@ -11526,7 +11574,11 @@ async function ojosUI(){
       let d=null; try{ d=await P.sitio(); }catch(_){}
       btn.className="btn";
       btn.textContent="📍 ¿Dónde cree que estoy?";
-      nota.innerHTML="✅ Concedido — la <b>aproximada</b>. Roberto sabe si estás en casa o fuera, nunca tu calle."
+      let fino=false; try{ const hh=await P.sitioHay(); fino=!!(hh&&hh.fino); }catch(_){}
+      nota.innerHTML = (fino
+          ? "✅ Concedido — la <b>precisa</b>. Puede decirte en qué calle estás."
+          : "⚠️ Concedido, pero solo la <b>aproximada</b>: así solo puede decirte la ciudad, con kilómetros de margen. "
+            + "Para que te diga la calle, ve a los ajustes de Android → Apex → Ubicación y activa <b>Usar ubicación precisa</b>.")
         + (d&&d.hay ? " Ahora mismo: <b>"+esc(d.sitio||"sabe dónde, pero no el nombre del sitio")+"</b>"
             + (d.haceMin!=null ? " (de hace "+d.haceMin+" min)" : "")+"."
           : " <b>Todavía no tiene una posición guardada</b>; la tendrá en cuanto uses el mapa o salgas a la calle.");
@@ -11535,6 +11587,53 @@ async function ojosUI(){
         toast(x&&x.hay ? (x.sitio||"Sabe dónde, pero no el nombre")+(x.haceMin!=null?" · hace "+x.haceMin+" min":"")
                        : "Todavía no tiene una posición guardada");
         ojosUI(); };
+    })();
+
+    /* 📇 sus contactos — y cómo quiere que se llame */
+    (async()=>{
+      const btn=$("#ojoContactosBtn"), nota=$("#ojoContactosNota"), caja=$("#ojoLlamadaCaja");
+      if(!btn||!nota) return;
+      if(typeof P.contactosHay!=="function"){ btn.style.display="none"; nota.style.display="none"; return; }
+      let tiene=false, marcaSolo=false;
+      try{ const h=await P.contactosHay(); tiene=!!(h&&h.permiso); marcaSolo=!!(h&&h.marcaSolo); }catch(_){}
+      if(!tiene){
+        btn.className="btn gold";
+        btn.textContent="📇 Dejar que Roberto use tus contactos";
+        nota.innerHTML="Es lo que convierte <b>«llama a Sonia»</b> en un número. Sin esto puede abrirte WhatsApp, pero no sabe quién es Sonia. "
+          + "También es donde WhatsApp guarda lo que se puede hacer con cada contacto, así que sin esto <b>no hay videollamada</b>. "
+          + "Solo <b>lee</b>: nombres y números. No los manda a ningún sitio ni los cambia.";
+        btn.onclick=async()=>{ btn.disabled=true;
+          try{ await P.contactosPermiso(); }catch(e){ toast("No pude abrirlo: "+(e&&e.message?e.message:e)); }
+          btn.disabled=false; setTimeout(ojosUI, 1200); };
+        if(caja) caja.style.display="none";
+        return;
+      }
+      let n=0; try{ const x=await P.contactos({}); if(x&&x.hay) n=(x.contactos||[]).length; }catch(_){}
+      btn.className="btn";
+      btn.textContent="📇 Contactos — concedido";
+      nota.innerHTML="✅ Concedido, solo lectura. Ya puede <b>llamar</b>, abrir un <b>chat de WhatsApp</b> y hacer <b>llamada o videollamada</b> por WhatsApp diciéndole el nombre.";
+
+      /* 📞 cómo llamar — lo elige Rey, no yo */
+      if(caja){
+        caja.style.display="";
+        const seg=$("#ojoLlamadaSeg"), ln=$("#ojoLlamadaNota");
+        const modo = marcaSolo && localStorage.getItem("crtelite_llamamodo")==="solo" ? "solo" : "marcador";
+        [...seg.querySelectorAll("button")].forEach(b2=>{
+          b2.classList.toggle("on", b2.dataset.modo===modo);
+          b2.onclick=async()=>{
+            if(b2.dataset.modo==="solo"){
+              let ok=marcaSolo;
+              if(!ok){ try{ const q=await P.llamarPermiso(); ok=!!(q&&q.marcaSolo); }catch(_){} }
+              if(!ok){ toast("Android no dio el permiso de llamar; sigue con el marcador"); setTimeout(ojosUI,1200); return; }
+              localStorage.setItem("crtelite_llamamodo","solo");
+            } else localStorage.setItem("crtelite_llamamodo","marcador");
+            ojosUI();
+          };
+        });
+        ln.innerHTML = modo==="solo"
+          ? "📞 Marca él solo. Más cómodo con las manos ocupadas. <b>Ojo</b>: si oye mal un nombre, la llamada ya salió — y una llamada no se deshace."
+          : "☎️ Te abre el marcador con el número puesto y <b>tocas tú</b>. Es medio segundo más, y es tu red de seguridad si entiende mal un nombre. <b>Te lo recomiendo para empezar</b>; cuando veas que acierta, cambia.";
+      }
     })();
 
     /* 📅 su agenda */
@@ -14661,6 +14760,7 @@ async function iaEnviar(textoForzado, promptExtra){
      fuente de contexto y alguien olvida su reloj, la pregunta sale igual. El contexto es un
      extra — perder el dato del calendario es una molestia; perder la pregunta es lo que Rey
      lleva dos días sufriendo. */
+  refrescarSitio();   /* 📍 v7.107 — para el SIGUIENTE mensaje; éste va con lo que haya */
   let calTxt="", grafTxt="", entTxt="";
   await Promise.race([
     (async()=>{
@@ -15011,7 +15111,8 @@ function init(){
   try{ const abre=consumirParam("open"); const jb=consumirParam("job"); const seed=consumirParam("seed");
        if(abre==="chat"){ setTimeout(()=>{ if(typeof abrirIA==="function") abrirIA(); if(seed) setTimeout(()=>iaProactivo(seed),350); else if(jb) iaMostrarJob(jb); else iaResumePend(); }, 500); } }catch(_){}
   setTimeout(syncReminders, 1800);   /* sube los avisos al vigilante (cron) */
-  setTimeout(subirEntorno, 4200);   /* 📱 v7.102: su teléfono y su ritmo, para que el repaso aprenda (no gasta) */
+  setTimeout(subirEntorno, 4200);
+setTimeout(refrescarSitio, 5200);   /* 📍 v7.107 — un arreglo fresco desde que abre */   /* 📱 v7.102: su teléfono y su ritmo, para que el repaso aprenda (no gasta) */
   setTimeout(hoyCargarNoticias, 2000);  /* 📰 noticias del día dentro de la vista HOY */
   setTimeout(planCargarMem, 2400);     /* 🧭 cuenta la memoria de Roberto para las señales del plan */
   setTimeout(hoyCargarCtx, 2600);      /* 📡 último contexto del indicador para la vista 🎯 HOY */

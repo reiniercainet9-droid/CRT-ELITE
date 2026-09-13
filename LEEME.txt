@@ -1,29 +1,34 @@
-APEX v7.104 — TRADING DESK
+APEX v7.108 — TRADING DESK
 =========================
 
-📍 LA UBICACIÓN Y EL CALENDARIO — ya puedes dárselos
+🖐️ LAS MANOS DE ROBERTO EN TU TELÉFONO
 
-Rey: «todavía no vi permiso de ubicación para darle». No lo había visto porque NO
-existía: lo dejé fuera del manifiesto a propósito hasta tener construido su uso, para
-que Android no te lo enseñara al instalar sin darte nada a cambio. Ya está construido.
+Rey: «que tenga manos para todo… Roberto abre WhatsApp y llama a Sonia por videollamada…
+aquí en Brasil se utiliza más el WhatsApp que cualquier otra cosa».
 
-En ⚙️ ajustes de Roberto hay una sección nueva: 👁️ Lo que Roberto ve de tu día,
-con los dos permisos, uno a uno, diciendo qué gana Y QUÉ NO SE TE PIDE.
+👁️ VISIÓN
+ · Ve tus aplicaciones instaladas con el nombre que TÚ ves (168 en tu teléfono)
+ · Busca un contacto por su nombre y sabe QUÉ se puede hacer con él: llamar, chat de
+   WhatsApp, llamada o videollamada. Si ese número no está en WhatsApp, lo dice en vez
+   de intentarlo igual
 
-📍 UBICACIÓN — solo la APROXIMADA (barrio, no calle)
-   Para «estás fuera y Londres abre en 20 minutos», o para callarse cuando no estás
-   en casa. Lee la última posición que el teléfono YA conoce: no enciende el GPS ni
-   te gasta batería. La precisa no se pide: no hace falta para nada de esto.
+🖐️ MANOS
+ · Abrir cualquier aplicación, diciéndole el nombre como lo dirías hablando
+ · Llamar por teléfono
+ · WhatsApp: abrir el chat · llamada de voz · VIDEOLLAMADA
+ · Poner música (una canción concreta, no solo abrir la app)
+ · Mandar sobre lo que ya suena: pausa, siguiente, anterior — sin permiso ninguno
 
-📅 CALENDARIO — solo LEER
-   «Tienes cita a las 15:00 y NY abre a las 14:30». Solo mira CUÁNDO estás ocupado:
-   título y hora. Ni invitados, ni notas, ni el sitio. Escribir en él se decide aparte.
+📍 Y EL GPS BAJO TECHO: pedir posición nueva tardaba 20 s dentro de casa y no llegaba,
+   porque los satélites no atraviesan el techo. Ahora se pregunta a los satélites Y a la
+   red a la vez y gana el primero: pasó de 20 s a 0,0 s.
 
-Los dos llegan a Roberto por el contexto vivo (no como mano: una mano cuesta dos
-llamadas al modelo). La posición va SIEMPRE con su antigüedad, porque una de hace seis
-horas no es dónde estás, es dónde estuviste.
+☎️ LO QUE ELIGES TÚ, no yo: si Roberto abre el marcador con el número puesto y tocas tú,
+   o si marca él solo. Están las dos construidas y la elección está en la pantalla. Te
+   recomiendo la primera para empezar — si oye mal un nombre, una llamada no se deshace.
 
-Los dos se quitan desde Android cuando quieras: Roberto se queda sin ese dato y sigue.
+⚠️ El mensaje de WhatsApp queda ESCRITO, nunca enviado. Android no deja enviarlo por
+   código, y está bien que no deje.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
