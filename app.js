@@ -9461,6 +9461,28 @@ function refrescarSitio(){
   }catch(_){}
 }
 
+/* 🌦️ EL TIEMPO — v7.114. Rey lo pidió: «datos del clima, pronósticos del día y del
+   día siguiente y de la semana, en tiempo real».
+   Va en el CONTEXTO VIVO y no dentro del bloque cacheado del sistema, A PROPÓSITO: el
+   tiempo cambia cada media hora, y meterlo ahí tiraría la caché de 1 h en cada mensaje —
+   que es exactamente lo que le costaba dinero ([[apex-cache-orden-y-chat-salud]]).
+   Así lo sabe SIEMPRE sin que Rey tenga que pedirlo, y por ~70 fichas en la llamada que ya
+   se hace. La nube lo guarda 30 min y aquí 20: abrir Apex diez veces no son diez consultas.
+   Sale de Open-Meteo: gratis y SIN CLAVE, que es una cosa menos que se le puede caducar. */
+let _clima = null, _climaTs = 0;
+async function iaClimaTxt(){
+  try{
+    if(_clima && Date.now() - _climaTs < 20*60000) return _clima;
+    const r = await Promise.race([
+      fetch(iaBase()+"/clima?dias=3", {cache:"no-store"}).then(x=>x.json()),
+      new Promise(res=>setTimeout(()=>res(null), 1500))
+    ]);
+    if(!r || !r.ok || !r.texto) return _clima || "";
+    _clima = r.texto; _climaTs = Date.now();
+    return _clima;
+  }catch(_){ return _clima || ""; }
+}
+
 async function iaEntornoTxt(){
   try{
     const P = (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Apex) || null;
@@ -9900,6 +9922,9 @@ function iaInit(){
             </div>
             <div class="note" style="text-align:left" id="ojoLlamadaNota"></div>
           </div>
+          <button class="btn" id="ojoManosBtn" style="margin:14px 0 6px">⏳ …</button>
+          <div class="note" style="text-align:left" id="ojoManosNota"></div>
+          <button class="btn" id="ojoManosQuitar" style="margin:6px 0 0;display:none">🚪 Quitárselo del todo en Android</button>
           <div class="note" style="text-align:left;margin:10px 0 0;opacity:.8">Los dos se pueden <b>quitar cuando quieras</b> desde los ajustes de Android. Roberto se queda sin ese dato y sigue funcionando igual — nunca se cuelga por falta de un permiso.</div>
         </div>
         <div class="fl">🎬 Movimiento de Roberto</div>
@@ -11587,6 +11612,53 @@ async function ojosUI(){
         toast(x&&x.hay ? (x.sitio||"Sabe dónde, pero no el nombre")+(x.haceMin!=null?" · hace "+x.haceMin+" min":"")
                        : "Todavía no tiene una posición guardada");
         ojosUI(); };
+    })();
+
+    /* 🖐️ LAS MANOS EN LA PANTALLA — lo último y lo más serio de esta pantalla.
+       Rey lo aceptó con dos condiciones suyas: interruptor para apagarlo cuando quiera, y
+       que solo toque lo que él pida. El interruptor está aquí, y debajo está escrito qué
+       puede ver y qué NO — un permiso que no explica sus límites se concede a ciegas. */
+    (async()=>{
+      const btn=$("#ojoManosBtn"), nota=$("#ojoManosNota"), quitar=$("#ojoManosQuitar");
+      if(!btn||!nota) return;
+      if(typeof P.manosHay!=="function"){ btn.style.display="none"; nota.style.display="none"; if(quitar) quitar.style.display="none"; return; }
+      let and=false, sw=true;
+      try{ const h=await P.manosHay(); and=!!(h&&h.android); sw=!!(h&&h.interruptor); }catch(_){}
+
+      const LIMITES = "<br><b>Solo puede ver tres aplicaciones</b>: WhatsApp, WA Business y el marcador. "
+        + "Eso no es una promesa mía — lo obliga Android, y ni queriendo podría ver tu banca, tus fotos ni tu correo. "
+        + "Y <b>no mira nada por su cuenta</b>: solo despierta cuando tú le pides algo.";
+
+      if(!and){
+        btn.className="btn gold";
+        btn.textContent="🖐️ Darle manos en la pantalla";
+        nota.innerHTML="Hace falta para <b>colgar una llamada de WhatsApp</b>. No hay otro camino: WhatsApp registra sus llamadas de forma que Android no deja terminarlas desde fuera, "
+          + "así que la única manera es ver el botón de colgar y tocarlo."
+          + LIMITES
+          + "<br>Android te va a enseñar un aviso serio, y hace bien: este permiso, en otras aplicaciones, deja leer toda tu pantalla. "
+          + "Busca <b>Apex</b> o <b>Manos de Roberto</b> en la lista y actívalo.";
+        btn.onclick=async()=>{ try{ await P.manosPermiso(); toast("Busca «Manos de Roberto» y actívalo"); }catch(e){ toast("No pude abrirlo"); }
+          setTimeout(ojosUI, 2500); };
+        if(quitar) quitar.style.display="none";
+        return;
+      }
+
+      btn.className = sw ? "btn" : "btn gold";
+      btn.textContent = sw ? "🔌 Apagar las manos de Roberto" : "🖐️ Volver a encender sus manos";
+      nota.innerHTML = (sw
+          ? "✅ <b>Encendidas.</b> Puede colgarte una llamada de WhatsApp cuando se lo pidas."
+          : "⏸️ <b>Apagadas por ti.</b> Android le sigue dando el permiso, pero Roberto no toca nada. Para quitárselo del todo, el botón de abajo.")
+        + LIMITES;
+      btn.onclick=async()=>{
+        btn.disabled=true;
+        try{ await P.manosInterruptor({on:!sw}); toast(!sw?"Manos encendidas":"Manos apagadas"); }catch(e){ toast("No pude cambiarlo"); }
+        btn.disabled=false; ojosUI();
+      };
+      if(quitar){
+        quitar.style.display="";
+        quitar.onclick=async()=>{ try{ await P.manosPermiso(); toast("Desactívalo en la lista y vuelve"); }catch(e){ toast("No pude abrirlo"); }
+          setTimeout(ojosUI, 2500); };
+      }
     })();
 
     /* 📇 sus contactos — y cómo quiere que se llame */
@@ -13347,7 +13419,45 @@ const IA_TOOLS = [
   { name:"tema_apex", description:"Cambia el TEMA VISUAL de Apex y del chat: 'claro' (☀️ para ver bien a plena luz del sol) u 'oscuro' (🌙 el clásico de la app). Úsalo cuando Rey te lo pida de palabra ('ponme el modo claro'). Es cosmético, instantáneo y reversible: se aplica SIN tarjeta.",
     input_schema:{ type:"object", properties:{ tema:{type:"string",enum:["claro","oscuro"]} }, required:["tema"] } },
   { name:"estrategia_vigente", description:"Marca una estrategia como ⭐ VIGENTE: la que MANDA en el 🤖 Ejecutor y en los análisis de señales (solo puede haber una). REGLA DURA: solo estrategias en estado ✅ Aprobada (pasaron el laboratorio con backtest y Rey las aprobó). OJO honestidad: hoy el Ejecutor solo sabe ejecutar señales de CRT Elite — si Rey pone vigente otra estrategia, adviértele que ejecutarla de verdad requiere que Claude le construya sus señales/reglas en una tanda de código. SIEMPRE con tarjeta.",
-    input_schema:{ type:"object", properties:{ nombre:{type:"string",description:"Estrategia (✅ aprobada) que pasa a ser la ⭐ vigente"} }, required:["nombre"] } }
+    input_schema:{ type:"object", properties:{ nombre:{type:"string",description:"Estrategia (✅ aprobada) que pasa a ser la ⭐ vigente"} }, required:["nombre"] } },
+  /* ════ 🖐️ SUS MANOS EN EL TELÉFONO (v7.114) ═════════════════════════════
+     Existían en el teléfono desde la v7.108 y Roberto NO SABÍA QUE LAS TENÍA: si Rey le
+     decía «abre WhatsApp» contestaba que no podía, siendo mentira. Tercera vez que me pasa
+     lo mismo, y por eso no lo daba por entregado hasta esto.
+     Solo existen dentro de la APK. En la web, Roberto debe decir que eso lo hace desde el
+     teléfono — no que no se puede. ═════════════════════════════════════════ */
+  { name:"abrir_app", description:"Abre una aplicación del teléfono de Rey. Díselo por su nombre tal como él lo diría («WhatsApp», «YT Music», «Telegram»). Si no la encuentras te lo dice y entonces AVÍSALE — no intentes otra parecida. No hace falta que Rey confirme: abrir una app no rompe nada y él vuelve atrás con un gesto.",
+    input_schema:{ type:"object", properties:{
+      nombre:{type:"string",description:"El nombre de la aplicación tal como aparece en su teléfono"},
+    }, required:["nombre"] } },
+  { name:"buscar_contacto", description:"Busca en la agenda de Rey por nombre y te dice, de cada coincidencia, el número y QUÉ se puede hacer: llamar, chat de WhatsApp, llamada o videollamada de WhatsApp. ⚠️ ÚSALA SIEMPRE ANTES de llamar o de escribir por WhatsApp. Si sale más de uno, PREGÚNTALE a Rey cuál — buscando «Sonia» salen diez contactos distintos y el primero no es su esposa. Y si un contacto no tiene WhatsApp, díselo en vez de intentarlo.",
+    input_schema:{ type:"object", properties:{
+      nombre:{type:"string",description:"El nombre o parte del nombre"},
+    }, required:["nombre"] } },
+  { name:"llamar", description:"Llama por teléfono. Usa ANTES buscar_contacto para tener el número correcto. Rey ve una tarjeta con a quién vas a llamar antes de que salga la llamada.",
+    input_schema:{ type:"object", properties:{
+      numero:{type:"string",description:"El número, tal como lo devolvió buscar_contacto"},
+      quien:{type:"string",description:"El nombre de esa persona, para que Rey vea a quién vas a llamar"},
+    }, required:["numero","quien"] } },
+  { name:"whatsapp", description:"WhatsApp: abrir el chat de alguien, llamarle o hacerle una VIDEOLLAMADA. Usa ANTES buscar_contacto: de ahí sale el identificador que hace falta. ⚠️ Un mensaje se queda ESCRITO, nunca enviado — Android no deja enviarlo por código. Díselo así a Rey: «te lo dejé listo», nunca «lo envié».",
+    input_schema:{ type:"object", properties:{
+      accion:{type:"string",enum:["chat","voz","video"],description:"chat = abrir la conversación · voz = llamada · video = videollamada"},
+      filaId:{type:"string",description:"El identificador que devolvió buscar_contacto para esa acción"},
+      quien:{type:"string",description:"El nombre de esa persona, para que Rey lo vea en la tarjeta"},
+      texto:{type:"string",description:"Solo con accion=chat: el mensaje que quieres dejarle escrito (lo envía ÉL)"},
+    }, required:["accion","filaId","quien"] } },
+  { name:"colgar", description:"Cuelga la llamada que Rey tenga ahora mismo. NO pide confirmación a propósito: cuando él dice «cuelga», quiere colgar ya. Si te devuelve que no pudo, DÍSELO con su motivo — nunca le digas que colgaste si no colgaste, porque seguiría hablando.",
+    input_schema:{ type:"object", properties:{} } },
+  { name:"poner_musica", description:"Pone música en el teléfono de Rey. Con «que» suena esa canción o ese artista; sin «que» solo abre la aplicación de música.",
+    input_schema:{ type:"object", properties:{
+      que:{type:"string",description:"La canción, el artista o el disco"},
+    } } },
+  { name:"mando_musica", description:"Manda sobre lo que ya esté sonando, sea la aplicación que sea: seguir, pausar, parar, siguiente, anterior. «Parar» no es «pausa»: pausa la deja a medias para seguirla, parar la suelta.",
+    input_schema:{ type:"object", properties:{
+      que:{type:"string",enum:["play","pausa","parar","siguiente","anterior"]},
+    }, required:["que"] } },
+  { name:"donde_estoy", description:"Dónde está Rey AHORA MISMO, con la calle y el número. Pide una posición nueva de verdad, así que tarda unos segundos. ⚠️ Te llega SIEMPRE con el margen de error y la antigüedad: si el margen es de kilómetros solo sabes la ciudad, y si el dato es viejo es dónde ESTUVO, no dónde está. No le des más precisión de la que tienes.",
+    input_schema:{ type:"object", properties:{} } }
 ];
 /* Texto humano para la tarjeta de confirmación */
 /* v7.92 — los nombres de las reglas TAL COMO ÉL LAS VE EN LA SECCIÓN. Una tarjeta que dice
@@ -13433,6 +13543,75 @@ async function enviarComando(action, params){
 async function ejecutarTool(name, i){
   i=i||{};
   try{
+    /* ════ 🖐️ SUS MANOS EN EL TELÉFONO — v7.114 ═══════════════════════════
+       Todas devuelven lo que pasó DE VERDAD. Si el plugin dice que no pudo, aquí sale
+       ok:false con su motivo: Roberto tiene orden de repetirle el motivo a Rey y no
+       inventarse otro. */
+    if(name==="abrir_app" || name==="buscar_contacto" || name==="llamar" || name==="whatsapp"
+       || name==="colgar" || name==="poner_musica" || name==="mando_musica" || name==="donde_estoy"){
+      const P = (typeof vigiaPuente==="function") ? vigiaPuente() : null;
+      if(!P || typeof P.apps!=="function")
+        return {ok:false,msg:"Eso lo hago desde la app del teléfono, no desde la web. Ábrela en tu móvil y te lo hago."};
+
+      if(name==="abrir_app"){
+        const r=await P.abrirApp({nombre:String(i.nombre||"")});
+        return r&&r.abierta ? {ok:true,msg:"📱 Abrí "+i.nombre}
+                            : {ok:false,msg:"No pude abrir «"+i.nombre+"»: "+((r&&r.motivo)||"no la encuentro en tu teléfono")};
+      }
+      if(name==="buscar_contacto"){
+        const r=await P.contactos({nombre:String(i.nombre||"")});
+        if(!r||!r.hay) return {ok:false,msg:"No puedo mirar tus contactos: "+((r&&r.motivo)||"?")+". Dámelo en ⚙️ ajustes → 👁️."};
+        const c=(r.contactos||[]);
+        if(!c.length) return {ok:true,msg:"No encuentro a nadie que se llame así en tu agenda."};
+        return {ok:true, msg:"Encontré "+c.length+":\n"+c.map(x=>{
+          const w=x.whatsapp||{}; const p=[];
+          if(w.chat) p.push("chat="+w.chat);
+          if(w.voz) p.push("voz="+w.voz);
+          if(w.video) p.push("video="+w.video);
+          return "· "+x.nombre+" ("+x.numero+") → "+(p.length?p.join(" "):"NO tiene WhatsApp");
+        }).join("\n")};
+      }
+      if(name==="llamar"){
+        const solo = localStorage.getItem("crtelite_llamamodo")==="solo";
+        const r=await P.llamar({numero:String(i.numero||""), directo:solo});
+        return r&&r.hecho ? {ok:true,msg:(r.marco?"📞 Llamando a ":"☎️ Marcador abierto con ")+(i.quien||i.numero)}
+                          : {ok:false,msg:"No pude llamar: "+((r&&r.motivo)||"?")};
+      }
+      if(name==="whatsapp"){
+        const r=await P.whatsapp({accion:String(i.accion||"chat"), filaId:String(i.filaId||""), texto:String(i.texto||"")});
+        if(!r||!r.hecho) return {ok:false,msg:"No pude: "+((r&&r.motivo)||"?")};
+        const q=i.quien||"";
+        return {ok:true,msg: i.accion==="video" ? ("📹 Videollamada a "+q)
+                          : i.accion==="voz"   ? ("📞 Llamando a "+q+" por WhatsApp")
+                          : ("💬 Chat de "+q+" abierto"+(i.texto?" con el mensaje escrito — lo envías tú":""))};
+      }
+      if(name==="colgar"){
+        const r=await P.colgar();
+        return r&&r.hecho ? {ok:true,msg:"📴 Colgado"}
+                          : {ok:false,msg:((r&&r.motivo)||"no pude colgar")};
+      }
+      if(name==="poner_musica"){
+        const r=await P.musica({que:String(i.que||"")});
+        return r&&r.hecho ? {ok:true,msg:"🎵 "+(i.que?("Poniendo "+i.que):"Abrí tu música")}
+                          : {ok:false,msg:"No pude: "+((r&&r.motivo)||"?")};
+      }
+      if(name==="mando_musica"){
+        const r=await P.mandoMedia({que:String(i.que||"play")});
+        return r&&r.hecho ? {ok:true,msg:"⏯️ "+i.que} : {ok:false,msg:"No pude: "+((r&&r.motivo)||"?")};
+      }
+      if(name==="donde_estoy"){
+        const r = (typeof P.sitioAhora==="function") ? await P.sitioAhora() : await P.sitio();
+        if(!r||!r.hay) return {ok:false,msg:"No sé dónde estás: "+((r&&r.motivo)||"?")};
+        const margen = r.precisionM==null ? "" : (r.precisionM>=1000
+          ? " (aprox., margen de "+Math.round(r.precisionM/1000)+" km — solo la ciudad)"
+          : " (margen de "+r.precisionM+" m)");
+        const edad = r.haceMin==null ? "" : (r.haceMin<3 ? " · de ahora mismo"
+          : r.haceMin<90 ? (" · de hace "+r.haceMin+" min")
+          : (" · ⚠️ de hace "+Math.round(r.haceMin/60)+" h, puede que ya no esté ahí"));
+        return {ok:true,msg:(r.direccion||r.sitio||"no sé el nombre del sitio")+margen+edad};
+      }
+    }
+
     if(name==="crear_aviso"){
       if(!/^\d{1,2}:\d{2}$/.test(String(i.hora||""))) return {ok:false,msg:"Hora inválida"};
       const hora=i.hora.length===4?("0"+i.hora):i.hora;
@@ -13887,6 +14066,19 @@ function histRobertoModal(){
 const IA_TOOL_PEND=[];
 function confirmarTool(tu){
   // 🗂️ Organizar chats, 🧠 buscar en memoria, 🧭 marcar paso, 🎯 veredicto: automáticos, SIN tarjeta.
+  /* 🖐️ v7.114 — LAS DEL TELÉFONO QUE NO LLEVAN TARJETA, y por qué:
+     son instantáneas, no tocan a nadie más y se deshacen solas. Pedirle a Rey que confirme
+     para PAUSAR la música o para COLGAR sería absurdo: cuando tocara la tarjeta ya lo
+     habría hecho él a mano, y le habríamos hecho más lento lo que venía a hacerle más
+     rápido. Las que SÍ llevan tarjeta son las que le suenan a OTRA PERSONA — llamar y
+     WhatsApp — y ahí la tarjeta no es burocracia: es la red por si entendió mal un nombre,
+     que buscando «Sonia» salen diez. */
+  if(tu.name==="abrir_app" || tu.name==="buscar_contacto" || tu.name==="colgar"
+     || tu.name==="poner_musica" || tu.name==="mando_musica" || tu.name==="donde_estoy"){
+    return (async()=>{ let res; try{ res=await ejecutarTool(tu.name, tu.input); }catch(e){ res={ok:false,msg:"Error: "+e}; }
+      try{ if(res && res.msg && tu.name!=="buscar_contacto" && tu.name!=="donde_estoy") toast(res.msg); }catch(_){}
+      return {confirmed:true, res}; })();
+  }
   if(tu.name==="organizar_chat" || tu.name==="buscar_memoria" || tu.name==="marcar_paso_plan" || tu.name==="registrar_veredicto" || tu.name==="tema_apex" || tu.name==="guardar_saber" || tu.name==="idea_estado"){
     return (async()=>{ let res; try{ res=await ejecutarTool(tu.name, tu.input); }catch(e){ res={ok:false,msg:"Error: "+e}; } if(res&&res.ok&&(tu.name==="organizar_chat"||tu.name==="marcar_paso_plan")) toast(res.msg); return {confirmed:true, res}; })();
   }
@@ -14761,7 +14953,7 @@ async function iaEnviar(textoForzado, promptExtra){
      extra — perder el dato del calendario es una molestia; perder la pregunta es lo que Rey
      lleva dos días sufriendo. */
   refrescarSitio();   /* 📍 v7.107 — para el SIGUIENTE mensaje; éste va con lo que haya */
-  let calTxt="", grafTxt="", entTxt="";
+  let calTxt="", grafTxt="", entTxt="", climaTxt="";
   await Promise.race([
     (async()=>{
       try{ const ev=await cargarCalendarioCache(); calTxt=iaCalendarioContexto(ev)+"\n"; }catch(_){ calTxt=""; }
@@ -14774,6 +14966,9 @@ async function iaEnviar(textoForzado, promptExtra){
          (pide y responde); esto son ~150 tokens en la que ya se hace. Y así lo sabe siempre,
          sin tener que acordarse de preguntar. */
       try{ entTxt=await iaEntornoTxt(); }catch(_){ entTxt=""; }
+      /* 🌦️ v7.114 — y el tiempo. Va DETRÁS del entorno a propósito: si algo tiene que
+         quedarse fuera por falta de tiempo, que sea esto y no su teléfono. */
+      try{ climaTxt=await iaClimaTxt(); }catch(_){ climaTxt=""; }
       /* 🤖 v7.28 — y una foto FRESCA de lo que hizo el Ejecutor, para que Roberto no vuelva a
          decirle a Rey que hoy no operó cuando sí operó (04-09: "es todo basura"). */
       try{ await ejecRefrescar(); }catch(_){}
@@ -14789,7 +14984,7 @@ async function iaEnviar(textoForzado, promptExtra){
      viaja en su bloque ESTABLE (idéntico byte a byte al que luego va en el historial) con la
      marca de caché puesta AQUÍ MISMO, y el contexto vivo va DETRÁS de la marca, en su propio
      bloque, a precio normal (1×). El worker v5.68 respeta esta marca y no la pisa. */
-  const inj="=== CONTEXTO VIVO DE LA APP (datos de AHORA MISMO; el mensaje de Rey es el bloque anterior) ===\n"+entTxt+iaReloj()+"\n"+grafTxt+calTxt+iaContexto()+"\n"+iaEstrategiaDef()+"\n"+guardianRiesgo()+"\n"+iaPlan()+"\n"+iaAciertos()+"\n"+(estadoRecuperacionFreno().block||"")+iaFugas()+"\n"+iaRacha()+"\n"+iaPatrones()+"\n"+iaDatosSueltos()+"\n"+iaHitos()+"\n"+iaChats()+"\n"+iaPendientes()+"\n"+iaPlanSemanal()+"\n"+iaAvisos()+"\n"+iaEntradasAbiertas()+iaEjecutorArchivo()+iaEjecutorHoy()+iaTemplo()+iaLeyes(texto)+marco+"\n=== FIN DEL CONTEXTO — responde al mensaje de Rey del bloque anterior ===";
+  const inj="=== CONTEXTO VIVO DE LA APP (datos de AHORA MISMO; el mensaje de Rey es el bloque anterior) ===\n"+entTxt+climaTxt+iaReloj()+"\n"+grafTxt+calTxt+iaContexto()+"\n"+iaEstrategiaDef()+"\n"+guardianRiesgo()+"\n"+iaPlan()+"\n"+iaAciertos()+"\n"+(estadoRecuperacionFreno().block||"")+iaFugas()+"\n"+iaRacha()+"\n"+iaPatrones()+"\n"+iaDatosSueltos()+"\n"+iaHitos()+"\n"+iaChats()+"\n"+iaPendientes()+"\n"+iaPlanSemanal()+"\n"+iaAvisos()+"\n"+iaEntradasAbiertas()+iaEjecutorArchivo()+iaEjecutorHoy()+iaTemplo()+iaLeyes(texto)+marco+"\n=== FIN DEL CONTEXTO — responde al mensaje de Rey del bloque anterior ===";
   const last=msgs[msgs.length-1];
   const textoMsg=c.msgs[c.msgs.length-1].content;   /* EXACTAMENTE lo guardado (texto + nota del doc) */
   let bloquesMsg = Array.isArray(last.content) ? last.content.filter(b=>b.type==="image") : [];   /* la foto va delante */
