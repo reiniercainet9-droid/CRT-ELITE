@@ -1,48 +1,19 @@
-APEX v7.124 — TRADING DESK
+APEX v7.134 — TRADING DESK
 =========================
 
-🔔 LOS DOS REPASOS AHORA SÍ TE INTERRUMPEN · 🕓 Y SABE QUE ERES MOTOBOY
+🗑️ AHORA PUEDES BORRAR UN MENSAJE SUELTO — v7.133
 
-1) LOS REPASOS TE HABLAN SIEMPRE. Tenías razón y yo lo tenía mal.
+Cada mensaje del chat, tuyo o de Roberto, lleva un botón 🗑️ pequeño al lado.
+Lo tocas, te pregunta, y se va solo ése.
 
-   Yo les puse el mismo criterio que a todo lo demás: «avisar SOLO si algo se le escapa hoy;
-   si dudas, no avises». Con eso, el repaso de esta mañana decidió «tarjeta» y ni te
-   enteraste — tus dos propuestas llevan horas sin ver.
+POR QUÉ: tu chat «🗓️ Análisis semanal», que está fijado y es importante, se
+llenó de pruebas mías. Se podía borrar el chat ENTERO, pero no una línea — o
+sea que o lo tirabas todo o te quedabas con la basura dentro para siempre.
+Eso no puede ser: es tu chat.
 
-   Pero esto no es el parte del día. El parte es INFORMACIÓN y se ofrece. Estos dos son
-   ESTRUCTURA: existen para que no se te pase nada, y una estructura que se calla cuando hay
-   poco que decir no estructura nada. Tus palabras: «es ordenar, estructura, disciplina».
-
-   Ahora las 21:00 y las 06:00 SIEMPRE te llegan con notificación. Si el día viene tranquilo
-   te lo dirá en dos líneas — pero te lo dirá.
-
-   Y sigue teniendo interruptor: tu ley es que decides TÚ, y aquí decidiste que sí.
-
-2) 🏍️ AHORA SABE QUE TU TELÉFONO ES TU TRABAJO. Esto me lo contaste hoy y yo no lo sabía:
-   tu teléfono es tu herramienta en el trading Y en las entregas de motoboy, y por eso lo
-   coges centísimas de veces al día.
-
-   ⚠️ SIN SABER ESO, Roberto habría leído tus 200 desbloqueos como distracción o ansiedad —
-   y te habría echado un sermón por estar trabajando.
-
-   Y lo que yo guardaba tampoco servía: «veces: 200» no dice CUÁNDO trabajaste, y «primera
-   vez 4:40» no distingue entre levantarte y despertarte un momento.
-
-   AHORA SE GUARDA LA FORMA DEL DÍA: un número por cada hora, de 0 a 23. Con eso se ve solo:
-     · el hueco largo sin nada  = estás durmiendo
-     · el primer repunte tras el hueco = te levantaste
-     · los bloques densos = estás trabajando
-   Y así aprende tus horarios de verdad, que es lo que pediste. Le dejé dicho que con pocos
-   días NO afirme un patrón.
-
-3) 🧹 Y una errata mía en sus instrucciones: ponía «calíllate» en vez de «cállate».
-
-📌 ANOTADO PARA EL FINAL, como pediste:
-   · las cuentas del gasto (en qué se gasta y cuánto subió) — partiendo de los ~$102/mes
-     medidos el 12-09
-   · la auditoría completa de TODO, simulando cada cosa. Subrayo SIMULAR: el 11-09 seis
-     detectores automáticos míos dieron falsos positivos y cero hallazgos, y todo lo real
-     salió de pulsar y simular.
+Ya te lo dejé limpio (los 13 mensajes de prueba fuera, tu análisis intacto y
+el chat sigue fijado), y tienes copia entera de cómo estaba antes en
+🛟 PUNTOS SEGUROS, por si algo te faltara.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

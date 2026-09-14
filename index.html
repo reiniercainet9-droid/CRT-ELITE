@@ -811,6 +811,13 @@ html.rob-anim-min .fab.rob-cuerpo.alerta{animation:none!important}
   padding:6px 12px;border-radius:20px;background:var(--card3);border:1px solid var(--line);color:var(--txt2)}
 .ia-speak:active{transform:scale(.95)}
 .ia-speak.on{border-color:var(--gold);color:var(--gold)}
+/* 🗑️ borrar un mensaje suelto (v7.133). Va discreto y a un lado: tiene que estar cuando hace
+   falta, sin invitar a tocarlo por error — y aun así pregunta antes de borrar nada. */
+.ia-del{display:inline-flex;align-items:center;justify-content:center;margin-top:9px;margin-left:6px;
+  width:30px;height:30px;font-size:13px;line-height:1;border-radius:50%;
+  background:transparent;border:1px solid var(--line);color:var(--txt2);opacity:.45;vertical-align:middle}
+.ia-del:active{transform:scale(.9);opacity:1}
+.ia-msg.user .ia-del{margin-top:6px}
 .ia-link{color:var(--gold);text-decoration:underline;word-break:break-all}
 .ia-welcome{text-align:center;margin:auto;padding:20px;color:var(--txt2)}
 .ia-w-emoji{font-size:44px;margin-bottom:10px}

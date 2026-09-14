@@ -9961,6 +9961,11 @@ function iaInit(){
         <div id="burbBox" style="display:none;margin-bottom:14px">
           <button class="btn" id="burbBtn" style="margin:0 0 6px">⏳ …</button>
           <button class="btn" id="burbPorque" style="margin:0 0 6px;display:none">🔎 No lo veo — ¿por qué?</button>
+          <div id="burbOpaCaja" style="display:none;margin:10px 0 0">
+            <div class="fl" style="margin:0 0 6px">🎨 Lo fuerte que se ve</div>
+            <input type="range" id="burbOpa" min="25" max="80" step="5" style="width:100%">
+            <div class="note" style="text-align:left;margin:4px 0 0" id="burbOpaNota"></div>
+          </div>
           <div class="note" style="text-align:left" id="burbNota"></div>
         </div>
         <div class="fl" id="oyeCaja" style="display:none">🗣️ «Oye Roberto»</div>
@@ -10821,8 +10826,28 @@ function oyeEscuchar(){
     try{
       const resto = String((ev && ev.resto) || "").trim();
       try{ if(navigator.vibrate) navigator.vibrate(40); }catch(_){}
-      try{ robCara("escucha","¿sí, Rey?"); }catch(_){}
       oidoTraza("«oye Roberto»"+(resto?(" + «"+resto+"»"):""));
+      /* 👋 v7.126 — LE SALUDA COMO UNA PERSONA, y así Rey sabe que le está escuchando.
+         Solo cuando le llama SIN orden: si ya pidió algo en la misma frase, saludarle antes
+         de hacerlo sería hacerle esperar por educación. Cuesta cero: habla el teléfono. */
+      if(!resto || resto.length < 2){
+        /* 👋 v7.128 — PRIMERO SALUDA, LUEGO ESCUCHA. Y aquí estaba el fallo.
+           Antes yo salúdaba y abría el oído en la misma décima de segundo — y abrir el oído
+           llama a iaVozParar() («que Roberto calle mientras Rey habla»), que está BIEN y lleva
+           ahí desde siempre: hablar y oír a la vez es oírse a sí mismo.
+           Resultado: Roberto empezaba a decir «Buenos días» y se callaba ÉL SOLO antes de
+           que sonara. Rey: «no me dijo nada».
+           Ahora saluda, espera a terminar, y entonces abre el oído. Que además es como hace
+           una persona: primero te contesta, luego te escucha. Antes le estaba pidiendo a Rey
+           que hablara encima del saludo. */
+        const hola = saludoAlLlamarle();
+        OIDO.desdeOye = true;
+        try{ robCara("saluda", hola.toLowerCase()); }catch(_){}
+        try{ toast("🗣️ "+hola); }catch(_){}
+        saludarYLuegoEscuchar(hola);
+        return;
+      }
+      try{ robCara("escucha","¿sí, Rey?"); }catch(_){}
       if(resto && resto.length >= 2){
         /* 📺 v7.122 — dijo su nombre Y algo más en la misma frase. Tampoco se manda a
            ciegas: la tele también puede decir su nombre seguido de cualquier cosa. Primero
@@ -10837,13 +10862,11 @@ function oyeEscuchar(){
         })();
         return;
       }
-      /* solo su nombre: se abre el oído para la orden.
-         ⚠️ Se marca DE DÓNDE viene: si esto salió de su nombre y no de que Rey pulsara el
-         micrófono, lo que se oiga NO puede mandarse solo — la primera vez que lo probó,
-         decir «Oye Roberto» le costó un mensaje entero al modelo. */
+      /* ⚠️ aquí ya no se abre el oído: lo abre el saludo de arriba cuando termina de hablar
+         (v7.128). Esto queda por si algún día el saludo no llega a dispararse. */
       OIDO.desdeBurbuja = true;
       OIDO.desdeOye = true;
-      try{ oidoEmpezar(); }catch(_){}
+      try{ if(!OIDO.on) oidoEmpezar(); }catch(_){}
     }catch(_){}
   });
 
@@ -10916,9 +10939,11 @@ function oidoPintar(texto, esFinal){
       oidoTraza("solo su nombre — no se manda nada");
       OIDO.desdeOye = false;
       if(ta){ ta.value=""; ta.style.height="auto"; }
-      try{ robCara("escucha","dime, Rey"); }catch(_){}
-      try{ if(IA.voz && IA.voz.on && typeof iaHablar==="function") iaHablar("Dime, Rey."); }catch(_){}
-      toast("🗣️ Dime, Rey…");
+      /* 👋 v7.126 — aquí ya le saludó al despertar, así que esto es solo «sigo aquí».
+         Saludarle dos veces seguidas suena a máquina, que es justo lo contrario de lo que
+         Rey pidió. */
+      try{ robCara("escucha","te escucho"); }catch(_){}
+      toast("🗣️ Te escucho…");
       oidoParteAlaNube();
       setTimeout(()=>{ try{ OIDO.desdeOye = true; oidoEmpezar(); }catch(_){} }, 1200);
       return;
@@ -11175,6 +11200,19 @@ function oidoEmpezar(){
   const ta = $("#iaText");
   OIDO.base = (ta && ta.value ? ta.value.replace(/\s+$/,"")+" " : "");
   try{
+    /* 🔊 v7.132 — DE DÓNDE SALE EL RUIDO QUE MOLESTA A REY, MEDIDO EN SU TELÉFONO.
+       «Se está activando y desactivando solo el micrófono si yo no hablo nada». No era el
+       micrófono: son los PITIDOS del reconocedor de Google — «Playing beep raw/open» al abrir,
+       «raw/no_input» / «raw/failure» al no oír nada. Dos cada vez que se abre o se cierra un
+       reconocedor. En 3 minutos parado: CERO. O sea, solo suenan cuando algo se abre o cierra.
+       ✅ ARREGLADO: cuando Roberto habla solo (sus frases de cada 30 minutos, los avisos) el
+          oído ya no se aparta — se hace el sordo. Medido: de 2 pitidos a 0.
+       ⏳ QUEDA: al llamarle suenan 4, porque abrir este dictado obliga al oído a soltar el
+          micrófono (2) y el dictado toca los suyos de «habla» y «no te entendí» (2).
+          Para que sean 0 hay que dejar de abrir un segundo micrófono y aprovechar el que el
+          oído ya tiene abierto. Es un cambio de diseño, no un parche.
+       ⚠️ Y NO vale el reconocedor del aparato (el mudo): probado aquí el 13-09, no dicta —
+          devuelve error. Control con el de siempre: «Pon música y dime la hora», entera. */
     PM.oirEmpezar({ idioma:"es-US" }).catch((e)=>{
       OIDO.on = false; iaMicUI(false);
       const msg = String((e && e.message) || e || "");
@@ -12006,6 +12044,31 @@ async function burbujaUI(){
         catch(e){ toast("No pude abrir los permisos: "+(e&&e.message?e.message:e)); } };
       return;
     }
+    /* 🎨 v7.125 — EL MANDO DE LA OPACIDAD. Rey: «a veces quiero verlo todo lindo con sus
+       colores vivos, y cuando lo requiera más suave, transparente».
+       No baja del 25 %: un Roberto que no se ve pero SÍ se toca es justo el fallo que
+       acababa de arreglar, y no dejo la puerta abierta a repetirlo por un ajuste. */
+    (async()=>{
+      const caja=$("#burbOpaCaja"), sl=$("#burbOpa"), nt=$("#burbOpaNota");
+      if(!caja||!sl) return;
+      if(!on || typeof P.burbujaOpacidad!=="function"){ caja.style.display="none"; return; }
+      caja.style.display="";
+      let v=1; try{ const r=await P.burbujaOpacidad({}); if(r && r.opacidad!=null) v=r.opacidad; }catch(_){}
+      sl.value = Math.round(v*100);
+      /* ⚠️ EL MÁXIMO ES 80 % Y NO ES MÍO: Android no deja que una app se dibuje encima de
+         otras con más opacidad, para que ninguna pueda taparte la pantalla del todo y
+         engañarte con lo que hay debajo. Medido en su teléfono: pedí 0,85 / 0,95 / 1 y las
+         tres quedaron en 0,8. Se lo digo, en vez de dejarle un mando que miente. */
+      const pinta=(x)=>{ if(nt) nt.textContent = (x>=80 ? "Lo más vivo que Android permite. "
+                                    : x>=65 ? "Bien visible, pero sin robar la pantalla. "
+                                    : x>=45 ? "Suave: se ve lo que hay detrás. "
+                                            : "Casi transparente — apenas un recuerdo suyo. ")
+                                  + "(El tope es 80 %: Android no deja más, para que ninguna app pueda taparte la pantalla entera.)"; };
+      pinta(sl.value);
+      sl.oninput = ()=>pinta(sl.value);
+      sl.onchange = async()=>{ try{ await P.burbujaOpacidad({ valor: Number(sl.value)/100 }); }catch(_){} };
+    })();
+
     btn.className="btn"+(on?"":" gold");
     btn.textContent = on ? "🚪 Retirar a Roberto de la pantalla" : "🫧 Sacar a Roberto a la pantalla";
     if(on && !enPantalla){
@@ -13099,6 +13162,44 @@ function robReacciona(texto, gesto){
     }catch(_){}
   }catch(_){}
 }
+/* 🗑️ BORRAR UN MENSAJE SUELTO DEL CHAT — v7.133
+   Rey, el 13-09, con su chat del análisis semanal lleno de pruebas MÍAS: «hay tremendo reguero
+   de pruebas mezclado con el plan semanal, que es súper importante y está fijado, y NO PUEDO
+   NI BORRARLO DE AHÍ NI DECIRLE A ROBERTO QUE LO HAGA».
+   Tenía razón y era un agujero de los gordos: se podía borrar un chat ENTERO, pero no un
+   mensaje suelto. Un chat fijado que importa no se tira entero por limpiar cuatro líneas, así
+   que se quedaba con la basura dentro para siempre — y dependiendo de mí para quitarla.
+   El botón va pequeño y apagado, y SIEMPRE pregunta antes, con la ventana propia: nunca con
+   confirm(), que congela Apex y en Android ni se ve. */
+function iaBorrarBtn(i){
+  return '<button class="ia-del" data-borrar="' + i + '" title="Borrar este mensaje">🗑️</button>';
+}
+
+async function iaBorrarMsg(i){
+  try{
+    const c = iaConvAct();
+    const m = (c && c.msgs) || [];
+    if(!(i >= 0 && i < m.length)) return;
+    const suyo = m[i];
+    const trozo = String(suyo.content || "").replace(/\s+/g," ").trim().slice(0, 90);
+    const quien = suyo.role === "user" ? "tuyo" : "de Roberto";
+    const si = await preguntar("«" + (trozo || "(sin texto)") + "»\n\nSe quita de este chat y no se puede deshacer.",
+      { titulo:"🗑️ Borrar este mensaje " + quien, si:"Sí, bórralo", no:"Dejarlo", peligro:true });
+    if(!si) return;
+    /* ⚠️ se vuelve a buscar el mensaje por IDENTIDAD, no por su número: entre la pregunta y
+       el sí puede haber entrado un aviso de Roberto y correrse la numeración — y entonces
+       borraría el equivocado. */
+    const c2 = iaConvAct();
+    const m2 = (c2 && c2.msgs) || [];
+    const j = m2.indexOf(suyo);
+    if(j < 0){ toast("Ese mensaje ya no está"); return; }
+    m2.splice(j, 1);
+    iaGuardarConvs();
+    try{ pintarIAChat(); }catch(_){}
+    toast("🗑️ Borrado");
+  }catch(_){ toast("No pude borrarlo"); }
+}
+
 function pintarIAChat(){
   const m=$("#iaMsgs"); if(!m) return;
   robMontar();
@@ -13121,7 +13222,7 @@ function pintarIAChat(){
   m.innerHTML=c.msgs.map((x,i)=>{
     const cuerpo=x.role==="user"?esc(x.content):(x.html?x.html:fmtIA(x.content)); /* x.html: vistas ricas propias (ej. memoria plegable) */
     const foto=x.img?`<img class="ia-msg-img" src="${x.img}" alt="gráfico">`:"";
-    if(x.role==="user") return `<div class="ia-msg user">${foto}${cuerpo}</div>`;
+    if(x.role==="user") return `<div class="ia-msg user">${foto}${cuerpo}${iaBorrarBtn(i)}</div>`;
     const habla = IA.hablandoIdx===i;
     /* 🔊 v6.95 — el botón sale si HAY voz, sea la del navegador o la de Android. Antes se
          miraba solo `TTS` (la del navegador) y dentro de la APK no existe: Roberto hablaba
@@ -13144,7 +13245,7 @@ function pintarIAChat(){
         else
           btn = `<button class="ia-speak" data-speak="${i}">🔊 Escuchar</button>`;
       }
-    return `<div class="ia-msg bot">${foto}${cuerpo}${btn}${iaAccionesHTML(x,i)}</div>`;
+    return `<div class="ia-msg bot">${foto}${cuerpo}${btn}${iaBorrarBtn(i)}${iaAccionesHTML(x,i)}</div>`;
   }).join("")
     + (IA.busy?`<div class="ia-msg bot ia-typing"><span></span><span></span><span></span></div>
        <div class="ia-cancel-w"><button class="ia-cancel" id="iaCancel">✕ Cancelar y escribir</button></div>
@@ -13155,6 +13256,9 @@ function pintarIAChat(){
   try{ iaPintarTools(); }catch(_){}   /* 🤖 las tarjetas sobreviven a cualquier repintado */
   m.querySelectorAll("[data-acc]").forEach(b=>{
     b.onclick=(e)=>{ e.stopPropagation(); const a=IA_ACCIONES[b.dataset.acc]; if(a && a.fn) a.fn(); };
+  });
+  m.querySelectorAll("[data-borrar]").forEach(b=>{
+    b.onclick=(e)=>{ e.stopPropagation(); iaBorrarMsg(+b.dataset.borrar); };
   });
   m.querySelectorAll("[data-pausa]").forEach(b=>{ b.onclick=()=>{ iaVozPausa(); }; });
   m.querySelectorAll("[data-seguir]").forEach(b=>{ b.onclick=()=>{ iaVozSeguir(); }; });
@@ -15165,6 +15269,122 @@ function localReloj(){
   const d = new Date();
   const hh = d.toLocaleTimeString("es",{hour:"2-digit",minute:"2-digit",hour12:false,timeZone:"America/Sao_Paulo"});
   return hh;
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   👋 EL SALUDO AL LLAMARLE — v7.126
+   Rey: «que al activarse me diga buenos días, buenas tardes o buenas noches según
+   corresponda; y si ya le he pedido algo en esa parte del día, solo me diga te escucho Rey.
+   De esa forma se ve más real el asistente, y entonces ya sé en qué momento hablarle».
+
+   Y hay algo que él no dijo pero que es la mitad del valor: ESTO LE DICE QUE LE ESTÁ
+   ESCUCHANDO DE VERDAD. Sin respuesta, Rey habla a ciegas y no sabe si le oyó. Con ella sabe
+   el momento exacto en que puede empezar. Eso hace que un asistente se sienta vivo más que
+   cualquier función.
+
+   ⚠️ EL SALUDO LARGO, SOLO LA PRIMERA VEZ DE CADA PARTE DEL DÍA. Repetir «buenos días»
+   quince veces en una mañana es lo contrario de sonar real: es sonar a máquina.
+   Y cuesta CERO: es su teléfono hablando, no el modelo.
+
+   Las franjas van con SU hora, la de Timbó — no con la de Nueva York, que esa es la del
+   mercado ([[apex-reloj-mercado-vs-reloj-rey]]).
+   ══════════════════════════════════════════════════════════════════ */
+function franjaDelDia(){
+  const h = Number(new Date().toLocaleString("en-GB",{hour:"2-digit",hour12:false,timeZone:"America/Sao_Paulo"}));
+  if(h >= 5 && h < 12) return { id:"manana", saludo:"Buenos días, Rey" };
+  if(h >= 12 && h < 20) return { id:"tarde",  saludo:"Buenas tardes, Rey" };
+  return { id:"noche", saludo:"Buenas noches, Rey" };
+}
+
+/* ⏱️ HABLAR PRIMERO, Y LUEGO YA ESCUCHAR — v7.131
+   Rey lo probó tres veces y las tres dijo lo mismo: «solo pone el cartel te escucho y no
+   entendí; no habla nada». Y tenía toda la razón: Roberto NO hablaba.
+
+   EL FALLO, MEDIDO EN SU TELÉFONO (13-09): `PV.addListener(...)` en esta versión de Capacitor
+   devuelve el mando directamente — un objeto {remove} — y NO una promesa. Yo le encadenaba
+   un `.then()`, así que reventaba ahí mismo con un TypeError. Estaba dentro de un try, o sea
+   que no se veía por ninguna parte… y `vozHablar` era la línea SIGUIENTE. Nunca se ejecutaba.
+   Comprobado aparte: quitando el `.then()`, la voz suena en 1,76 s y el aviso «vozFin» llega
+   con su marca exacta. El mecanismo estaba bien desde el principio; lo roto era mi cañería.
+
+   LA LECCIÓN, Y ES LA QUE IMPORTA: lo que de verdad tiene que pasar va PRIMERO. Antes yo
+   montaba toda la espera y hablaba al final, así que cualquier tropiezo preparando la espera
+   se llevaba por delante el saludo. Ahora habla en la primera línea útil: aunque todo lo de
+   después falle, Rey le oye. Es también lo que él propuso al volver — «llevamos tiempo
+   estancado porque se arregla una cosa y se rompe otra»: lo frágil era la cadena, no el orden.
+
+   Y ESPERAR A QUE TERMINE TIENE TRES CAMINOS INDEPENDIENTES, porque abrir el oído CALLA a
+   Roberto (iaVozParar) y hacerlo antes de tiempo le corta la frase:
+     1. el aviso «vozFin» con su marca            → lo normal, ~1,8 s
+     2. un plazo holgado por el largo de la frase → por si el aviso no llega
+     3. un seguro de 6 s                          → jamás dejarle sin oído
+   El oído no puede abrirse ANTES de hablar: el micrófono oiría su propio «buenos días» y lo
+   tomaría por la orden de Rey. */
+function saludarYLuegoEscuchar(hola){
+  /* 🚪 la puerta de la APK, escrita como en todas las demás: en el navegador esto es null
+     y de aquí no pasa nada. La web es el respaldo de Rey y no se toca. */
+  const PV = vozNativa();
+  let yaAbri = false, quitarIni = null, quitarFin = null, plazo = null;
+  const unaVez = ()=>{
+    if(yaAbri) return;
+    yaAbri = true;
+    /* los mandos se sueltan siempre: Rey le llama muchas veces al día y si no, se irían
+       amontonando oyentes de la voz uno encima de otro durante toda la jornada */
+    try{ if(quitarIni && quitarIni.remove) quitarIni.remove(); }catch(_){}
+    try{ if(quitarFin && quitarFin.remove) quitarFin.remove(); }catch(_){}
+    try{ if(plazo) clearTimeout(plazo); }catch(_){}
+    try{ OIDO.desdeOye = true; if(!OIDO.on) oidoEmpezar(); }catch(_){}
+  };
+  if(!PV || typeof PV.vozHablar !== "function" || !(IA.voz && IA.voz.on)){
+    setTimeout(unaVez, 350);          /* sin voz: no hay nada que esperar */
+    return;
+  }
+  const marca = "saludo-" + Date.now();
+  const dura  = 1500 + String(hola||"").length * 120;   /* lo que puede durar la frase, con margen */
+  /* 1º HABLAR — lo primero de todo, antes de cualquier preparativo */
+  try{
+    PV.vozHablar({
+      texto: hola + ".", marca,
+      voz: (IA.voz && IA.voz.nativa) || "",
+      motor: (IA.voz && IA.voz.motor) || "",
+      tono: (IA.voz && typeof IA.voz.pitch==="number") ? IA.voz.pitch : 0.6,
+      ritmo: (IA.voz && typeof IA.voz.ritmo==="number") ? IA.voz.ritmo : 0.92,
+    });
+  }catch(_){ setTimeout(unaVez, 350); return; }
+  /* si la voz no llega ni a arrancar, a los 4 s se abre el oído igual: peor que no le salude
+     es que encima no le escuche */
+  plazo = setTimeout(unaVez, 4000);
+  /* 2º y ya después, enterarse de cuándo empieza y cuándo termina */
+  try{
+    /* ⏱️ EL PLAZO SE CUENTA DESDE QUE SUENA, NO DESDE QUE SE PIDE. Medido en su teléfono el
+       13-09: entre pedirle que hable y oírle de verdad pasan 1,7 s de arranque del motor de
+       voz. Contando desde la petición, el plazo saltaba a mitad de frase y el oído le cortaba
+       el saludo — justo lo que Rey vio: «me dijo buenos días Rey pero se cortó muy rápido».
+       El arranque del motor es imprevisible; el aviso de que ya está sonando, no. */
+    quitarIni = PV.addListener("vozInicio", (ev)=>{
+      try{ if(!ev || ev.marca !== marca) return; }catch(_){}
+      try{ if(plazo) clearTimeout(plazo); }catch(_){}
+      plazo = setTimeout(unaVez, dura);
+    });
+    quitarFin = PV.addListener("vozFin", (ev)=>{
+      try{ if(!ev || ev.marca !== marca) return; }catch(_){}
+      unaVez();                       /* el camino normal: ~1,8 s, y el oído se abre al acabar */
+    });
+  }catch(_){}
+  setTimeout(unaVez, 12000);          /* 🛟 el seguro duro: jamás dejarle sin oído */
+}
+
+function saludoAlLlamarle(){
+  try{
+    const f = franjaDelDia();
+    const hoy = new Date().toLocaleDateString("en-CA",{timeZone:"America/Sao_Paulo"});  /* AAAA-MM-DD */
+    const marca = hoy + ":" + f.id;
+    let ult = "";
+    try{ ult = localStorage.getItem("crtelite_saludo") || ""; }catch(_){}
+    if(ult === marca) return "Te escucho, Rey";      /* ya hablaron en esta parte del día */
+    try{ localStorage.setItem("crtelite_saludo", marca); }catch(_){}
+    return f.saludo;
+  }catch(_){ return "Te escucho, Rey"; }
 }
 
 async function cerebroLocal(texto){
