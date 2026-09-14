@@ -462,6 +462,40 @@ function borrarCaptura(id){
 let TRADES = load(K.trades, []);
 let SHOTS  = load(K.shots, []);   // capturas sueltas (sin trade) para la Galería
 let PLANSEM = load(K.plansem, null);  // plan de la semana (bias/zonas/invalidación) persistente
+
+/* 🗓️ v7.136 — EL PLAN GUARDA LOS DOS PARES, NO UNO.
+   Rey opera EUR/USD y GBP/USD. El 13-09 Roberto le escribió «Guardo el plan de los DOS pares»
+   y aquí solo cabía UNO: el campo `par` era único, así que guardar el segundo habría borrado
+   el primero. Le prometió algo que no cabía donde se guarda.
+
+   ⚠️ EL FORMATO VIEJO SE SIGUE LEYENDO. Su plan del 06-09 está guardado como un objeto suelto
+   con `.bias` y `.par`; `planSemLista()` lo envuelve al vuelo. Nada que migrar a mano y nada
+   que se pierda — eso es ley suya. */
+function planSemLista(){
+  try{
+    const p = PLANSEM;
+    if(!p) return [];
+    if(p.pares && typeof p.pares === "object"){
+      return Object.keys(p.pares).map(k => Object.assign({ par:k }, p.pares[k])).filter(x => x && x.bias);
+    }
+    return p.bias ? [p] : [];                       /* formato viejo: un solo par */
+  }catch(_){ return []; }
+}
+
+/* Guarda/actualiza el plan DE UN PAR sin tocar el del otro. */
+function planSemGuardar(uno){
+  try{
+    const par = String((uno && uno.par) || "").trim() || "(sin par)";
+    const previos = {};
+    for(const x of planSemLista()){ previos[x.par || "(sin par)"] = x; }
+    previos[par] = Object.assign({}, uno, { par });
+    const pares = {};
+    for(const k of Object.keys(previos)){ const c = Object.assign({}, previos[k]); delete c.par; pares[k] = c; }
+    PLANSEM = { pares, fecha: hoyISO() };
+    save(K.plansem, PLANSEM);
+    return planSemLista();
+  }catch(_){ return planSemLista(); }
+}
 let CHK    = load(K.chk, {});
 let CONF   = load(K.conf, {});
 let RLEIDAS= load(K.reglas, {});
@@ -13394,7 +13428,14 @@ function iaReloj(){
     let vent="FUERA de ventana operativa";
     if(finde) vent="fin de semana (mercado FX cerrado)";
     else if(t>=450 && t<570) vent="Pre-NY Kill Zone (7:30–9:30 NY, la MEJOR ventana)";
-    else if(t>=570 && t<690) vent="NY Apertura (9:30–11:30 NY)";
+    /* ⚠️ v7.135 — LAS MISMAS HORAS QUE VE REY EN PANTALLA.
+       Aquí ponía 9:30–11:30, mientras la tabla VENTANAS (la del 🎯 Hoy) y la killzone del
+       propio indicador (su entrada 0730-1230) llegan hasta las 12:30. Entre las 11:30 y las
+       12:30 Roberto le decía «fuera de ventana» con el panel diciendo «Killzone ✅ Activa»:
+       dos relojes distintos son dos verdades distintas, y Rey acaba sin saber a cuál creer.
+       Rey (14-09): «debe darme exactamente lo que dice y está ocurriendo en el gráfico, no
+       decir cosas que me engañen». */
+    else if(t>=570 && t<750) vent="NY Apertura (9:30–12:30 NY)";
     else if(t>=120 && t<300) vent="Londres (2:00–5:00 NY)";
     let extra="";
     if(!finde && t>=690 && t<810) extra=" — ojo: NY Lunch (11:30–1:30 NY), trampas, no operar";
@@ -13468,18 +13509,65 @@ async function iaGrafico(){
 
 /* PLAN DE LA SEMANA persistente: se inyecta en CADA mensaje para que Roberto lo
    recuerde toda la semana y detecte si se invalidó por precio o noticias. */
+/* 🕵️ v7.136 — SI DICE QUE GUARDÓ EL PLAN, QUE SEA VERDAD.
+   El 13-09 Roberto cerró el análisis semanal de Rey con «Guardo el plan de los dos pares y mi
+   lectura de hoy» — y NUNCA llamó a `guardar_plan_semanal`. No salió ninguna tarjeta. Rey se
+   quedó creyendo que su plan estaba al día, y al día siguiente seguía el del 06-09: con ESE
+   plan viejo iba a operar el lunes.
+
+   NO se rastrean las manos: se mira el EFECTO. Si promete guardarlo, el plan tiene que quedar
+   fechado HOY. Si no lo está, no lo guardó, y se le dice a Rey en el acto — en su chat, no en
+   un registro que no mira. Es la misma ley de [[apex-pulsar-no-basta]]: se comprueba el efecto,
+   no el intento.
+   ⚠️ Cuesta CERO: es una comprobación de texto y una fecha, sin nube y sin modelo. */
+function avisarSiPrometioGuardar(txt, c){
+  try{
+    const t = String(txt || "");
+    if(!t || !c) return;
+    /* promesa en PRIMERA PERSONA y pegada a la palabra plan; «tu plan sigue guardado del 06»
+       NO cuenta — eso es informar, no prometer. */
+    const promete = /\b(guardo|guardé|guardaré|voy a guardar|actualizo|actualicé|actualizaré)\b[^.\n]{0,40}\bplan\b/i.test(t)
+                 || /\bel plan\b[^.\n]{0,30}\b(lo guardo|lo guardé|lo actualizo|lo actualicé)\b/i.test(t);
+    if(!promete) return;
+    const hoy = hoyISO();
+    const fecha = (PLANSEM && PLANSEM.fecha) || "";
+    if(fecha === hoy) return;                       /* lo guardó de verdad: nada que decir */
+    const lista = planSemLista();
+    const de = fecha ? ("sigue siendo el del " + fecha) : "sigue sin haber ninguno guardado";
+    c.msgs.push({ role:"assistant", content:
+      "⚠️ OJO, REY: dije que guardaba tu plan pero NO lo guardé — tu plan " + de
+      + (lista.length ? (" (" + lista.map(x=>x.par||"?").join(", ") + ")") : "")
+      + ". Si quieres el de hoy, pídemelo otra vez: «guarda el plan de <par>», y sale la tarjeta para que lo confirmes." });
+  }catch(_){}
+}
+
 function iaPlanSemanal(){
-  if(!PLANSEM || !PLANSEM.bias) return "[🗓️ PLAN SEMANAL: aún no hay uno guardado. Cuando hagas el análisis semanal, guárdalo con guardar_plan_semanal para recordarlo toda la semana.]";
-  let s="[🗓️ PLAN SEMANAL VIGENTE (guardado el "+PLANSEM.fecha+" — RECUÉRDALO y compáralo con el gráfico en vivo y las noticias en CADA respuesta):\n";
-  s+="Bias: "+PLANSEM.bias+(PLANSEM.par?(" ("+PLANSEM.par+")"):"")+"\n";
-  if(PLANSEM.zonaP) s+="Zona principal: "+PLANSEM.zonaP+"\n";
-  if(PLANSEM.zonaS) s+="Zona secundaria: "+PLANSEM.zonaS+"\n";
-  if(PLANSEM.invalid) s+="⚠️ Nivel de INVALIDACIÓN: "+PLANSEM.invalid+" — si el precio en vivo lo rompió (o una noticia roja cambió el panorama), el SESGO SEMANAL CAMBIÓ: díselo claramente a Rey y ADÁPTATE (actualiza el plan con guardar_plan_semanal).\n";
-  if(PLANSEM.mejorDia) s+="Mejor día: "+PLANSEM.mejorDia+"\n";
-  if(PLANSEM.evitar) s+="Días a evitar: "+PLANSEM.evitar+"\n";
-  if(PLANSEM.notas) s+="Notas: "+PLANSEM.notas+"\n";
-  s+="REGLA: el plan semanal MANDA sobre el diario, salvo que se invalide por ruptura de estructura mayor o noticia fuerte. Si sigue válido, respétalo.]";
-  return s;
+  /* 🗓️ v7.136 — LOS DOS PARES, cada uno con lo suyo.
+     Antes esto leía un plan Único. Rey opera EUR/USD y GBP/USD y el 13-09 Roberto le dijo que
+     guardaba «el plan de los dos pares» teniendo sitio para uno solo. */
+  const lista = planSemLista();
+  if(!lista.length) return "[🗓️ PLAN SEMANAL: aún no hay uno guardado. Cuando hagas el análisis semanal, guárdalo con guardar_plan_semanal (UNA VEZ POR PAR) para recordarlo toda la semana.]";
+  const fecha = (PLANSEM && PLANSEM.fecha) || lista[0].fecha || "?";
+  /* ⚠️ si el plan tiene más de 6 días, se dice: un plan rancio presentado como vigente es lo
+     que le hizo operar el 13-09 con una lectura de una semana antes. */
+  let viejo = "";
+  try{
+    const d = Math.round((Date.now() - new Date(fecha+"T12:00:00").getTime())/86400000);
+    if(d >= 6) viejo = " ⚠️ TIENE "+d+" DÍAS: díselo a Rey y ofrécele refrescarlo antes de usarlo.";
+  }catch(_){}
+  let s2 = "[🗓️ PLAN SEMANAL VIGENTE (guardado el "+fecha+"."+viejo+" Compáralo con el gráfico en vivo y las noticias en CADA respuesta):\n";
+  for(const p of lista){
+    s2 += "\n─ "+(p.par||"(sin par)")+" ─\n";
+    s2 += "Bias: "+p.bias+"\n";
+    if(p.zonaP) s2 += "Zona principal: "+p.zonaP+"\n";
+    if(p.zonaS) s2 += "Zona secundaria: "+p.zonaS+"\n";
+    if(p.invalid) s2 += "⚠️ Nivel de INVALIDACIÓN: "+p.invalid+" — si el precio en vivo lo rompió (o una noticia roja cambió el panorama), el SESGO SEMANAL DE ESE PAR CAMBIÓ: díselo claro y actualízalo con guardar_plan_semanal.\n";
+    if(p.mejorDia) s2 += "Mejor día: "+p.mejorDia+"\n";
+    if(p.evitar) s2 += "Días a evitar: "+p.evitar+"\n";
+    if(p.notas) s2 += "Notas: "+p.notas+"\n";
+  }
+  s2 += "\nREGLA: el plan semanal MANDA sobre el diario, salvo que se invalide por ruptura de estructura mayor o noticia fuerte. Cada par tiene el SUYO: no mezcles el bias de uno con el otro.]";
+  return s2;
 }
 
 /* Entradas ABIERTAS ya registradas en el Diario, para que Roberto NO las duplique
@@ -14123,11 +14211,13 @@ async function ejecutarTool(name, i){
       return {ok:true,msg:"📸 Captura pedida"+(par?(" de "+par):"")+" — el Puente la sube en unos segundos; la verás en la 🖼️ Galería"+(t?" y en tu entrada abierta.":".")};
     }
     if(name==="guardar_plan_semanal"){
-      PLANSEM={ bias:i.bias||"", par:i.par||"", zonaP:i.zona_principal||"", zonaS:i.zona_secundaria||"", invalid:i.nivel_invalidacion||"", mejorDia:i.mejor_dia||"", evitar:i.dias_evitar||"", notas:i.notas||"", fecha:hoyISO() };
-      save(K.plansem, PLANSEM);
+      /* 🗓️ v7.136 — se guarda POR PAR y sin pisar el otro (antes el segundo borraba al primero) */
+      const lista = planSemGuardar({ bias:i.bias||"", par:i.par||"", zonaP:i.zona_principal||"", zonaS:i.zona_secundaria||"", invalid:i.nivel_invalidacion||"", mejorDia:i.mejor_dia||"", evitar:i.dias_evitar||"", notas:i.notas||"", fecha:hoyISO() });
       /* 🌙 v6.39: el plan viaja a la nube para que el dossier nocturno lo conozca */
       try{ fetch(nubeUrl()+"/plansem",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(PLANSEM)}).catch(()=>{}); }catch(_){}
-      return {ok:true,msg:"Plan semanal guardado: "+PLANSEM.bias+(PLANSEM.par?(" en "+PLANSEM.par):"")+(PLANSEM.invalid?(" · invalida en "+PLANSEM.invalid):"")+". Lo recordaré toda la semana."};
+      const otros = lista.filter(x => x.par !== (i.par||"")).map(x => x.par).filter(Boolean);
+      return {ok:true,msg:"Plan semanal guardado: "+(i.bias||"")+(i.par?(" en "+i.par):"")+(i.nivel_invalidacion?(" · invalida en "+i.nivel_invalidacion):"")+". Lo recordaré toda la semana."
+        +(otros.length?(" (sigue guardado también el de "+otros.join(", ")+")"):"")};
     }
     if(name==="ajustar_indicador"){
       if(!i.ajuste || i.valor===undefined || i.valor===null || i.valor==="") return {ok:false,msg:"Falta el ajuste o el valor"};
@@ -15139,6 +15229,8 @@ async function iaBgResuelto(jobId, d){
      antes de estrenar el candado), no se repite. */
   if(txt && c.msgs.some(m=>m.role==="assistant" && m.content===txt)){ iaGuardarConvs(); pintarIAChat(); return; }
   c.msgs.push({role:"assistant",content: txt || "⚠️ No me llegó respuesta, reintenta."});
+  /* 🕵️ v7.136 — ¿DIJO QUE GUARDÓ EL PLAN Y NO LO GUARDÓ? */
+  try{ avisarSiPrometioGuardar(txt, c); }catch(_){}
   iaGuardarConvs();
   pintarIAChat();
   /* 👄 v7.35 — Y QUE MUEVA LA BOCA AL CONTESTAR. Rey (05-09): "el cuerpo está… sin mover

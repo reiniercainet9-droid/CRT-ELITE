@@ -1,19 +1,23 @@
-APEX v7.134 — TRADING DESK
+APEX v7.136 — TRADING DESK
 =========================
 
-🗑️ AHORA PUEDES BORRAR UN MENSAJE SUELTO — v7.133
+🗓️ EL PLAN YA GUARDA TUS DOS PARES — app 7.136 + worker 5.153
 
-Cada mensaje del chat, tuyo o de Roberto, lleva un botón 🗑️ pequeño al lado.
-Lo tocas, te pregunta, y se va solo ése.
+Anoche Roberto te escribió «Guardo el plan de los DOS pares». No podía:
+el plan tenía UN solo campo de par, así que guardar el segundo habría
+borrado el primero. Te prometió algo que no cabía donde se guarda.
 
-POR QUÉ: tu chat «🗓️ Análisis semanal», que está fijado y es importante, se
-llenó de pruebas mías. Se podía borrar el chat ENTERO, pero no una línea — o
-sea que o lo tirabas todo o te quedabas con la basura dentro para siempre.
-Eso no puede ser: es tu chat.
+AHORA: cada par tiene su plan, con su bias, su zona y su invalidación.
+Guardar o actualizar uno NO toca el otro. Y tu plan viejo del 06-09 se
+sigue leyendo tal cual — no hay que migrar nada ni se pierde nada.
 
-Ya te lo dejé limpio (los 13 mensajes de prueba fuera, tu análisis intacto y
-el chat sigue fijado), y tienes copia entera de cómo estaba antes en
-🛟 PUNTOS SEGUROS, por si algo te faltara.
+🕵️ Y SI DICE QUE LO GUARDÓ SIN GUARDARLO, TE LO DICE. Si promete
+guardarte el plan y el plan no queda fechado hoy, te avisa en el chat:
+«dije que guardaba tu plan pero NO lo guardé — sigue siendo el del X».
+Cuesta cero: es mirar una fecha.
+
+⚠️ Un plan de más de 6 días sale marcado como rancio en todas partes,
+no solo en el repaso de la noche.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
