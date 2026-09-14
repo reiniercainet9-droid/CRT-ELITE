@@ -10582,6 +10582,38 @@ const PARA_LA_VOZ = [
   [/\bMSS\b/g, "eme ese ese"], [/\bDD\b/g, "drawdown"], [/\bSL\b/g, "ese ele"],
   [/\bTP\b/g, "te pe"], [/\bPF\b/g, "pe efe"], [/\bKZ\b/g, "killzone"],
   [/\bPDH\b/g, "máximo del día anterior"], [/\bPDL\b/g, "mínimo del día anterior"],
+  /* 🗣️ v7.138 — EL INGLÉS DEL TRADING, DICHO EN CRISTIANO.
+     Rey, oyendo una alarma (14-09): «en vez de decir discount DELETREA eso». Y es normal: un
+     motor de voz en español se encuentra una palabra que no es suya y la deletrea letra por
+     letra. No se trata de pronunciarla mejor — se trata de DECIR LO QUE SIGNIFICA, que además
+     es lo útil: «zona barata, de compra» le dice más que «discount».
+     Van ANTES que las siglas de arriba para que no se las coman a trozos. */
+  /* ⚠️ primero el caso con «Zona:» delante, si no salía «Zona: zona barata» */
+  /* su indicador escribe «Zona: DISCOUNT (compra)»: se traga también el paréntesis,
+     si no quedaba «zona barata, de compra (compra)». */
+  [/\bZona\s*:\s*DISCOUNT\s*(?:\(\s*compra\s*\))?/gi, "Zona: barata, de compra"],
+  [/\bZona\s*:\s*PREMIUM\s*(?:\(\s*venta\s*\))?/gi, "Zona: cara, de venta"],
+  [/\bDISCOUNT\b/gi, "zona barata, de compra"],
+  [/\bPREMIUM\b/gi, "zona cara, de venta"],
+  [/\bEQUILIBRIUM\b/gi, "el punto medio"],
+  /* el «+» entre dos cosas se DICE: «barrido más cambio de carácter» */
+  [/(\S)\s*\+\s*(\S)/g, "$1 más $2"],
+  [/\bSWEEP\b/gi, "barrido"],
+  [/\bCHoCH\b/g, "cambio de carácter"],
+  [/\bBOS\b/g, "ruptura de estructura"],
+  [/\bFVG\b/g, "hueco de valor justo"],
+  [/\bOB\b/g, "bloque de órdenes"],
+  [/\bKILLZONE(S)?\b/gi, "ventana operativa$1"],
+  [/\bDISPLACEMENT\b/gi, "desplazamiento"],
+  /* ⚠️ «setup» NO se traduce: es palabra de Rey y un motor español la lee bien.
+     Lo que se deletrea es el inglés largo EN MAYÚSCULAS, tipo DISCOUNT. */
+  [/\bBREAK\s*EVEN\b/gi, "punto de equilibrio"],
+  [/\bBE\b/g, "punto de equilibrio"],
+  [/\bTRAILING\b/gi, "seguimiento"],
+  [/\bSMT\b/g, "divergencia entre pares"],
+  [/\bCRT\b/g, "cé erre té"],
+  [/\bLIQUIDITY\b/gi, "liquidez"],
+  [/\bBIAS\b/gi, "sesgo"],
 ];
 
 /* ⚠️ REGLA DE REY (02-09): "es fundamental que las actualizaciones de la APK no afecten la

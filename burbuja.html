@@ -476,10 +476,78 @@
      puntos y comas". Una coma detrás de "Rey" la pasa cualquier motor casi de largo; un punto
      obliga a parar. En la nubecita el texto sigue con su coma: esto solo toca lo que se dice.
      Es la MISMA regla que aplica Apex en PARA_LA_VOZ — los dos cuerpos suenan igual. */
+  /* 🗣️ v7.138 — QUE SUENE A PERSONA, NO A MÁQUINA LEYENDO SÍMBOLOS.
+     Rey, oyendo una alarma (14-09): «dice 15 metros, y también dice cabeza parlante… eso está
+     feo y mal dicho, debe sonar natural y con coherencia, con sus acentos y las pausas donde
+     van; en vez de decir discount DELETREA eso».
+     Las tres cosas eran la misma: aquí solo se ponía la pausa del nombre, y toda la traducción
+     a habla natural vive en app.js — otra página, así que no llegaba. La voz de fuera recibía
+     el texto CRUDO, y un motor en español con texto crudo hace lo que puede:
+       🗣️  → lo lee por su nombre: «cabeza parlante»
+       5m   → «5 metros»
+       DISCOUNT → deletreado, letra por letra
+     ⚠️ Esta tabla es hermana de PARA_LA_VOZ en app.js y hay un banco que vigila que no se
+     separen: si una aprende una palabra y la otra no, Roberto sonaría distinto por dentro y
+     por fuera, que es justo lo que Rey no quiere. */
+  var VOZ_NATURAL = [
+    /* el inglés del trading, dicho por lo que SIGNIFICA (es lo útil, además) */
+    /* ⚠️ primero el caso con «Zona:» delante, si no salía «Zona: zona barata» */
+    /* su indicador escribe «Zona: DISCOUNT (compra)»: se traga también el paréntesis,
+       si no quedaba «zona barata, de compra (compra)». */
+    [/\bZona\s*:\s*DISCOUNT\s*(?:\(\s*compra\s*\))?/gi, "Zona: barata, de compra"],
+    [/\bZona\s*:\s*PREMIUM\s*(?:\(\s*venta\s*\))?/gi, "Zona: cara, de venta"],
+    [/\bDISCOUNT\b/gi, "zona barata, de compra"],
+    [/\bPREMIUM\b/gi, "zona cara, de venta"],
+    [/\bEQUILIBRIUM\b/gi, "el punto medio"],
+    /* el «+» entre dos cosas se DICE: «barrido más cambio de carácter» */
+    [/(\S)\s*\+\s*(\S)/g, "$1 más $2"],
+    [/\bSWEEP\b/gi, "barrido"],
+    [/\bCHoCH\b/g, "cambio de carácter"],
+    [/\bBOS\b/g, "ruptura de estructura"],
+    [/\bFVG\b/g, "hueco de valor justo"],
+    [/\bOB\b/g, "bloque de órdenes"],
+    [/\bKILLZONE(S)?\b/gi, "ventana operativa$1"],
+    [/\bDISPLACEMENT\b/gi, "desplazamiento"],
+    /* ⚠️ «setup» NO se traduce: es palabra de Rey y un motor español la lee bien.
+       Lo que se deletrea es el inglés largo EN MAYÚSCULAS, tipo DISCOUNT. */
+    [/\bBIAS\b/gi, "sesgo"],
+    /* los pares, por su nombre */
+    [/\bEUR\s*\/?\s*USD\b/gi, "euro dólar"],
+    [/\bGBP\s*\/?\s*USD\b/gi, "libra dólar"],
+    [/\bXAU\s*\/?\s*USD\b/gi, "oro"],
+    /* las temporalidades, en horas y minutos — «5m» no es «5 metros» */
+    [/\bH4\b/g, "4 horas"], [/\bD1\b/g, "diario"], [/\bW1\b/g, "semanal"],
+    [/\b(\d+)\s*H\b/g, "$1 horas"],
+    [/\b1\s*horas\b/g, "1 hora"],
+    [/\b(\d+)\s*[mM]in\b/g, "$1 minutos"],
+    [/\b(\d+)\s*[mM]\b(?!\w)/g, "$1 minutos"],
+    [/\b1 minutos\b/g, "1 minuto"],
+    /* siglas que si no se separan se leen de corrido */
+    [/\bMSS\b/g, "eme ese ese"], [/\bSL\b/g, "ese ele"], [/\bTP\b/g, "te pe"],
+    [/\bCRT\b/g, "cé erre té"], [/\bSMT\b/g, "divergencia entre pares"],
+    /* números como los dice una persona */
+    [/(\d)[.,](\d+)\s*R\b/g, "$1 coma $2 erres"],
+    [/\b1\s*R\b/g, "1 erre"],
+    [/(\d)\s*R\b/g, "$1 erres"],
+    [/(\d)[.,](\d+)\s*%/g, "$1 coma $2 por ciento"],
+    [/(\d)\s*%/g, "$1 por ciento"],
+    [/(\d)\.(\d)/g, "$1 coma $2"]
+  ];
+
   function paraLaVoz(t){
     try{
-      var x = String(t || "").replace(/^Rey,\s+/, "Rey. ");
-      return x.replace(/^(Rey\.\s+[^:.]{2,40}):\s+/, "$1. ");
+      var x = String(t || "");
+      /* 🔇 fuera los emojis: el motor los lee por su NOMBRE y suelta «cabeza parlante»
+         en mitad de una alarma. En pantalla siguen todos — esto es solo para la voz. */
+      x = x.replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2190}-\u{21FF}\u{2B00}-\u{2BFF}\u{FE0F}\u{20E3}]/gu, " ");
+      /* los separadores de Rey marcan PAUSA: si se quitan a secas, todo suena de corrido */
+      x = x.replace(/\s*[·•]\s*/g, ", ").replace(/[—–]/g, ", ").replace(/\s*\|\s*/g, ", ");
+      for (var i = 0; i < VOZ_NATURAL.length; i++) x = x.replace(VOZ_NATURAL[i][0], VOZ_NATURAL[i][1]);
+      /* la pausa después de su nombre: un punto obliga a parar, una coma se pasa de largo */
+      x = x.replace(/^Rey,\s+/, "Rey. ").replace(/^(Rey\.\s+[^:.]{2,40}):\s+/, "$1. ");
+      /* ni espacios de más ni dos signos seguidos: eso también suena mal */
+      return x.replace(/\s{2,}/g, " ").replace(/\s+([,.;:])/g, "$1")
+              .replace(/([.!?,])\s*\1+/g, "$1").trim();
     }catch(_){ return t; }
   }
   var _erUrgente = false, _tDespeja = null;
@@ -578,7 +646,15 @@
        programó. Es lo ÚNICO que suena — ver la regla en burbujaDecir.
        🔊 v7.41 — salvo que Rey haya apagado la voz de ESE aviso concreto: entonces sale la
        nubecita y el gesto igual, pero callado. Su idea del 05-09. */
-    window.burbujaDecir(frase, g, dice !== false);
+    /* 🗣️ v7.137 — LA NUBECITA LLEVA LA FRASE CORTA; LA VOZ, LA ALARMA ENTERA.
+       Antes se mandaba `frase` a los dos sitios: `frase` sale de robSitua() y es un resumen de
+       una línea pensado para que quepa en la nube. Así que a Rey se le leía el resumen y NUNCA
+       el cuerpo del aviso — ni la señal del indicador ni la opinión de Roberto del final.
+       Rey lo dijo con estas palabras: «estaba cortando las alarmas del indicador a la mitad». */
+    var completo = String(titulo || "").trim();
+    var cuerpoTxt = String(cuerpo || "").trim();
+    if (cuerpoTxt) completo = completo ? (completo + ". " + cuerpoTxt) : cuerpoTxt;
+    window.burbujaDecir(frase, g, dice !== false, undefined, completo || frase);
   };
 
   /* ══════════════════════════════════════════════════════════════════════════
@@ -597,9 +673,17 @@
      MUDA. Solo suenan las alarmas del mercado y los avisos que él se programó,
      que es lo que pidió. Y encima de eso sigue mandando su interruptor de siempre
      (🔊 Que Roberto me hable): si lo apaga, no suena ni eso. */
-  window.burbujaDecir = function(texto, g, hablar, modo){
+  /* 🗣️ v7.137 — LO QUE SE PINTA Y LO QUE SE DICE YA NO SON LO MISMO.
+     Rey (14-09): «no sé si Roberto me lee las alarmas y avisos COMPLETO y su opinión al final
+     completamente… estaba cortando las alarmas del indicador a la mitad». Tenía razón, y la
+     causa era que el límite de la NUBECITA se le aplicaba también a la VOZ.
+     Una nubecita no puede llevar un discurso — eso sigue igual. Pero una voz SÍ: para eso es
+     una voz. `vozTexto` es lo que se DICE; `texto` es lo que se PINTA. */
+  window.burbujaDecir = function(texto, g, hablar, modo, vozTexto){
     texto = String(texto || "").trim();
     if (!texto) return;
+    /* ⬇️ se guarda ANTES de recortar: el recorte es cosa de la nubecita, no de la voz */
+    var decir = String(vozTexto || texto).replace(/\s+/g, " ").trim();
     /* 📋 v7.67 — el repaso del día se pinta como panel (ver #globo.repaso) */
     var esRepaso = (modo === "repaso");
     try { globo.classList.remove("repaso"); if (esRepaso) globo.classList.add("repaso"); } catch(_){}
@@ -615,7 +699,7 @@
        que oír, lo oye: la nubecita no se toca y la voz sale igual. */
     if (tarjetaViva && !PISAR_TARJETA) {
       if (hablar) {
-        try { console.log("BURBUJA-VOZ " + (typeof paraLaVoz === "function" ? paraLaVoz(texto) : texto)); } catch(_){}
+        try { console.log("BURBUJA-VOZ " + (typeof paraLaVoz === "function" ? paraLaVoz(decir) : decir)); } catch(_){}
         try { console.log("BURBUJA-TRAGADO con-tarjeta-pero-dicho"); } catch(_){}
       } else {
         try { console.log("BURBUJA-TRAGADO callado-por-la-tarjeta"); } catch(_){}
@@ -674,7 +758,7 @@
     /* 🔇 y SOLO si esto es una alarma o un aviso programado se le pide a Android que lo
        DIGA. Su vida de fondo pasa por aquí sin `hablar`, así que mueve la boca y saca su
        nubecita pero no suena — que es exactamente lo que pidió Rey. */
-    if (hablar) { try { console.log("BURBUJA-VOZ " + (typeof paraLaVoz === "function" ? paraLaVoz(texto) : texto)); } catch(_){} }
+    if (hablar) { try { console.log("BURBUJA-VOZ " + (typeof paraLaVoz === "function" ? paraLaVoz(decir) : decir)); } catch(_){} }
     clearTimeout(tVuelta);
     /* vuelve solo a estar de guardia: no se queda con cara de nada */
     tVuelta = setTimeout(window.burbujaCallar, 9000);

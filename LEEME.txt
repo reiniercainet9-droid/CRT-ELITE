@@ -1,23 +1,26 @@
-APEX v7.136 — TRADING DESK
+APEX v7.138 — TRADING DESK
 =========================
 
-🗓️ EL PLAN YA GUARDA TUS DOS PARES — app 7.136 + worker 5.153
+🗣️ LA VOZ SUENA A PERSONA — app 7.138
 
-Anoche Roberto te escribió «Guardo el plan de los DOS pares». No podía:
-el plan tenía UN solo campo de par, así que guardar el segundo habría
-borrado el primero. Te prometió algo que no cabía donde se guarda.
+Tenías razón en las tres: «15 metros», «cabeza parlante» y deletrear
+«discount». Las tres eran lo mismo — el cuerpo flotante mandaba a la voz el
+texto CRUDO, y un motor español con texto crudo hace lo que puede:
 
-AHORA: cada par tiene su plan, con su bias, su zona y su invalidación.
-Guardar o actualizar uno NO toca el otro. Y tu plan viejo del 06-09 se
-sigue leyendo tal cual — no hay que migrar nada ni se pierde nada.
+  🗣️ emoji  → lo lee por su NOMBRE: «cabeza parlante»
+  5m        → «5 metros»
+  DISCOUNT  → deletreado, letra por letra
 
-🕵️ Y SI DICE QUE LO GUARDÓ SIN GUARDARLO, TE LO DICE. Si promete
-guardarte el plan y el plan no queda fechado hoy, te avisa en el chat:
-«dije que guardaba tu plan pero NO lo guardé — sigue siendo el del X».
-Cuesta cero: es mirar una fecha.
+AHORA (y en pantalla no cambia nada, esto es solo la voz):
+  · fuera los emojis
+  · 5m → 5 minutos · H4 → 4 horas · GBPUSD → libra dólar
+  · DISCOUNT → «zona barata, de compra» · PREMIUM → «cara, de venta»
+  · CHoCH → «cambio de carácter» · displacement → «desplazamiento»
+  · el + se dice «más», y los · | — se vuelven PAUSA, no se tiran
+  · 1.85R → «1 coma 85 erres» · 0.5% → «0 coma 5 por ciento»
 
-⚠️ Un plan de más de 6 días sale marcado como rancio en todas partes,
-no solo en el repaso de la noche.
+«setup» NO se traduce: es palabra tuya y el motor la lee bien. Lo que se
+deletrea es el inglés largo en MAYÚSCULAS.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
