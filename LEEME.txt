@@ -1,26 +1,31 @@
 APEX v7.138 — TRADING DESK
 =========================
 
-🗣️ LA VOZ SUENA A PERSONA — app 7.138
+📋 EL PARTE DEL EJECUTOR — worker 5.155
 
-Tenías razón en las tres: «15 metros», «cabeza parlante» y deletrear
-«discount». Las tres eran lo mismo — el cuerpo flotante mandaba a la voz el
-texto CRUDO, y un motor español con texto crudo hace lo que puede:
+Pediste no quedarte a ciegas entre operación y operación. Cada X tiempo
+te llega esto, y te lo lee en voz alta si quieres:
 
-  🗣️ emoji  → lo lee por su NOMBRE: «cabeza parlante»
-  5m        → «5 metros»
-  DISCOUNT  → deletreado, letra por letra
+  🟢 Aquí sigo, en guardia y conectado.
+  📍 Tengo 1 posición abierta:
+     · EURUSD VENTA · -12.40 $
+  🎯 Hoy llevo 1 de 2 operaciones — me queda 1. Del día: -12.40 $.
+  ⛔ Lo que he rechazado hoy:
+     · GBPUSD: VETO — Noticia de ALTO impacto hace 15 min
 
-AHORA (y en pantalla no cambia nada, esto es solo la voz):
-  · fuera los emojis
-  · 5m → 5 minutos · H4 → 4 horas · GBPUSD → libra dólar
-  · DISCOUNT → «zona barata, de compra» · PREMIUM → «cara, de venta»
-  · CHoCH → «cambio de carácter» · displacement → «desplazamiento»
-  · el + se dice «más», y los · | — se vuelven PAUSA, no se tiran
-  · 1.85R → «1 coma 85 erres» · 0.5% → «0 coma 5 por ciento»
+Y si no ha pasado nada te lo dice igual: «No ha habido ninguna
+oportunidad todavía». Que es justo lo que pediste.
 
-«setup» NO se traduce: es palabra tuya y el motor la lee bien. Lo que se
-deletrea es el inglés largo en MAYÚSCULAS.
+💰 NO CUESTA UN CÉNTIMO. Todos esos datos ya están en tu nube: el parte
+se ARMA, no se PIENSA. Cero llamadas al modelo.
+
+TODO TUYO: se apaga, se cambia el cada-cuánto (mínimo 15 min, por
+defecto 60) y se puede limitar a tu horario de operar. Por defecto solo
+te lo manda mientras el Ejecutor puede operar.
+
+Y si algo del sistema no está bien —lleva rato sin latir, el gráfico
+está rancio, lo apagaste tú— te lo dice en el MISMO parte, no en otro
+aviso aparte.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
