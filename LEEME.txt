@@ -1,31 +1,48 @@
-APEX v7.138 — TRADING DESK
+APEX v7.141 — TRADING DESK
 =========================
 
-📋 EL PARTE DEL EJECUTOR — worker 5.155
+APEX v7.141 + worker 5.156 + Ejecutor v3.3
 
-Pediste no quedarte a ciegas entre operación y operación. Cada X tiempo
-te llega esto, y te lo lee en voz alta si quieres:
+🏦 MODO BANCO — que no tengas que desinstalar Apex para entrar en tu banco
+   Rey (14-09): «una de mis aplicaciones de banco no me deja hacer ninguna operación hasta
+   que desinstale Apex».
+   MEDIDO EN TU TELÉFONO, no adivinado:
+     · accesibilidad activa → com.reiniercainet.apex/RobertoManos
+     · dibujar encima → SYSTEM_ALERT_WINDOW: allow (funcionando)
+   Tus bancos (Inter, Neon, Mercado Pago, Caixa) NO miran qué hace Apex: miran que EXISTA
+   un permiso de accesibilidad encendido y que algo dibuje encima de la pantalla. Apex
+   tiene los dos.
+   Y el botón que ya había («apagar las manos») solo bajaba el interruptor de Apex — el
+   servicio de Android seguía encendido y el banco lo seguía viendo. Por eso la única
+   salida que te quedaba era desinstalar.
+   AHORA, de un toque en ⛑️ Sus ojos y manos: retira el cuerpo flotante, apaga el servicio
+   de accesibilidad DE VERDAD (disableSelf) y baja tu interruptor para que al volver nada
+   se encienda solo. Para devolvérselo: dos toques, cero reinstalaciones.
+   ⚠️ NO es automático a propósito: para detectar tu banco, Roberto tendría que PODER VER
+   tu banco, y solo ve WhatsApp y el marcador. Ése es el primero de los cuatro candados que
+   pactamos el 12-09 y no se toca. Hay banco que lo vigila.
 
-  🟢 Aquí sigo, en guardia y conectado.
-  📍 Tengo 1 posición abierta:
-     · EURUSD VENTA · -12.40 $
-  🎯 Hoy llevo 1 de 2 operaciones — me queda 1. Del día: -12.40 $.
-  ⛔ Lo que he rechazado hoy:
-     · GBPUSD: VETO — Noticia de ALTO impacto hace 15 min
+💰 LA COMISIÓN ENTRA EN EL LOTE (apagado de fábrica — lo enciendes tú)
+   Del forense de la venta EURUSD #381229541: el lote reparte tu riesgo SOLO entre los pips
+   del stop, y la comisión va POR LOTE. Con el stop fino el lote sube y la comisión se come
+   parte del riesgo pactado. Tus 5 perdedoras reales:
+     5,2 pips → −1,09R   ·   6,2 pips → −1,11R   ·   11,0 pips → −1,06R
+   Son 69,47 USD pagados por encima de lo que creías arriesgar.
+   MEDIDO EN EL LABORATORIO (EURUSD 15m, 31-mar→14-sep, 11.419 velas, tu config real):
+     control  +1.134,14  PF 2,273  96 ops  DD 3,00%
+     con esto +1.073,03  PF 2,294  96 ops  DD 2,83%   ← ni una operación menos
+   No gana más: hace que −1R sea −1R. Tu operación del 14-09 pasaría de 4,01 lotes y −1,11R
+   a 3,60 lotes y −1,00R.
+   Está en ⚙️ las reglas del Ejecutor, con su interruptor y con el número en tus manos.
 
-Y si no ha pasado nada te lo dice igual: «No ha habido ninguna
-oportunidad todavía». Que es justo lo que pediste.
+🧪 Y LO QUE EL LABORATORIO RECHAZÓ (para que quede escrito)
+   · el candado del H4 vivo en contra: +461,80 vs +1.134,14 (quita 21 operaciones)
+   · no perseguir un extremo ya barrido: −119,14 (se carga 79 de las 96)
+   Tu lectura de esa operación era correcta; la regla general que la habría evitado destruye
+   el sistema. Detalle en analisis/lab-14-09-tres-arreglos-EURUSD.md
 
-💰 NO CUESTA UN CÉNTIMO. Todos esos datos ya están en tu nube: el parte
-se ARMA, no se PIENSA. Cero llamadas al modelo.
-
-TODO TUYO: se apaga, se cambia el cada-cuánto (mínimo 15 min, por
-defecto 60) y se puede limitar a tu horario de operar. Por defecto solo
-te lo manda mientras el Ejecutor puede operar.
-
-Y si algo del sistema no está bien —lleva rato sin latir, el gráfico
-está rancio, lo apagaste tú— te lo dice en el MISMO parte, no en otro
-aviso aparte.
+🛡️ Bancos nuevos: test-el-modo-banco.cjs (7) · test-la-comision-entra-en-el-lote.cjs (8,
+   ejecuta el calc_lote real en Python con los números exactos de tu operación).
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

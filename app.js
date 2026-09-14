@@ -1395,6 +1395,15 @@ function ejecFormHTML(cfg){
     '<label style="font-size:.85em">hasta<input class="inp ia-ejec-hfin" type="time" value="'+esc(cfg.horaFin||"13:00")+'"></label>'+
     '<label style="font-size:.85em">Hora de<select class="inp ia-ejec-tz"><option value="America/New_York"'+(cfg.tz!=="America/Sao_Paulo"?" selected":"")+'>Nueva York (gráfico)</option><option value="America/Sao_Paulo"'+(cfg.tz==="America/Sao_Paulo"?" selected":"")+'>Brasil (tu reloj)</option></select></label>'+
     '<label style="font-size:.85em">Lote máximo<input class="inp ia-ejec-maxlote" type="number" step="0.01" min="0.01" max="50" value="'+esc(String(cfg.maxLote!=null?cfg.maxLote:1))+'"></label>'+
+    /* 💰 v7.141 — LA COMISIÓN ENTRA EN EL LOTE.
+       Del forense de la venta EURUSD del 14-09: el lote se reparte solo entre los pips del
+       stop, y la comisión va POR LOTE — así que con el stop fino el lote sube y la comisión
+       se come parte del riesgo pactado. Sus 5 perdedoras reales: 5,2p → −1,09R · 6,2p →
+       −1,11R · 11,0p → −1,06R (69,47 USD de más). Laboratorio del 14-09 sobre 11.419 velas:
+       las MISMAS 96 operaciones, PF 2,294 vs 2,273 y drawdown 2,83% vs 3,00%.
+       Viene APAGADO: no gana más dinero, hace que −1R sea −1R. Lo enciende Rey. */
+    '<label style="grid-column:1/3;font-size:.85em">💰 Contar la comisión al calcular el lote<select class="inp ia-ejec-comon"><option value="0"'+(cfg.contarComision?"":" selected")+'>No — como hasta ahora (una pérdida limpia sale a −1,1R)</option><option value="1"'+(cfg.contarComision?" selected":"")+'>Sí — que −1R sea −1R de verdad</option></select></label>'+
+    '<label style="font-size:.85em">Comisión por lote (ida y vuelta, $)<input class="inp ia-ejec-comlote" type="number" step="0.5" min="0" max="60" value="'+esc(String(cfg.comisionPorLote!=null?cfg.comisionPorLote:7))+'"></label>'+
     '<label style="grid-column:1/3;font-size:.85em">🛑 Veto (revisión ANTES de entrar)<select class="inp ia-ejec-veto"><option value="1"'+(cfg.veto!==false?" selected":"")+'>Activado — Roberto revisa noticias y contexto y puede frenar la entrada</option><option value="0"'+(cfg.veto===false?" selected":"")+'>Apagado — ejecuta directo con tus reglas</option></select></label>'+
     '<label style="font-size:.85em">Sin noticias fuertes (± minutos)<input class="inp ia-ejec-vetomin" type="number" step="5" min="5" max="120" value="'+esc(String(cfg.vetoNoticiasMin!=null?cfg.vetoNoticiasMin:15))+'"></label>'+
     /* 🎤 v7.91 — EL VETO DE RUEDAS DE PRENSA, A LA VISTA Y EN SUS MANOS.
@@ -1512,6 +1521,8 @@ function ejecLeerForm(root){
     horaFin:q("ia-ejec-hfin").value,
     tz:q("ia-ejec-tz").value,
     maxLote:parseFloat(q("ia-ejec-maxlote").value),
+    contarComision:q("ia-ejec-comon").value==="1",
+    comisionPorLote:parseFloat(q("ia-ejec-comlote").value),
     veto:q("ia-ejec-veto").value==="1",
     vetoNoticiasMin:parseInt(q("ia-ejec-vetomin").value,10),
     vetoRueda:q("ia-ejec-vrueda").value==="1",
@@ -10026,6 +10037,8 @@ function iaInit(){
           <button class="btn" id="ojoManosBtn" style="margin:14px 0 6px">⏳ …</button>
           <div class="note" style="text-align:left" id="ojoManosNota"></div>
           <button class="btn" id="ojoManosQuitar" style="margin:6px 0 0;display:none">🚪 Quitárselo del todo en Android</button>
+          <button class="btn" id="ojoBancoBtn" style="margin:10px 0 0">🏦 Modo banco — apártate un rato</button>
+          <div class="note" style="text-align:left;margin:6px 0 0" id="ojoBancoNota"></div>
           <div class="note" style="text-align:left;margin:10px 0 0;opacity:.8">Los dos se pueden <b>quitar cuando quieras</b> desde los ajustes de Android. Roberto se queda sin ese dato y sigue funcionando igual — nunca se cuelga por falta de un permiso.</div>
         </div>
         <div class="fl">🎬 Movimiento de Roberto</div>
@@ -11967,6 +11980,31 @@ async function ojosUI(){
        que solo toque lo que él pida. El interruptor está aquí, y debajo está escrito qué
        puede ver y qué NO — un permiso que no explica sus límites se concede a ciegas. */
     (async()=>{
+      /* 🏦 MODO BANCO — v7.141
+         Rey (14-09): «una de mis aplicaciones de banco no me deja hacer ninguna operación
+         hasta que desinstale Apex». Los bancos bloquean por DOS cosas: que haya cualquier
+         servicio de accesibilidad encendido, y que algo dibuje encima de la pantalla.
+         Apex tiene las dos. Y el botón de arriba solo baja el interruptor de Apex — el
+         servicio de Android seguía encendido y el banco lo seguía viendo. Por eso la única
+         salida que le quedaba era desinstalar. Esto lo apaga de verdad, de un toque. */
+      (function(){
+        const bb=$("#ojoBancoBtn"), bn=$("#ojoBancoNota");
+        if(!bb) return;
+        if(typeof P.modoBanco!=="function"){ bb.style.display="none"; if(bn) bn.style.display="none"; return; }
+        bn.innerHTML = "Tu banco no mira lo que hace Roberto: mira que <b>exista</b> un permiso de accesibilidad encendido y que algo dibuje encima de la pantalla. "
+          + "Esto le retira el cuerpo y le quita ese permiso <b>de verdad</b> — no hace falta desinstalar nada. Cuando termines, vuelves aquí y se lo devuelves.";
+        bb.onclick=async()=>{
+          bb.disabled=true;
+          try{
+            const r = await P.modoBanco();
+            toast("Roberto se apartó — ya puedes entrar en tu banco");
+            bn.innerHTML = "✅ <b>Apartado.</b> " + esc(String((r&&r.resumen)||"")) + ".<br>"
+              + "Entra en tu banco con tranquilidad. Cuando termines, dale arriba a <b>«Volver a encender sus manos»</b> y a tu interruptor del cuerpo flotante.";
+          }catch(e){ toast("No pude apartarlo"); }
+          bb.disabled=false;
+          setTimeout(ojosUI, 1200);
+        };
+      })();
       const btn=$("#ojoManosBtn"), nota=$("#ojoManosNota"), quitar=$("#ojoManosQuitar");
       if(!btn||!nota) return;
       if(typeof P.manosHay!=="function"){ btn.style.display="none"; nota.style.display="none"; if(quitar) quitar.style.display="none"; return; }
