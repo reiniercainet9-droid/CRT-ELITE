@@ -11021,6 +11021,30 @@ function oyeEscuchar(){
     }catch(_){}
   });
 
+  /* 🙉 v7.149 — QUITARLE A LA ORDEN EL SALUDO QUE ROBERTO ACABA DE DECIR.
+   Rastro real del 15-09: «TE ESCUCHO REY cual es mi ubicacion». El oído está abierto cuando
+   Roberto saluda, así que se oye a sí mismo. Apartar el micrófono para evitarlo es lo que
+   hacía los pitidos ([[apex-oye-roberto]]), y Apex sabe exactamente qué acaba de decir: se
+   quita del texto y ya.
+   ⚠️ Solo del PRINCIPIO y solo si coinciden 2 palabras seguidas o más: una sola («rey»,
+   «hola») puede ser casualidad y comerse lo que dijo Rey sería mucho peor que no hacer nada. */
+function sinElSaludo(orden, saludo){
+  try{
+    const limpia = (x)=>String(x||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+                      .replace(/[^a-z0-9ñ ]+/g," ").replace(/\s+/g," ").trim();
+    const sal = limpia(saludo).split(" ").filter(Boolean);
+    if(sal.length < 2) return orden;
+    /* las palabras de la orden, con dónde empieza cada una en el texto original */
+    const pal = [], re = /\S+/g; let m;
+    while((m = re.exec(orden)) !== null) pal.push({ w: limpia(m[0]), i: m.index });
+    let n = 0;
+    while(n < pal.length && n < sal.length + 2 && pal[n].w && sal.indexOf(pal[n].w) >= 0) n++;
+    if(n < 2) return orden;                       /* una sola coincidencia no basta */
+    if(n >= pal.length) return "";                /* solo se oyó a sí mismo */
+    return orden.slice(pal[n].i).trim();
+  }catch(_){ return orden; }
+}
+
   /* 🔊 v7.142 — LA ORDEN, POR EL MISMO OÍDO.
      El vigía la lee del micrófono que ya tenía abierto y la manda entera cuando Rey termina
      de hablar. Aquí se trata igual que si la hubiera dicho de un tirón: primero el cerebro
@@ -11029,8 +11053,16 @@ function oyeEscuchar(){
      eso nada de esto puede costarle un céntimo sin que él lo toque ([[apex-oye-roberto]]). */
   P.addListener("oyeOrden", (ev)=>{
     try{
-      const orden = String((ev && ev.orden) || "").trim();
+      let orden = String((ev && ev.orden) || "").trim();
       OIDO.desdeOye = false;
+      /* 🙉 v7.149 — fuera el saludo que Roberto acaba de decir (el micrófono se lo come) */
+      try{
+        if(OIDO.ultimoSaludo && (Date.now() - (OIDO.saludoTs||0)) < 60000){
+          const antes = orden;
+          orden = sinElSaludo(orden, OIDO.ultimoSaludo);
+          if(orden !== antes) oidoTraza("quitado mi propio saludo: «"+antes.slice(0,40)+"» → «"+orden.slice(0,40)+"»");
+        }
+      }catch(_){}
       if(!orden || orden.length < 2){
         oidoTraza("orden vacía: le llamó y no dijo nada más");
         try{ robCara("duda","¿me decías?"); }catch(_){}
@@ -15583,6 +15615,13 @@ function franjaDelDia(){
    El oído no puede abrirse ANTES de hablar: el micrófono oiría su propio «buenos días» y lo
    tomaría por la orden de Rey. */
 function saludarYLuegoEscuchar(hola, laCogeElOido){
+  /* 🙉 v7.149 — se apunta el saludo para poder QUITARLO de la orden. El 15-09 el micrófono
+     se comió «Te escucho, Rey» y lo metió dentro de lo que preguntó Rey. */
+  try{ OIDO.ultimoSaludo = String(hola||""); OIDO.saludoTs = Date.now(); }catch(_){}
+  /* 🚪 v7.151 — Y SE LE DICE AL OÍDO ANTES DE DECIRLO. Quitarle el saludo al texto después
+     llegaba tarde: el saludo ya había arrancado el reloj del silencio y la ventana se cerraba
+     antes de que Rey hablara. Con esto, oírse a sí mismo no cuenta como que habló Rey. */
+  try{ const PN = vigiaPuente(); if(PN && typeof PN.oyeNoCuentes==="function") PN.oyeNoCuentes({texto:String(hola||"")}); }catch(_){}
   /* 🚪 la puerta de la APK, escrita como en todas las demás: en el navegador esto es null
      y de aquí no pasa nada. La web es el respaldo de Rey y no se toca. */
   const PV = vozNativa();
@@ -15658,9 +15697,28 @@ function saludoAlLlamarle(){
   }catch(_){ return "Te escucho, Rey"; }
 }
 
-async function cerebroLocal(texto){
+async function cerebroLocal(texto, unaSola){
   try{
     const t = String(texto||"").trim();
+    /* 🧩 v7.149 — DOS PREGUNTAS EN UNA. Rey (15-09) preguntó «cuál es mi ubicación Y qué
+       temperatura hay aquí en Timbó». El cerebro local sabe las dos por separado, pero todo
+       va anclado ^...$ a propósito y «A y B» no casa con nada: le ofreció una tarjeta de
+       pago para algo que tenía gratis y en 3 ms.
+       ⚠️ SU LEY NO SE TOCA: solo se contesta si TODAS las partes son locales. Si una sola no
+       lo es, la frase ENTERA va a Roberto — jamás se contesta media pregunta ni se traga lo
+       que él quería pensado ([[apex-cerebro-local]]). */
+    if(!unaSola && /\sy\s/.test(t) && t.length <= 140){
+      const partes = t.split(/\s+y\s+/).map(x=>x.trim()).filter(x=>x.length>2);
+      if(partes.length >= 2 && partes.length <= 3){
+        const rs = [];
+        for(const p of partes){
+          const r = await cerebroLocal(p, true);
+          if(!r || !r.txt) { rs.length = 0; break; }      /* una sola que falle y va entera a Roberto */
+          rs.push(r.txt);
+        }
+        if(rs.length === partes.length) return {txt: rs.join("  ")};
+      }
+    }
     if(!t || t.length > 70) return null;              /* lo largo es conversación */
     if(LOCAL_JAMAS.test(t)) return null;              /* eso es para lo que existe Roberto */
     /* ⚠️ SOLO se cuentan los signos de CIERRE. En español una pregunta bien escrita lleva
@@ -15683,6 +15741,14 @@ async function cerebroLocal(texto){
          .replace(/^(?:cual es|cu[aá]l es)\s+/, "")
          .replace(/\s+(?:por favor|porfa)$/, "")
          .replace(/\s+/g, " ").trim();
+    /* 🗣️ v7.149 — LAS COLETILLAS DE HABLAR. Rey no dice «qué temperatura hay»: dice «qué
+       temperatura hay AQUÍ EN TIMBÓ», o «AHORA MISMO». Hablando se añaden y escribiendo no,
+       y no cambian la pregunta. Se quitan del final antes de comparar — igual que el
+       imperativo se quita de delante. */
+    l = l.replace(/\s+(?:ahora mismo|ahora|aqui|hoy|en este momento|por aqui)$/, "")
+         .replace(/\s+aqui en [a-z\s]{2,20}$/, "")
+         .replace(/\s+en este momento$/, "")
+         .trim();
     if(!l) return null;
     const P = (typeof vigiaPuente==="function") ? vigiaPuente() : null;
     const hayManos = !!(P && typeof P.apps==="function");
@@ -15714,7 +15780,9 @@ async function cerebroLocal(texto){
     }
 
     /* 🌦️ el tiempo */
-    if(/^(?:que tiempo (?:hace|va a hacer)(?: hoy| manana)?|como esta el (?:tiempo|clima)|va a llover(?: hoy| manana)?|esta lloviendo|el clima|el tiempo|dime el tiempo)$/.test(l)){
+    /* 🌡️ v7.149 — y la TEMPERATURA con sus palabras. Rey preguntó «qué temperatura hay» y
+       no casaba: solo estaba «qué tiempo hace». Son la misma respuesta. */
+    if(/^(?:que tiempo (?:hace|va a hacer)(?: hoy| manana)?|como esta el (?:tiempo|clima)|va a llover(?: hoy| manana)?|esta lloviendo|el clima|el tiempo|dime el tiempo|que temperatura (?:hace|hay|tenemos)|la temperatura|temperatura|cuantos grados (?:hace|hay|tenemos)|que calor hace|que frio hace)$/.test(l)){
       const c = await iaClimaTxt();
       if(!c) return null;
       return {txt:c.trim()};
@@ -15723,11 +15791,22 @@ async function cerebroLocal(texto){
     /* 📍 dónde está */
     /* ⚠️ ANCLADO. «dónde estoy» vive dentro de «¿dónde estoy FALLANDO?», y su banco cogió
        esa segunda contestando con su calle. Son dos preguntas que no se parecen en nada. */
-    if(/^(?:donde estoy|en donde estoy|que calle es esta|en que calle estoy|mi ubicacion|donde me encuentro)$/.test(l) && hayManos){
-      const r = (typeof P.sitioAhora==="function") ? await P.sitioAhora() : await P.sitio();
+    if(/^(?:donde estoy|en donde estoy|que calle es esta|en que calle estoy|mi ubicacion|mi ubicacion actual|donde me encuentro|en que lugar estoy|que direccion es esta|la ubicacion|ubicacion)$/.test(l) && hayManos){
+      /* 📍 v7.149 — SI EL GPS TODAVÍA NO TIENE SEÑAL, NO SE LE DEJA SIN RESPUESTA.
+         Medido en su teléfono el 15-09: la PRIMERA petición tras abrir Apex vuelve vacía
+         (el GPS está arrancando) y entonces esto devolvía null → tarjeta de pago por algo
+         que Apex sabía hace un minuto. Si la de ahora no llega, se usa la ÚLTIMA conocida y
+         se dice CUÁNDO fue: un dato viejo con su fecha es honrado; uno viejo disfrazado de
+         actual sería mentir ([[apex-roberto-no-inventa]]). */
+      let r = (typeof P.sitioAhora==="function") ? await P.sitioAhora() : await P.sitio();
+      let vieja = false;
+      if((!r||!r.hay) && typeof P.sitio==="function"){
+        try{ r = await P.sitio(); vieja = !!(r && r.hay); }catch(_){}
+      }
       if(!r||!r.hay) return null;
       const margen = r.precisionM>=1000 ? " (aprox., solo la ciudad)" : "";
-      return {txt:"📍 "+(r.direccion||r.sitio)+margen+"."};
+      const cuando = (vieja && r.haceMin>1) ? " (hace "+r.haceMin+" min: el GPS aún no tiene señal)" : "";
+      return {txt:"📍 "+(r.direccion||r.sitio)+margen+cuando+"."};
     }
 
     /* ⏯️ la música */

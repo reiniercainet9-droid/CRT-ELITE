@@ -1,35 +1,59 @@
-APEX v7.147 — TRADING DESK
+APEX v7.151 — TRADING DESK
 =========================
 
-📈 EL BOTÓN QUE TE LLEVA AL GRÁFICO, EN TU APP DE TRADINGVIEW (app 7.147)
+🗣️ LAS DOS COSAS QUE TE FALLARON AL PREGUNTARLE (app 7.149)
 
-Preguntaste si tocando la notificación ya te sale directo en la app de TradingView. No: te
-llevaba a Apex, al hilo del día — eso lo pediste tú el 28-08 («y a Apex, no a la web de
-TradingView»). Lo que faltaba era el salto desde ahí, y elegiste «lo que hay más el botón».
+Le preguntaste por tu ubicación y la temperatura y no te contestó. El rastro de tu teléfono
+dice que fallaron por DOS motivos distintos, y el oído no era ninguno de los dos: te oyó
+perfectamente las dos veces.
 
-Ahora, al aterrizar desde el aviso, debajo del día te sale una tarjeta 📈 Ver el gráfico con
-un botón por cada par que haya dado señal hoy. Se abre en TU APP de TradingView, en ese par.
+1) DOS PREGUNTAS EN UNA. Dijiste «cuál es mi ubicación Y qué temperatura hay aquí en Timbó».
+   Roberto sabe las dos por separado, pero todo va anclado palabra por palabra a propósito
+   (es lo que impide que se trague algo que tú querías pensado), y «A y B» no casaba con nada.
+   Ahora parte la frase y te contesta las dos.
+   ⚠️ Tu ley sigue igual de firme: SOLO contesta si TODAS las partes son de las gratis. Si una
+   sola necesita que Roberto piense, la frase ENTERA va a Roberto. Nunca media pregunta.
 
-· Si la app no acepta entrar al par, te deja en su portada Y TE LO DICE.
-· Si no estuviera instalada, te abre la web y también te lo dice.
-· No inventa pares: si el aviso no traía ninguno, sale un botón general.
+2) ROBERTO SE ESTABA OYENDO A SÍ MISMO. Esto es lo feo. En el rastro, a las 16:30:44, lo que
+   llegó fue: «TE ESCUCHO REY cual es mi ubicacion». El micrófono se comió su propio saludo y
+   lo metió dentro de tu pregunta. Con eso delante no casa nada.
+   No lo arreglo apartando el micrófono — eso es lo que hacía los pitidos. Apex sabe palabra
+   por palabra lo que Roberto acaba de decir, así que se lo quita del texto.
+   Y con freno: solo lo quita del principio y solo si coinciden 2 palabras seguidas o más.
+   «rey dime la hora» se queda entera. Comerse media pregunta tuya sería peor que no hacer nada.
 
-Antes esto no se podía («no se puede abrir la app nativa desde una PWA»). Era cierto cuando
-Apex era una web; hoy es una APK con su propio plugin, así que ya sí.
+3) Y TUS PALABRAS DE VERDAD. Ahora también entiende «qué temperatura hace», «cuántos grados
+   hace», «cuál es mi ubicación», y las coletillas que uno dice HABLANDO y no escribiendo:
+   «ahora mismo», «aquí», «aquí en Timbó».
 
-🔒 Y EL CANDADO DEL INDICADOR, REFORZADO
+Probado con tus frases exactas: 29 preguntas gratis reconocidas, y las 3 peligrosas
+(«¿dónde estoy y debería entrar ahora?») siguen yendo enteras a Roberto.
 
-Hoy te sobrescribí el indicador vivo con un backtest (revisión 160 → 161). Está restaurado y
-verificado byte a byte (revisión 162), tu gráfico lee bien y tus dos alarmas nunca dejaron de
-funcionar: van ancladas a la revisión 160, que no se tocó.
+4) Y UNA QUE SALIO PROBANDO EN TU TELEFONO: la PRIMERA vez que preguntas la ubicacion justo
+   despues de abrir Apex, el GPS todavia esta arrancando y volvia vacio -> no te contestaba
+   nada. Ahora, si la de ahora no llega, te da la ULTIMA conocida diciendote cuando fue:
+   «hace 3 min: el GPS aun no tiene señal». Un dato viejo con su hora es honrado; uno viejo
+   disfrazado de actual seria mentirte.
 
-La causa: `pine_open` NO abre ningún script — solo pega el texto de otro dentro del editor
-que ya estaba abierto. El editor seguía siendo tu indicador. El candado me avisó tres veces y
-yo lo desactivé para seguir. Eso es lo que estaba mal.
+🚪 Y LA DE VERDAD (7.151): LA VENTANA PARA HABLAR SE CERRABA ANTES DE QUE TÚ HABLARAS
 
-Ahora el candado tiene DOS cerraduras: el nombre del editor tiene que ser el que se dijo
-(sin nombre legible tampoco se pega), y además si el código cargado es tu indicador vivo no
-se pisa aunque el nombre cuadre. Con su banco, 9/9.
+Preguntaste si solo puedes pedirle una cosa a la vez. NO: dos ya funcionaban. Tu rastro dice
+qué pasó de verdad, a las 18:19:35:
+
+    quitado mi propio saludo: «te escucho rey» → «»
+    orden vacía: le llamó y no dijo nada más
+
+Lo ÚNICO que llegó fue el saludo de Roberto. Tú sí hablaste: no te dio tiempo. El micrófono
+está abierto mientras Roberto saluda, así que se oye a sí mismo; ese «te escucho rey» entraba
+como si hubieras hablado tú, arrancaba el reloj del silencio (1,6 segundos) y la ventana se
+cerraba con el aire todavía en tus pulmones.
+
+Lo de ayer (quitarle el saludo al texto) llegaba TARDE: le quitaba las palabras cuando la
+puerta ya estaba cerrada.
+
+Ahora Apex le dice al oído QUÉ VA A DECIR, justo antes de decirlo. Lo que coincida con eso no
+cuenta como que hablaste tú: ni arranca el reloj ni ocupa la orden. Si hablas encima, se queda
+solo tu parte. Y caduca a los 30 segundos, para que no se quede filtrando tus palabras.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

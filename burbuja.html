@@ -537,11 +537,17 @@
   function paraLaVoz(t){
     try{
       var x = String(t || "");
-      /* 🔇 fuera los emojis: el motor los lee por su NOMBRE y suelta «cabeza parlante»
-         en mitad de una alarma. En pantalla siguen todos — esto es solo para la voz. */
-      x = x.replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2190}-\u{21FF}\u{2B00}-\u{2BFF}\u{FE0F}\u{20E3}]/gu, " ");
-      /* los separadores de Rey marcan PAUSA: si se quitan a secas, todo suena de corrido */
+      /* los separadores de Rey marcan PAUSA: si se quitan a secas, todo suena de corrido.
+         VAN PRIMERO, antes de la criba. */
       x = x.replace(/\s*[·•]\s*/g, ", ").replace(/[—–]/g, ", ").replace(/\s*\|\s*/g, ", ");
+      /* 🔇 v7.148 — LISTA BLANCA, no lista negra. Iba tachando rangos de emoji y cada
+         uno nuevo se colaba; Rey seguía oyendo «cabeza parlante» y «portapapeles». Ahora pasa
+         solo lo que una persona lee en voz alta y el resto se va, incluido lo que inventen
+         mañana. En pantalla siguen todos: esto es solo para la voz. */
+      x = x.replace(/[^\p{L}\p{N}\s.,;:!¡?¿%$€£+\-/()'"º°ª]/gu, " ");
+      /* los «????» sueltos: el motor los dice uno a uno */
+      x = x.replace(/[?¿]{2,}/g, "?").replace(/[!¡]{2,}/g, "!")
+           .replace(/(?<=\s)[?¿!¡](?=\s)/g, " ").replace(/^[\s?¿!¡]+/, "");
       for (var i = 0; i < VOZ_NATURAL.length; i++) x = x.replace(VOZ_NATURAL[i][0], VOZ_NATURAL[i][1]);
       /* la pausa después de su nombre: un punto obliga a parar, una coma se pasa de largo */
       x = x.replace(/^Rey,\s+/, "Rey. ").replace(/^(Rey\.\s+[^:.]{2,40}):\s+/, "$1. ");
