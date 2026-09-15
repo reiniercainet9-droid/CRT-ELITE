@@ -1187,8 +1187,68 @@ async function abrirHiloDia(){
   iaGuardarConvs(); pintarIAChat();
   /* 🔊 leer el último aviso del día al aterrizar (voz opcional de Roberto) */
   try{ if(avHoy.length && IA.voz && IA.voz.on){ const u=avHoy[avHoy.length-1]; iaHablar((u.t||"Aviso")+". "+(u.b||""), -1); } }catch(_){}
+  /* 📈 v7.147 — y el botón para saltar al gráfico, con los pares que salieron hoy */
+  try{ tarjetaGrafico(avHoy); }catch(_){}
   try{ const m=$("#iaMsgs"); if(m) m.scrollTop=m.scrollHeight; }catch(_){}
 }
+/* 📈 v7.147 — EL SALTO AL GRÁFICO, EN SU APP.
+   Rey (15-09): «ya yo pinchando la notificación del gráfico me sale directo en la app de
+   TradingView o todavía?». No: el aviso lleva a Apex, al hilo del día — eso lo pidió él el
+   28-08 («y a Apex, no a la web de TradingView»). Lo que faltaba era el salto desde ahí, y
+   lo eligió así: «lo que hay más el botón».
+   ⚠️ La nota del 28-08 decía «no se puede abrir la app nativa desde una PWA». Era cierto
+   entonces; hoy Apex es un APK con plugin propio. Una limitación se caduca cuando cambia la
+   casa, no cuando cambia la gana.
+   Y dice lo que PASÓ, no lo que intentó: si la app no coge el enlace del par, avisa de que
+   le deja en la portada; si no está instalada, se abre la web. */
+function paresDeAvisos(avisos){
+  /* ⚠️ Un par NO es «seis letras en mayúsculas». Así, «Modelo: CONTINUACIÓN» ponía un botón
+     «MODELO» en su chat (lo cazó el banco). Una lista de palabras prohibidas no vale: mañana
+     sale otra. Un par se reconoce porque sus DOS mitades son divisas de verdad. */
+  const DIV = ["EUR","USD","GBP","JPY","CHF","CAD","AUD","NZD","XAU","XAG",
+               "MXN","SEK","NOK","DKK","PLN","ZAR","TRY","HKD","SGD","CNH"];
+  const vistos = [];
+  (avisos||[]).forEach(a=>{
+    const t = (String((a&&a.t)||"") + " " + String((a&&a.b)||"")).toUpperCase();
+    (t.match(/\b[A-Z]{6}\b/g)||[]).forEach(p=>{
+      if(DIV.indexOf(p.slice(0,3))<0 || DIV.indexOf(p.slice(3))<0) return;
+      if(vistos.indexOf(p)<0) vistos.push(p);
+    });
+  });
+  return vistos.slice(0,4);
+}
+async function abrirEnTradingView(par){
+  const P = (()=>{ try{ return vigiaPuente(); }catch(_){ return null; } })();
+  const web = "https://www.tradingview.com/chart/" + (par ? "?symbol=OANDA%3A"+encodeURIComponent(par) : "");
+  if(P && typeof P.abrirGraficoTV==="function"){
+    try{
+      const r = await P.abrirGraficoTV({ par: par||"" });
+      if(r && r.abierta && r.como==="grafico"){ toast("📈 TradingView"+(par?" · "+par:"")); return; }
+      if(r && r.abierta && r.como==="app"){ toast("📈 TradingView abierta (no entra al par sola)"); return; }
+      toast((r&&r.motivo) ? ("📈 "+r.motivo+" — te abro la web") : "📈 Te abro la web");
+    }catch(_){ }
+  }
+  try{ window.open(web,"_blank","noopener"); }catch(_){ location.href = web; }
+}
+function tarjetaGrafico(avisos){
+  const cont=$("#iaMsgs"); if(!cont) return;
+  cont.querySelectorAll(".ia-vergrafico").forEach(n=>n.remove());
+  const pares = paresDeAvisos(avisos);
+  const card=el("div","ia-tool ia-vergrafico");
+  card.innerHTML =
+    '<div class="ia-tool-h">📈 Ver el gráfico</div>'+
+    '<div class="ia-tool-d">Se abre en tu <b>app de TradingView</b>, no en el navegador.</div>'+
+    '<div class="ia-tool-bar">'+
+      (pares.length
+        ? pares.map(p=>'<button class="btn gold ia-tv-par" data-par="'+esc(p)+'">'+esc(p)+'</button>').join("")
+        : '<button class="btn gold ia-tv-par" data-par="">Abrir TradingView</button>')+
+    '</div>';
+  cont.appendChild(card);
+  card.querySelectorAll(".ia-tv-par").forEach(b=>{
+    b.onclick=()=>abrirEnTradingView(b.dataset.par||"");
+  });
+}
+
 /* Envía a Roberto un mensaje con BLOQUES arbitrarios (varias imágenes, documentos…)
    sin pasar por la caja de texto. Las imágenes NO se guardan en el historial del chat
    (solo el resumen), para no reventar el almacenamiento del teléfono. */
@@ -10905,7 +10965,10 @@ function oyeEscuchar(){
     try{
       const resto = String((ev && ev.resto) || "").trim();
       try{ if(navigator.vibrate) navigator.vibrate(40); }catch(_){}
-      oidoTraza("«oye Roberto»"+(resto?(" + «"+resto+"»"):""));
+      oidoTraza("«oye Roberto»"+(resto?(" + «"+resto+"»"):"")
+        +" · esperando="+((ev&&ev.esperando)?"si":"no")
+        +" · voz="+((IA.voz&&IA.voz.on)?"on":"OFF")
+        +" · puerta="+((typeof vozNativa==="function"&&vozNativa())?"si":"NO"));
       /* 👋 v7.126 — LE SALUDA COMO UNA PERSONA, y así Rey sabe que le está escuchando.
          Solo cuando le llama SIN orden: si ya pidió algo en la misma frase, saludarle antes
          de hacerlo sería hacerle esperar por educación. Cuesta cero: habla el teléfono. */
@@ -10923,7 +10986,10 @@ function oyeEscuchar(){
         OIDO.desdeOye = true;
         try{ robCara("saluda", hola.toLowerCase()); }catch(_){}
         try{ toast("🗣️ "+hola); }catch(_){}
-        saludarYLuegoEscuchar(hola);
+        /* 🔊 v7.142 — si el vigía dice que la orden la coge ÉL (por el micrófono que ya
+           tiene abierto), el saludo NO debe abrir otro al terminar: ese cambio de micrófono
+           es el hueco de 3 segundos donde se caía todo lo que Rey decía. */
+        saludarYLuegoEscuchar(hola, !!(ev && ev.esperando));
         return;
       }
       try{ robCara("escucha","¿sí, Rey?"); }catch(_){}
@@ -10941,11 +11007,45 @@ function oyeEscuchar(){
         })();
         return;
       }
-      /* ⚠️ aquí ya no se abre el oído: lo abre el saludo de arriba cuando termina de hablar
-         (v7.128). Esto queda por si algún día el saludo no llega a dispararse. */
+      /* 🔊 v7.142 — YA NO SE ABRE UN SEGUNDO MICRÓFONO.
+         Medido en su teléfono el 14-09: entre que el oído le oía y el micrófono del dictado
+         estaba listo pasaban 3 segundos, y la orden de Rey caía justo en ese hueco
+         («error 7: no te entendí» con la frase dicha del tirón). Ahora la orden la coge el
+         MISMO micrófono que ya estaba abierto y llega por «oyeOrden».
+         Si el vigía no dice que la está cogiendo él (teléfono viejo, o el oído apagado),
+         se abre el dictado como toda la vida: nunca dejarle sin forma de hablarle. */
       OIDO.desdeBurbuja = true;
       OIDO.desdeOye = true;
+      if(ev && ev.esperando){ oidoTraza("la orden la coge el mismo oído"); return; }
       try{ if(!OIDO.on) oidoEmpezar(); }catch(_){}
+    }catch(_){}
+  });
+
+  /* 🔊 v7.142 — LA ORDEN, POR EL MISMO OÍDO.
+     El vigía la lee del micrófono que ya tenía abierto y la manda entera cuando Rey termina
+     de hablar. Aquí se trata igual que si la hubiera dicho de un tirón: primero el cerebro
+     local (gratis) y, si no la coge, TARJETA — nunca se manda sola.
+     ⚠️ La tele también habla: que algo llegue por aquí no significa que lo dijera Rey, y por
+     eso nada de esto puede costarle un céntimo sin que él lo toque ([[apex-oye-roberto]]). */
+  P.addListener("oyeOrden", (ev)=>{
+    try{
+      const orden = String((ev && ev.orden) || "").trim();
+      OIDO.desdeOye = false;
+      if(!orden || orden.length < 2){
+        oidoTraza("orden vacía: le llamó y no dijo nada más");
+        try{ robCara("duda","¿me decías?"); }catch(_){}
+        try{ toast("Te llamé pero no te oí nada — llámame otra vez"); }catch(_){}
+        return;
+      }
+      oidoTraza("orden: "+orden);
+      (async()=>{
+        let ya=null;
+        try{ ya = await cerebroLocal(orden); }catch(e){ ya=null; try{ oidoTraza("cerebro local ROMPIÓ: "+e.message); }catch(_){} }
+        if(ya && ya.txt){ try{ oidoTraza("contestado gratis: "+String(ya.txt).slice(0,30)); }catch(_){} localResponder(orden, ya.txt); return; }
+        try{ oidoTraza("no lo cogió el cerebro local → tarjeta"); }catch(_){}
+        ofrecerLoOido(orden);
+        try{ robCara("espera","¿te lo mando?"); }catch(_){}
+      })();
     }catch(_){}
   });
 
@@ -15482,7 +15582,7 @@ function franjaDelDia(){
      3. un seguro de 6 s                          → jamás dejarle sin oído
    El oído no puede abrirse ANTES de hablar: el micrófono oiría su propio «buenos días» y lo
    tomaría por la orden de Rey. */
-function saludarYLuegoEscuchar(hola){
+function saludarYLuegoEscuchar(hola, laCogeElOido){
   /* 🚪 la puerta de la APK, escrita como en todas las demás: en el navegador esto es null
      y de aquí no pasa nada. La web es el respaldo de Rey y no se toca. */
   const PV = vozNativa();
@@ -15495,12 +15595,19 @@ function saludarYLuegoEscuchar(hola){
     try{ if(quitarIni && quitarIni.remove) quitarIni.remove(); }catch(_){}
     try{ if(quitarFin && quitarFin.remove) quitarFin.remove(); }catch(_){}
     try{ if(plazo) clearTimeout(plazo); }catch(_){}
-    try{ OIDO.desdeOye = true; if(!OIDO.on) oidoEmpezar(); }catch(_){}
+    /* 🔊 v7.142 — con el oído del vigía cogiendo la orden, aquí NO se abre nada: solo se
+       termina de saludar. Abrir un segundo micrófono era lo que perdía su orden. */
+    try{ OIDO.desdeOye = true; if(!laCogeElOido && !OIDO.on) oidoEmpezar(); }catch(_){}
   };
   if(!PV || typeof PV.vozHablar !== "function" || !(IA.voz && IA.voz.on)){
+    /* 🔎 v7.144 — si no va a sonar, que se sepa POR QUÉ. Rey vio el saludo escrito y no
+       oyó nada, y yo no tenía forma de saber si es que no se pidió, no sonó, o sonó y no le
+       llegó. Callarse sin dejar rastro es lo que me hizo teorizar en vano. */
+    try{ oidoTraza("saludo MUDO: "+(!PV?"sin puerta nativa":(typeof PV.vozHablar!=="function"?"sin vozHablar":"su interruptor de voz apagado"))); }catch(_){}
     setTimeout(unaVez, 350);          /* sin voz: no hay nada que esperar */
     return;
   }
+  try{ oidoTraza("saludo pedido: «"+String(hola).slice(0,30)+"»"); }catch(_){}
   const marca = "saludo-" + Date.now();
   const dura  = 1500 + String(hola||"").length * 120;   /* lo que puede durar la frase, con margen */
   /* 1º HABLAR — lo primero de todo, antes de cualquier preparativo */
@@ -15525,11 +15632,13 @@ function saludarYLuegoEscuchar(hola){
        El arranque del motor es imprevisible; el aviso de que ya está sonando, no. */
     quitarIni = PV.addListener("vozInicio", (ev)=>{
       try{ if(!ev || ev.marca !== marca) return; }catch(_){}
+      try{ oidoTraza("saludo SONANDO"); }catch(_){}
       try{ if(plazo) clearTimeout(plazo); }catch(_){}
       plazo = setTimeout(unaVez, dura);
     });
     quitarFin = PV.addListener("vozFin", (ev)=>{
       try{ if(!ev || ev.marca !== marca) return; }catch(_){}
+      try{ oidoTraza("saludo terminado"); }catch(_){}
       unaVez();                       /* el camino normal: ~1,8 s, y el oído se abre al acabar */
     });
   }catch(_){}
@@ -15559,8 +15668,22 @@ async function cerebroLocal(texto){
        lo cazó en la primera pasada: no cogeía ni «¿qué hora es?». */
     if((t.match(/\?/g)||[]).length > 1) return null;   /* dos preguntas ya no es una orden */
     /* y SIN ACENTOS: Rey escribe «avísame» y dicta «avisame», y las dos son lo mismo */
-    const l = t.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"")
+    let l = t.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"")
                .replace(/[¿?¡!.,]/g," ").replace(/\s+/g," ").trim();
+    /* 🗣️ v7.143 — HABLANDO NO SE DICE IGUAL QUE ESCRIBIENDO.
+       Rey le dijo «dime la hora» y Roberto no lo reconoció: las órdenes estaban ancladas a
+       «que hora es» / «la hora», y ninguna persona habla así. Le ofreció una tarjeta para
+       mandarlo al modelo — lento y de pago — cuando la respuesta la tenía en 3 ms y gratis.
+       Anclar sigue estando bien (es lo que impide que se trague algo que Rey quería
+       pensado); lo que faltaba era quitarle el imperativo de delante ANTES de comparar.
+       Así se arregla para TODAS las órdenes de golpe, no solo para la hora. */
+    l = l.replace(/^(?:oye\s+)?(?:roberto\s+)?(?:por favor\s+)?/, "")
+         .replace(/^(?:me\s+)?(?:puedes\s+|podrias\s+|podr[ií]as\s+)?(?:decir|dec[ií]rme|dime|dame|decime|dices|di)\s+/, "")
+         .replace(/^(?:quiero saber|sabes|necesito saber)\s+/, "")
+         .replace(/^(?:cual es|cu[aá]l es)\s+/, "")
+         .replace(/\s+(?:por favor|porfa)$/, "")
+         .replace(/\s+/g, " ").trim();
+    if(!l) return null;
     const P = (typeof vigiaPuente==="function") ? vigiaPuente() : null;
     const hayManos = !!(P && typeof P.apps==="function");
 
