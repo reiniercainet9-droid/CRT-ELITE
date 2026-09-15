@@ -1,59 +1,31 @@
-APEX v7.151 — TRADING DESK
+APEX v7.152 — TRADING DESK
 =========================
 
-🗣️ LAS DOS COSAS QUE TE FALLARON AL PREGUNTARLE (app 7.149)
+🏋️ ROBERTO SE PONE EL CHÁNDAL CUANDO TÚ ENTRENAS (app 7.152)
 
-Le preguntaste por tu ubicación y la temperatura y no te contestó. El rastro de tu teléfono
-dice que fallaron por DOS motivos distintos, y el oído no era ninguno de los dos: te oyó
-perfectamente las dos veces.
+Lo pediste el 07-09 y se aplazó porque tu templo estaba vacío. Ya no lo está: lo comprobé en
+tu teléfono — plan nivel 0 semana 1, TRES sesiones hechas (3,17 km · 4,5 km · 5 km), la semana
+cerrada 3/3, y tus dos alarmas vivas y encendidas: lunes y martes a las 05:00.
 
-1) DOS PREGUNTAS EN UNA. Dijiste «cuál es mi ubicación Y qué temperatura hay aquí en Timbó».
-   Roberto sabe las dos por separado, pero todo va anclado palabra por palabra a propósito
-   (es lo que impide que se trague algo que tú querías pensado), y «A y B» no casaba con nada.
-   Ahora parte la frase y te contesta las dos.
-   ⚠️ Tu ley sigue igual de firme: SOLO contesta si TODAS las partes son de las gratis. Si una
-   sola necesita que Roberto piense, la frase ENTERA va a Roberto. Nunca media pregunta.
+Así que se cumplió tu orden y empieza el paso que tú marcaste: PRIMERO SOLO LA ROPA, con los
+chándales que ya existen. Durante 2 horas desde que suena tu alarma del templo, Roberto lleva
+chándal — el de dentro de Apex Y el que ves flotando. Al terminar vuelve solo a lo que llevaba.
 
-2) ROBERTO SE ESTABA OYENDO A SÍ MISMO. Esto es lo feo. En el rastro, a las 16:30:44, lo que
-   llegó fue: «TE ESCUCHO REY cual es mi ubicacion». El micrófono se comió su propio saludo y
-   lo metió dentro de tu pregunta. Con eso delante no casa nada.
-   No lo arreglo apartando el micrófono — eso es lo que hacía los pitidos. Apex sabe palabra
-   por palabra lo que Roberto acaba de decir, así que se lo quita del texto.
-   Y con freno: solo lo quita del principio y solo si coinciden 2 palabras seguidas o más.
-   «rey dime la hora» se queda entera. Comerse media pregunta tuya sería peor que no hacer nada.
+· Sin accesorios encima del chándal: una gorra o una taza ahí es otra de esas «combinaciones
+  fatales» que tú señalaste. Los accesorios de deporte van en el paso siguiente, SI te gusta este.
+· Se ata a TU ALARMA, no al plan: el Roberto flotante no puede leer el templo (es otra página),
+  y es justo el que vas a ver mientras entrenas.
+· La ventana la guarda Android, así que sobrevive a que la página se reinicie: ni se queda en
+  chándal todo el día ni se lo quita a media sesión.
+· Y NO TOCA NADA MÁS. Tu ley del 07-09: el doble papel no deja ninguna función atrás. El banco
+  comprueba que elegir la ropa no roza alarmas, Ejecutor, gráfico ni vigía.
 
-3) Y TUS PALABRAS DE VERDAD. Ahora también entiende «qué temperatura hace», «cuántos grados
-   hace», «cuál es mi ubicación», y las coletillas que uno dice HABLANDO y no escribiendo:
-   «ahora mismo», «aquí», «aquí en Timbó».
+⚖️ Y TE DEVUELVO UNA DECISIÓN QUE TOMÉ YO POR TI
 
-Probado con tus frases exactas: 29 preguntas gratis reconocidas, y las 3 peligrosas
-(«¿dónde estoy y debería entrar ahora?») siguen yendo enteras a Roberto.
-
-4) Y UNA QUE SALIO PROBANDO EN TU TELEFONO: la PRIMERA vez que preguntas la ubicacion justo
-   despues de abrir Apex, el GPS todavia esta arrancando y volvia vacio -> no te contestaba
-   nada. Ahora, si la de ahora no llega, te da la ULTIMA conocida diciendote cuando fue:
-   «hace 3 min: el GPS aun no tiene señal». Un dato viejo con su hora es honrado; uno viejo
-   disfrazado de actual seria mentirte.
-
-🚪 Y LA DE VERDAD (7.151): LA VENTANA PARA HABLAR SE CERRABA ANTES DE QUE TÚ HABLARAS
-
-Preguntaste si solo puedes pedirle una cosa a la vez. NO: dos ya funcionaban. Tu rastro dice
-qué pasó de verdad, a las 18:19:35:
-
-    quitado mi propio saludo: «te escucho rey» → «»
-    orden vacía: le llamó y no dijo nada más
-
-Lo ÚNICO que llegó fue el saludo de Roberto. Tú sí hablaste: no te dio tiempo. El micrófono
-está abierto mientras Roberto saluda, así que se oye a sí mismo; ese «te escucho rey» entraba
-como si hubieras hablado tú, arrancaba el reloj del silencio (1,6 segundos) y la ventana se
-cerraba con el aire todavía en tus pulmones.
-
-Lo de ayer (quitarle el saludo al texto) llegaba TARDE: le quitaba las palabras cuando la
-puerta ya estaba cerrada.
-
-Ahora Apex le dice al oído QUÉ VA A DECIR, justo antes de decirlo. Lo que coincida con eso no
-cuenta como que hablaste tú: ni arranca el reloj ni ocupa la orden. Si hablas encima, se queda
-solo tu parte. Y caduca a los 30 segundos, para que no se quede filtrando tus palabras.
+En la lista de pendientes figuraba como «fallo mío por corregir» que Roberto no sonara fuera de
+Apex «para no molestarte». Lo comprobé EJECUTANDO en tu teléfono: ya estaba corregido desde la
+v7.15 — habla fuera de Apex y quien decide el silencio eres tú, con tu interruptor. Lo que
+seguía diciendo lo viejo era un comentario mío en el código y la propia lista. Los dos corregidos.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

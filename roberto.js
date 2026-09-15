@@ -1347,6 +1347,22 @@ ROB_CSS += "\n" + Object.keys(POSES).map(function (k) { return '[data-pose="' + 
     if (!t) return { ropa: "wallstreet", acc: "" };
     if (t.mes === 12 && t.num >= 24 && t.num <= 26) return { ropa: "navidad", acc: "" };
     if ((t.mes === 12 && t.num === 31) || (t.mes === 1 && t.num === 1)) return { ropa: "fiesta", acc: "" };
+    /* 🏋️ v7.152 — ENTRENANDO: CHÁNDAL. Dos horas desde que suena su alarma del templo.
+       La ventana la marca Java (sobrevive a que el WebView se reinicie) y la refrescan tanto
+       Apex como el cuerpo flotante en `Roberto.entrenaHasta`.
+       Se hace como lo pidió Rey (07-09): «primero SOLO la ropa, con los chándales que ya
+       existen, y lo ve en su teléfono; y SOLO SI LE GUSTA, los accesorios y que le hable».
+       Sin accesorio a propósito: una gorra o una taza sobre un chándal es otra de las
+       «combinaciones fatales» que él señaló. Eso va en el paso siguiente, si este le gusta.
+       ⚠️ Y toca SOLO la ropa: aquí dentro no hay alarmas, ni Ejecutor, ni gráfico, ni vigía.
+       Su ley del 07-09: el doble papel no puede dejar ninguna función atrás. */
+    try {
+      var hastaE = (typeof Roberto !== "undefined" && Roberto && Roberto.entrenaHasta) || 0;
+      if (hastaE > Date.now()) {
+        var CH = ["chandalAzul", "chandalGris", "chandalVerde"];
+        return { ropa: CH[((t.num || 1) + (t.mes || 1)) % CH.length], acc: "" };
+      }
+    } catch (_) {}
     var finde = (t.dia === "Sat" || t.dia === "Sun");
     /* el accesorio se elige más abajo, cuando ya se sabe QUÉ ROPA lleva puesta (v7.64) */
     var m = momentoDelDia(t);              /* 0 madrugada · 1 mercado · 2 tarde · 3 noche */
@@ -1662,7 +1678,35 @@ ROB_CSS += "\n" + Object.keys(POSES).map(function (k) { return '[data-pose="' + 
     vivas().forEach(function (i) { i.svg.classList.remove("rob-hablando"); });
   }
 
+  /* 🏋️ v7.152 — ¿ESTÁ REY ENTRENANDO? Se le pregunta a Java, que es quien tiene la
+     ventana guardada (y por eso sobrevive a que el WebView se reinicie).
+     VA AQUÍ, en roberto.js, porque es el ÚNICO fichero que comparten Apex y el cuerpo
+     flotante: así los dos Robertos llevan siempre la misma ropa. Ponerlo en cada uno sería
+     repetir el fallo de las tres voces con dos limpiezas.
+     Cada 5 minutos basta: la ventana dura 2 horas y esto no puede costar batería. */
+  function miraSiEntrena() {
+    try {
+      var P = (raiz.Capacitor && raiz.Capacitor.Plugins && raiz.Capacitor.Plugins.Apex) || null;
+      if (!P || typeof P.entrenaAhora !== "function") return;   /* en la web no existe: no pasa nada */
+      var p = P.entrenaAhora({});
+      if (!p || typeof p.then !== "function") return;
+      p.then(function (r) {
+        var antes = (raiz.Roberto && raiz.Roberto.entrenaHasta) || 0;
+        var ahora = (r && r.hasta) || 0;
+        if (raiz.Roberto) raiz.Roberto.entrenaHasta = ahora;
+        /* solo se le cambia la ropa si CRUZÓ la frontera: ni se disfraza cada 5 minutos ni
+           se queda en chándal cuando termina */
+        if ((antes > Date.now()) !== (ahora > Date.now())) { try { vestirSolo(); } catch (_) {} }
+      }).catch(function () {});
+    } catch (_) {}
+  }
+  try {
+    raiz.setTimeout(miraSiEntrena, 1500);
+    raiz.setInterval(miraSiEntrena, 300000);
+  } catch (_) {}
+
   raiz.Roberto = {
+    entrenaHasta: 0,
     /* 🔄 Roberto.mirar("espalda"|"frente") — se gira sobre su eje. El cambio de vista se
        hace EN MITAD del achatado (a los 240 ms), que es cuando está de canto y no se ve:
        si se cambiara antes o después, se vería el salto. */
