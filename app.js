@@ -1896,6 +1896,39 @@ async function ejecVerShot(id){
 /* 🧮 v6.23 (Rey): la evaluación del Ejecutor ahora tiene FILTRO DE PERÍODO — "hoy",
    "semana" o "todas" — con botones reales. Roberto recibe SOLO las operaciones del
    período elegido (con fecha) y lo dice en su evaluación. */
+/* 🔬 v7.155 — EL FORENSE DE UNA OPERACIÓN, pedido desde su fila del Diario.
+   Rey: «que pueda hacer los análisis de las operaciones COMO LAS HAGO CONTIGO, CON EL MÁS
+   MÍNIMO DETALLE». El trabajo lo hace el worker (/ejec/forense, v5.160): junta la operación
+   con LA alarma que la disparó y con cómo llegó él ese día, y se lo pide a Roberto con el
+   listón del 14-09 y sus seis partes.
+   💳 Se guarda por ticket: la primera vez cuesta, releerlo es gratis — y se lo digo. */
+async function ejecForense(ticket){
+  const tk=String(ticket||"").replace(/[^0-9]/g,"");
+  if(!tk){ toast("Esa operación no tiene número de ticket"); return; }
+  if(!nubeUrl()){ toast("Configura el puente (⚙️)"); return; }
+  const a=load(K.ejec,{trades:{}});
+  const t=(a.trades||{})[tk]||{};
+  const titulo=(t.dir==="buy"?"COMPRA":t.dir==="sell"?"VENTA":String(t.dir||""))+" "+(t.sym||"")
+    +(t.tsOut?(" del "+new Date(t.tsOut).toLocaleDateString("es",{day:"2-digit",month:"2-digit"})):"");
+  toast("🔬 Roberto está estudiando esa operación…");
+  let d=null;
+  try{
+    const r=await fetch(nubeUrl()+"/ejec/forense?ticket="+encodeURIComponent(tk),{cache:"no-store"});
+    d=await r.json();
+  }catch(e){ d={ok:false,error:"sin conexión"}; }
+  if(!d||!d.ok){
+    toast("No pude hacer el forense: "+((d&&d.error)||"error"));
+    return;
+  }
+  if(typeof abrirIA==="function") abrirIA();
+  iaTemaChat("🔬 Forense de operaciones");
+  const c=iaConvAct();
+  c.msgs.push({role:"user",content:"🔬 Hazme el forense de la "+titulo+" (ticket "+tk+")"});
+  c.msgs.push({role:"assistant",content:String(d.texto||"")
+    +"\n\n_·  Este forense queda guardado: puedes volver a abrirlo sin que cueste nada. Si quieres uno nuevo, pídemelo por aquí._"});
+  iaGuardarConvs(); pintarIAChat();
+  toast(d.guardado?"🔬 Forense (ya lo tenía hecho — gratis)":"🔬 Forense listo");
+}
 function ejecEvaluarRoberto(per){
   per = per==="hoy"||per==="semana"||per==="todas" ? per : "todas";
   let ts=ejecCerradas();
@@ -3189,6 +3222,8 @@ async function renderEjecutor(){
             esc(new Date(t.tsOut).toTimeString().slice(0,5))+' · <b>'+esc((t.dir==="buy"?"COMPRA":t.dir==="sell"?"VENTA":String(t.dir||""))+" "+(t.sym||""))+'</b> lote '+t.lote+' → '+esc(t.motivo||"")+' '+((t.pl||0)>=0?"🟢 +$":"🔴 −$")+Math.abs(t.pl||0).toFixed(2)+(t.r!=null?" ("+t.r+"R)":"")+(t.grado?' · '+esc(String(t.grado)):"")+
             ' <button class="btn ej-shot" data-id="'+esc(String(t.shot||""))+'" style="padding:2px 8px;font-size:.85em">📸 entrada</button>'+
             ' <button class="btn ej-shot" data-id="'+esc(String(t.shotCierre||("ejecC"+t.ticket)))+'" style="padding:2px 8px;font-size:.85em">📸 cierre</button>'+
+            /* 🔬 v7.155 — el punto 2 de su 80/20: el análisis al detalle de ESTA operación */
+            ' <button class="btn ej-forense" data-tk="'+esc(String(t.ticket||""))+'" style="padding:2px 8px;font-size:.85em">🔬 Forense</button>'+
             (t.ficha?('<div style="opacity:.95;margin-top:4px;font-size:.9em">'+esc(t.ficha)+'</div>'):"")+
             (t.lectura?('<div style="opacity:.9;margin-top:4px">🎓 <i>'+esc(t.lectura)+'</i></div>'):"")+
           '</div>').join("")+'</div>').join("")+
@@ -3308,6 +3343,7 @@ async function renderEjecutor(){
   const bevS=$("#ejEvalSem"); if(bevS) bevS.onclick=()=>ejecEvaluarRoberto("semana");
   const bevT=$("#ejEvalTodo"); if(bevT) bevT.onclick=()=>ejecEvaluarRoberto("todas");
   cont.querySelectorAll(".ej-shot").forEach(b=>{ b.onclick=()=>ejecVerShot(b.dataset.id); });
+  cont.querySelectorAll(".ej-forense").forEach(b=>{ b.onclick=()=>ejecForense(b.dataset.tk); });
   /* 🗑️ borrar un MES del archivo (decisión de Rey, con confirmación; Roberto también puede
      con la herramienta limpiar_diario_ejecutor, que siempre pasa por la tarjeta de aprobación) */
   cont.querySelectorAll(".ej-delmes").forEach(b=>{ b.onclick=async(e)=>{

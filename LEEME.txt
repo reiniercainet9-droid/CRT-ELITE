@@ -1,34 +1,41 @@
-APEX v7.154 — TRADING DESK
+APEX v7.155 — TRADING DESK
 =========================
 
-🔬 EL FORENSE DE UNA OPERACIÓN (worker 5.160) — la mitad del punto 2
+🔬 EL FORENSE DE UNA OPERACIÓN — ya se puede pedir, y ya no sale cojo
+(app 7.155 · worker 5.161 · 15-09-2026 noche)
 
-Pediste que Roberto analice «como las hago contigo, con el más mínimo detalle». El listón lo
-pusiste tú: el forense del 14-09, del que salieron el barrido de la H4, el cambio interno 66
-minutos antes y el candado que ve el giro y no frena.
+Esto es el punto 2️⃣ de tu 80/20, cerrado por los dos lados.
+Tus palabras: «que pueda hacer los análisis del Ejecutor y los de las operaciones
+COMO LAS HAGO CONTIGO, CON EL MÁS MÍNIMO DETALLE».
 
-Lo que había NO daba para eso: la lección del cierre juzga bien pero está capada a 45 palabras
-(es el cuerpo de una notificación), y «Que lo juzgue Roberto» juzga LA SERIE, no UNA operación.
+🔬 EL BOTÓN
+En 📓 Diario del Ejecutor, cada operación tiene ahora un tercer botón al lado de
+📸 entrada y 📸 cierre: **🔬 Forense**.
+Lo tocas y Roberto te hace el análisis completo de ESA operación, en seis partes:
+  🧾 la operación · 🗺️ qué decía el gráfico · ⚙️ por qué entró
+  🎛️ cómo se gestionó · ⚖️ el juicio · 🎯 qué hacer
+El listón es el análisis del 14-09, el de la venta de −$276. No es un resumen.
+La respuesta aterriza EN EL CHAT, para que la releas y le preguntes encima.
 
-Ahora hay un expediente por operación, armado con lo que EXISTE:
-· tus números verificados de MT5 (entrada, stop, objetivo, salida, riesgo, R, motivo del cierre)
-· LA ALARMA que la disparó, con el panel del indicador DE ESE MOMENTO (misma par, dentro de los
-  30 minutos anteriores — ni de otro par ni de hace hora y media)
-· cómo llegaste ese día (tu cruce vida↔trading)
-Y lo que no haya, Roberto DICE que no lo tiene. No lo rellena.
+💳 Y NO GASTA SOLO
+Cada forense queda guardado por operación. La primera vez cuesta una llamada;
+volver a abrirlo es gratis, y te lo digo en el aviso.
 
-Y el listón: SEIS partes obligatorias — la operación · qué decía el gráfico · por qué entró ·
-cómo se gestionó · el juicio · qué hacer. Con cinco reglas duras, entre ellas:
-· se juzga la EJECUCIÓN, no el resultado (una ganadora puede estar mal hecha)
-· mirar si el objetivo era DECORATIVO (si la salida por tiempo estaba más cerca que el TP,
-  nunca pudo llegar — es lo que pasó en tu operación de hoy: TP a 3,32R y el techo H4 a 1R)
-· nada de tocar una regla sin medirla antes (tu Ley 37)
+🗂️ LO QUE ARREGLÉ AL PROBARLO DE VERDAD
+Probé el forense con tu COMPRA de EURUSD de hoy, contra la nube en vivo.
+Salió bien… y COJO. Te lo dijo el propio Roberto: «no tengo la alarma de esta
+entrada — el registro solo guarda las últimas 12 y ésta ya salió de rango».
+Sin la alarma no hay «qué decía el gráfico» ni «por qué entró»: dos de las seis
+partes se caen.
+El fallo no era del forense, era de CUÁNDO buscaba la prueba: días después, en un
+registro que rota cada pocas horas.
+Ahora la alarma se guarda EN EL MOMENTO DE ENTRAR, con su ticket (400 días), y al
+cerrar viaja DENTRO de la operación archivada, que aguanta 1000 operaciones.
+De aquí en adelante ningún forense tuyo se quedará ciego.
+⚠️ Las operaciones de ANTES de esta versión pueden no tener la alarma guardada.
+Cuando pase, Roberto te lo dirá en vez de inventársela.
 
-Las cuentas no se las pido al modelo: se calculan aquí y se le dan hechas. Un modelo haciendo
-aritmética con pips es un error gratis, y un número torcido te hace estudiar una operación que
-no existió. Comprobado con tus dos operaciones reales: 9/9.
-
-⏳ Falta el botón en Apex para pedirlo. Va en la siguiente.
+🛡️ Bancos: el del forense pasa de 9 a 14 · nuevo «el botón del forense» 6/6.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
