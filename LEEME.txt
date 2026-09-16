@@ -1,4 +1,4 @@
-APEX v7.162 — TRADING DESK
+APEX v7.163 — TRADING DESK
 =========================
 
 🕯️ LAS CAPTURAS YA SE PUEDEN ESTUDIAR
@@ -11,9 +11,11 @@ Tres causas, dos mías:
 · el latido esperaba 150 s antes de resucitar → ahora 40 s;
 · la espera entre intentos crecía al cuadrado y solo se reiniciaba con un tipo de fallo: con otros se clavaba en 30 s y ahí se quedaba TODO EL DÍA. Eso es lo de «un día sí y otro no»: no se rompía, se DEGRADABA. Ahora se topa en 8 s y vuelve a cero en cuanto te oye;
 · y el reconocedor de Google se pudre con las horas → relevo limpio cada 25 min, antes de que se degrade.
+Esto hay que verlo en la calle, no aquí: mañana dime si te oyó a la primera.
 
 🔎 LA TABLA DEJA DE SER UNA HILERA SIN FIN
 Buscador que entiende lo que escribirías de verdad: «11/09», «septiembre», «sep», «2026», «ganados», «lunes». Tope de filas con «ver más». Y el total sigue siendo el de TODO lo encontrado, no el de lo que cabe en pantalla — si no, mentiría.
+Probándolo en tu teléfono salieron dos cosas más: con menos de 4 letras («202», «09») enganchaba todo y parecía roto; y en tu Diario, que tiene 0 operaciones porque las del Ejecutor no son tuyas, el cartel te mandaba a probar otro término cuando lo que pasa es que ahí no hay ni una fila. Las dos arregladas.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

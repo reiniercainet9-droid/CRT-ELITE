@@ -3224,7 +3224,9 @@ function resFiltraFilas(filas, txt){
       /* fecha en cualquiera de sus formas: 11/09 · 11-09 · 2026-09-11 */
       const dd=String(d.getDate()).padStart(2,"0"), mm=String(d.getMonth()+1).padStart(2,"0"), yy=String(d.getFullYear());
       if((dd+"/"+mm).indexOf(q)>=0 || (dd+"-"+mm).indexOf(q)>=0) return true;
-      if((yy+"-"+mm+"-"+dd).indexOf(q)>=0) return true;
+      /* ⚠️ con menos de 4 letras esto se dispara solo: «202», «09» o «-» cazó todo lo de
+         2026 y parecía que el buscador no filtraba. La fecha entera pide 4 o más. */
+      if(q.length>=4 && (yy+"-"+mm+"-"+dd).indexOf(q)>=0) return true;
       if(yy.indexOf(q)>=0 && q.length>=4) return true;
       /* el mes por su nombre, entero o empezado: «septiembre» o «sep» */
       const nm=MES[d.getMonth()];
@@ -3489,7 +3491,12 @@ function resPinta(id, ops, dinero){
      búsqueda pertenece al detalle. */
   const hayMas = filas.length > TOPE;
   const visibles = hayMas ? filas.slice(0, TOPE) : filas;
-  const buscador =
+  /* 🧹 v7.162 — SI NO HAY NADA REGISTRADO, NO HAY NADA QUE BUSCAR.
+     Su Diario tiene 0 operaciones (las del Ejecutor no son suyas, y él lo dijo). Con el
+     buscador puesto, escribir «septiembre» devolvía «Nada con septiembre, prueba con el
+     día o el mes» — y eso le manda a buscar el término bueno cuando el problema es que
+     ahí no hay ni una fila. Un cartel que apunta al sitio equivocado cuesta tiempo suyo. */
+  const buscador = (todasF.length === 0) ? "" :
     '<div style="display:flex;gap:6px;align-items:center;margin:8px 0 2px">'+
       '<input class="inp res-busca" placeholder="🔎 Busca: 11/09 · septiembre · 2026 · ganados" value="'+esc(busca)+'" style="flex:1;font-size:.86em;padding:6px 9px">'+
       (busca?'<button class="btn res-busca-x" style="padding:4px 9px;font-size:.85em">✕</button>':"")+
