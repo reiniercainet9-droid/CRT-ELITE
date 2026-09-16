@@ -29,6 +29,7 @@ const K = {
   shots:"crtelite_shots_v1",
   vents:"crtelite_ventanas_v1",
   plansem:"crtelite_plansem_v1",
+  guardia:"crtelite_guardia_v1",   /* 🛡️ v7.160 — el guardián de la disciplina */
   plan:"crtelite_plan_v1",
   vered:"crtelite_vered_v1",
   ejec:"crtelite_ejectrades_v1"
@@ -52,6 +53,9 @@ const NUBE_KEYS = ["crtelite_trades_v2","crtelite_cuentas_v3","crtelite_reminder
      CADA aparato: copiarlo callaría avisos que en el otro nunca salieron) y
      `crtelite_iachat_v3` (rastro de una migración vieja, no guarda nada vivo). */
   "crtelite_plan_v1", "crtelite_vered_v1", "crtelite_robertolog_v3", "crtelite_iaurl_v3",
+  /* 🛡️ v7.160 — lo que Rey decidió que NO se le exija es una decisión suya: si no
+     viajara, al cambiar de teléfono volverían a salirle exigencias que él ya quitó. */
+  "crtelite_guardia_v1",
   /* 🏛️ v7.85 — EL TEMPLO ENTERO, QUE SE HABÍA QUEDADO FUERA. Rey (09-09): "lo de la sección
      nueva del templo no está subiendo… intenté actualizar la web y la sección se quedó
      intacta". No era la actualización: la web y la APK tienen almacenes SEPARADOS, y como
@@ -91,6 +95,9 @@ const NUBE_NOMBRES = {
   "crtelite_shots_v1":"tus capturas de pantalla",
   "crtelite_ventanas_v1":"tus ventanas y killzones",
   "crtelite_plansem_v1":"tu plan de la semana",
+  /* 🛡️ v7.160 — en el respaldo se ve con su nombre, no en crudo: cuando Rey abra la
+     lista tiene que entender QUÉ es cada cosa suya ([[apex-nube-solo-lo-que-importa]]). */
+  "crtelite_guardia_v1":"lo que Roberto te exige (y lo que le dijiste que no)",
   "crtelite_iaconvs_v3":"vuestros chats",
   "crtelite_iaact_v3":"el chat abierto",
   "crtelite_ejectrades_v1":"las operaciones del Ejecutor",
@@ -647,6 +654,150 @@ function iaHitos(){
     if(!due.length) return "[🗺️ HITOS DE REVISIÓN: ningún chip pide revisión todavía — los datos aún no acumulan lo suficiente desde la última vez.]";
     return "[🗺️ HITOS DE REVISIÓN (tu deber de vigía de los datos: TÚ le dices a Rey CUÁNDO toca revisar cada chip): YA ES HORA de:\n"+due.join("\n")+"\nSUGIÉRESELO con naturalidad en un momento oportuno de la charla ('Rey, ya toca pasar por el 🎓 Simulacro: llevas 12 operaciones nuevas…') — sin interrumpir algo urgente y sin repetirlo en cada mensaje. Al abrir él ese chip, su hito se reinicia solo.]";
   }catch(_){ return ""; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════════
+   🛡️ EL GUARDIÁN DE LA DISCIPLINA — v7.160 (16-09-2026)
+   ──────────────────────────────────────────────────────────────────────────────────
+   Rey: «¿por qué no me notifica y me EXIGE las cosas que debo hacer y no he hecho?
+   Ahí está la disciplina, la estructura — no en solo avisarme mediante los avisos
+   programados: es estar pendiente de si lo cumplo o no, y exigirme cuando deba».
+
+   Lo que había (iaDatosSueltos, iaPendientes) solo viajaba DENTRO del contexto de un chat:
+   existía si Rey hablaba primero, y salía «si encajaba en la charla». Eso es esperar.
+
+   Esto MIRA SOLO y le pone delante lo que no ha hecho, con su número y con el botón.
+   · 💳 no gasta nada: es una cuenta local, sin llamar al modelo.
+   · 🚫 nada obligatorio: se apaga entero o exigencia por exigencia.
+   · 👀 si está todo al día, NO dice nada.
+   · 🤖 no se inventa: cada exigencia sale de un dato contado.
+   ══════════════════════════════════════════════════════════════════════════════════ */
+const GUARDIA_DEF = { on:true, hora:"20:00", quitadas:[] };
+function guardiaCfg(){ const c=load(K.guardia, null); return Object.assign({}, GUARDIA_DEF, c||{}); }
+function guardiaGuardar(c){ save(K.guardia, Object.assign({}, guardiaCfg(), c||{})); }
+
+/* Cuántos días hace del último trade de un libro (null = nunca hubo ninguno) */
+function guardiaDiasDesde(modo){
+  try{
+    const l=(Array.isArray(TRADES)?TRADES:[]).filter(t=>t && (t.modo||"real")===modo && t.fecha);
+    if(!l.length) return null;
+    const ult=l.map(t=>t.fecha).sort().pop();
+    return Math.floor((Date.now()-new Date(ult+"T12:00:00").getTime())/86400000);
+  }catch(_){ return null; }
+}
+
+/* 📋 LAS EXIGENCIAS. Cada una: qué falta, POR QUÉ importa (con su número) y qué hacer.
+   El texto lo escribo yo, no la IA: así no cuesta un céntimo y no puede inventarse nada. */
+function guardiaHuecos(){
+  const out=[];
+  const cfg=guardiaCfg();
+  const quitada=(id)=>(cfg.quitadas||[]).indexOf(id)>=0;
+  try{
+    const todos=(Array.isArray(TRADES)?TRADES:[]);
+    const bt=todos.filter(t=>t && t.modo==="backtest");
+    const reales=todos.filter(t=>t && (t.modo||"real")==="real");
+
+    /* 1) BACKTESTING — la que él puso de ejemplo, y la más dura a propósito */
+    if(!quitada("backtest")){
+      if(!bt.length){
+        out.push({ id:"backtest", urg:3, tit:"No has registrado ni UNA operación en backtesting",
+          txt:"Llevas "+reales.length+" operación(es) reales registradas y **cero** de backtesting. Sin backtesting no tienes datos propios: estás operando con la confianza que te dan "+reales.length+" casos, y con "+reales.length+" casos no se puede saber si un sistema gana o pierde. El laboratorio del 16-09 necesitó 49 para decir algo, y tu propia Ley 37 pide 30 mínimo.",
+          acc:"backtest", bot:"🎬 Registrar backtest" });
+      }else{
+        const d=guardiaDiasDesde("backtest");
+        if(bt.length<30) out.push({ id:"backtest", urg:2, tit:"Te faltan "+(30-bt.length)+" operaciones de backtesting",
+          txt:"Tienes **"+bt.length+" de 30**. Tu Ley 37 dice que nada se decide con menos de 30 casos — y eso te incluye a ti, no solo al Ejecutor."+(d!=null&&d>3?(" El último fue hace "+d+" días."):""),
+          acc:"backtest", bot:"🎬 Registrar backtest" });
+        else if(d!=null && d>7) out.push({ id:"backtest", urg:1, tit:"Hace "+d+" días que no haces backtesting",
+          txt:"Tienes "+bt.length+" registrados y llevas "+d+" días sin añadir ninguno. El backtesting no es para empezar: es para seguir teniendo datos cuando el mercado cambia.",
+          acc:"backtest", bot:"🎬 Registrar backtest" });
+      }
+    }
+
+    /* 2) DATOS SUELTOS — su regla: cero datos sueltos */
+    if(!quitada("huecos")){
+      const CAMPOS=[["setup","setup"],["ventana","ventana"],["zona","zona"],["poi","POI"]];
+      const conHueco=todos.filter(t=>t && !t.abierta && (t.r==null||t.r==="" || CAMPOS.some(([k])=>t[k]==null||t[k]==="")));
+      if(conHueco.length) out.push({ id:"huecos", urg:2, tit:conHueco.length+" operación(es) con datos sueltos",
+        txt:"Tu regla es **cero datos sueltos**: sin setup, zona o POI, esas operaciones no sirven para ningún análisis futuro — ni tuyo ni de Roberto. Son "+conHueco.length+" de "+todos.length+".",
+        acc:"huecos", bot:"📒 Ir al Diario" });
+    }
+
+    /* 3) LO QUE DEJÓ A MEDIAS */
+    if(!quitada("revisar")){
+      const p=(IA.convs||[]).filter(c=>c && c.revisar && c.msgs && c.msgs.length);
+      if(p.length) out.push({ id:"revisar", urg:1, tit:p.length+" cosa(s) marcadas «por revisar»",
+        txt:"Las dejaste a medias y siguen ahí: "+p.slice(0,3).map(c=>"«"+iaTit(c)+"»").join(", ")+(p.length>3?" y "+(p.length-3)+" más":"")+".",
+        acc:"revisar", bot:"🔍 Verlas" });
+    }
+
+    /* 4) EL PLAN DE LA SEMANA */
+    if(!quitada("plansem")){
+      const hayPlan = PLANSEM && (PLANSEM.pares || PLANSEM.texto || PLANSEM.bias);
+      if(!hayPlan) out.push({ id:"plansem", urg:2, tit:"No tienes plan de la semana escrito",
+        txt:"Operar sin plan escrito es decidir en caliente. Si no está escrito, no se puede comprobar después si lo cumpliste — y sin eso no hay disciplina que medir.",
+        acc:"plansem", bot:"🗓️ Escribirlo" });
+    }
+  }catch(_){}
+  out.sort((a,b)=>b.urg-a.urg);
+  return out;
+}
+
+/* 🛡️ LA TARJETA. Si no hay nada que exigir, NO SE PINTA: lo que está bien no se anuncia. */
+function guardiaPinta(){
+  try{
+    const cont=$("#guardiaCaja"); if(!cont) return;
+    const cfg=guardiaCfg();
+    if(!cfg.on){ cont.innerHTML=""; return; }
+    const h=guardiaHuecos();
+    if(!h.length){ cont.innerHTML=""; return; }
+    const urgTxt=(u)=>u>=3?"🔴":u===2?"🟠":"🟡";
+    cont.innerHTML='<div class="card" style="border-color:var(--gold)">'+
+      '<b>🛡️ Roberto te está exigiendo '+h.length+' cosa'+(h.length>1?"s":"")+'</b>'+
+      '<div class="desc" style="margin:4px 0 10px;font-size:12px">No son avisos programados: es lo que <b>no has hecho</b>, contado de tus propios registros. Nada de esto gasta créditos.</div>'+
+      h.map(x=>'<div style="margin:10px 0;padding:9px;border-radius:10px;background:rgba(255,255,255,.04)">'+
+        '<div style="font-weight:700">'+urgTxt(x.urg)+' '+esc(x.tit)+'</div>'+
+        '<div class="desc" style="margin:5px 0 8px;font-size:12.5px;line-height:1.45">'+esc(x.txt).replace(/\*\*(.+?)\*\*/g,"<b>$1</b>")+'</div>'+
+        '<div style="display:flex;gap:6px;flex-wrap:wrap">'+
+          '<button class="btn gold guardia-ir" data-acc="'+esc(x.acc)+'" style="padding:4px 10px;font-size:.85em">'+esc(x.bot)+'</button>'+
+          '<button class="btn guardia-no" data-id="'+esc(x.id)+'" style="padding:4px 10px;font-size:.85em">🔕 No me lo exijas</button>'+
+        '</div></div>').join("")+
+      '</div>';
+    cont.querySelectorAll(".guardia-ir").forEach(b=>{ b.onclick=()=>guardiaIr(b.dataset.acc); });
+    cont.querySelectorAll(".guardia-no").forEach(b=>{ b.onclick=async()=>{
+      if(!await preguntar("Roberto dejará de exigirte esto. Puedes volver a encenderlo en ⚙️.",{titulo:"🔕 ¿Quitar esta exigencia?",si:"Quitar"})) return;
+      const c=guardiaCfg(); const q=(c.quitadas||[]).slice(); if(q.indexOf(b.dataset.id)<0) q.push(b.dataset.id);
+      guardiaGuardar({quitadas:q}); guardiaPinta(); toast("Quitada — se vuelve a poner en ⚙️");
+    }; });
+  }catch(e){ console.log("[apex] guardia:", e.message); }
+}
+function guardiaIr(acc){
+  try{
+    if(acc==="backtest"){ CTX.modo="backtest"; save(K.ctx,CTX); irDestino("diario"); toast("🎬 Libro de backtesting — registra la vela"); }
+    else if(acc==="huecos"){ irDestino("diario"); }
+    else if(acc==="revisar"){ if(typeof abrirIA==="function") abrirIA(); }
+    else if(acc==="plansem"){ irDestino("analisis"); }
+  }catch(_){}
+}
+
+/* ⏰ Y UNA VEZ AL DÍA, EL AVISO — por el reloj de Android, que suena sin internet y sin
+   gastar nada. Va con un id reservado (guardia0) para que no choque con los suyos. */
+async function guardiaAlReloj(){
+  try{
+    const P=(typeof vigiaPuente==="function")?vigiaPuente():null;
+    if(!P || typeof P.programarAvisos!=="function") return;
+    const cfg=guardiaCfg();
+    const h=cfg.on ? guardiaHuecos() : [];
+    const avisos=[];
+    if(h.length){
+      const x=h[0];
+      avisos.push({ id:"guardia0", tit:"🛡️ "+x.tit,
+        msg:String(x.txt).replace(/\*\*/g,"").slice(0,220)+" — ábrelo en Apex y hazlo.",
+        tipo:"normal", hora:String(cfg.hora||"20:00"), dias:"1,2,3,4,5,6,7" });
+    }
+    /* "todos" incluye guardia0 SIEMPRE: si hoy no hay nada que exigir, su despertador se va */
+    await P.programarAvisos({ avisos: avisos, todos: ["guardia0"] });
+  }catch(_){}
 }
 
 /* 📋 v6.33 — VIGILANTE DE DATOS SUELTOS: la regla de Rey es "ningún dato suelto — todo
@@ -3531,10 +3682,24 @@ function ofrecerLoOido(texto){
   }catch(_){}
 }
 
+/* 🗂️ v7.160 — busca (o crea) el chat de un tema SIN cambiar al que Rey está mirando.
+   `iaTemaChat` sirve para cuando ÉL pide algo: le lleva allí. Esto es para cuando ROBERTO
+   deja algo: tiene que ir a su sitio y esperar, no secuestrarle la pantalla. */
+function iaConvDeTema(titulo){
+  try{
+    const hoy=new Date().toDateString();
+    let c=IA.convs.find(x=>x.t===titulo && new Date(x.ts).toDateString()===hoy);
+    if(!c){ c={ id:iaNuevoId(), t:titulo, ts:Date.now(), msgs:[] }; IA.convs.unshift(c); }
+    return c;
+  }catch(_){ return null; }
+}
 function ofrecerEnChat(accion, titulo, texto){
   try{
-    const c=iaConvAct(); if(!c) return;
     const A=IA_ACCIONES[accion]; if(!A) return;
+    /* 🗂️ v7.160 — a SU chat si lo tiene; si no, al que esté abierto (las de respuesta) */
+    const enSuSitio = !!A.tema;
+    const c = enSuSitio ? iaConvDeTema(A.tema) : iaConvAct();
+    if(!c) return;
     /* si ya hay una oferta igual sin tocar, no se apila otra */
     if(c.msgs.some(m=>m && m.oferta===accion)) return;
     c.msgs.push({ role:"assistant", oferta:accion, content:titulo+" — "+texto,
@@ -3546,7 +3711,12 @@ function ofrecerEnChat(accion, titulo, texto){
               tocar, que es peor. */
            '<div class="ia-acc"><button class="ia-acc-b gold" data-acc="'+esc(accion)+'">'+esc(A.t)+'</button></div>'+
            '<div class="ia-mem-pie" style="margin-top:8px">No gasta nada hasta que lo toques.</div></div>' });
-    iaGuardarConvs(); pintarIAChat();
+    iaGuardarConvs();
+    /* si la tarjeta fue a SU chat y Rey está en otro, se le avisa: si no, se la perdería.
+       El banner ya sabe llevarle allí de un toque. */
+    const abierta = (typeof iaConvAct==="function") && iaConvAct() && iaConvAct().id===c.id;
+    if(enSuSitio && !abierta){ try{ mostrarBannerRoberto(titulo+" — te lo dejé en «"+A.tema+"»"); }catch(_){} }
+    pintarIAChat();
   }catch(_){}
 }
 
@@ -5830,12 +6000,16 @@ async function hoyCargarCtx(){
 }
 function renderHoy(){
   const body=$("#hoyBody"); if(!body) return;
+  /* 🛡️ v7.160 — lo que Roberto le EXIGE va lo primero de todo. Rey (16-09): «las cosas pasan
+     desapercibidas… ahí está la disciplina, la estructura». Si no hay nada que exigir, esta
+     caja se queda vacía y no ocupa ni una línea. */
   const now=new Date();
   const fBR=new Intl.DateTimeFormat("es",{timeZone:"America/Sao_Paulo",weekday:"long",day:"2-digit",month:"long"}).format(now);
   const hBR=new Intl.DateTimeFormat("es",{timeZone:"America/Sao_Paulo",hour:"2-digit",minute:"2-digit",hour12:true}).format(now);
   const hNY=new Intl.DateTimeFormat("es",{timeZone:"America/New_York",hour:"2-digit",minute:"2-digit",hour12:true}).format(now);
   const ny=horaNY(); const abierto=forexAbierto(ny); const vent=ventanaActiva(); const prox=proximaVentana();
   let h="";
+  h+='<div id="guardiaCaja"></div>';
 
   /* ── 1. RELOJ + VENTANA ── */
   const estado = !abierto ? `<span class="hoy-pill bad">🔒 Forex cerrado</span>`
@@ -5923,6 +6097,9 @@ function renderHoy(){
   </div>`;
 
   body.innerHTML=h;
+  /* 🛡️ v7.160 — y se pinta lo que le falta (o nada, si está al día) */
+  try{ guardiaPinta(); }catch(e){ console.log('[apex] guardia:', e.message); }
+  try{ guardiaAlReloj(); }catch(_){}
   const on=(id,fn)=>{ const b=$("#"+id); if(b) b.onclick=fn; };
   on("hoyChk",()=>irA("checklist"));
   on("hoyPlan",()=>irA("arranque"));
@@ -7042,6 +7219,8 @@ function renderDiario(){
           ${t.nota?`<div class="trade-n">${esc(t.nota)}</div>`:""}
           <div class="trade-act">
             <button class="ta" data-a="ver">Ver</button>
+            <!-- 🔬 v7.160 — el cirujano también en SUS operaciones y su backtesting (Rey, 16-09) -->
+            <button class="ta" data-a="forense">🔬 Forense</button>
             <button class="ta" data-a="edit">Editar</button>
             <button class="ta" data-a="exp">Exportar</button>
             <button class="ta danger" data-a="del">Borrar</button>
@@ -7050,6 +7229,7 @@ function renderDiario(){
           btn.onclick=async(e)=>{ e.stopPropagation();
             const a=btn.dataset.a;
             if(a==="ver") verTrade(t.id);
+            else if(a==="forense") miForense(t.id);
             else if(a==="edit") editarTrade(t.id);
             else if(a==="exp") exportarUno(t.id);
             else if(a==="del"){ if(await preguntar("Se borra del Diario y no se puede deshacer.",{titulo:"🗑️ ¿Borrar este trade?",si:"Borrar",peligro:true})){ TRADES=TRADES.filter(x=>x.id!==t.id); save(K.trades,TRADES); refrescarDiarioCtx(); toast("Trade borrado"); } }
@@ -7060,6 +7240,40 @@ function renderDiario(){
       });
     }
   }
+}
+
+/* 🔬 v7.160 — EL FORENSE DE UNA OPERACIÓN SUYA (real o de backtesting).
+   Rey (16-09): «¿el botón del cirujano también está en mi backtesting y mis operaciones
+   reales? Porque deberían estar y bien funcionando».
+   El del Ejecutor juzga a un robot que sigue reglas. Éste le juzga A ÉL: su criterio, su
+   disciplina y su ejecución. Por eso manda lo que el robot no tiene — setup, confluencias,
+   zona, POI, emoción, si rompió el plan, MAE/MFE.
+   💳 Se guarda por operación: la primera vez cuesta, releerlo es gratis, y se lo digo. */
+async function miForense(id){
+  const t=(TRADES||[]).find(x=>x && x.id===id);
+  if(!t){ toast("No encuentro esa operación"); return; }
+  if(!nubeUrl()){ toast("Configura el puente (⚙️)"); return; }
+  const esBT = String(t.modo||"")==="backtest";
+  const titulo=(t.par||"?")+" "+(t.dir||"")+" · "+(t.fecha||"")+(esBT?" · backtest":"");
+  toast("🔬 Roberto está estudiando esa operación…");
+  let d=null;
+  try{
+    const r=await fetch(nubeUrl()+"/mi/forense",{method:"POST",
+      headers:{"content-type":"application/json"},
+      body:JSON.stringify({ trade:t })});
+    d=await r.json();
+  }catch(e){ d={ok:false,error:"sin conexión"}; }
+  if(!d||!d.ok){ toast("No pude hacer el forense: "+((d&&d.error)||"error")); return; }
+  if(typeof abrirIA==="function") abrirIA();
+  /* 🗂️ cada cosa en su sitio: el forense de SUS operaciones tiene su propio chat, separado
+     del del Ejecutor. Es lo que pidió el 16-09 y no se mezcla. */
+  iaTemaChat(esBT?"🔬 Forense de mi backtesting":"🔬 Forense de mis operaciones");
+  const c=iaConvAct();
+  c.msgs.push({role:"user",content:"🔬 Hazme el forense de mi operación: "+titulo});
+  c.msgs.push({role:"assistant",content:String(d.texto||"")
+    +"\n\n_·  Queda guardado: puedes volver a abrirlo sin que cueste nada._"});
+  iaGuardarConvs(); pintarIAChat();
+  toast(d.guardado?"🔬 Forense (ya lo tenía hecho — gratis)":"🔬 Forense listo");
 }
 
 /* ---------- DETALLE (modal) ---------- */
@@ -15325,7 +15539,12 @@ const IA_ACCIONES = {
   reintentar:{ t:"↻ Probar otra vez",          fn:()=>iaReintentarEnvio() },
   /* 🎟️ v7.99 — lo que antes se mandaba solo ahora espera en una tarjeta. Estas son las
      acciones que esas tarjetas pueden disparar, y solo las dispara el dedo de Rey. */
-  parte:     { t:"🌅 Dame el parte del día",   fn:()=>parteMatutino() }
+  /* 🗂️ v7.160 — CADA OFERTA, EN SU CHAT. Rey (16-09): «el parte del día salió en el
+     análisis semanal… eso no es organización ni estructura como habíamos quedado».
+     `tema` dice DÓNDE vive esta tarjeta. Las que no lo llevan son respuestas a lo que él
+     acaba de hacer (reenviar, continuar, recargar, lo que se oyó) y ésas SÍ van donde está:
+     moverlas sería el mismo fallo al revés. */
+  parte:     { t:"🌅 Dame el parte del día", tema:"🌅 Parte del día", fn:()=>parteMatutino() }
 };
 /* Pinta los botones de un mensaje que los lleve.
    RETROCOMPATIBLE: los avisos de fallo guardados por versiones anteriores no traen el

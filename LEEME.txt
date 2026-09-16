@@ -1,49 +1,53 @@
-APEX v7.159 — TRADING DESK
+APEX v7.160 — TRADING DESK
 =========================
 
-🎛️ LA GESTIÓN DE CADA OPERACIÓN, EN TU SECCIÓN
-(app 7.159 · Ejecutor v3.5 · 16-09-2026)
+🛡️ ROBERTO TE EXIGE · 🔬 EL CIRUJANO EN LO TUYO · 🗂️ CADA COSA EN SU SITIO
+(app 7.160 · worker 5.164 · 16-09-2026)
 
-Tres reglas deciden CUÁNDO SE CIERRA una operación ya abierta. Hasta hoy vivían
-clavadas dentro del programa de la PC: no se podían ver ni cambiar. Tu ley del
-10-09: «todas las reglas del Ejecutor deben ser configurables».
-Y el laboratorio de hoy midió que son las tres que más mueven el resultado.
+💾 PRIMERO: LO QUE NO SE GUARDABA
+Dijiste: «configuro la sección del Ejecutor, le doy guardar y no se guardan; pongo
+2R y salida en D y al tocar guardar vuelve a cero y a H4».
+La causa: la nube tiene una LISTA BLANCA y lo que no está escrito allí LO TIRA EN
+SILENCIO. Puse las cinco casillas en Apex y me dejé sus cinco líneas en la nube.
+Arreglado — y el banco nuevo ya no prueba cinco casillas: comprueba LOS 29 ajustes
+de tu formulario, uno a uno, y además que el Ejecutor de la PC los busque con el
+mismo nombre. Si algún día añado la número 30 y me olvido, se pone rojo antes de
+que tú lo descubras tocando guardar.
+⚠️ Esto está en el worker 5.164: hasta que no lo subas, sigue sin guardarse.
 
-Están en ⚙️ Tus reglas → «🎛️ Cómo gestiona cada operación».
+🛡️ ROBERTO TE EXIGE
+Tus palabras: «¿por qué no me notifica y me EXIGE las cosas que debo hacer y no he
+hecho? Ahí está la disciplina, la estructura».
+Lo que había solo viajaba dentro del contexto de un chat: existía si tú hablabas
+primero y salía «si encajaba en la charla». Eso es esperar, no exigir.
+Ahora, lo PRIMERO que ves al abrir Apex, con tu número delante:
+  🔴 No has registrado ni UNA operación en backtesting
+     Llevas 13 reales y CERO de backtesting. Con 13 casos no se puede saber si un
+     sistema gana o pierde. Tu Ley 37 pide 30.
+     [🎬 Registrar backtest]  [🔕 No me lo exijas]
+También: datos sueltos en el Diario · lo que dejaste «por revisar» · si no tienes
+plan de la semana escrito.
+· No gasta un céntimo: es una cuenta local, no llama al modelo.
+· Nada obligatorio: se apaga entero o exigencia por exigencia.
+· Si está todo al día, NO dice nada.
+· Y una vez al día te lo recuerda por el reloj de Android.
 
-🛡️ MOVER EL STOP A LA ENTRADA — Sí/No, y a cuántos R
-Con Sí, al llegar a ese beneficio el stop sube a tu entrada y esa operación ya no
-puede perder. Con No es TODO O NADA: o el objetivo o el stop.
-📊 Medido (EURUSD, 49 entradas): quitarlo da más por operación (0,50R contra
-0,33R) pero deja la MITAD de operaciones, porque la que sigue abierta bloquea la
-siguiente señal.
+🔬 EL CIRUJANO, TAMBIÉN EN LO TUYO
+Preguntaste si el forense estaba en tu backtesting y tus operaciones reales.
+NO ESTABA: solo en el Diario del Ejecutor. Ahora hay botón 🔬 Forense en cada
+operación tuya, real y de backtesting.
+Y no es el mismo análisis: el del Ejecutor juzga a un robot que sigue reglas; éste
+TE JUZGA A TI. Por eso manda lo que el robot no tiene: setup, confluencias, zona,
+POI, cómo te sentías, si rompiste el plan, MAE/MFE.
+Con una regla dentro: «si ganó rompiendo su plan, eso NO es una buena operación».
+Cada uno en su chat, separados del Ejecutor.
 
-⏱ CERRAR AL NUEVO EXTREMO — Sí/No, y de qué vela (H1 · H4 · D)
-📊 De las que cerró este reloj, el extremo estaba a 0,12R de mediana cuando
-entraste, y después el precio siguió hasta 1,95R. Te deja 1,92R en la mesa por
-operación. Quitarlo fue el cambio que más mejoró los números.
-⚠️ El 04-09 esto estaba en H1 sin que se pudiera ver, y te costó 2,19R en un día.
+🗂️ CADA COSA EN SU SITIO
+El parte del día te salió en el análisis semanal porque las tarjetas caían en el
+chat que tuvieras abierto. Ahora cada una declara su sitio y aterriza ahí; si estás
+en otro chat, te avisa y de un toque te lleva.
 
-🎯 OBJETIVO EN R — 0 = el que mande el indicador
-TU INDICADOR NO SE TOCA: el Ejecutor recoloca el objetivo sobre tu precio real de
-entrada y tu stop.
-📊 1,5R se alcanza 2 de cada 3 veces · 2R, 1 de cada 2 · 3R solo 1 de cada 4.
-Comisión: 16,2% con 1,5R contra 8,5% con 2,5R.
-🧪 La mejor combinación medida en EURUSD: objetivo 2R + stop a la entrada SÍ +
-reloj NO. En GBPUSD solo hubo 9 operaciones: ahí no hay dato que valga.
-
-🛡️ DOS COSAS QUE TE PROTEGEN
-· De fábrica son EXACTAMENTE los que tienes hoy (BE sí a 1R · reloj sí en H4 ·
-  objetivo 0). Guardar sin tocar nada no cambia nada. Hay banco que lo ata.
-· Un Apex viejo no te borra estos ajustes: si no los ve, los deja como estaban.
-
-🧮 Y LO QUE EL LABORATORIO DIJO DE TU CUENTA
-Tus 13 operaciones reales: −0,67R = −$193 sobre un balance de $49.798 = −0,39%.
-En el mismo período el laboratorio da +0,26R/op y tú −0,05R/op: la diferencia son
-0,8 errores típicos, o sea que CABE EN EL AZAR de 12 operaciones. No hay avería.
-El deslizamiento de entrada es +1,28% de cada R: no te cuesta nada.
-
-🛡️ Banco nuevo «la gestión está en sus manos» 11/11.
+🛡️ Bancos nuevos: «lo que guarda se guarda» 4/4 · «Roberto te exige» 8/8.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
