@@ -1220,6 +1220,23 @@ async function abrirHiloDia(){
    casa, no cuando cambia la gana.
    Y dice lo que PASÓ, no lo que intentó: si la app no coge el enlace del par, avisa de que
    le deja en la portada; si no está instalada, se abre la web. */
+/* 🎯 v7.157 — EL PAR **Y SU FASE**, tal como los mandó el worker con la alarma.
+   Rey (16-09): «las alarmas no me llevan al gráfico ni vi nada de botón».
+   El botón existía… pero se construía con `data-par` y SIN `data-tf`: aunque lo hubiera
+   pulsado, habría abierto el gráfico sin la temporalidad de la fase, que es justo lo que él
+   pidió el 15-09 (mayor si espera liquidez · 15m si es el MSS · 5m en el gatillo).
+   Aquí se lee lo que el aviso TRAE (sym + tvint); rebuscar el par en el texto es el último
+   recurso, para los avisos viejos que no lo llevan. */
+function grafDeAvisos(avisos){
+  const out = [];
+  (avisos||[]).slice().reverse().forEach(a=>{
+    const par = String((a&&a.sym)||"").toUpperCase().replace(/[^A-Z]/g,"");
+    if(par.length!==6) return;
+    if(out.some(x=>x.par===par)) return;
+    out.push({ par, tf: String((a&&a.tvint)||""), que: String((a&&a.faseQue)||"") });
+  });
+  return out.slice(0,4);
+}
 function paresDeAvisos(avisos){
   /* ⚠️ Un par NO es «seis letras en mayúsculas». Así, «Modelo: CONTINUACIÓN» ponía un botón
      «MODELO» en su chat (lo cazó el banco). Una lista de palabras prohibidas no vale: mañana
@@ -1270,15 +1287,20 @@ async function abrirEnTradingView(par, tf){
 function tarjetaGrafico(avisos){
   const cont=$("#iaMsgs"); if(!cont) return;
   cont.querySelectorAll(".ia-vergrafico").forEach(n=>n.remove());
-  const pares = paresDeAvisos(avisos);
+  /* 🎯 v7.157 — primero lo que el aviso TRAE (par + fase); si no trae, se rebusca en el
+     texto, que es lo único que había antes y por eso el botón nunca llevaba temporalidad. */
+  let gs = grafDeAvisos(avisos);
+  if(!gs.length) gs = paresDeAvisos(avisos).map(p=>({ par:p, tf:"", que:"" }));
+  const nomTF = (tf)=> !tf ? "" : (tf==="240"?"4H":(tf==="D"?"D":(tf==="W"?"S":tf+"m")));
   const card=el("div","ia-tool ia-vergrafico");
   card.innerHTML =
     '<div class="ia-tool-h">📈 Ver el gráfico</div>'+
-    '<div class="ia-tool-d">Se abre en tu <b>app de TradingView</b>, no en el navegador.</div>'+
+    '<div class="ia-tool-d">Se abre en tu <b>app de TradingView</b>, en la temporalidad de la fase.</div>'+
     '<div class="ia-tool-bar">'+
-      (pares.length
-        ? pares.map(p=>'<button class="btn gold ia-tv-par" data-par="'+esc(p)+'">'+esc(p)+'</button>').join("")
-        : '<button class="btn gold ia-tv-par" data-par="">Abrir TradingView</button>')+
+      (gs.length
+        ? gs.map(g=>'<button class="btn gold ia-tv-par" data-par="'+esc(g.par)+'" data-tf="'+esc(g.tf)+'"'
+            + (g.que?(' title="'+esc(g.que)+'"'):"") + '>'+esc(g.par)+(g.tf?(' · '+esc(nomTF(g.tf))):"")+'</button>').join("")
+        : '<button class="btn gold ia-tv-par" data-par="" data-tf="">Abrir TradingView</button>')+
     '</div>';
   cont.appendChild(card);
   card.querySelectorAll(".ia-tv-par").forEach(b=>{
@@ -12510,16 +12532,31 @@ function robSemaforo(){
       try{ robDecir("Roberto", "Ya tienes luz verde, Rey: pasó " + (ROB_SEM.motivo||"el peligro") + ". Puedes operar con normalidad.", {gesto:"aprueba"}); }catch(_){}
       clearTimeout(_robTDespeja);
       _robTDespeja = setTimeout(()=>{ try{ const g=$("#fab"); if(g) g.classList.remove("despejado"); robSemaforoFuera(""); }catch(_){} }, 6000);
-    } else if(p && ROB_SEM.activo && f && !f.classList.contains("alerta")){
-      /* sigue el peligro pero algo le quitó el rojo (un gesto, un repintado): se repone */
-      f.classList.add("alerta"); robSemaforoFuera("rojo");
+    } else if(p && ROB_SEM.activo){
+      /* sigue el peligro: se repone en los DOS cuerpos.
+         🚦 v7.157 — antes esto solo miraba al de DENTRO, y solo repintaba si al de dentro
+         le habían quitado el rojo. El de FUERA puede nacer a mitad de una noticia (Rey lo
+         apaga y lo enciende, o Android lo recrea) y nacía sin luz para siempre. La luz de
+         fuera se manda en cada vuelta: cuesta nada y no puede quedarse apagada. */
+      if(f && !f.classList.contains("alerta")) f.classList.add("alerta");
+      robSemaforoFuera("rojo");
     }
   }catch(_){}
 }
 /* y el de FUERA, que es el mismo (ley de Rey del 02-09) */
 function robSemaforoFuera(luz){
   try{
-    if(window.Apex && Apex.semaforo) { Apex.semaforo({ luz: luz }); return; }
+    /* 🚦 v7.157 — AQUÍ ESTABA LA AVERÍA DE SU LUZ. Rey (16-09): «estaba en tiempo de
+       noticias y Roberto no estuvo con la luz roja, y ahora dijo ya tienes luz verde pero
+       NO PUSO luz verde». Y tenía razón: esto preguntaba por un objeto que NO EXISTE — el
+       plugin colgado de la ventana. En todo app.js el plugin se llama `Capacitor.Plugins.Apex`;
+       el nombre malo salía UNA SOLA VEZ, justo aquí (y por eso el banco no deja que vuelva a
+       escribirse, ni en un comentario). La luz de fuera no funcionó NI UNA VEZ desde la
+       v7.60. La VOZ sí, porque va por otro camino, y por eso oyó el verde sin verlo.
+       El respaldo de abajo tampoco podía salvarlo: burbujaSemaforo() vive en burbuja.html,
+       no en esta página ([[apex-declarar-no-es-dar]]). */
+    const P = (window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.Apex) || null;
+    if(P && typeof P.semaforo === "function"){ P.semaforo({ luz: luz || "" }); return; }
     if(typeof burbujaSemaforo === "function") burbujaSemaforo(luz);
   }catch(_){}
 }

@@ -1,31 +1,45 @@
-APEX v7.156 — TRADING DESK
+APEX v7.157 — TRADING DESK
 =========================
 
-🗂️ UNA SOLA NOTIFICACIÓN DE APEX, CON TODAS DENTRO
-(app 7.156 · 16-09-2026)
+🔌 LOS TRES CABLES SUELTOS
+(app 7.157 · worker 5.162 · 16-09-2026)
 
-Tus palabras de esta mañana: «te dije que arreglaras lo de la pestaña fija, no que
-se hicieran notificaciones interminables. Cuando son de la misma aplicación deben
-seguir siendo UNA SOLA con todas dentro, no una fila interminable».
+Tres quejas tuyas de esta mañana. Las tres eran EL MISMO fallo mío: código
+escrito entero, con sus bancos en verde, que NUNCA llegaba a ejecutarse porque le
+faltaba el último cable.
 
-QUÉ PASÓ (fallo mío, y te lo explico porque tiene miga)
-Ayer, para que el cartel fijo del vigilante dejara de taparte los mensajes, le puse
-GRUPO a los avisos. Lo que no sabía: mientras una app NO agrupa, Android los agrupa
-solo a partir de 4. En cuanto la app declara un grupo, Android le cede el mando —
-y un grupo SIN CABECERA DE RESUMEN enseña cada aviso suelto, uno debajo de otro.
-Resumiendo: mi arreglo te quitó el agrupado que ya tenías gratis.
+👔 LA ROPA — no era una decisión, era una avería
+Roberto debe llevar la MISMA ropa dentro y fuera. El de fuera vive en su propio
+navegador y el puente con Android es de UNA SOLA DIRECCIÓN: Java le habla, pero
+él no puede preguntar nada — y para saber si estás entrenando tenía que preguntar.
+Por eso el de dentro se ponía el chándal y el de fuera se quedaba de traje.
+Ahora Java se lo EMPUJA: al empezar tu sesión, y también si el cuerpo nace a mitad.
+Y al terminar las dos horas se cambia solo, sin esperar a nadie.
 
-CÓMO QUEDA AHORA
-· Una sola entrada: «Apex · N avisos». La despliegas y ves los últimos dentro.
-· La cuenta la da Android, no la llevo yo: nunca te dirá «5 avisos» con dos dentro.
-· Si no queda ninguno, la cabecera desaparece sola.
-· La cabecera se actualiza CALLADA: el aviso suena al llegar, y una sola vez.
-· Si deslizas la cabecera, se dan por vistos TODOS los de dentro — ninguno se queda
-  sonando solo por detrás.
-· El cartel fijo del vigilante SIGUE en su propia pila, debajo, sin taparte nada.
-  El arreglo de ayer no se pierde, y hay un banco que lo ata para que no vuelva.
+🚦 LA LUZ — nunca funcionó, ni una sola vez
+La línea que encendía tu luz de FUERA preguntaba por un objeto que no existe. En
+todo app.js el plugin se llama de otra forma; el nombre malo aparecía UNA SOLA VEZ,
+justo ahí. O sea: la luz de fuera no se ha encendido ni una vez desde la v7.60.
+La VOZ sí, porque va por otro camino — y por eso oíste «ya tienes luz verde» sin
+ver ninguna luz. Tu diagnóstico fue exacto.
+Y ahora la luz se repone en cada vuelta: si apagas y enciendes el cuerpo a mitad de
+una noticia, antes nacía a oscuras y se quedaba así los 30 minutos.
 
-🛡️ Banco nuevo «los avisos van en una sola» 7/7 · regresión completa en verde.
+📈 LAS ALARMAS Y EL GRÁFICO — el camino que tú usas era el único sin conectar
+El worker manda el par y la temporalidad de la FASE con cada alarma desde el 15-09,
+y Apex sabe leerlos. Pero el vigía de Android no los miraba (cero apariciones en
+todo el fichero) y MainActivity solo reenviaba el destino: el dato del gráfico
+llegaba SOLO por el camino de la web, el único que tú no usas.
+Y el botón existía, pero se construía con el par y SIN la temporalidad: aunque lo
+hubieras pulsado, habría abierto el gráfico fuera de la fase.
+Ahora: tocas la alarma → Apex abre el hilo del día con la lectura de Roberto y,
+encima, TradingView en la temporalidad de la fase. Y el botón del chat sale con el
+par Y la fase escrita (EURUSD · 4H).
+
+⚠️ Esto es culpa mía dos veces, porque ayer te lo di por terminado. Lo probé por el
+lado del worker y por el de la web, no por el tuyo.
+
+🛡️ Banco nuevo «los tres cables sueltos» 10/10 · regresión completa en verde.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

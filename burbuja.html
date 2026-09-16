@@ -585,6 +585,32 @@
 
   window.burbujaGesto = function(g){ gesto(g); };
 
+  /* 🏋️ v7.157 — LA VENTANA DE ENTRENAMIENTO, QUE AQUÍ NO SE PUEDE PREGUNTAR.
+     Rey (16-09): «¿cómo fue que dejaste a Roberto dentro de Apex con ropa de entrenador y
+     fuera traje?». Este cuerpo vive en su propio navegador, SIN el puente de Capacitor: el
+     puente con Java es de una sola dirección. Por eso miraSiEntrena() no podía enterarse de
+     nada y el de fuera se quedaba siempre de traje. Ahora Java se lo dice.
+     El temporizador es de UN SOLO DISPARO, a propósito: uno que se repita cuelga los bancos
+     de navegador porque este fichero se mete dentro de la APK ([[apex-frases-cada-30]]). */
+  var tFinEntrena = null;
+  window.burbujaEntrena = function(hasta){
+    try{
+      var h = Number(hasta) || 0;
+      if(typeof Roberto === "undefined" || !Roberto) return;
+      var antes = (Roberto.entrenaHasta || 0) > Date.now();
+      Roberto.entrenaHasta = h;
+      var ahora = h > Date.now();
+      if(antes !== ahora){ try{ Roberto.vestirSolo(); }catch(e){} }
+      /* y al terminar la sesión se cambia SOLO, sin esperar a que Java le diga nada */
+      clearTimeout(tFinEntrena);
+      if(ahora){
+        tFinEntrena = setTimeout(function(){
+          try{ Roberto.entrenaHasta = 0; Roberto.vestirSolo(); }catch(e){}
+        }, Math.min(h - Date.now() + 1500, 2*60*60*1000 + 5000));
+      }
+    }catch(e){}
+  };
+
   /* 🚦 v7.60 — LA LUZ DEL SEMÁFORO, que DURA lo que dura el peligro.
      Rey (06-09): "las señales rojas deben durar mientras todavía esté en peligro… y al
      terminar la verde diciéndome «ya tienes luz verde»".
