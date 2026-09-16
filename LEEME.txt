@@ -1,45 +1,45 @@
-APEX v7.157 — TRADING DESK
+APEX v7.158 — TRADING DESK
 =========================
 
-🔌 LOS TRES CABLES SUELTOS
-(app 7.157 · worker 5.162 · 16-09-2026)
+🎯 LA ALARMA ABRE EL GRÁFICO. DIRECTO.
+💸 Y EL COSTE DE CADA OPERACIÓN DEJA DE PERDERSE
+(app 7.158 · worker 5.163 · Puente v4.22 · 16-09-2026)
 
-Tres quejas tuyas de esta mañana. Las tres eran EL MISMO fallo mío: código
-escrito entero, con sus bancos en verde, que NUNCA llegaba a ejecutarse porque le
-faltaba el último cable.
+🎯 LA ALARMA, COMO LA PEDISTE
+Tus palabras: «ese para aquí para allá no lo quiero. Al tocarla que abra
+DIRECTAMENTE el gráfico donde debe».
+Hecho: tocas la alarma y sale tu app de TradingView en el par y en la temporalidad
+de la fase. Nada de abrir Apex, ni el chat, ni esperar tres segundos.
+Roberto te sigue leyendo la alarma por voz mientras miras las velas — la voz no
+necesita pantalla.
+Y como el toque ya no pasa por Apex, ahora es el vigilante el que calla la
+insistencia y retira el aviso: si no, la alarma habría seguido sonando sola.
+Te queda un botón 📱 Apex por si algún día quieres el hilo del día escrito. Eso lo
+eliges tú, que es distinto a que te obligue a pasar por ahí.
 
-👔 LA ROPA — no era una decisión, era una avería
-Roberto debe llevar la MISMA ropa dentro y fuera. El de fuera vive en su propio
-navegador y el puente con Android es de UNA SOLA DIRECCIÓN: Java le habla, pero
-él no puede preguntar nada — y para saber si estás entrenando tenía que preguntar.
-Por eso el de dentro se ponía el chándal y el de fuera se quedaba de traje.
-Ahora Java se lo EMPUJA: al empezar tu sesión, y también si el cuerpo nace a mitad.
-Y al terminar las dos horas se cambia solo, sin esperar a nadie.
+💸 EL COSTE, GUARDADO EN VEZ DE DEDUCIDO
+Dijiste: «la comisión se come toda la poca ganancia». Tenías razón, y lo medí en
+tus 13 operaciones: bruto −$18,21 · coste −$175,14 · neto −$193,35.
+Pero para demostrarlo tuve que restar el neto del bruto una por una, porque no se
+guardaba en ninguna parte… y el Ejecutor lo mandaba desde la v2.9.
+Ahora cada operación archivada lleva su bruto, su comisión y su duración.
+Medido: $7,00 por lote ida y vuelta desde el 08-09 (antes $3,50) = 0,70 pips fijos.
 
-🚦 LA LUZ — nunca funcionó, ni una sola vez
-La línea que encendía tu luz de FUERA preguntaba por un objeto que no existe. En
-todo app.js el plugin se llama de otra forma; el nombre malo aparecía UNA SOLA VEZ,
-justo ahí. O sea: la luz de fuera no se ha encendido ni una vez desde la v7.60.
-La VOZ sí, porque va por otro camino — y por eso oíste «ya tienes luz verde» sin
-ver ninguna luz. Tu diagnóstico fue exacto.
-Y ahora la luz se repone en cada vuelta: si apagas y enciendes el cuerpo a mitad de
-una noticia, antes nacía a oscuras y se quedaba así los 30 minutos.
+🕵️ Y EL REPASO, PEGADO A SU OPERACIÓN
+El Ejecutor mide a los 30 minutos de cerrar hasta dónde siguió el precio. Ese es EL
+dato que contesta si la salida roba o si la entrada llega tarde. Vivía solo en la
+bitácora, topada a 40 eventos: cuando fui a mirar quedaban TRES.
+Ahora viaja dentro de la operación, en el archivo que aguanta 1000.
 
-📈 LAS ALARMAS Y EL GRÁFICO — el camino que tú usas era el único sin conectar
-El worker manda el par y la temporalidad de la FASE con cada alarma desde el 15-09,
-y Apex sabe leerlos. Pero el vigía de Android no los miraba (cero apariciones en
-todo el fichero) y MainActivity solo reenviaba el destino: el dato del gráfico
-llegaba SOLO por el camino de la web, el único que tú no usas.
-Y el botón existía, pero se construía con el par y SIN la temporalidad: aunque lo
-hubieras pulsado, habría abierto el gráfico fuera de la fase.
-Ahora: tocas la alarma → Apex abre el hilo del día con la lectura de Roberto y,
-encima, TradingView en la temporalidad de la fase. Y el botón del chat sale con el
-par Y la fase escrita (EURUSD · 4H).
+📏 LA CAPTURA, CON LAS VELAS CON SU FORMA
+Dijiste: «vela estirada, no pude analizar esa entrada».
+Mi fallo de aritmética: fijé la escala al rango de la operación (unos pips) y a la
+vez encogí la ventana de tiempo. Alto pequeño + pocas velas = vela de media
+pantalla. Ahora la escala sale del máximo y el mínimo de LAS VELAS QUE SE VEN, y la
+operación siempre cabe entera dentro.
 
-⚠️ Esto es culpa mía dos veces, porque ayer te lo di por terminado. Lo probé por el
-lado del worker y por el de la web, no por el tuyo.
-
-🛡️ Banco nuevo «los tres cables sueltos» 10/10 · regresión completa en verde.
+🛡️ Bancos nuevos: «la alarma abre el gráfico directo» 6/6 · «el coste y el repaso no
+se pierden» 4/4 · regresión completa en verde.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
