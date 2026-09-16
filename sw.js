@@ -1,4 +1,4 @@
-const CACHE = "crt-elite-v7-152";
+const CACHE = "crt-elite-v7-154";
 const FILES = ["./","./index.html","./data.js","./app.js","./roberto.js","./situaciones.js","./frases-celebres.js","./manifest.json","./icon-192.png","./icon-512.png"];
 const WORKER = "https://elitepro-worker.reiniercainet9.workers.dev";
 /* Web Push: al llegar un aviso (con la app CERRADA), muestra la notificación.
@@ -189,9 +189,16 @@ self.addEventListener("notificationclick", e => {
      están todos los avisos de hoy en orden y Roberto lee el último en voz alta (si su voz
      está encendida en ⚙️ del chat). */
   if(data.sym){
-    const destino = "./index.html?ir="+encodeURIComponent("rob:hilo");
+    /* 🎯 v7.154 — Y ADEMÁS, EL GRÁFICO EN LA FASE EN QUE ESTÁ. Rey (15-09): «debo tocar la
+       notificación y ella llevarme al contexto de lo que me está sucediendo… así veo el
+       gráfico mientras Roberto me va diciendo lo que está ocurriendo».
+       El worker 5.159 manda la temporalidad de la FASE (4H si espera la toma de liquidez,
+       15m si es el MSS, 5m si toca el gatillo). Apex abrirá SU APP de TradingView — nunca la
+       web, que es la que expulsa la sesión de la PC y deja ciego al Ejecutor. */
+    const graf = String(data.sym||"") + (data.tvint ? (":" + data.tvint) : "");
+    const destino = "./index.html?ir="+encodeURIComponent("rob:hilo")+"&graf="+encodeURIComponent(graf);
     e.waitUntil(clients.matchAll({type:"window",includeUncontrolled:true}).then(cs => {
-      for(const c of cs){ if("focus" in c){ if(c.postMessage) c.postMessage({type:"apex-ir", ir:"rob:hilo"}); return c.focus(); } }
+      for(const c of cs){ if("focus" in c){ if(c.postMessage) c.postMessage({type:"apex-ir", ir:"rob:hilo", graf:graf}); return c.focus(); } }
       if(clients.openWindow) return clients.openWindow(destino);
     }));
     return;

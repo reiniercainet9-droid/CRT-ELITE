@@ -311,7 +311,9 @@ async function abrirFoto(id, meta){
     '<img id="fImg" src="'+img+'" style="position:absolute;left:50%;top:50%;transform-origin:center center;'+
       'max-width:none;max-height:none;image-rendering:auto;will-change:transform;user-select:none;-webkit-user-drag:none">'+
     '<div id="fBar" class="fbar">'+
-      '<span class="fmeta">'+esc(meta||"")+' · <span id="fZoom">100%</span> — dos dedos o doble toque</span>'+
+      /* el rótulo decía «100%» con la foto encajada al 33%: lo que enseña es el AUMENTO
+         sobre lo que cabe, así que se dice así y se empieza vacío hasta medirlo. */
+      '<span class="fmeta">'+esc(meta||"")+' · <span id="fZoom">…</span> — dos dedos o doble toque</span>'+
       '<button class="fbtn" id="fShare">📤 Compartir</button>'+
       '<button class="fbtn" id="fDown">⬇️ Guardar</button>'+
       '<button class="fbtn danger" id="fDel">🗑️ Borrar</button>'+
@@ -327,22 +329,39 @@ async function abrirFoto(id, meta){
   let esc0=0, base=1, x=0, y=0;      /* escala actual, escala de encaje, y el paseo */
 
   /* la escala que hace que la foto quepa ENTERA en la pantalla, sea cual sea la orientación */
+  /* 🔄 v7.153 — SI LA FOTO ES ANCHA Y LA PANTALLA ESTÁ DE PIE, SE GIRA SOLA.
+     Rey (15-09), con dos capturas suyas delante: «no se ve nada de nada, así están» — y en
+     las fotos el gráfico era una franja fina en medio de una pantalla negra.
+     El 10-09 me pidió verlas ENTERAS y se las di enteras. Y entera es correcto… e
+     inservible: una captura de 2716×1364 encajada entera en una pantalla vertical ocupa
+     menos de un cuarto, y ahí una vela de 5 minutos mide un píxel. Cumplí la letra y fallé
+     el propósito, que estaba en su misma frase: «poder revisar TODOS LOS DETALLES de esos
+     momentos sin omitir nada».
+     Y él ya dijo la solución sin saberlo: «hasta virando el teléfono de lado». Pues que no
+     tenga que virarlo. Si gira el teléfono, esto se desgira solo y se recoloca. */
+  let girada=false;
   function ajustar(){
     const W=ov.clientWidth, H=ov.clientHeight;
     const iw=im.naturalWidth||1, ih=im.naturalHeight||1;
-    base=Math.min(W/iw, H/ih);
-    if(!esc0 || esc0 <= base*1.02){ esc0=base; x=0; y=0; }   /* recien abierta o sin ampliar: entera */
+    const antes=girada;
+    /* solo cuando de verdad gana: foto claramente apaisada y pantalla claramente de pie */
+    girada = (iw/ih >= 1.4) && (H/W >= 1.2);
+    base = girada ? Math.min(W/ih, H/iw) : Math.min(W/iw, H/ih);
+    if(!esc0 || esc0 <= base*1.02 || antes!==girada){ esc0=base; x=0; y=0; }
     pintar();
   }
   function limites(){
     const W=ov.clientWidth, H=ov.clientHeight;
-    const w=(im.naturalWidth||1)*esc0, h=(im.naturalHeight||1)*esc0;
+    /* girada, lo ancho de la foto se pasea en VERTICAL: los topes se cruzan también */
+    const w=(girada ? (im.naturalHeight||1) : (im.naturalWidth||1))*esc0;
+    const h=(girada ? (im.naturalWidth||1) : (im.naturalHeight||1))*esc0;
     const mx=Math.max(0,(w-W)/2), my=Math.max(0,(h-H)/2);
     x=Math.max(-mx,Math.min(mx,x)); y=Math.max(-my,Math.min(my,y));
   }
   function pintar(){
     limites();
-    im.style.transform="translate(-50%,-50%) translate("+x+"px,"+y+"px) scale("+esc0+")";
+    im.style.transform="translate(-50%,-50%) translate("+x+"px,"+y+"px)"
+      +(girada?" rotate(90deg)":"")+" scale("+esc0+")";
     if(zTxt) zTxt.textContent=Math.round(esc0/base*100)+"%";
   }
   im.onload=ajustar;
@@ -1217,18 +1236,36 @@ function paresDeAvisos(avisos){
   });
   return vistos.slice(0,4);
 }
-async function abrirEnTradingView(par){
+/* 🎯 v7.154 — «EURUSD:240» → abre su app de TradingView en ese par y esa temporalidad.
+   El par y la fase los manda el worker con la alarma; aquí solo se reparte. */
+function abrirGrafDeAviso(g){
+  try{
+    const p = String(g||"").split(":");
+    const par = (p[0]||"").trim();
+    if(!par) return;
+    abrirEnTradingView(par, (p[1]||"").trim());
+  }catch(_){}
+}
+
+async function abrirEnTradingView(par, tf){
+  /* 🔴 v7.154 — NUNCA LA WEB DESDE EL TELÉFONO. Rey (15-09): «cuando abrí la APP de
+     TradingView en mi teléfono NO se cerró el gráfico en la PC… si en vez de abrir la app
+     abre la WEB, ahí sí cierra». TradingView admite una sesión de gráfico por cuenta: abrir
+     la web en el móvil EXPULSA a la PC, y la PC es la que alimenta al Puente, al Ejecutor y
+     a Roberto — se queda todo ciego.
+     Aquí había un respaldo que abría la web si no encontraba la app: era justo el caso
+     peligroso, y en silencio. Un respaldo que hace daño no es un respaldo. */
   const P = (()=>{ try{ return vigiaPuente(); }catch(_){ return null; } })();
-  const web = "https://www.tradingview.com/chart/" + (par ? "?symbol=OANDA%3A"+encodeURIComponent(par) : "");
-  if(P && typeof P.abrirGraficoTV==="function"){
-    try{
-      const r = await P.abrirGraficoTV({ par: par||"" });
-      if(r && r.abierta && r.como==="grafico"){ toast("📈 TradingView"+(par?" · "+par:"")); return; }
-      if(r && r.abierta && r.como==="app"){ toast("📈 TradingView abierta (no entra al par sola)"); return; }
-      toast((r&&r.motivo) ? ("📈 "+r.motivo+" — te abro la web") : "📈 Te abro la web");
-    }catch(_){ }
+  if(!P || typeof P.abrirGraficoTV!=="function"){
+    toast("📈 Esto necesita la app de Apex instalada (desde la web no abro TradingView)");
+    return;
   }
-  try{ window.open(web,"_blank","noopener"); }catch(_){ location.href = web; }
+  try{
+    const r = await P.abrirGraficoTV({ par: par||"", tf: tf||"" });
+    if(r && r.abierta && r.como==="grafico"){ toast("📈 "+(par||"TradingView")+(tf?" · "+(tf==="240"?"4H":tf+"m"):"")); return; }
+    if(r && r.abierta && r.como==="app"){ toast("📈 TradingView abierta (no entra al par sola)"); return; }
+    toast("📈 " + ((r&&r.motivo) || "no pude abrir TradingView"));
+  }catch(_){ toast("📈 no pude abrir TradingView"); }
 }
 function tarjetaGrafico(avisos){
   const cont=$("#iaMsgs"); if(!cont) return;
@@ -1245,7 +1282,7 @@ function tarjetaGrafico(avisos){
     '</div>';
   cont.appendChild(card);
   card.querySelectorAll(".ia-tv-par").forEach(b=>{
-    b.onclick=()=>abrirEnTradingView(b.dataset.par||"");
+    b.onclick=()=>abrirEnTradingView(b.dataset.par||"", b.dataset.tf||"");
   });
 }
 
@@ -12761,6 +12798,8 @@ function robCuerpoMontar(){
     ROB_CUERPO=true;
     robVigilante();
     setInterval(robVigilante,45000);
+    /* 🏋️ v7.152 — y en la misma vuelta, si Rey entrena (con su freno de 5 min dentro) */
+    setInterval(()=>{ try{ if(typeof Roberto!=="undefined" && Roberto.miraSiEntrena) Roberto.miraSiEntrena(); }catch(_){} },45000);
     robVida();                       /* 🎭 y su vida propia entre tarea y tarea */
     fcReloj();                       /* 🗣️ y el reloj de las frases célebres (v7.79) */
     robPensandoVigilante();          /* 🤔 y que se le note cuando está pensando (v7.35) */
@@ -16271,7 +16310,15 @@ function init(){
     }
   }); } }catch(_){}
   try{ const dst=consumirParam("ir"); if(dst) setTimeout(()=>irDestino(dst), 600); }catch(_){}
-  try{ if(navigator.serviceWorker){ navigator.serviceWorker.addEventListener("message", ev=>{ if(ev.data && ev.data.type==="apex-ir" && ev.data.ir) irDestino(ev.data.ir); }); } }catch(_){}
+  /* 🎯 v7.154 — y si el aviso traía gráfico, se abre SU APP de TradingView en esa fase.
+     Va DESPUÉS del hilo del día y con un respiro: primero Apex con la lectura de Roberto,
+     y encima el gráfico. Si se abriera antes, Apex se quedaría detrás sin haber pintado. */
+  try{ const g=consumirParam("graf"); if(g) setTimeout(()=>abrirGrafDeAviso(g), 2200); }catch(_){}
+  try{ if(navigator.serviceWorker){ navigator.serviceWorker.addEventListener("message", ev=>{
+    if(!ev.data) return;
+    if(ev.data.type==="apex-ir" && ev.data.ir) irDestino(ev.data.ir);
+    if(ev.data.type==="apex-ir" && ev.data.graf) setTimeout(()=>abrirGrafDeAviso(ev.data.graf), 2200);
+  }); } }catch(_){}
   /* 💬 v6.23 (Rey): respuesta de Roberto con Apex ABIERTA — sin notificación: si el chat
      está abierto, el mensaje aterriza AHÍ al instante; si estás en otra sección, sale el
      banner 🛡️ de Roberto (tocarlo abre el chat de ESA conversación). */

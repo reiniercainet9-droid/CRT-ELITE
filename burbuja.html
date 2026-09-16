@@ -1024,6 +1024,9 @@
     clearTimeout(vidaT);
     /* 🤔 mientras piensa la respuesta de Rey, su vida propia no le pisa el gesto */
     if(PENSANDO) return;
+    /* 🏋️ v7.152 — de paso se mira si Rey está entrenando (la función tiene su propio
+       freno de 5 min, así que llamarla en cada vuelta no cuesta nada). */
+    try { if (typeof Roberto !== "undefined" && Roberto.miraSiEntrena) Roberto.miraSiEntrena(); } catch (_) {}
     vidaT = setTimeout(function(){ if(PENSANDO){ vida(); return; } unGesto(); vida(); }, 12000 + Math.random() * 18000);
   }
   vida();

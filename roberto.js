@@ -1684,8 +1684,12 @@ ROB_CSS += "\n" + Object.keys(POSES).map(function (k) { return '[data-pose="' + 
      flotante: así los dos Robertos llevan siempre la misma ropa. Ponerlo en cada uno sería
      repetir el fallo de las tres voces con dos limpiezas.
      Cada 5 minutos basta: la ventana dura 2 horas y esto no puede costar batería. */
-  function miraSiEntrena() {
+  var _ultEntrena = 0;
+  function miraSiEntrena(ya) {
     try {
+      var ahoraMs = Date.now();
+      if (!ya && ahoraMs - _ultEntrena < 300000) return;   /* el freno: 5 minutos */
+      _ultEntrena = ahoraMs;
       var P = (raiz.Capacitor && raiz.Capacitor.Plugins && raiz.Capacitor.Plugins.Apex) || null;
       if (!P || typeof P.entrenaAhora !== "function") return;   /* en la web no existe: no pasa nada */
       var p = P.entrenaAhora({});
@@ -1700,10 +1704,13 @@ ROB_CSS += "\n" + Object.keys(POSES).map(function (k) { return '[data-pose="' + 
       }).catch(function () {});
     } catch (_) {}
   }
-  try {
-    raiz.setTimeout(miraSiEntrena, 1500);
-    raiz.setInterval(miraSiEntrena, 300000);
-  } catch (_) {}
+  /* ⏱️ SIN TEMPORIZADOR PROPIO, Y NI SU NOMBRE. Aquí puse uno que se repetía y el banco de
+     la Fase 2 se puso rojo con toda la razón: al construir la APK, roberto.js se mete DENTRO
+     de burbuja.html, y ahí un reloj que se repite cuelga los bancos de navegador y deja
+     procesos vivos para siempre. Ni escrito en un comentario, que el banco busca el nombre
+     en el fichero compilado y no distingue código de prosa — y así está mejor.
+     El freno va DENTRO de la función: quien ya tiene un bucle la llama en cada vuelta y solo
+     pregunta de verdad cada 5 minutos. */
 
   raiz.Roberto = {
     entrenaHasta: 0,
@@ -1716,6 +1723,7 @@ ROB_CSS += "\n" + Object.keys(POSES).map(function (k) { return '[data-pose="' + 
     vestir: vestir, vestirSolo: vestirSolo, ropaDeAhora: ropaDeAhora,
     ropas: function () { return Object.keys(ROPAS); }, accesorios: function () { return Object.keys(ACCS); },
     vestido: function () { return { ropa: estado.ropa, acc: estado.acc }; },
+    miraSiEntrena: miraSiEntrena,
     emociones: ROB_EMO, cats: CATS, lista: function () { return Object.keys(ROB_EMO); },
     actual: function () { return estado.emo; }, svgHTML: svgHTML, css: ROB_CSS,
   };

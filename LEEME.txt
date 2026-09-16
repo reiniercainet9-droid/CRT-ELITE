@@ -1,31 +1,34 @@
-APEX v7.152 — TRADING DESK
+APEX v7.154 — TRADING DESK
 =========================
 
-🏋️ ROBERTO SE PONE EL CHÁNDAL CUANDO TÚ ENTRENAS (app 7.152)
+🔬 EL FORENSE DE UNA OPERACIÓN (worker 5.160) — la mitad del punto 2
 
-Lo pediste el 07-09 y se aplazó porque tu templo estaba vacío. Ya no lo está: lo comprobé en
-tu teléfono — plan nivel 0 semana 1, TRES sesiones hechas (3,17 km · 4,5 km · 5 km), la semana
-cerrada 3/3, y tus dos alarmas vivas y encendidas: lunes y martes a las 05:00.
+Pediste que Roberto analice «como las hago contigo, con el más mínimo detalle». El listón lo
+pusiste tú: el forense del 14-09, del que salieron el barrido de la H4, el cambio interno 66
+minutos antes y el candado que ve el giro y no frena.
 
-Así que se cumplió tu orden y empieza el paso que tú marcaste: PRIMERO SOLO LA ROPA, con los
-chándales que ya existen. Durante 2 horas desde que suena tu alarma del templo, Roberto lleva
-chándal — el de dentro de Apex Y el que ves flotando. Al terminar vuelve solo a lo que llevaba.
+Lo que había NO daba para eso: la lección del cierre juzga bien pero está capada a 45 palabras
+(es el cuerpo de una notificación), y «Que lo juzgue Roberto» juzga LA SERIE, no UNA operación.
 
-· Sin accesorios encima del chándal: una gorra o una taza ahí es otra de esas «combinaciones
-  fatales» que tú señalaste. Los accesorios de deporte van en el paso siguiente, SI te gusta este.
-· Se ata a TU ALARMA, no al plan: el Roberto flotante no puede leer el templo (es otra página),
-  y es justo el que vas a ver mientras entrenas.
-· La ventana la guarda Android, así que sobrevive a que la página se reinicie: ni se queda en
-  chándal todo el día ni se lo quita a media sesión.
-· Y NO TOCA NADA MÁS. Tu ley del 07-09: el doble papel no deja ninguna función atrás. El banco
-  comprueba que elegir la ropa no roza alarmas, Ejecutor, gráfico ni vigía.
+Ahora hay un expediente por operación, armado con lo que EXISTE:
+· tus números verificados de MT5 (entrada, stop, objetivo, salida, riesgo, R, motivo del cierre)
+· LA ALARMA que la disparó, con el panel del indicador DE ESE MOMENTO (misma par, dentro de los
+  30 minutos anteriores — ni de otro par ni de hace hora y media)
+· cómo llegaste ese día (tu cruce vida↔trading)
+Y lo que no haya, Roberto DICE que no lo tiene. No lo rellena.
 
-⚖️ Y TE DEVUELVO UNA DECISIÓN QUE TOMÉ YO POR TI
+Y el listón: SEIS partes obligatorias — la operación · qué decía el gráfico · por qué entró ·
+cómo se gestionó · el juicio · qué hacer. Con cinco reglas duras, entre ellas:
+· se juzga la EJECUCIÓN, no el resultado (una ganadora puede estar mal hecha)
+· mirar si el objetivo era DECORATIVO (si la salida por tiempo estaba más cerca que el TP,
+  nunca pudo llegar — es lo que pasó en tu operación de hoy: TP a 3,32R y el techo H4 a 1R)
+· nada de tocar una regla sin medirla antes (tu Ley 37)
 
-En la lista de pendientes figuraba como «fallo mío por corregir» que Roberto no sonara fuera de
-Apex «para no molestarte». Lo comprobé EJECUTANDO en tu teléfono: ya estaba corregido desde la
-v7.15 — habla fuera de Apex y quien decide el silencio eres tú, con tu interruptor. Lo que
-seguía diciendo lo viejo era un comentario mío en el código y la propia lista. Los dos corregidos.
+Las cuentas no se las pido al modelo: se calculan aquí y se le dan hechas. Un modelo haciendo
+aritmética con pips es un error gratis, y un número torcido te hace estudiar una operación que
+no existió. Comprobado con tus dos operaciones reales: 9/9.
+
+⏳ Falta el botón en Apex para pedirlo. Va en la siguiente.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
