@@ -1,41 +1,31 @@
-APEX v7.155 — TRADING DESK
+APEX v7.156 — TRADING DESK
 =========================
 
-🔬 EL FORENSE DE UNA OPERACIÓN — ya se puede pedir, y ya no sale cojo
-(app 7.155 · worker 5.161 · 15-09-2026 noche)
+🗂️ UNA SOLA NOTIFICACIÓN DE APEX, CON TODAS DENTRO
+(app 7.156 · 16-09-2026)
 
-Esto es el punto 2️⃣ de tu 80/20, cerrado por los dos lados.
-Tus palabras: «que pueda hacer los análisis del Ejecutor y los de las operaciones
-COMO LAS HAGO CONTIGO, CON EL MÁS MÍNIMO DETALLE».
+Tus palabras de esta mañana: «te dije que arreglaras lo de la pestaña fija, no que
+se hicieran notificaciones interminables. Cuando son de la misma aplicación deben
+seguir siendo UNA SOLA con todas dentro, no una fila interminable».
 
-🔬 EL BOTÓN
-En 📓 Diario del Ejecutor, cada operación tiene ahora un tercer botón al lado de
-📸 entrada y 📸 cierre: **🔬 Forense**.
-Lo tocas y Roberto te hace el análisis completo de ESA operación, en seis partes:
-  🧾 la operación · 🗺️ qué decía el gráfico · ⚙️ por qué entró
-  🎛️ cómo se gestionó · ⚖️ el juicio · 🎯 qué hacer
-El listón es el análisis del 14-09, el de la venta de −$276. No es un resumen.
-La respuesta aterriza EN EL CHAT, para que la releas y le preguntes encima.
+QUÉ PASÓ (fallo mío, y te lo explico porque tiene miga)
+Ayer, para que el cartel fijo del vigilante dejara de taparte los mensajes, le puse
+GRUPO a los avisos. Lo que no sabía: mientras una app NO agrupa, Android los agrupa
+solo a partir de 4. En cuanto la app declara un grupo, Android le cede el mando —
+y un grupo SIN CABECERA DE RESUMEN enseña cada aviso suelto, uno debajo de otro.
+Resumiendo: mi arreglo te quitó el agrupado que ya tenías gratis.
 
-💳 Y NO GASTA SOLO
-Cada forense queda guardado por operación. La primera vez cuesta una llamada;
-volver a abrirlo es gratis, y te lo digo en el aviso.
+CÓMO QUEDA AHORA
+· Una sola entrada: «Apex · N avisos». La despliegas y ves los últimos dentro.
+· La cuenta la da Android, no la llevo yo: nunca te dirá «5 avisos» con dos dentro.
+· Si no queda ninguno, la cabecera desaparece sola.
+· La cabecera se actualiza CALLADA: el aviso suena al llegar, y una sola vez.
+· Si deslizas la cabecera, se dan por vistos TODOS los de dentro — ninguno se queda
+  sonando solo por detrás.
+· El cartel fijo del vigilante SIGUE en su propia pila, debajo, sin taparte nada.
+  El arreglo de ayer no se pierde, y hay un banco que lo ata para que no vuelva.
 
-🗂️ LO QUE ARREGLÉ AL PROBARLO DE VERDAD
-Probé el forense con tu COMPRA de EURUSD de hoy, contra la nube en vivo.
-Salió bien… y COJO. Te lo dijo el propio Roberto: «no tengo la alarma de esta
-entrada — el registro solo guarda las últimas 12 y ésta ya salió de rango».
-Sin la alarma no hay «qué decía el gráfico» ni «por qué entró»: dos de las seis
-partes se caen.
-El fallo no era del forense, era de CUÁNDO buscaba la prueba: días después, en un
-registro que rota cada pocas horas.
-Ahora la alarma se guarda EN EL MOMENTO DE ENTRAR, con su ticket (400 días), y al
-cerrar viaja DENTRO de la operación archivada, que aguanta 1000 operaciones.
-De aquí en adelante ningún forense tuyo se quedará ciego.
-⚠️ Las operaciones de ANTES de esta versión pueden no tener la alarma guardada.
-Cuando pase, Roberto te lo dirá en vez de inventársela.
-
-🛡️ Bancos: el del forense pasa de 9 a 14 · nuevo «el botón del forense» 6/6.
+🛡️ Banco nuevo «los avisos van en una sola» 7/7 · regresión completa en verde.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
