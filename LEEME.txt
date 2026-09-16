@@ -1,53 +1,53 @@
-APEX v7.160 — TRADING DESK
+APEX v7.161 — TRADING DESK
 =========================
 
-🛡️ ROBERTO TE EXIGE · 🔬 EL CIRUJANO EN LO TUYO · 🗂️ CADA COSA EN SU SITIO
-(app 7.160 · worker 5.164 · 16-09-2026)
+🧠 ROBERTO TE HABLA, TE EXIGE Y RELLENA LO QUE ÉL YA VE
+(app 7.161 · worker 5.165 · 16-09-2026)
 
-💾 PRIMERO: LO QUE NO SE GUARDABA
-Dijiste: «configuro la sección del Ejecutor, le doy guardar y no se guardan; pongo
-2R y salida en D y al tocar guardar vuelve a cero y a H4».
-La causa: la nube tiene una LISTA BLANCA y lo que no está escrito allí LO TIRA EN
-SILENCIO. Puse las cinco casillas en Apex y me dejé sus cinco líneas en la nube.
-Arreglado — y el banco nuevo ya no prueba cinco casillas: comprueba LOS 29 ajustes
-de tu formulario, uno a uno, y además que el Ejecutor de la PC los busque con el
-mismo nombre. Si algún día añado la número 30 y me olvido, se pone rojo antes de
-que tú lo descubras tocando guardar.
-⚠️ Esto está en el worker 5.164: hasta que no lo subas, sigue sin guardarse.
+🗣️ ROBERTO ABRE LA BOCA
+Dijiste: «¿solo sale un cartel? ¿Y Roberto qué papel cumple? Ahí no me dice nada».
+Tenías razón: te hice un tablón, no un mentor. Y lo peor: la pieza ya existía y
+no estaba enchufada.
+Ahora Roberto te lo DICE — nubecita en los dos cuerpos (dentro de Apex y el
+flotante), con su cara, y te lo lee en voz alta si tienes la voz encendida:
+  «Rey, no has registrado ni una operación en backtesting. Sin datos tuyos no hay
+   sistema: hay corazonadas.»
+Y lo deja escrito en su chat para que puedas releerlo y contestarle. Una vez al día:
+repetirlo sería ruido, y el ruido no exige.
 
-🛡️ ROBERTO TE EXIGE
-Tus palabras: «¿por qué no me notifica y me EXIGE las cosas que debo hacer y no he
-hecho? Ahí está la disciplina, la estructura».
-Lo que había solo viajaba dentro del contexto de un chat: existía si tú hablabas
-primero y salía «si encajaba en la charla». Eso es esperar, no exigir.
-Ahora, lo PRIMERO que ves al abrir Apex, con tu número delante:
-  🔴 No has registrado ni UNA operación en backtesting
-     Llevas 13 reales y CERO de backtesting. Con 13 casos no se puede saber si un
-     sistema gana o pierde. Tu Ley 37 pide 30.
-     [🎬 Registrar backtest]  [🔕 No me lo exijas]
-También: datos sueltos en el Diario · lo que dejaste «por revisar» · si no tienes
-plan de la semana escrito.
-· No gasta un céntimo: es una cuenta local, no llama al modelo.
-· Nada obligatorio: se apaga entero o exigencia por exigencia.
-· Si está todo al día, NO dice nada.
-· Y una vez al día te lo recuerda por el reloj de Android.
+✍️ LA ENTRADA DETECTADA LLEGA RELLENA
+Dijiste: «¿por qué Roberto no rellena TODO menos cómo me sentí?». El bache era
+gordo: EL PANEL DE TU INDICADOR YA ESTABA GUARDADO —sesgo, killzone, zona, setup,
+secuencia F3, alineación— y la tarjeta salía medio vacía.
+Ahora llega así:
+  📋 Ya te rellené: setup B · ventana NY AM · zona Discount · sesgo ALCISTA ·
+     4 confluencias (del panel de hace 3 min)
+  Solo te queda decir cómo te sentiste. Lo demás ya está.
+· Si el panel tiene más de 15 min, te avisa para que lo mires.
+· Lo que el panel no diga se queda VACÍO. No se inventa nada.
 
-🔬 EL CIRUJANO, TAMBIÉN EN LO TUYO
-Preguntaste si el forense estaba en tu backtesting y tus operaciones reales.
-NO ESTABA: solo en el Diario del Ejecutor. Ahora hay botón 🔬 Forense en cada
-operación tuya, real y de backtesting.
-Y no es el mismo análisis: el del Ejecutor juzga a un robot que sigue reglas; éste
-TE JUZGA A TI. Por eso manda lo que el robot no tiene: setup, confluencias, zona,
-POI, cómo te sentías, si rompiste el plan, MAE/MFE.
-Con una regla dentro: «si ganó rompiendo su plan, eso NO es una buena operación».
-Cada uno en su chat, separados del Ejecutor.
+🧠 TU REPASO, MAÑANA Y TARDE (09:00 y 18:30)
+Esas horas no las elegí a ojo: miré tus 18 avisos. El de las 18:30 está JUSTO
+DESPUÉS de tu «🏋️ Backtesting obligatorio» de las 17:30 — ahí es donde tiene
+sentido decirte si lo hiciste. Si cambias tus avisos, se recoloca solo.
+Te dirá, en este orden: 🎯 lo primero (UNA cosa) · ⚠️ lo que arrastras (con su
+número y desde cuándo) · 👀 lo que veo (aquí cruza tu descanso con tus resultados,
+tu hora de entrar con lo que ganas) · ✅ haz esto.
+Con tu regla dentro, textual: «las operaciones del Ejecutor NO son suyas».
 
-🗂️ CADA COSA EN SU SITIO
-El parte del día te salió en el análisis semanal porque las tarjetas caían en el
-chat que tuvieras abierto. Ahora cada una declara su sitio y aterriza ahí; si estás
-en otro chat, te avisa y de un toque te lleva.
+⚠️ DOS DECISIONES QUE TOMÉ
+1. Quité la alarma propia del guardián: caía a las 20:00, encima de tu «Cierre del
+   día con Roberto». Su contenido va DENTRO del repaso. Un aviso más no es más
+   disciplina, es más ruido — ya tienes 18.
+2. Lo dejé en automático, como autorizaste.
+💳 Coste: ~$0,02–0,04 cada repaso × 2 = $1,20–2,40 al mes sobre los ~$78 de hoy.
 
-🛡️ Bancos nuevos: «lo que guarda se guarda» 4/4 · «Roberto te exige» 8/8.
+🧭 Y EL CARTEL YA NO ES SOLO DEL BACKTESTING
+También te exige los pasos de TU plan sin cerrar, los datos sueltos, lo que dejaste
+«por revisar», el plan de la semana, y si el Ejecutor está caído o apagado.
+
+🛡️ Bancos nuevos: «la entrada llega rellena» 6/6 · «el repaso dos veces al día» 9/9
+· «Roberto te exige» ampliado a 13/13.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

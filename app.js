@@ -30,6 +30,9 @@ const K = {
   vents:"crtelite_ventanas_v1",
   plansem:"crtelite_plansem_v1",
   guardia:"crtelite_guardia_v1",   /* 🛡️ v7.160 — el guardián de la disciplina */
+  ejecvisto:"crtelite_ejecvisto_v1", /* 🔕 v7.161 — lo último que se supo del Ejecutor */
+  repaso:"crtelite_repaso_v1",      /* 🧠 v7.161 — sus dos repasos del día */
+  repasohecho:"crtelite_repasohecho_v1",
   plan:"crtelite_plan_v1",
   vered:"crtelite_vered_v1",
   ejec:"crtelite_ejectrades_v1"
@@ -56,6 +59,9 @@ const NUBE_KEYS = ["crtelite_trades_v2","crtelite_cuentas_v3","crtelite_reminder
   /* 🛡️ v7.160 — lo que Rey decidió que NO se le exija es una decisión suya: si no
      viajara, al cambiar de teléfono volverían a salirle exigencias que él ya quitó. */
   "crtelite_guardia_v1",
+  /* 🧠 v7.161 — SUS dos horas de repaso y si lo quiere encendido: es una decision
+     suya, y al cambiar de telefono tiene que seguir siendo la misma. */
+  "crtelite_repaso_v1",
   /* 🏛️ v7.85 — EL TEMPLO ENTERO, QUE SE HABÍA QUEDADO FUERA. Rey (09-09): "lo de la sección
      nueva del templo no está subiendo… intenté actualizar la web y la sección se quedó
      intacta". No era la actualización: la web y la APK tienen almacenes SEPARADOS, y como
@@ -98,6 +104,7 @@ const NUBE_NOMBRES = {
   /* 🛡️ v7.160 — en el respaldo se ve con su nombre, no en crudo: cuando Rey abra la
      lista tiene que entender QUÉ es cada cosa suya ([[apex-nube-solo-lo-que-importa]]). */
   "crtelite_guardia_v1":"lo que Roberto te exige (y lo que le dijiste que no)",
+  "crtelite_repaso_v1":"tus dos repasos del día con Roberto (horas e interruptor)",
   "crtelite_iaconvs_v3":"vuestros chats",
   "crtelite_iaact_v3":"el chat abierto",
   "crtelite_ejectrades_v1":"las operaciones del Ejecutor",
@@ -693,15 +700,27 @@ function guardiaHuecos(){
   const cfg=guardiaCfg();
   const quitada=(id)=>(cfg.quitadas||[]).indexOf(id)>=0;
   try{
+    /* ⚠️ SIN DUDAS NI CONDICIONES (Rey, 16-09): TRADES es SU Diario — lo que apunta ÉL.
+       Lo que hace el robot vive en otro libro (K.ejec) y NO son operaciones suyas. Decir
+       «operaciones» a secas le hizo pensar que le estaba contando las del Ejecutor como
+       propias, y eso es exactamente lo que no puede pasar. Aquí se nombran las dos por
+       separado, siempre. */
     const todos=(Array.isArray(TRADES)?TRADES:[]);
     const bt=todos.filter(t=>t && t.modo==="backtest");
     const reales=todos.filter(t=>t && (t.modo||"real")==="real");
+    let delRobot=0;
+    try{ const a=load(K.ejec,{trades:{}}); delRobot=Object.keys(a.trades||{}).filter(k=>a.trades[k] && a.trades[k].tsOut).length; }catch(_){}
 
     /* 1) BACKTESTING — la que él puso de ejemplo, y la más dura a propósito */
     if(!quitada("backtest")){
       if(!bt.length){
         out.push({ id:"backtest", urg:3, tit:"No has registrado ni UNA operación en backtesting",
-          txt:"Llevas "+reales.length+" operación(es) reales registradas y **cero** de backtesting. Sin backtesting no tienes datos propios: estás operando con la confianza que te dan "+reales.length+" casos, y con "+reales.length+" casos no se puede saber si un sistema gana o pierde. El laboratorio del 16-09 necesitó 49 para decir algo, y tu propia Ley 37 pide 30 mínimo.",
+          txt:(reales.length
+            ? ("Llevas **"+reales.length+"** operación(es) **tuyas** en el Diario y **cero** de backtesting. Con "+reales.length+" casos no se puede saber si un sistema gana o pierde: eso es confianza, no datos.")
+            : ("No tienes **ninguna operación tuya** registrada: ni en real ni en backtesting."
+               + (delRobot ? (" Las **"+delRobot+"** que ves en el sistema son **del Ejecutor, no tuyas** — ésas no te enseñan a ti a ver el gráfico.") : "")
+               + " Ahora mismo no hay un solo dato **tuyo** con el que juzgar nada."))
+            +" El laboratorio del 16-09 necesitó 49 operaciones para poder decir algo, y tu propia Ley 37 pide 30 mínimo. El backtesting es la única forma de tenerlos sin arriesgar dinero.",
           acc:"backtest", bot:"🎬 Registrar backtest" });
       }else{
         const d=guardiaDiasDesde("backtest");
@@ -731,6 +750,49 @@ function guardiaHuecos(){
         acc:"revisar", bot:"🔍 Verlas" });
     }
 
+    /* 🧭 SU PLAN. Rey (16-09): «¿ese cartel es genérico, solo del backtesting? ¿Y lo que no
+       he cumplido en la sección del plan con él?». Pues eso: los pasos de SU fase que sigue
+       sin marcar. No es una regla mía — es la lista que él mismo se puso. */
+    if(!quitada("plan")){
+      try{
+        const f=(typeof planFaseActual==="function") ? planFaseActual() : null;
+        if(f && Array.isArray(f.pasos) && f.pasos.length){
+          const faltan=f.pasos.filter(p=>!(PLAN_ARR.pasos||{})[p.id]);
+          if(faltan.length) out.push({ id:"plan", urg:2,
+            tit:"Te faltan "+faltan.length+" paso(s) de tu plan",
+            txt:"Estás en **"+(f.t||f.nombre||"tu fase actual")+"** y tienes sin marcar: "
+              + faltan.slice(0,3).map(p=>"**"+(p.t||p.txt||p.id)+"**").join(" · ")
+              + (faltan.length>3?(" y "+(faltan.length-3)+" más"):"")
+              + ". No es una regla mía: es la lista que te pusiste tú.",
+            acc:"plan", bot:"🧭 Ver mi plan" });
+        }
+      }catch(_){}
+    }
+
+    /* 🔕 EL EJECUTOR, QUE SE PUEDE HABER IDO SIN QUE NADIE SE LO DIGA.
+       Rey (16-09): «en ningún momento se me notificó cuando cerré el Ejecutor, y eso también
+       es grave». Dos avisos DISTINTOS a propósito:
+         🟡 lo apagó él  -> recordatorio, no alarma: fue su decisión
+         🔴 se cayó solo -> lo más urgente de todo: cree que está cubierto y no lo está
+       ⚠️ Su PC DUERME POR HORARIO y dormir no es caerse: por eso el corte es de 45 minutos,
+       más que cualquier hueco normal entre lecturas, y menos que una siesta de verdad. */
+    if(!quitada("ejecutor")){
+      const e=load(K.ejecvisto, null);
+      if(e && e.ts){
+        const horas=Math.floor((Date.now()-e.ts)/3600000);
+        if(e.on===false){
+          out.push({ id:"ejecutor", urg:1, tit:"El Ejecutor está apagado",
+            txt:"Lo apagaste tú"+(horas>0?(" hace "+horas+" hora(s)"):"")+" y sigue apagado. **No hay robot**: si sale una señal mientras estás en la moto, no entra nadie. Si fue a propósito, perfecto — pero que lo sepas.",
+            acc:"ejecutor", bot:"🤖 Ver el Ejecutor" });
+        }else if(e.on===true && e.vistoHace!=null && e.vistoHace>45*60){
+          const min=Math.round(e.vistoHace/60);
+          out.push({ id:"ejecutor", urg:3, tit:"El Ejecutor está ENCENDIDO pero no responde",
+            txt:"Lleva **"+min+" minutos** sin dar señales y tú lo tienes encendido. Eso no es una siesta de tu PC: es que **no hay robot y creías que sí**. El 28-08 te pasó 1 h 35 min por un reinicio de Windows.",
+            acc:"ejecutor", bot:"🤖 Ver el Ejecutor" });
+        }
+      }
+    }
+
     /* 4) EL PLAN DE LA SEMANA */
     if(!quitada("plansem")){
       const hayPlan = PLANSEM && (PLANSEM.pares || PLANSEM.texto || PLANSEM.bias);
@@ -742,6 +804,198 @@ function guardiaHuecos(){
   out.sort((a,b)=>b.urg-a.urg);
   return out;
 }
+
+/* ══════════════════════════════════════════════════════════════════════════════════
+   🧠 EL REPASO DE ROBERTO — mañana y tarde (v7.161, 16-09-2026)
+   ──────────────────────────────────────────────────────────────────────────────────
+   Rey: «dos veces al día, por la mañana y por la tarde, para sentir la precisión de hacer
+   las cosas que debo hacer y disciplinarme. Roberto debe hablarme, exigirme, recordarme, ver
+   qué me falta por completar y por hacer, y sugerirme. Es mi RESPALDO MENTAL DE
+   PREOCUPACIONES, para tener la mente lo más libre posible.»
+
+   No es el guardián: el guardián CUENTA lo que falta (gratis, determinista). Esto PIENSA —
+   cruza sus datos y busca el patrón. Por eso cuesta, y por eso son dos al día y no veinte.
+   💳 medido de su gasto real: ~$0,02–0,04 cada uno ≈ $1,20–2,40 al mes.
+   ══════════════════════════════════════════════════════════════════════════════════ */
+const REPASO_DEF = { on:true, manana:"09:00", tarde:"18:30", solo:true };
+function repasoCfg(){ const c=load(K.repaso,null); return Object.assign({},REPASO_DEF,c||{}); }
+function repasoGuardar(c){ save(K.repaso, Object.assign({}, repasoCfg(), c||{})); }
+
+/* 🕐 UNA HORA QUE NO CHOQUE CON LAS SUYAS. Rey (16-09): «debes revisar que no choquen mis
+   avisos el uno con el otro». Si la hora pedida está ocupada, se busca el hueco más cercano
+   dentro de su franja; si no hay ninguno, se deja la pedida y se dice. */
+function repasoHoraLibre(pedida, desde, hasta){
+  try{
+    const ocupadas=new Set((Array.isArray(REMINDERS)?REMINDERS:[])
+      .filter(r=>r && r.on && /^\d{1,2}:\d{2}$/.test(String(r.hora||"")))
+      .map(r=>String(r.hora)));
+    const aMin=(h)=>{ const p=String(h).split(":"); return (+p[0])*60+(+p[1]); };
+    const aTxt=(m)=>String(Math.floor(m/60)).padStart(2,"0")+":"+String(m%60).padStart(2,"0");
+    if(!ocupadas.has(pedida)) return pedida;
+    const p=aMin(pedida), d=aMin(desde), h=aMin(hasta);
+    for(let paso=15; paso<=180; paso+=15){
+      for(const cand of [p+paso, p-paso]){
+        if(cand<d || cand>h) continue;
+        if(!ocupadas.has(aTxt(cand))) return aTxt(cand);
+      }
+    }
+    return pedida;
+  }catch(_){ return pedida; }
+}
+
+/* 📦 TODO LO QUE SABE DE ÉL, APRETADO. Cuanto más corto, más barato — y más claro.
+   ⚠️ Lo del Ejecutor va ETIQUETADO COMO DEL ROBOT: su regla no admite matices. */
+function repasoDatos(momento){
+  const L=[];
+  try{
+    const hoy=hoyISO();
+    L.push("MOMENTO: "+(momento==="tarde"?"repaso de la TARDE (la jornada ya pasó)":"repaso de la MAÑANA (antes de operar)"));
+    L.push("HOY: "+hoy+" ("+diaSemana(hoy)+")");
+    /* lo que el guardián ya sabe, sin volver a calcularlo */
+    try{ const h=guardiaHuecos();
+      L.push(h.length ? ("LO QUE LE FALTA (contado de sus registros):\n"+h.map(x=>"· ["+(x.urg>=3?"URGENTE":x.urg===2?"importante":"menor")+"] "+x.tit+" — "+String(x.txt).replace(/\*\*/g,"")).join("\n"))
+                      : "LO QUE LE FALTA: nada pendiente. Está al día.");
+    }catch(_){}
+    /* SUS operaciones — las suyas */
+    const mias=(Array.isArray(TRADES)?TRADES:[]).filter(t=>t && !t.abierta);
+    const miasR=mias.filter(t=>(t.modo||"real")==="real"), miasB=mias.filter(t=>t.modo==="backtest");
+    L.push("SUS OPERACIONES (las que apunta ÉL): "+miasR.length+" en real · "+miasB.length+" en backtesting");
+    if(miasR.length) L.push("  últimas suyas: "+miasR.slice(-5).map(t=>t.fecha+" "+t.par+" "+(t.r>0?"+":"")+t.r+"R"+(t.plan==="No"?" [PLAN ROTO]":"")).join(" | "));
+    /* LAS DEL ROBOT, ETIQUETADAS: no son suyas y no se pueden confundir */
+    try{ const a=load(K.ejec,{trades:{}}); const ej=Object.values(a.trades||{}).filter(x=>x&&x.tsOut);
+      L.push("DEL EJECUTOR (SU ROBOT — NO SON OPERACIONES DE REY): "+ej.length+" cerradas"
+        +(ej.length?(", última "+new Date(ej[ej.length-1].tsOut).toISOString().slice(0,10)):""));
+    }catch(_){}
+    /* su plan y su racha */
+    try{ const f=planFaseActual(); if(f) L.push("SU PLAN: fase «"+(f.t||f.nombre||"?")+"» — "+planPasosHechos(f)+"/"+((f.pasos||[]).length)+" pasos hechos"); }catch(_){}
+    try{ const r=planRachaDisciplina(); if(r!=null) L.push("RACHA DE DISCIPLINA: "+(typeof r==="object"?JSON.stringify(r):r)); }catch(_){}
+    /* cómo ha llegado: su vida, que él pidió cruzar con el trading */
+    try{ if(typeof iaRitmo==="function"){ const rr=iaRitmo(); if(rr) L.push("SU RITMO: "+String(rr).slice(0,300)); } }catch(_){}
+    /* el Ejecutor, encendido o no */
+    try{ const e=load(K.ejecvisto,null); if(e) L.push("EL EJECUTOR: "+(e.on?"encendido":"APAGADO")+(e.vistoHace!=null?(" · última señal hace "+Math.round(e.vistoHace/60)+" min"):"")); }catch(_){}
+  }catch(_){}
+  return L.join("\n");
+}
+
+/* 🧠 Y SE LO PIDE. Deja la respuesta en SU chat, Roberto la dice y la voz la lee. */
+async function repasoPedir(momento, aMano){
+  try{
+    const cfg=repasoCfg();
+    if(!cfg.on && !aMano) return;
+    if(!nubeUrl()) return;
+    const dia=hoyISO();
+    const hecho=load(K.repasohecho,{}) || {};
+    const marca=dia+":"+momento;
+    if(!aMano && hecho[marca]) return;            /* uno por momento y día */
+    let d=null;
+    try{
+      const r=await fetch(nubeUrl()+"/repaso/roberto",{method:"POST",
+        headers:{"content-type":"application/json"},
+        body:JSON.stringify({ momento, dia, datos:repasoDatos(momento) })});
+      d=await r.json();
+    }catch(_){ d={ok:false}; }
+    if(!d || !d.ok){ if(aMano) toast("No pude hacer el repaso: "+((d&&d.error)||"sin conexión")); return; }
+    hecho[marca]=Date.now(); save(K.repasohecho,hecho);
+    const tit = momento==="tarde" ? "🌆 Repaso de la tarde" : "🌅 Repaso de la mañana";
+    try{
+      const c=iaConvDeTema("🧠 Mis repasos con Roberto");
+      if(c){
+        c.msgs.push({role:"assistant",content:"**"+tit+"** · "+dia+"\n\n"+String(d.texto||"")});
+        iaGuardarConvs();
+        const abierta=(typeof iaConvAct==="function") && iaConvAct() && iaConvAct().id===c.id;
+        if(abierta) pintarIAChat();
+      }
+    }catch(_){}
+    /* y Roberto lo DICE: la primera línea, que es la que importa */
+    try{
+      const prim=String(d.texto||"").split("\n").filter(x=>x.trim() && !/^[🎯⚠️👀✅#*]/.test(x.trim()))[0]
+                 || String(d.texto||"").slice(0,140);
+      robDecir("Roberto", tit+": "+prim.slice(0,180), {gesto:"analiza", ir:"hoy"});
+    }catch(_){}
+    if(aMano) toast(d.guardado?"🧠 Repaso (ya estaba hecho — gratis)":"🧠 Repaso listo");
+  }catch(e){ console.log("[apex] repaso:", e.message); }
+}
+
+/* ⏰ SUS DOS HORAS, EN EL RELOJ DE ANDROID Y SIN CHOCAR CON LAS SUYAS */
+async function repasoAlReloj(){
+  try{
+    const P=(typeof vigiaPuente==="function")?vigiaPuente():null;
+    if(!P || typeof P.programarAvisos!=="function") return;
+    const cfg=repasoCfg();
+    const avisos=[];
+    if(cfg.on){
+      const hm=repasoHoraLibre(cfg.manana,"06:30","11:30");
+      const ht=repasoHoraLibre(cfg.tarde ,"15:00","21:30");
+      avisos.push({ id:"repaso0", tit:"🌅 Repaso de la mañana", msg:"Roberto tiene tu repaso: qué te toca hoy y qué arrastras sin hacer.", tipo:"normal", hora:hm, dias:"1,2,3,4,5,6,7" });
+      avisos.push({ id:"repaso1", tit:"🌆 Repaso de la tarde",  msg:"Roberto tiene tu repaso: qué hiciste, qué no, y qué cerrar hoy.",     tipo:"normal", hora:ht, dias:"1,2,3,4,5,6,7" });
+    }
+    await P.programarAvisos({ avisos: avisos, todos: ["repaso0","repaso1"] });
+  }catch(_){}
+}
+
+/* 🔕 v7.161 — ¿SIGUE AHÍ EL EJECUTOR? Rey (16-09): «en ningún momento se me notificó cuando
+   cerré el Ejecutor en mi PC, y eso también es grave».
+   El estado ya existía (`on`, `vivo`, `vistoHace`) pero solo se veía ABRIENDO el panel 🤖.
+   Aquí se guarda cada vez que Apex lo lee, para que el guardián pueda mirarlo sin pedir nada
+   a la nube — y sin gastar.
+   ⚠️ NO se apunta "está caído": se apunta LO QUE SE VIO y cuándo. Decidir es cosa del
+   guardián, que sabe distinguir una siesta de su PC de una caída ([[apex-roberto-no-inventa]]). */
+function ejecApuntarEstado(d){
+  try{
+    if(!d || typeof d!=="object") return;
+    save(K.ejecvisto, { on: d.on===true, vivo: (d.vivo===true),
+      vistoHace: (typeof d.vistoHace==="number" ? d.vistoHace : null), ts: Date.now() });
+  }catch(_){}
+}
+
+/* 🗣️ v7.161 — Y AQUÍ ES DONDE ROBERTO ABRE LA BOCA.
+   Rey (16-09): «¿solo sale un cartel? ¿Y Roberto qué papel cumple? Ahí no me dice nada».
+   Tenía razón: le hice un tablón, no un mentor. Un cartel se ignora; que te lo diga Roberto,
+   con su cara y su voz, en los dos cuerpos, no.
+   · el texto lo escribo yo → no gasta un céntimo
+   · UNA VEZ AL DÍA → si lo repitiera cada vez que abre Apex sería ruido, y el ruido no exige
+   · y queda ESCRITO en su chat, para que pueda volver a leerlo y contestarle */
+function guardiaLoQueDiceRoberto(h){
+  const x=h[0];
+  const n=h.length;
+  const cola = n>1 ? (" Y hay "+(n-1)+" cosa"+(n>2?"s":"")+" más esperando.") : "";
+  if(x.id==="backtest")  return "Rey, "+x.tit.toLowerCase()+". Sin datos tuyos no hay sistema: hay corazonadas."+cola;
+  if(x.id==="huecos")    return "Rey, tienes operaciones con datos sueltos. Tu regla es cero — y una operación a medias no sirve para ningún análisis, ni mío ni tuyo."+cola;
+  if(x.id==="revisar")   return "Rey, dejaste cosas a medias y siguen ahí. Lo que se empieza se cierra."+cola;
+  if(x.id==="plansem")   return "Rey, no tienes plan de la semana escrito. Si no está escrito, después no hay forma de saber si lo cumpliste."+cola;
+  if(x.id==="plan")      return "Rey, tienes pasos de tu plan sin cerrar. Eso no lo puse yo: te lo pusiste tú."+cola;
+  if(x.id==="ejecutor")  return x.urg>=3
+    ? "Rey, ATENCIÓN: el Ejecutor está encendido pero no responde. No hay robot, y tú creías que sí. Míralo ahora."+cola
+    : "Rey, el Ejecutor sigue apagado. No hay nadie cubriéndote si sale una señal."+cola;
+  return "Rey, "+x.tit.toLowerCase()+"."+cola;
+}
+function guardiaRobertoHabla(){
+  try{
+    const cfg=guardiaCfg();
+    if(!cfg.on) return;
+    const h=guardiaHuecos();
+    if(!h.length) return;
+    /* 🔇 una vez al día: la firma junta el día y QUÉ se está exigiendo, así que si cambia lo
+       que le falta, vuelve a decírselo — pero no repite lo mismo diez veces. */
+    const firma=hoyISO()+"|"+h.map(x=>x.id).join(",");
+    if(cfg.dicho===firma) return;
+    guardiaGuardar({dicho:firma});
+    const txt=guardiaLoQueDiceRoberto(h);
+    /* 1) lo DICE: nubecita en los dos cuerpos, con cara de frenar, y la voz si está encendida */
+    try{ robDecir("Roberto", txt, {gesto:"frena", urge:h[0].urg>=3, ir:"hoy"}); }catch(_){}
+    /* 2) y lo deja ESCRITO en su chat, para que pueda releerlo y contestarle */
+    try{
+      const c=(typeof iaConvDeTema==="function") ? iaConvDeTema("🛡️ Lo que te estoy exigiendo") : null;
+      if(c){
+        c.msgs.push({role:"assistant",content:"🛡️ **"+x0tit(h)+"**\n\n"+txt+"\n\n_Lo tienes en 🎯 Hoy con el botón para hacerlo. Si no quieres que te lo exija, ahí mismo lo quitas._"});
+        iaGuardarConvs();
+        const abierta=(typeof iaConvAct==="function") && iaConvAct() && iaConvAct().id===c.id;
+        if(abierta) pintarIAChat();
+      }
+    }catch(_){}
+  }catch(e){ console.log("[apex] guardia habla:", e.message); }
+}
+function x0tit(h){ try{ return h[0].tit; }catch(_){ return "Te falta algo"; } }
 
 /* 🛡️ LA TARJETA. Si no hay nada que exigir, NO SE PINTA: lo que está bien no se anuncia. */
 function guardiaPinta(){
@@ -777,6 +1031,8 @@ function guardiaIr(acc){
     else if(acc==="huecos"){ irDestino("diario"); }
     else if(acc==="revisar"){ if(typeof abrirIA==="function") abrirIA(); }
     else if(acc==="plansem"){ irDestino("analisis"); }
+    else if(acc==="ejecutor"){ irDestino("ejecutor"); }
+    else if(acc==="plan"){ irDestino("arranque"); }
   }catch(_){}
 }
 
@@ -789,12 +1045,11 @@ async function guardiaAlReloj(){
     const cfg=guardiaCfg();
     const h=cfg.on ? guardiaHuecos() : [];
     const avisos=[];
-    if(h.length){
-      const x=h[0];
-      avisos.push({ id:"guardia0", tit:"🛡️ "+x.tit,
-        msg:String(x.txt).replace(/\*\*/g,"").slice(0,220)+" — ábrelo en Apex y hazlo.",
-        tipo:"normal", hora:String(cfg.hora||"20:00"), dias:"1,2,3,4,5,6,7" });
-    }
+    /* 🔕 v7.161 — EL GUARDIÁN YA NO PONE ALARMA PROPIA. Caía a las 20:00, encima de su
+       «📒 Cierre del día con Roberto», y Rey pidió expresamente que sus avisos no choquen.
+       Un aviso más no es más disciplina, es más ruido: lo que el guardián sabe viaja DENTRO
+       del repaso de Roberto (mañana y tarde). La tarjeta de 🎯 Hoy se queda: no suena y es gratis. */
+    void h;
     /* "todos" incluye guardia0 SIEMPRE: si hoy no hay nada que exigir, su despertador se va */
     await P.programarAvisos({ avisos: avisos, todos: ["guardia0"] });
   }catch(_){}
@@ -1891,6 +2146,9 @@ async function verEjecutor(){
   try{
     const r=await fetch(nubeUrl()+"/ejec/estado",{cache:"no-store"});
     d=await r.json();
+    /* 🔕 v7.161 — se apunta LO QUE SE VIO, para que el guardian pueda avisar si el
+       Ejecutor se fue sin decir nada (Rey, 16-09). No cuesta nada: ya estaba leido. */
+    try{ ejecApuntarEstado(d); }catch(_){}
     if(!d || !d.ok) throw 0;
     const live=d.live||{};
     const lg=d.log||[];
@@ -2470,7 +2728,7 @@ async function revisionNoche(){
   const mal=[], ojo=[], bien=[];
   let S=null, E=null;
   try{ const r=await fetch(nubeUrl()+"/salud",{cache:"no-store"}); S=await r.json(); }catch(_){}
-  try{ const r=await fetch(nubeUrl()+"/ejec/estado",{cache:"no-store"}); E=await r.json(); }catch(_){}
+  try{ const r=await fetch(nubeUrl()+"/ejec/estado",{cache:"no-store"}); E=await r.json(); try{ ejecApuntarEstado(E); }catch(_){} }catch(_){}
 
   if(!S){ avisar("🌙 REVISIÓN DE ANTES DE DORMIR\n\n❌ No pude hablar con la nube, así que NO puedo\nrevisarte nada. Mira tu internet y vuelve a intentarlo.\n\nNo te digo que está todo bien: es que no lo sé."); return; }
   bien.push("La nube responde (worker "+(S.version||"?")+")");
@@ -2541,7 +2799,7 @@ async function auditoriaEjecutor(){
   if(typeof abrirIA==="function") abrirIA();
   iaTemaChat("🕵️ Auditoría del Ejecutor");
   let d=null;
-  try{ const r=await fetch(nubeUrl()+"/ejec/estado",{cache:"no-store"}); d=await r.json(); }catch(_){}
+  try{ const r=await fetch(nubeUrl()+"/ejec/estado",{cache:"no-store"}); d=await r.json(); try{ ejecApuntarEstado(d); }catch(_){} }catch(_){}
   /* 📊 v7.18 — Y LO QUE EL INDICADOR MANDÓ DE VERDAD, para poder distinguir
      «el Ejecutor falla» de «no hubo señales». Rey (03-09): "a mi vista está todo bien pero
      internamente si está pasando algo mal no lo puedo ver, ya sea que no esté pasando alguna
@@ -3385,7 +3643,7 @@ function viewEjecutor(){
 async function renderEjecutor(){
   const cont=$("#ejBody"); if(!cont) return;
   let d=null;
-  try{ const r=await fetch(nubeUrl()+"/ejec/estado",{cache:"no-store"}); d=await r.json(); }catch(_){}
+  try{ const r=await fetch(nubeUrl()+"/ejec/estado",{cache:"no-store"}); d=await r.json(); try{ ejecApuntarEstado(d); }catch(_){} }catch(_){}
   if(!d||!d.ok){
     cont.innerHTML='<div class="card">⚠️ No pude leer el Ejecutor. Revisa tu internet — y que el worker v5.77 esté subido. <div style="margin-top:8px"><button class="btn gold" id="ejRetry">🔄 Reintentar</button></div></div>';
     const br=$("#ejRetry"); if(br) br.onclick=renderEjecutor;
@@ -6100,6 +6358,16 @@ function renderHoy(){
   /* 🛡️ v7.160 — y se pinta lo que le falta (o nada, si está al día) */
   try{ guardiaPinta(); }catch(e){ console.log('[apex] guardia:', e.message); }
   try{ guardiaAlReloj(); }catch(_){}
+  /* 🗣️ v7.161 — y ROBERTO SE LO DICE, que es lo que faltaba. Va con un respiro para que
+     Apex termine de pintar: su nubecita encima de una pantalla a medio dibujar no se lee. */
+  setTimeout(()=>{ try{ guardiaRobertoHabla(); }catch(_){} }, 2200);
+  /* 🧠 v7.161 — y sus dos repasos: se ponen en el reloj y, si toca, se piden */
+  try{ repasoAlReloj(); }catch(_){}
+  try{
+    const _h=new Date().getHours();
+    if(_h>=8 && _h<12) repasoPedir("manana", false);
+    else if(_h>=17 && _h<22) repasoPedir("tarde", false);
+  }catch(_){}
   const on=(id,fn)=>{ const b=$("#"+id); if(b) b.onclick=fn; };
   on("hoyChk",()=>irA("checklist"));
   on("hoyPlan",()=>irA("arranque"));
@@ -6747,10 +7015,28 @@ async function posPendPinta(){
   try{ const r=await fetch(nubeUrl()+"/pos/pend",{cache:"no-store"}); const d=await r.json(); pend=d&&d.pend; }catch(_){ return; }
   if(!pend || !pend.sym){ caja.innerHTML=""; return; }
   const dir = pend.dir==="LONG" ? "COMPRA" : "VENTA";
+  /* ✍️ v7.161 — LO QUE ROBERTO YA RELLENÓ, A LA VISTA. Rey (16-09): «mi trabajo solo era
+     poner la posición y llenar cómo me sentí». El panel de su indicador viene traducido desde
+     el worker 5.165; aquí se enseña, con la EDAD del panel — si estaba rancio, que lo vea él
+     y decida, no que se entere después ([[apex-informe-rancio-agitador]]). */
+  const P = (pend && pend.panel) || {};
+  const puesto = [];
+  if(P.setup)   puesto.push("setup <b>"+esc(P.setup)+"</b>");
+  if(P.ventana) puesto.push("ventana <b>"+esc(P.ventana)+"</b>");
+  if(P.zona)    puesto.push("zona <b>"+esc(P.zona)+"</b>");
+  if(P.bias)    puesto.push("sesgo <b>"+esc(P.bias)+"</b>");
+  if(P.nconf)   puesto.push("<b>"+esc(String(P.nconf))+"</b> confluencias");
+  if(P.momento) puesto.push("secuencia <b>"+esc(P.momento)+"</b>");
+  const rancio = (P.edadMin!=null && P.edadMin>15);
   caja.innerHTML='<div class="card" style="border:2px solid #e2b341">'+
     '<b>✍️ Detecté tu '+esc(dir)+' en '+esc(pend.sym)+'</b>'+
     '<div style="margin-top:6px;font-size:.92em;line-height:1.45">'+
       'entrada '+esc(String(pend.entry))+(pend.sl!=null?(' · SL '+esc(String(pend.sl))):"")+(pend.tp!=null?(' · TP '+esc(String(pend.tp))):"")+(pend.rr?(' · RR 1:'+esc(String(pend.rr))):"")+
+      (puesto.length
+        ? ('<br><span style="opacity:.92">📋 Ya te rellené: '+puesto.join(" · ")+'.</span>'
+           + (P.edadMin!=null ? ('<span style="opacity:.75"> (del panel de hace '+esc(String(P.edadMin))+' min'+(rancio?" — ⚠️ míralo, puede estar viejo":"")+')</span>') : ""))
+        : '<br><span style="opacity:.8">📋 El panel no estaba disponible: esta vez tendrás que poner los datos tú.</span>')+
+      '<br><b>Solo te queda decir cómo te sentiste.</b> Lo demás ya está.'+
       '<br><b>¿En qué libro la apunto?</b> Hasta que lo digas, no está registrada en ninguno.'+
     '</div>'+
     '<div style="display:flex;gap:8px;margin-top:10px">'+
@@ -6764,11 +7050,17 @@ async function posPendPinta(){
     const f=hoyISO();
     const t={ id:Date.now(), modo, estrategia:CTX.estrategia, fecha:f, dia:diaSemana(f),
       hora:new Date().toTimeString().slice(0,5), par:pend.sym, dir:(dir==="COMPRA"?"Compra":"Venta"),
-      setup:"", res:"Abierta", r:0, abierta:true,
+      /* ✍️ v7.161 — RELLENADA CON LO QUE EL PANEL DECÍA EN ESE MOMENTO. Lo único que queda
+         para Rey es `emo`: cómo se sintió. Eso no lo puede saber nadie más que él. */
+      setup:(P.setup||""), res:"Abierta", r:0, abierta:true,
       entrada:pend.entry!=null?+pend.entry:null, sl:pend.sl!=null?+pend.sl:null, tp:pend.tp!=null?+pend.tp:null,
-      rr:pend.rr!=null?+pend.rr:null, riesgoPct:"", ventana:"", momento:"En confirmación",
-      bias:"", nconf:0, zona:(dir==="VENTA"?"Premium":"Discount"), poi:"FVG", disp:"FVG 50%", gtf:"5M",
-      plan:"Sí", emo:"", nota:"Detectada en el gráfico", cuenta:"", fueraLimite:false, confs:[] };
+      rr:pend.rr!=null?+pend.rr:null, riesgoPct:"", ventana:(P.ventana||""), momento:(P.momento||"En confirmación"),
+      bias:(P.bias||""), nconf:(P.nconf||0),
+      /* la zona la manda EL PANEL; si no la dijo, se deduce de la dirección como antes */
+      zona:(P.zona || (dir==="VENTA"?"Premium":"Discount")), poi:"FVG", disp:"FVG 50%", gtf:"5M",
+      plan:"Sí", emo:"", cuenta:"", fueraLimite:false, confs:[],
+      nota:"Detectada en el gráfico"+(P.edadMin!=null?(" · panel de hace "+P.edadMin+" min"):"")
+        +(P.panel?("\n"+String(P.panel).slice(0,400)):"") };
     TRADES.push(t); save(K.trades,TRADES);
     try{ veredEnlazar(t); }catch(_){}
     await cerrar();
