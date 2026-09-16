@@ -1,53 +1,19 @@
-APEX v7.161 — TRADING DESK
+APEX v7.162 — TRADING DESK
 =========================
 
-🧠 ROBERTO TE HABLA, TE EXIGE Y RELLENA LO QUE ÉL YA VE
-(app 7.161 · worker 5.165 · 16-09-2026)
+🕯️ LAS CAPTURAS YA SE PUEDEN ESTUDIAR
+Llevabas tres avisos diciendo lo mismo y yo llevaba dos arreglos fallidos, porque buscaba el estirón a lo ALTO. Pedí una captura de tu operación real y la miré: eran 13 velas repartidas en 2716 píxeles. ~190 px por vela. No estaban estiradas a lo alto: lo estaban A LO ANCHO. Ahora la foto nunca baja de 70 velas, con el 60% del contexto ANTES de la entrada.
+Y salieron dos más, los dos callados: el rótulo de la salida se metía debajo del panel del indicador (ahora se aparta a la franja libre), y una operación más vieja que las velas cargadas sacaba una foto del gráfico entero sin quejarse — ahora lo dice en vez de darte una foto inútil.
 
-🗣️ ROBERTO ABRE LA BOCA
-Dijiste: «¿solo sale un cartel? ¿Y Roberto qué papel cumple? Ahí no me dice nada».
-Tenías razón: te hice un tablón, no un mentor. Y lo peor: la pieza ya existía y
-no estaba enchufada.
-Ahora Roberto te lo DICE — nubecita en los dos cuerpos (dentro de Apex y el
-flotante), con su cara, y te lo lee en voz alta si tienes la voz encendida:
-  «Rey, no has registrado ni una operación en backtesting. Sin datos tuyos no hay
-   sistema: hay corazonadas.»
-Y lo deja escrito en su chat para que puedas releerlo y contestarle. Una vez al día:
-repetirlo sería ruido, y el ruido no exige.
+💓 EL OÍDO: POR QUÉ FUNCIONA UN DÍA Y AL SIGUIENTE NO
+Lo miré con el cable, no de cabeza. Tu teléfono dijo: «latido: callado 179s -> resucito». Permiso concedido, batería sin restricciones, segundo plano permitido, servicio vivo con el micrófono declarado... y TRES MINUTOS sordo mientras Apex juraba estar encendido.
+Tres causas, dos mías:
+· el latido esperaba 150 s antes de resucitar → ahora 40 s;
+· la espera entre intentos crecía al cuadrado y solo se reiniciaba con un tipo de fallo: con otros se clavaba en 30 s y ahí se quedaba TODO EL DÍA. Eso es lo de «un día sí y otro no»: no se rompía, se DEGRADABA. Ahora se topa en 8 s y vuelve a cero en cuanto te oye;
+· y el reconocedor de Google se pudre con las horas → relevo limpio cada 25 min, antes de que se degrade.
 
-✍️ LA ENTRADA DETECTADA LLEGA RELLENA
-Dijiste: «¿por qué Roberto no rellena TODO menos cómo me sentí?». El bache era
-gordo: EL PANEL DE TU INDICADOR YA ESTABA GUARDADO —sesgo, killzone, zona, setup,
-secuencia F3, alineación— y la tarjeta salía medio vacía.
-Ahora llega así:
-  📋 Ya te rellené: setup B · ventana NY AM · zona Discount · sesgo ALCISTA ·
-     4 confluencias (del panel de hace 3 min)
-  Solo te queda decir cómo te sentiste. Lo demás ya está.
-· Si el panel tiene más de 15 min, te avisa para que lo mires.
-· Lo que el panel no diga se queda VACÍO. No se inventa nada.
-
-🧠 TU REPASO, MAÑANA Y TARDE (09:00 y 18:30)
-Esas horas no las elegí a ojo: miré tus 18 avisos. El de las 18:30 está JUSTO
-DESPUÉS de tu «🏋️ Backtesting obligatorio» de las 17:30 — ahí es donde tiene
-sentido decirte si lo hiciste. Si cambias tus avisos, se recoloca solo.
-Te dirá, en este orden: 🎯 lo primero (UNA cosa) · ⚠️ lo que arrastras (con su
-número y desde cuándo) · 👀 lo que veo (aquí cruza tu descanso con tus resultados,
-tu hora de entrar con lo que ganas) · ✅ haz esto.
-Con tu regla dentro, textual: «las operaciones del Ejecutor NO son suyas».
-
-⚠️ DOS DECISIONES QUE TOMÉ
-1. Quité la alarma propia del guardián: caía a las 20:00, encima de tu «Cierre del
-   día con Roberto». Su contenido va DENTRO del repaso. Un aviso más no es más
-   disciplina, es más ruido — ya tienes 18.
-2. Lo dejé en automático, como autorizaste.
-💳 Coste: ~$0,02–0,04 cada repaso × 2 = $1,20–2,40 al mes sobre los ~$78 de hoy.
-
-🧭 Y EL CARTEL YA NO ES SOLO DEL BACKTESTING
-También te exige los pasos de TU plan sin cerrar, los datos sueltos, lo que dejaste
-«por revisar», el plan de la semana, y si el Ejecutor está caído o apagado.
-
-🛡️ Bancos nuevos: «la entrada llega rellena» 6/6 · «el repaso dos veces al día» 9/9
-· «Roberto te exige» ampliado a 13/13.
+🔎 LA TABLA DEJA DE SER UNA HILERA SIN FIN
+Buscador que entiende lo que escribirías de verdad: «11/09», «septiembre», «sep», «2026», «ganados», «lunes». Tope de filas con «ver más». Y el total sigue siendo el de TODO lo encontrado, no el de lo que cabe en pantalla — si no, mentiría.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

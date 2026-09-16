@@ -3207,7 +3207,42 @@ function resNum(v, dinero, conSigno){
    para que las columnas queden alineadas —un dinero desalineado se lee mal aunque sea
    correcto— y la tabla vive dentro de su propio contenedor con scroll horizontal, así
    la página nunca se mueve de lado. */
-function resTablaHTML(filas, dinero){
+/* 🔎 v7.162 — BUSCAR EN LA TABLA. Rey (16-09): «no voy a poder buscar un dato de un día,
+   semana, mes o año en específico».
+   Entiende lo que él escribiría de verdad, no una sintaxis que haya que aprender:
+     «11/09» · «septiembre» · «sep» · «2026» · «ganados» · «perdidos» · «lunes»
+   Si no encuentra nada, se dice — no se le deja una tabla vacía sin explicación. */
+function resFiltraFilas(filas, txt){
+  const q=String(txt||"").trim().toLowerCase();
+  if(!q) return filas;
+  const MES=["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+  return filas.filter(f=>{
+    try{
+      const d=new Date(f.ini);
+      const et=String(f.et||"").toLowerCase();
+      if(et.indexOf(q)>=0) return true;
+      /* fecha en cualquiera de sus formas: 11/09 · 11-09 · 2026-09-11 */
+      const dd=String(d.getDate()).padStart(2,"0"), mm=String(d.getMonth()+1).padStart(2,"0"), yy=String(d.getFullYear());
+      if((dd+"/"+mm).indexOf(q)>=0 || (dd+"-"+mm).indexOf(q)>=0) return true;
+      if((yy+"-"+mm+"-"+dd).indexOf(q)>=0) return true;
+      if(yy.indexOf(q)>=0 && q.length>=4) return true;
+      /* el mes por su nombre, entero o empezado: «septiembre» o «sep» */
+      const nm=MES[d.getMonth()];
+      if(q.length>=3 && nm.indexOf(q)===0) return true;
+      /* el día de la semana */
+      const ds=d.toLocaleDateString("es",{weekday:"long"}).toLowerCase();
+      if(q.length>=3 && ds.indexOf(q)===0) return true;
+      /* y cómo fue */
+      if(/^gana|^verde|^\+/.test(q) && f.valor>0) return true;
+      if(/^perd|^rojo|^-/.test(q) && f.valor<0) return true;
+      return false;
+    }catch(_){ return false; }
+  });
+}
+/* ⚠️ v7.162 — `filas` es lo que SE VE; `paraTotal` es TODO lo que hay (filtrado).
+   El total tiene que sumar todo: una tabla cuyo total solo cuenta lo que cabe en pantalla
+   miente, y encima miente en silencio ([[apex-nube-solo-lo-que-importa]]). */
+function resTablaHTML(filas, dinero, paraTotal){
   if(!filas.length) return '<div class="desc" style="padding:12px 2px;font-size:12px">Todavía no hay operaciones cerradas aquí. En cuanto cierre la primera, esta tabla se llena sola.</div>';
   /* 📏 CINCO COLUMNAS, NI UNA MÁS — y esto se decidió MIRÁNDOLA en una pantalla de 412 px,
      no calculándolo. Con ocho columnas, «En R» salía cortada por la mitad y «Mejor/Peor» ni
@@ -3219,7 +3254,7 @@ function resTablaHTML(filas, dinero){
   const th=(t,al)=>'<th style="text-align:'+(al||"right")+';padding:6px 5px;font-size:.7em;letter-spacing:.04em;text-transform:uppercase;opacity:.65;font-weight:700;white-space:nowrap">'+t+'</th>';
   const td=(t,al)=>'<td style="text-align:'+(al||"right")+';padding:7px 5px;white-space:nowrap">'+t+'</td>';
   const T={n:0,g:0,p:0,e:0,pl:0,r:0,conPL:false,conR:false};
-  filas.forEach(f=>{ T.n+=f.n; T.g+=f.ganadas; T.p+=f.perdidas; T.e+=f.empates;
+  (paraTotal||filas).forEach(f=>{ T.n+=f.n; T.g+=f.ganadas; T.p+=f.perdidas; T.e+=f.empates;
     if(f.pl!=null){ T.pl+=f.pl; T.conPL=true; } if(f.r!=null){ T.r+=f.r; T.conR=true; } });
   const Tdec=T.g+T.p;
   const marcas=(f)=>'<span style="color:#26a269">'+f.ganadas+'✓</span> <span style="color:#e0483d">'+f.perdidas+'✗</span>'+(f.empates?('<span style="opacity:.55"> '+f.empates+'=</span>'):"");
@@ -3441,12 +3476,55 @@ function resBloqueHTML(id, titulo, subtitulo){
 function resPinta(id, ops, dinero){
   const caja = document.getElementById("res-"+id); if(!caja) return;
   const per = localStorage.getItem("apex.res."+id) || "dia";
-  const filas = apexResumen(ops, per);
+  const todasF = apexResumen(ops, per);
+  /* 🔎 v7.162 — lo que busca y cuántas filas quiere ver, recordado por sección y período */
+  const kBusca="apex.busca."+id, kVer="apex.ver."+id+"."+per;
+  const busca = localStorage.getItem(kBusca) || "";
+  const filas = resFiltraFilas(todasF, busca);
+  const TOPE = parseInt(localStorage.getItem(kVer)||"12", 10) || 12;
   const cuerpo = caja.querySelector(".res-cuerpo");
   /* la gráfica ARRIBA y la tabla debajo: la pregunta «¿cómo voy?» se contesta de un
      vistazo con la forma; los números son para cuando ya quiere el detalle. */
-  cuerpo.innerHTML = resGraficaSVG(filas, dinero, id) + resTablaHTML(filas, dinero);
+  /* 🔎 la caja de búsqueda va ENTRE la gráfica y la tabla: la gráfica es el vistazo, y la
+     búsqueda pertenece al detalle. */
+  const hayMas = filas.length > TOPE;
+  const visibles = hayMas ? filas.slice(0, TOPE) : filas;
+  const buscador =
+    '<div style="display:flex;gap:6px;align-items:center;margin:8px 0 2px">'+
+      '<input class="inp res-busca" placeholder="🔎 Busca: 11/09 · septiembre · 2026 · ganados" value="'+esc(busca)+'" style="flex:1;font-size:.86em;padding:6px 9px">'+
+      (busca?'<button class="btn res-busca-x" style="padding:4px 9px;font-size:.85em">✕</button>':"")+
+    '</div>'+
+    (busca
+      ? ('<div class="desc" style="font-size:11.5px;margin:0 0 4px">'
+         + (filas.length? ("Encontrado en <b>"+filas.length+"</b> de "+todasF.length+" período(s).")
+                        : "Nada con «"+esc(busca)+"». Prueba con el día (11/09), el mes (septiembre) o el año.")
+         + '</div>')
+      : "");
+  const verMas = hayMas
+    ? '<div style="margin-top:8px"><button class="btn res-mas" style="width:100%;font-size:.86em">▾ Ver '+Math.min(24, filas.length-TOPE)+' más (hay '+filas.length+')</button></div>'
+    : (TOPE>12 && filas.length>12
+        ? '<div style="margin-top:8px"><button class="btn res-menos" style="width:100%;font-size:.86em">▴ Ver menos</button></div>'
+        : "");
+  /* ⚠️ la GRÁFICA y el TOTAL se hacen con TODAS las filas filtradas, no con las visibles:
+     si el total solo sumara lo que cabe en pantalla, estaría mintiendo. */
+  cuerpo.innerHTML = resGraficaSVG(filas, dinero, id) + buscador + resTablaHTML(visibles, dinero, filas) + verMas;
   try{ resGraficaTacto(cuerpo, filas, dinero); }catch(_){}
+  try{
+    const inp=cuerpo.querySelector(".res-busca");
+    if(inp){
+      let tmr=null;
+      inp.oninput=()=>{ clearTimeout(tmr); tmr=setTimeout(()=>{
+        localStorage.setItem(kBusca, inp.value); localStorage.removeItem(kVer); resPinta(id, ops, dinero);
+        try{ const n=cuerpo.querySelector(".res-busca"); if(n){ n.focus(); n.setSelectionRange(n.value.length,n.value.length); } }catch(_){}
+      }, 320); };
+    }
+    const x=cuerpo.querySelector(".res-busca-x");
+    if(x) x.onclick=()=>{ localStorage.removeItem(kBusca); localStorage.removeItem(kVer); resPinta(id, ops, dinero); };
+    const mas=cuerpo.querySelector(".res-mas");
+    if(mas) mas.onclick=()=>{ localStorage.setItem(kVer, String(TOPE+24)); resPinta(id, ops, dinero); };
+    const men=cuerpo.querySelector(".res-menos");
+    if(men) men.onclick=()=>{ localStorage.removeItem(kVer); resPinta(id, ops, dinero); };
+  }catch(_){}
   caja.querySelectorAll(".res-tab").forEach(b=>{
     b.classList.toggle("on", b.getAttribute("data-per")===per);
     b.onclick=()=>{ localStorage.setItem("apex.res."+id, b.getAttribute("data-per")); resPinta(id, ops, dinero); };
