@@ -1,17 +1,19 @@
-APEX v7.163 — TRADING DESK
+APEX v7.164 — TRADING DESK
 =========================
 
-🕯️ LAS CAPTURAS YA SE PUEDEN ESTUDIAR
-Llevabas tres avisos diciendo lo mismo y yo llevaba dos arreglos fallidos, porque buscaba el estirón a lo ALTO. Pedí una captura de tu operación real y la miré: eran 13 velas repartidas en 2716 píxeles. ~190 px por vela. No estaban estiradas a lo alto: lo estaban A LO ANCHO. Ahora la foto nunca baja de 70 velas, con el 60% del contexto ANTES de la entrada.
-Y salieron dos más, los dos callados: el rótulo de la salida se metía debajo del panel del indicador (ahora se aparta a la franja libre), y una operación más vieja que las velas cargadas sacaba una foto del gráfico entero sin quejarse — ahora lo dice en vez de darte una foto inútil.
+💓 EL OÍDO: ENCONTRÉ LA CAUSA DE VERDAD, Y ERA MÍA
+Esta mañana te di tres arreglos del micrófono. Los tres eran síntomas. Después de instalarlos me quedé mirando el registro de tu teléfono y me dijo esto:
+    19:18:48  latido: callado 59s -> resucito
+    19:20:48  latido: callado 119s -> resucito
+Dos resurrecciones seguidas con el micrófono perfectamente vivo.
+El aviso que dice «está entrando sonido» (llega diez veces por segundo mientras la oreja está abierta) lo tenía VACÍO. Y con la sesión de tu Android el silencio no produce ni resultado ni error — el micrófono sigue abierto y callado, que es lo normal el 99% del tiempo. Así que el vigilante no veía absolutamente nada, daba el oído por muerto cada 40 segundos, y MATABA UN RECONOCEDOR SANO CADA DOS MINUTOS, todo el día.
+Eso es las dos cosas de las que te quejabas a la vez: «suena cada x tiempo» (dos pitidos por cada resurrección) y «funciona un día y al siguiente no» (era yo machacando al reconocedor de Google hasta que se pudría).
+Ahora el latido mide lo único que significa estar vivo: que entra sonido. Y si de verdad hace falta resucitar, ya no te cuesta dos minutos sino 45 segundos.
+Esto hay que verlo en la calle: mañana dime si te oyó a la primera.
 
-💓 EL OÍDO: POR QUÉ FUNCIONA UN DÍA Y AL SIGUIENTE NO
-Lo miré con el cable, no de cabeza. Tu teléfono dijo: «latido: callado 179s -> resucito». Permiso concedido, batería sin restricciones, segundo plano permitido, servicio vivo con el micrófono declarado... y TRES MINUTOS sordo mientras Apex juraba estar encendido.
-Tres causas, dos mías:
-· el latido esperaba 150 s antes de resucitar → ahora 40 s;
-· la espera entre intentos crecía al cuadrado y solo se reiniciaba con un tipo de fallo: con otros se clavaba en 30 s y ahí se quedaba TODO EL DÍA. Eso es lo de «un día sí y otro no»: no se rompía, se DEGRADABA. Ahora se topa en 8 s y vuelve a cero en cuanto te oye;
-· y el reconocedor de Google se pudre con las horas → relevo limpio cada 25 min, antes de que se degrade.
-Esto hay que verlo en la calle, no aquí: mañana dime si te oyó a la primera.
+🕯️ LAS CAPTURAS YA SE PUEDEN ESTUDIAR
+Llevabas tres avisos diciendo lo mismo y yo llevaba dos arreglos fallidos, porque buscaba el estirón a lo ALTO. Pedí una captura de tu operación real y la miré: 13 velas repartidas en 2716 píxeles, ~190 px por vela. Estaban estiradas A LO ANCHO. Ahora la foto nunca baja de 70 velas, con el 60% del contexto ANTES de la entrada.
+Y dos más, los dos callados: el rótulo de la salida se metía debajo del panel del indicador (ahora se aparta a la franja libre), y una operación más vieja que las velas cargadas sacaba una foto del gráfico entero sin quejarse — ahora lo dice en vez de darte una foto inútil.
 
 🔎 LA TABLA DEJA DE SER UNA HILERA SIN FIN
 Buscador que entiende lo que escribirías de verdad: «11/09», «septiembre», «sep», «2026», «ganados», «lunes». Tope de filas con «ver más». Y el total sigue siendo el de TODO lo encontrado, no el de lo que cabe en pantalla — si no, mentiría.
