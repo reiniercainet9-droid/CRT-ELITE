@@ -1,45 +1,49 @@
-APEX v7.158 — TRADING DESK
+APEX v7.159 — TRADING DESK
 =========================
 
-🎯 LA ALARMA ABRE EL GRÁFICO. DIRECTO.
-💸 Y EL COSTE DE CADA OPERACIÓN DEJA DE PERDERSE
-(app 7.158 · worker 5.163 · Puente v4.22 · 16-09-2026)
+🎛️ LA GESTIÓN DE CADA OPERACIÓN, EN TU SECCIÓN
+(app 7.159 · Ejecutor v3.5 · 16-09-2026)
 
-🎯 LA ALARMA, COMO LA PEDISTE
-Tus palabras: «ese para aquí para allá no lo quiero. Al tocarla que abra
-DIRECTAMENTE el gráfico donde debe».
-Hecho: tocas la alarma y sale tu app de TradingView en el par y en la temporalidad
-de la fase. Nada de abrir Apex, ni el chat, ni esperar tres segundos.
-Roberto te sigue leyendo la alarma por voz mientras miras las velas — la voz no
-necesita pantalla.
-Y como el toque ya no pasa por Apex, ahora es el vigilante el que calla la
-insistencia y retira el aviso: si no, la alarma habría seguido sonando sola.
-Te queda un botón 📱 Apex por si algún día quieres el hilo del día escrito. Eso lo
-eliges tú, que es distinto a que te obligue a pasar por ahí.
+Tres reglas deciden CUÁNDO SE CIERRA una operación ya abierta. Hasta hoy vivían
+clavadas dentro del programa de la PC: no se podían ver ni cambiar. Tu ley del
+10-09: «todas las reglas del Ejecutor deben ser configurables».
+Y el laboratorio de hoy midió que son las tres que más mueven el resultado.
 
-💸 EL COSTE, GUARDADO EN VEZ DE DEDUCIDO
-Dijiste: «la comisión se come toda la poca ganancia». Tenías razón, y lo medí en
-tus 13 operaciones: bruto −$18,21 · coste −$175,14 · neto −$193,35.
-Pero para demostrarlo tuve que restar el neto del bruto una por una, porque no se
-guardaba en ninguna parte… y el Ejecutor lo mandaba desde la v2.9.
-Ahora cada operación archivada lleva su bruto, su comisión y su duración.
-Medido: $7,00 por lote ida y vuelta desde el 08-09 (antes $3,50) = 0,70 pips fijos.
+Están en ⚙️ Tus reglas → «🎛️ Cómo gestiona cada operación».
 
-🕵️ Y EL REPASO, PEGADO A SU OPERACIÓN
-El Ejecutor mide a los 30 minutos de cerrar hasta dónde siguió el precio. Ese es EL
-dato que contesta si la salida roba o si la entrada llega tarde. Vivía solo en la
-bitácora, topada a 40 eventos: cuando fui a mirar quedaban TRES.
-Ahora viaja dentro de la operación, en el archivo que aguanta 1000.
+🛡️ MOVER EL STOP A LA ENTRADA — Sí/No, y a cuántos R
+Con Sí, al llegar a ese beneficio el stop sube a tu entrada y esa operación ya no
+puede perder. Con No es TODO O NADA: o el objetivo o el stop.
+📊 Medido (EURUSD, 49 entradas): quitarlo da más por operación (0,50R contra
+0,33R) pero deja la MITAD de operaciones, porque la que sigue abierta bloquea la
+siguiente señal.
 
-📏 LA CAPTURA, CON LAS VELAS CON SU FORMA
-Dijiste: «vela estirada, no pude analizar esa entrada».
-Mi fallo de aritmética: fijé la escala al rango de la operación (unos pips) y a la
-vez encogí la ventana de tiempo. Alto pequeño + pocas velas = vela de media
-pantalla. Ahora la escala sale del máximo y el mínimo de LAS VELAS QUE SE VEN, y la
-operación siempre cabe entera dentro.
+⏱ CERRAR AL NUEVO EXTREMO — Sí/No, y de qué vela (H1 · H4 · D)
+📊 De las que cerró este reloj, el extremo estaba a 0,12R de mediana cuando
+entraste, y después el precio siguió hasta 1,95R. Te deja 1,92R en la mesa por
+operación. Quitarlo fue el cambio que más mejoró los números.
+⚠️ El 04-09 esto estaba en H1 sin que se pudiera ver, y te costó 2,19R en un día.
 
-🛡️ Bancos nuevos: «la alarma abre el gráfico directo» 6/6 · «el coste y el repaso no
-se pierden» 4/4 · regresión completa en verde.
+🎯 OBJETIVO EN R — 0 = el que mande el indicador
+TU INDICADOR NO SE TOCA: el Ejecutor recoloca el objetivo sobre tu precio real de
+entrada y tu stop.
+📊 1,5R se alcanza 2 de cada 3 veces · 2R, 1 de cada 2 · 3R solo 1 de cada 4.
+Comisión: 16,2% con 1,5R contra 8,5% con 2,5R.
+🧪 La mejor combinación medida en EURUSD: objetivo 2R + stop a la entrada SÍ +
+reloj NO. En GBPUSD solo hubo 9 operaciones: ahí no hay dato que valga.
+
+🛡️ DOS COSAS QUE TE PROTEGEN
+· De fábrica son EXACTAMENTE los que tienes hoy (BE sí a 1R · reloj sí en H4 ·
+  objetivo 0). Guardar sin tocar nada no cambia nada. Hay banco que lo ata.
+· Un Apex viejo no te borra estos ajustes: si no los ve, los deja como estaban.
+
+🧮 Y LO QUE EL LABORATORIO DIJO DE TU CUENTA
+Tus 13 operaciones reales: −0,67R = −$193 sobre un balance de $49.798 = −0,39%.
+En el mismo período el laboratorio da +0,26R/op y tú −0,05R/op: la diferencia son
+0,8 errores típicos, o sea que CABE EN EL AZAR de 12 operaciones. No hay avería.
+El deslizamiento de entrada es +1,28% de cada R: no te cuesta nada.
+
+🛡️ Banco nuevo «la gestión está en sus manos» 11/11.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

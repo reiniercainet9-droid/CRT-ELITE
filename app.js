@@ -1507,6 +1507,26 @@ function ejecFormHTML(cfg){
        El corte va en hora de NUEVA YORK porque es la hora del gráfico, no la suya. */
     '<label style="font-size:.85em">🎯 Entradas por SESIÓN (Londres y NY van aparte)<input class="inp ia-ejec-maxopsses" type="number" step="1" min="1" max="10" value="'+esc(String(cfg.maxOpsSesion!=null?cfg.maxOpsSesion:1))+'"></label>'+
     '<label style="font-size:.85em">Hora NY que separa Londres de NY<input class="inp ia-ejec-cortesesion" type="number" step="1" min="0" max="23" value="'+esc(String(cfg.corteSesionNY!=null?cfg.corteSesionNY:6))+'"></label>'+
+    /* 🎛️ v7.159 (16-09) — LA GESTIÓN DE LA OPERACIÓN, QUE HASTA HOY NO SE VEÍA.
+       El break-even, la salida por tiempo y el objetivo vivían CLAVADOS dentro del programa
+       de la PC (BE_AT_R = 1.0, USE_TIME_EXIT = True, y el objetivo lo mandaba el indicador).
+       El laboratorio del 16-09 midió que son LAS TRES QUE MÁS MUEVEN EL RESULTADO, así que
+       no pueden seguir escondidas. Cada una lleva debajo lo que se midió, con sus números:
+       la decisión es de Rey, pero con los datos delante. */
+    '<div style="grid-column:1/3;margin:10px 0 2px;font-weight:700">🎛️ Cómo gestiona cada operación</div>'+
+    '<div class="desc" style="grid-column:1/3;font-size:11.5px;line-height:1.45;margin:0 0 8px">Estas tres reglas deciden <b>cuándo se cierra</b> una operación que ya está abierta. Hasta el 16-09 estaban fijas dentro del programa y no se podían ver ni cambiar. Los valores de abajo son <b>los que tienes ahora</b>: si guardas sin tocar nada, no cambia nada.</div>'+
+
+    '<label style="font-size:.85em">🛡️ Mover el stop a la entrada<select class="inp ia-ejec-beon"><option value="1"'+((cfg.beActivo!==false)?" selected":"")+'>Sí</option><option value="0"'+((cfg.beActivo===false)?" selected":"")+'>No — todo o nada</option></select></label>'+
+    '<label style="font-size:.85em">…cuando vaya a favor (en R)<input class="inp ia-ejec-ber" type="number" step="0.1" min="0.2" max="5" value="'+esc(String(cfg.beEnR!=null?cfg.beEnR:1))+'"></label>'+
+    '<div class="desc" style="grid-column:1/3;font-size:11.5px;line-height:1.45;margin:-2px 0 8px">Con <b>Sí</b>, al llegar a ese beneficio el stop sube a tu precio de entrada y esa operación ya <b>no puede perder</b>. Con <b>No</b>, el stop no se mueve nunca: o llega al objetivo o se va al stop — <i>todo o nada</i>.<br>📊 <b>Medido el 16-09 (EURUSD, 49 entradas):</b> quitarlo da más por operación (0,50R contra 0,33R) pero <b>deja la mitad de operaciones</b>, porque la que se queda abierta bloquea la siguiente señal. Con él puesto entran más.</div>'+
+
+    '<label style="font-size:.85em">⏱ Cerrar al nuevo extremo<select class="inp ia-ejec-ston"><option value="1"'+((cfg.salidaTiempo!==false)?" selected":"")+'>Sí</option><option value="0"'+((cfg.salidaTiempo===false)?" selected":"")+'>No</option></select></label>'+
+    '<label style="font-size:.85em">…de qué vela<select class="inp ia-ejec-sttf">'+["H1","H4","D"].map(x=>'<option value="'+x+'"'+((String(cfg.salidaTiempoTF||"H4").toUpperCase()===x)?" selected":"")+'>'+x+'</option>').join("")+'</select></label>'+
+    '<div class="desc" style="grid-column:1/3;font-size:11.5px;line-height:1.45;margin:-2px 0 8px">Cierra la operación en cuanto el precio hace un <b>nuevo máximo (o mínimo) de la vela anterior</b> de esa temporalidad. Es «ya recorrió lo suyo, cobra».<br>📊 <b>Medido el 16-09:</b> de las que cerró este reloj, ese extremo estaba a solo <b>0,12R de mediana</b> cuando entraste — y después el precio siguió hasta <b>1,95R de mediana</b>. Te deja <b>1,92R en la mesa</b> por operación. <b>Quitarlo fue el cambio que más mejoró</b> los números.<br>⚠️ El 04-09 esto estaba puesto en H1 sin que se pudiera ver, y te costó 2,19R en un día. Por eso ahora se elige aquí.</div>'+
+
+    '<label style="grid-column:1/3;font-size:.85em">🎯 Objetivo en R (0 = el que mande el indicador)<input class="inp ia-ejec-objrr" type="number" step="0.1" min="0" max="10" value="'+esc(String(cfg.objetivoRR!=null?cfg.objetivoRR:0))+'"></label>'+
+    '<div class="desc" style="grid-column:1/3;font-size:11.5px;line-height:1.45;margin:-2px 0 8px">Cuántas veces lo arriesgado quieres ganar. Con <b>0</b> se usa el del indicador (hoy, <b>3R</b>) y <b>tu indicador no se toca</b>: el Ejecutor recoloca el objetivo sobre tu precio real de entrada y tu stop.<br>📊 <b>Medido el 16-09:</b> 1,5R se alcanza <b>2 de cada 3 veces</b> · 2R, <b>1 de cada 2</b> · <b>3R solo 1 de cada 4</b>. Y la comisión pesa menos cuanto mayor es el objetivo: <b>16,2%</b> con 1,5R contra <b>8,5%</b> con 2,5R.<br>🧪 La mejor combinación medida en EURUSD fue <b>objetivo 2R + stop a la entrada SÍ + reloj NO</b>. En GBPUSD solo hubo 9 operaciones: <b>ahí no hay dato que valga</b>.</div>'+
+
     '<div class="desc" style="grid-column:1/3;font-size:11.5px;line-height:1.4;margin:-2px 0 6px">El gatillo es <b>por sesión, no por par</b> (lo corregiste el 07-09, y aquella misma madrugada recuperaste dos señales de Nueva York que se estaban descartando). Con 1 aquí, puede entrar una vez en Londres y otra en NY — dentro de tu máximo del día.</div>'+
     '<label style="font-size:.85em">🔻 Tope de HOY: pérdida máx. del DÍA % (se apaga solo)<input class="inp ia-ejec-maxdd" type="number" step="0.5" min="0.5" max="20" value="'+esc(String(cfg.maxPerdidaDiaPct!=null?cfg.maxPerdidaDiaPct:2))+'"></label>'+
     '<label style="font-size:.85em">Señales que acepta<select class="inp ia-ejec-grado"><option value="A+"'+(cfg.grado!=="B"?" selected":"")+'>Solo A+</option><option value="B"'+(cfg.grado==="B"?" selected":"")+'>A+ y B</option></select></label>'+
@@ -1633,6 +1653,13 @@ function ejecLeerForm(root){
     maxOpsDia:parseInt(q("ia-ejec-maxops").value,10),
     /* si el formulario es viejo y no los trae, van undefined y la nube deja lo que ya hay */
     maxOpsSesion:(q("ia-ejec-maxopsses") ? parseInt(q("ia-ejec-maxopsses").value,10) : undefined),
+    /* 🎛️ v7.159 — la gestión. Igual que arriba: si el formulario es viejo y no los trae, van
+       undefined y la nube deja lo que ya hay. Nunca se le borra un ajuste por no verlo. */
+    beActivo:(q("ia-ejec-beon") ? q("ia-ejec-beon").value==="1" : undefined),
+    beEnR:(q("ia-ejec-ber") ? parseFloat(q("ia-ejec-ber").value) : undefined),
+    salidaTiempo:(q("ia-ejec-ston") ? q("ia-ejec-ston").value==="1" : undefined),
+    salidaTiempoTF:(q("ia-ejec-sttf") ? q("ia-ejec-sttf").value : undefined),
+    objetivoRR:(q("ia-ejec-objrr") ? parseFloat(q("ia-ejec-objrr").value) : undefined),
     corteSesionNY:(q("ia-ejec-cortesesion") ? parseInt(q("ia-ejec-cortesesion").value,10) : undefined),
     maxPerdidaDiaPct:parseFloat(q("ia-ejec-maxdd").value),
     grado:q("ia-ejec-grado").value,
