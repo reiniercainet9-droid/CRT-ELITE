@@ -669,11 +669,153 @@
     } catch (_) { return null; }
   }
 
+  /* ══════════════════════════════════════════════════════════════════════════════
+     ⚡ EL PROGRAMA DE SUELO PÉLVICO (KEGEL) — v1, 17-09-2026
+     ═════════════════════════════════════════════════════════════════════════════
+     Rey (17-09): «no veo los ejercicios de Kegel en mi sección del templo, y quisiera un
+     programa de ejercicios de Kegel bien programado científicamente, con las sesiones todos
+     los días y varias veces al día, con sus descansos entre sesión según corresponda…
+     recordando que nada fijo, poder adaptar los horarios… un programa completo con
+     escalabilidad por día, semanas y meses».
+
+     POR QUÉ LE IMPORTA, en sus palabras: perdió masa muscular y ganó grasa visceral tras
+     dejar el deporte, y eso le está afectando a la libido y a las erecciones. El suelo
+     pélvico es UNA de las piezas de eso — la que se entrena. Las otras (grasa visceral,
+     sueño, estrés, fuerza) viven en los otros bloques del templo, y sin ellas esto solo
+     llega hasta cierto punto. Se lo decimos así de claro, sin vender humo.
+
+     ⚠️ LO QUE ESTO ES Y LO QUE NO ES: es un programa de ENTRENAMIENTO de un músculo, con la
+     progresión que está descrita en la literatura de entrenamiento del suelo pélvico (PFMT).
+     No es un tratamiento. Si las erecciones cambiaron de forma notable, eso se mira con un
+     médico UNA vez, porque suele ser un aviso temprano vascular o metabólico y ningún
+     ejercicio lo detecta. Se dice una vez y no se repite en cada pantalla.
+
+     ═══ LO QUE DICE LA EVIDENCIA, Y DE DÓNDE SALEN LOS NÚMEROS ═══════════════════
+     · El suelo pélvico es músculo estriado: responde a sobrecarga progresiva como cualquier
+       otro. Por eso el programa SUBE, no se queda en «10 repeticiones» para siempre.
+     · Tiene DOS tipos de fibra y hay que entrenar las dos:
+         – lentas (resistencia)  → contracciones SOSTENIDAS, de 3 s subiendo hasta 10 s;
+         – rápidas (potencia)    → contracciones CORTAS y fuertes, de 1 s.
+       Entrenar solo una deja la mitad del músculo sin trabajar.
+     · El descanso entre contracciones es igual o mayor que la contracción: un suelo pélvico
+       sin recuperar se compensa con glúteo y abdomen, y entonces se entrena otra cosa.
+     · 3 sesiones al día, repartidas, es la pauta habitual. No 30 seguidas: es músculo pequeño
+       y se fatiga; más no es mejor, es peor.
+     · Los cambios no se notan antes de 4-6 semanas, y el efecto completo pide 3 meses o más.
+       Decirlo por delante es lo que evita que lo deje a la segunda semana.
+     ═════════════════════════════════════════════════════════════════════════════ */
+
+  /** Las semanas del programa. Cada una dice EXACTAMENTE qué hacer en cada sesión.
+      Nada de "haz Kegels": segundos, repeticiones y descansos. */
+  const KEGEL = [
+    { bloque: "Encontrar el músculo", desde: 1, hasta: 2, sesiones: 3,
+      lentas: { reps: 10, hold: 3, descanso: 6 },
+      rapidas: { reps: 10 },
+      ascensor: 0,
+      q: "las dos primeras semanas no son de fuerza: son de PUNTERÍA. La mayoría de la gente aprieta glúteo y abdomen creyendo que trabaja el suelo pélvico, y entrena otra cosa durante meses.",
+      foco: "aprender a contraer SOLO el suelo pélvico, sin apretar nada más y sin dejar de respirar." },
+    { bloque: "Construir la base", desde: 3, hasta: 4, sesiones: 3,
+      lentas: { reps: 10, hold: 5, descanso: 10 },
+      rapidas: { reps: 10 },
+      ascensor: 0,
+      q: "ya sabes dónde está: ahora se alarga el tiempo de sostén. Aquí es donde empieza a ser entrenamiento de verdad.",
+      foco: "que los 5 segundos sean 5 segundos REALES, no 3 y medio contados rápido." },
+    { bloque: "Resistencia", desde: 5, hasta: 8, sesiones: 3,
+      lentas: { reps: 10, hold: 7, descanso: 10 },
+      rapidas: { reps: 15 },
+      ascensor: 3,
+      q: "se entra en el tramo donde la mayoría empieza a notar cambios — entre la semana 4 y la 6. Si no notas nada todavía, es normal: no lo dejes aquí.",
+      foco: "mantener la fuerza en la última repetición igual que en la primera. Si la última es floja, haz menos y mejor." },
+    { bloque: "Fuerza", desde: 9, hasta: 12, sesiones: 3,
+      lentas: { reps: 10, hold: 10, descanso: 10 },
+      rapidas: { reps: 20 },
+      ascensor: 5,
+      q: "10 segundos sostenidos es el objetivo clásico del programa. Llegar aquí desde 3 segundos es exactamente la misma idea que subir de peso en una barra.",
+      foco: "los 10 segundos completos sin que se escape la contracción a mitad." },
+    { bloque: "Mantenimiento", desde: 13, hasta: 999, sesiones: 2,
+      lentas: { reps: 10, hold: 10, descanso: 10 },
+      rapidas: { reps: 20 },
+      ascensor: 5,
+      q: "a partir de aquí se mantiene, no se sigue subiendo. Dos sesiones al día sostienen lo ganado; es un músculo, y lo que no se usa se pierde.",
+      foco: "no dejarlo. Esto ya no es un programa: es una costumbre, como lavarse los dientes." },
+  ];
+
+  /** Las reglas que hacen que el ejercicio sea el ejercicio y no otra cosa. */
+  const KEGEL_REGLAS = [
+    "🫁 RESPIRA NORMAL. Aguantar el aire mientras contraes es el error más común: convierte el ejercicio en una maniobra de presión que empuja hacia ABAJO, justo lo contrario.",
+    "🚫 NO APRIETES glúteo, abdomen ni muslos. Si notas que se te mueve la cadera o se te tensa la barriga, estás entrenando otra cosa.",
+    "💧 NUNCA lo hagas cortando el pis. Sirve UNA vez para localizar el músculo y nada más: hacerlo de costumbre puede dejar orina dentro y traer infecciones.",
+    "📈 MÁS NO ES MEJOR. Es un músculo pequeño: con más repeticiones de la cuenta se fatiga y empieza a compensar. Las sesiones cortas y repartidas ganan.",
+    "⏳ NO ESPERES CAMBIOS ANTES DE 4-6 SEMANAS, y el efecto completo pide 3 meses o más. Quien lo deja, casi siempre lo deja en la semana 2 por no saber esto.",
+    "🪑 Se puede hacer sentado, de pie o tumbado, y no se nota desde fuera: en el semáforo, en la moto parado, delante del gráfico.",
+  ];
+
+  /** Cómo se hace cada tipo de contracción — el guion, para que no haya dudas. */
+  const KEGEL_COMO = [
+    { id: "buscar", n: "Encontrar el músculo", q: "es el mismo que usarías para aguantar un gas en público, o para levantar los testículos hacia dentro. Sensación de CERRAR y SUBIR, no de empujar." },
+    { id: "lenta", n: "Contracción lenta (resistencia)", q: "contraes y SOSTIENES los segundos que toque, sin aflojar a mitad. Luego sueltas del todo y descansas lo mismo o más. Soltar del todo es parte del ejercicio." },
+    { id: "rapida", n: "Contracción rápida (potencia)", q: "contraes fuerte y sueltas enseguida, 1 segundo cada una. Son las fibras que actúan cuando toses o levantas peso." },
+    { id: "ascensor", n: "El ascensor (control)", q: "subes la contracción por pisos: un poco, más, al máximo — y bajas igual, piso a piso, sin soltar de golpe. Enseña control, no solo fuerza." },
+  ];
+
+  /** Qué toca esta semana. `semana` es 1, 2, 3… desde que empezó. */
+  function kegelSemana(semana) {
+    const s = Math.max(1, parseInt(semana, 10) || 1);
+    const b = KEGEL.find((x) => s >= x.desde && s <= x.hasta) || KEGEL[KEGEL.length - 1];
+    /* los segundos totales de trabajo del día, para que vea que la carga sube de verdad */
+    const porSesion = b.lentas.reps * b.lentas.hold + b.rapidas.reps + b.ascensor * 6;
+    return {
+      semana: s, bloque: b.bloque, q: b.q, foco: b.foco,
+      sesiones: b.sesiones, lentas: b.lentas, rapidas: b.rapidas, ascensor: b.ascensor,
+      segundosSesion: porSesion,
+      segundosDia: porSesion * b.sesiones,
+      minutosSesion: Math.round(porSesion / 60 * 10) / 10,
+      /* ¿es la última semana de su bloque? sirve para avisarle de que va a subir */
+      ultimaDelBloque: (s === b.hasta),
+      siguiente: (KEGEL.find((x) => x.desde === b.hasta + 1) || null),
+    };
+  }
+
+  /** Los horarios por defecto de las sesiones del día.
+      ⚠️ SU LEY: nada fijo. Esto es solo el punto de partida — él los cambia y mandan los suyos.
+      Se reparten con horas de separación porque el músculo tiene que recuperar entre sesiones;
+      tres seguidas no son tres sesiones, son una sesión larga y fatigada. */
+  function kegelHorarioPorDefecto(nSesiones) {
+    if (nSesiones <= 2) return ["08:00", "20:00"];
+    if (nSesiones === 3) return ["08:00", "14:00", "20:00"];
+    return ["08:00", "12:00", "16:00", "20:00"];
+  }
+
+  /** ¿Cuántas horas hay entre dos sesiones? Menos de 3 y no descansó. */
+  function kegelDescansoOk(horas) {
+    try {
+      const h = (horas || []).map((x) => {
+        const p = String(x).split(":");
+        return parseInt(p[0], 10) * 60 + (parseInt(p[1], 10) || 0);
+      }).sort((a, b) => a - b);
+      for (let i = 1; i < h.length; i++) if (h[i] - h[i - 1] < 180) return false;
+      return true;
+    } catch (_) { return true; }
+  }
+
+  /** La progresión de la semana: ¿sube, se queda o se recorta?
+      Misma idea que el entrenamiento físico: se progresa sobre lo que se HIZO, no sobre lo
+      que estaba puesto. Aquí la unidad es la SESIÓN (no el día): así saltarse una mañana no
+      rompe nada — se cuenta lo que hizo sobre lo que tocaba. */
+  function kegelCerrarSemana(hechas, total, semana) {
+    const pct = total ? hechas / total : 0;
+    if (pct >= 0.8) return { que: "sube", pct, por: "hiciste " + hechas + " de " + total + " sesiones (" + Math.round(pct * 100) + "%): se progresa." };
+    if (pct >= 0.5) return { que: "repite", pct, por: "hiciste " + hechas + " de " + total + ": se repite la semana. No se progresa sobre lo que no se hizo." };
+    return { que: "repite", pct, por: "hiciste " + hechas + " de " + total + ". La semana se repite entera — y si el problema es el horario, cámbialo: no se cambia el cuerpo, se cambia la hora." };
+  }
+
   /* se cuelga de donde toque, igual que situaciones.js y roberto-leyes.js */
   raiz.TEMPLO = {
     imc, imcQueEs, pesoSano, gastoEnReposo, gastoDiario, calcular, edadDe, tendencia,
     ACTIVIDAD, OBJETIVOS, SUPLEMENTOS, PILARES, PRACTICAS, CALMA,
     NIVELES, PRUEBAS, nivelDePrueba, ADAPTA, cerrarSemana, semanaDe,
     NUTRI, nutriDe, chocaConOperativa,
+    /* ⚡ 17-09 — el programa de suelo pélvico, pedido de Rey */
+    KEGEL, KEGEL_REGLAS, KEGEL_COMO, kegelSemana, kegelHorarioPorDefecto, kegelDescansoOk, kegelCerrarSemana,
   };
 })(typeof window !== "undefined" ? window : self);

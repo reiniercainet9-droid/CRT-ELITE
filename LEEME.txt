@@ -1,25 +1,33 @@
-APEX v7.172 — TRADING DESK
+APEX v7.173 — TRADING DESK
 =========================
 
-🛡️ ROBERTO TE EXIGE MÁS FUERTE — Y TAMBIÉN TE RECONOCE
-Me dijiste dos cosas y las dos eran verdad.
+⚡ EL PROGRAMA DE SUELO PÉLVICO (KEGEL) — YA ESTÁ EN TU TEMPLO
+Tenías razón: no estaba. Existía UNA LÍNEA suelta en los pilares («3 series de 10 un par de veces al día») y nada más. Una frase no es un programa: sin progresión, sin horarios, sin descansos y sin poder marcarlo, eso no se sostiene tres semanas.
 
-1) EL TONO SUBE CON LOS DÍAS, no con mi humor.
-Antes te decía exactamente lo mismo el primer día que el séptimo. Un mentor que repite la misma frase siete días no exige: recuerda. Ahora se cuentan los DÍAS SEGUIDOS que llevas con cada cosa sin hacer:
-  · día 1-2 → directo y tranquilo
-  · día 3-6 → firme, y con el número delante: «Rey, van 4 días con esto»
-  · día 7+  → sin rodeos: «van 10 días seguidos. Ya no es un olvido: es un patrón, y te lo digo tal cual»
+13 SEMANAS, CON PROGRESIÓN DE VERDAD:
+  semanas 1-2  · Encontrar el músculo  → 10 de 3s (descanso 6s) + 10 rápidas   · 3 al día
+  semanas 3-4  · Construir la base     → 10 de 5s (descanso 10s) + 10 rápidas  · 3 al día
+  semanas 5-8  · Resistencia           → 10 de 7s + 15 rápidas + 3 ascensor    · 3 al día
+  semanas 9-12 · Fuerza                → 10 de 10s + 20 rápidas + 5 ascensor   · 3 al día
+  semana 13+   · Mantenimiento         → igual, pero 2 al día
 
-2) Y TE RECONOCE CUANDO LO HACES, con el dato.
-«Si estoy haciendo las cosas bien también merezco reconocimiento» — tenías razón, y nunca te felicitaba. Ahora, cuando algo que llevaba días pendiente deja de estarlo, te lo dice con lo que costó:
-  · 1 día  → «Rey, registraste backtesting. Eso es hacer las cosas.»
-  · 4 días → «Rey, registraste backtesting — llevaba 4 días pidiéndotelo. Bien hecho.»
-  · 9 días → «Rey, registraste backtesting. Te lo estuve exigiendo 9 días seguidos y lo hiciste. Eso es disciplina, no suerte.»
-⚠️ Y NO te felicita porque sí. Solo cuando de verdad cerraste algo. Un premio vacío te enseñaría a no creerte lo que te digo.
+POR QUÉ ESTÁ HECHO ASÍ, y no «haz Kegels»:
+· El suelo pélvico es músculo estriado: responde a sobrecarga progresiva como cualquier otro. Por eso SUBE de 3s a 10s, igual que subirías peso en una barra.
+· Tiene DOS tipos de fibra y hay que entrenar las dos: lentas (sostenidas, resistencia) y rápidas (1 segundo, potencia). Entrenar solo una deja la mitad del músculo sin trabajar.
+· El descanso es igual o mayor que la contracción. Sin recuperar, el cuerpo compensa con glúteo y abdomen — y entonces entrenas otra cosa durante meses sin enterarte.
+· 3 sesiones repartidas, no 30 seguidas: es un músculo pequeño, más no es mejor.
+· Las dos primeras semanas NO son de fuerza: son de PUNTERÍA. Aprender a contraer solo eso.
 
-3) Y AHORA TE HABLA DE VERDAD.
-Aquí está el detalle que explica tu queja, y lo comprobé en tu teléfono: TIENES EL CUERPO FLOTANTE RETIRADO (lo apagaste tú el 16-09, y estás en tu derecho). Con el cuerpo apagado, la nubecita NO EXISTE: por eso solo te llegaba el cartel.
-Ahora te habla Apex con su propia voz, que no depende del cuerpo flotante — tanto cuando te exige como cuando te reconoce. Y respeta tu interruptor: si tienes la voz apagada, no suena nada.
+TUS HORAS SON TUYAS: empieza en 08:00 / 14:00 / 20:00 y las cambias tocándolas. Si pones dos a menos de 3 horas te avisa — tres seguidas no son tres sesiones, son una fatigada.
+
+⏳ Y TE LO DIGO POR DELANTE: no vas a notar nada antes de 4-6 semanas, y el efecto completo pide 3 meses o más. Quien lo deja, casi siempre lo deja en la semana 2 por no saber esto.
+
+🗓️ Y LO DEL ENTRENAMIENTO QUE SE TE ROMPÍA — YA SÉ POR QUÉ
+«Si dejo de hacer un día… tuve que programar el día de mañana porque me había saltado un día, y como que se rompe la rutina.»
+Las sesiones estaban CLAVADAS a días de la semana. Si te saltabas el lunes, esa sesión se perdía y tenías que reprogramar a mano.
+Ahora la semana es una CUOTA, no un calendario: te dice «te faltan 2 sesiones y quedan 4 días». Los días y horas siguen ahí, pero son EL RECORDATORIO, no la regla: si te saltas uno, la haces otro día y no se rompe nada.
+
+⚠️ Y UNA COSA QUE SE DICE UNA VEZ: lo que describe (pérdida de erecciones y de libido junto con grasa visceral) conviene que lo vea un médico una vez. No por alarmismo: los cambios en la erección suelen ser de los primeros avisos de algo vascular o metabólico, y eso ningún programa de ejercicios lo detecta. Esto es entrenamiento, no tratamiento.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

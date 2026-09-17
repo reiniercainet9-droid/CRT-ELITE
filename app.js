@@ -76,7 +76,10 @@ const NUBE_KEYS = ["crtelite_trades_v2","crtelite_cuentas_v3","crtelite_reminder
      técnicas de CADA aparato (el tema, las carpetas abiertas, los avisos ya mostrados, la
      propia maquinaria de sincronizar) y deben seguir fuera. */
   "crtelite_templo_ficha", "crtelite_templo_peso", "crtelite_templo_plan",
-  "crtelite_templo_hechos", "crtelite_templo_marcas"];
+  "crtelite_templo_hechos", "crtelite_templo_marcas",
+  /* ⚡ v7.173 — su programa de Kegel es un dato SUYO: entra en la nube como todo lo demás.
+     Lo cazó el banco, y ya había pasado dos veces ([[apex-nada-en-un-solo-aparato]]). */
+  "crtelite_templo_kegel"];
 /* 🏷️ v7.05 — LOS 26 APARTADOS, CADA UNO CON SU NOMBRE EN CRISTIANO.
    El informe 🔎 de la v7.03 solo sabía nombrar siete, y a Rey le salieron justo los otros:
    leyó "crtelite_conf_v2, crtelite_reglas_v2, crtelite_estrategias_v3, crtelite_estrdefs_v1"
@@ -113,6 +116,7 @@ const NUBE_NOMBRES = {
   "crtelite_templo_plan":"tu plan de entreno (escalón, días y horarios)",
   "crtelite_templo_hechos":"las sesiones de entreno que marcaste",
   "crtelite_templo_marcas":"tus marcas físicas (flexiones, plancha, sentadillas, km)",
+  "crtelite_templo_kegel":"tu programa de suelo pélvico (semana, horarios y sesiones hechas)",
   /* 📞 v7.108 — cómo quiere Rey que Roberto llame (marcador o marcar solo). Es una
      DECISIÓN suya, no un ajuste de esta pantalla: si cambia de teléfono le tiene que
      seguir ([[apex-nada-en-un-solo-aparato]]). */
@@ -5223,6 +5227,48 @@ function temploCuentas(){ try{ return (window.TEMPLO && TEMPLO_FICHA) ? TEMPLO.c
    el que su indicador decide y Roberto lee. Aquí es igual: el motor decide, Roberto explica,
    corrige y empuja. */
 const TEMPLO_KP = { plan:"crtelite_templo_plan", marcas:"crtelite_templo_marcas" };
+
+/* ⚡ v7.173 (17-09) — EL PROGRAMA DE SUELO PÉLVICO. Pedido de Rey: «no veo los ejercicios
+   de Kegel en mi sección del templo… un programa completo con escalabilidad».
+   Se guarda aparte del plan de entrenamiento: son dos cosas distintas y una no arrastra a
+   la otra. `horas` son SUYAS y se pueden cambiar — nada fijo. */
+const TEMPLO_KK = "crtelite_templo_kegel";
+let KEGEL_ST = load(TEMPLO_KK, null);   /* { inicio, lunes, semanaNum, horas:[], hechas:{} } */
+function kegelGuardar(){ save(TEMPLO_KK, KEGEL_ST); }
+function kegelEmpezar(){
+  const hoy = temploLunes();
+  const s = (window.TEMPLO ? TEMPLO.kegelSemana(1) : {sesiones:3});
+  KEGEL_ST = { inicio: Date.now(), lunes: hoy, semanaNum: 1,
+    horas: (window.TEMPLO ? TEMPLO.kegelHorarioPorDefecto(s.sesiones) : ["08:00","14:00","20:00"]),
+    hechas: {}, historia: [] };
+  kegelGuardar();
+}
+/* la semana avanza SOLA los lunes, como el plan de entrenamiento: Rey no pulsa nada */
+function kegelAhora(){
+  try{
+    if(!KEGEL_ST || !window.TEMPLO) return null;
+    const lunes = temploLunes();
+    while(KEGEL_ST.lunes && KEGEL_ST.lunes < lunes){
+      const sem = TEMPLO.kegelSemana(KEGEL_ST.semanaNum);
+      const total = sem.sesiones * 7;
+      const hechas = Object.keys(KEGEL_ST.hechas||{}).filter(k=>k.indexOf(KEGEL_ST.lunes+":")===0).length;
+      const r = TEMPLO.kegelCerrarSemana(hechas, total, KEGEL_ST.semanaNum);
+      KEGEL_ST.historia = (KEGEL_ST.historia||[]).concat([{ lunes:KEGEL_ST.lunes, hechas, total, que:r.que, por:r.por }]).slice(-26);
+      if(r.que==="sube") KEGEL_ST.semanaNum++;   /* si no cumplió, la semana se REPITE */
+      KEGEL_ST.lunes += 7*86400000;
+    }
+    kegelGuardar();
+    return TEMPLO.kegelSemana(KEGEL_ST.semanaNum);
+  }catch(_){ return null; }
+}
+function kegelClaveHoy(i){ const d=new Date(); return KEGEL_ST.lunes+":"+d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate()+":"+i; }
+function kegelHechaHoy(i){ try{ return !!(KEGEL_ST && KEGEL_ST.hechas && KEGEL_ST.hechas[kegelClaveHoy(i)]); }catch(_){ return false; } }
+function kegelMarcar(i){
+  if(!KEGEL_ST) return;
+  const k=kegelClaveHoy(i);
+  if(KEGEL_ST.hechas[k]) delete KEGEL_ST.hechas[k]; else KEGEL_ST.hechas[k]=Date.now();
+  kegelGuardar(); renderTemplo();
+}
 let TEMPLO_PLAN = load(TEMPLO_KP.plan, null);      /* { nivel, semanaNum, modo, inicio, hechas:{} } */
 let TEMPLO_MARCAS = load(TEMPLO_KP.marcas, []);    /* sus pruebas de nivel, con fecha */
 if(!Array.isArray(TEMPLO_MARCAS)) TEMPLO_MARCAS=[];
@@ -5281,6 +5327,81 @@ function viewTemplo(){
   return v;
 }
 
+/* ⚡ v7.173 (17-09) — LA TARJETA DEL PROGRAMA DE SUELO PÉLVICO.
+   Rey: «no veo los ejercicios de Kegel en mi sección del templo… un programa completo con
+   escalabilidad por día, semanas y meses». Antes había UNA LÍNEA en los pilares.
+   Aquí sale lo que toca HOY, sesión por sesión, con sus segundos y sus descansos. */
+function kegelTarjetaHTML(){
+  try{
+    if(!window.TEMPLO) return "";
+    if(!KEGEL_ST){
+      return `<div class="card">
+        <div class="nt-tt" style="font-size:15px">⚡ Suelo pélvico (Kegel)</div>
+        <div class="nt-sub" style="margin:6px 0 10px;line-height:1.5">Un programa de verdad, con progresión por semanas:
+          de <b>10 contracciones de 3 segundos</b> hasta <b>10 de 10 segundos</b>, tres veces al día y con sus descansos.
+          <br>Es músculo, y se entrena como cualquier otro. No se nota desde fuera: puedes hacerlo sentado, en la moto parado o delante del gráfico.
+          <br><span style="opacity:.8">Los cambios no se notan antes de 4-6 semanas. Decírtelo por delante es lo que evita que lo dejes en la segunda.</span></div>
+        <button class="btn gold" id="kgEmpezar" style="width:100%">⚡ Empezar el programa</button>
+      </div>`;
+    }
+    const s = kegelAhora();
+    if(!s) return "";
+    const horas = (KEGEL_ST.horas||[]).slice(0, s.sesiones);
+    while(horas.length < s.sesiones) horas.push("--:--");
+    const hechasHoy = horas.filter((_,i)=>kegelHechaHoy(i)).length;
+    const descansoOk = TEMPLO.kegelDescansoOk(horas);
+    const filas = horas.map((h,i)=>{
+      const ok = kegelHechaHoy(i);
+      return `<div style="display:flex;align-items:center;gap:8px;margin-top:8px;padding:8px;border-radius:10px;background:rgba(255,255,255,${ok?".07":".03"})">
+        <button class="btn kg-hecha ${ok?"gold":""}" data-i="${i}" style="padding:4px 10px;font-size:.9em;min-width:44px">${ok?"✅":"○"}</button>
+        <div style="flex:1">
+          <div style="font-weight:700;font-size:.95em">Sesión ${i+1} · <span class="kg-hora" data-i="${i}" style="text-decoration:underline dotted;cursor:pointer">${esc(h)}</span></div>
+          <div class="desc" style="font-size:11.5px;line-height:1.45;margin-top:2px">
+            <b>${s.lentas.reps}</b> lentas de <b>${s.lentas.hold}s</b> (descansa ${s.lentas.descanso}s entre cada una)
+            · <b>${s.rapidas.reps}</b> rápidas de 1s
+            ${s.ascensor?("· <b>"+s.ascensor+"</b> ascensor"):""}
+          </div>
+        </div></div>`;
+    }).join("");
+    return `<div class="card">
+      <div class="nt-head"><div class="nt-htxt">
+        <div class="nt-tt" style="font-size:15px">⚡ Suelo pélvico · semana ${s.semana}</div>
+        <div class="nt-sub">${esc(s.bloque)} · ${hechasHoy}/${s.sesiones} hoy · ${s.minutosSesion} min por sesión</div>
+      </div></div>
+      <div class="desc" style="font-size:12px;line-height:1.5;margin:6px 0 2px">${esc(s.q)}</div>
+      <div class="desc" style="font-size:12px;line-height:1.5;margin:0 0 6px"><b>Esta semana, el foco:</b> ${esc(s.foco)}</div>
+      ${filas}
+      ${!descansoOk?`<div class="desc" style="font-size:11.5px;margin-top:8px;color:var(--gold)">⚠️ Tienes sesiones a menos de 3 horas. El músculo no recupera: tres seguidas no son tres sesiones, son una fatigada. Toca una hora para cambiarla.</div>`:""}
+      ${s.ultimaDelBloque && s.siguiente ? `<div class="desc" style="font-size:11.5px;margin-top:8px">📈 Última semana de este bloque: si cumples, la próxima subes a <b>${s.siguiente.lentas.reps}×${s.siguiente.lentas.hold}s</b>.</div>` : ""}
+      <div style="display:flex;gap:6px;margin-top:10px">
+        <button class="btn kg-como" style="flex:1;font-size:.86em">📖 Cómo se hace</button>
+        <button class="btn kg-reglas" style="flex:1;font-size:.86em">⚠️ Las reglas</button>
+      </div>
+    </div>`;
+  }catch(e){ console.log("[apex] kegel tarjeta:", e.message); return ""; }
+}
+
+/* los botones de la tarjeta: se enganchan después de pintar, como todo lo demás */
+function kegelWire(){
+  try{
+    const emp=$("#kgEmpezar");
+    if(emp) emp.onclick=()=>{ kegelEmpezar(); renderTemplo(); toast("⚡ Programa empezado — semana 1"); };
+    document.querySelectorAll(".kg-hecha").forEach(b=>{ b.onclick=()=>kegelMarcar(+b.dataset.i); });
+    document.querySelectorAll(".kg-hora").forEach(b=>{ b.onclick=async()=>{
+      const i=+b.dataset.i;
+      /* ⚖️ NADA FIJO: la hora es suya. Se le pregunta y manda lo que ponga. */
+      const h=await pedirTexto("Escríbela como 08:00. Es TU hora: cámbiala cuando quieras.", (KEGEL_ST.horas[i]||"08:00"), "⏰ Hora de la sesión "+(i+1));
+      if(!h) return;
+      KEGEL_ST.horas[i]=h; kegelGuardar(); renderTemplo();
+    }; });
+    const c=document.querySelector(".kg-como");
+    if(c) c.onclick=()=>abrirModal("📖 Cómo se hace cada una",
+      "<div class=\"desc\" style=\"text-align:left;line-height:1.55\">"+TEMPLO.KEGEL_COMO.map(x=>"<b>"+esc(x.n)+"</b><br>"+esc(x.q)).join("<br><br>")+"</div>", [{t:"Entendido"}]);
+    const r=document.querySelector(".kg-reglas");
+    if(r) r.onclick=()=>abrirModal("⚠️ Las reglas que hacen que funcione",
+      "<div class=\"desc\" style=\"text-align:left;line-height:1.55\">"+TEMPLO.KEGEL_REGLAS.map(x=>esc(x)).join("<br><br>")+"</div>", [{t:"Entendido"}]);
+  }catch(e){ console.log("[apex] kegel wire:", e.message); }
+}
 function renderTemplo(){
   const b=$("#tmpBody"); if(!b) return;
   const fb=$("#tmpFicha"); if(fb) fb.onclick=()=>temploFichaModal();
@@ -5367,6 +5488,27 @@ function renderTemplo(){
              días que quiere cambiar, que es donde a uno se le ocurre cambiarlos. -->
         <button class="btn nt-ff" id="tmpHorario2">⏰ Cambiar días y horas</button>
       </div>
+      <!-- 🗓️ v7.173 (17-09) — LA SEMANA ES UNA CUOTA, NO UN CALENDARIO.
+           Rey: «programo tres días, después sumo los otros, pero si dejo de hacer un día…
+           tuve que programar el día de mañana porque me había saltado un día, y como que se
+           rompe la rutina». Y tenía razón: las sesiones estaban CLAVADAS a días de la semana,
+           así que saltarse el lunes obligaba a reprogramar a mano.
+           No se rompe nada: lo que cuenta es hacer las N sesiones ANTES DEL DOMINGO. Los días
+           y las horas de abajo son el recordatorio, no la regla. -->
+      ${(function(){
+        const tot=sem.sesiones.length;
+        const hechas=sem.sesiones.filter((_,i)=>temploHecha(i)).length;
+        const faltan=tot-hechas;
+        const hoyN=(new Date().getDay()+6)%7;      /* 0=lunes … 6=domingo */
+        const diasQuedan=7-hoyN;                    /* hoy cuenta */
+        if(!faltan) return `<div class="desc" style="font-size:12px;margin:2px 0 8px;color:var(--gold)">✅ Semana completa: <b>${hechas} de ${tot}</b>. Lo que venga de más es regalo.</div>`;
+        const apretado = faltan > diasQuedan;
+        return `<div class="desc" style="font-size:12px;margin:2px 0 8px;line-height:1.5">
+          Te faltan <b>${faltan}</b> sesión(es) y quedan <b>${diasQuedan}</b> día(s) de semana.
+          ${apretado ? "Van justas: hoy tocaría una." : "Vas con margen."}
+          <br><span style=\"opacity:.8\">Los días de abajo son el <b>recordatorio</b>, no la regla: si te saltas uno, la haces otro día y no se rompe nada.</span>
+        </div>`;
+      })()}
       <div class="tmp-sem">
         ${(function(){ const hor=temploHorario(sem.sesiones.length);
           return sem.sesiones.map((x,i)=>{
@@ -5465,6 +5607,8 @@ function renderTemplo(){
         '<b>'+n1(p.peso)+' kg</b>'+(p.cintura?('<span>'+n1(p.cintura)+' cm cintura</span>'):'<span></span>')+'</div>').join("")+'</div>') : ""}
     </div>
 
+    ${kegelTarjetaHTML()}
+
     <div class="card">
       <div class="nt-tt" style="font-size:15px">🧱 Los cuatro pilares</div>
       <div class="nt-sub" style="margin-bottom:8px">Lo que sostiene el entrenamiento. Sin esto, lo demás no cuaja.</div>
@@ -5548,6 +5692,8 @@ function renderTemplo(){
     </div>`;
 
   const pb=$("#tmpPesar"); if(pb) pb.onclick=()=>temploPesarModal();
+  /* ⚡ v7.173 — los botones del programa de Kegel, enganchados con los demás del templo */
+  try{ kegelWire(); }catch(_){}
   try{ if(TEMPLO_PLAN) temploAvisosDelPlan(); }catch(_){}
   const hb=$("#tmpHorario"); if(hb) hb.onclick=()=>temploHorarioModal();
   const hb2=$("#tmpHorario2"); if(hb2) hb2.onclick=()=>temploHorarioModal();   /* v7.77: el mismo, donde se ven los días */
