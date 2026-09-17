@@ -3725,6 +3725,70 @@ function viewEjecutor(){
   v.innerHTML='<div id="ejBody"><div class="card">⏳ Cargando el Ejecutor…</div></div>';
   return v;
 }
+/* ═══════════════════════════════════════════════════════════════════════════════
+   🗂️ TARJETAS PLEGABLES — v7.168 (17-09), pedido de Rey
+   ───────────────────────────────────────────────────────────────────────────────
+   «Cada cosa, datos y descripciones, debería ser desplegable, para reducir el
+   deslizamiento buscando cosas.»
+   Medido antes de tocar nada: la sección del Ejecutor medía 13,7 pantallas, y el
+   Diario del Ejecutor él solo se llevaba la mitad.
+   Se pliega DESPUÉS de pintar, sin recrear ningún nodo: los botones de dentro
+   siguen vivos. Lo que Rey abre o cierra se recuerda.
+   ═══════════════════════════════════════════════════════════════════════════════ */
+function plegKey(sec, titulo){ return "apex.pleg."+sec+"."+String(titulo).slice(0,40); }
+
+function plegarTarjetas(sec, caja, opciones){
+  try{
+    const o = Object.assign({ desde: 1.5 }, opciones||{});
+    const cont = caja || document.body;
+    const alto = Math.max(360, window.innerHeight||700);
+    cont.querySelectorAll(".card").forEach(card=>{
+      if(card.dataset.pleg) return;                 /* ya tiene su pliegue puesto */
+      /* el título es lo primero en negrita de la tarjeta; sin título no hay dónde tocar */
+      const tit = card.querySelector("b, h3, h4");
+      if(!tit || !tit.textContent.trim()) return;
+      const texto = tit.textContent.trim();
+      /* lo que se pliega es TODO lo que viene después del título */
+      const resto = [];
+      let n = tit.parentElement===card ? tit.nextSibling : tit.parentElement.nextSibling;
+      /* si el título va dentro de un envoltorio, se pliega lo que sigue a ese envoltorio */
+      while(n){ resto.push(n); n = n.nextSibling; }
+      if(!resto.length) return;
+      const hay = resto.reduce((s,x)=> s + (x.getBoundingClientRect ? x.getBoundingClientRect().height : 0), 0);
+      /* ⚠️ lo corto NO se pliega: esconder dos líneas es esconder por esconder */
+      if(hay < alto * o.desde && !localStorage.getItem(plegKey(sec,texto))) { card.dataset.pleg="no"; return; }
+
+      const env = document.createElement("div");
+      resto.forEach(x=> env.appendChild(x));        /* se MUEVEN, no se recrean */
+      card.appendChild(env);
+      card.dataset.pleg="si";
+
+      const k = plegKey(sec, texto);
+      const guardado = localStorage.getItem(k);
+      /* de fábrica: lo enorme, plegado. Y lo que él decida manda por encima. */
+      let abierto = guardado==="1" ? true : (guardado==="0" ? false : false);
+
+      const flecha = document.createElement("span");
+      flecha.style.cssText = "float:right;opacity:.75;font-size:.9em;margin-left:8px";
+      const pintar = ()=>{
+        env.style.display = abierto ? "" : "none";
+        flecha.textContent = abierto ? "▾ ocultar" : ("▸ ver ("+Math.round(hay/alto*10)/10+" pantallas)");
+      };
+      const tocable = (tit.parentElement===card) ? tit : tit.parentElement;
+      tocable.style.cursor = "pointer";
+      tocable.appendChild(flecha);
+      tocable.addEventListener("click", (e)=>{
+        /* si toca un botón que esté dentro del título, no se pliega */
+        if(e.target.closest("button, a, input, select")) return;
+        abierto = !abierto;
+        localStorage.setItem(k, abierto ? "1" : "0");
+        pintar();
+      });
+      pintar();
+    });
+  }catch(e){ console.log("[apex] plegables:", e.message); }
+}
+
 async function renderEjecutor(){
   const cont=$("#ejBody"); if(!cont) return;
   let d=null;
@@ -3871,6 +3935,9 @@ async function renderEjecutor(){
         const c=$("#espEjec"); if(c) c.innerHTML=espPanelHTML(apexEsperanza(opsDelEjecutor()), "📐 ¿Esto gana, o solo empata?", "Del robot · medido en R");
       }catch(_){} }); }catch(_){}
   try{ resPinta("ejec", opsDelEjecutor(), true); }catch(e){ console.log("[apex] resultados ejec:", e.message); }
+  /* 🗂️ v7.168 — y lo último: plegar lo enorme. Va AQUÍ, al final, cuando ya está todo
+     pintado y se puede medir de verdad lo que ocupa cada tarjeta. */
+  try{ plegarTarjetas("ejec", cont); }catch(_){}
   try{ const c=$("#espEjec"); if(c) c.innerHTML=espPanelHTML(apexEsperanza(opsDelEjecutor()), "📐 ¿Esto gana, o solo empata?", "Del robot · medido en R"); }catch(e){ console.log("[apex] esperanza ejec:", e.message); }
   /* 🔐 v7.92 — un toque, y ya. Ni ficheros, ni pedírmelo a mí. */
   if($("#ejCtaSi")) $("#ejCtaSi").onclick=async()=>{

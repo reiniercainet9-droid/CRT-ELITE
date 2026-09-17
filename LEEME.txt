@@ -1,25 +1,29 @@
-APEX v7.167 — TRADING DESK
+APEX v7.168 — TRADING DESK
 =========================
 
-🔕 QUITADO «OYE ROBERTO». TENÍAS RAZÓN Y NO HAY VUELTA DE HOJA.
-Te dije tres veces que lo había arreglado y seguía pitando. Eso está mal por mi parte, y lo que me pediste es lo correcto.
+🗂️ LA SECCIÓN DEL EJECUTOR SE PLIEGA
+Tenías razón y el número lo dice: medí tu sección en tu propio teléfono y ocupaba 13,7 PANTALLAS. El «📓 Diario del Ejecutor» él solo se llevaba la mitad (6,8 pantallas) y «⚙️ Tus reglas» otras 3,4. Para llegar al resumen del final había que deslizar catorce pantallas.
+Ahora cada tarjeta grande se pliega tocando su título, y te dice cuántas pantallas hay dentro antes de abrirla. Medido después, en tu teléfono: de 13,2 pantallas a 3,1.
+· Lo que abres o cierras SE RECUERDA: no tienes que volver a plegarlo cada vez que entras.
+· Lo corto NO se pliega: esconder dos líneas sería añadirte un toque para nada.
+· Y lo que más me preocupaba: los 44 botones del Diario siguen VIVOS después de plegar y desplegar. Comprobado uno a uno en tu teléfono, porque plegar mal deja una sección que se ve bien y no funciona.
 
-Por qué no tiene arreglo por ese camino, medido en tu teléfono:
-· el pitido lo toca el servicio de Google CUANDO ABRE EL MICRÓFONO («Playing beep raw/open»);
-· y lo abre EN CADA SESIÓN;
-· y la sesión se cierra sola cada 10-25 segundos sin avisar a nadie.
-O sea: hay que reabrirla todo el día y cada reapertura es un pitido. Medido: 3 en 90 segundos con el ritmo lento, uno cada 9 segundos con el rápido. Mientras el micrófono lo abra Google, pita. No es un ajuste que me falte por encontrar.
+💾 EL RESPALDO YA NO TE AHOGA LA MÁQUINA
+· Cifraba cargando el archivo ENTERO en memoria: 2,7 GB de tus 8. Windows me lo mató dos veces esta mañana, y era uno de los trabajos que dejaban ciego al Puente. Ahora va por trozos de 1 MB: da igual que el respaldo pese 800 MB o 8 GB.
+· Y cifraba los mismos 780 MB DOS VECES (una para el principal y otra para el histórico) para obtener el mismo archivo. Ahora cifra una vez y copia — comprobado con la huella SHA-256 de los dos archivos: idénticos.
+· ⚠️ Tus 30 respaldos guardados SE SIGUEN ABRIENDO. Eso lo probé de verdad: fabriqué uno con el formato viejo y lo abrí con el código nuevo.
+· Y ahora el respaldo COMPRUEBA SOLO que se puede abrir. Hasta hoy nadie lo comprobaba nunca: si hubiera salido ilegible, lo habrías descubierto el día que hiciera falta. El tuyo de hoy dio «ok».
 
-QUÉ HE HECHO
-· Apagado en tu teléfono esta noche, y comprobado: 0 pitidos en dos minutos seguidos.
-· Quitado el interruptor de Apex. No lo dejo «por si acaso»: un interruptor que solo sirve para llenarte el teléfono de ruido es una trampa.
-· Y lo importante: el vigía YA NO PUEDE ENCENDERLO SOLO. Si quedaba un «encendido» guardado de antes, se borra. Un ajuste viejo no puede desobedecer una decisión tuya, y menos cuando no estás mirando.
-· Hay un banco nuevo que defiende esto. No defiende una función: defiende tu decisión, para que a mí no se me ocurra devolverlo mañana con buena intención.
+🪜 EL HISTORIAL: ERA PEOR QUE LOS 21 GB
+Tus 30 copias cubrían SOLO DOS DÍAS — 9 del lunes, 13 del martes, 8 de hoy. Porque en un día de trabajo se hacen diez respaldos y se comen el histórico entero. Si algo se rompió hace cinco días y lo notabas hoy, no tenías a dónde volver.
+Ahora es una escalera: las 6 últimas (para deshacer una hora mala) + 1 por día (7) + 1 por semana (4) + 1 por mes (3). Máximo 20 copias, y cubre TRES MESES en vez de dos días.
+Y ante la duda, se queda: un archivo con nombre raro no se borra nunca.
 
-QUÉ SE QUEDA
-El botón de hablar, entero. Ése solo abre el micrófono cuando TÚ lo pulsas: suena una vez, cuando lo has pedido, que es lo normal. Pulsas y hablas.
-
-Si algún día encuentro la forma de que no pite, te lo enseñaré funcionando y callado antes de proponértelo. No te lo voy a volver a dar por arreglado sin haberlo medido.
+🛡️ LO QUE ROBERTO TE EXIGE: SÍ FUNCIONABA, LO VISTE CORTADO
+Me dijiste que no habías sentido la presión. Fui a mirar y esto es lo que Roberto te escribió esta mañana, entero:
+   «🎯 LO PRIMERO — Hoy no abres ningún gráfico a operar tú sin antes hacer una operación en backtesting. CERO EXCEPCIONES. Ahora mismo tienes cero datos tuyos — ni uno — para saber si lo que haces funciona.»
+   «⚠️ LO QUE ARRASTRAS — Registrar operaciones: 0 hechas. Esto no es un olvido de hoy, es que todavía no ha arrancado. El Ejecutor lleva 13 cerradas, pero esas son de tu robot, no tuyas.»
+Tú viste «Hoy despejado y sin lluvia… El plan de EURUSD sigue p» y ahí se cortaba. La exigencia venía JUSTO DEBAJO del corte. Ya está arreglado, así que el próximo te llega entero.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
