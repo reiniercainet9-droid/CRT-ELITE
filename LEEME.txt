@@ -1,29 +1,25 @@
-APEX v7.168 — TRADING DESK
+APEX v7.169 — TRADING DESK
 =========================
 
-🗂️ LA SECCIÓN DEL EJECUTOR SE PLIEGA
-Tenías razón y el número lo dice: medí tu sección en tu propio teléfono y ocupaba 13,7 PANTALLAS. El «📓 Diario del Ejecutor» él solo se llevaba la mitad (6,8 pantallas) y «⚙️ Tus reglas» otras 3,4. Para llegar al resumen del final había que deslizar catorce pantallas.
-Ahora cada tarjeta grande se pliega tocando su título, y te dice cuántas pantallas hay dentro antes de abrirla. Medido después, en tu teléfono: de 13,2 pantallas a 3,1.
-· Lo que abres o cierras SE RECUERDA: no tienes que volver a plegarlo cada vez que entras.
-· Lo corto NO se pliega: esconder dos líneas sería añadirte un toque para nada.
-· Y lo que más me preocupaba: los 44 botones del Diario siguen VIVOS después de plegar y desplegar. Comprobado uno a uno en tu teléfono, porque plegar mal deja una sección que se ve bien y no funciona.
+🕰️ EL VETO QUE TE RECHAZÓ LA SEÑAL DE NY — ARREGLADO
+Lo encontré en tu registro, con hora y par:
+    17/09 09:01:27  EURUSD  «ya hay una posición del Ejecutor en EURUSD»
+Las 09:01 de Timbó son las 08:01 de Nueva York, o sea sesión de NY. Y la posición que bloqueó esa señal venía de LONDRES, como dijiste.
+La regla miraba si había una posición viva en el par, SIN MIRAR DE QUÉ SESIÓN ERA. Es el mismo fallo que te costó dos señales el 07-09, por otra puerta.
+Ahora una posición de una sesión anterior ya no bloquea la siguiente. Y lo que la regla sí quería evitar —dos entradas seguidas en el mismo par, misma idea, MISMA sesión— se sigue evitando igual.
+⚠️ Y te dejé el interruptor, porque esto significa que puedes acabar con DOS posiciones a la vez en el mismo par, o sea el doble de riesgo en ese símbolo. Está en tus reglas: «Un par bloqueado… solo su sesión / todo el día». Esa decisión es tuya, no mía.
 
-💾 EL RESPALDO YA NO TE AHOGA LA MÁQUINA
-· Cifraba cargando el archivo ENTERO en memoria: 2,7 GB de tus 8. Windows me lo mató dos veces esta mañana, y era uno de los trabajos que dejaban ciego al Puente. Ahora va por trozos de 1 MB: da igual que el respaldo pese 800 MB o 8 GB.
-· Y cifraba los mismos 780 MB DOS VECES (una para el principal y otra para el histórico) para obtener el mismo archivo. Ahora cifra una vez y copia — comprobado con la huella SHA-256 de los dos archivos: idénticos.
-· ⚠️ Tus 30 respaldos guardados SE SIGUEN ABRIENDO. Eso lo probé de verdad: fabriqué uno con el formato viejo y lo abrí con el código nuevo.
-· Y ahora el respaldo COMPRUEBA SOLO que se puede abrir. Hasta hoy nadie lo comprobaba nunca: si hubiera salido ilegible, lo habrías descubierto el día que hiciera falta. El tuyo de hoy dio «ok».
+✂️ PARCIALES Y DEJAR CORRER — LAS DOS FORMAS QUE PEDISTE
+1. A MANO: en cada posición abierta tienes botones 25% · 50% · 75%. Antes de hacerlo te dice qué parte se cierra, que el resto SIGUE CORRIENDO y con qué stop.
+2. SOLO: interruptor de parcial automático, con a cuántos R y qué porcentaje. DE FÁBRICA APAGADO — esto mueve tu dinero, lo enciendes tú.
+Y como dijiste: se mantiene TODO igual. Las detecciones, el break-even automático, la salida por tiempo, el veto y el horario no se han tocado. El parcial va DESPUÉS del break-even a propósito: primero el stop a salvo, luego se cobra la parte.
 
-🪜 EL HISTORIAL: ERA PEOR QUE LOS 21 GB
-Tus 30 copias cubrían SOLO DOS DÍAS — 9 del lunes, 13 del martes, 8 de hoy. Porque en un día de trabajo se hacen diez respaldos y se comen el histórico entero. Si algo se rompió hace cinco días y lo notabas hoy, no tenías a dónde volver.
-Ahora es una escalera: las 6 últimas (para deshacer una hora mala) + 1 por día (7) + 1 por semana (4) + 1 por mes (3). Máximo 20 copias, y cubre TRES MESES en vez de dos días.
-Y ante la duda, se queda: un archivo con nombre raro no se borra nunca.
+⚠️ LA TRAMPA QUE CACÉ, y es de broker, no de idea: el lote va en escalones de 0,01. Pedir «la mitad» de una posición de 0,01 lotes da 0,005, el broker LO RECHAZA, y tú te quedarías creyendo que cerraste media posición cuando no cerraste nada. Ahora, si una posición es demasiado pequeña para partirla, te lo dice con sus palabras y no toca nada.
 
-🛡️ LO QUE ROBERTO TE EXIGE: SÍ FUNCIONABA, LO VISTE CORTADO
-Me dijiste que no habías sentido la presión. Fui a mirar y esto es lo que Roberto te escribió esta mañana, entero:
-   «🎯 LO PRIMERO — Hoy no abres ningún gráfico a operar tú sin antes hacer una operación en backtesting. CERO EXCEPCIONES. Ahora mismo tienes cero datos tuyos — ni uno — para saber si lo que haces funciona.»
-   «⚠️ LO QUE ARRASTRAS — Registrar operaciones: 0 hechas. Esto no es un olvido de hoy, es que todavía no ha arrancado. El Ejecutor lleva 13 cerradas, pero esas son de tu robot, no tuyas.»
-Tú viste «Hoy despejado y sin lluvia… El plan de EURUSD sigue p» y ahí se cortaba. La exigencia venía JUSTO DEBAJO del corte. Ya está arreglado, así que el próximo te llega entero.
+📊 POR QUÉ ESTO ES LO QUE MÁS TE CAMBIA EL DINERO (laboratorio del 16-09): la salida por tiempo te deja 1,92R sobre la mesa POR OPERACIÓN, y el 3R solo llega 1 de cada 4 veces. Cobrar una parte y dejar correr el resto ataca justo eso.
+
+🐢 MI TRABAJO PESADO: DISMINUYE, NO PARA
+Me corregiste y tenías razón. Nada de esperar ni de bloquearme porque tengas una posición abierta —ya se entró—. Lo que hace ahora es ir más despacio mientras el mercado está abierto: el cifrado respira 12 ms por cada MB (unos 9 segundos más en un respaldo de 765 MB) y va a toda velocidad fuera de mercado.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

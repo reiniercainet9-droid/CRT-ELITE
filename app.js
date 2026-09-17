@@ -1930,6 +1930,15 @@ function ejecFormHTML(cfg){
     '<label style="font-size:.85em">…de qué vela<select class="inp ia-ejec-sttf">'+["H1","H4","D"].map(x=>'<option value="'+x+'"'+((String(cfg.salidaTiempoTF||"H4").toUpperCase()===x)?" selected":"")+'>'+x+'</option>').join("")+'</select></label>'+
     '<div class="desc" style="grid-column:1/3;font-size:11.5px;line-height:1.45;margin:-2px 0 8px">Cierra la operación en cuanto el precio hace un <b>nuevo máximo (o mínimo) de la vela anterior</b> de esa temporalidad. Es «ya recorrió lo suyo, cobra».<br>📊 <b>Medido el 16-09:</b> de las que cerró este reloj, ese extremo estaba a solo <b>0,12R de mediana</b> cuando entraste — y después el precio siguió hasta <b>1,95R de mediana</b>. Te deja <b>1,92R en la mesa</b> por operación. <b>Quitarlo fue el cambio que más mejoró</b> los números.<br>⚠️ El 04-09 esto estaba puesto en H1 sin que se pudiera ver, y te costó 2,19R en un día. Por eso ahora se elige aquí.</div>'+
 
+    /* ✂️ v7.169 (17-09) — PARCIALES Y DEJAR CORRER, pedido de Rey. */
+    '<label style="font-size:.85em">✂️ Cerrar una parte y dejar correr<select class="inp ia-ejec-parcon"><option value="0"'+((cfg.parcialActivo!==true)?" selected":"")+'>No</option><option value="1"'+((cfg.parcialActivo===true)?" selected":"")+'>Sí</option></select></label>'+
+    '<label style="font-size:.85em">…al llegar a (en R)<input class="inp ia-ejec-parr" type="number" step="0.1" min="0.1" max="10" value="'+esc(String(cfg.parcialEnR!=null?cfg.parcialEnR:1))+'"></label>'+
+    '<label style="font-size:.85em">…y cierro este % de la posición<input class="inp ia-ejec-parpct" type="number" step="5" min="5" max="95" value="'+esc(String(cfg.parcialPct!=null?cfg.parcialPct:50))+'"></label>'+
+    '<div class="desc" style="grid-column:1/3;font-size:11.5px;line-height:1.45;margin:-2px 0 8px">Al llegar a ese beneficio cierro esa parte y <b>el resto sigue corriendo</b> con su stop donde esté. El break-even se hace ANTES, así que lo que sigue vivo ya no puede perder.<br>📊 <b>Medido el 16-09:</b> la salida por tiempo te deja <b>1,92R en la mesa</b> por operación y el 3R solo llega <b>1 de cada 4 veces</b>. Cobrar una parte y dejar correr el resto ataca justo eso.<br>✋ Y cuando quieras hacerlo a mano, tienes los botones <b>25% / 50% / 75%</b> en cada posición abierta, ahí arriba.</div>'+
+
+    '<label style="font-size:.85em">🕒 Un par bloqueado…<select class="inp ia-ejec-unapordia"><option value="0"'+((cfg.unaPorParDia!==true)?" selected":"")+'>solo su sesión</option><option value="1"'+((cfg.unaPorParDia===true)?" selected":"")+'>todo el día</option></select></label>'+
+    '<div class="desc" style="grid-column:1/3;font-size:11.5px;line-height:1.45;margin:-2px 0 8px">Con <b>solo su sesión</b>, una posición abierta en Londres <b>no te bloquea</b> la señal de Nueva York en ese par. Con <b>todo el día</b>, sí — como era antes.<br>⚠️ Ojo: con «solo su sesión» puedes acabar con <b>dos posiciones a la vez en el mismo par</b>, o sea el doble de riesgo en ese símbolo.<br>🗓️ El 17-09 a las 09:01 te rechazó una señal de EURUSD de NY por una posición que venía de Londres. Eso es lo que arregla esto.</div>'+
+
     '<label style="grid-column:1/3;font-size:.85em">🎯 Objetivo en R (0 = el que mande el indicador)<input class="inp ia-ejec-objrr" type="number" step="0.1" min="0" max="10" value="'+esc(String(cfg.objetivoRR!=null?cfg.objetivoRR:0))+'"></label>'+
     '<div class="desc" style="grid-column:1/3;font-size:11.5px;line-height:1.45;margin:-2px 0 8px">Cuántas veces lo arriesgado quieres ganar. Con <b>0</b> se usa el del indicador (hoy, <b>3R</b>) y <b>tu indicador no se toca</b>: el Ejecutor recoloca el objetivo sobre tu precio real de entrada y tu stop.<br>📊 <b>Medido el 16-09:</b> 1,5R se alcanza <b>2 de cada 3 veces</b> · 2R, <b>1 de cada 2</b> · <b>3R solo 1 de cada 4</b>. Y la comisión pesa menos cuanto mayor es el objetivo: <b>16,2%</b> con 1,5R contra <b>8,5%</b> con 2,5R.<br>🧪 La mejor combinación medida en EURUSD fue <b>objetivo 2R + stop a la entrada SÍ + reloj NO</b>. En GBPUSD solo hubo 9 operaciones: <b>ahí no hay dato que valga</b>.</div>'+
 
@@ -2065,6 +2074,12 @@ function ejecLeerForm(root){
     beEnR:(q("ia-ejec-ber") ? parseFloat(q("ia-ejec-ber").value) : undefined),
     salidaTiempo:(q("ia-ejec-ston") ? q("ia-ejec-ston").value==="1" : undefined),
     salidaTiempoTF:(q("ia-ejec-sttf") ? q("ia-ejec-sttf").value : undefined),
+    /* ✂️ v7.169 — los parciales y la regla por sesión. Si el formulario fuera viejo y no los
+       trajera, van undefined y la nube deja lo que ya hay: nunca se le borra un ajuste. */
+    parcialActivo:(q("ia-ejec-parcon") ? q("ia-ejec-parcon").value==="1" : undefined),
+    parcialEnR:(q("ia-ejec-parr") ? parseFloat(q("ia-ejec-parr").value) : undefined),
+    parcialPct:(q("ia-ejec-parpct") ? parseInt(q("ia-ejec-parpct").value,10) : undefined),
+    unaPorParDia:(q("ia-ejec-unapordia") ? q("ia-ejec-unapordia").value==="1" : undefined),
     objetivoRR:(q("ia-ejec-objrr") ? parseFloat(q("ia-ejec-objrr").value) : undefined),
     corteSesionNY:(q("ia-ejec-cortesesion") ? parseInt(q("ia-ejec-cortesesion").value,10) : undefined),
     maxPerdidaDiaPct:parseFloat(q("ia-ejec-maxdd").value),
@@ -2129,12 +2144,28 @@ async function ejecSwitchSet(on){
     toast("⚠️ No se pudo — ¿worker v5.77 subido?"); return false;
   }catch(_){ toast("⚠️ Sin internet"); return false; }
 }
-async function ejecCmdCerrar(ticket){
+/* ✂️ v7.169 (17-09) — CERRAR UNA PARTE Y DEJAR CORRER EL RESTO.
+   Rey: «quiero interruptores para poder cerrar posiciones donde yo determine y dejar correr
+   lo que quede de la posición». Con `parte` (0,25 / 0,5 / 0,75) se cierra solo esa fracción.
+   El laboratorio del 16-09 midió por qué importa: la salida por tiempo le deja 1,92R sobre la
+   mesa por operación, y el 3R solo llega 1 de cada 4 veces.
+   ⚠️ Se le dice ANTES lo que va a pasar: es irreversible y es su dinero. */
+async function ejecCmdCerrar(ticket, parte){
   const todo=ticket==null;
-  if(!await preguntar(todo?"✖ ¿Cerrar TODAS las posiciones del Ejecutor ahora?":"✖ ¿Cerrar esta posición ahora, al precio de mercado?")) return false;
+  const pct=parte?Math.round(parte*100):0;
+  const pregunta = todo
+    ? "✖ ¿Cerrar TODAS las posiciones del Ejecutor ahora?"
+    : (parte
+        ? ("✂️ ¿Cerrar el <b>"+pct+"%</b> de esta posición ahora, al precio de mercado?<br><br>"
+           + "El <b>"+(100-pct)+"% restante SIGUE CORRIENDO</b>, con su stop donde está.<br>"
+           + '<span style="opacity:.75;font-size:.9em">Si la posición es demasiado pequeña para partirla, te lo digo y no toco nada.</span>')
+        : "✖ ¿Cerrar esta posición ahora, al precio de mercado?");
+  if(!await preguntar(pregunta,{titulo:parte?("✂️ Parcial del "+pct+"%"):"✖ Cerrar posición", si:parte?("Cerrar el "+pct+"%"):"Cerrar"})) return false;
   try{
-    await fetch(nubeUrl()+"/ejec/cmd",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(todo?{action:"cerrar_todo"}:{action:"cerrar",ticket})});
-    toast("Orden de cierre enviada — te aviso al cerrar"); return true;
+    const cuerpo = todo ? {action:"cerrar_todo"} : (parte?{action:"cerrar",ticket,parte}:{action:"cerrar",ticket});
+    await fetch(nubeUrl()+"/ejec/cmd",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(cuerpo)});
+    toast(parte?("✂️ Orden enviada: cierro el "+pct+"% y dejo correr el resto"):"Orden de cierre enviada — te aviso al cerrar");
+    return true;
   }catch(_){ toast("⚠️ Sin internet"); return false; }
 }
 async function verEjecutor(){
@@ -3906,7 +3937,14 @@ async function renderEjecutor(){
     '<div id="espEjec"></div>'+
     /* posiciones abiertas */
     (poss.length?('<div class="card"><b>📌 Posiciones abiertas</b>'+
-      poss.map(p=>'<div style="display:flex;align-items:center;gap:8px;margin-top:8px"><span style="flex:1">'+esc(p.dir+" "+p.sym)+' · lote '+p.lote+' @ '+p.entrada+' · SL '+p.sl+' · TP '+p.tp+' · <b>$'+p.pl+'</b></span><button class="btn ej-cerrar" data-tk="'+esc(String(p.ticket))+'">✖ Cerrar</button></div>').join("")+
+      /* ✂️ v7.169 — debajo de cada posición, sus parciales. Rey (17-09): «cerrar posiciones
+         donde yo determine y dejar correr lo que quede de la posición». */
+      poss.map(p=>'<div style="margin-top:10px;padding-top:8px;border-top:1px solid rgba(255,255,255,.07)">'+
+        '<div style="display:flex;align-items:center;gap:8px;margin-top:8px"><span style="flex:1">'+esc(p.dir+" "+p.sym)+' · lote '+p.lote+' @ '+p.entrada+' · SL '+p.sl+' · TP '+p.tp+' · <b>$'+p.pl+'</b></span><button class="btn ej-cerrar" data-tk="'+esc(String(p.ticket))+'">✖ Cerrar</button></div>'+
+        '<div style="display:flex;gap:6px;margin-top:6px;align-items:center;flex-wrap:wrap">'+
+          '<span class="desc" style="font-size:11.5px;opacity:.85">✂️ Cerrar parte y dejar correr:</span>'+
+          [25,50,75].map(q=>'<button class="btn ej-parcial" data-tk="'+esc(String(p.ticket))+'" data-q="'+q+'" style="padding:3px 9px;font-size:.85em">'+q+'%</button>').join("")+
+        '</div></div>').join("")+
       '<div style="margin-top:8px"><button class="btn" id="ejCerrarTodo" style="width:100%">✖ Cerrar TODAS</button></div></div>'):"")+
     /* reglas */
     '<div class="card"><b>⚙️ Tus reglas</b> <span style="opacity:.8;font-size:.85em">(las mismas del chip 🤖 del chat — un solo lugar en la nube)</span>'+
@@ -3949,6 +3987,12 @@ async function renderEjecutor(){
   $("#ejSave").onclick=async()=>{ const body=ejecLeerForm($("#ejForm")); if(body && await ejecGuardarCfg(body)) renderEjecutor(); };
   cont.querySelectorAll(".ej-cerrar").forEach(b=>{ b.onclick=()=>ejecCmdCerrar(b.dataset.tk); });
   const ctd=$("#ejCerrarTodo"); if(ctd) ctd.onclick=()=>ejecCmdCerrar(null);
+  /* ✂️ v7.169 — los parciales de cada posición. Se enganchan aquí, con los demás botones
+     de la sección, para que vivan en el mismo pintado y no queden mudos al repintar. */
+  cont.querySelectorAll(".ej-parcial").forEach(b=>{ b.onclick=async()=>{
+    const q=parseInt(b.dataset.q,10)||50;
+    if(await ejecCmdCerrar(b.dataset.tk, q/100)) setTimeout(renderEjecutor, 2500);
+  }; });
   const bevH=$("#ejEvalHoy"); if(bevH) bevH.onclick=()=>ejecEvaluarRoberto("hoy");
   const bevS=$("#ejEvalSem"); if(bevS) bevS.onclick=()=>ejecEvaluarRoberto("semana");
   const bevT=$("#ejEvalTodo"); if(bevT) bevT.onclick=()=>ejecEvaluarRoberto("todas");
