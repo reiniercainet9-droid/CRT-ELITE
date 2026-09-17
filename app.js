@@ -1857,6 +1857,10 @@ async function verGasto(){
    el total actual, no lo añadido). Necesita el worker v5.68 (POST /gasto/recarga). */
 function tarjetaRecarga(rec){
   const cont=$("#iaMsgs"); if(!cont) return;
+  /* 🖐️ v7.170 — se mira si estaba pegado abajo ANTES de añadir nada: al añadir la tarjeta
+     el contenido crece y mirarlo después daría siempre «no» ([[apex-no-le-quitan-el-sitio]]). */
+  const _yaAbajo = (typeof pegadoAbajo==="function") ? pegadoAbajo(cont) : true;
+  /* 🖐️ v7.170 — se apunta si estaba pegado abajo ANTES de añadir nada: si se mira
   cont.querySelectorAll(".ia-recarga").forEach(n=>n.remove());
   const card=el("div","ia-tool ia-recarga");
   card.innerHTML=
@@ -1876,7 +1880,9 @@ function tarjetaRecarga(rec){
       else{ bar.innerHTML="<span class='ia-tool-cancel'>⚠️ No se pudo — ¿ya subiste el worker v5.68?</span>"; }
     }catch(_){ bar.innerHTML="<span class='ia-tool-cancel'>⚠️ Sin internet — inténtalo otra vez</span>"; }
   };
-  cont.scrollTop=cont.scrollHeight;
+  /* 🖐️ v7.170 — solo baja si Rey YA estaba abajo. Antes, cada tarjeta que se pintaba le
+     arrastraba al final aunque estuviera leyendo arriba ([[apex-no-le-quitan-el-sitio]]). */
+  try{ if(_yaAbajo) cont.scrollTop=cont.scrollHeight; }catch(_){}
 }
 
 /* ============================================================
@@ -2257,6 +2263,10 @@ async function verEjecutor(){
 }
 function tarjetaEjecutor(d){
   const cont=$("#iaMsgs"); if(!cont) return;
+  /* 🖐️ v7.170 — se mira si estaba pegado abajo ANTES de añadir nada: al añadir la tarjeta
+     el contenido crece y mirarlo después daría siempre «no» ([[apex-no-le-quitan-el-sitio]]). */
+  const _yaAbajo = (typeof pegadoAbajo==="function") ? pegadoAbajo(cont) : true;
+  /* 🖐️ v7.170 — se apunta si estaba pegado abajo ANTES de añadir nada: si se mira
   cont.querySelectorAll(".ia-ejec").forEach(n=>n.remove());
   const cfg=d.cfg||{};
   const card=el("div","ia-tool ia-ejec");
@@ -2280,7 +2290,9 @@ function tarjetaEjecutor(d){
   card.querySelector(".ia-ejec-seccion").onclick=()=>{ if(typeof cerrarIA==="function") cerrarIA(); irA("ejecutor"); };
   ejecFormWire(card);   /* v7.92 — fichas de cuentas autorizadas + botón de reglas de la firma */
   card.querySelector(".ia-ejec-save").onclick=async()=>{ const body=ejecLeerForm(card); if(body) await ejecGuardarCfg(body); };
-  cont.scrollTop=cont.scrollHeight;
+  /* 🖐️ v7.170 — solo baja si Rey YA estaba abajo. Antes, cada tarjeta que se pintaba le
+     arrastraba al final aunque estuviera leyendo arriba ([[apex-no-le-quitan-el-sitio]]). */
+  try{ if(_yaAbajo) cont.scrollTop=cont.scrollHeight; }catch(_){}
 }
 /* ── 📚 ARCHIVO PERMANENTE del Ejecutor (v6.10) — la nube solo guarda los últimos
    ~40 eventos, así que la app ARCHIVA aquí cada operación para SIEMPRE (localStorage
@@ -14385,7 +14397,6 @@ function pintarIAChat(){
        <div class="ia-wait">Roberto está pensando… si busca en internet (firmas, noticias) tarda un poco más. Espera los puntitos.</div>`:"");
   /* 🖐️ v7.170 — SOLO SI YA ESTABA ABAJO. Antes esto le arrastraba al final en CADA
      repintado: Rey leyendo hacia arriba y Roberto tirándole abajo con cada mensaje. */
-  devolverSitio(m, _sitioChat);
   /* 🆘 botones de recuperación dentro de un mensaje (reenviar / continuar / recargar) */
   { const bc=$("#iaCancel"); if(bc) bc.onclick=iaCancelarEspera; }
   try{ iaPintarTools(); }catch(_){}   /* 🤖 las tarjetas sobreviven a cualquier repintado */
@@ -14404,6 +14415,10 @@ function pintarIAChat(){
       if(!texto){ toast("En este mensaje no hay texto que leer"); return; }
       iaHablar(texto, i); };
   });
+  /* 🖐️ v7.170 — AQUÍ AL FINAL, Y NO A MITAD. La primera vez lo puse antes de pintar las
+     tarjetas (iaPintarTools) y ésas volvían a bajarle al final: probado en su teléfono, estaba
+     leyendo en 1930 y acababa en 4890. Lo último que se toca es su sitio. */
+  devolverSitio(m, _sitioChat);
 }
 /* 🔊 v6.68 — EL BOTÓN "ESCUCHAR" DEL CHAT NO HABLABA (Rey, 01-09: "los demás sí funcionan
    pero ese no"). Y tenía toda la razón: era el ÚNICO que sacaba el texto de otro sitio.
@@ -15829,6 +15844,10 @@ function iaTarjetaCuerpoFuera(remate){
 /* Pinta (o repinta) las tarjetas que están esperando decisión. */
 function iaPintarTools(){
   const cont=$("#iaMsgs"); if(!cont) return;
+  /* 🖐️ v7.170 — se mira si estaba pegado abajo ANTES de añadir nada: al añadir la tarjeta
+     el contenido crece y mirarlo después daría siempre «no» ([[apex-no-le-quitan-el-sitio]]). */
+  const _yaAbajo = (typeof pegadoAbajo==="function") ? pegadoAbajo(cont) : true;
+  /* 🖐️ v7.170 — se apunta si estaba pegado abajo ANTES de añadir nada: si se mira
   cont.querySelectorAll(".ia-tool").forEach(n=>n.remove());
   IA_TOOL_PEND.filter(p=>p.estado==="pendiente").forEach(p=>{
     const card=el("div","ia-tool");
@@ -15839,7 +15858,9 @@ function iaPintarTools(){
     card.querySelector(".ia-tool-si").onclick=()=>iaToolSi(p, card);
     card.querySelector(".ia-tool-no").onclick=()=>iaToolNo(p, card);
   });
-  cont.scrollTop=cont.scrollHeight;
+  /* 🖐️ v7.170 — solo baja si Rey YA estaba abajo. Antes, cada tarjeta que se pintaba le
+     arrastraba al final aunque estuviera leyendo arriba ([[apex-no-le-quitan-el-sitio]]). */
+  try{ if(_yaAbajo) cont.scrollTop=cont.scrollHeight; }catch(_){}
 }
 /* Bucle de conversación con herramientas: maneja texto, errores y acciones a confirmar */
 async function iaLoop(msgs, c){
