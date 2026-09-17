@@ -1,25 +1,20 @@
-APEX v7.169 — TRADING DESK
+APEX v7.170 — TRADING DESK
 =========================
 
-🕰️ EL VETO QUE TE RECHAZÓ LA SEÑAL DE NY — ARREGLADO
-Lo encontré en tu registro, con hora y par:
-    17/09 09:01:27  EURUSD  «ya hay una posición del Ejecutor en EURUSD»
-Las 09:01 de Timbó son las 08:01 de Nueva York, o sea sesión de NY. Y la posición que bloqueó esa señal venía de LONDRES, como dijiste.
-La regla miraba si había una posición viva en el par, SIN MIRAR DE QUÉ SESIÓN ERA. Es el mismo fallo que te costó dos señales el 07-09, por otra puerta.
-Ahora una posición de una sesión anterior ya no bloquea la siguiente. Y lo que la regla sí quería evitar —dos entradas seguidas en el mismo par, misma idea, MISMA sesión— se sigue evitando igual.
-⚠️ Y te dejé el interruptor, porque esto significa que puedes acabar con DOS posiciones a la vez en el mismo par, o sea el doble de riesgo en ese símbolo. Está en tus reglas: «Un par bloqueado… solo su sesión / todo el día». Esa decisión es tuya, no mía.
+🖐️ EL SITIO DONDE ESTÁS LEYENDO ES TUYO
+Rey: «cuando estoy deslizando una sección o el chat mientras él habla, se devuelve al comienzo o al final, impidiéndome seguir leyendo».
+Eran DOS fallos distintos, y por eso unas veces ibas al final y otras al principio:
+· EL CHAT te tiraba AL FINAL. Repintaba y hacía scroll al final en CADA mensaje. Daba igual dónde estuvieras leyendo: cada frase de Roberto te arrastraba abajo.
+· LA SECCIÓN te tiraba AL PRINCIPIO. La del Ejecutor se repinta SOLA CADA 25 SEGUNDOS, y al repintar el desplazamiento volvía a cero. Estabas leyendo una entrada del Diario y cada 25 segundos volvías arriba.
 
-✂️ PARCIALES Y DEJAR CORRER — LAS DOS FORMAS QUE PEDISTE
-1. A MANO: en cada posición abierta tienes botones 25% · 50% · 75%. Antes de hacerlo te dice qué parte se cierra, que el resto SIGUE CORRIENDO y con qué stop.
-2. SOLO: interruptor de parcial automático, con a cuántos R y qué porcentaje. DE FÁBRICA APAGADO — esto mueve tu dinero, lo enciendes tú.
-Y como dijiste: se mantiene TODO igual. Las detecciones, el break-even automático, la salida por tiempo, el veto y el horario no se han tocado. El parcial va DESPUÉS del break-even a propósito: primero el stop a salvo, luego se cobra la parte.
+Ahora:
+· se apunta dónde estás leyendo ANTES de repintar y se te devuelve después;
+· si estabas al final del chat, sigues al final (ahí sí quieres ver lo nuevo);
+· si estabas leyendo arriba, te quedas donde estabas aunque Roberto siga hablando;
+· y si acabas de deslizar, el repintado automático ESPERA a la siguiente vuelta. No hay ninguna prisa por enseñarte algo que va a seguir ahí dentro de 25 segundos.
+· Se escucha tu DEDO, no solo la rueda del ratón — en un teléfono no hay rueda, y sin eso esto no habría servido de nada.
 
-⚠️ LA TRAMPA QUE CACÉ, y es de broker, no de idea: el lote va en escalones de 0,01. Pedir «la mitad» de una posición de 0,01 lotes da 0,005, el broker LO RECHAZA, y tú te quedarías creyendo que cerraste media posición cuando no cerraste nada. Ahora, si una posición es demasiado pequeña para partirla, te lo dice con sus palabras y no toca nada.
-
-📊 POR QUÉ ESTO ES LO QUE MÁS TE CAMBIA EL DINERO (laboratorio del 16-09): la salida por tiempo te deja 1,92R sobre la mesa POR OPERACIÓN, y el 3R solo llega 1 de cada 4 veces. Cobrar una parte y dejar correr el resto ataca justo eso.
-
-🐢 MI TRABAJO PESADO: DISMINUYE, NO PARA
-Me corregiste y tenías razón. Nada de esperar ni de bloquearme porque tengas una posición abierta —ya se entró—. Lo que hace ahora es ir más despacio mientras el mercado está abierto: el cifrado respira 12 ms por cada MB (unos 9 segundos más en un respaldo de 765 MB) y va a toda velocidad fuera de mercado.
+Comprobado ejecutándolo en tu teléfono: estando arriba no te baja, estando abajo sigues abajo, y al crecer el contenido lo que estás leyendo NO se te mueve.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

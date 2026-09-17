@@ -14293,8 +14293,48 @@ async function iaBorrarMsg(i){
   }catch(_){ toast("No pude borrarlo"); }
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════════
+   🖐️ v7.170 (17-09) — EL SITIO DONDE REY ESTÁ LEYENDO ES SUYO
+   ───────────────────────────────────────────────────────────────────────────────
+   Rey: «cuando estoy deslizando una sección o el chat mientras él habla, se devuelve al
+   comienzo o al final, impidiéndome seguir leyendo».
+   Nada automático puede quitarle el sitio. Se baja al final SOLO si ya estaba abajo.
+   ═══════════════════════════════════════════════════════════════════════════════ */
+let _ultimoRoce = 0;
+try{
+  ["scroll","touchstart","touchmove","wheel"].forEach(ev=>{
+    window.addEventListener(ev, ()=>{ _ultimoRoce = Date.now(); }, {passive:true, capture:true});
+  });
+}catch(_){}
+/* ¿está Rey desplazándose AHORA MISMO? 6 s: lo que tarda en leer un trozo y seguir */
+function reyDeslizando(ms){ return (Date.now() - _ultimoRoce) < (ms || 6000); }
+/* ¿está pegado al final? Entonces sí quiere ver lo nuevo. 90 px de margen: un dedo. */
+function pegadoAbajo(el, margen){
+  try{ return (el.scrollHeight - el.scrollTop - el.clientHeight) <= (margen || 90); }
+  catch(_){ return true; }
+}
+/* guarda y devuelve el sitio de lectura alrededor de un repintado */
+function guardarSitio(el){
+  try{ return { y: el.scrollTop, alto: el.scrollHeight, abajo: pegadoAbajo(el) }; }catch(_){ return null; }
+}
+function devolverSitio(el, s){
+  if(!el || !s) return;
+  try{
+    if(s.abajo){ el.scrollTop = el.scrollHeight; return; }   /* estaba abajo: que siga abajo */
+    /* si el contenido creció por arriba, se compensa para que NO se le mueva lo que lee */
+    const crecio = el.scrollHeight - s.alto;
+    el.scrollTop = s.y + (crecio > 0 ? crecio : 0);
+  }catch(_){}
+}
+
+let _sitioChat = null;
 function pintarIAChat(){
   const m=$("#iaMsgs"); if(!m) return;
+  /* 🖐️ v7.170 — SE APUNTA DÓNDE ESTÁ LEYENDO ANTES DE TOCAR NADA.
+     Rey (17-09): «mientras él habla se devuelve al final, impidiéndome seguir leyendo».
+     Antes de repintar se guarda su sitio, y al final se le devuelve: si estaba abajo sigue
+     abajo, y si estaba leyendo arriba se queda donde estaba aunque Roberto siga hablando. */
+  _sitioChat = guardarSitio(m);
   robMontar();
   const c=iaConvAct();
   /* 👀 la cara sigue SOLA lo que pasa en el chat */
@@ -14343,7 +14383,9 @@ function pintarIAChat(){
     + (IA.busy?`<div class="ia-msg bot ia-typing"><span></span><span></span><span></span></div>
        <div class="ia-cancel-w"><button class="ia-cancel" id="iaCancel">✕ Cancelar y escribir</button></div>
        <div class="ia-wait">Roberto está pensando… si busca en internet (firmas, noticias) tarda un poco más. Espera los puntitos.</div>`:"");
-  m.scrollTop=m.scrollHeight;
+  /* 🖐️ v7.170 — SOLO SI YA ESTABA ABAJO. Antes esto le arrastraba al final en CADA
+     repintado: Rey leyendo hacia arriba y Roberto tirándole abajo con cada mensaje. */
+  devolverSitio(m, _sitioChat);
   /* 🆘 botones de recuperación dentro de un mensaje (reenviar / continuar / recargar) */
   { const bc=$("#iaCancel"); if(bc) bc.onclick=iaCancelarEspera; }
   try{ iaPintarTools(); }catch(_){}   /* 🤖 las tarjetas sobreviven a cualquier repintado */
@@ -17050,7 +17092,26 @@ function init(){
      repintado borraba el mensaje de espera Y el hueco donde iba la respuesta, así que cuando
      llegaba se escribía en un nodo que ya no estaba en pantalla.
      Refrescar es útil, pero JAMÁS por encima de algo que Rey está esperando. */
-  setInterval(()=>{ try{ if(TAB==="ejecutor" && document.visibilityState==="visible" && !window.__resJuzgando) renderEjecutor(); }catch(_){} }, 25000);
+  /* 🖐️ v7.170 (17-09) — NO SE REPINTA MIENTRAS REY ESTÁ LEYENDO.
+     Rey: «cuando estoy deslizándome por una sección se devuelve al comienzo». Era esto: la
+     sección del Ejecutor se repintaba SOLA cada 25 s y el desplazamiento volvía a cero, así
+     que le echaba de donde estaba leyendo cada 25 segundos.
+     Ahora, si acaba de deslizar, este repintado ESPERA a la siguiente vuelta: no hay ninguna
+     prisa por enseñarle algo que va a seguir ahí dentro de 25 segundos. Y aunque repinte, se
+     le devuelve el sitio donde estaba. */
+  setInterval(()=>{ try{
+    if(TAB!=="ejecutor" || document.visibilityState!=="visible" || window.__resJuzgando) return;
+    if(typeof reyDeslizando==="function" && reyDeslizando()) return;   /* está leyendo: se espera */
+    const doc=document.scrollingElement||document.documentElement;
+    const sitio=(typeof guardarSitio==="function")?guardarSitio(doc):null;
+    const y=doc.scrollTop;
+    Promise.resolve(renderEjecutor()).then(()=>{
+      try{
+        /* se le devuelve su sitio; si estaba arriba del todo, ahí se queda */
+        if(sitio && y>4) doc.scrollTop=y;
+      }catch(_){}
+    }).catch(()=>{});
+  }catch(_){} }, 25000);
   buildNav();
   fillPlanDinamico();
   initDiarioControles();
