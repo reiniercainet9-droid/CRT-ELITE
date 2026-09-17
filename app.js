@@ -12712,6 +12712,22 @@ async function oyeUI(){
     if(!P || typeof P.oyeHay!=="function"){ caja.style.display="none"; box.style.display="none"; return; }
     caja.style.display=""; box.style.display="";
 
+    /* 🔕 v7.167 — RETIRADO POR REY, Y CON RAZÓN.
+       Rey (16-09, de madrugada): «a cada segundo ese pitido no, así no, es demasiado molesto…
+       si ese es el precio por hacer que Roberto me oiga, no lo quiero. No es profesional.»
+       Y es verdad: el pitido lo toca el servicio de Google CADA VEZ QUE ABRE EL MICRÓFONO
+       («Playing beep raw/open»), y lo abre en cada sesión. La sesión se cierra sola cada
+       10-25 s sin avisar, o sea que hay que reabrirla todo el día: un pitido por reapertura.
+       Medido en su teléfono: 3 en 90 s con el ritmo lento, uno cada 9 s con el rápido.
+       No hay ajuste que lo arregle mientras el micrófono lo abra Google.
+       Así que se retira. Para llamarle sigue estando el botón de hablar, que no pita porque
+       solo abre el micrófono cuando ÉL lo pulsa. El interruptor no se deja «por si acaso»:
+       un interruptor que solo sirve para llenarle el teléfono de ruido es una trampa. */
+    caja.style.display="none"; box.style.display="none";
+    try{ if(typeof P.oyeApagar==="function") await P.oyeApagar(); }catch(_){}
+    return;
+
+    /* eslint-disable no-unreachable */
     let h=null; try{ h=await P.oyeHay(); }catch(_){}
     const hay = !!(h && h.hay), on = !!(h && h.encendido), paquete = !(h && h.paquete===false);
 

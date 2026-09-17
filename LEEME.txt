@@ -1,38 +1,25 @@
-APEX v7.166 — TRADING DESK
+APEX v7.167 — TRADING DESK
 =========================
 
-💓 EL OÍDO: LO QUE ENCONTRÉ Y LO QUE TIENES QUE DECIDIR TÚ
-Esta mañana te di tres arreglos del micrófono. Los tres eran síntomas. Te cuento lo que dijo tu teléfono, con horas, porque la decisión que queda es tuya.
+🔕 QUITADO «OYE ROBERTO». TENÍAS RAZÓN Y NO HAY VUELTA DE HOJA.
+Te dije tres veces que lo había arreglado y seguía pitando. Eso está mal por mi parte, y lo que me pediste es lo correcto.
 
-Primero, el registro del oído:
-    19:18:48  latido: callado 59s -> resucito
-    19:20:48  latido: callado 119s -> resucito
-El aviso que dice «está entrando sonido» lo tenía VACÍO, así que el vigilante no veía nada. Arreglado.
+Por qué no tiene arreglo por ese camino, medido en tu teléfono:
+· el pitido lo toca el servicio de Google CUANDO ABRE EL MICRÓFONO («Playing beep raw/open»);
+· y lo abre EN CADA SESIÓN;
+· y la sesión se cierra sola cada 10-25 segundos sin avisar a nadie.
+O sea: hay que reabrirla todo el día y cada reapertura es un pitido. Medido: 3 en 90 segundos con el ritmo lento, uno cada 9 segundos con el rápido. Mientras el micrófono lo abra Google, pita. No es un ajuste que me falte por encontrar.
 
-Después, el registro de audio de Android, que es el que lo explica todo:
-    19:58:49  el micrófono se abre
-    19:58:59  se cierra          ← DIEZ SEGUNDOS después
-    20:00:49  se vuelve a abrir  ← dos minutos de nada
-El reconocedor de Google graba unos 10 segundos, CIERRA EL MICRÓFONO Y NO AVISA A NADIE: ni error, ni fin de sesión, nada. Y mi vigilante miraba cada 30 segundos. Resultado: tu oído vivía 10 segundos de cada 60. El 83% del tiempo le hablabas a nadie con el interruptor en verde. Eso es lo que llevas días sintiendo.
+QUÉ HE HECHO
+· Apagado en tu teléfono esta noche, y comprobado: 0 pitidos en dos minutos seguidos.
+· Quitado el interruptor de Apex. No lo dejo «por si acaso»: un interruptor que solo sirve para llenarte el teléfono de ruido es una trampa.
+· Y lo importante: el vigía YA NO PUEDE ENCENDERLO SOLO. Si quedaba un «encendido» guardado de antes, se borra. Un ajuste viejo no puede desobedecer una decisión tuya, y menos cuando no estás mirando.
+· Hay un banco nuevo que defiende esto. No defiende una función: defiende tu decisión, para que a mí no se me ocurra devolverlo mañana con buena intención.
 
-LO PROBÉ A FONDO Y AQUÍ ESTÁ EL MURO. Puse el vigilante a mirar cada 3 segundos: el micrófono quedó prácticamente continuo (se cierra y se reabre en 112 milisegundos). Pero el registro me enseñó el precio:
-    20:33:11  Playing beep
-    20:33:20  Playing beep
-    20:33:30  Playing beep
-UN PITIDO CADA NUEVE SEGUNDOS. Eso es literalmente tu queja («se activa y se desactiva solo»), y dártelo así sería peor que lo que tenías. Con esta forma de escuchar, el oído puede ser CONTINUO o CALLADO, no las dos cosas: el pitido lo toca Google al abrir el micrófono, y se abre en cada sesión.
+QUÉ SE QUEDA
+El botón de hablar, entero. Ése solo abre el micrófono cuando TÚ lo pulsas: suena una vez, cuando lo has pedido, que es lo normal. Pulsas y hablas.
 
-NO VOY A ELEGIR ESO POR TI. Te lo dejo en el punto medio: vigilancia cada 5 segundos, margen de 20. Y ahora cada reapertura es UN pitido en vez de dos, porque ya no destruyo el reconocedor, solo le pido escuchar otra vez. En el peor caso son tres por minuto, no siete.
-
-LA SALIDA DE VERDAD, y es trabajo aparte: darle NOSOTROS el audio en vez de que él abra el micrófono. Así el servicio de Google deja de tocar el micrófono, deja de pitar, y la sesión no se cierra sola. Es la solución buena y quiero hacerla bien, no de madrugada.
-Dime qué prefieres mientras tanto: oído más despierto con más pitidos, más callado con menos oído, o esperamos a la solución buena.
-
-🕯️ LAS CAPTURAS YA SE PUEDEN ESTUDIAR
-Tres avisos tuyos y dos arreglos míos fallidos, porque yo buscaba el estirón a lo ALTO. Cuando forcé una captura de tu operación y la MIRÉ: 13 velas en 2716 píxeles, ~190 px por vela. Estaban estiradas A LO ANCHO. Ahora nunca baja de 70 velas, con el 60% del contexto ANTES de la entrada, que es donde está el «por qué entró».
-Dos fallos callados más: el rótulo de salida se metía debajo del panel del indicador, y una operación más vieja que las velas cargadas sacaba una foto del gráfico entero sin quejarse. Los dos arreglados.
-
-🔎 LA TABLA DEJA DE SER UNA HILERA SIN FIN
-Buscador que entiende «11/09», «septiembre», «sep», «2026», «ganados», «lunes». Tope de filas con «ver más». El total sigue sumando TODO lo encontrado, no solo lo que cabe en pantalla.
-Probándolo en tu teléfono salieron dos más: con menos de 4 letras enganchaba todo y parecía roto, y en tu Diario (0 operaciones, porque las del Ejecutor no son tuyas) el cartel te mandaba a probar otro término cuando no hay ni una fila. Arreglados.
+Si algún día encuentro la forma de que no pite, te lo enseñaré funcionando y callado antes de proponértelo. No te lo voy a volver a dar por arreglado sin haberlo medido.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
