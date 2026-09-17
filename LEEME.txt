@@ -1,20 +1,25 @@
-APEX v7.171 — TRADING DESK
+APEX v7.172 — TRADING DESK
 =========================
 
-🖐️ EL SITIO DONDE ESTÁS LEYENDO ES TUYO
-Rey: «cuando estoy deslizando una sección o el chat mientras él habla, se devuelve al comienzo o al final, impidiéndome seguir leyendo».
-Eran DOS fallos distintos, y por eso unas veces ibas al final y otras al principio:
-· EL CHAT te tiraba AL FINAL. Repintaba y hacía scroll al final en CADA mensaje. Daba igual dónde estuvieras leyendo: cada frase de Roberto te arrastraba abajo.
-· LA SECCIÓN te tiraba AL PRINCIPIO. La del Ejecutor se repinta SOLA CADA 25 SEGUNDOS, y al repintar el desplazamiento volvía a cero. Estabas leyendo una entrada del Diario y cada 25 segundos volvías arriba.
+🛡️ ROBERTO TE EXIGE MÁS FUERTE — Y TAMBIÉN TE RECONOCE
+Me dijiste dos cosas y las dos eran verdad.
 
-Ahora:
-· se apunta dónde estás leyendo ANTES de repintar y se te devuelve después;
-· si estabas al final del chat, sigues al final (ahí sí quieres ver lo nuevo);
-· si estabas leyendo arriba, te quedas donde estabas aunque Roberto siga hablando;
-· y si acabas de deslizar, el repintado automático ESPERA a la siguiente vuelta. No hay ninguna prisa por enseñarte algo que va a seguir ahí dentro de 25 segundos.
-· Se escucha tu DEDO, no solo la rueda del ratón — en un teléfono no hay rueda, y sin eso esto no habría servido de nada.
+1) EL TONO SUBE CON LOS DÍAS, no con mi humor.
+Antes te decía exactamente lo mismo el primer día que el séptimo. Un mentor que repite la misma frase siete días no exige: recuerda. Ahora se cuentan los DÍAS SEGUIDOS que llevas con cada cosa sin hacer:
+  · día 1-2 → directo y tranquilo
+  · día 3-6 → firme, y con el número delante: «Rey, van 4 días con esto»
+  · día 7+  → sin rodeos: «van 10 días seguidos. Ya no es un olvido: es un patrón, y te lo digo tal cual»
 
-Comprobado ejecutándolo en tu teléfono: estando arriba no te baja, estando abajo sigues abajo, y al crecer el contenido lo que estás leyendo NO se te mueve.
+2) Y TE RECONOCE CUANDO LO HACES, con el dato.
+«Si estoy haciendo las cosas bien también merezco reconocimiento» — tenías razón, y nunca te felicitaba. Ahora, cuando algo que llevaba días pendiente deja de estarlo, te lo dice con lo que costó:
+  · 1 día  → «Rey, registraste backtesting. Eso es hacer las cosas.»
+  · 4 días → «Rey, registraste backtesting — llevaba 4 días pidiéndotelo. Bien hecho.»
+  · 9 días → «Rey, registraste backtesting. Te lo estuve exigiendo 9 días seguidos y lo hiciste. Eso es disciplina, no suerte.»
+⚠️ Y NO te felicita porque sí. Solo cuando de verdad cerraste algo. Un premio vacío te enseñaría a no creerte lo que te digo.
+
+3) Y AHORA TE HABLA DE VERDAD.
+Aquí está el detalle que explica tu queja, y lo comprobé en tu teléfono: TIENES EL CUERPO FLOTANTE RETIRADO (lo apagaste tú el 16-09, y estás en tu derecho). Con el cuerpo apagado, la nubecita NO EXISTE: por eso solo te llegaba el cartel.
+Ahora te habla Apex con su propia voz, que no depende del cuerpo flotante — tanto cuando te exige como cuando te reconoce. Y respeta tu interruptor: si tienes la voz apagada, no suena nada.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

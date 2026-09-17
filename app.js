@@ -955,34 +955,127 @@ function ejecApuntarEstado(d){
    · el texto lo escribo yo → no gasta un céntimo
    · UNA VEZ AL DÍA → si lo repitiera cada vez que abre Apex sería ruido, y el ruido no exige
    · y queda ESCRITO en su chat, para que pueda volver a leerlo y contestarle */
-function guardiaLoQueDiceRoberto(h){
+/* 📅 v7.172 — CUÁNTOS DÍAS SEGUIDOS LLEVA CADA COSA SIN HACER.
+   Es lo que permite que el tono suba solo, con un número detrás y no con mi humor.
+   Se apunta el día en que apareció; mientras siga apareciendo, se cuenta desde ahí. En
+   cuanto deja de aparecer, se borra — y ESO es lo que dispara el reconocimiento. */
+function guardiaRachaMirar(h){
+  const cfg=guardiaCfg();
+  const r=Object.assign({}, cfg.racha||{});
+  const hoy=hoyISO();
+  const vivos=h.map(x=>x.id);
+  const logrados=[];
+  /* lo que YA NO aparece: lo hizo. Se guarda para felicitarle con el número de días. */
+  Object.keys(r).forEach(id=>{
+    if(vivos.indexOf(id)<0){
+      logrados.push({ id, dias: guardiaDiasEntre(r[id], hoy) });
+      delete r[id];
+    }
+  });
+  vivos.forEach(id=>{ if(!r[id]) r[id]=hoy; });
+  guardiaGuardar({racha:r});
+  return { racha:r, logrados };
+}
+function guardiaDiasEntre(desde, hasta){
+  try{
+    const a=new Date(desde+"T12:00:00"), b=new Date(hasta+"T12:00:00");
+    const d=Math.round((b-a)/86400000);
+    return (isFinite(d) && d>=0) ? d+1 : 1;   /* el día que aparece ya cuenta como 1 */
+  }catch(_){ return 1; }
+}
+/* 🔥 EL TONO, según los días. No es una escala de enfado: es una escala de EVIDENCIA. */
+function guardiaTono(dias){
+  if(dias>=7) return "patron";
+  if(dias>=3) return "firme";
+  return "normal";
+}
+
+function guardiaLoQueDiceRoberto(h, racha){
   const x=h[0];
   const n=h.length;
   const cola = n>1 ? (" Y hay "+(n-1)+" cosa"+(n>2?"s":"")+" más esperando.") : "";
-  if(x.id==="backtest")  return "Rey, "+x.tit.toLowerCase()+". Sin datos tuyos no hay sistema: hay corazonadas."+cola;
-  if(x.id==="huecos")    return "Rey, tienes operaciones con datos sueltos. Tu regla es cero — y una operación a medias no sirve para ningún análisis, ni mío ni tuyo."+cola;
-  if(x.id==="revisar")   return "Rey, dejaste cosas a medias y siguen ahí. Lo que se empieza se cierra."+cola;
-  if(x.id==="plansem")   return "Rey, no tienes plan de la semana escrito. Si no está escrito, después no hay forma de saber si lo cumpliste."+cola;
-  if(x.id==="plan")      return "Rey, tienes pasos de tu plan sin cerrar. Eso no lo puse yo: te lo pusiste tú."+cola;
+  /* 🔥 v7.172 — EL TONO SUBE CON LOS DÍAS. Rey (17-09): «el tono de Roberto debe subir».
+     El número va DELANTE: es lo que convierte un recordatorio en una exigencia. */
+  const dias = (racha && racha[x.id]) ? guardiaDiasEntre(racha[x.id], hoyISO()) : 1;
+  const tono = guardiaTono(dias);
+  const abre = tono==="patron"
+    ? ("Rey, van "+dias+" días seguidos con esto. Ya no es un olvido: es un patrón, y te lo digo tal cual. ")
+    : (tono==="firme" ? ("Rey, van "+dias+" días con esto. ") : "Rey, ");
+  /* ✏️ cuando el tono abre con su propia frase («van 4 días con esto.») lo que viene detrás
+     empieza ORACIÓN NUEVA, así que va en mayúscula. Sin esto salía «…con esto. no has», y una
+     falta de ortografía en su cara le resta autoridad a lo que le está diciendo. */
+  const frase = (s)=>{ s=String(s||""); return (tono==="normal") ? s : (s.charAt(0).toUpperCase()+s.slice(1)); };
+  const cierra = tono==="patron"
+    ? " Esto es lo que separa a quien opera de quien lo intenta. Hoy, aunque sea una."
+    : (tono==="firme" ? " No lo dejes correr otro día más." : "");
+  if(x.id==="backtest")  return abre+frase(x.tit.toLowerCase())+". Sin datos tuyos no hay sistema: hay corazonadas."+cierra+cola;
+  if(x.id==="huecos")    return abre+frase("tienes operaciones con datos sueltos.")+" Tu regla es cero — y una operación a medias no sirve para ningún análisis, ni mío ni tuyo."+cierra+cola;
+  if(x.id==="revisar")   return abre+frase("dejaste cosas a medias y siguen ahí.")+" Lo que se empieza se cierra."+cierra+cola;
+  if(x.id==="plansem")   return abre+frase("no tienes plan de la semana escrito.")+" Si no está escrito, después no hay forma de saber si lo cumpliste."+cierra+cola;
+  if(x.id==="plan")      return abre+frase("tienes pasos de tu plan sin cerrar.")+" Eso no lo puse yo: te lo pusiste tú."+cierra+cola;
   if(x.id==="ejecutor")  return x.urg>=3
     ? "Rey, ATENCIÓN: el Ejecutor está encendido pero no responde. No hay robot, y tú creías que sí. Míralo ahora."+cola
     : "Rey, el Ejecutor sigue apagado. No hay nadie cubriéndote si sale una señal."+cola;
-  return "Rey, "+x.tit.toLowerCase()+"."+cola;
+  return abre+frase(x.tit.toLowerCase())+"."+cierra+cola;
 }
+/* 🎉 v7.172 — LO QUE DICE CUANDO REY LO HACE.
+   Con su nombre y con el número de días: un reconocimiento sin dato es una palmadita, y
+   una palmadita no vale nada viniendo de quien también te exige. */
+const GUARDIA_LOGRO = {
+  backtest: "registraste backtesting",
+  huecos:   "completaste los datos que faltaban",
+  revisar:  "cerraste lo que tenías a medias",
+  plansem:  "escribiste tu plan de la semana",
+  plan:     "cerraste los pasos de tu plan",
+  ejecutor: "dejaste el Ejecutor en su sitio",
+};
+function guardiaLoQueTeReconoce(logrados){
+  if(!logrados || !logrados.length) return "";
+  const l=logrados[0];
+  const que=GUARDIA_LOGRO[l.id] || "cerraste lo que te estaba exigiendo";
+  const mas = logrados.length>1 ? (" Y no fue lo único: cerraste "+logrados.length+" cosas.") : "";
+  if(l.dias>=7) return "Rey, "+que+". Te lo estuve exigiendo "+l.dias+" días seguidos y lo hiciste. Eso es disciplina, no suerte."+mas;
+  if(l.dias>=3) return "Rey, "+que+" — llevaba "+l.dias+" días pidiéndotelo. Bien hecho."+mas;
+  return "Rey, "+que+". Eso es hacer las cosas."+mas;
+}
+
 function guardiaRobertoHabla(){
   try{
     const cfg=guardiaCfg();
     if(!cfg.on) return;
     const h=guardiaHuecos();
+    /* 📅 v7.172 — la cuenta de días se actualiza SIEMPRE, aunque hoy no falte nada:
+       es justo cuando no falta nada cuando hay que felicitarle. */
+    const est=guardiaRachaMirar(h);
+
+    /* 🎉 ¿cerró algo que llevaba días? Eso se dice ANTES que nada. */
+    if(est.logrados.length){
+      const bien=guardiaLoQueTeReconoce(est.logrados);
+      const firmaB="ok|"+hoyISO()+"|"+est.logrados.map(x=>x.id).join(",");
+      if(cfg.dichoBien!==firmaB){
+        guardiaGuardar({dichoBien:firmaB});
+        try{ robDecir("Roberto", bien, {gesto:"felicita", ir:"hoy"}); }catch(_){}
+        try{ guardiaDiloEnVozAlta(bien); }catch(_){}
+        try{
+          const c=(typeof iaConvDeTema==="function") ? iaConvDeTema("🛡️ Lo que te estoy exigiendo") : null;
+          if(c){ c.msgs.push({role:"assistant",content:"🎉 **Lo hiciste**\n\n"+bien}); iaGuardarConvs();
+            const ab=(typeof iaConvAct==="function") && iaConvAct() && iaConvAct().id===c.id; if(ab) pintarIAChat(); }
+        }catch(_){}
+      }
+    }
     if(!h.length) return;
     /* 🔇 una vez al día: la firma junta el día y QUÉ se está exigiendo, así que si cambia lo
        que le falta, vuelve a decírselo — pero no repite lo mismo diez veces. */
     const firma=hoyISO()+"|"+h.map(x=>x.id).join(",");
     if(cfg.dicho===firma) return;
     guardiaGuardar({dicho:firma});
-    const txt=guardiaLoQueDiceRoberto(h);
+    const txt=guardiaLoQueDiceRoberto(h, est.racha);
     /* 1) lo DICE: nubecita en los dos cuerpos, con cara de frenar, y la voz si está encendida */
     try{ robDecir("Roberto", txt, {gesto:"frena", urge:h[0].urg>=3, ir:"hoy"}); }catch(_){}
+    /* 🔊 v7.172 — Y SE LO DICE EN VOZ ALTA. Rey (17-09): «Roberto debe HABLARME, no solo
+       poner una nube». Y tenía razón por un motivo concreto: su cuerpo flotante está
+       RETIRADO, así que la nubecita no existe y solo le quedaba el cartel. */
+    try{ guardiaDiloEnVozAlta(txt); }catch(_){}
     /* 2) y lo deja ESCRITO en su chat, para que pueda releerlo y contestarle */
     try{
       const c=(typeof iaConvDeTema==="function") ? iaConvDeTema("🛡️ Lo que te estoy exigiendo") : null;
@@ -994,6 +1087,21 @@ function guardiaRobertoHabla(){
       }
     }catch(_){}
   }catch(e){ console.log("[apex] guardia habla:", e.message); }
+}
+/* 🔊 v7.172 — LA VOZ DE APEX, QUE NO DEPENDE DEL CUERPO FLOTANTE.
+   Comprobado en su teléfono el 17-09: tiene el cuerpo flotante RETIRADO (lo apagó él).
+   Con el cuerpo apagado, `robDecir` no dice nada y a Rey solo le llegaba el cartel — que es
+   justo lo que se quejó de ver. Apex tiene su propia voz y esa sí funciona.
+   ⚠️ Respeta SU interruptor: si apagó la voz, aquí no suena nada. Nada obligatorio
+   ([[apex-nada-obligatorio-nada-gasta-solo]]). */
+function guardiaDiloEnVozAlta(txt){
+  try{
+    if(!txt) return false;
+    if(!(IA && IA.voz && IA.voz.on)) return false;   /* su interruptor manda */
+    if(typeof iaHablar!=="function") return false;
+    iaHablar(txt, -1);
+    return true;
+  }catch(_){ return false; }
 }
 function x0tit(h){ try{ return h[0].tit; }catch(_){ return "Te falta algo"; } }
 
