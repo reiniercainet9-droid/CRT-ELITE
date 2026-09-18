@@ -24,10 +24,30 @@
   /* ── LAS FÓRMULAS (lo único fijo de todo el fichero) ─────────────────────── */
 
   /** Índice de masa corporal: peso en kilos entre la estatura en metros al cuadrado. */
-  function imc(pesoKg, estaturaCm) {
-    const p = Number(pesoKg), e = Number(estaturaCm) / 100;
-    if (!p || !e) return null;
-    return p / (e * e);
+  /* 📏 17-09 — LA ESTATURA, EN METROS O EN CENTÍMETROS: DA IGUAL.
+     Rey puso 1.76 (metros) donde se esperaban centímetros, y Apex le enseñó sin pestañear:
+         IMC 309917,4 · obesidad grado III · «tu peso saludable va de 0 a 0 kg»
+     Y él tuvo que preguntar si ese número estaba bien. Un dato imposible no puede salir a su
+     pantalla con toda naturalidad: o se entiende, o se dice que no se entiende.
+     Nadie mide 3 metros ni 3 centímetros, así que el número se interpreta solo: por debajo de
+     3 son metros. Ningún humano cae en la zona ambigua. */
+  function estaturaCm(v) {
+    const e = Number(v);
+    if (!e || e <= 0) return null;
+    if (e < 3) return e * 100;        /* 1,76 → 176 */
+    if (e < 30) return null;          /* 17,6 no es nada: mejor decir que no se entiende */
+    return e;                          /* 176 */
+  }
+
+  function imc(pesoKg, est) {
+    const p = Number(pesoKg), cm = estaturaCm(est);
+    if (!p || !cm) return null;
+    const e = cm / 100;
+    const v = p / (e * e);
+    /* 🚨 y un último freno: si el resultado no cabe en un cuerpo humano, no se enseña.
+       El IMC de una persona viva va de ~10 a ~100. Fuera de ahí, el dato está mal, no él. */
+    if (!isFinite(v) || v < 5 || v > 150) return null;
+    return v;
   }
 
   /** Lo que dice la OMS de ese número. Se devuelve también el color, para no repetirlo. */
@@ -42,16 +62,17 @@
   }
 
   /** El rango de peso que le daría un IMC saludable con SU estatura. */
-  function pesoSano(estaturaCm) {
-    const e = Number(estaturaCm) / 100;
-    if (!e) return null;
+  function pesoSano(est) {
+    const cm = estaturaCm(est);
+    if (!cm) return null;
+    const e = cm / 100;
     return { min: 18.5 * e * e, max: 24.9 * e * e };
   }
 
   /** Gasto en reposo (Mifflin-St Jeor): las calorías que quema estando quieto.
       Es la fórmula estándar y la más fiable de las que solo necesitan peso, talla y edad. */
-  function gastoEnReposo(pesoKg, estaturaCm, edad, sexo) {
-    const p = Number(pesoKg), e = Number(estaturaCm), a = Number(edad);
+  function gastoEnReposo(pesoKg, est, edad, sexo) {
+    const p = Number(pesoKg), e = estaturaCm(est), a = Number(edad);
     if (!p || !e || !a) return null;
     const base = 10 * p + 6.25 * e - 5 * a;
     return (String(sexo).toLowerCase() === "mujer") ? base - 161 : base + 5;
@@ -91,6 +112,11 @@
   /** El plan de números completo, TODO calculado a partir de lo que él configuró. */
   function calcular(d) {
     if (!d || !d.peso || !d.estatura) return null;
+    /* 🚨 17-09 — SI LA ESTATURA NO SE ENTIENDE, SE DICE. No se calcula con ella.
+       El 17-09 Apex le enseñó «IMC 309917,4 · obesidad grado III» y «tu peso saludable va de 0
+       a 0 kg» con toda naturalidad, y Rey tuvo que preguntar si ese número estaba bien.
+       Un dato imposible que sale con naturalidad es peor que un hueco: el hueco se ve. */
+    if (estaturaCm(d.estatura) == null) return { errorDato: "estatura", que: "No entiendo tu estatura (" + d.estatura + "). Ponla como 176 o como 1,76 — las dos valen." };
     const edad = edadDe(d.nacimiento) != null ? edadDe(d.nacimiento) : Number(d.edad);
     const v = imc(d.peso, d.estatura);
     const obj = OBJETIVOS.find((x) => x.id === d.objetivo) || OBJETIVOS[2];
@@ -809,13 +835,86 @@
     return { que: "repite", pct, por: "hiciste " + hechas + " de " + total + ". La semana se repite entera — y si el problema es el horario, cámbialo: no se cambia el cuerpo, se cambia la hora." };
   }
 
+  /* ══════════════════════════════════════════════════════════════════════════════
+     🎯 POR QUÉ SU ENTRENAMIENTO ESTÁ ARMADO ASÍ — v1, 17-09-2026
+     ═════════════════════════════════════════════════════════════════════════════
+     Rey (17-09), contándome de dónde parte:
+
+       «Yo era deportista de alto rendimiento, pero hace un tiempo dejé de hacer ejercicio y,
+        debido al estrés y a la falta de ejercicio, he perdido masa muscular y ganado grasa
+        visceral, y cortisol alto, afectando también mi testosterona, disminuyendo mi libido y
+        erecciones. En base a todo eso quisiera que estuvieran basados mis entrenamientos.»
+
+     Eso cambia el programa entero. No es lo mismo «ponerse en forma» que recuperar músculo
+     perdido bajando grasa visceral y estrés. Un programa genérico haría justo lo contrario en
+     dos cosas concretas, y por eso está escrito aquí:
+
+     ⚠️ LO QUE UN PLAN GENÉRICO LE HARÍA MAL:
+       1. le mandaría MUCHO cardio largo para «quemar grasa» — y el cardio largo y frecuente,
+          sobre un cuerpo ya estresado, es más carga sobre el mismo sistema que ya tiene
+          saturado. Se pierde peso, sí, pero también músculo, y el descanso empeora;
+       2. le pondría a entrenar a diario «porque tiene prisa» — y sin recuperación no hay
+          adaptación: solo hay más fatiga sobre la fatiga que ya trae.
+
+     ✅ LO QUE SÍ ORDENA SU CASO, y en este orden de importancia:
+       · FUERZA primero, 3 veces por semana, movimientos grandes y con más peso cada semana.
+         Es la señal que dice «esto hace falta» y la que protege el músculo mientras baja la
+         grasa. Lo demás sin esto es adelgazar hacia abajo.
+       · ANDAR mucho, todos los días. Es la herramienta más efectiva contra la grasa visceral
+         que existe, y la única que no añade estrés: se puede hacer cansado y no hay que
+         recuperarse de ella. En su caso además es gratis — va en moto todo el día, y andar 20
+         minutos después de comer cuesta menos que una sesión.
+       · DORMIR. Es el pilar, no el complemento. La mayor parte de la recuperación y del
+         equilibrio hormonal pasa durmiendo; sin sueño, el resto del programa rinde la mitad.
+       · RESPIRAR, todos los días, a la misma hora. Ya lo tiene en la escalera de la calma.
+         Baja la activación de forma medible y en minutos, y es lo único de esta lista que
+         actúa sobre el estrés DIRECTAMENTE.
+       · PROTEÍNA suficiente y déficit MODERADO. Un déficit agresivo con poca proteína es la
+         receta exacta para perder justo lo que quiere recuperar.
+
+     🧠 Y UNA VENTAJA QUE ÉL TIENE Y NO TODOS: fue deportista de alto rendimiento. Sabe
+     entrenar, sabe lo que es la progresión y aguanta estructura. El riesgo en su caso no es
+     quedarse corto: es PASARSE la primera semana, quedar molido y abandonar. Por eso el plan
+     arranca por debajo de lo que él cree que puede.
+
+     ⚕️ Y LO QUE ESTO NO ES: lo de la libido y las erecciones puede tener causa médica, y los
+     cambios en la erección suelen ser un aviso temprano vascular o metabólico. Esto es
+     entrenamiento, no tratamiento. Se dice UNA vez y no se repite en cada pantalla.
+     ═════════════════════════════════════════════════════════════════════════════ */
+  const ORIENTA = {
+    de: "un deportista de alto rendimiento que lleva tiempo parado",
+    hacia: "recuperar músculo, bajar grasa visceral y bajar el estrés",
+    ordena: [
+      { id: "fuerza", ic: "🏋️", n: "Fuerza, 3 veces por semana",
+        q: "movimientos grandes (empujar, tirar, piernas, core) y un poco más cada semana. Es la señal que protege el músculo mientras baja la grasa.",
+        por: "sin esto, perder peso es perder también lo que quieres recuperar." },
+      { id: "andar", ic: "🚶", n: "Andar, todos los días",
+        q: "lo más efectivo que hay contra la grasa visceral, y lo único que no añade estrés: se hace cansado y no hay que recuperarse de ello.",
+        por: "20 minutos después de comer cuestan menos que una sesión y suman más de lo que parece." },
+      { id: "dormir", ic: "😴", n: "Dormir, el pilar",
+        q: "la mayor parte de la recuperación y del equilibrio hormonal pasa durmiendo.",
+        por: "sin sueño, todo lo demás del programa rinde la mitad. No es el complemento: es la base." },
+      { id: "respirar", ic: "🫁", n: "Respirar, a diario y a su hora",
+        q: "5 minutos de exhalación alargada bajan la activación en minutos, y se mide.",
+        por: "es lo único de esta lista que actúa sobre el estrés directamente." },
+      { id: "comer", ic: "🍽️", n: "Proteína suficiente, déficit moderado",
+        q: "proteína alta y un déficit contenido, no agresivo.",
+        por: "poca proteína con mucho déficit es la receta exacta para perder músculo." },
+    ],
+    evitar: [
+      "Mucho cardio largo y frecuente para «quemar grasa»: sobre un cuerpo ya estresado es más carga sobre el mismo sistema saturado. Andar sí; correr una hora cada día, no.",
+      "Entrenar a diario por tener prisa: sin recuperación no hay adaptación, solo fatiga sobre fatiga.",
+      "Empezar por donde lo dejaste hace años. Tu riesgo no es quedarte corto: es pasarte la primera semana, quedar molido y abandonar.",
+    ],
+  };
+
   /* se cuelga de donde toque, igual que situaciones.js y roberto-leyes.js */
   raiz.TEMPLO = {
-    imc, imcQueEs, pesoSano, gastoEnReposo, gastoDiario, calcular, edadDe, tendencia,
+    imc, imcQueEs, pesoSano, estaturaCm, gastoEnReposo, gastoDiario, calcular, edadDe, tendencia,
     ACTIVIDAD, OBJETIVOS, SUPLEMENTOS, PILARES, PRACTICAS, CALMA,
     NIVELES, PRUEBAS, nivelDePrueba, ADAPTA, cerrarSemana, semanaDe,
     NUTRI, nutriDe, chocaConOperativa,
     /* ⚡ 17-09 — el programa de suelo pélvico, pedido de Rey */
-    KEGEL, KEGEL_REGLAS, KEGEL_COMO, kegelSemana, kegelHorarioPorDefecto, kegelDescansoOk, kegelCerrarSemana,
+    KEGEL, KEGEL_REGLAS, KEGEL_COMO, ORIENTA, kegelSemana, kegelHorarioPorDefecto, kegelDescansoOk, kegelCerrarSemana,
   };
 })(typeof window !== "undefined" ? window : self);

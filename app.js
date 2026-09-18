@@ -31,6 +31,7 @@ const K = {
   plansem:"crtelite_plansem_v1",
   guardia:"crtelite_guardia_v1",   /* 🛡️ v7.160 — el guardián de la disciplina */
   ejecvisto:"crtelite_ejecvisto_v1", /* 🔕 v7.161 — lo último que se supo del Ejecutor */
+  ejeccfg:"crtelite_ejeccfg_v1",   /* ⚙️ v7.174 — sus reglas VIVAS del Ejecutor, para que Roberto no opine a ciegas */
   repaso:"crtelite_repaso_v1",      /* 🧠 v7.161 — sus dos repasos del día */
   repasohecho:"crtelite_repasohecho_v1",
   plan:"crtelite_plan_v1",
@@ -949,6 +950,13 @@ function ejecApuntarEstado(d){
     if(!d || typeof d!=="object") return;
     save(K.ejecvisto, { on: d.on===true, vivo: (d.vivo===true),
       vistoHace: (typeof d.vistoHace==="number" ? d.vistoHace : null), ts: Date.now() });
+    /* ⚙️ v7.174 (17-09) — Y SUS REGLAS VIVAS, PARA QUE ROBERTO NO OPINE A CIEGAS.
+       Rey: «Roberto está volviendo a decirme lo de las salidas por tiempo y dándolo como un
+       detalle cuando ya las configuraciones están hechas en el Ejecutor por mí».
+       Y era verdad: tenía salidaTiempo=false y objetivoRR=2, y Roberto le juzgaba con la
+       regla apagada. Guardar aquí su config VIVA es lo que permite que Roberto la mire
+       ANTES de abrir la boca ([[apex-la-sesion-manda-en-el-veto]]). */
+    try{ if(d.cfg && typeof d.cfg==="object") save(K.ejeccfg, { cfg:d.cfg, ts:Date.now() }); }catch(_){}
   }catch(_){}
 }
 
@@ -5331,6 +5339,30 @@ function viewTemplo(){
    Rey: «no veo los ejercicios de Kegel en mi sección del templo… un programa completo con
    escalabilidad por día, semanas y meses». Antes había UNA LÍNEA en los pilares.
    Aquí sale lo que toca HOY, sesión por sesión, con sus segundos y sus descansos. */
+/* 🎯 v7.174 (17-09) — POR QUÉ SU ENTRENAMIENTO ESTÁ ARMADO ASÍ.
+   Rey contó de dónde parte: deportista de alto rendimiento parado hace tiempo, músculo
+   perdido, grasa visceral, estrés alto, y eso afectándole la libido y las erecciones.
+   Un plan genérico de «ponerse en forma» le haría mal en dos cosas concretas (mucho cardio
+   largo sobre un cuerpo ya estresado, y entrenar a diario por tener prisa), así que el porqué
+   se le enseña EN SU SECCIÓN y no se queda en un comentario mío que se pierde. */
+function orientaTarjetaHTML(){
+  try{
+    if(!window.TEMPLO || !TEMPLO.ORIENTA) return "";
+    const O=TEMPLO.ORIENTA;
+    const filas=O.ordena.map((x,i)=>'<div style="display:flex;gap:8px;margin-top:8px">'+
+        '<div style="opacity:.7;font-weight:700;min-width:18px">'+(i+1)+'</div>'+
+        '<div style="flex:1"><div style="font-weight:700;font-size:.95em">'+x.ic+' '+esc(x.n)+'</div>'+
+          '<div class="desc" style="font-size:11.5px;line-height:1.45">'+esc(x.q)+'<br><span style="opacity:.8">'+esc(x.por)+'</span></div>'+
+        '</div></div>').join("");
+    return '<div class="card">'+
+      '<div class="nt-tt" style="font-size:15px">🎯 Por qué tu plan está armado así</div>'+
+      '<div class="nt-sub" style="margin:4px 0 2px">De '+esc(O.de)+' → '+esc(O.hacia)+'.</div>'+
+      filas+
+      '<div style="margin-top:10px"><button class="btn or-evitar" style="width:100%;font-size:.86em">⚠️ Lo que te haría mal</button></div>'+
+    '</div>';
+  }catch(e){ console.log("[apex] orienta:", e.message); return ""; }
+}
+
 function kegelTarjetaHTML(){
   try{
     if(!window.TEMPLO) return "";
@@ -5416,6 +5448,18 @@ function renderTemplo(){
   }
 
   const c = temploCuentas();
+  /* 🚨 v7.173 — SI UN DATO SUYO NO SE ENTIENDE, SE LE DICE CUÁL Y CÓMO ARREGLARLO.
+     El 17-09 Apex le enseñó «IMC 309917,4 · obesidad grado III» y «peso saludable de 0 a 0 kg»
+     tan tranquila, y él tuvo que preguntar si ese número estaba bien. «Revisa tus datos» a
+     secas tampoco sirve: hay que decirle QUÉ dato y CÓMO ([[apex-roberto-no-inventa]]). */
+  if(c && c.errorDato){
+    b.innerHTML='<div class="card"><div class="empty"><div class="t">⚠️ Hay un dato que no entiendo</div>'+
+      '<div class="s">'+esc(c.que)+'</div>'+
+      '<div style="margin-top:10px"><button class="btn gold" id="tmpArreglar">✏️ Arreglarlo</button></div>'+
+      '</div></div>';
+    const ar=$("#tmpArreglar"); if(ar) ar.onclick=()=>temploFichaModal();
+    return;
+  }
   if(!c){ b.innerHTML='<div class="card"><div class="empty"><div class="t">No pude calcular</div><div class="s">Revisa tus datos.</div></div></div>'; return; }
   const t = (window.TEMPLO ? TEMPLO.tendencia(TEMPLO_PESO) : null);
   const n1 = (x)=> x==null ? "—" : (Math.round(x*10)/10).toString().replace(".", ",");
@@ -5590,7 +5634,9 @@ function renderTemplo(){
         <div class="tmp-n"><span class="v">${n1(c.agua/1000)} L</span><span class="q">de agua al día</span></div>
       </div>
       <div class="note" style="text-align:left;margin-top:10px">
-        Con ${esc(String(TEMPLO_FICHA.estatura))} cm, tu peso saludable va de <b>${n1(c.pesoSano.min)}</b> a
+        <!-- ⚖️ v7.174 — la estatura NORMALIZADA, no la que tecleó. Rey escribe 1,76 y aquí
+             ponía «Con 1,76 cm», que es el mismo fallo del IMC asomando por otra rendija. -->
+        Con ${ent(TEMPLO.estaturaCm(TEMPLO_FICHA.estatura) || 0)} cm, tu peso saludable va de <b>${n1(c.pesoSano.min)}</b> a
         <b>${n1(c.pesoSano.max)} kg</b>. Gastas <b>${ent(c.reposo)}</b> kcal en reposo y
         <b>${ent(c.gastoDiario)}</b> con tu actividad. ${esc(c.objetivo.nota)}.
       </div>
@@ -5606,6 +5652,8 @@ function renderTemplo(){
         '<div class="tmp-fila"><span>'+new Date(p.ts).toLocaleDateString("es",{day:"2-digit",month:"short"})+'</span>'+
         '<b>'+n1(p.peso)+' kg</b>'+(p.cintura?('<span>'+n1(p.cintura)+' cm cintura</span>'):'<span></span>')+'</div>').join("")+'</div>') : ""}
     </div>
+
+    ${orientaTarjetaHTML()}
 
     ${kegelTarjetaHTML()}
 
@@ -5694,6 +5742,11 @@ function renderTemplo(){
   const pb=$("#tmpPesar"); if(pb) pb.onclick=()=>temploPesarModal();
   /* ⚡ v7.173 — los botones del programa de Kegel, enganchados con los demás del templo */
   try{ kegelWire(); }catch(_){}
+  try{
+    const oe=document.querySelector(".or-evitar");
+    if(oe) oe.onclick=()=>abrirModal("⚠️ Lo que te haría mal",
+      '<div class="desc" style="text-align:left;line-height:1.55">'+TEMPLO.ORIENTA.evitar.map(x=>"· "+esc(x)).join("<br><br>")+'</div>', [{t:"Entendido"}]);
+  }catch(_){}
   try{ if(TEMPLO_PLAN) temploAvisosDelPlan(); }catch(_){}
   const hb=$("#tmpHorario"); if(hb) hb.onclick=()=>temploHorarioModal();
   const hb2=$("#tmpHorario2"); if(hb2) hb2.onclick=()=>temploHorarioModal();   /* v7.77: el mismo, donde se ven los días */
@@ -10284,6 +10337,75 @@ const MERCADOS_DOSSIER =
 "- REGLA: usa el día que te llega en el [Reloj EN VIVO]. Fin de semana en FX/oro/índices = cerrado, no lo mandes a operar; solo cripto opera el finde.";
 /* Mapa COMPLETO de la app Apex: para que Roberto conozca su 'casa' entera y sepa
    a qué se refiere Rey cuando menciona Apex o cualquiera de sus secciones. */
+/* ═══════════════════════════════════════════════════════════════════════════════
+   🧠 v7.174 (17-09) — LO QUE ROBERTO VE DE SU CASA, SACADO DE LA CASA
+   ───────────────────────────────────────────────────────────────────────────────
+   Rey: «él debe saber automáticamente qué es el movimiento y lo nuevo en mi sistema y el
+   teléfono: que entra un nuevo dato, nueva sección, nuevo botón… si no, voy a depender
+   todo el tiempo de ti».
+   El mapa de abajo (APEX_MAPA) es una lista ESCRITA A MANO. Esto no la sustituye —ahí está
+   el porqué de cada sección, que no se puede deducir— pero le añade lo que sí se puede
+   mirar: qué hay AHORA MISMO y qué ha cambiado desde la última vez.
+   ═══════════════════════════════════════════════════════════════════════════════ */
+const APEX_VISTO_K = "apex.inventario.visto";
+
+/* El inventario VIVO: nadie lo escribe, se mira. */
+function apexInventario(){
+  const inv = { secciones:[], datos:{}, versiones:{} };
+  try{ inv.secciones = (TABS||[]).map(x=>x.id); }catch(_){}
+  try{
+    (NUBE_KEYS||[]).forEach(k=>{
+      try{
+        const crudo = localStorage.getItem(k);
+        if(crudo==null) return;
+        let n = 1;
+        try{ const v=JSON.parse(crudo); n = Array.isArray(v) ? v.length : (v && typeof v==="object" ? Object.keys(v).length : 1); }catch(_){}
+        inv.datos[k] = n;
+      }catch(_){}
+    });
+  }catch(_){}
+  try{ inv.versiones.app = (typeof APP_VERSION!=="undefined") ? APP_VERSION : "?"; }catch(_){}
+  try{ const e=load(K.ejecEstado,null); if(e && e.ver) inv.versiones.ejecutor=e.ver; }catch(_){}
+  return inv;
+}
+
+/* Lo que ha CAMBIADO desde la última vez que Roberto miró. Esto es lo que Rey pedía:
+   que se entere él, sin que nadie se lo diga. */
+function apexNovedades(guardar){
+  try{
+    const hoy = apexInventario();
+    let antes = null;
+    try{ antes = JSON.parse(localStorage.getItem(APEX_VISTO_K)||"null"); }catch(_){}
+    if(guardar!==false) localStorage.setItem(APEX_VISTO_K, JSON.stringify(hoy));
+    if(!antes) return { primera:true, texto:"" };
+    const n = [];
+    /* secciones nuevas o que desaparecieron */
+    const nuevasSec = hoy.secciones.filter(x=>(antes.secciones||[]).indexOf(x)<0);
+    const idasSec   = (antes.secciones||[]).filter(x=>hoy.secciones.indexOf(x)<0);
+    if(nuevasSec.length) n.push("SECCIÓN NUEVA en Apex: "+nuevasSec.join(", ")+". Pregúntale a Rey para qué la quiere y ofrécele tu mano en ella.");
+    if(idasSec.length)   n.push("Ha desaparecido la sección: "+idasSec.join(", ")+". Si no fue a propósito, díselo.");
+    /* datos suyos que empiezan a existir, o que crecen de golpe */
+    Object.keys(hoy.datos).forEach(k=>{
+      const a=(antes.datos||{})[k];
+      const nombre = (typeof NUBE_NOMBRES!=="undefined" && NUBE_NOMBRES[k]) ? NUBE_NOMBRES[k] : k;
+      if(a==null){ n.push("DATO NUEVO suyo: "+nombre+" ("+hoy.datos[k]+" registro/s). Antes no existía."); return; }
+      if(hoy.datos[k] > a) n.push("Creció: "+nombre+" — de "+a+" a "+hoy.datos[k]+" registro(s).");
+      if(hoy.datos[k] < a) n.push("Bajó: "+nombre+" — de "+a+" a "+hoy.datos[k]+". Si él no borró nada, eso hay que mirarlo.");
+    });
+    /* y las versiones */
+    Object.keys(hoy.versiones).forEach(k=>{
+      const a=(antes.versiones||{})[k];
+      if(a && a!==hoy.versiones[k]) n.push("Versión nueva de "+k+": "+a+" → "+hoy.versiones[k]+". Algo se ha arreglado o añadido; si no sabes qué, pregúntalo antes de opinar.");
+    });
+    if(!n.length) return { texto:"" };
+    return { texto: "[🆕 LO QUE HA CAMBIADO EN SU SISTEMA DESDE QUE LO MIRASTE (esto lo ves TÚ solo, "
+      + "nadie te lo ha escrito):\n" + n.slice(0,10).map(x=>"· "+x).join("\n")
+      + "\n⚠️ No se lo sueltes como un informe: úsalo. Si aparece algo nuevo suyo, ofrécele tu "
+      + "mano en ello; si un dato suyo bajó sin motivo, avísale; y NUNCA opines sobre una regla "
+      + "suya sin mirar antes cómo la tiene configurada.]" };
+  }catch(_){ return { texto:"" }; }
+}
+
 const APEX_MAPA =
 "TU CASA — LA APP 'APEX' (conócela COMPLETA): Tu hogar se llama APEX; es el centro de mando de trading de Rey y tú eres su cerebro. Vives DENTRO, no eres un chat externo. Cuando Rey mencione 'Apex' o cualquier sección ('lléname tal parte de Apex', 'apúntalo en…', 'ábreme…'), sabes EXACTAMENTE a qué se refiere. Secciones:\n"+
 "1. 📰 Noticias — PRIMERA y lo primero del día: calendario económico real (ForexFactory) filtrado por sus pares + 'Parte del día' (ventana/mercado, noticias, cuentas) + botón '🚦 ¿Puedo operar AHORA?'.\n"+
@@ -10570,6 +10692,38 @@ function evalSemana(){
   const data=ts.length?tradesTexto(ts):"(No hay trades cerrados en los últimos 7 días.)";
   iaEnviar("🤖 Hazme el CIERRE de mi semana.", EVAL_SEMANA_PROM+"\n\nSUS TRADES DE LA SEMANA (desde "+cut+"):\n"+data);
 }
+/* 🧵 v7.174 (17-09) — CADA AVISO ABRE SU PROPIO CHAT, CON SU TEMA.
+   Rey: «me dijo “Rey, cerremos el día… tócame y lo revisamos”, pero al tocar el aviso me
+   abrió Apex y NINGÚN chat con el tema de revisar las operaciones».
+   Por el camino de la WEB el tema ya llegaba; por el de la APK —el único que él usa— no.
+   Esta puerta la llama el vigía con el aviso ENTERO, así que si mañana el worker manda un
+   campo nuevo, aquí ya está sin tocar Java.
+   ⚠️ Y si el tema no se reconoce, NO se calla: se abre un chat con el título del aviso. Que
+   Rey toque algo y no pase nada es peor que abrir un chat de más. */
+function avisoAbreSuChat(seed, avisoJson){
+  try{
+    let a=null; try{ a=avisoJson?JSON.parse(avisoJson):null; }catch(_){}
+    if(typeof abrirIA==="function") abrirIA();
+    /* 1) si el tema es de los que Roberto sabe atender, lo atiende */
+    if(seed && typeof iaProactivo==="function"){
+      const hecho = iaProactivo(seed);
+      if(hecho !== undefined) return true;
+    }
+    /* 2) y si no, se abre un chat CON SU TÍTULO: cada cosa en su lugar, que es su regla */
+    const tit=(a && (a.title||a.t)) ? String(a.title||a.t) : "💬 Lo que me dijiste";
+    if(typeof iaConvDeTema==="function"){
+      const c=iaConvDeTema(tit);
+      if(c && a && (a.body||a.b)){
+        const ya=(c.msgs||[]).some(m=>m.content && m.content.indexOf(String(a.body||a.b).slice(0,40))>=0);
+        if(!ya){ c.msgs.push({role:"assistant",content:String(a.body||a.b)}); iaGuardarConvs(); }
+      }
+      if(typeof pintarIAChat==="function") pintarIAChat();
+      return true;
+    }
+    return false;
+  }catch(e){ console.log("[apex] avisoAbreSuChat:", e.message); return false; }
+}
+
 function iaProactivo(seed){ if(seed==="informe_aprendizaje") return verMemoria(); if(seed==="eval_dia") return evalDia(); if(seed==="eval_semana") return evalSemana(); if(seed==="revisar_pendientes") return revisarPendientes(); if(seed==="revisar_riesgo") return revisarRiesgo(); if(seed==="practica_replay") return practicaReplay(); if(seed==="mentor_manana") return mentorManana(); if(seed==="mentor_noche") return mentorNoche(); if(seed==="repaso") return repasoLecciones(); if(seed==="repaso_rey") return verRepasoRey(); }
 
 /* 🧭 v7.99 — EL REPASO DE ROBERTO: lo que ya pensó, sin volver a pensarlo.
@@ -10630,6 +10784,27 @@ function iaConocimiento(){
     PERFIL_REY+"\n\n"+
     MERCADOS_DOSSIER+"\n\n"+
     APEX_MAPA+"\n\n"+
+    /* ⚙️ v7.174 — SUS REGLAS DEL EJECUTOR, TAL COMO LAS TIENE AHORA.
+       Rey (17-09): «Roberto está volviendo a decirme lo de las salidas por tiempo y dándolo
+       como un detalle cuando ya las configuraciones están hechas en el Ejecutor por mí… si no
+       lo mantienes informado de cada detalle va a estar siempre discrepando conmigo».
+       Esto es justo lo que evita eso: que tenga sus números delante antes de juzgar. */
+    (function(){ try{
+      const e=load(K.ejeccfg,null); if(!e || !e.cfg) return "";
+      const c=e.cfg;
+      const si=(x)=>x===true?"SÍ":"NO";
+      return "[⚙️ CÓMO TIENE REY CONFIGURADO SU EJECUTOR AHORA MISMO (él lo decide, tú lo respetas):\n"
+        + "· objetivo: "+(c.objetivoRR!=null?c.objetivoRR+"R":"?")+"\n"
+        + "· break-even: "+(c.beActivo!==false?"SÍ":"NO")+(c.beEnR!=null?(" a "+c.beEnR+"R"):"")+"\n"
+        + "· salida por tiempo: "+(c.salidaTiempo===true?"SÍ":"NO")+((c.salidaTiempo===true&&c.salidaTiempoTF)?(" ("+c.salidaTiempoTF+")"):"")+"\n"
+        + "· parcial automático: "+(c.parcialActivo===true?"SÍ":"NO")+((c.parcialActivo===true)?(" — "+(c.parcialPct||50)+"% a "+(c.parcialEnR||1)+"R"):"")+"\n"
+        + "· riesgo: "+(c.riesgoPct!=null?c.riesgoPct+"%":"?")+" · tope del día: "+(c.maxOpsDia!=null?c.maxOpsDia:"?")+" ops · por sesión: "+(c.maxOpsSesion!=null?c.maxOpsSesion:"?")+"\n"
+        + "⚠️ PROHIBIDO señalarle como problema algo que dependa de una regla que ÉL TIENE APAGADA.\n"
+        + "Si vas a hablar de cómo entró o salió una operación, MIRA ESTOS NÚMEROS PRIMERO.]\n\n";
+    }catch(_){ return ""; } })()+
+    /* 🆕 v7.174 — y lo que ha cambiado desde que lo miró. Rey: «él debe saber
+       automáticamente qué es el movimiento y lo nuevo en mi sistema». */
+    (function(){ try{ const nv=apexNovedades(); return nv && nv.texto ? (nv.texto+"\n\n") : ""; }catch(_){ return ""; } })()+
     PUENTE_DOSSIER+"\n\n"+
     "SU ESTRATEGIA CRT ELITE (SMC/ICT/CRT):\n"+
     "REGLA DE ORO (modelo de REVERSIÓN): SIN SWEEP = SIN SETUP. Si el precio no barrió liquidez con MECHA (no con cierre), NO hay operación de reversión, por muchas otras confluencias que haya.\n"+
@@ -16876,6 +17051,35 @@ function saludoAlLlamarle(){
   }catch(_){ return "Te escucho, Rey"; }
 }
 
+/* ⏱️ v7.174 (17-09) — EL CRONÓMETRO DE LAS RESPUESTAS.
+   Rey: «le pregunto a Roberto cosas normales como la hora, mi ubicación, etc., y demora un
+   mundo en responder, y eso lo habíamos cambiado para respuestas muchísimo más rápidas».
+   Lo medí en su teléfono y en el chat tarda 99 ms la hora y 152 ms el día. O sea que su
+   lentitud viene de OTRO sitio — y discutirlo a base de impresiones no lleva a ninguna parte.
+   Ahora cada respuesta deja su tiempo y su camino apuntados. La próxima vez habrá números,
+   como con el Puente ciego ([[apex-auditar-es-ejecutar]]). */
+const RESP_TIEMPOS_K = "apex.resp.tiempos";
+function respApunta(pregunta, ms, camino){
+  try{
+    let l=[]; try{ l=JSON.parse(localStorage.getItem(RESP_TIEMPOS_K)||"[]"); }catch(_){}
+    l.unshift({ q:String(pregunta||"").slice(0,60), ms:Math.round(ms), via:camino, ts:Date.now() });
+    localStorage.setItem(RESP_TIEMPOS_K, JSON.stringify(l.slice(0,60)));
+  }catch(_){}
+}
+/* para mirarlo de un vistazo: respTiempos() en la consola, o Roberto al preguntarle */
+function respTiempos(){
+  try{
+    const l=JSON.parse(localStorage.getItem(RESP_TIEMPOS_K)||"[]");
+    if(!l.length) return "todavía no hay medidas";
+    const loc=l.filter(x=>x.via==="local"), mod=l.filter(x=>x.via!=="local");
+    const med=(a)=>a.length?Math.round(a.reduce((s,x)=>s+x.ms,0)/a.length):0;
+    return "⚡ aquí mismo: "+loc.length+" respuestas, "+med(loc)+" ms de media\n"
+         + "☁️ por el modelo: "+mod.length+" respuestas, "+med(mod)+" ms de media\n"
+         + "lo más lento: " + l.slice().sort((a,b)=>b.ms-a.ms).slice(0,3)
+             .map(x=>"«"+x.q+"» "+x.ms+" ms ("+x.via+")").join(" · ");
+  }catch(_){ return "no pude leer las medidas"; }
+}
+
 async function cerebroLocal(texto, unaSola){
   try{
     const t = String(texto||"").trim();
@@ -16933,7 +17137,11 @@ async function cerebroLocal(texto, unaSola){
     const hayManos = !!(P && typeof P.apps==="function");
 
     /* ⏰ la hora y el día */
-    if(/^(que|qu[ée]|k) hora (es|son)$/.test(l) || l==="la hora" || l==="hora")
+    /* ⏰ v7.174 — Y LAS FORMAS QUE ÉL USA DE VERDAD. Probado en su teléfono el 17-09:
+       de ocho maneras de preguntar la hora, siete entraban y «qué hora tienes» se iba al
+       modelo — lento y de pago — teniendo la respuesta en 1 ms. Anclar sigue bien; lo que
+       falta es cubrir cómo habla una persona ([[apex-cerebro-local]]). */
+    if(/^(que|qu[ée]|k) hora (es|son|tienes|ten[ée]s|marca|hay)$/.test(l) || /^(la )?hora$/.test(l) || /^tienes (la )?hora$/.test(l) || /^me (das|dices) la hora$/.test(l))
       return {txt:"Son las "+localReloj()+"."};
     if(/^(que|qu[ée]) (dia|d[íi]a) (es|es hoy|estamos)$/.test(l) || l==="que dia es hoy"){
       const d=new Date();
@@ -17068,7 +17276,9 @@ async function iaEnviar(textoForzado, promptExtra){
      segundo y sin internet. Si duda, devuelve null y sigue el camino de siempre. */
   if(texto && !img && !doc){
     let ya=null;
+    const _t0=Date.now();
     try{ ya = await cerebroLocal(texto); }catch(_){ ya=null; }
+    try{ respApunta(texto, Date.now()-_t0, ya&&ya.txt ? "local" : "al-modelo"); }catch(_){}
     if(ya && ya.txt){
       if(ta){ ta.value=""; ta.style.height="auto"; }
       localResponder(texto, ya.txt);
