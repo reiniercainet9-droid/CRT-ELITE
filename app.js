@@ -297,7 +297,8 @@ function nubePintarEstado(){
 }
 /* 📸 Capturas del gráfico: la app PIDE la foto (el Puente la saca y la sube). */
 async function nubeShotReq(sym, id){ try{ await fetch(nubeUrl()+"/shot/req",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({sym,id})}); }catch(_){}}
-async function nubeShotGet(id){ try{ const r=await fetch(nubeUrl()+"/shot/get?id="+encodeURIComponent(id)); if(!r.ok) return null; const d=await r.json(); return (d&&d.img)?d.img:null; }catch(_){ return null; } }
+/* ⏳ v7.174 — con plazo: sin él, la pantalla de la foto se quedaba en «Cargando…» para siempre. */
+async function nubeShotGet(id){ try{ const r=await traerConTiempo(nubeUrl()+"/shot/get?id="+encodeURIComponent(id),{},15000); if(!r.ok) return null; const d=await r.json(); return (d&&d.img)?d.img:null; }catch(_){ return null; } }
 async function nubeShotDel(ids){ try{ await fetch(nubeUrl()+"/shot/del",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({ids:Array.isArray(ids)?ids:[ids]})}); }catch(_){}}
 function dataURLtoBlob(u){ const parts=String(u).split(","); const mime=(parts[0].match(/:(.*?);/)||[])[1]||"image/jpeg"; const bin=atob(parts[1]||""); const arr=new Uint8Array(bin.length); for(let k=0;k<bin.length;k++)arr[k]=bin.charCodeAt(k); return new Blob([arr],{type:mime}); }
 /* Visor de foto DENTRO de Apex (no abre pestaña) con compartir/descargar/borrar */
@@ -315,9 +316,16 @@ async function abrirFoto(id, meta){
      recoloca sola. La foto ademas viene al doble de resolucion desde el Puente (v4.10). */
   const ov=el("div","foto-ov");
   ov.style.cssText="position:fixed;inset:0;z-index:9999;background:#000;display:flex;align-items:center;justify-content:center;overflow:hidden;touch-action:none";
-  ov.innerHTML='<div style="color:#ccc;font-size:13px">Cargando…</div>';
+  ov.innerHTML='<div style="color:#ccc;font-size:13px">Cargando…<br><span style="font-size:11px;opacity:.6">(toca para cerrar)</span></div>';
   document.body.appendChild(ov);
   const cerrar=()=>{ try{ window.removeEventListener("resize",ajustar); }catch(_){} ov.remove(); };
+  /* 🚪 v7.174 (17-09) — SE PUEDE CERRAR DESDE EL PRIMER SEGUNDO.
+     Esto tapa la pantalla ENTERA (inset:0, z-index 9999) y hasta ahora solo se le ponía la
+     salida en la rama de error. Si la foto tardaba —o no llegaba nunca, que es lo que hace un
+     fetch sin plazo— Rey se quedaba con una pantalla negra que no podía quitar más que
+     cerrando Apex. Una ventana que tapa todo tiene que poder cerrarse SIEMPRE, no solo cuando
+     el código llega a la línea que lo permite ([[apex-nada-bloquea-el-hilo]]). */
+  ov.onclick=cerrar;
   const img=await nubeShotGet(id);
 
   if(!img){
@@ -2506,11 +2514,13 @@ function ejecCerradas(){
 async function ejecVerShot(id){
   if(!id){ toast("Esa operación no tiene captura"); return; }
   toast("📸 Cargando captura…");
+  /* ⏳ v7.174 — pasa por nubeShotGet, que es quien tiene el plazo. Aquí había una copia a mano
+     de la misma petición SIN plazo: al tocar la captura, si la nube no contestaba, el aviso se
+     apagaba y no pasaba nada nunca más. Dos caminos para lo mismo es un camino sin arreglar. */
   try{
-    const r=await fetch(nubeUrl()+"/shot/get?id="+encodeURIComponent(id));
-    const d=await r.json();
-    if(d&&d.img) abrirModal('<img src="'+d.img+'" style="max-width:100%;border-radius:8px">',[{t:"Cerrar",cls:"gold",fn:cerrarModal}]);
-    else toast("No encontré la captura (quizá aún no se tomó o se limpió de la nube)");
+    const img=await nubeShotGet(id);
+    if(img) abrirModal('<img src="'+img+'" style="max-width:100%;border-radius:8px">',[{t:"Cerrar",cls:"gold",fn:cerrarModal}]);
+    else toast("No encontré la captura (quizá aún no se tomó, o no hay internet)");
   }catch(_){ toast("⚠️ Sin internet"); }
 }
 /* 🧠 manda el historial del Ejecutor al chat para evaluarlo CON Roberto */
@@ -3955,7 +3965,18 @@ function plegarTarjetas(sec, caja, opciones){
 async function renderEjecutor(){
   const cont=$("#ejBody"); if(!cont) return;
   let d=null;
-  try{ const r=await fetch(nubeUrl()+"/ejec/estado",{cache:"no-store"}); d=await r.json(); try{ ejecApuntarEstado(d); }catch(_){} }catch(_){}
+  /* ⏳ v7.174 (17-09) — ESTA ESPERA TENÍA QUE TENER FINAL.
+     Comprobado en su teléfono esta noche: con Apex en segundo plano Android congela la
+     petición, y la sección se quedaba en «⏳ Cargando el Ejecutor…» PARA SIEMPRE — sin
+     mensaje, sin botón y sin salida que no fuera cerrar Apex. Aquí debajo ya existía la
+     tarjeta de «no pude leer el Ejecutor» con su botón de reintentar; simplemente no se
+     llegaba nunca a ella, porque un fetch sin plazo no falla: espera.
+     12 segundos: de sobra para su red (medido hoy: 99-761 ms de punta a punta) y lo bastante
+     corto para que no se quede mirando una rueda. */
+  try{
+    const r=await traerConTiempo(nubeUrl()+"/ejec/estado",{cache:"no-store"},12000);
+    d=await r.json(); try{ ejecApuntarEstado(d); }catch(_){}
+  }catch(_){}
   if(!d||!d.ok){
     cont.innerHTML='<div class="card">⚠️ No pude leer el Ejecutor. Revisa tu internet — y que el worker v5.77 esté subido. <div style="margin-top:8px"><button class="btn gold" id="ejRetry">🔄 Reintentar</button></div></div>';
     const br=$("#ejRetry"); if(br) br.onclick=renderEjecutor;
@@ -5762,6 +5783,18 @@ function renderTemplo(){
   b.querySelectorAll("[data-ses]").forEach(x=>{ x.onclick=()=>temploVerSesion(+x.dataset.ses); });
   b.querySelectorAll("[data-guia]").forEach(x=>{ x.onclick=()=>temploGuiar(x.dataset.guia); });
   b.querySelectorAll("[data-prog]").forEach(x=>{ x.onclick=()=>temploProgramarModal(x.dataset.prog); });
+  /* 🗂️ v7.175 (18-09) — Y LO ÚLTIMO: PLEGAR LO ENORME.
+     Rey: «en la sección de mi templo también necesito organizar y que las cosas sean
+     plegables para que no sean secciones tan extensas».
+     Es la más larga de las 19 con diferencia: medida en su propio teléfono esta mañana,
+     10.847 letras — casi el triple que la siguiente. Tiene sentido que sea así (es su
+     cuerpo entero: peso, entrenamiento, calma, Kegel, suplementos), pero recorrerla
+     entera para tocar una cosa es lo que él no quiere.
+     Va AQUÍ, al final y detrás de enganchar TODOS los botones, por dos razones: hasta que
+     está pintado no se puede medir lo que ocupa de verdad, y `plegarTarjetas` MUEVE los
+     nodos en vez de recrearlos — así los 40 botones de arriba siguen vivos
+     ([[apex-las-secciones-se-pliegan]]). */
+  try{ plegarTarjetas("templo", b); }catch(_){}
 }
 /* ✏️ SU FICHA — la única fuente de todos los números del templo.
    Se puede abrir y cambiar SIEMPRE: es su ley. La edad no se escribe, se calcula de su
@@ -8047,6 +8080,17 @@ function renderDiario(){
       });
     }
   }
+  /* 🗂️ v7.175 (18-09) — Y EL DIARIO TAMBIÉN SE PLIEGA.
+     Rey pidió el templo «y busca otra que haya que hacerle lo mismo». No la elegí a ojo: se
+     midieron las 19 secciones en un navegador puesto al tamaño exacto de su moto g54
+     (412×915). El Diario salió el más largo de todos los que no dependen de sus datos
+     personales — 4,4 pantallas con 8 tarjetas — y es el que MÁS crece, porque cada
+     operación que registra le añade una fila para siempre.
+     (Mi templo es aún mayor, pero solo se ve con sus datos dentro: en su teléfono midió
+     10.847 letras. Por eso se pliegan los dos.)
+     `plegarTarjetas` decide sola: lo que no llega a 1,5 pantallas NO se pliega, así que los
+     trades sueltos siguen a la vista y solo se recogen los bloques gordos. */
+  try{ plegarTarjetas("diario", $("#v-diario")); }catch(_){}
 }
 
 /* 🔬 v7.160 — EL FORENSE DE UNA OPERACIÓN SUYA (real o de backtesting).
@@ -10924,6 +10968,17 @@ async function iaEntornoTxt(){
     if(m.librePct!=null) partes.push("memoria "+m.librePct+"% libre de "+m.totalGB+" GB"+(m.andaJusto?" — ANDROID DICE QUE ANDA JUSTA":""));
     if(n.hayInternet!=null) partes.push(n.hayInternet?("con internet por "+(n.porDonde||"?")):"SIN INTERNET");
     if(b.sinLimite===false) partes.push("⚠️ Apex TIENE límite de batería puesto (puede dejarte sin avisos de madrugada)");
+    /* 🔕 v7.175 — el No molestar, que es la otra forma de quedarse sin avisos sin enterarse.
+       Dos cosas distintas y las dos importan: si Apex NO puede anular el No molestar, sus
+       avisos se pueden volver invisibles; y si el filtro está puesto AHORA mismo, es que le
+       está pasando en este momento. */
+    try{
+      const dn = e.noMolestar || {};
+      if(dn.permiso===false || dn.canalAnula===false)
+        partes.push("⚠️ Apex NO puede saltarse el No molestar: si tiene el Modo Hora de dormir puesto, los avisos le llegan pero NO LOS VE (le pasó la noche del 17 al 18-09 y perdió casi toda la sesión de Londres)");
+      else if(dn.filtroAhora!=null && dn.filtroAhora>1)
+        partes.push("el No molestar está puesto AHORA mismo, pero Apex se lo salta");
+    }catch(_){}
     /* 📍 v7.104 — DÓNDE ESTÁ, si lo ha concedido. Va con la ANTIGÜEDAD siempre: una
        posición de hace seis horas no es dónde está, es dónde estuvo, y Roberto no puede
        decirle "estás en el centro" si el dato es de esta mañana ([[apex-roberto-no-inventa]]). */
@@ -13173,6 +13228,9 @@ async function vigiaUI(){
     /* el hueco del aviso de batería se crea la primera vez que hace falta */
     if(nota && !$("#vigiaBateria")){ const d=el("div","aviso-rojo"); d.id="vigiaBateria"; d.style.display="none";
       nota.parentNode.insertBefore(d, nota); }
+    /* 🔕 v7.175 — y el hueco del aviso de "No molestar", que es el que le costó Londres */
+    if(nota && !$("#vigiaNoMolestar")){ const d=el("div","aviso-rojo"); d.id="vigiaNoMolestar"; d.style.display="none";
+      nota.parentNode.insertBefore(d, nota); }
     if(!caja||!box||!btn) return;
     if(!P){ caja.style.display="none"; box.style.display="none"; return; }   /* en la web, ni aparece */
     caja.style.display=""; box.style.display="";
@@ -13206,6 +13264,29 @@ async function vigiaUI(){
         const nb = $("#vigiaBatBtn");
         if(nb) nb.onclick = async ()=>{ try{ await P.bateriaPedir(); toast("Elige «Permitir» en la ventana de Android"); }
           catch(e){ toast("Ábrelo a mano: Ajustes → Apps → Apex → Batería → Sin restricciones"); } };
+      }
+    }
+    /* 🔕 v7.175 (18-09) — ¿Y EL "NO MOLESTAR"? Es el hueco que le costó casi toda la sesión
+       de Londres del 18-09. Su PC se reinició sola a las 22:44 por Windows Update; la nube
+       mandó "🤖 Ejecutor CAÍDO" a las 22:46 y "🔌 Puente DESCONECTADO" a las 22:47, y su
+       teléfono los recibió los dos. Pero su Modo Hora de dormir los dejó invisibles: ni en
+       la lista, ni en la barra, ni de puntito. Se despertó creyendo que nada había avisado.
+       Estar encendido no es estar despierto (v6.94) — y que te llegue no es que lo VEAS. */
+    let dnd = { puedeAnular: true, canalAnula: true };
+    try{ if(P.noMolestarEstado) dnd = await P.noMolestarEstado(); }catch(_){}
+    const nm = $("#vigiaNoMolestar");
+    if(nm){
+      const mal = on && P.noMolestarEstado && !(dnd && dnd.puedeAnular && dnd.canalAnula);
+      nm.style.display = mal ? "" : "none";
+      if(mal){
+        nm.innerHTML = '<b>🔕 El No molestar puede esconderte los avisos</b><br>' +
+          'Te llegan, pero el Modo Hora de dormir los borra de la lista, de la barra y del ' +
+          'icono: te despiertas creyendo que no pasó nada. La madrugada del 18 de septiembre ' +
+          'te escondió el Puente caído, el Ejecutor caído y una señal de EURUSD.' +
+          '<div style="margin-top:8px"><button class="btn gold" id="vigiaDndBtn">🔕 Dejar que Apex se salte el No molestar</button></div>';
+        const db = $("#vigiaDndBtn");
+        if(db) db.onclick = async ()=>{ try{ await P.noMolestarPedir(); toast("Busca Apex en la lista y actívala"); }
+          catch(e){ toast("Ábrelo a mano: Ajustes → Notificaciones → Acceso a No molestar → Apex"); } };
       }
     }
     nota.innerHTML = on

@@ -1,13 +1,32 @@
-APEX v7.174 — TRADING DESK
+APEX v7.175 — TRADING DESK
 =========================
 
-🎓 Roberto aprende cuando tú le corriges. Antes aprendía solo de las operaciones del Ejecutor; tus correcciones se perdían al acabar el chat y al día siguiente volvía a pasar lo mismo. Ahora cada corrección tuya se guarda y entra en su memoria profunda.
-🧠 Y se entera SOLO de lo que cambia en tu sistema: sección nueva, dato nuevo, versión nueva. Antes eso era una lista que yo tenía que escribir a mano, y si se me olvidaba, él no se enteraba.
-⚙️ Tu configuración del Ejecutor le llega. Ya no puede señalarte como problema una regla que TÚ tienes apagada.
-🧵 Cada aviso abre SU chat con su tema. Tocar «cerremos el día» ya no te deja en la pantalla de inicio.
-⚖️ Arreglado el índice de masa corporal: ponía 309.917 porque escribiste 1,76. Ahora 1,76 y 176 valen igual, y si un dato no se entiende te lo dice con un botón para arreglarlo.
-🎯 Nueva tarjeta en el Templo: por qué tu entrenamiento está armado así, y qué te haría mal.
-⏱️ «Qué hora tienes» ya se contesta aquí mismo (antes se iba al modelo). Y cada respuesta apunta cuánto tardó.
+APEX 7.175 · worker 5.171 · Puente 4.27 — 18-09-2026
+
+🔕 EL "NO MOLESTAR" YA NO TE ESCONDE LOS AVISOS
+   La noche del 17 al 18 Windows Update reinició la PC a las 22:44 y a las 22:48 y la dejó
+   en la pantalla de contraseña: Puente y Ejecutor caídos 5 h 43 min. La nube avisó de las
+   dos caídas (22:46 y 22:47) y el teléfono las recibió — pero el "Modo Hora de dormir" las
+   hizo invisibles: ni en la lista, ni en la barra, ni de puntito en el icono.
+   Ahora las alarmas van por un canal que ANULA el No molestar. Hubo que estrenar canal
+   porque Android no deja cambiar uno ya creado; el tono "Element" que elegiste se copia al
+   nuevo, no se pierde.
+
+🗂️ MI TEMPLO Y EL DIARIO SE PLIEGAN
+   Medidas las 19 secciones al tamaño exacto de la moto g54: Mi templo es la más larga con
+   diferencia (10.847 letras en el teléfono) y el Diario la sigue (4,4 pantallas), y además
+   crece con cada operación. Las dos se pliegan por tarjeta y recuerdan lo que dejas abierto.
+
+⏳ EL PUENTE YA NO ACUSA MIENTRAS TRADINGVIEW CARGA
+   La caja negra puesta ayer cazó a su primer sospechoso en ocho horas… y era el propio
+   Puente: a los 4-5 minutos de arrancar daba por perdidos unos indicadores que TradingView
+   aún estaba cargando, y RECARGABA la página. Ahora espera, sin acusar y sin recargar.
+
+🤖 ROBERTO YA VE LO QUE TIENES ABIERTO
+   El repaso de la mañana dijo "Viernes: cierra posiciones" con CERO posiciones abiertas, y
+   encima recitando un recordatorio tuyo. No podía saberlo: solo le llegaban los cierres
+   pasados. Ahora le llega el estado vivo del Ejecutor, y tiene prohibido hablar de cerrar
+   posiciones que no existen y de cerrar por el reloj las que sí.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
