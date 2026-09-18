@@ -7274,10 +7274,10 @@ function viewRiesgo(){
 
   const lim=el("div","card alert");
   lim.innerHTML=`<div class="card-h"><span class="ic">🚦</span><h2 class="red">Límites inviolables</h2></div>
-    <div class="row"><div class="l">2 trades/día</div><div class="r" style="color:var(--txt2);font-weight:400;font-size:13.5px;max-width:58%">Cerrar plataforma hasta mañana, gane o pierda</div></div>
-    <div class="row"><div class="l" style="color:var(--red)">2 SL/día</div><div class="r" style="color:var(--txt2);font-weight:400;font-size:13.5px;max-width:58%">Cierre total. Prohibido abrir gráficos operativos</div></div>
-    <div class="row"><div class="l" style="color:var(--orange)">Semana −3%</div><div class="r" style="color:var(--txt2);font-weight:400;font-size:13.5px;max-width:58%">Solo setups A+ el resto de la semana</div></div>
-    <div class="row"><div class="l" style="color:var(--red)">Semana −5%</div><div class="r" style="color:var(--txt2);font-weight:400;font-size:13.5px;max-width:58%">Pausa total hasta el lunes. Sin excepciones</div></div>
+    <div class="row"><div class="l">2 trades/día</div><div class="r" style="color:var(--txt2);font-weight:400;font-size:13.5px;max-width:58%;white-space:normal;text-align:right">Cerrar plataforma hasta mañana, gane o pierda</div></div>
+    <div class="row"><div class="l" style="color:var(--red)">2 SL/día</div><div class="r" style="color:var(--txt2);font-weight:400;font-size:13.5px;max-width:58%;white-space:normal;text-align:right">Cierre total. Prohibido abrir gráficos operativos</div></div>
+    <div class="row"><div class="l" style="color:var(--orange)">Semana −3%</div><div class="r" style="color:var(--txt2);font-weight:400;font-size:13.5px;max-width:58%;white-space:normal;text-align:right">Solo setups A+ el resto de la semana</div></div>
+    <div class="row"><div class="l" style="color:var(--red)">Semana −5%</div><div class="r" style="color:var(--txt2);font-weight:400;font-size:13.5px;max-width:58%;white-space:normal;text-align:right">Pausa total hasta el lunes. Sin excepciones</div></div>
     <div id="semaforoSemana"></div>`;
   v.appendChild(lim);
 
