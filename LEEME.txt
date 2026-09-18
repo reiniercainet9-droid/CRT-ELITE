@@ -1,7 +1,7 @@
-APEX v7.175 — TRADING DESK
+APEX v7.176 — TRADING DESK
 =========================
 
-APEX 7.175 · worker 5.171 · Puente 4.27 — 18-09-2026
+APEX 7.176 · worker 5.171 · Puente 4.27 — 18-09-2026
 
 🔕 EL "NO MOLESTAR" YA NO TE ESCONDE LOS AVISOS
    La noche del 17 al 18 Windows Update reinició la PC a las 22:44 y a las 22:48 y la dejó
@@ -27,6 +27,14 @@ APEX 7.175 · worker 5.171 · Puente 4.27 — 18-09-2026
    encima recitando un recordatorio tuyo. No podía saberlo: solo le llegaban los cierres
    pasados. Ahora le llega el estado vivo del Ejecutor, y tiene prohibido hablar de cerrar
    posiciones que no existen y de cerrar por el reloj las que sí.
+
+🔁 Y EL CANAL SE ELIGE MIRANDO EL TELÉFONO (7.176)
+   La 7.175 fijaba el canal nuevo en el código. Al instalarla y comprobarla por cable, el
+   canal nuevo nació SIN anular el No molestar (Android lo ignora si falta el permiso) justo
+   cuando el viejo SÍ lo anulaba, porque Rey lo había puesto a mano. O sea: peor que antes.
+   Ahora Apex mira en cada arranque cuál es el canal que de verdad anula: si el que hay ya
+   sirve, se respeta; si no y hay permiso, estrena otro y COMPRUEBA que nació anulando antes
+   de adoptarlo. Nunca se cambia a peor, y los canales que sobran se retiran.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
