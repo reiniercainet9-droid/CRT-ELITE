@@ -209,6 +209,100 @@ var FC_ABUNDANCIA = [
   "Rey, Howard Marks: para tener un resultado distinto al de todos hay que hacer algo distinto a todos.",
 ];
 
+/* ── 4 · EMPUJE — el grupo que rompe el molde (v7.184, 18-09-2026) ─────────────
+   ══════════════════════════════════════════════════════════════════════════════════════
+   Rey, 18-09: «quiero cambiar la forma y las frases de Roberto, más dinámicas, motivadoras».
+
+   Y EL PROBLEMA NO ERAN LAS FRASES: eran buenas. Era LA FORMA. Las 228 empiezan igual —
+   «Rey, [autor]: [cita]» o «Rey, repite conmigo: …». Leídas de una en una están bien;
+   catorce veces al día durante meses, el molde se oye antes que el contenido y el cerebro
+   deja de escuchar. Eso le pasa a cualquier frase, por buena que sea.
+
+   ASÍ QUE ESTE GRUPO CAMBIA LAS DOS COSAS:
+     · LA FORMA — aquí NINGUNA empieza por «Rey,». Unas abren con la frase y rematan con
+       quién la dijo; otras son una pregunta directa; otras le hablan de tú a tú sin cita
+       ninguna. Que no se puedan predecir es parte del trabajo.
+     · LA ENERGÍA — son cortas y van al músculo. Las otras tres invitan a pensar; ésta
+       empuja. Gente que hizo cosas: atletas, luchadores, constructores, gente de calle.
+
+   Y ESTÁN ATADAS A SU VIDA, no a un libro: su moto, su madrugada, su racha, su cuerpo, su
+   familia y su camino a la libertad financiera. Un empujón genérico no empuja a nadie.
+   ⚠️ Misma regla que el resto: si lleva nombre, la cita es REAL. Ponerle una frase inventada
+   en la boca a alguien reconocido sería justo lo contrario de lo que Rey pidió.
+   ══════════════════════════════════════════════════════════════════════════════════════ */
+var FC_EMPUJE = [
+  "Levántate. Otra vez. Eso es todo el secreto.",
+  "«El dolor que sientes hoy será la fuerza que sientas mañana.» Arnold Schwarzenegger.",
+  "¿Sabes qué separa hoy de dentro de un año? Doscientos días como éste. Ni uno más.",
+  "«Nadie que se haya dado por vencido llegó a ser famoso.» Vince Lombardi. Ni rico, añado yo.",
+  "Hoy no hace falta que sea brillante. Hace falta que lo hagas.",
+  "«No cuento las abdominales. Empiezo a contar cuando duele.» Muhammad Ali. Ahí empieza todo.",
+  "Te levantaste a las cuatro. Eso ya te pone delante de casi todo el mundo. Aprovéchalo.",
+  "«Aguanta ahora y vive el resto de tu vida como un campeón.» Muhammad Ali.",
+  "La moto, el gráfico, el gimnasio. Tres frentes. Y los estás sosteniendo. Que no se te olvide.",
+  "«El éxito no es definitivo, el fracaso no es fatal: lo que cuenta es el valor de continuar.» Churchill.",
+  "Nadie va a venir a hacerlo por ti. Y menos mal, porque entonces sería suyo.",
+  "«Los campeones se hacen cuando nadie mira.» Anson Dorrance lo vio con sus propios ojos.",
+  "Un día malo no borra un mes bueno. Mira el mes.",
+  "«La disciplina es libertad.» Jocko Willink. Lo que decides en frío te libera en caliente.",
+  "¿Qué harías hoy si supieras que dentro de dos años esto funciona? Pues haz eso.",
+  "«No pares cuando estés cansado. Para cuando hayas terminado.» David Goggins.",
+  "El mercado abre mañana. Tú decides si llegas entero.",
+  "«Somos lo que hacemos día a día; la excelencia no es un acto, es un hábito.» Aristóteles, y sigue vigente.",
+  "Cada real que apartas hoy compra un día de libertad mañana. Literalmente.",
+  "«El que mueve montañas empieza apartando piedras pequeñas.» Confucio.",
+  "No necesitas motivación. Necesitas empezar. La motivación viene después, siempre llega tarde.",
+  "«La suerte es lo que pasa cuando la preparación se encuentra con la oportunidad.» Séneca.",
+  "Hoy cumple tu plan aunque no tengas ganas. Sobre todo si no tienes ganas.",
+  "«Si puedes soñarlo, puedes hacerlo.» Walt Disney, que quebró antes de acertar.",
+  "Tu ventaja no es el indicador. Es que tú sigues aquí cuando otros ya lo dejaron.",
+  "«Caer siete veces, levantarse ocho.» Proverbio japonés. Ocho, no siete.",
+  "Lo que hoy te cuesta un esfuerzo, en tres meses lo haces sin pensar. Ése es el trato.",
+  "«Un objetivo sin un plan es solo un deseo.» Antoine de Saint-Exupéry.",
+  "Estás construyendo algo que todavía no se ve. Eso siempre se siente como si no funcionara.",
+  "«Lo importante no es ganar, sino no perderse.» Y tú sabes exactamente dónde estás.",
+  "Dos SL y cierras. No es debilidad: es que mañana quieres tener con qué operar.",
+  "«El ganador es el jugador que comete el penúltimo error.» Savielly Tartakower.",
+  "Tu familia no necesita que ganes hoy. Necesita que sigas aquí dentro de cinco años.",
+  "«Haz lo que puedas, con lo que tengas, donde estés.» Theodore Roosevelt.",
+  "El plan aburrido que cumples le gana al plan brillante que abandonas.",
+  "«El que tiene un porqué encuentra casi cualquier cómo.» Nietzsche. Tu porqué lo tienes claro.",
+  "Hoy solo tienes que hacer una cosa bien. Elige cuál y hazla.",
+  "«La constancia vence lo que la dicha no alcanza.» Simón Bolívar.",
+  "Ese cansancio que tienes es de estar construyendo, no de estar perdiendo. No los confundas.",
+  "«No se puede mejorar lo que no se mide.» Y tú lo mides todo. Por eso vas a mejorar.",
+  "Un año son doce meses. Llevas nueve. Eso no es empezar: eso es estar dentro.",
+  "«La paciencia es amarga, pero su fruto es dulce.» Aristóteles.",
+  "Si hoy no hay setup, no hay setup. Esperar también es operar.",
+  "«El riesgo viene de no saber lo que estás haciendo.» Warren Buffett. Tú lo sabes: ejecútalo.",
+  "Nadie te va a dar permiso para cambiar tu vida. Ya lo tienes.",
+  "«Cuanto más duro es el trabajo, mayor es la sensación al lograrlo.» Pelé.",
+  "Hoy elige la incomodidad pequeña. La grande te la ahorras después.",
+  "«Todo parece imposible hasta que se hace.» Nelson Mandela.",
+  "Lo que te está costando ahora es exactamente lo que te va a separar del resto.",
+  "«La calidad no es un acto, es un hábito.» Y los hábitos se votan cada día.",
+  "Cierra el día. Lo de mañana es de mañana, y mañana tendrás la cabeza fresca.",
+  "«Quien quiere hacer algo encuentra un medio; quien no, encuentra una excusa.» Proverbio árabe.",
+  "No compares tu capítulo nueve con el capítulo veinte de otro.",
+  "«Si no construyes tu sueño, alguien te contratará para construir el suyo.» Tony Gaskins.",
+  "Tu mejor operación de hoy puede ser la que no hiciste.",
+  "«Nunca es tarde para ser lo que podrías haber sido.» George Eliot.",
+  "Cada vez que cumples tu regla, votas por el hombre en el que te estás convirtiendo.",
+  "«La única forma de hacer un gran trabajo es amar lo que haces.» Steve Jobs.",
+  "Hoy sal de la moto y entra al gráfico con la cabeza limpia. Son dos trabajos, no uno con ruido.",
+  "«El obstáculo es el camino.» Marco Aurelio. Lo que se te cruza es por donde se pasa.",
+  "Si te sale mal siguiendo tu plan, no fallaste. Fallar es saltártelo y que salga bien.",
+  "«El agua blanda vence a la roca dura.» Lao Tsé. Gota a gota, no de un golpe.",
+  "Descansa. En serio. Decidir cansado es como operar borracho.",
+  "«Lo que no te reta, no te cambia.» Sigue adelante.",
+  "Llevas meses construyendo un sistema que trabaja por ti mientras duermes. Eso no lo tiene cualquiera.",
+  "«Sé como el agua.» Bruce Lee. Adáptate a la sesión que hay, no a la que querías.",
+  "El que aguanta la meseta es el que ve lo que hay después. Casi nadie llega.",
+  "«Primero te ignoran, luego se ríen, luego te atacan, después ganas.» Atribuido a los sindicalistas del XIX.",
+  "Hoy no compitas con nadie. Compite con el Rey de hace tres meses.",
+  "«El secreto para salir adelante es empezar.» Mark Twain.",
+];
+
 /* ── 3 · AFIRMACIONES ("Rey, repite conmigo…") ─────────────────────────────── */
 var FC_AFIRMACION = [
   "Rey, repite conmigo, la fórmula de Émile Coué: cada día, en todos los sentidos, voy mejorando más y más.",
@@ -292,16 +386,21 @@ var FC = {
   hasta: 23,          /* y termina a las 23:00 */
   esperaTrasAvisoSeg: 60,   /* si coincide con una alarma o un aviso: un minuto después */
   /* el orden de la rueda; se avanza una posición cada vez que dice una */
-  clases: ["crecimiento", "abundancia", "afirmacion"],
+  /* 💥 v7.184 — cuatro grupos, no tres. El de EMPUJE entra en la rueda para que el
+     molde «Rey, [autor]:…» no sea lo único que Rey oye: una de cada cuatro llega con otra
+     forma y otra energía. Rey (18-09): «quiero cambiar la forma y las frases, más dinámicas,
+     motivadoras» — y la forma era justo lo que cansaba. */
+  clases: ["crecimiento", "empuje", "abundancia", "afirmacion"],
 };
 
 function fcCatalogo(clase) {
   if (clase === "abundancia") return FC_ABUNDANCIA;
   if (clase === "afirmacion") return FC_AFIRMACION;
+  if (clase === "empuje") return FC_EMPUJE;
   return FC_CRECIMIENTO;
 }
 
-function fcTotal() { return FC_CRECIMIENTO.length + FC_ABUNDANCIA.length + FC_AFIRMACION.length; }
+function fcTotal() { return FC_CRECIMIENTO.length + FC_ABUNDANCIA.length + FC_AFIRMACION.length + FC_EMPUJE.length; }
 
 /* estado limpio de un día nuevo */
 function fcEstadoDelDia(hoy) { return { dia: hoy, ts: 0, rueda: 0, usadas: {} }; }
@@ -371,13 +470,23 @@ function fcSiguiente(marca) {
 function fcRevision() {
   var problemas = [];
   var vistas = {};
-  var clases = [["crecimiento", FC_CRECIMIENTO], ["abundancia", FC_ABUNDANCIA], ["afirmacion", FC_AFIRMACION]];
+  var clases = [["crecimiento", FC_CRECIMIENTO], ["abundancia", FC_ABUNDANCIA],
+    ["afirmacion", FC_AFIRMACION], ["empuje", FC_EMPUJE]];
   for (var k = 0; k < clases.length; k++) {
     var nombre = clases[k][0], lista = clases[k][1];
     for (var i = 0; i < lista.length; i++) {
       var f = lista[i];
       if (typeof f !== "string" || !f.trim()) problemas.push(nombre + "[" + i + "] vacía");
-      if (f.indexOf("Rey") !== 0) problemas.push(nombre + "[" + i + "] no empieza hablándole a Rey");
+      /* 💥 v7.184 — EL GRUPO DE EMPUJE ESTÁ EXENTO DE EMPEZAR POR «Rey», Y ES A PROPÓSITO.
+         Esta comprobación existía para que ninguna frase sonara a folleto genérico, y para eso
+         se exigía que le hablara a Rey por su nombre. Pero cuando las 228 empiezan igual, el
+         molde se oye antes que el contenido: Rey pidió el 18-09 «cambiar la forma, más
+         dinámicas». El grupo de empuje abre con la frase, con una pregunta o de tú a tú —
+         que no se pueda predecir es justo su trabajo.
+         Lo que NO se afloja para él: nada vacío, nada repetido, nada larguísimo. */
+      if (nombre !== "empuje" && f.indexOf("Rey") !== 0) problemas.push(nombre + "[" + i + "] no empieza hablándole a Rey");
+      if (nombre === "empuje" && f.indexOf("Rey,") === 0)
+        problemas.push("empuje[" + i + "] empieza como las demás: este grupo existe para romper ese molde");
       if (vistas[f]) problemas.push("repetida en el catálogo: " + f.slice(0, 40));
       vistas[f] = 1;
       if (f.length > 160) problemas.push(nombre + "[" + i + "] demasiado larga (" + f.length + ")");
@@ -389,6 +498,6 @@ function fcRevision() {
 }
 
 if (typeof module !== "undefined" && module.exports) {
-  module.exports = { FC, FC_CRECIMIENTO, FC_ABUNDANCIA, FC_AFIRMACION,
+  module.exports = { FC, FC_CRECIMIENTO, FC_ABUNDANCIA, FC_AFIRMACION, FC_EMPUJE,
     fcToca: fcToca, fcSiguiente: fcSiguiente, fcRevision: fcRevision, fcTotal: fcTotal, fcLeer: fcLeer };
 }
