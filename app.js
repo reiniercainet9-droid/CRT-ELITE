@@ -3936,6 +3936,21 @@ function plegarTarjetas(sec, caja, opciones){
     const largoSec = (cont.scrollHeight||0) / alto;
     const porDefecto = largoSec >= 4 ? 0.12 : largoSec >= 2 ? 0.3 : 0.8;
     const o = Object.assign({ desde: porDefecto }, opciones||{});
+
+    /* 📐 v7.179 — Y SI LA SECCIÓN CRECIÓ DESPUÉS, SE VUELVE A DECIDIR.
+       El mismo veneno que la marca prematura, un piso más arriba: el listón sale de lo larga
+       que PARECE la sección en ese instante, y en la primera pasada muchas secciones todavía
+       están a medio pintar. Con Mi templo pasaba esto: primera pasada → parecía corta →
+       listón alto → casi nada se plegaba y todo quedaba marcado «no»; segunda pasada → ya
+       medía 5,6 pantallas, pero las marcas de la primera ya no se volvían a mirar.
+       Ahora se apunta con qué tamaño se decidió, y si la sección ha crecido de verdad se
+       borran SOLO las marcas de «no se pliega» y se decide otra vez.
+       ⚠️ Nunca se tocan las de «sí»: eso desharía lo que Rey tenga abierto o cerrado. */
+    const antes = parseFloat(cont.dataset.plegLargo || "0");
+    if(antes && largoSec > antes * 1.5){
+      cont.querySelectorAll('.card[data-pleg="no"]').forEach(c=>{ delete c.dataset.pleg; });
+    }
+    if(largoSec > antes) cont.dataset.plegLargo = String(Math.round(largoSec*100)/100);
     cont.querySelectorAll(".card").forEach(card=>{
       if(card.dataset.pleg) return;                 /* ya tiene su pliegue puesto */
       const tit = card.querySelector(PLEG_TITULOS);
@@ -3943,11 +3958,22 @@ function plegarTarjetas(sec, caja, opciones){
       /* el rótulo que se ve y con el que se recuerda: la PRIMERA línea, no el párrafo entero
          (los `.nt-head` traen título y subtítulo juntos y la clave salía ilegible) */
       const texto = tit.textContent.trim().split("\n").map(s=>s.trim()).filter(Boolean)[0] || tit.textContent.trim();
-      /* lo que se pliega es TODO lo que viene después del título */
-      const resto = [];
-      let n = tit.parentElement===card ? tit.nextSibling : tit.parentElement.nextSibling;
-      /* si el título va dentro de un envoltorio, se pliega lo que sigue a ese envoltorio */
-      while(n){ resto.push(n); n = n.nextSibling; }
+      /* 🧩 v7.180 — SE PLIEGA TODO LO QUE NO ES LA CABECERA, NO «LO QUE VIENE DESPUÉS».
+         ─────────────────────────────────────────────────────────────────────────────────
+         Mi idea anterior era «lo que se pliega es lo que va detrás del título», y no encaja
+         con cómo están hechas sus tarjetas. Medido en su teléfono el 18-09, dentro de Mi
+         templo:
+             #7  tarjeta de 1058 px → «debajo del título: 0 px»
+             #9  tarjeta de 2408 px → «debajo del título: 0 px»
+             #2  tarjeta de  800 px → «debajo del título: 40 px»
+         O sea: el contenido no va detrás del título, va en otros hijos de la tarjeta. Por eso
+         la sección seguía midiendo 5,6 pantallas con todo «plegado».
+         Esto no supone nada de la forma: la cabecera es el hijo directo de la tarjeta que
+         contiene el título, y se pliega TODO el resto de hijos directos. */
+      let cabecera = tit;
+      while(cabecera && cabecera.parentElement !== card) cabecera = cabecera.parentElement;
+      if(!cabecera) return;
+      const resto = [...card.childNodes].filter(x=> x !== cabecera);
       if(!resto.length) return;
       const hay = resto.reduce((s,x)=> s + (x.getBoundingClientRect ? x.getBoundingClientRect().height : 0), 0);
       /* 🕳️ v7.178 — MEDIR CERO NO ES MEDIR PEQUEÑO, Y CONFUNDIRLO DEJABA SECCIONES ENTERAS
@@ -3983,7 +4009,7 @@ function plegarTarjetas(sec, caja, opciones){
           : pant >= 0.5 ? ("▸ ver ("+Math.round(pant*10)/10+" pantallas)")
           : "▸ ver";
       };
-      const tocable = (tit.parentElement===card) ? tit : tit.parentElement;
+      const tocable = cabecera;   /* v7.180: se toca la cabecera entera, no un trozo suyo */
       tocable.style.cursor = "pointer";
       tocable.appendChild(flecha);
       tocable.addEventListener("click", (e)=>{

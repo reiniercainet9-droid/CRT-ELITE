@@ -1,4 +1,4 @@
-APEX v7.179 — TRADING DESK
+APEX v7.181 — TRADING DESK
 =========================
 
 APEX 7.176 · worker 5.171 · Puente 4.27 — 18-09-2026
