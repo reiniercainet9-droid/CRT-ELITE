@@ -3950,6 +3950,15 @@ function plegarTarjetas(sec, caja, opciones){
       while(n){ resto.push(n); n = n.nextSibling; }
       if(!resto.length) return;
       const hay = resto.reduce((s,x)=> s + (x.getBoundingClientRect ? x.getBoundingClientRect().height : 0), 0);
+      /* 🕳️ v7.178 — MEDIR CERO NO ES MEDIR PEQUEÑO, Y CONFUNDIRLO DEJABA SECCIONES ENTERAS
+         SIN PLEGAR PARA SIEMPRE.
+         Lo cacé midiendo en el teléfono de Rey: el Diario seguía en 4,4 pantallas con sus 8
+         tarjetas marcadas como «demasiado cortas»… y no lo eran. Lo que pasaba es que la
+         primera pasada llegaba antes de que la sección terminara de pintarse: las tarjetas
+         medían CERO, se las marcaba `pleg="no"` — y esa marca es para siempre, así que la
+         segunda pasada ya ni las miraba.
+         Si aún no mide nada, no se decide nada: se deja para la siguiente pasada. */
+      if(hay <= 0) return;
       /* ⚠️ lo de dos líneas sigue sin plegarse: esconder dos líneas es esconder por esconder */
       if(hay < alto * o.desde && !localStorage.getItem(plegKey(sec,texto))) { card.dataset.pleg="no"; return; }
 
