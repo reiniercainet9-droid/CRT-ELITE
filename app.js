@@ -3910,17 +3910,39 @@ function viewEjecutor(){
    ═══════════════════════════════════════════════════════════════════════════════ */
 function plegKey(sec, titulo){ return "apex.pleg."+sec+"."+String(titulo).slice(0,40); }
 
+/* 🏷️ v7.178 — DÓNDE ESTÁ EL TÍTULO DE UNA TARJETA, DE VERDAD.
+   ─────────────────────────────────────────────────────────────────────────────────
+   Rey, 18-09: «entré ahora al templo y está igual… eso debes aplicarlo en TODAS las
+   secciones, y dentro de cada una los renglones deben ser plegables, sin cambiar nada de
+   sus funciones, solo para más facilidad; Apex ha crecido y dentro de cada sección hay
+   muchas cosas escritas y muchas subsecciones».
+   TENÍA RAZÓN Y EL FALLO ERA MÍO, DE LOS DE LEER EN VEZ DE MIRAR: el buscador de títulos
+   era `card.querySelector("b, h3, h4")`, y las tarjetas de Apex casi nunca usan eso.
+   Medido en su teléfono el 18-09, tarjetas que NO encontraba:
+       Mi templo 4 · Avisos 21 · Galería 12 · Plan con Roberto 7 · Riesgo 6 · Diario 5
+   Sus títulos de verdad son `.nt-head`, `.nt-tt`, `.card-h`, `.arr-h`, `.av-top`, `.fl`.
+   Por eso Mi templo medía 7,5 pantallas con UNA sola tarjeta plegada. */
+const PLEG_TITULOS = "b, h3, h4, .nt-tt, .card-h, .arr-h, .av-top, .fl, .tt, strong";
+
 function plegarTarjetas(sec, caja, opciones){
   try{
-    const o = Object.assign({ desde: 1.5 }, opciones||{});
     const cont = caja || document.body;
     const alto = Math.max(360, window.innerHeight||700);
+    /* 📏 EL LISTÓN SE ADAPTA A LO LARGA QUE SEA LA SECCIÓN.
+       1,5 pantallas por tarjeta era un listón pensado para esconder monstruos, y Rey no pide
+       eso: pide poder ENCONTRAR las cosas. En una sección larga (sus Avisos: 4,8 pantallas en
+       21 tarjetas de 0,2 cada una) ninguna tarjeta llega nunca a 1,5 — y plegadas todas, esa
+       sección pasa a ser una lista de 21 renglones donde se ve todo de un vistazo. */
+    const largoSec = (cont.scrollHeight||0) / alto;
+    const porDefecto = largoSec >= 4 ? 0.12 : largoSec >= 2 ? 0.3 : 0.8;
+    const o = Object.assign({ desde: porDefecto }, opciones||{});
     cont.querySelectorAll(".card").forEach(card=>{
       if(card.dataset.pleg) return;                 /* ya tiene su pliegue puesto */
-      /* el título es lo primero en negrita de la tarjeta; sin título no hay dónde tocar */
-      const tit = card.querySelector("b, h3, h4");
+      const tit = card.querySelector(PLEG_TITULOS);
       if(!tit || !tit.textContent.trim()) return;
-      const texto = tit.textContent.trim();
+      /* el rótulo que se ve y con el que se recuerda: la PRIMERA línea, no el párrafo entero
+         (los `.nt-head` traen título y subtítulo juntos y la clave salía ilegible) */
+      const texto = tit.textContent.trim().split("\n").map(s=>s.trim()).filter(Boolean)[0] || tit.textContent.trim();
       /* lo que se pliega es TODO lo que viene después del título */
       const resto = [];
       let n = tit.parentElement===card ? tit.nextSibling : tit.parentElement.nextSibling;
@@ -3928,7 +3950,7 @@ function plegarTarjetas(sec, caja, opciones){
       while(n){ resto.push(n); n = n.nextSibling; }
       if(!resto.length) return;
       const hay = resto.reduce((s,x)=> s + (x.getBoundingClientRect ? x.getBoundingClientRect().height : 0), 0);
-      /* ⚠️ lo corto NO se pliega: esconder dos líneas es esconder por esconder */
+      /* ⚠️ lo de dos líneas sigue sin plegarse: esconder dos líneas es esconder por esconder */
       if(hay < alto * o.desde && !localStorage.getItem(plegKey(sec,texto))) { card.dataset.pleg="no"; return; }
 
       const env = document.createElement("div");
@@ -3945,7 +3967,12 @@ function plegarTarjetas(sec, caja, opciones){
       flecha.style.cssText = "float:right;opacity:.75;font-size:.9em;margin-left:8px";
       const pintar = ()=>{
         env.style.display = abierto ? "" : "none";
-        flecha.textContent = abierto ? "▾ ocultar" : ("▸ ver ("+Math.round(hay/alto*10)/10+" pantallas)");
+        /* en pantallas para lo gordo; en líneas para lo pequeño — «0,2 pantallas» no le dice
+           nada a nadie, y ahora se pliega también lo corto */
+        const pant = hay/alto;
+        flecha.textContent = abierto ? "▾ ocultar"
+          : pant >= 0.5 ? ("▸ ver ("+Math.round(pant*10)/10+" pantallas)")
+          : "▸ ver";
       };
       const tocable = (tit.parentElement===card) ? tit : tit.parentElement;
       tocable.style.cursor = "pointer";
@@ -6524,6 +6551,20 @@ function irA(id){
   if(id==="avisos")   renderAvisos();
   if(id==="ejecutor") renderEjecutor();
   if(id==="templo")   renderTemplo();
+  /* 🗂️ v7.178 — Y LOS PLIEGUES, EN TODAS LAS SECCIONES, DESDE UN SOLO SITIO.
+     ─────────────────────────────────────────────────────────────────────────────────
+     Rey, 18-09: «eso debes aplicarlo en TODAS las secciones». Y tenía razón también en el
+     método: yo lo había ido metiendo a mano al final de tres renders (ejec, templo,
+     diario), así que las otras dieciséis se quedaban fuera — y cualquier sección nueva
+     nacería sin pliegues y sin que nadie se diera cuenta.
+     Aquí se pliega TODO lo que se abra, hoy y lo que venga mañana.
+     ⏱️ Dos pasadas a propósito: algunas secciones se pintan solas y al instante, y otras
+     (el Ejecutor, las Noticias) esperan a la nube. Sin la segunda pasada, esas se quedaban
+     a medio plegar — y `plegarTarjetas` mide alturas: lo que aún no está pintado mide cero.
+     Repetir es gratis: cada tarjeta lleva su marca `data-pleg` y no se toca dos veces. */
+  const plegarAhora = ()=>{ try{ const v=$("#v-"+id); if(v) plegarTarjetas(id, v); }catch(_){} };
+  setTimeout(plegarAhora, 350);
+  setTimeout(plegarAhora, 1600);
 }
 function buildNav(){
   const n=$("#nav"); n.innerHTML="";
