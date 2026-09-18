@@ -3934,7 +3934,12 @@ function plegarTarjetas(sec, caja, opciones){
        21 tarjetas de 0,2 cada una) ninguna tarjeta llega nunca a 1,5 — y plegadas todas, esa
        sección pasa a ser una lista de 21 renglones donde se ve todo de un vistazo. */
     const largoSec = (cont.scrollHeight||0) / alto;
-    const porDefecto = largoSec >= 4 ? 0.12 : largoSec >= 2 ? 0.3 : 0.8;
+    /* 📐 v7.182 — CUATRO ESCALONES, NO TRES. Rey, tras reiniciar Apex: «volvió a como estaba,
+       sin las secciones plegables». Medido: NO se había perdido nada — pero tenía razón en lo
+       que veía, porque en las secciones de entre 1 y 2 pantallas (Gatillo 1,9 · Confluencias
+       1,7 · Análisis · Mentor · Noticias) no se plegaba NI UNA: con el listón en 0,8, tarjetas
+       de 0,6 pantallas se quedaban fuera. Él pidió TODAS las secciones, no las gordas. */
+    const porDefecto = largoSec >= 4 ? 0.12 : largoSec >= 2 ? 0.25 : largoSec >= 1.2 ? 0.4 : 0.8;
     const o = Object.assign({ desde: porDefecto }, opciones||{});
 
     /* 📐 v7.179 — Y SI LA SECCIÓN CRECIÓ DESPUÉS, SE VUELVE A DECIDIR.
@@ -3998,8 +4003,23 @@ function plegarTarjetas(sec, caja, opciones){
       /* de fábrica: lo enorme, plegado. Y lo que él decida manda por encima. */
       let abierto = guardado==="1" ? true : (guardado==="0" ? false : false);
 
+      /* 🪧 v7.182 — LA FLECHA SE SALÍA DEL RECUADRO, Y REY LO VIO ANTES QUE YO.
+         ─────────────────────────────────────────────────────────────────────────────────
+         Estaba con `float:right`. Medido en su teléfono, con la foto suya delante:
+           · cabecera <b> (display:inline) → un float dentro de un elemento EN LÍNEA se
+             escapa de la caja: la flecha salía 8 px POR DEBAJO del borde de la tarjeta.
+             Eso es lo que él rodeó en azul.
+           · cabecera .card-h (display:flex) → los floats NO se aplican a los hijos de un
+             flex: se ignoraba, y la flecha quedaba pegada al texto en vez de a la derecha.
+         O sea: mal en los dos sitios, por el mismo motivo. Sin float:
+           · si la cabecera es flex, `margin-left:auto` la manda a la derecha limpiamente;
+           · si no lo es, va en línea detrás del texto — nunca se sale, que es lo que importa.
+         Rey: «cada cosa en mi sistema, hasta el más mínimo detalle, debe quedar bien
+         profesional». */
       const flecha = document.createElement("span");
-      flecha.style.cssText = "float:right;opacity:.75;font-size:.9em;margin-left:8px";
+      const esFlex = (()=>{ try{ return /flex/.test(getComputedStyle(cabecera).display); }catch(_){ return false; } })();
+      flecha.style.cssText = "opacity:.75;font-size:.9em;white-space:nowrap;"
+        + (esFlex ? "margin-left:auto" : "margin-left:8px");
       const pintar = ()=>{
         env.style.display = abierto ? "" : "none";
         /* en pantallas para lo gordo; en líneas para lo pequeño — «0,2 pantallas» no le dice
