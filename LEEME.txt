@@ -1,4 +1,4 @@
-APEX v7.176 — TRADING DESK
+APEX v7.177 — TRADING DESK
 =========================
 
 APEX 7.176 · worker 5.171 · Puente 4.27 — 18-09-2026
@@ -35,6 +35,52 @@ APEX 7.176 · worker 5.171 · Puente 4.27 — 18-09-2026
    Ahora Apex mira en cada arranque cuál es el canal que de verdad anula: si el que hay ya
    sirve, se respeta; si no y hay permiso, estrena otro y COMPRUEBA que nació anulando antes
    de adoptarlo. Nunca se cambia a peor, y los canales que sobran se retiran.
+
+🧠 EL CEREBRO DE ROBERTO — worker 5.172 (lo más grande de hoy)
+   Medido: Opus 5 se usaba en 1 llamada de 14 (solo el chat), el razonamiento estaba APAGADO
+   en 12 de 13, solo el chat tenía manos, y ninguna tarea podía decir "esto no me cuadra".
+   Por eso el Roberto que habla solo metía la pata y el del chat parecía listo: eran dos
+   arquitecturas, no dos humores.
+   Ahora TODO lo que piensa pasa por una sola puerta: cerebro grande en las 14 tareas que
+   juzgan, la mano de mirar_sistema para comprobar antes de afirmar, el estado vivo delante
+   (posiciones abiertas, Puente vivo o caído, última lectura del gráfico) y la salida
+   "🕵️ Algo no me cuadra", obligada a decir qué dato, con qué choca, qué revisar y qué mano
+   le falta.
+   La profundidad la deduce ÉL: con dinero abierto, cuenta real, Puente ciego o una
+   corrección de Rey hoy, sube a fondo sin preguntar; y si al mirar los materiales ve que la
+   cosa no es de despachar, pide otra vuelta (una sola, y queda apuntada).
+   Con interruptor de Rey (cfg:cerebro): auto / siempre / nunca.
+   El veto se queda con reloj de 14 s y su regla intacta: si no puede decidir, DEJA PASAR.
+
+🪞 ROBERTO APRENDE DE SÍ MISMO — worker 5.173
+   Medido: aprendía de cinco sitios y ninguno era él. De lo que hacía el robot y de cuando
+   Rey le corregía; de sus propias palabras, nunca. Por eso hacía falta corregirle cada cosa.
+   · EL ESPEJO: cada noche pone lo que DIJO al lado de lo que PASÓ (operaciones cerradas,
+     señales perdidas, ratos ciego, correcciones de Rey) y saca sus lecciones en primera
+     persona. Se juzga por el resultado, no por la intención. Si no hay nada honesto que
+     aprender, se calla.
+   · SU MEMORIA YA LE SIRVE DE JUICIO: el repaso, el dossier, el pensadero y el espejo
+     recibían "los últimos 12 recuerdos" — una cola tonta. Ahora buscan por relevancia, así
+     que lo que aprende el martes le vuelve el jueves, cuando aplica.
+   · Y MIS RENGLONES SE MUDARON: los párrafos con ⛔ que yo le metía en el prompt cada vez que
+     fallaba son ahora lecciones SUYAS, con su fecha y su caso real. Quedan CERO en el repaso.
+     Las garantías (el veto pasa si no puede decidir, el gasto lo manda Rey) siguen en código:
+     eso no es juicio, es una promesa, y una promesa no se aprende.
+
+🎚️ EL CEREBRO LO ELIGE ROBERTO — app 7.177 · worker 5.175
+   Rey: «él elige dónde poner el caro y dónde el barato».
+   · EN EL CHAT: se acabó mi lista de palabras (backtest, análisis semanal, informe…) y se
+     acabó la tarjeta que te preguntaba «¿con cuánta potencia?». Ahora un portero mira tu
+     último mensaje con el cerebro barato (60 fichas, fracciones de céntimo) y decide: el
+     grande para el gráfico, el indicador, tus operaciones y las decisiones con dinero; el
+     barato para programar un aviso, la hora, tu PC o el Ejecutor. Tu «🧠 Máximo siempre»
+     manda por encima de su criterio.
+   · LAS DOS PUERTAS DEL CHAT cuestan ya lo mismo: una iba SIEMPRE en Opus, así que lo que
+     gastabas dependía de por dónde entrara la pregunta.
+   · Y EL INTERRUPTOR YA SE VE en ⚙️: Automático / Ahorro / Siempre a fondo / Nunca, con lo
+     que hace cada uno explicado. Antes vivía solo en la nube y no lo podías tocar.
+   · DOS GASTOS INVISIBLES cazados: el vigilante y la vía directa del chat llamaban al modelo
+     sin apuntar nunca su coste. Ya aparecen en tu chip 💰.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

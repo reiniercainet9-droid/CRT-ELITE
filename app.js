@@ -11430,10 +11430,24 @@ function iaInit(){
         <div class="note" style="text-align:left;margin:0 0 14px">Sus gestos son su forma de hablarte. Si tienes las <b>animaciones del teléfono apagadas</b>, Android le pide a Apex que se mueva menos: con <b>✨ Siempre animado</b> Roberto se mueve igual, sin tocar los ajustes de tu teléfono.</div>
         <div class="fl">🚀 Motor de Roberto (lo que gasta)</div>
         <div class="seg c2" id="iaMotorSeg" style="margin-bottom:6px">
-          <button data-motor="sonnet">🏎️ Rendidor</button>
-          <button data-motor="opus">🧠 Máximo</button>
+          <button data-motor="sonnet">🤖 Que elija él</button>
+          <button data-motor="opus">🧠 Máximo siempre</button>
         </div>
-        <div class="note" style="text-align:left;margin:0 0 14px">🏎️ <b>Rendidor</b> (Sonnet 5): rápido y gasta mucho menos — para el día a día, backtesting y charla. 🧠 <b>Máximo</b> (Opus 5): para un análisis profundo puntual. Y si estás en Rendidor y pides algo profundo (documentos, análisis semanal, mensajes largos), Roberto <b>te pregunta</b> si usar Máximo solo para esa consulta — tú siempre decides.</div>
+        <div class="note" style="text-align:left;margin:0 0 14px">🤖 <b>Que elija él</b>: Roberto mira lo que le pides y decide. Si es analizar el gráfico, el indicador o tus operaciones, usa el cerebro grande. Si es programar un aviso, la hora o cómo va tu PC, usa el barato — esos datos los tiene a mano, no hay que deducirlos. 🧠 <b>Máximo siempre</b>: Opus para todo, gasta bastante más. <b>Tu interruptor manda por encima de su criterio.</b></div>
+        <!-- 🎚️ v7.177 — EL CEREBRO DE LO QUE HACE SOLO.
+             Rey (18-09): «no me quedó claro cómo se manejan los modos… y DÓNDE». Los monté el
+             18-09 como una clave de la nube y nada más; su ley dice que si no lo ve en la
+             sección, no existe. Un ajuste que solo puedo tocar yo no es suyo, es mío. -->
+        <div class="fl">🧠 Cuando Roberto trabaja solo</div>
+        <div class="seg c2" id="iaCerebroSeg" style="margin-bottom:6px">
+          <button data-cereb="auto">🎯 Automático</button>
+          <button data-cereb="ahorro">💸 Ahorro</button>
+        </div>
+        <div class="seg c2" id="iaCerebroSeg2" style="margin-bottom:6px">
+          <button data-cereb="siempre">🧠 Siempre a fondo</button>
+          <button data-cereb="nunca">🏎️ Nunca</button>
+        </div>
+        <div class="note" style="text-align:left;margin:0 0 14px" id="iaCerebroNota">Esto es para lo que Roberto hace <b>sin que le preguntes</b>: tus repasos, el dossier del amanecer, la lectura de las alarmas, el veto del Ejecutor.<br><br>🎯 <b>Automático</b>: piensa con el cerebro grande, y <b>se pone a fondo solo cuando hay motivo</b> — tienes una posición abierta, la cuenta es real, el Puente está ciego, o te ha tenido que corregir hoy. Y si al mirar los datos ve que la cosa no es de despachar, <b>él pide otra vuelta</b>.<br>💸 <b>Ahorro</b>: cerebro barato para lo rutinario y el grande <b>solo</b> cuando hay motivo. Es donde el cerebro caro se gana el dinero.<br>🧠 <b>Siempre a fondo</b>: lo más caro, casi nunca hace falta.<br>🏎️ <b>Nunca</b>: todo al barato, como antes del 18-09.</div>
         <div class="fl">🛡️ Roberto vigilante</div>
         <button class="btn" id="iaVigilaToggle" style="margin-bottom:6px">🛡️ Vigilante: activado</button>
         <button class="btn" id="iaHistRob" style="margin-bottom:6px">🗒️ Historial de Roberto (qué ha cambiado)</button>
@@ -11666,6 +11680,34 @@ function iaInit(){
     if(vp){ vp.style.display=""; vp.disabled=false;
       vp.onclick=()=>iaHablar("Hola Rey, soy Roberto, tu mentor de trading. Estoy listo para ayudarte a pasar tus fondeos y escalar tu capital.", -1); }
   }
+  /* 🧠 v7.177 — EL CEREBRO DE LO QUE ROBERTO HACE SOLO, con su interruptor a la vista */
+  { const pinta=(modo)=>{
+      [...document.querySelectorAll("#iaCerebroSeg [data-cereb], #iaCerebroSeg2 [data-cereb]")]
+        .forEach(b=>b.classList.toggle("on", b.dataset.cereb===modo));
+    };
+    const cargar=async()=>{
+      try{ const r=await traerConTiempo(nubeUrl()+"/cerebro",{cache:"no-store"},9000);
+        const d=await r.json(); pinta((d&&d.cfg&&d.cfg.modo)||"auto");
+      }catch(_){ pinta("auto"); }
+    };
+    [...document.querySelectorAll("#iaCerebroSeg [data-cereb], #iaCerebroSeg2 [data-cereb]")].forEach(b=>{
+      b.onclick=async()=>{
+        const modo=b.dataset.cereb;
+        pinta(modo);                                   /* se pinta ya: su toque se ve al instante */
+        try{
+          const r=await traerConTiempo(nubeUrl()+"/cerebro",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({modo})},9000);
+          const d=await r.json();
+          if(d&&d.ok){ toast(modo==="ahorro"?"💸 Ahorro: el cerebro grande solo cuando hay motivo"
+                            :modo==="siempre"?"🧠 Siempre a fondo — gasta bastante más"
+                            :modo==="nunca"?"🏎️ Todo al cerebro barato"
+                            :"🎯 Automático: él decide cuándo pensar a fondo"); }
+          else { toast("No pude guardarlo — vuelve a tocarlo"); cargar(); }
+        }catch(_){ toast("No pude guardarlo: revisa tu internet"); cargar(); }
+      };
+    });
+    cargar();
+  }
+
   /* 🚀 Selector de motor: guarda la elección y la manda el worker en cada mensaje */
   { const seg=$("#iaMotorSeg");
     if(seg){
@@ -16492,13 +16534,16 @@ const IA_PEND_KEY = "crtelite_pendchat_v3";
 function iaBase(){ return (IA.url||IA_URL_DEFAULT).replace(/\/+$/,""); }
 /* 🚀 Motor elegido en ⚙️: "sonnet" (Rendidor, por defecto) u "opus" (Máximo). */
 function iaMotor(){ try{ return localStorage.getItem("crtelite_ia_motor")==="opus"?"opus":"sonnet"; }catch(_){ return "sonnet"; } }
-/* 🧠 MOTOR SINTOMÁTICO: detecta cuándo la consulta es trabajo PROFUNDO. */
-function iaTareaProfunda(texto, tieneDoc, tieneMarco){
-  if(tieneDoc || tieneMarco) return true;                       // documentos y análisis con marco = profundo
-  const t=String(texto||"");
-  if(t.length>600) return true;                                 // un mensaje largo merece el motor grande
-  return /backtest|an[aá]lisis (semanal|del d[ií]a|profundo|completo)|revisa (todo|mi semana|mi operativa)|comp[aá]rame|auditor[ií]a|informe|plan (de fondeo|semanal|mensual|completo)|inter[eé]s compuesto|escalado/i.test(t);
-}
+/* 🗑️ v7.177 — AQUÍ VIVÍA `iaTareaProfunda()`, Y ERA UNA LISTA DE PALABRAS MÍA.
+   Decía, palabra por palabra:
+       if(tieneDoc || tieneMarco) return true;
+       if(t.length>600) return true;
+       return /backtest|an[aá]lisis (semanal|del d[ií]a|profundo|completo)|revisa (todo|mi
+               semana|mi operativa)|comp[aá]rame|auditor[ií]a|informe|plan (de fondeo|semanal)/
+   Con eso yo decidía cuándo Rey merecía el cerebro grande, y una lista no entiende lo que
+   él pregunta: entiende lo que yo supuse que preguntaría. Ahora lo juzga Roberto en el
+   worker (`elegirCerebro`), mirando lo que se le pide. Lo único que sigue mandando por
+   encima es el interruptor de Rey en ⚙️. */
 /* Decide el motor de ESTA consulta: si el ajuste es Máximo, va directo; si es Rendidor
    pero la tarea parece profunda, PREGUNTA a Rey (solo vale para esta consulta, el
    ajuste de ⚙️ no cambia). Así Roberto "detecta y avisa" pero Rey siempre decide. */
@@ -16514,35 +16559,27 @@ function iaTareaProfunda(texto, tieneDoc, tieneMarco){
    AHORA: se pregunta con la ventana propia de Apex, que no bloquea nada; y si el chat no
    está delante NO se pregunta — se usa su motor de siempre (el económico) y se sigue,
    porque callarse y responder vale más que preguntar y morirse. */
+/* 🎚️ v7.177 — LA POTENCIA YA NO SE LE PREGUNTA A REY: LA DEDUCE ROBERTO.
+   ─────────────────────────────────────────────────────────────────────────────────
+   Rey, 18-09: «él elige dónde poner el caro, que necesita cerebro, deducción, razonamiento
+   — cuando es sobre las operaciones, analizar indicador, gráfico — y dónde poner el barato:
+   que programe avisos, preguntarle la hora, algo en la PC, sabiendo que esos datos están a
+   su alcance fácil sin tener que analizar».
+
+   AQUÍ HABÍA DOS COSAS MÍAS Y LAS DOS SOBRABAN:
+     · `iaTareaProfunda()`, una LISTA DE PALABRAS que escribí yo (backtest, análisis semanal,
+       auditoría, informe…) más «si el mensaje pasa de 600 caracteres». Una lista no entiende
+       lo que Rey pregunta: entiende lo que yo supuse que preguntaría.
+     · Y cuando la lista saltaba, esta función le sacaba una TARJETA preguntándole «¿con
+       cuánta potencia?» — o sea, le devolvía a él la decisión que Roberto debería tomar.
+       Rey lo dijo con todas las letras: si tiene que guiarlo a cada paso, nunca aprende.
+
+   Ahora el worker tiene un PORTERO (`elegirCerebro`): mira el último mensaje de Rey con el
+   cerebro barato, en 60 fichas, y decide. Fracciones de céntimo, y decide UNA llamada.
+   Lo único que sigue viajando desde aquí es la decisión de REY, que manda por encima:
+   si tiene puesto «🧠 Máximo siempre» en ⚙️, va Opus y el portero ni se abre. */
 function iaMotorPara(texto, tieneDoc, tieneMarco){
-  if(iaMotor()==="opus") return Promise.resolve("opus");
-  if(!iaTareaProfunda(texto, tieneDoc, tieneMarco)) return Promise.resolve("sonnet");
-  let delante=false;
-  try{ delante = iaAbierto() && document.visibilityState==="visible"; }catch(_){ delante=false; }
-  if(!delante) return Promise.resolve("sonnet");
-  return new Promise((resolve)=>{
-    let ya=false;
-    const responder=(m)=>{ if(ya) return; ya=true; try{ cerrarModal(); }catch(_){} resolve(m); };
-    try{
-      abrirModal("🧠 ¿Con cuánta potencia?", `
-        <p class="desc" style="text-align:left">Esto parece <b>trabajo profundo</b>. Puedo pensarlo con el motor
-        <b>Máximo</b> (razona más fino, gasta más) solo para esta consulta — tu ajuste de ⚙️ no cambia.</p>`,
-        [{t:"✋ Ahora no", fn:()=>responder(null)},
-         {t:"🏎️ Rendidor", fn:()=>responder("sonnet")},
-         {t:"🧠 Máximo", cls:"gold", fn:()=>responder("opus")}]);
-      /* 🔴 v7.99 — TOCAR FUERA CANCELA, NO ABARATA (Rey, 12-09).
-         Antes, cerrar la ventana tocando fuera resolvía "sonnet": la consulta SEGUÍA y se
-         pagaba, solo que más barata. Rey: «aún así toque fuera de la tarjeta él comienza a
-         responder y es como obligatorio». Quitarse una tarjeta de encima no es decir que sí
-         a nada. Ahora tocar fuera CANCELA el envío y el texto se queda en la caja, tal cual
-         lo escribió, por si lo quiere mandar luego. */
-      const ov=$("#modalOv");
-      if(ov && window.MutationObserver){
-        const obs=new MutationObserver(()=>{ if(!document.body.contains(ov)){ obs.disconnect(); responder(null); } });
-        obs.observe(document.body,{childList:true});
-      }
-    }catch(_){ responder("sonnet"); }
-  });
+  return Promise.resolve(iaMotor()==="opus" ? "opus" : "");
 }
 function iaAbierto(){ const ov=$("#iaOv"); return !!(ov && ov.classList.contains("show")); }
 function iaPendCargar(){ try{ return JSON.parse(localStorage.getItem(IA_PEND_KEY)||"[]"); }catch(_){ return []; } }
@@ -17369,11 +17406,14 @@ async function iaEnviar(textoForzado, promptExtra){
   if(!texto && doc) texto="Te comparto este documento para que APRENDAS de él: analízalo a fondo, dime qué aporta a mi método, qué confirma, qué mejoraría o cambiaría — y GUARDA sus 3-8 ideas más valiosas en tu biblioteca con guardar_saber (una por una, con su fuente), para que lo estudiado quede tuyo PARA SIEMPRE.";
   /* 🧭 cuenta el material que Rey le comparte (documentos y enlaces): es la señal de la fase 02 */
   try{ if(doc || /https?:\/\//i.test(texto)){ PLAN_ARR.docs=(PLAN_ARR.docs||0)+1; guardarPlan(); } }catch(_){}
-  /* 🧠 motor sintomático: si la tarea parece profunda y el ajuste es Rendidor, pregunta.
-     Se decide AQUÍ (antes de vaciar la caja) y vale solo para esta consulta. */
+  /* 🧠 v7.177 — aquí solo viaja la decisión de REY: "opus" si tiene puesto «🧠 Máximo
+     siempre», o vacío para que lo juzgue Roberto en la nube. Ya no hay tarjeta que le
+     pregunte con cuánta potencia: eso era devolverle a él la decisión. */
   const motorMsg = await iaMotorPara(texto, !!doc, !!promptExtra);
-  /* 🔴 v7.99 — «Ahora no» es que NO. Se sale antes de vaciar la caja, antes de encender
-     IA.busy y antes de gastar un solo crédito. Lo escrito se queda donde estaba. */
+  /* 🔴 v7.99 — se conserva la salida de «cancelado» aunque hoy `iaMotorPara` ya no devuelve
+     null: si mañana vuelve a haber una pregunta antes de enviar, esta puerta tiene que
+     seguir cerrando bien. Antes, tocar fuera de la tarjeta NO cancelaba, solo abarataba, y
+     la consulta se pagaba igual — Rey: «es como obligatorio». */
   if(motorMsg===null){ try{ toast("Cancelado — tu mensaje sigue escrito"); }catch(_){} return; }
   /* 📎 v6.25 (Rey, 28-08): el reintento/reenvío PERDÍA el marco oculto (promptExtra) — al
      reenviar "Evalúa HOY de mi Ejecutor", Roberto recibía solo la frase visible SIN la lista
