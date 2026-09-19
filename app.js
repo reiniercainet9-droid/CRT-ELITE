@@ -1855,8 +1855,10 @@ async function iaEnviarBloques(bloques, resumenChat){
   IA.busy=true; iaGuardarConvs(); pintarIAChat();
   /* 💰 v6.02: misma ventana ESTABLE que iaEnviar (si aquí se usara "los últimos 14" rodante,
      esta llamada rompería el prefijo y el caché fallaría justo al estudiar capturas). */
-  if(typeof c.histIni!=="number" || c.histIni>c.msgs.length) c.histIni=Math.max(0,c.msgs.length-14);
-  if(c.msgs.length-c.histIni>26) c.histIni=c.msgs.length-14;
+  /* 💰 v7.186 — MISMA VENTANA QUE `iaEnviar` (8→14). Si aquí quedara la vieja, estudiar una
+     captura rompería el prefijo del caché justo en el mensaje más caro del día. */
+  if(typeof c.histIni!=="number" || c.histIni>c.msgs.length) c.histIni=Math.max(0,c.msgs.length-8);
+  if(c.msgs.length-c.histIni>14) c.histIni=c.msgs.length-8;
   let hist=c.msgs.slice(c.histIni);
   while(hist.length && hist[0].role!=="user") hist.shift();
   const msgs=hist.map(x=>iaMsgApi(x,false));
@@ -17530,11 +17532,21 @@ async function iaEnviar(textoForzado, promptExtra){
   pintarIAChat();
   /* 💰 VENTANA ESTABLE DE HISTORIAL: antes se mandaban SIEMPRE "los últimos 14" y la
      ventana se corría 1 con cada mensaje — el prefijo cambiaba y el caché del historial
-     fallaba justo en las charlas largas. Ahora la ventana crece hasta 26 mensajes y solo
-     entonces se re-ancla a los últimos 14: el prefijo se queda quieto ~12 mensajes
-     seguidos y el caché pega de verdad. */
-  if(typeof c.histIni!=="number" || c.histIni>c.msgs.length) c.histIni=Math.max(0,c.msgs.length-14);
-  if(c.msgs.length-c.histIni>26) c.histIni=c.msgs.length-14;
+     fallaba justo en las charlas largas. La ventana CRECE y solo al llegar al tope se
+     re-ancla: así el prefijo se queda quieto varios mensajes seguidos y el caché pega.
+     💰 v7.186 (19-09) — Y AHORA LA MITAD DE GRANDE: era 14→26, pasa a 8→14.
+     Rey, con su chip 💰 delante: «el gasto de Roberto es excesivo… a ese ritmo no voy a
+     poder utilizar a Roberto». MEDIDO en su contador: el historial que se le reenviaba eran
+     ~79.000 tokens en CADA mensaje suyo, y con la fuga de la caché (worker 5.179) no se
+     reutilizaba ni uno. Arreglada la caché, sigue siendo la pieza más cara del paquete.
+     LO QUE ESTO NO TOCA, y se dice porque él lo preguntó: ni su cerebro, ni su memoria, ni
+     su biblioteca, ni sus manos, ni el contexto vivo (plan, cuentas, rachas, avisos,
+     posiciones). Tampoco borra NADA: sus chats siguen enteros en el teléfono. Lo único que
+     cambia es cuántos mensajes hacia atrás lee Roberto de un tirón dentro de esa charla —
+     de 7 idas y vueltas a 4. Lo de más atrás lo trae su memoria por significado (RAG).
+     Decidido por Rey el 19-09: «arregla el caché y acorta el otro arreglo». */
+  if(typeof c.histIni!=="number" || c.histIni>c.msgs.length) c.histIni=Math.max(0,c.msgs.length-8);
+  if(c.msgs.length-c.histIni>14) c.histIni=c.msgs.length-8;
   let hist=c.msgs.slice(c.histIni);
   while(hist.length && hist[0].role!=="user") hist.shift();
   // La foto solo viaja en el ÚLTIMO mensaje; los turnos anteriores van sin ella.

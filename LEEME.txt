@@ -1,29 +1,33 @@
-APEX v7.185 — TRADING DESK
+APEX v7.186 — TRADING DESK
 =========================
 
-Apex 7.185 + Worker 5.177 — Nada se arregla en silencio
+Worker 5.178 — Lo que ya se pagó no se paga dos veces (URGENTE: tu gasto)
 
-1) «Cuando cerré el Ejecutor no me avisó, solo cuando se conectó.»
-   Tenías razón. El aviso "Ejecutor CAÍDO" lo canta la nube tras DOS MINUTOS sin señal de
-   vida, y el guardián lo levantó en SEGUNDOS — así que la nube nunca lo vio muerto.
-   Ahora NINGÚN HUECO QUEDA SIN NOMBRE: cuando vuelve, el aviso dice cuánto estuvo fuera.
-   Y si pasó de 5 minutos, sale fuerte.
+Rey vio su chip 💰 y dijo que el gasto era excesivo. Tenía razón y había un fallo mío.
 
-2) Lo que el guardián arregla, te lo dice.
-   Antes lo apuntaba en un fichero del Escritorio que no abres. Ahora te llega con su
-   propio título 🛡️ y freno de 15 minutos.
+MEDIDO en su propio contador, no supuesto:
+   18-09 → repaso: 10 llamadas, $0,409
+   17-09 → repaso:  2 llamadas, $0,038
+   16-09 → repaso:  3 llamadas, $0,054
 
-3) La pantalla negra que te parpadeaba cada 2 minutos: era la tarea del guardián, que
-   llamaba a PowerShell directo. Ya va por el mismo camino silencioso que el respaldo y
-   la auditoría. Sigue vigilando igual, pero sin ventana.
+El repaso es "uno por momento y día". Corrió DIEZ veces y se pagó diez veces.
 
-4) Roberto ya no se pone el chándal sin entrenar.
-   Lo destapó la regresión de esta noche: los tres chándales que usa para entrenar estaban
-   TAMBIÉN en su ropa de diario (el gris de noche entre semana, el azul y el verde las
-   mañanas del fin de semana). Así que unos días aparecía en chándal sin motivo — y el día
-   que tú entrenaras de verdad, no habría forma de notarlo.
-   Una señal que no se distingue de lo normal no es una señal. Fuera de los cajones de
-   diario: cuando lo lleve, es porque estás entrenando.
+LA CAUSA, mía y de ayer: el candado "ya está hecho" es una clave en la nube que solo se
+escribía cuando todo iba bien. Ayer le añadí a Roberto el "🕵️ algo no me cuadra" — y esa
+rama devolvía la respuesta y se iba SIN GUARDAR. Como no guardaba, el candado nunca cerraba
+y la siguiente vez que se abría Apex volvía a pagar lo mismo.
+
+La misma fuga estaba en /mi/forense y en /ejec/forense, que son de los caros.
+
+ARREGLADO en las tres puertas:
+ · si hay respuesta útil (normal o "no me cuadra"), se guarda y el día queda cerrado;
+ · si el modelo falló de verdad, NO se guarda un texto malo 40 días — se pone un freno de
+   30 minutos para reintentar luego sin volver a cobrar en cada apertura de Apex;
+ · el resultado guardado manda sobre el freno: lo ya pagado se entrega siempre, gratis;
+ · y Rey sigue pudiendo pedir que se rehaga a mano. El ahorro no le quita el mando.
+
+Banco nuevo: test-lo-pagado-no-se-paga-dos-veces.cjs (5/5). Probado rompiéndolo con el
+worker de ayer: caza las tres fugas.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
