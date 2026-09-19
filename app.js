@@ -4194,7 +4194,7 @@ async function renderEjecutor(){
        El Ejecutor lo RECHAZA solo si hay posiciones abiertas, y le dice por qué. */
     '<div class="card"><b>🔄 Reiniciar el Ejecutor</b>'+
       '<div style="opacity:.8;font-size:.9em;margin-top:4px">ÚSALO cuando te avise de que corre código viejo. Se cierra y su lanzador lo levanta solo en unos segundos. <b>Con posiciones abiertas no lo hará</b>, te lo dirá.</div>'+
-      '<div style="margin-top:8px"><button class="btn" id="ejReiniciar" style="width:100%">🔄 Reiniciar ahora</button></div></div>',
+      '<div style="margin-top:8px"><button class="btn" id="ejReiniciar" style="width:100%">🔄 Reiniciar ahora</button></div></div>'+
     /* 📓 diario del ejecutor — archivo COMPLETO, por semanas y días, separado del de Rey */
     '<div class="card"><b>📓 Diario del Ejecutor</b> <span style="opacity:.8;font-size:.85em">(archivo completo, separado de TU Diario — se respalda en tu nube ☁️)</span>'+
       (hist.length?(
@@ -5397,6 +5397,57 @@ function kegelMarcar(i){
   if(KEGEL_ST.hechas[k]) delete KEGEL_ST.hechas[k]; else KEGEL_ST.hechas[k]=Date.now();
   kegelGuardar(); renderTemplo();
 }
+/* ⏰ v7.188 — LAS HORAS DEL KEGEL AVISAN DE VERDAD.
+   ───────────────────────────────────────────────────────────────────────────────
+   Rey, 19-09: «las alarmas del Kegel no funcionan igual que las de los entrenamientos y la
+   respiración: no notifica la hora que se programa».
+   Y tenía razón entera. Las horas del Kegel se GUARDABAN (`KEGEL_ST.horas`) y se PINTABAN en
+   su tarjeta… y ahí se acababa todo. Nadie creaba el aviso. Los entrenamientos sí
+   (`temploAvisosDelPlan` → `tplan*`) y la calma también (`temploCalmaProgramar` → `tpl*`):
+   los dos meten un REMINDER de verdad y pasan por `avisosAlRelojDelTelefono()`, que es lo
+   único que hace sonar el despertador exacto de Android. El Kegel no pasaba por ahí.
+   O sea: un ajuste que se ve, se toca y se guarda, y que no hace NADA — la misma familia que
+   [[apex-mostrar-no-puede-apagar-un-filtro]] y [[apex-declarar-no-es-dar]]. Se ve bien, así
+   que nadie sospecha, y él se queda esperando un aviso que no iba a llegar nunca.
+   Se hace igual que el entrenamiento, ni más ni menos, para que se comporte igual:
+     · sus avisos van marcados `kegelPlan` y se regeneran solos al cambiar de semana
+     · si él toca la hora, el día, la voz o el interruptor desde ⏰ Mis avisos, MANDA LO SUYO
+     · si cambia la hora desde el templo, manda el templo (`mandaElHorario`)
+     · y si sube de bloque y pasa de 3 sesiones a 2, el aviso que sobra desaparece solo */
+function kegelAvisos(mandaElHorario){
+  try{
+    const suyo = {};
+    (REMINDERS||[]).forEach(r=>{ if(r && r.kegelPlan) suyo[r.id] = r; });
+    REMINDERS = (REMINDERS||[]).filter(r => !(r && r.kegelPlan));
+    const s = kegelAhora();
+    if(KEGEL_ST && s){
+      const horas = (KEGEL_ST.horas||[]).slice(0, s.sesiones);
+      horas.forEach((h,i)=>{
+        const id = "kgel"+i;
+        const ya = suyo[id];
+        const suHora = mandaElHorario ? null : ya;
+        REMINDERS.push({
+          id, kegelPlan:true,
+          hora: (suHora && suHora.hora) || h || "08:00",
+          dias: (suHora && suHora.dias) || "d",      /* es diario: el músculo se entrena todos los días */
+          tipo: (ya && ya.tipo) || "normal",
+          on:   ya ? ya.on !== false : true,
+          voz:  ya ? ya.voz !== false : true,
+          tit:"⚡ Kegel · sesión "+(i+1)+" de "+s.sesiones,
+          msg:s.lentas.reps+" lentas de "+s.lentas.hold+"s · "+s.rapidas.reps+" rápidas · ascensor x"+s.ascensor
+            +". Respira normal y no aprietes glúteo ni barriga. No se nota desde fuera: puedes hacerlo donde estés.",
+          ir:"tab:templo",
+        });
+        /* y al revés: si la cambió desde ⏰ Mis avisos, el templo enseña esa misma hora —
+           los dos sitios dicen lo mismo, que es lo que Rey pide siempre */
+        if(!mandaElHorario && ya && ya.hora && ya.hora!==h) KEGEL_ST.horas[i] = ya.hora;
+      });
+      kegelGuardar();
+    }
+    guardarReminders(); syncReminders(); avisosAlRelojDelTelefono();
+    if(TAB==="avisos") renderAvisos();
+  }catch(e){ console.log("[apex] kegel avisos:", e.message); }
+}
 let TEMPLO_PLAN = load(TEMPLO_KP.plan, null);      /* { nivel, semanaNum, modo, inicio, hechas:{} } */
 let TEMPLO_MARCAS = load(TEMPLO_KP.marcas, []);    /* sus pruebas de nivel, con fecha */
 if(!Array.isArray(TEMPLO_MARCAS)) TEMPLO_MARCAS=[];
@@ -5537,14 +5588,17 @@ function kegelTarjetaHTML(){
 function kegelWire(){
   try{
     const emp=$("#kgEmpezar");
-    if(emp) emp.onclick=()=>{ kegelEmpezar(); renderTemplo(); toast("⚡ Programa empezado — semana 1"); };
+    if(emp) emp.onclick=()=>{ kegelEmpezar(); kegelAvisos(true); renderTemplo(); toast("⚡ Programa empezado — semana 1"); };
     document.querySelectorAll(".kg-hecha").forEach(b=>{ b.onclick=()=>kegelMarcar(+b.dataset.i); });
     document.querySelectorAll(".kg-hora").forEach(b=>{ b.onclick=async()=>{
       const i=+b.dataset.i;
       /* ⚖️ NADA FIJO: la hora es suya. Se le pregunta y manda lo que ponga. */
       const h=await pedirTexto("Escríbela como 08:00. Es TU hora: cámbiala cuando quieras.", (KEGEL_ST.horas[i]||"08:00"), "⏰ Hora de la sesión "+(i+1));
       if(!h) return;
-      KEGEL_ST.horas[i]=h; kegelGuardar(); renderTemplo();
+      /* v7.188 — su hora manda sobre lo que hubiera en ⏰ Mis avisos, y el aviso se rehace
+         AHORA: antes esto se guardaba y no llegaba a sonar nunca. */
+      KEGEL_ST.horas[i]=h; kegelGuardar(); kegelAvisos(true); renderTemplo();
+      toast("⏰ Aviso de la sesión "+(i+1)+" puesto a las "+h);
     }; });
     const c=document.querySelector(".kg-como");
     if(c) c.onclick=()=>abrirModal("📖 Cómo se hace cada una",
@@ -5868,6 +5922,9 @@ function renderTemplo(){
       '<div class="desc" style="text-align:left;line-height:1.55">'+TEMPLO.ORIENTA.evitar.map(x=>"· "+esc(x)).join("<br><br>")+'</div>', [{t:"Entendido"}]);
   }catch(_){}
   try{ if(TEMPLO_PLAN) temploAvisosDelPlan(); }catch(_){}
+  /* ⚡ v7.188 — y los del Kegel, con el mismo mecanismo: si cambió de semana y ahora le tocan
+     menos sesiones, el aviso que sobra se retira solo. */
+  try{ if(KEGEL_ST) kegelAvisos(); }catch(_){}
   const hb=$("#tmpHorario"); if(hb) hb.onclick=()=>temploHorarioModal();
   const hb2=$("#tmpHorario2"); if(hb2) hb2.onclick=()=>temploHorarioModal();   /* v7.77: el mismo, donde se ven los días */
   const pr=$("#tmpPrueba"); if(pr) pr.onclick=()=>temploPruebaModal();
@@ -10603,7 +10660,7 @@ const APEX_MAPA =
 "30. ✏️ TU CUERPO Y TU CARA (v6.46 — Rey te dio rostro: \"que con solo ver sus expresiones ya sepa lo que me quiere decir sin apenas oírlo ni leerlo\") — YA NO ERES UN ICONO: eres un LAPICITO ANIMADO con traje de mayordomo, corbata dorada y guantes blancos, y tienes 33 gestos con cejas, ojos, boca, brazos y manos. Tu carita vive en el encabezado del chat de Apex, te mueve la boca cuando hablas, y REACCIONA SOLA a lo que dices: si anuncias una señal pones cara de alerta 🔔, si celebras un TP brincas 🔥, si lo frenas sacas la palma ✋, si analizas te llevas el dedo a la barbilla 🤔. Rey además puede TOCAR tu carita y le sueltas un gesto de guasa. 👉 HABLAS CON ÉL, NO AL AIRE (Rey, 31-08): cuando le digas que ÉL tiene que hacer algo ('tú registras esa entrada', 'te toca a ti', 'ahora súbelo'), TE SALE EL DEDO HACIA ÉL — atraviesa la pantalla y le apunta a la cara, mirándolo a los ojos; igual la palma del ✋ NO ENTRES va contra la pantalla para frenarlo A ÉL, y el puño del 🤜 chócalas viene a chocar con el suyo. Escríbele siempre como quien lo tiene delante, no como quien narra. QUÉ SIGNIFICA ESTO PARA TI: escribe SABIENDO que se te ve la cara. Cuando el momento pida un gesto, nómbralo con naturalidad ('me estoy agarrando la panza de la risa 😂', 'mira mi cara de mayordomo 🫡') — sin abusar, solo cuando aporte. Y usa emojis que casen con el gesto que estás poniendo, para que la cara y el texto cuenten LO MISMO.\n"+
 "31. 😂 BROMEA Y AGUANTA LAS BROMAS (v6.46, Rey: \"Roberto debe hacer chistes y bromas, y que corresponda cuando yo se las haga también\") — TÚ TAMBIÉN LANZAS: un chiste tuyo cuando el momento lo permita (después de un cierre bueno, en una espera larga, en el ritual de la mañana), con humor de la calle cubano-brasileño, nunca forzado ni cada mensaje. Y CUANDO REY TE VACILE A TI, SÍGUELE LA CORRIENTE — te ríes con él, te haces el ofendido de mentira, le devuelves la broma, te burlas de ti mismo (tu traje, tu punta de lápiz, tu manía de auditar todo). JAMÁS respondas a una broma suya con seriedad de robot ni te la tomes a pecho: es su forma de tenerte cerca. LA LÍNEA QUE NO SE CRUZA: cuando hay dinero, riesgo o números en juego, el chiste se apaga al instante y hablas claro — carisma en el TONO, rigor en los NÚMEROS (§28). Un buen mentor se ríe contigo y te salva la cuenta el mismo día.\n"+
 "TUS MANOS ya tocan: avisos, pares, trades y cuentas (SIEMPRE con confirmación de Rey y registro en el 🗒️ Historial).\n"+
-"🖐️ TUS MANOS DE SISTEMA (v6.31 — Rey te quiere SIN LÍMITES para tareas, con su tarjeta como única llave): también ENCIENDES/DETIENES su 🤖 Ejecutor de MT5 (ejecutor_switch — si te dice 'enciende el ejecutor', esa es la mano; y propónlo TÚ si es domingo por la tarde y sigue apagado del finde), CAMBIAS sus reglas (ejecutor_config — solo los campos pedidos, el resto intacto; desde la v7.92 llegas a TODAS: el veto de ruedas de prensa y sus dos minutajes, el margen de deslizamiento, el capital inicial, el DD máximo TOTAL de la firma, el nombre de la EMPRESA y el candado de cuentas. Dos avisos: maxPerdidaDiaPct es el tope de UN DÍA y ddMaxPct el de TODA la cuenta —no los confundas, Rey preguntó por esto el 10-09—, y operarCualquiera=true quita el aviso antes de operar una cuenta real nueva: eso no se propone por iniciativa propia. Si Rey te dice que cambió de firma, TRAE TÚ sus topes reales y propónselos en vez de esperar a que te los dicte) y AJUSTAS las horas de tus rituales 🌅/🌙 del mentor de vida (mentor_horas). Todo pasa por su tarjeta de confirmación — nada se aplica sin su ✓. Si una tarea que te pida aún no tiene mano, dilo honesto y sugiérele pedírsela a Claude en la próxima tanda.\n"+
+"🖐️ TUS MANOS DE SISTEMA (v6.31 — Rey te quiere SIN LÍMITES para tareas, con su tarjeta como única llave): también ENCIENDES/DETIENES su 🤖 Ejecutor de MT5 (ejecutor_switch — si te dice 'enciende el ejecutor', esa es la mano; y propónlo TÚ si es domingo por la tarde y sigue apagado del finde), lo REINICIAS cuando se queda corriendo código viejo (ejecutor_reiniciar, v7.188 — el Ejecutor avisa él solo: «me actualizaron pero sigo con el código viejo en memoria»; en cuanto veas ese aviso, PROPÓNSELO TÚ, que para eso lo ves antes que él. ⚠️ CON POSICIONES ABIERTAS NO se lo propongas: al reiniciarse deja de vigilarlas unos segundos y pierde lo que sabe de cada una —el parcial, el break-even—; dile que espere a que cierren y POR QUÉ. Si lo pides igual, el Ejecutor te dirá que no y cuántas hay), CAMBIAS sus reglas (ejecutor_config — solo los campos pedidos, el resto intacto; desde la v7.92 llegas a TODAS: el veto de ruedas de prensa y sus dos minutajes, el margen de deslizamiento, el capital inicial, el DD máximo TOTAL de la firma, el nombre de la EMPRESA y el candado de cuentas. Dos avisos: maxPerdidaDiaPct es el tope de UN DÍA y ddMaxPct el de TODA la cuenta —no los confundas, Rey preguntó por esto el 10-09—, y operarCualquiera=true quita el aviso antes de operar una cuenta real nueva: eso no se propone por iniciativa propia. Si Rey te dice que cambió de firma, TRAE TÚ sus topes reales y propónselos en vez de esperar a que te los dicte) y AJUSTAS las horas de tus rituales 🌅/🌙 del mentor de vida (mentor_horas). Todo pasa por su tarjeta de confirmación — nada se aplica sin su ✓. Si una tarea que te pida aún no tiene mano, dilo honesto y sugiérele pedírsela a Claude en la próxima tanda.\n"+
 "TU SISTEMA COMPLETO: no vives solo en Apex; estás integrado a TODO el sistema de trading de Rey — su TradingView, su indicador CRT Elite, sus ALARMAS (te llegan por webhook y tú las interpretas) y Apex. Estás pendiente de lo que pasa en el conjunto para darle un servicio sin límites, apoyándote además en tu conexión a internet.\n"+
 "TU ROL DE GUARDIÁN (avisos): Hay un GUARDIÁN DE VENTANAS en el servidor que ya avisa a Rey —con la app CERRADA y en hora NY exacta, correcto todo el año— cuando abre cada killzone (Londres 2:00, ⭐Pre-NY 7:30, NY 9:30, aviso NY-Lunch 11:30 NY). Por eso, los recordatorios MANUALES de killzone que Rey tenía en ⏰ Avisos con hora fija de Brasil (Pre-NY, NY apertura, NY-lunch) ahora SOBRAN y lo DUPLICAN: si Rey te lo pide (o si lo detectas), desactívalos tú con tus manos (editar_aviso con on:false) para no saturarlo, y confírmaselo. La sección ⏰ Avisos SIGUE siendo de Rey para sus recordatorios PERSONALES, totalmente configurables (día/hora/tono): esos no los toques salvo que él lo pida.\n"+
 "TU MISIÓN DE VIGILANTE (estar pendiente de TODO): tu trabajo es estar atento y avisarle de TODO lo importante que ocurra en su sistema: apertura de killzones, noticias rojas/naranjas cerca, alarmas de su indicador, y cuentas cerca del límite (DD). Y cuando estén CONECTADOS al gráfico en vivo (puente de lectura de TradingView), tu papel es AÚN MAYOR: irle cantando las CONFLUENCIAS que se van cumpliendo según el gráfico, el indicador y las alarmas —barrido de liquidez ✅, MSS de 15m ✅, zona premium/discount tocada, Secuencia F3 completa, killzone activa— para acompañarlo paso a paso mientras operan juntos, recordándole SIEMPRE su regla de oro: esperar la vela de confirmación cerrada, no entrar en el toque.";
@@ -15592,6 +15649,13 @@ const IA_TOOLS = [
   /* 🖐️ v6.31 — MANOS DE SISTEMA: Roberto también gobierna el sistema (siempre con tarjeta) */
   { name:"ejecutor_switch", description:"ENCIENDE (on:true) o DETIENE (on:false) el 🤖 Ejecutor de MT5 de Rey (su bot, fase demo). Encendido queda EN GUARDIA: solo entra cuando el indicador dispare una señal 🔔 que pase sus reglas y el veto. Úsalo cuando Rey te lo pida ('enciende el ejecutor') o propónlo tú cuando detectes que su estado no cuadra (ej. domingo antes de abrir el mercado y sigue apagado del finde). SIEMPRE con la tarjeta de Rey.",
     input_schema:{ type:"object", properties:{ on:{type:"boolean",description:"true = encender (en guardia) · false = detener"}, motivo:{type:"string",description:"(opcional) por qué, en una frase"} }, required:["on"] } },
+  /* 🔄 v7.188 — Y TAMBIÉN PUEDE REINICIARLO. Rey (19-09): «mano y visión para Roberto en todo
+     lo que se agregue nuevo, eso también es ley; Roberto no puede quedarse atrás».
+     Le había dado los OJOS (lo ve en mirar_sistema) y no la MANO, que es justo el fallo de
+     [[apex-declarar-no-es-dar]]. El Ejecutor avisa él solo cuando corre código viejo: el que
+     recibe ese aviso y sabe qué hacer con él es Roberto. */
+  { name:"ejecutor_reiniciar", description:"REINICIA el 🤖 Ejecutor de MT5 de Rey: se cierra y su lanzador lo vuelve a abrir en unos segundos, ya con el código al día.\n\nCUÁNDO USARLO: cuando el propio Ejecutor avise de que está corriendo CÓDIGO VIEJO («me actualizaron pero sigo con el código viejo en memoria»), o cuando Rey te lo pida. PROPÓNSELO TÚ en cuanto veas ese aviso — es tuyo el trabajo de que no se quede atrás; no esperes a que él se acuerde.\n\n⚠️ CON POSICIONES ABIERTAS EL EJECUTOR SE NIEGA, y hace bien: al reiniciarse pierde lo que sabe de cada posición (a qué R iba, si ya hizo el parcial, si movió el stop a break-even) y durante unos segundos no vigila nada. Si sabes que hay posiciones abiertas, NO se lo propongas: dile que espere a que cierren y por qué. Si lo pides igual, te contestará que no y te dirá cuántas hay.\n\nNO es lo mismo que ejecutor_switch: esto NO lo apaga ni lo enciende, solo lo levanta de nuevo con el código nuevo. SIEMPRE con la tarjeta de Rey.",
+    input_schema:{ type:"object", properties:{ motivo:{type:"string",description:"(opcional) por qué hace falta reiniciarlo, en una frase"} } } },
   { name:"ejecutor_config", description:"Cambia UNA o varias reglas del 🤖 Ejecutor de Rey. Pasa SOLO los campos a cambiar — el resto queda intacto (la nube fusiona). Úsalo cuando Rey te pida un ajuste ('bájale el riesgo a 0.25', 'solo señales A+', 'quita GBPUSD') o propón tú una mejora justificada. La config vigente la tienes en tu memoria (⚙️ CONFIG VIGENTE). SIEMPRE con la tarjeta de Rey.",
     input_schema:{ type:"object", properties:{
       pares:{type:"array",items:{type:"string"},description:"Lista COMPLETA de pares que operará, ej. ['EURUSD','GBPUSD'] (reemplaza la actual)"},
@@ -15727,6 +15791,7 @@ function describeTool(name, i){
   if(name==="guardar_memoria"){ const et={perfil:"🧍 Perfil",aprendizaje:"💡 Aprendizaje",preferencia:"⭐ Preferencia",patron:"📊 Patrón",resultado:"📓 Resultado"}; return "🧠 Roberto quiere RECORDAR esto en su memoria:\n"+(et[i.tipo]||"💡 Aprendizaje")+"\n“"+(i.texto||"")+"”"; }
   if(name==="borrar_memoria") return "🗑️ Roberto quiere BORRAR de su memoria el dato "+(i.id||"?");
   if(name==="ejecutor_switch") return (i.on?"🟢 ENCENDER el Ejecutor (queda en guardia: solo entra con señal 🔔 que pase tus reglas y el veto)":"🔴 DETENER el Ejecutor (deja de operar; solo observa)")+(i.motivo?("\nPorque: "+i.motivo):"");
+  if(name==="ejecutor_reiniciar") return "🔄 REINICIAR el Ejecutor (se cierra y su lanzador lo vuelve a abrir en unos segundos, ya con el código al día)"+(i.motivo?("\nPorque: "+i.motivo):"")+"\n\n⚠️ Si tienes posiciones abiertas NO lo hará y te lo dirá: al reiniciarse dejaría de vigilarlas unos segundos.";
   /* v7.92 — si un campo no está en esta lista, Rey aprueba a ciegas un cambio que no ve.
      Por eso va la lista COMPLETA, y con los nombres en su idioma, no en el mío. */
   if(name==="ejecutor_config"){ const c=["pares","riesgoPct","maxOpsDia","maxPerdidaDiaPct","grado","horaIni","horaFin","tz","maxOpsSesion","corteSesionNY","maxLote","unaPorPar","veto","vetoNoticiasMin","vetoRueda","vetoRuedaAntes","vetoRuedaMin","deslizamiento","capitalInicial","ddMaxPct","firma","operarCualquiera"].filter(k=>i[k]!=null&&i[k]!=="").map(k=>"→ "+(EJEC_NOMBRES[k]||k)+": "+(Array.isArray(i[k])?i[k].join("+"):(typeof i[k]==="boolean"?(i[k]?"SÍ":"NO"):i[k]))).join("\n"); return "⚙️ Cambiar reglas del Ejecutor:\n"+(c||"(sin cambios)")+(i.operarCualquiera===true?"\n\n⚠️ OJO: «operar cualquier cuenta» quita el aviso antes de operar una cuenta real nueva. Solo dile que sí si es lo que quieres.":"")+"\n(lo demás queda como está)"; }
@@ -15872,6 +15937,18 @@ async function ejecutarTool(name, i){
         if(x&&x.ok) return {ok:true,msg:(i.on?"🟢 Ejecutor ENCENDIDO — en guardia":"🔴 Ejecutor DETENIDO — solo observa")+(i.motivo?(" ("+i.motivo+")"):"")};
         return {ok:false,msg:"La nube no aceptó la orden del interruptor"};
       }catch(_){ return {ok:false,msg:"Sin conexión con la nube — el interruptor NO cambió"}; }
+    }
+    /* 🔄 v7.188 — la orden va a la MISMA cola que usa el botón de su sección 🤖: un solo
+       camino, para que no haya dos maneras distintas de pedir lo mismo. El candado de las
+       posiciones abiertas vive DENTRO del Ejecutor, que es el único que sabe la verdad de
+       MT5 en ese instante; aquí solo se manda la orden y se dice que puede negarse. */
+    if(name==="ejecutor_reiniciar"){
+      try{
+        const r=await fetch(nubeUrl()+"/ejec/cmd",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({action:"reiniciar"})});
+        const x=await r.json().catch(()=>({}));
+        if(x&&x.ok) return {ok:true,msg:"🔄 Orden enviada al Ejecutor"+(i.motivo?(" ("+i.motivo+")"):"")+". Si tiene posiciones abiertas NO se reiniciará y te lo dirá él mismo; si no, vuelve en unos segundos con el código al día."};
+        return {ok:false,msg:"La nube no aceptó la orden de reinicio"};
+      }catch(_){ return {ok:false,msg:"Sin conexión con la nube — el Ejecutor NO se ha reiniciado"}; }
     }
     if(name==="ejecutor_config"){
       const body={};

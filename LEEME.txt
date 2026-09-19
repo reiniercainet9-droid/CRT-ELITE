@@ -1,45 +1,25 @@
-APEX v7.187 — TRADING DESK
+APEX v7.189 — TRADING DESK
 =========================
 
-Tres cosas nuevas, todas del repaso a fondo del sistema.
+⚡ LAS ALARMAS DEL KEGEL YA SUENAN — lo que me dijiste hoy
 
-🔔 UN VIGILANTE PARA TUS ALARMAS
-   Te lo prometí el 18-09 y no existía. Ahora, cada media hora, tu PC compara sola la
-   revisión del script que tiene el gráfico con la que corre CADA UNA de tus alarmas.
-   Si alguna se queda atrás te lo dice con su nombre.
-   Por qué importa: llegaron a ir ONCE versiones por detrás sin que nadie lo viera. Tú
-   mirabas un panel con una lógica y recibías avisos calculados con otra, y el Ejecutor
-   ejecutaba los de la vieja.
-   Ahora mismo, comprobado en vivo: las 2 alarmas en la revisión 165.0, igual que el gráfico.
+   Tenías razón entera: «no notifica la hora que se programa».
+   Las horas del Kegel se guardaban y se pintaban en tu tarjeta… y ahí se acababa todo.
+   NADIE creaba el aviso. Los entrenamientos sí lo hacían, y la respiración también: los
+   dos meten un aviso de verdad y pasan por el despertador exacto de Android. El Kegel no
+   pasaba por ahí, así que la hora era decorativa.
 
-🔄 REINICIAR EL EJECUTOR DESDE EL TELÉFONO
-   En tu sección 🤖 hay una tarjeta nueva con su botón. Antes, cuando el propio Ejecutor
-   avisaba de que corría código viejo, había que ir a la PC a cerrar una ventana negra: si
-   estabas en la moto, no podías.
-   Con el candado que pediste: si tienes POSICIONES ABIERTAS se niega, te dice cuántas y
-   no lo hace. Esa comprobación vive dentro del Ejecutor, que es el único que sabe la
-   verdad de MT5 en ese instante.
+   Ahora funciona EXACTAMENTE igual que el entrenamiento:
+   · cada sesión del día crea su aviso, diario
+   · el aviso te dice lo que toca esa semana (lentas, rápidas y ascensor)
+   · si cambias la hora desde el templo, manda el templo
+   · si la cambias desde ⏰ Mis avisos —o lo apagas, o le quitas la voz—, MANDA LO TUYO
+   · y si subes de bloque y pasas de 3 sesiones a 2, el aviso que sobra se retira solo
 
-📱 YA SE MIDE CUÁNTO TIEMPO TU TELÉFONO SE QUEDA MUDO
-   Un hallazgo del repaso: no hay ni una suscripción de aviso web (subs: 0). O sea que
-   TODO lo que te llega —una señal, un cierre, un aviso del Ejecutor— viaja por UN SOLO
-   camino: el vigía de la APK preguntando. Si ese se calla, no te enteras de nada y no hay
-   un segundo camino que lo tape.
-   Eso era invisible. Ahora se apunta cada silencio de más de 15 minutos, con la hora y si
-   fue con el mercado abierto, y la auditoría lo juzga y se lo cuenta a Roberto.
-   Los huecos de madrugada o de fin de semana NO cuentan como avería: ahí tu teléfono debe
-   dormir.
-   El arreglo de verdad (aviso nativo de Android) es trabajo en Java y va más adelante.
-   Pero antes de arreglarlo lo mido, igual que hicimos con el Puente a ciegas.
-
-🧪 Y DE CAMINO, TRES TRAMPAS CAZADAS EN LAS PROPIAS PRUEBAS
-   · La app se había convertido a finales de línea de Windows y eso tumbó DIEZ bancos de
-     golpe con el código correcto delante (la misma trampa por quinta vez).
-   · Un banco medía "los 900 caracteres siguientes" y caducó al crecer el código.
-   · El banco del silencio de fin de semana CONTABA usos; ahora mira CADA LÍNEA y exige que
-     sean exactamente los dos vigilantes los que se callan, que es más estricto.
-
-Regresión: 272 bancos en verde.
+   ⚠️ Y algo que anoto porque es peor que el fallo: la comprobación 8 de mi propio banco del
+   Kegel daba VERDE. Comprobaba que PUDIERAS CAMBIAR la hora, no que la hora LLEGARA a
+   ninguna parte. Poder tocar un ajuste no es que el ajuste haga algo. Añadidas tres
+   comprobaciones nuevas que siguen la hora hasta el despertador del teléfono.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
