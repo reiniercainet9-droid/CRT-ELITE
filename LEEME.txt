@@ -1,106 +1,29 @@
-APEX v7.184 — TRADING DESK
+APEX v7.185 — TRADING DESK
 =========================
 
-APEX 7.176 · worker 5.171 · Puente 4.27 — 18-09-2026
+Apex 7.185 + Worker 5.177 — Nada se arregla en silencio
 
-🔕 EL "NO MOLESTAR" YA NO TE ESCONDE LOS AVISOS
-   La noche del 17 al 18 Windows Update reinició la PC a las 22:44 y a las 22:48 y la dejó
-   en la pantalla de contraseña: Puente y Ejecutor caídos 5 h 43 min. La nube avisó de las
-   dos caídas (22:46 y 22:47) y el teléfono las recibió — pero el "Modo Hora de dormir" las
-   hizo invisibles: ni en la lista, ni en la barra, ni de puntito en el icono.
-   Ahora las alarmas van por un canal que ANULA el No molestar. Hubo que estrenar canal
-   porque Android no deja cambiar uno ya creado; el tono "Element" que elegiste se copia al
-   nuevo, no se pierde.
+1) «Cuando cerré el Ejecutor no me avisó, solo cuando se conectó.»
+   Tenías razón. El aviso "Ejecutor CAÍDO" lo canta la nube tras DOS MINUTOS sin señal de
+   vida, y el guardián lo levantó en SEGUNDOS — así que la nube nunca lo vio muerto.
+   Ahora NINGÚN HUECO QUEDA SIN NOMBRE: cuando vuelve, el aviso dice cuánto estuvo fuera.
+   Y si pasó de 5 minutos, sale fuerte.
 
-🗂️ MI TEMPLO Y EL DIARIO SE PLIEGAN
-   Medidas las 19 secciones al tamaño exacto de la moto g54: Mi templo es la más larga con
-   diferencia (10.847 letras en el teléfono) y el Diario la sigue (4,4 pantallas), y además
-   crece con cada operación. Las dos se pliegan por tarjeta y recuerdan lo que dejas abierto.
+2) Lo que el guardián arregla, te lo dice.
+   Antes lo apuntaba en un fichero del Escritorio que no abres. Ahora te llega con su
+   propio título 🛡️ y freno de 15 minutos.
 
-⏳ EL PUENTE YA NO ACUSA MIENTRAS TRADINGVIEW CARGA
-   La caja negra puesta ayer cazó a su primer sospechoso en ocho horas… y era el propio
-   Puente: a los 4-5 minutos de arrancar daba por perdidos unos indicadores que TradingView
-   aún estaba cargando, y RECARGABA la página. Ahora espera, sin acusar y sin recargar.
+3) La pantalla negra que te parpadeaba cada 2 minutos: era la tarea del guardián, que
+   llamaba a PowerShell directo. Ya va por el mismo camino silencioso que el respaldo y
+   la auditoría. Sigue vigilando igual, pero sin ventana.
 
-🤖 ROBERTO YA VE LO QUE TIENES ABIERTO
-   El repaso de la mañana dijo "Viernes: cierra posiciones" con CERO posiciones abiertas, y
-   encima recitando un recordatorio tuyo. No podía saberlo: solo le llegaban los cierres
-   pasados. Ahora le llega el estado vivo del Ejecutor, y tiene prohibido hablar de cerrar
-   posiciones que no existen y de cerrar por el reloj las que sí.
-
-🔁 Y EL CANAL SE ELIGE MIRANDO EL TELÉFONO (7.176)
-   La 7.175 fijaba el canal nuevo en el código. Al instalarla y comprobarla por cable, el
-   canal nuevo nació SIN anular el No molestar (Android lo ignora si falta el permiso) justo
-   cuando el viejo SÍ lo anulaba, porque Rey lo había puesto a mano. O sea: peor que antes.
-   Ahora Apex mira en cada arranque cuál es el canal que de verdad anula: si el que hay ya
-   sirve, se respeta; si no y hay permiso, estrena otro y COMPRUEBA que nació anulando antes
-   de adoptarlo. Nunca se cambia a peor, y los canales que sobran se retiran.
-
-🧠 EL CEREBRO DE ROBERTO — worker 5.172 (lo más grande de hoy)
-   Medido: Opus 5 se usaba en 1 llamada de 14 (solo el chat), el razonamiento estaba APAGADO
-   en 12 de 13, solo el chat tenía manos, y ninguna tarea podía decir "esto no me cuadra".
-   Por eso el Roberto que habla solo metía la pata y el del chat parecía listo: eran dos
-   arquitecturas, no dos humores.
-   Ahora TODO lo que piensa pasa por una sola puerta: cerebro grande en las 14 tareas que
-   juzgan, la mano de mirar_sistema para comprobar antes de afirmar, el estado vivo delante
-   (posiciones abiertas, Puente vivo o caído, última lectura del gráfico) y la salida
-   "🕵️ Algo no me cuadra", obligada a decir qué dato, con qué choca, qué revisar y qué mano
-   le falta.
-   La profundidad la deduce ÉL: con dinero abierto, cuenta real, Puente ciego o una
-   corrección de Rey hoy, sube a fondo sin preguntar; y si al mirar los materiales ve que la
-   cosa no es de despachar, pide otra vuelta (una sola, y queda apuntada).
-   Con interruptor de Rey (cfg:cerebro): auto / siempre / nunca.
-   El veto se queda con reloj de 14 s y su regla intacta: si no puede decidir, DEJA PASAR.
-
-🪞 ROBERTO APRENDE DE SÍ MISMO — worker 5.173
-   Medido: aprendía de cinco sitios y ninguno era él. De lo que hacía el robot y de cuando
-   Rey le corregía; de sus propias palabras, nunca. Por eso hacía falta corregirle cada cosa.
-   · EL ESPEJO: cada noche pone lo que DIJO al lado de lo que PASÓ (operaciones cerradas,
-     señales perdidas, ratos ciego, correcciones de Rey) y saca sus lecciones en primera
-     persona. Se juzga por el resultado, no por la intención. Si no hay nada honesto que
-     aprender, se calla.
-   · SU MEMORIA YA LE SIRVE DE JUICIO: el repaso, el dossier, el pensadero y el espejo
-     recibían "los últimos 12 recuerdos" — una cola tonta. Ahora buscan por relevancia, así
-     que lo que aprende el martes le vuelve el jueves, cuando aplica.
-   · Y MIS RENGLONES SE MUDARON: los párrafos con ⛔ que yo le metía en el prompt cada vez que
-     fallaba son ahora lecciones SUYAS, con su fecha y su caso real. Quedan CERO en el repaso.
-     Las garantías (el veto pasa si no puede decidir, el gasto lo manda Rey) siguen en código:
-     eso no es juicio, es una promesa, y una promesa no se aprende.
-
-🎚️ EL CEREBRO LO ELIGE ROBERTO — app 7.177 · worker 5.175
-   Rey: «él elige dónde poner el caro y dónde el barato».
-   · EN EL CHAT: se acabó mi lista de palabras (backtest, análisis semanal, informe…) y se
-     acabó la tarjeta que te preguntaba «¿con cuánta potencia?». Ahora un portero mira tu
-     último mensaje con el cerebro barato (60 fichas, fracciones de céntimo) y decide: el
-     grande para el gráfico, el indicador, tus operaciones y las decisiones con dinero; el
-     barato para programar un aviso, la hora, tu PC o el Ejecutor. Tu «🧠 Máximo siempre»
-     manda por encima de su criterio.
-   · LAS DOS PUERTAS DEL CHAT cuestan ya lo mismo: una iba SIEMPRE en Opus, así que lo que
-     gastabas dependía de por dónde entrara la pregunta.
-   · Y EL INTERRUPTOR YA SE VE en ⚙️: Automático / Ahorro / Siempre a fondo / Nunca, con lo
-     que hace cada uno explicado. Antes vivía solo en la nube y no lo podías tocar.
-   · DOS GASTOS INVISIBLES cazados: el vigilante y la vía directa del chat llamaban al modelo
-     sin apuntar nunca su coste. Ya aparecen en tu chip 💰.
-
-🛰️ ROBERTO SE ENTERA SOLO Y TE LO DICE — worker 5.176
-   Rey: «él debe darse cuenta y decirme qué entró en su ambiente, qué está funcionando bien y
-   qué no». La app ya sabía mirarse a sí misma desde el 17-09, pero eso solo le llegaba a
-   Roberto DENTRO del chat: se enteraba cuando Rey le escribía, y nunca lo decía él.
-   Ahora la nube saca una foto del entorno en cada vuelta del reloj y la compara con la
-   anterior: versiones, la cuenta del Ejecutor y si es demo o REAL, sus reglas una a una
-   (riesgo, topes, horario, parciales, capital, drawdown), sus avisos y cuántos tiene
-   apagados, sus recuerdos y el modo de su cerebro.
-   La foto y la comparación NO cuestan nada. Solo cuando hay diferencias de verdad —y si no
-   se las ha contado ya— Roberto las mira y decide: callar, decirlo, o dar la alarma si algo
-   cambió sin que Rey lo tocara. Y no repite lo que ya tiene su propio aviso.
-
-🏛️ LOS PILARES
-   64 saberes en su biblioteca (estoicismo, Tao, inteligencia emocional, hábitos atómicos,
-   disciplina, estructura y libertad financiera), escritos para Rey y atados a su vida entera:
-   trading, su trabajo de motoboy, su dinero, su cuerpo, su familia. Le llegan por significado
-   cuando la conversación o el momento lo tocan — no como frases pegadas.
-   Y su cerebro cambió de identidad: ya no es solo mentor de trading, es guía en los dos
-   caminos (los mercados y su libertad financiera y de tiempo).
+4) Roberto ya no se pone el chándal sin entrenar.
+   Lo destapó la regresión de esta noche: los tres chándales que usa para entrenar estaban
+   TAMBIÉN en su ropa de diario (el gris de noche entre semana, el azul y el verde las
+   mañanas del fin de semana). Así que unos días aparecía en chándal sin motivo — y el día
+   que tú entrenaras de verdad, no habría forma de notarlo.
+   Una señal que no se distingue de lo normal no es una señal. Fuera de los cajones de
+   diario: cuando lo lleve, es porque estás entrenando.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

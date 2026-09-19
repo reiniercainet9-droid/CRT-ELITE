@@ -1381,14 +1381,26 @@ ROB_CSS += "\n" + Object.keys(POSES).map(function (k) { return '[data-pose="' + 
        día lleva lo mismo de la mañana a la noche (no se disfraza delante de él) pero mañana
        le toca otra. Con cajones de 4-6 prendas y saltos distintos por momento, no repite
        conjunto ni de un día para otro ni al pasar de la mañana a la tarde. */
+    /* 🏋️ v7.185 — LOS CHÁNDALES SALEN DE LOS CAJONES DE DIARIO, y no es un capricho de estilo.
+       El chándal es una SEÑAL: significa «Rey está entrenando». Pero `chandalGris` vivía en el
+       cajón de noche entre semana y `chandalAzul`/`chandalVerde` en el de las mañanas de fin de
+       semana — los tres, los MISMOS tres que se pone para entrenar. Así que en las fechas en que
+       la rotación caía ahí, Roberto aparecía en chándal sin que Rey entrenara, y el día que sí
+       entrenara no habría forma de notarlo. Una señal que no se distingue de lo normal no es una
+       señal ([[apex-la-alarma-va-tal-cual]]).
+       Lo destapó la regresión de esta noche, 18-09: el banco del chándal se puso rojo él solo
+       porque HOY tocaba `chandalGris` de noche. No era un fallo del banco: era el banco haciendo
+       su trabajo un día que la fecha lo puso del lado de la verdad.
+       Los cajones quedan con 5 prendas (antes 6 y 5): siguen dando muda distinta cada día de la
+       semana, que es lo que Rey pidió, y ninguna se confunde con la de entrenar. */
     var CAJONES = finde ? {
-      man: ["chandalAzul", "poloVerde", "sudaderaGranate", "chandalVerde", "poloVino"],
+      man: ["sudaderaAzul", "poloVerde", "sudaderaGranate", "sudaderaApex", "poloVino"],
       tar: ["hawaiana", "camisaCuadros", "hawaianaRoja", "poloBlanco", "sudaderaVerde"],
       noc: ["pijamaRayas", "bataVino", "pijamaGris", "bataVerde", "casa"]
     } : {
       man: ["wallstreet", "trajeNegro", "trajeAzul", "trajeGranate", "trajeGris", "trajeVerde"],
       tar: ["casual", "sudaderaAzul", "sudaderaVerde", "camisaCuadros", "poloBlanco", "sudaderaApex", "sudaderaGranate"],
-      noc: ["casa", "bataVino", "pijamaRayas", "chandalGris", "bataVerde", "pijamaGris"]
+      noc: ["casa", "bataVino", "pijamaRayas", "bataVerde", "pijamaGris"]
     };
     var fecha = (t.num || 1) + (t.mes || 1) * 31;
     function delCajon(lista, salto) { return lista[(fecha + salto) % lista.length]; }
