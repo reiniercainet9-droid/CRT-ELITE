@@ -4187,6 +4187,14 @@ async function renderEjecutor(){
     '<div class="card"><b>⚙️ Tus reglas</b> <span style="opacity:.8;font-size:.85em">(las mismas del chip 🤖 del chat — un solo lugar en la nube)</span>'+
       '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px" id="ejForm">'+ejecFormHTML(cfg)+'</div>'+
       '<div style="margin-top:8px"><button class="btn gold" id="ejSave" style="width:100%">💾 Guardar mis reglas</button></div></div>'+
+    /* 🔄 v7.187 — REINICIAR EL EJECUTOR DESDE AQUÍ.
+       Él mismo avisa cuando corre código viejo —«cierra y vuelve a abrir el Ejecutor»— y hasta
+       hoy eso obligaba a ir a la PC a cerrar una ventana negra. Si Rey está en la moto, no
+       podía. Ahora se pide desde aquí y su lanzador lo levanta en 5 s con el código al día.
+       El Ejecutor lo RECHAZA solo si hay posiciones abiertas, y le dice por qué. */
+    '<div class="card"><b>🔄 Reiniciar el Ejecutor</b>'+
+      '<div style="opacity:.8;font-size:.9em;margin-top:4px">ÚSALO cuando te avise de que corre código viejo. Se cierra y su lanzador lo levanta solo en unos segundos. <b>Con posiciones abiertas no lo hará</b>, te lo dirá.</div>'+
+      '<div style="margin-top:8px"><button class="btn" id="ejReiniciar" style="width:100%">🔄 Reiniciar ahora</button></div></div>',
     /* 📓 diario del ejecutor — archivo COMPLETO, por semanas y días, separado del de Rey */
     '<div class="card"><b>📓 Diario del Ejecutor</b> <span style="opacity:.8;font-size:.85em">(archivo completo, separado de TU Diario — se respalda en tu nube ☁️)</span>'+
       (hist.length?(
@@ -4224,6 +4232,13 @@ async function renderEjecutor(){
   $("#ejSave").onclick=async()=>{ const body=ejecLeerForm($("#ejForm")); if(body && await ejecGuardarCfg(body)) renderEjecutor(); };
   cont.querySelectorAll(".ej-cerrar").forEach(b=>{ b.onclick=()=>ejecCmdCerrar(b.dataset.tk); });
   const ctd=$("#ejCerrarTodo"); if(ctd) ctd.onclick=()=>ejecCmdCerrar(null);
+  const rei=$("#ejReiniciar"); if(rei) rei.onclick=async()=>{
+    if(!await preguntar("El Ejecutor se cerrará y su lanzador lo volverá a abrir en unos segundos, ya con el código al día.<br><br><b>Si tienes posiciones abiertas NO lo hará</b> y te lo dirá: al reiniciarse dejaría de vigilarlas unos segundos.",{titulo:"🔄 Reiniciar el Ejecutor", si:"Sí, reiniciar"})) return;
+    try{
+      await fetch(nubeUrl()+"/ejec/cmd",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({action:"reiniciar"})});
+      toast("🔄 Orden enviada — te aviso cuando vuelva");
+    }catch(_){ toast("⚠️ Sin internet"); }
+  };
   /* ✂️ v7.169 — los parciales de cada posición. Se enganchan aquí, con los demás botones
      de la sección, para que vivan en el mismo pintado y no queden mudos al repintar. */
   cont.querySelectorAll(".ej-parcial").forEach(b=>{ b.onclick=async()=>{

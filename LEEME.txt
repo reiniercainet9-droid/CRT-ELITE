@@ -1,33 +1,45 @@
-APEX v7.186 — TRADING DESK
+APEX v7.187 — TRADING DESK
 =========================
 
-Worker 5.178 — Lo que ya se pagó no se paga dos veces (URGENTE: tu gasto)
+Tres cosas nuevas, todas del repaso a fondo del sistema.
 
-Rey vio su chip 💰 y dijo que el gasto era excesivo. Tenía razón y había un fallo mío.
+🔔 UN VIGILANTE PARA TUS ALARMAS
+   Te lo prometí el 18-09 y no existía. Ahora, cada media hora, tu PC compara sola la
+   revisión del script que tiene el gráfico con la que corre CADA UNA de tus alarmas.
+   Si alguna se queda atrás te lo dice con su nombre.
+   Por qué importa: llegaron a ir ONCE versiones por detrás sin que nadie lo viera. Tú
+   mirabas un panel con una lógica y recibías avisos calculados con otra, y el Ejecutor
+   ejecutaba los de la vieja.
+   Ahora mismo, comprobado en vivo: las 2 alarmas en la revisión 165.0, igual que el gráfico.
 
-MEDIDO en su propio contador, no supuesto:
-   18-09 → repaso: 10 llamadas, $0,409
-   17-09 → repaso:  2 llamadas, $0,038
-   16-09 → repaso:  3 llamadas, $0,054
+🔄 REINICIAR EL EJECUTOR DESDE EL TELÉFONO
+   En tu sección 🤖 hay una tarjeta nueva con su botón. Antes, cuando el propio Ejecutor
+   avisaba de que corría código viejo, había que ir a la PC a cerrar una ventana negra: si
+   estabas en la moto, no podías.
+   Con el candado que pediste: si tienes POSICIONES ABIERTAS se niega, te dice cuántas y
+   no lo hace. Esa comprobación vive dentro del Ejecutor, que es el único que sabe la
+   verdad de MT5 en ese instante.
 
-El repaso es "uno por momento y día". Corrió DIEZ veces y se pagó diez veces.
+📱 YA SE MIDE CUÁNTO TIEMPO TU TELÉFONO SE QUEDA MUDO
+   Un hallazgo del repaso: no hay ni una suscripción de aviso web (subs: 0). O sea que
+   TODO lo que te llega —una señal, un cierre, un aviso del Ejecutor— viaja por UN SOLO
+   camino: el vigía de la APK preguntando. Si ese se calla, no te enteras de nada y no hay
+   un segundo camino que lo tape.
+   Eso era invisible. Ahora se apunta cada silencio de más de 15 minutos, con la hora y si
+   fue con el mercado abierto, y la auditoría lo juzga y se lo cuenta a Roberto.
+   Los huecos de madrugada o de fin de semana NO cuentan como avería: ahí tu teléfono debe
+   dormir.
+   El arreglo de verdad (aviso nativo de Android) es trabajo en Java y va más adelante.
+   Pero antes de arreglarlo lo mido, igual que hicimos con el Puente a ciegas.
 
-LA CAUSA, mía y de ayer: el candado "ya está hecho" es una clave en la nube que solo se
-escribía cuando todo iba bien. Ayer le añadí a Roberto el "🕵️ algo no me cuadra" — y esa
-rama devolvía la respuesta y se iba SIN GUARDAR. Como no guardaba, el candado nunca cerraba
-y la siguiente vez que se abría Apex volvía a pagar lo mismo.
+🧪 Y DE CAMINO, TRES TRAMPAS CAZADAS EN LAS PROPIAS PRUEBAS
+   · La app se había convertido a finales de línea de Windows y eso tumbó DIEZ bancos de
+     golpe con el código correcto delante (la misma trampa por quinta vez).
+   · Un banco medía "los 900 caracteres siguientes" y caducó al crecer el código.
+   · El banco del silencio de fin de semana CONTABA usos; ahora mira CADA LÍNEA y exige que
+     sean exactamente los dos vigilantes los que se callan, que es más estricto.
 
-La misma fuga estaba en /mi/forense y en /ejec/forense, que son de los caros.
-
-ARREGLADO en las tres puertas:
- · si hay respuesta útil (normal o "no me cuadra"), se guarda y el día queda cerrado;
- · si el modelo falló de verdad, NO se guarda un texto malo 40 días — se pone un freno de
-   30 minutos para reintentar luego sin volver a cobrar en cada apertura de Apex;
- · el resultado guardado manda sobre el freno: lo ya pagado se entrega siempre, gratis;
- · y Rey sigue pudiendo pedir que se rehaga a mano. El ahorro no le quita el mando.
-
-Banco nuevo: test-lo-pagado-no-se-paga-dos-veces.cjs (5/5). Probado rompiéndolo con el
-worker de ayer: caza las tres fugas.
+Regresión: 272 bancos en verde.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
