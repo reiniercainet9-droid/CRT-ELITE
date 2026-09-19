@@ -1,25 +1,58 @@
-APEX v7.189 — TRADING DESK
+APEX v7.190 — TRADING DESK
 =========================
 
-⚡ LAS ALARMAS DEL KEGEL YA SUENAN — lo que me dijiste hoy
+Entrega del 19-09 noche. Todo sale de lo que decidiste hoy.
 
-   Tenías razón entera: «no notifica la hora que se programa».
-   Las horas del Kegel se guardaban y se pintaban en tu tarjeta… y ahí se acababa todo.
-   NADIE creaba el aviso. Los entrenamientos sí lo hacían, y la respiración también: los
-   dos meten un aviso de verdad y pasan por el despertador exacto de Android. El Kegel no
-   pasaba por ahí, así que la hora era decorativa.
+🧭 D Y H4 VUELVEN A PINTAR ESTRUCTURA — Y AHORA SE ROTULA
+   Tu decisión: «el D y H4 pueden seguir pintando estructura, pero debe quedar claro que,
+   sin las temporalidades de contexto CRT, las verdaderas estructuras del mercado son de
+   H1 para abajo».
+   ⚠️ IMPORTANTE: la v3.11 que tienes puesta hacía lo CONTRARIO — había dejado de pintarla
+   en D y H4. Eso lo decidí yo, y tú lo revisaste. Queda como tú dijiste:
+   · en D y H4 se vuelve a dibujar BOS, CHoCH, Strong High y Weak Low
+   · y el panel lo rotula: «🔴 bajista (Strong High) · CONTEXTO (aquí manda el CRT)»
+   Así, mirando el panel, nunca confundes una lectura de contexto con la estructura que de
+   verdad decide. El problema nunca fue el dibujo: era que nada decía qué significaba ahí.
+   👉 HAY QUE PEGAR EL PINE OTRA VEZ Y RECREAR LAS ALARMAS.
 
-   Ahora funciona EXACTAMENTE igual que el entrenamiento:
-   · cada sesión del día crea su aviso, diario
-   · el aviso te dice lo que toca esa semana (lentas, rápidas y ascensor)
-   · si cambias la hora desde el templo, manda el templo
-   · si la cambias desde ⏰ Mis avisos —o lo apagas, o le quitas la voz—, MANDA LO TUYO
-   · y si subes de bloque y pasas de 3 sesiones a 2, el aviso que sobra se retira solo
+🤖 CUANDO EL EJECUTOR NO ENTRA, AHORA TE LO DICE
+   El agujero que encontré en tu engranaje: cuando el Ejecutor RECHAZABA una señal, eso se
+   iba SOLO al registro del panel 🤖. O sea: te sonaba la alarma, veías la caja en el
+   gráfico, pensabas «aquí entra el robot»… y el robot decía que no en silencio.
+   Ahora te llega un aviso corto que dice QUÉ señal, POR QUÉ no entró, y —lo importante—
+   SI ESO TE AFECTA A TI TAMBIÉN:
+   · «límite diario», «una por par», «fuera de mi horario» → es un tope MÍO, no del
+     mercado: el setup puede seguir siendo bueno y TÚ sí podrías entrar a mano.
+   · «precio ya fuera del rango SL/TP» → ahí tú tampoco entres: el tren pasó.
+   · un fallo del broker o del lote → no es criterio, es avería: míralo.
+   Va en voz baja y con etiqueta propia, para no taparte otros avisos. Y solo pasa cuando
+   hubo señal de verdad: no añade ruido, cierra el aviso que quedaba a medias.
 
-   ⚠️ Y algo que anoto porque es peor que el fallo: la comprobación 8 de mi propio banco del
-   Kegel daba VERDE. Comprobaba que PUDIERAS CAMBIAR la hora, no que la hora LLEGARA a
-   ninguna parte. Poder tocar un ajuste no es que el ajuste haga algo. Añadidas tres
-   comprobaciones nuevas que siguen la hora hasta el despertador del teléfono.
+⚡ LAS HORAS DEL KEGEL YA NO CAEN ENCIMA DE OTROS AVISOS
+   Culpa mía: las creé con las horas por defecto sin mirar lo que ya tenías, y dos cayeron
+   encima de «Correr prompt diario» (08:00) y «Cierre del día con Roberto» (20:00). Dos
+   notificaciones en el mismo minuto no son dos avisos: es una tapando a la otra.
+   · de raíz: un programa nuevo elige horas LIBRES, respetando las 3 h de descanso
+   · para las tuyas de ahora: en la tarjeta ⚡ Kegel te sale cuál choca y con qué, y un
+     botón para moverlas. No te muevo nada por detrás: si las quieres ahí, se quedan ahí.
+
+⬆️ EL TEMPLO SUBIDO A TUS 3 SESIONES, SIN DUPLICACIONES
+   Tu plan estaba recortado a 2 sesiones (el sistema se recorta solo cuando una semana no
+   se cumple) mientras tú entrenas 3 días, y por eso tenías dos avisos a las 05:00 el lunes
+   y el martes. Al abrir Apex, una sola vez:
+   · tu plan vuelve a sus 3 sesiones
+   · los avisos tuyos que sonaban a la misma hora que una sesión del plan se APAGAN
+   · NO se borran: siguen en ⏰ Mis avisos y los enciendes cuando quieras
+   · y te sale un cartel diciendo exactamente qué apagó y por qué
+
+🧠 ROBERTO YA SABE LO QUE NO SABÍA DEL INDICADOR
+   Le metí 4 recuerdos: los 5 interruptores que no bloquean nada en tu modo (3 están
+   muertos del todo), el asunto de D/H4, cómo se leen las 11 confluencias, y la orden de
+   NO contestarte de memoria: usar su mano de leer el indicador y darte nombre del ajuste,
+   su casilla, el valor de hoy y el que propone.
+   Pregúntale «¿cómo están mis confirmaciones?» y te dará el mismo detalle que yo.
+
+👉 SUBE EL worker-elitepro-v5.184.js (sustituye al 5.183: es uno solo).
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

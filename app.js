@@ -5363,12 +5363,42 @@ const TEMPLO_KP = { plan:"crtelite_templo_plan", marcas:"crtelite_templo_marcas"
 const TEMPLO_KK = "crtelite_templo_kegel";
 let KEGEL_ST = load(TEMPLO_KK, null);   /* { inicio, lunes, semanaNum, horas:[], hechas:{} } */
 function kegelGuardar(){ save(TEMPLO_KK, KEGEL_ST); }
+/* ⏰ v7.190 — UNA HORA LIBRE, NO LA HORA DE OTRO AVISO.
+   ───────────────────────────────────────────────────────────────────────────────
+   El 19-09 creé sus avisos de Kegel con las horas por defecto (08:00 · 14:00 · 20:00) sin
+   mirar lo que ya tenía puesto, y dos cayeron ENCIMA de otros avisos suyos: el de las 08:00
+   sobre «🧠 Correr prompt diario» y el de las 20:00 sobre «📒 Cierre del día con Roberto».
+   Dos notificaciones en el mismo minuto no son dos avisos: es uno que tapa al otro, y el que
+   se pierde no avisa de que se perdió.
+   Esto NO le quita la decisión a Rey ([[apex-no-elegir-por-rey]]): solo elige mejor el punto
+   de partida. Él sigue cambiando cada hora cuando quiera, y si la quiere encima de otra, la
+   pone y nadie se la mueve. Lo único que ya no pasa es que se la ponga YO sin mirar.
+   Se respeta también la regla del descanso: el músculo necesita horas entre sesión y sesión
+   (`kegelDescansoOk` pide 3 h), así que solo se desplaza hasta 2 h y en pasos de 30 min. */
+function kegelHoraLibre(h, ocupadas){
+  try{
+    const min = (t)=>{ const p=String(t).split(":"); return (parseInt(p[0],10)||0)*60 + (parseInt(p[1],10)||0); };
+    const txt = (m)=>String(Math.floor(m/60)).padStart(2,"0")+":"+String(m%60).padStart(2,"0");
+    const base = min(h);
+    /* se prueba la suya primero, y luego a un lado y a otro: 30, 60, 90 y 120 minutos */
+    const intentos = [0,30,-30,60,-60,90,-90,120,-120];
+    for(const d of intentos){
+      const m = ((base+d)%1440+1440)%1440;
+      if(ocupadas.indexOf(txt(m))<0) return txt(m);
+    }
+  }catch(_){}
+  return h;   /* si todo está ocupado, se queda la suya: mejor chocar que inventarse una rara */
+}
 function kegelEmpezar(){
   const hoy = temploLunes();
   const s = (window.TEMPLO ? TEMPLO.kegelSemana(1) : {sesiones:3});
-  KEGEL_ST = { inicio: Date.now(), lunes: hoy, semanaNum: 1,
-    horas: (window.TEMPLO ? TEMPLO.kegelHorarioPorDefecto(s.sesiones) : ["08:00","14:00","20:00"]),
-    hechas: {}, historia: [] };
+  const porDefecto = (window.TEMPLO ? TEMPLO.kegelHorarioPorDefecto(s.sesiones) : ["08:00","14:00","20:00"]);
+  /* las horas que YA tienen aviso suyo, para no ponerle dos cosas en el mismo minuto */
+  let ocupadas = [];
+  try{ ocupadas = (REMINDERS||[]).filter(r=>r && r.on!==false).map(r=>String(r.hora||"")); }catch(_){}
+  const horas = [];
+  for(const h of porDefecto){ const libre = kegelHoraLibre(h, ocupadas.concat(horas)); horas.push(libre); }
+  KEGEL_ST = { inicio: Date.now(), lunes: hoy, semanaNum: 1, horas, hechas: {}, historia: [] };
   kegelGuardar();
 }
 /* la semana avanza SOLA los lunes, como el plan de entrenamiento: Rey no pulsa nada */
@@ -5575,6 +5605,21 @@ function kegelTarjetaHTML(){
       <div class="desc" style="font-size:12px;line-height:1.5;margin:0 0 6px"><b>Esta semana, el foco:</b> ${esc(s.foco)}</div>
       ${filas}
       ${!descansoOk?`<div class="desc" style="font-size:11.5px;margin-top:8px;color:var(--gold)">⚠️ Tienes sesiones a menos de 3 horas. El músculo no recupera: tres seguidas no son tres sesiones, son una fatigada. Toca una hora para cambiarla.</div>`:""}
+      ${(()=>{
+        /* ⏰ v7.190 — Y SI UNA SESIÓN CAE ENCIMA DE OTRO AVISO SUYO, SE LE DICE.
+           Dos notificaciones en el mismo minuto no son dos avisos: es una tapando a la otra,
+           y la que se pierde no avisa de que se perdió ([[apex-nada-le-deja-mudo]]).
+           No se le mueve nada por detrás: se le enseña cuál choca y con qué, y él decide con
+           un toque. Si la quiere ahí, se queda ahí. */
+        try{
+          const choques = horas.map((h,i)=>({ i, h, con: (REMINDERS||[]).filter(r=>r && r.on!==false && !r.kegelPlan && String(r.hora)===String(h)).map(r=>r.tit||r.id) }))
+                               .filter(x=>x.con.length);
+          if(!choques.length) return "";
+          return `<div class="desc" style="font-size:11.5px;margin-top:8px;color:var(--gold)">⏰ ${choques.length===1?"Una sesión cae":"Hay sesiones que caen"} a la misma hora que ${choques.length===1?"otro aviso tuyo":"otros avisos tuyos"}, y una notificación tapa a la otra:<br>`
+            + choques.map(x=>`· <b>Sesión ${x.i+1} (${esc(x.h)})</b> choca con ${esc(x.con.join(", "))}`).join("<br>")
+            + `<div style="margin-top:6px"><button class="btn kg-libres" style="width:100%;font-size:.86em">⏰ Moverlas a la hora libre más cercana</button></div></div>`;
+        }catch(_){ return ""; }
+      })()}
       ${s.ultimaDelBloque && s.siguiente ? `<div class="desc" style="font-size:11.5px;margin-top:8px">📈 Última semana de este bloque: si cumples, la próxima subes a <b>${s.siguiente.lentas.reps}×${s.siguiente.lentas.hold}s</b>.</div>` : ""}
       <div style="display:flex;gap:6px;margin-top:10px">
         <button class="btn kg-como" style="flex:1;font-size:.86em">📖 Cómo se hace</button>
@@ -5590,6 +5635,22 @@ function kegelWire(){
     const emp=$("#kgEmpezar");
     if(emp) emp.onclick=()=>{ kegelEmpezar(); kegelAvisos(true); renderTemplo(); toast("⚡ Programa empezado — semana 1"); };
     document.querySelectorAll(".kg-hecha").forEach(b=>{ b.onclick=()=>kegelMarcar(+b.dataset.i); });
+    /* ⏰ v7.190 — el botón de mover las que chocan. Mueve SOLO las que chocan, a la hora
+       libre más cercana, y se lo dice una a una: nada cambia en silencio. */
+    const libres=document.querySelector(".kg-libres");
+    if(libres) libres.onclick=()=>{
+      if(!KEGEL_ST) return;
+      const ocupadas=(REMINDERS||[]).filter(r=>r && r.on!==false && !r.kegelPlan).map(r=>String(r.hora||""));
+      const movidas=[];
+      (KEGEL_ST.horas||[]).forEach((h,i)=>{
+        if(ocupadas.indexOf(String(h))<0) return;
+        const nueva=kegelHoraLibre(h, ocupadas.concat(KEGEL_ST.horas.filter((_,j)=>j!==i)));
+        if(nueva!==h){ movidas.push("Sesión "+(i+1)+": "+h+" → "+nueva); KEGEL_ST.horas[i]=nueva; }
+      });
+      if(!movidas.length){ toast("No encontré ninguna hora libre cerca — cámbialas tú tocando la hora"); return; }
+      kegelGuardar(); kegelAvisos(true); renderTemplo();
+      avisar("⏰ Movidas para que no se tapen entre ellas:" + String.fromCharCode(10,10) + movidas.join(String.fromCharCode(10)) + String.fromCharCode(10,10) + "Son TUS horas: toca cualquiera para cambiarla.");
+    };
     document.querySelectorAll(".kg-hora").forEach(b=>{ b.onclick=async()=>{
       const i=+b.dataset.i;
       /* ⚖️ NADA FIJO: la hora es suya. Se le pregunta y manda lo que ponga. */
@@ -5921,6 +5982,7 @@ function renderTemplo(){
     if(oe) oe.onclick=()=>abrirModal("⚠️ Lo que te haría mal",
       '<div class="desc" style="text-align:left;line-height:1.55">'+TEMPLO.ORIENTA.evitar.map(x=>"· "+esc(x)).join("<br><br>")+'</div>', [{t:"Entendido"}]);
   }catch(_){}
+  try{ temploSubirYLimpiar(); }catch(_){}   /* ⬆️ v7.190 — una sola vez, ver abajo */
   try{ if(TEMPLO_PLAN) temploAvisosDelPlan(); }catch(_){}
   /* ⚡ v7.188 — y los del Kegel, con el mismo mecanismo: si cambió de semana y ahora le tocan
      menos sesiones, el aviso que sobra se retira solo. */
@@ -6275,6 +6337,57 @@ function temploFaltanDatos(){
     if(!f) return true;
     return !f.peso || !f.estatura || !(f.nacimiento || f.edad) || !f.objetivo;
   }catch(_){ return true; }
+}
+/* ⬆️ v7.190 — SUBIR EL PLAN A SUS 3 DÍAS Y APAGAR LO QUE SE DUPLICABA.
+   ───────────────────────────────────────────────────────────────────────────────
+   Rey, 19-09: «Sube el templo porque no quiero duplicaciones ni mucho ruido durante mi día,
+   solo el necesario».
+   QUÉ PASABA: su nivel Base tiene TRES sesiones (Cuerpo entero A · B · Movilidad), pero su
+   plan estaba en modo recortado —el sistema se recorta solo cuando una semana no se cumple,
+   y eso es correcto: «se adapta él a ti, no tú a él»—, así que solo generaba DOS. Como él
+   entrena tres días, tenía además sus propios avisos 💪🏃🧘 DÍA 1/2/3 de antes del templo.
+   Resultado: lunes y martes a las 05:00 le sonaban DOS avisos para la misma sesión. Dos
+   notificaciones en el mismo minuto no son dos avisos: es una tapando a la otra.
+   QUÉ SE HACE, UNA SOLA VEZ: el plan vuelve a sus 3 sesiones y los avisos suyos que caían
+   sobre una sesión del plan se APAGAN — no se borran. Apagar es reversible y borrar no
+   ([[apex-no-elegir-por-rey]]): si mañana los quiere de vuelta, los enciende en ⏰ Mis avisos.
+   Y se le DICE lo que se hizo, con nombre y hora. Nada cambia en silencio. */
+function temploSubirYLimpiar(){
+  try{
+    if(!TEMPLO_PLAN || !window.TEMPLO) return;
+    if(load("crtelite_templo_subido_v1", null)) return;   /* ya se hizo: no se repite jamás */
+    const antes = (TEMPLO.semanaDe(TEMPLO_PLAN.nivel, TEMPLO_PLAN.semanaNum, TEMPLO_PLAN.modo).sesiones||[]).length;
+    const hecho = [];
+    if(TEMPLO_PLAN.modo && TEMPLO_PLAN.modo !== "normal"){
+      TEMPLO_PLAN.modo = "normal";
+      temploPlanGuardar();
+      const ahora = (TEMPLO.semanaDe(TEMPLO_PLAN.nivel, TEMPLO_PLAN.semanaNum, "normal").sesiones||[]).length;
+      if(ahora > antes) hecho.push("Tu plan vuelve a sus " + ahora + " sesiones (estaba recortado a " + antes + ").");
+    }
+    /* se regeneran los avisos del plan ANTES de comparar: si no, se compararía con los viejos */
+    try{ temploAvisosDelPlan(); }catch(_){}
+    const delPlan = (REMINDERS||[]).filter(r=>r && r.temploPlan && r.on!==false);
+    const mismoDia = (a,b)=>{ try{ const x=parseDias(a), y=parseDias(b); return x.some(d=>y.indexOf(d)>=0); }catch(_){ return false; } };
+    const apagados = [];
+    (REMINDERS||[]).forEach(r=>{
+      if(!r || r.temploPlan || r.kegelPlan || r.on===false) return;
+      const choca = delPlan.find(p=>String(p.hora)===String(r.hora) && mismoDia(p.dias, r.dias));
+      if(!choca) return;
+      r.on = false;
+      apagados.push("· " + (r.tit||r.id) + " (" + r.hora + ") — se solapaba con «" + (choca.tit||choca.id) + "»");
+    });
+    if(apagados.length){
+      guardarReminders(); syncReminders(); avisosAlRelojDelTelefono();
+      hecho.push("Apagados " + apagados.length + " aviso(s) que sonaban a la vez que una sesión del plan:");
+      hecho.push(apagados.join(String.fromCharCode(10)));
+      hecho.push("NO los he borrado: están en ⏰ Mis avisos y los enciendes cuando quieras.");
+    }
+    save("crtelite_templo_subido_v1", Date.now());
+    if(hecho.length){
+      try{ avisar("⬆️ Tu templo, sin duplicaciones" + String.fromCharCode(10,10) + hecho.join(String.fromCharCode(10,10))); }catch(_){}
+      try{ renderTemplo(); }catch(_){}
+    }
+  }catch(e){ console.log("[apex] subir templo:", e.message); }
 }
 function temploAvisosDelPlan(mandaElHorario){
   try{
