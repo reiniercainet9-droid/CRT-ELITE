@@ -13280,7 +13280,12 @@ async function motoCiclo(){
   const P = motoPlugin();
   while(MOTO.on && !MOTO.parar){
     let g = null;
-    try{ g = await P.vozEscuchar({ soloManosLibres:true, esperaMs:12000 }); }catch(_){ g = null; }
+    /* 🔗 `sesion:true` — 20-09. La ruta del casco se abre UNA vez y se queda viva toda la
+       conversación. Antes se montaba y se tiraba en cada vuelta, y en ese hueco de casi un
+       segundo se perdía el principio de cada frase: a la nube le llegaban cachos de 16 a 42
+       letras y Rey lo notó como «me escucha pero no me entiende». La suelta `vozParar`, y si
+       nunca llega, el vigilante de la APK la suelta solo a los 90 s. */
+    try{ g = await P.vozEscuchar({ soloManosLibres:true, esperaMs:12000, sesion:true }); }catch(_){ g = null; }
     if(MOTO.parar) break;
     if(!g || !g.ok){
       /* dos silencios seguidos y se cierra: dejarlo abierto le come batería sin que lo sepa */

@@ -1,96 +1,58 @@
-APEX v7.191 — TRADING DESK
+APEX v7.192 — TRADING DESK
 =========================
 
-Entrega del 19-09 noche. Todo sale de lo que decidiste hoy.
+v7.192 — 20-09-2026 · LOS DOS FALLOS DEL MODO MOTO
 
-🧭 D Y H4 VUELVEN A PINTAR ESTRUCTURA — Y AHORA SE ROTULA
-   Tu decisión: «el D y H4 pueden seguir pintando estructura, pero debe quedar claro que,
-   sin las temporalidades de contexto CRT, las verdaderas estructuras del mercado son de
-   H1 para abajo».
-   ⚠️ IMPORTANTE: la v3.11 que tienes puesta hacía lo CONTRARIO — había dejado de pintarla
-   en D y H4. Eso lo decidí yo, y tú lo revisaste. Queda como tú dijiste:
-   · en D y H4 se vuelve a dibujar BOS, CHoCH, Strong High y Weak Low
-   · y el panel lo rotula: «🔴 bajista (Strong High) · CONTEXTO (aquí manda el CRT)»
-   Así, mirando el panel, nunca confundes una lectura de contexto con la estructura que de
-   verdad decide. El problema nunca fue el dibujo: era que nada decía qué significaba ahí.
-   👉 HAY QUE PEGAR EL PINE OTRA VEZ Y RECREAR LAS ALARMAS.
+Tu aviso: «me está escuchando pero no me está entendiendo bien».
 
-🤖 CUANDO EL EJECUTOR NO ENTRA, AHORA TE LO DICE
-   El agujero que encontré en tu engranaje: cuando el Ejecutor RECHAZABA una señal, eso se
-   iba SOLO al registro del panel 🤖. O sea: te sonaba la alarma, veías la caja en el
-   gráfico, pensabas «aquí entra el robot»… y el robot decía que no en silencio.
-   Ahora te llega un aviso corto que dice QUÉ señal, POR QUÉ no entró, y —lo importante—
-   SI ESO TE AFECTA A TI TAMBIÉN:
-   · «límite diario», «una por par», «fuera de mi horario» → es un tope MÍO, no del
-     mercado: el setup puede seguir siendo bueno y TÚ sí podrías entrar a mano.
-   · «precio ya fuera del rango SL/TP» → ahí tú tampoco entres: el tren pasó.
-   · un fallo del broker o del lote → no es criterio, es avería: míralo.
-   Va en voz baja y con etiqueta propia, para no taparte otros avisos. Y solo pasa cuando
-   hubo señal de verdad: no añade ruido, cierra el aviso que quedaba a medias.
+Lo primero: me equivoqué al diagnosticarlo. Te dije que a Roberto le había
+atado las manos. Después lo probé contra la nube con seis preguntas y no era
+eso: la hora te la contesta bien, y lo de mirar tu sistema, tus recuerdos o
+tus ganancias lo escala como debe. Cuatro de seis, correctas.
 
-⚡ LAS HORAS DEL KEGEL YA NO CAEN ENCIMA DE OTROS AVISOS
-   Culpa mía: las creé con las horas por defecto sin mirar lo que ya tenías, y dos cayeron
-   encima de «Correr prompt diario» (08:00) y «Cierre del día con Roberto» (20:00). Dos
-   notificaciones en el mismo minuto no son dos avisos: es una tapando a la otra.
-   · de raíz: un programa nuevo elige horas LIBRES, respetando las 3 h de descanso
-   · para las tuyas de ahora: en la tarjeta ⚡ Kegel te sale cuál choca y con qué, y un
-     botón para moverlas. No te muevo nada por detrás: si las quieres ahí, se quedan ahí.
+Lo que sí falla son las otras dos, y es peor de lo que yo dije:
 
-⬆️ EL TEMPLO SUBIDO A TUS 3 SESIONES, SIN DUPLICACIONES
-   Tu plan estaba recortado a 2 sesiones (el sistema se recorta solo cuando una semana no
-   se cumple) mientras tú entrenas 3 días, y por eso tenías dos avisos a las 05:00 el lunes
-   y el martes. Al abrir Apex, una sola vez:
-   · tu plan vuelve a sus 3 sesiones
-   · los avisos tuyos que sonaban a la misma hora que una sesión del plan se APAGAN
-   · NO se borran: siguen en ⏰ Mis avisos y los enciendes cuando quieras
-   · y te sale un cartel diciendo exactamente qué apagó y por qué
+   «apúntame un aviso para mañana a las nueve»  ->  «Dale, te pongo el aviso»
+   «pon música»                                 ->  «Dale, ¿qué tipo te pongo?»
 
-🧠 ROBERTO YA SABE LO QUE NO SABÍA DEL INDICADOR
-   Le metí 4 recuerdos: los 5 interruptores que no bloquean nada en tu modo (3 están
-   muertos del todo), el asunto de D/H4, cómo se leen las 11 confluencias, y la orden de
-   NO contestarte de memoria: usar su mano de leer el indicador y darte nombre del ajuste,
-   su casilla, el valor de hoy y el que propone.
-   Pregúntale «¿cómo están mis confirmaciones?» y te dará el mismo detalle que yo.
+Te dice que SÍ y no hace nada, porque por el camino rápido no tiene manos.
+Con un «no puedo» lo haces tú. Con un «dale» te quedas esperando un aviso que
+no va a sonar nunca.
 
-👉 SUBE EL worker-elitepro-v5.184.js (sustituye al 5.183: es uno solo).
+ARREGLO 1 (worker 5.193, lo subes tú)
+   Antes de decir «dale», «vale», «ahora mismo» o «te lo pongo», mira si tiene
+   la mano. Si no la tiene, escala. Prometer y no cumplir es lo único peor que
+   rendirse.
 
-═══════════════════════════════════════════════════════════════════
-🎙️ Y ARRANCA EL MODO VOZ DE LA MOTO (worker 5.185)
-═══════════════════════════════════════════════════════════════════
+ARREGLO 2 (app 7.192 + APK)
+   Las frases te llegaban en cachos de 16 a 42 letras. La oreja no tenía la
+   culpa: contesta en menos de medio segundo. El fallo era mío, en el ciclo:
 
-Primera pieza de las cinco: LA OREJA EN LA NUBE.
+       pedir ruta -> grabar -> SOLTAR ruta -> hablar -> pedir ruta -> ...
 
-POR QUÉ NO ES EL «OYE ROBERTO» QUE YA RETIRASTE
-   Aquel usaba el reconocedor de Google, y de ahí salían los dos males: el pitido lo hace
-   Google al abrir el micro, y la sesión se muere sola con cualquier silencio de 10 a 25
-   segundos. ChatGPT no usa ese componente, y por eso ni pita ni se corta.
-   El camino nuevo es: micro EN CRUDO en el teléfono, y entender AQUÍ, en la nube.
-   Esta entrega es ese «aquí».
+   Montaba y tiraba el enlace de tu casco en CADA frase. Montarlo cuesta unos
+   640 ms en tu RS62, más 350 de respiro, más 600 en los que ni se mide. Tú,
+   que ya habías oído «te escucho», empezabas a hablar dentro de ese hueco y
+   el principio de cada frase se perdía. Y tirar la ruta mientras Roberto
+   habla corta lo que está sonando: por eso también te cortaba las respuestas.
 
-DÓNDE VA EL DINERO
-   En Workers AI: la MISMA cuenta y el MISMO token que ya usa la memoria de Roberto.
-   Cero proveedores nuevos, cero claves nuevas. Y no corre solo: solo transcribe cuando el
-   teléfono manda audio, o sea cuando tú aprietas para hablar.
+   Ahora la ruta se abre UNA vez y dura toda la conversación. Sin dejarla
+   pedida a su suerte: la suelta el botón de parar, la suelta si Android mata
+   Apex, y un vigilante la suelta sola a los 90 segundos si nadie la toca.
 
-LO QUE PUEDES COMPROBAR TÚ EN CUANTO LO SUBAS
-   Abre esta dirección en el navegador:
-      https://elitepro-worker.reiniercainet9.workers.dev/voz/salud
-   Te dirá si la oreja está enlazada, cuántos trozos ha entendido y CUÁNTO TARDA.
-   Ese número es el que decide si esto sirve: por debajo de 1500 ms se siente una
-   conversación; por encima de 2500 es un walkie-talkie y lo dejarías de usar.
+ARREGLO 3 (auditoría)
+   Te decía «oreja rápida · media 1716 ms». El número era real pero era la
+   media de las DOS orejas mezcladas. La rápida va a 402 ms. Un número bueno
+   con la etiqueta equivocada miente igual que uno falso. Corregido: ahora
+   enseña la media de la oreja que de verdad está oyendo, y te avisa si se
+   está cayendo a la lenta.
 
-👀 Y ROBERTO LA VE, como mandaste: la auditoría de tu PC la mira cada media hora y la
-   JUZGA por los milisegundos, no por «funciona». Puede pedirla por su nombre con la zona
-   «voz». Pregúntale «¿cómo está la oreja de la moto?».
-
-LO QUE TODAVÍA FALTA (y es trabajo en Java, en tu teléfono, con el cable)
-   · el micro en crudo (AudioRecord), que es lo que mata el pitido y los cortes
-   · el detector de cuándo empiezas y cuándo paras de hablar
-   · enrutar el audio al manos libres del casco por Bluetooth — hoy cogería el micro del
-     teléfono en el bolsillo, y eso en la moto no vale
-   · que empiece a contestarte con la primera frase en vez de esperar la respuesta entera
-
-👉 SUBE EL worker-elitepro-v5.185.js (sustituye al 5.184: es uno solo).
+LO QUE NO TE DOY POR BUENO TODAVÍA
+   Lo del casco compila limpio y sus bancos pasan, pero eso no es oírte. Hay
+   que probarlo contigo hablando, por cable. Y hay algo concreto que te voy a
+   preguntar: con el enlace abierto todo el rato, muchos Android suspenden el
+   canal de música, así que la voz de Roberto puede sonar más apagada que
+   antes. Lo vas a notar. Quiero saber cómo suena antes de darlo por hecho.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
