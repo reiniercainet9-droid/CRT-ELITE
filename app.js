@@ -13205,7 +13205,7 @@ let _vozIdx = null;
        —en voz alta, al momento— y escala a su cerebro de siempre. Un mentor que despacha
        rápido una pregunta de dinero no es rápido: es malo.
    ═══════════════════════════════════════════════════════════════════════════════════════ */
-let MOTO = { on:false, parar:false, vueltas:0 };
+let MOTO = { on:false, parar:false, vueltas:0, calladoDesde:0 };
 
 function motoPlugin(){ try{ return (window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.Apex) || null; }catch(_){ return null; } }
 
@@ -13263,6 +13263,30 @@ function motoDecir(t){
     seguro = setTimeout(unaVez, Math.min(20000, 3500 + texto.length * 80));
   });
 }
+
+/* 🎤 v7.197 — SI LE ABRIÓ EL BOTÓN DE VOZ DEL CASCO, SE ARRANCA HABLANDO.
+   ═════════════════════════════════════════════════════════════════════════════
+   Rey, 20-09: «no tengo cómo activarlo o decir algo para que se active sin tener que tocar
+   el teléfono». Y sobre elegir a Roberto de asistente en vez de Google: «el asistente de
+   Google no lo utilizo; si puedo tener mi propio sistema que sabe todo lo mío, mejor».
+   Se comprueba al cargar Y al volver del fondo, porque el casco puede abrir Apex cuando ya
+   estaba abierta por detrás. La bandera se baja al leerla, en el lado nativo. */
+async function motoPorElCasco(){
+  try{
+    const P = motoPlugin();
+    if(!P || !P.vozPorElCasco) return;
+    const r = await P.vozPorElCasco();
+    if(r && r.si && !MOTO.on) motoArrancar();
+  }catch(_){}
+}
+try{
+  /* el aviso EMPUJADO desde Android: es el que vale cuando Apex ya estaba abierta, que es lo
+     normal en la moto. Los otros dos quedan de red para el arranque en frío. */
+  const PC = motoPlugin();
+  if(PC && PC.addListener) PC.addListener("porElCasco", ()=>{ try{ if(!MOTO.on) motoArrancar(); }catch(_){} });
+  document.addEventListener("DOMContentLoaded", ()=>{ setTimeout(motoPorElCasco, 1200); });
+  document.addEventListener("visibilitychange", ()=>{ if(!document.hidden) motoPorElCasco(); });
+}catch(_){}
 
 async function motoArrancar(){
   const P = motoPlugin();
@@ -13322,12 +13346,27 @@ async function motoCiclo(){
     if(MOTO.parar) break;
     if(!g || !g.ok){
       /* dos silencios seguidos y se cierra: dejarlo abierto le come batería sin que lo sepa */
+      /* 🏍️ 20-09 — EL SILENCIO NO ES MOTIVO PARA ABANDONARLE.
+         ═══════════════════════════════════════════════════════════════════════════════
+         Aquí cerraba a las DOS vueltas sin oírle. Cada vuelta espera 12 s, o sea que bastaban
+         24 segundos callado —conduciendo, mirando una rotonda, adelantando— para que el modo
+         moto se cerrara. Y una vez cerrado, Rey NO puede reabrirlo sin tocar el teléfono, que
+         es justo lo que no puede hacer en marcha. Le pasó el 20-09.
+         Ahora el silencio no cierra nada: se lo dice UNA vez y sigue escuchando. Lo que cierra
+         es el TIEMPO, y con aviso — porque tampoco puede quedarse abierto toda la tarde
+         comíendole batería ([[apex-nada-obligatorio-nada-gasta-solo]]). */
       MOTO.vueltas++;
-      if(MOTO.vueltas >= 2){ await motoDecir("No te oigo, Rey. Cierro el modo moto."); motoParar(); return; }
-      await motoDecir("No te oí. Dime otra vez.");
+      if(!MOTO.calladoDesde) MOTO.calladoDesde = Date.now();
+      const calladoMin = (Date.now() - MOTO.calladoDesde) / 60000;
+      if(calladoMin >= 5){
+        await motoDecir("Llevo cinco minutos sin oírte. Cierro para no gastarte batería. Toca el botón cuando vuelvas.");
+        motoParar(); return;
+      }
+      if(MOTO.vueltas === 2) await motoDecir("Sigo aquí. Cuando quieras, habla.");
+      else if(MOTO.vueltas === 1) await motoDecir("No te oí. Dime otra vez.");
       continue;
     }
-    MOTO.vueltas = 0;
+    MOTO.vueltas = 0; MOTO.calladoDesde = 0;
     let dicho = "";
     try{
       const q = await fetch(nubeUrl()+"/voz/oir",{ method:"POST", headers:{"content-type":"application/json"},
@@ -13377,7 +13416,18 @@ async function motoCiclo(){
     /* 🧠 y aquí se le manda al chat de verdad: eso hace DOS cosas a la vez — lo escribe en
        su conversación (para que pueda releerlo con calma después, y ver si la transcripción
        salió torcida) y se lo contesta con TODO su cerebro, que es lo que él prometió. */
-    if(r.camino === "escala"){
+    /* 🔁 20-09 — UN MALENTENDIDO NO SE ESCRIBE EN SU CHAT.
+       Rey: «le pregunté por el clima pero no me entendió y pasó al chat y respondió a lo que
+       entendió… quiero que me diga: no te entendí, repite». La cadena era: oreja falla →
+       cerebro rápido no entiende → escala → la frase ROTA entra en su chat → el cerebro
+       grande contesta en serio a algo que él nunca dijo. Dinero gastado, chat ensuciado e
+       incoherencias para leer.
+       El worker ya devuelve `camino:"repite"` para eso. Y aquí se comprueba TAMBIÉN por lo
+       que se dice, para que esto siga protegiéndole aunque un día corra un worker anterior:
+       nada que suene a «no te entendí» entra en su chat. */
+    const esMalentendido = /no te (entend|cog|pill|escuch)|no consegu[í i] entenderte|rep[í i]t|no me lleg|no s[eé] a qu[eé]|lleg[oó] cortad/i
+      .test(String(r.decir || ""));
+    if(r.camino === "escala" && !esMalentendido){
       try{ if(typeof iaEnviar === "function") iaEnviar("🏍️ " + dicho); }catch(_){}
     }
   }
