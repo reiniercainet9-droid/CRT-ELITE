@@ -17800,6 +17800,15 @@ async function cerebroLocal(texto, unaSola){
        de ocho maneras de preguntar la hora, siete entraban y «qué hora tienes» se iba al
        modelo — lento y de pago — teniendo la respuesta en 1 ms. Anclar sigue bien; lo que
        falta es cubrir cómo habla una persona ([[apex-cerebro-local]]). */
+    /* 🗣️ 20-09 — «DÍMELA AHORA» ES «DIME LA HORA». No es un fallo del oído: en español suenan
+       EXACTAMENTE igual, y donde una persona pone el espacio lo decide el sentido, no el sonido.
+       Rey lo dijo dos veces por el casco y las dos veces llegó pegado. Por ahí se iba a la nube,
+       Roberto no entendía de qué le hablaban, y acababa cobrándole por pensar sobre una frase
+       que él nunca dijo. Ninguna mejora de audio arregla esto: hay que reconocer la variante.
+       Misma familia que la lección del 13-09 («dime la hora» hablando no es «qué hora es»
+       escribiendo): lo que falla no es el modelo, es que nadie habla como escribe. */
+    if(/^d[ií]me?l[ao] ahora$/.test(l) || /^d[ií]mel[ao]$/.test(l))
+      return {txt: "Son las " + new Date().toLocaleTimeString("es-ES",{hour:"2-digit",minute:"2-digit"}) + "."};
     if(/^(que|qu[ée]|k) hora (es|son|tienes|ten[ée]s|marca|hay)$/.test(l) || /^(la )?hora$/.test(l) || /^tienes (la )?hora$/.test(l) || /^me (das|dices) la hora$/.test(l))
       return {txt:"Son las "+localReloj()+"."};
     if(/^(que|qu[ée]) (dia|d[íi]a) (es|es hoy|estamos)$/.test(l) || l==="que dia es hoy"){
