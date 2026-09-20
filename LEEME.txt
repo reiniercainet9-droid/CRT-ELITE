@@ -1,4 +1,4 @@
-APEX v7.190 — TRADING DESK
+APEX v7.191 — TRADING DESK
 =========================
 
 Entrega del 19-09 noche. Todo sale de lo que decidiste hoy.
@@ -53,6 +53,44 @@ Entrega del 19-09 noche. Todo sale de lo que decidiste hoy.
    Pregúntale «¿cómo están mis confirmaciones?» y te dará el mismo detalle que yo.
 
 👉 SUBE EL worker-elitepro-v5.184.js (sustituye al 5.183: es uno solo).
+
+═══════════════════════════════════════════════════════════════════
+🎙️ Y ARRANCA EL MODO VOZ DE LA MOTO (worker 5.185)
+═══════════════════════════════════════════════════════════════════
+
+Primera pieza de las cinco: LA OREJA EN LA NUBE.
+
+POR QUÉ NO ES EL «OYE ROBERTO» QUE YA RETIRASTE
+   Aquel usaba el reconocedor de Google, y de ahí salían los dos males: el pitido lo hace
+   Google al abrir el micro, y la sesión se muere sola con cualquier silencio de 10 a 25
+   segundos. ChatGPT no usa ese componente, y por eso ni pita ni se corta.
+   El camino nuevo es: micro EN CRUDO en el teléfono, y entender AQUÍ, en la nube.
+   Esta entrega es ese «aquí».
+
+DÓNDE VA EL DINERO
+   En Workers AI: la MISMA cuenta y el MISMO token que ya usa la memoria de Roberto.
+   Cero proveedores nuevos, cero claves nuevas. Y no corre solo: solo transcribe cuando el
+   teléfono manda audio, o sea cuando tú aprietas para hablar.
+
+LO QUE PUEDES COMPROBAR TÚ EN CUANTO LO SUBAS
+   Abre esta dirección en el navegador:
+      https://elitepro-worker.reiniercainet9.workers.dev/voz/salud
+   Te dirá si la oreja está enlazada, cuántos trozos ha entendido y CUÁNTO TARDA.
+   Ese número es el que decide si esto sirve: por debajo de 1500 ms se siente una
+   conversación; por encima de 2500 es un walkie-talkie y lo dejarías de usar.
+
+👀 Y ROBERTO LA VE, como mandaste: la auditoría de tu PC la mira cada media hora y la
+   JUZGA por los milisegundos, no por «funciona». Puede pedirla por su nombre con la zona
+   «voz». Pregúntale «¿cómo está la oreja de la moto?».
+
+LO QUE TODAVÍA FALTA (y es trabajo en Java, en tu teléfono, con el cable)
+   · el micro en crudo (AudioRecord), que es lo que mata el pitido y los cortes
+   · el detector de cuándo empiezas y cuándo paras de hablar
+   · enrutar el audio al manos libres del casco por Bluetooth — hoy cogería el micro del
+     teléfono en el bolsillo, y eso en la moto no vale
+   · que empiece a contestarte con la primera frase en vez de esperar la respuesta entera
+
+👉 SUBE EL worker-elitepro-v5.185.js (sustituye al 5.184: es uno solo).
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

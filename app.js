@@ -80,7 +80,12 @@ const NUBE_KEYS = ["crtelite_trades_v2","crtelite_cuentas_v3","crtelite_reminder
   "crtelite_templo_hechos", "crtelite_templo_marcas",
   /* ⚡ v7.173 — su programa de Kegel es un dato SUYO: entra en la nube como todo lo demás.
      Lo cazó el banco, y ya había pasado dos veces ([[apex-nada-en-un-solo-aparato]]). */
-  "crtelite_templo_kegel"];
+  "crtelite_templo_kegel",
+  /* ⬆️ v7.190 — la marca de «ya subí el templo y apagué lo que se duplicaba» VIAJA.
+     Si se quedara solo en este teléfono, al cambiar de aparato la limpieza se ejecutaría otra
+     vez y le volvería a apagar avisos que él hubiera vuelto a encender a propósito
+     ([[apex-nada-en-un-solo-aparato]], [[apex-cambiar-de-aparato]]). */
+  "crtelite_templo_subido_v1"];
 /* 🏷️ v7.05 — LOS 26 APARTADOS, CADA UNO CON SU NOMBRE EN CRISTIANO.
    El informe 🔎 de la v7.03 solo sabía nombrar siete, y a Rey le salieron justo los otros:
    leyó "crtelite_conf_v2, crtelite_reglas_v2, crtelite_estrategias_v3, crtelite_estrdefs_v1"
@@ -118,6 +123,7 @@ const NUBE_NOMBRES = {
   "crtelite_templo_hechos":"las sesiones de entreno que marcaste",
   "crtelite_templo_marcas":"tus marcas físicas (flexiones, plancha, sentadillas, km)",
   "crtelite_templo_kegel":"tu programa de suelo pélvico (semana, horarios y sesiones hechas)",
+  "crtelite_templo_subido_v1":"la marca de que ya se subió tu plan del templo y se apagaron los avisos que se duplicaban",
   /* 📞 v7.108 — cómo quiere Rey que Roberto llame (marcador o marcar solo). Es una
      DECISIÓN suya, no un ajuste de esta pantalla: si cambia de teléfono le tiene que
      seguir ([[apex-nada-en-un-solo-aparato]]). */
@@ -11773,6 +11779,7 @@ function iaInit(){
         <button class="ia-attbtn" id="iaClip" aria-label="Adjuntar imagen">📎</button>
         <button class="ia-attbtn" id="iaCamBtn" aria-label="Tomar foto">📷</button>
         <button class="ia-attbtn" id="iaMicBtn" aria-label="Hablar con Roberto">🎤</button>
+        <button class="ia-attbtn" id="iaMotoBtn" aria-label="Modo moto: hablarle con el casco">🏍️</button>
         <textarea id="iaText" rows="1" placeholder="Escríbele o toca 🎤 para hablarle..."></textarea>
         <button class="ia-send" id="iaSend" aria-label="Enviar">➤</button>
       </div>
@@ -12029,6 +12036,10 @@ function iaInit(){
   $("#iaClip").onclick=()=>$("#iaFile").click();
   $("#iaCamBtn").onclick=()=>$("#iaCam").click();
   // Hablarle a Roberto con el micrófono
+  /* 🏍️ v7.191 — el botón del modo moto, al lado del micrófono de siempre */
+  const moto=$("#iaMotoBtn");
+  if(moto) moto.onclick=()=>{ try{ MOTO.on ? motoParar() : motoArrancar(); }catch(e){ toast("No pude abrir el modo moto"); } };
+  try{ motoUI(); }catch(_){}
   const mic=$("#iaMicBtn");
   if(mic){ if(!iaMicSoportado()){ mic.disabled=true; mic.title="Tu teléfono no permite dictado por voz"; } else { micDosGestos(mic); } }
   /* 📎 ADJUNTAR para NUTRIR a Roberto: imágenes (capturas del gráfico), PDF (documentos, clases,
@@ -13161,6 +13172,173 @@ function vozNativa(){
 }
 let _vozIdx = null;
 /* Habla un texto. idx = índice del mensaje en la conversación (para el botón). */
+/* 🏍️ EL MODO MOTO — v7.191 (19-09-2026)
+   ═══════════════════════════════════════════════════════════════════════════════════════
+   Rey, 18-09: «quisiera poder conversar con él mientras estoy en la moto con mi manos
+   libres, mientras camino o corro… lograr una conversación lo más fluida posible».
+
+   UN TOQUE Y A HABLAR. El ciclo entero, sin volver a tocar la pantalla:
+     Roberto dice «te escucho» → hablas → se cierra solo al callarte → la nube te entiende →
+     Roberto contesta en voz → y vuelve a escucharte. Hasta que le digas que pare o lo toques.
+
+   LO QUE SE APRENDIÓ PROBÁNDOLO CON ÉL, HABLANDO DE VERDAD (19-09, su RS62, por cable):
+     · SIN AVISO NO SIRVE. La primera prueba abrió el micro en silencio y Rey no sabía cuándo
+       hablar: «tienes que darme una señal de cuándo hablar». Por eso Roberto habla primero.
+     · EL ENLACE DEL CASCO TARDA ~640 ms en levantarse. Grabar antes daba un pico de 253
+       sobre 32.767 y «no te oí nada» con él hablando. Se espera a que esté vivo.
+     · SU MICRO ENTREGA MUY BAJO (6% de la escala). Se mide el pico y se sube lo justo.
+   Los tres eran fallos míos y NINGUNO se veía leyendo el código ([[apex-auditar-es-ejecutar]]).
+
+   ⚠️ Y LAS REGLAS QUE MANDAN AQUÍ:
+     · No escucha de fondo. Se abre cuando Rey lo pide y se cierra solo
+       ([[apex-nada-obligatorio-nada-gasta-solo]]).
+     · Si no hay manos libres conectado, NO graba del teléfono a escondidas: se lo dice.
+       Grabar del bolsillo a 80 km/h sería darle viento y ropa y que él no sepa por qué.
+     · Y cuando la pregunta es de trading de verdad, Roberto NO despacha: dice que lo piensa
+       —en voz alta, al momento— y escala a su cerebro de siempre. Un mentor que despacha
+       rápido una pregunta de dinero no es rápido: es malo.
+   ═══════════════════════════════════════════════════════════════════════════════════════ */
+let MOTO = { on:false, parar:false, vueltas:0 };
+
+function motoPlugin(){ try{ return (window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.Apex) || null; }catch(_){ return null; } }
+
+/* 🗣️ HABLAR Y ESPERAR A QUE HAYA TERMINADO DE VERDAD.
+   ⚠️ ESTE FUE EL FALLO QUE REY VIO EN LA PRIMERA PRUEBA DE VERDAD DEL MODO MOTO:
+   «no me está entendiendo y está cortando las respuestas… me dice no te oí, me dijo que le
+   repita, pero le repito y no me está entendiendo». Los dos síntomas eran LO MISMO:
+
+   yo esperaba con un CRONÓMETRO a ojo (1,1 s + el largo del texto) y luego grababa. Pero el
+   motor de voz de Android tarda ~1,7 s en ARRANCAR, así que mi cuenta empezaba antes de que
+   sonara nada. Resultado:
+     · me ponía a grabar con Roberto todavía hablando → al pedir la ruta del manos libres se
+       corta lo que está sonando → LE CORTABA LAS RESPUESTAS;
+     · y el detector de silencio aprendía SU PROPIA VOZ como ruido de fondo, así que el
+       umbral quedaba por las nubes y luego no oía a Rey → «NO TE OÍ».
+
+   Y lo peor: **esta lección ya estaba escrita en su propio código**, en el saludo del oído:
+   «el plazo saltaba a mitad de frase y el oído le cortaba el saludo — justo lo que Rey vio».
+   Cometí el mismo fallo al lado del comentario que lo explicaba ([[apex-lo-importante-va-primero]]).
+
+   Ahora se usa el aviso REAL: Roberto avisa con `vozFin` cuando ha terminado. El cronómetro
+   se queda solo de seguro duro, para no dejarle colgado si el aviso no llega nunca. */
+function motoDecir(t){
+  const texto = String(t||"").trim();
+  if(!texto) return Promise.resolve();
+  return new Promise((listo)=>{
+    let hecho=false, quitar=null, seguro=null;
+    const unaVez=()=>{ if(hecho) return; hecho=true;
+      try{ if(seguro) clearTimeout(seguro); }catch(_){}
+      try{ if(quitar && quitar.remove) quitar.remove(); }catch(_){}
+      /* un respiro después de callarse: el audio del casco tarda un poco en vaciarse, y
+         grabar en ese instante metería su propia cola de voz en el arranque de la frase */
+      setTimeout(listo, 450);
+    };
+    const PV = motoPlugin();
+    if(!PV || !PV.vozHablar){ try{ iaHablar(texto, -1); }catch(_){} setTimeout(listo, 1100 + texto.length*68); return; }
+    const marca = "moto-" + Date.now();
+    try{
+      const r = PV.addListener("vozFin", (ev)=>{ try{ if(ev && ev.marca === marca) unaVez(); }catch(_){ unaVez(); } });
+      if(r && typeof r.then === "function") r.then((h)=>{ quitar = h; }).catch(()=>{});
+      else quitar = r;
+    }catch(_){}
+    try{
+      PV.vozHablar({ texto: texto, tono: (IA.voz && IA.voz.pitch) || 0.85, ritmo: 1.0,
+        voz: (IA.voz && IA.voz.nativa) || "", motor: (IA.voz && IA.voz.motor) || "", marca: marca });
+    }catch(_){ unaVez(); return; }
+    /* 🛟 el seguro duro: arranque del motor + lectura + margen. Nunca deja el ciclo colgado. */
+    seguro = setTimeout(unaVez, Math.min(20000, 3500 + texto.length * 80));
+  });
+}
+
+async function motoArrancar(){
+  const P = motoPlugin();
+  if(!P || !P.vozEscuchar){ avisar("El modo moto solo funciona en la app instalada, no en el navegador."); return; }
+  /* 🔑 el permiso de Bluetooth: sin él cogería el micro del teléfono */
+  try{
+    const per = await P.vozPermiso({ pedir:true });
+    if(per && per.tiene === false){
+      avisar("🏍️ Necesito el permiso de Bluetooth para coger el micrófono de tu casco.\n\n"
+        + "Acéptalo cuando Android te lo pregunte y vuelve a tocar el botón. "
+        + "Sin él cogería el micrófono del teléfono, en el bolsillo.");
+      return;
+    }
+  }catch(_){}
+  const quien = await P.vozMirar().catch(()=>null);
+  if(!quien || !quien.hay){
+    avisar("🏍️ No veo ningún manos libres conectado.\n\nEnciende el del casco y vuelve a tocar el botón. "
+      + "No grabo del micrófono del teléfono a escondidas: en marcha solo te daría viento y ropa.");
+    return;
+  }
+  MOTO = { on:true, parar:false, vueltas:0 };
+  motoUI();
+  try{ toast("🏍️ Modo moto con «"+quien.manosLibres+"»"); }catch(_){}
+  await motoDecir("Modo moto. Te escucho, Rey.");
+  motoCiclo();
+}
+
+async function motoCiclo(){
+  const P = motoPlugin();
+  while(MOTO.on && !MOTO.parar){
+    let g = null;
+    try{ g = await P.vozEscuchar({ soloManosLibres:true, esperaMs:12000 }); }catch(_){ g = null; }
+    if(MOTO.parar) break;
+    if(!g || !g.ok){
+      /* dos silencios seguidos y se cierra: dejarlo abierto le come batería sin que lo sepa */
+      MOTO.vueltas++;
+      if(MOTO.vueltas >= 2){ await motoDecir("No te oigo, Rey. Cierro el modo moto."); motoParar(); return; }
+      await motoDecir("No te oí. Dime otra vez.");
+      continue;
+    }
+    MOTO.vueltas = 0;
+    let dicho = "";
+    try{
+      const q = await fetch(nubeUrl()+"/voz/oir",{ method:"POST", headers:{"content-type":"application/json"},
+        body: JSON.stringify({ audio:g.wav, idioma:"es" }) });
+      const j = await q.json();
+      dicho = String((j && j.texto) || "").trim();
+    }catch(_){}
+    if(!dicho){ await motoDecir("No conseguí entenderte. Repítemelo."); continue; }
+    if(MOTO.parar) break;
+    if(/\b(para|basta|cierra|apaga)\b.*\b(moto|modo|voz)\b|^(para|basta|ya está|ya esta)$/i.test(dicho)){
+      await motoDecir("Cierro el modo moto. Aquí sigo.");
+      motoParar(); return;
+    }
+    let r = null;
+    try{
+      const h = await fetch(nubeUrl()+"/voz/hablar",{ method:"POST", headers:{"content-type":"application/json"},
+        body: JSON.stringify({ texto: dicho }) });
+      r = await h.json();
+    }catch(_){}
+    if(MOTO.parar) break;
+    if(!r || !r.ok){ await motoDecir("Ahora mismo no puedo contestarte. Lo miro en cuanto pueda."); continue; }
+    await motoDecir(r.decir);
+    /* 🧠 si era de trading de verdad, Roberto ya le dijo «dame un segundo» — y ahora se lo
+       piensa con TODO su cerebro. Su ley: la profundidad no se sacrifica por la velocidad. */
+    /* 🧠 y aquí se le manda al chat de verdad: eso hace DOS cosas a la vez — lo escribe en
+       su conversación (para que pueda releerlo con calma después, y ver si la transcripción
+       salió torcida) y se lo contesta con TODO su cerebro, que es lo que él prometió. */
+    if(r.camino === "escala"){
+      try{ if(typeof iaEnviar === "function") iaEnviar("🏍️ " + dicho); }catch(_){}
+    }
+  }
+}
+
+function motoParar(){
+  MOTO.on = false; MOTO.parar = true;
+  try{ const P=motoPlugin(); if(P && P.vozParar) P.vozParar(); }catch(_){}
+  motoUI();
+}
+
+function motoUI(){
+  try{
+    const b = document.getElementById("iaMotoBtn");
+    if(!b) return;
+    b.textContent = MOTO.on ? "🛑" : "🏍️";
+    b.setAttribute("aria-label", MOTO.on ? "Cerrar el modo moto" : "Modo moto: hablarle con el casco");
+    b.style.background = MOTO.on ? "var(--gold)" : "";
+  }catch(_){}
+}
+
 function iaHablar(texto, idx, yaLimpio){
   /* 📱 dentro de la APK: la voz del propio Android */
   const PV = vozNativa();
