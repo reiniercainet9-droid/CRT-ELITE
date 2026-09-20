@@ -12288,6 +12288,13 @@ const PARA_LA_VOZ = [
   [/\bUSD\s*\/?\s*JPY\b/gi, "dólar yen"],
   [/\bXAU\s*\/?\s*USD\b/gi, "oro"],
   [/\bUS\s*30\b/gi, "US treinta"],
+  /* 🌡️ 20-09 — LOS GRADOS. Hasta hoy nunca llegaban a la voz: el clima solo se leía en
+     pantalla, o lo contaba la nube con palabras. Desde que el cerebro local contesta también
+     por el casco, lo que sale es «22°C» tal cual, y el motor de Android eso lo lee como
+     «veintidós ce» o se come el símbolo. Un dato bien traído que se dice mal es un dato
+     perdido ([[apex-el-oido-se-moria-de-pie]]). */
+  [/(\d+)\s*°\s*C\b/g, "$1 grados"],
+  [/(\d+)\s*°(?!\w)/g, "$1 grados"],
   /* las temporalidades, en horas y minutos */
   [/\b(\d+)\s*H\b/g, "$1 horas"],
   [/\b1\s*horas\b/g, "1 hora"],
@@ -13222,7 +13229,14 @@ function motoPlugin(){ try{ return (window.Capacitor && Capacitor.Plugins && Cap
    Ahora se usa el aviso REAL: Roberto avisa con `vozFin` cuando ha terminado. El cronómetro
    se queda solo de seguro duro, para no dejarle colgado si el aviso no llega nunca. */
 function motoDecir(t){
-  const texto = String(t||"").trim();
+  /* 🧹 20-09 — EL TEXTO SE LIMPIA ANTES DE HABLARLO, como en todos los demás caminos.
+     Aquí no se limpiaba, y hasta hoy no se notó porque lo único que llegaba era prosa de la
+     nube, a la que ya se le pide que no ponga emojis. En cuanto el cerebro local empieza a
+     contestar aquí, deja de ser prosa: sus respuestas llevan 🔋 y % y grados, y eso hay que
+     traducirlo a palabras o suena a ruido. Un camino nuevo que se salta la criba de siempre
+     es exactamente lo que le pasó al oído ([[apex-el-oido-se-moria-de-pie]]). */
+  let texto = String(t||"").trim();
+  try{ const lim = iaTextoParaVoz(texto, true); if(lim && lim.trim()) texto = lim.trim(); }catch(_){}
   if(!texto) return Promise.resolve();
   return new Promise((listo)=>{
     let hecho=false, quitar=null, seguro=null;
@@ -13276,6 +13290,25 @@ async function motoArrancar(){
   motoCiclo();
 }
 
+/* ✂️ 20-09 — LO QUE SE LEE EN PANTALLA NO SE DICE IGUAL EN LA MOTO.
+   El cerebro local está escrito para la pantalla, donde un bloque largo se lee de un vistazo
+   y se ignora lo que no interesa. Por el casco no: se oye TODO, seguido, a 80 km/h.
+   Medido hoy en su teléfono, las ocho respuestas locales caben en una o dos frases menos una:
+   el clima suelta 380 letras porque trae el pronóstico de tres días detrás. Preguntar «¿qué
+   tiempo hace?» y que te lean el martes es ruido, y Rey ya pidió que en la moto sea «una o
+   dos frases» — es la misma regla que se le da a la nube (max 220), así que aquí también.
+   Se corta en el FINAL DE FRASE anterior al tope, nunca a mitad de palabra: en el clima eso
+   deja justo lo de ahora y tira el pronóstico, que es exactamente lo que preguntó. */
+function motoCorto(t){
+  const s = String(t||"").trim();
+  if(s.length <= 220) return s;
+  const trozo = s.slice(0, 220);
+  const corte = Math.max(trozo.lastIndexOf(". "), trozo.lastIndexOf(".\n"),
+                         trozo.lastIndexOf("! "), trozo.lastIndexOf("? "));
+  if(corte > 60) return trozo.slice(0, corte + 1).trim();
+  return trozo.replace(/\s+\S*$/, "").trim();
+}
+
 async function motoCiclo(){
   const P = motoPlugin();
   while(MOTO.on && !MOTO.parar){
@@ -13308,6 +13341,28 @@ async function motoCiclo(){
       await motoDecir("Cierro el modo moto. Aquí sigo.");
       motoParar(); return;
     }
+    /* 🖐️ 20-09 — PRIMERO SUS PROPIAS MANOS, QUE SON GRATIS Y AL MOMENTO.
+       ─────────────────────────────────────────────────────────────────────────────────
+       Rey, después de preguntarle la hora en la moto: «si la hora es uno de los datos
+       locales que puede ver con facilidad… ¿por qué saltó el aviso de gastos? ¿De qué le
+       sirven todas sus manos y visiones en mi teléfono?».
+       Tenía toda la razón y el fallo era mío de raíz. Monté este camino rápido como una
+       carretera APARTE, y al hacerlo me salté el cerebro local que él ya tenía: la hora, el
+       día, la batería, el espacio, el clima, dónde está, poner música y colgar. Ocho cosas
+       que su teléfono sabe en 3 ms y gratis, y yo las mandaba a la nube a pensar y a cobrar.
+       Peor aún: «pon música» SÍ la sabe hacer el cerebro local, y por la nube contestaba
+       «dale, ¿qué tipo?» y no ponía nada. Le quité una mano que ya tenía y encima le cobré
+       por quitársela ([[apex-cerebro-local]], [[apex-mano-y-vision-en-todo-lo-nuevo]]).
+       Su ley no se toca: el cerebro local solo contesta si está SEGURO (todo anclado); si
+       duda lo más mínimo, la frase entera sigue a la nube como hasta ahora. */
+    let local = null;
+    try{ local = await cerebroLocal(dicho); }catch(_){ local = null; }
+    if(local && local.txt){
+      if(MOTO.parar) break;
+      await motoDecir(motoCorto(local.txt));
+      continue;                       /* ni un céntimo ni un segundo de espera */
+    }
+
     let r = null;
     try{
       const h = await fetch(nubeUrl()+"/voz/hablar",{ method:"POST", headers:{"content-type":"application/json"},
