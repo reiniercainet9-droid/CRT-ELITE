@@ -1,51 +1,60 @@
-APEX v7.208 — TRADING DESK
+APEX v7.210 — TRADING DESK
 =========================
 
-🎙️ EL BOTÓN DEL CASCO YA TIENE A QUIEN LLAMAR
+🎙️ EL BOTÓN DEL CASCO — AHORA SÍ, Y LA CAUSA ERA OTRA
 
-Apretabas el botón del casco y se abrían los AJUSTES en vez de Roberto.
-Lo medí en tu teléfono por cable y el fallo era otro del que yo creía:
+Con la 7.208 metí la pieza del asistente de voz. Android la aceptó
+(la casilla se llenó, el servicio quedó enlazado)… y tu botón siguió
+abriendo los ajustes. Así que lo medí con el registro del teléfono
+delante, a las 19:53:
 
-Android tiene DOS casillas de asistente, y una de las dos ya era Apex —
-por eso yo lo daba por medio hecho:
+   START {act=android.intent.action.VOICE_COMMAND
+          cmp=com.google.android.googlequicksearchbox/…HandsFreeActivity}
+          from uid 1002   ← uid 1002 = el propio Bluetooth de Android
+   START {act=android.settings.VOICE_INPUT_SETTINGS
+          cmp=com.android.settings/.Settings$ManageAssistActivity}
+          from uid 10221  ← uid 10221 = la app de Google
 
-   · la del GESTO (deslizar la esquina) ......... ya era Apex  ✔
-   · la de MANOS LIBRES (el casco, el coche) ... ESTABA VACÍA  ✘
+TU BOTÓN NO USA EL ASISTENTE DE VOZ DE ANDROID. Manda la orden por
+Bluetooth, y es el Bluetooth quien lanza un intent viejo llamado
+VOICE_COMMAND. Android busca qué app DECLARA ese intent — y la única
+era la de Google, que al no ser ya tu asistente te abría los ajustes.
+Apex no entraba en esa conversación en ningún momento.
 
-La de manos libres solo la puede ocupar una app que se declare asistente
-de voz, y Apex no se declaraba. Android no tenía a quién dársela.
-El gesto funcionando era justo lo que tapaba el fallo.
-
-👉 TE TOCA DAR DOS TOQUES, UNA SOLA VEZ:
-   Ajustes → Aplicaciones → Aplicaciones predeterminadas →
-   "Aplicación de asistencia digital" → elige Apex
-   (o busca "asistencia" en el buscador de Ajustes)
-
-   Ese ajuste NO te lo toco yo: es tu teléfono y es tu decisión.
-   Lo tienes paso a paso en "LEEME - el boton del casco (2 toques).txt".
-
-NO abre ningún micro por su cuenta. Nada de "Oye Roberto" — eso lo
-quitaste tú el 16-09 por el pitido y sigue quitado. El botón solo
-ENCIENDE el modo moto; de ahí en adelante escucha el micro de siempre,
-el que no pita. Y NO se abre con el teléfono bloqueado: dentro de Apex
-están tu cuenta y tus posiciones.
+Y el fallo era mío, de manual: Apex COMPROBABA ese intent en el código
+desde la v7.197, pero el manifiesto nunca lo declaró. Android jamás se
+lo mandó, así que ese trozo de código no se ejecutó ni una sola vez.
+Escrito, correcto y muerto.
 
 
-💰 Y EN LA NUBE (worker 5.207, ya subido por ti)
+LO QUE HACE AHORA
 
-Tu chat no tenía un camino, tenía DOS, y cada pregunta que usa una mano
-pasa por los dos. Un arreglo del 19-09 se aplicó solo a uno de ellos: el
-otro llevaba 28 versiones montando el mensaje distinto, y como el caché
-va en orden, eso hacía pagar de nuevo TODO lo que venía detrás —
-unos 16.500 tokens en cada pregunta.
+Una puerta nueva que declara los TRES intents que usan los manos libres
+del mercado (no solo el de tu RS62: cambiar de casco no va a obligar a
+recompilar). Y lo importante es cómo se comporta:
 
-Y había un daño que no era dinero: por ese camino Roberto no sabía que
-no puede ver vídeos. Se portaba distinto según por dónde entrara tu
-pregunta. Ahora los dos caminos le dicen exactamente lo mismo.
+   · NO enseña nada. Es transparente y se cierra sola. Ni un parpadeo.
+   · FUNCIONA CON EL TELÉFONO BLOQUEADO, que es como lo llevas en el
+     bolsillo con guantes. Como no pinta nada, no expone tu cuenta.
+   · TU PANTALLA DE VERDAD SIGUE PIDIENDO DESBLOQUEO. Eso no cambia:
+     dentro de Apex están tu cuenta y tus posiciones.
+   · NO te enciende la pantalla en el bolsillo.
+   · Enciende el modo moto por el camino que ya estaba probado, y una
+     sola vez.
 
-Nadie lo cazó en 28 versiones porque el banco que lo vigilaba daba verde
-en falso: buscaba la línea dentro del código y la encontraba dentro de un
-comentario mío que citaba el código viejo. Ese banco ya está corregido.
+
+👉 LA PRIMERA VEZ QUE LO APRIETES
+
+Android te va a preguntar: ¿Google o Apex? Elige APEX y marca SIEMPRE.
+Si no te lo pregunta y abre Google, quita a Google de la lista de apps
+predeterminadas de asistencia o dímelo y lo miro con el cable.
+
+
+🌧️ Y LO DE LA LETRA (venía de la 7.209)
+
+Dijiste "¿va a llover hoy?" y el casco te pegó la ese de "hoy" al verbo.
+Por esa letra la pregunta salía a la nube a cobrarse teniéndola el
+teléfono gratis. Ya reconoce las dos formas.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

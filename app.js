@@ -18419,7 +18419,7 @@ async function cerebroLocal(texto, unaSola){
     /* 🌦️ el tiempo */
     /* 🌡️ v7.149 — y la TEMPERATURA con sus palabras. Rey preguntó «qué temperatura hay» y
        no casaba: solo estaba «qué tiempo hace». Son la misma respuesta. */
-    if(/^(?:que tiempo (?:hace|va a hacer)(?: hoy| manana)?|como esta el (?:tiempo|clima)|va a llover(?: hoy| manana)?|esta lloviendo|el clima|el tiempo|dime el tiempo|que temperatura (?:hace|hay|tenemos)|la temperatura|temperatura|cuantos grados (?:hace|hay|tenemos)|que calor hace|que frio hace)$/.test(l)){
+    if(/^(?:que tiempo (?:hace|va a hacer)(?: hoy| manana)?|como esta el (?:tiempo|clima)|vas? a llover(?: hoy| manana)?|esta lloviendo|el clima|el tiempo|dime el tiempo|que temperatura (?:hace|hay|tenemos)|la temperatura|temperatura|cuantos grados (?:hace|hay|tenemos)|que calor hace|que frio hace)$/.test(l)){
       const c = await iaClimaTxt();
       if(!c) return null;
       return {txt:c.trim()};
