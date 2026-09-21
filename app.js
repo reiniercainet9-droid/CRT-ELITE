@@ -1253,12 +1253,26 @@ function iaChats(){
     const byTs=(a,b)=>b.ts-a.ts;
     const li=(c)=>{ const d=new Date(c.ts); return (c.revisar?"🔍":"")+"«"+iaTit(c).slice(0,55)+"» ("+d.toLocaleDateString("es",{day:"2-digit",month:"2-digit"})+", "+(c.msgs||[]).filter(m=>m.role==="user").length+" preg.)"; };
     const fij=cs.filter(c=>c.fijado).sort(byTs), imp=cs.filter(c=>!c.fijado&&c.estrella).sort(byTs);
-    const resto=cs.filter(c=>!c.fijado&&!c.estrella).sort(byTs).slice(0,6);
+    const sueltos=cs.filter(c=>!c.fijado&&!c.estrella).sort(byTs);
+    const resto=sueltos.slice(0,6);
+    /* 🧹 v7.200 — Y LOS MÁS VIEJOS, QUE SON LOS QUE HAY QUE LIMPIAR.
+       Auditado el 21-09. Aquí se le decía «TU VISTA TOTAL» y solo se le daban los fijados, los
+       importantes y los 6 ÚLTIMOS. Con eso es IMPOSIBLE que cumpla la limpieza dominical que
+       Rey echa de menos («los domingos me sugería borrar los chats que ya no aportaban… ahora
+       están llenos y ni se entera»): los candidatos a borrar son precisamente los viejos, que
+       eran los únicos que no veía.
+       No se le mandan los 40: eso se paga en CADA mensaje y el chat ya es el 75% de su gasto
+       ([[apex-la-cache-envenena-lo-que-va-detras]]). Se le mandan los 6 más viejos, que es lo
+       que necesita para proponer, y se le dice EXACTAMENTE lo que ve y lo que no.
+       Decirle «lo ves todo» cuando no es verdad es lo que le hace responder con seguridad
+       sobre lo que no ha mirado ([[apex-roberto-no-inventa]]). */
+    const viejos=sueltos.slice(6).sort((a,b)=>a.ts-b.ts).slice(0,6);
     let kb=0; try{ kb=Math.round((localStorage.getItem(K.iaconvs)||"").length/1024); }catch(_){}
-    return "[🗂️ MAPA DE CHATS de Apex — TU VISTA TOTAL ("+cs.length+" conversaciones, ~"+kb+" KB). El chat donde estamos AHORA es «"+iaTit(iaConvAct()||{})+"». Tus manos alcanzan CUALQUIERA de la lista: organizar_chat con el parámetro chat (fijar/desfijar 📌, estrella ⭐, revisar 🔍, renombrar con titulo) es automática; borrar_chat pide la tarjeta de Rey. Dos chats con el mismo título los distingues TÚ en el parámetro chat con la fecha ('Análisis semanal 23-08') o 'el más viejo' / 'el más reciente' — jamás le preguntes a Rey lo que este mapa ya te dice.\n"+
+    return "[🗂️ MAPA DE CHATS de Apex ("+cs.length+" conversaciones, ~"+kb+" KB). El chat donde estamos AHORA es «"+iaTit(iaConvAct()||{})+"». AQUÍ VES: todos los fijados, todos los importantes, los 6 más recientes y los 6 más viejos. NO ves los del medio — si necesitas uno que no esté en esta lista, DÍSELO a Rey en vez de dar por hecho que no existe. Tus manos alcanzan CUALQUIERA, salga o no en esta lista: organizar_chat con el parámetro chat (fijar/desfijar 📌, estrella ⭐, revisar 🔍, renombrar con titulo) es automática; borrar_chat pide la tarjeta de Rey. Dos chats con el mismo título los distingues TÚ en el parámetro chat con la fecha ('Análisis semanal 23-08') o 'el más viejo' / 'el más reciente' — jamás le preguntes a Rey lo que este mapa ya te dice.\n"+
       "📌 Fijados ("+fij.length+"): "+(fij.map(li).join(" · ")||"ninguno")+"\n"+
       "⭐ Importantes ("+imp.length+"): "+(imp.map(li).join(" · ")||"ninguno")+"\n"+
       "🕘 Últimos: "+(resto.map(li).join(" · ")||"—")+"\n"+
+      "🧹 Los más viejos (candidatos a borrar el domingo): "+(viejos.map(li).join(" · ")||"—")+"\n"+
       "REGLA DE LIMPIEZA (Rey, 30-08): Apex debe vivir ORDENADA Y LIMPIA, sin chats basura acumulados. Si ves fijado algo ya vencido (p.ej. el análisis de la semana pasada cuando ya existe el nuevo), DESFÍJALO tú y avísale. Cada DOMINGO, dentro del análisis semanal, revisa este mapa y SUGIÉRELE cuáles borrar porque ya no aportan (borrar_chat, siempre con su tarjeta — jamás borres por tu cuenta). No propongas borrar los ⭐ ni chats de hoy.]";
   }catch(_){ return ""; }
 }
@@ -15796,6 +15810,95 @@ function avisarSiPrometioGuardar(txt, c){
   }catch(_){}
 }
 
+/* ══════════════════════════════════════════════════════════════════════════════
+   🕵️ v7.200 — ROBERTO NO PUEDE DAR POR HECHO LO QUE NO HIZO
+   ═════════════════════════════════════════════════════════════════════════════
+   Rey, el 21-09, con la captura delante:
+
+     «ahora me está confirmando cosas que no está haciendo y me las da por realizadas…
+      si a la hora de hacer el backtesting me dice que registró la operación y pierdo datos…
+      ya no le tengo confianza»
+
+   LO QUE PASÓ, exacto. Rey le pidió reemplazar y FIJAR el chat del análisis semanal. Roberto
+   llamó dos veces a guardar_plan_semanal —que guarda los DATOS del plan— y nunca tocó
+   organizar_chat, que es la única mano que fija un chat. Y luego escribió:
+
+       «Listo, Rey. Los dos planes quedaron reemplazados y FIJADOS con fecha 20/09»
+
+   En la pantalla de Rey, el análisis del 15/09 seguía fijado y el del 20/09 fuera.
+   Una mentira dicha con seguridad es peor que un «no pude»: el «no pude» se arregla, la
+   mentira se cree y encima contamina lo que venga detrás.
+
+   POR QUÉ ESTO ES EXACTO Y NO UNA ADIVINANZA. Cada acción de estas solo puede ocurrir de UNA
+   forma: llamando a su mano. No hay otra vía. Así que si el texto dice «fijé» y en esta misma
+   vuelta no se llamó a organizar_chat, no es una sospecha: es que NO SE FIJÓ NADA.
+   La única parte delicada es reconocer la frase, y por eso los patrones van en PRIMERA PERSONA
+   y pegados a la acción: «tu plan sigue guardado» no cuenta (eso es informar), «lo guardé» sí.
+
+   Ya existía un guardián así desde la v7.136, pero cubría UNA sola mano de las 54: el plan.
+   Esto lo extiende a las que de verdad le pueden costar datos a Rey.
+   ([[apex-roberto-no-inventa]], [[apex-el-rechazo-no-es-mudo]])
+   ════════════════════════════════════════════════════════════════════════════ */
+/* ⚠️ NADA DE `\b` PEGADO A UNA VOCAL ACENTUADA. En JavaScript, `é` NO cuenta como letra para
+   `\b`, así que /\bregistré\b/ no casa JAMÁS: entre «é» y el espacio no hay frontera porque
+   ninguno de los dos es carácter de palabra. Probado el 21-09 al escribir esto: «registré la
+   operación», «Borré el chat» y «Cambié las reglas» pasaban limpias y el guardián parecía
+   funcionar porque el ÚNICO caso que cazaba («fijados») no llevaba tilde.
+   Un guardián que solo caza la mitad es un guardián en el que Rey confiaría de más.
+   Se usan miradas laterales con la lista de letras acentuadas escrita a mano. */
+const _AL = "A-Za-z0-9_áéíóúüñÁÉÍÓÚÜÑ";
+const DIJO_QUE_HIZO = [
+  { que:"fijar o desfijar un chat", manos:["organizar_chat"],
+    re:new RegExp("(?<![" + _AL + "])(fij[ée]|desfij[ée]|renombr[ée])(?![" + _AL + "])|qued(ó|aron|a|an)[^.\\n]{0,30}(fijad|desfijad|renombrad)", "i") },
+  { que:"borrar algo tuyo", manos:["borrar_chat","borrar_aviso","borrar_memoria","borrar_trade","borrar_dibujos","limpiar_capturas","limpiar_diario_ejecutor"],
+    re:new RegExp("(?<![" + _AL + "])(borr[ée]|elimin[ée])(?![" + _AL + "])|qued(ó|aron)[^.\\n]{0,30}borrad", "i") },
+  { que:"registrar una operación", manos:["registrar_trade","registrar_entrada","registrar_retiro","marcar_entrada","editar_trade"],
+    re:new RegExp("(?<![" + _AL + "])registr[ée](?![" + _AL + "])|qued(ó|aron)[^.\\n]{0,30}registrad|(?<![" + _AL + "])anot[ée](?![" + _AL + "])[^.\\n]{0,25}(operaci[óo]n|entrada|trade|retiro)", "i") },
+  { que:"crear o editar un aviso", manos:["crear_aviso","editar_aviso"],
+    re:new RegExp("(?<![" + _AL + "])(cre[ée]|edit[ée]|program[ée])(?![" + _AL + "])[^.\\n]{0,20}aviso", "i") },
+  { que:"reemplazar algo", manos:["organizar_chat","borrar_chat","guardar_plan_semanal","editar_estrategia","estrategia_vigente"],
+    re:new RegExp("(?<![" + _AL + "])(reemplac[ée]|sustitu[íi])(?![" + _AL + "])|qued(ó|aron)[^.\\n]{0,30}reemplazad", "i") },
+  { que:"guardar en tu memoria", manos:["guardar_memoria","guardar_saber"],
+    re:new RegExp("(?<![" + _AL + "])(lo guard[ée]|me lo guard[ée]|guard[ée] en mi memoria|lo recordar[ée] desde ahora)(?![" + _AL + "])", "i") },
+  { que:"tocar las reglas del Ejecutor", manos:["ejecutor_config","ejecutor_switch","ejecutor_reiniciar","set_pares"],
+    re:new RegExp("(?<![" + _AL + "])(cambi[ée]|ajust[ée]|apagu[ée]|encend[íi]|reinici[ée])(?![" + _AL + "])[^.\\n]{0,25}ejecutor", "i") },
+];
+
+/* qué manos se usaron DESDE EL ÚLTIMO MENSAJE DE REY (no en toda la conversación: si contara
+   todo, una mano de hace tres turnos taparía una mentira de ahora). En la duda se cuenta de
+   MÁS, nunca de menos: equivocarse hacia «sí lo hizo» solo pierde un aviso; equivocarse hacia
+   «no lo hizo» le llamaría mentiroso teniendo razón, y eso rompe la confianza igual. */
+function manosDeEstaVuelta(pend){
+  try{
+    const m = (pend && Array.isArray(pend.msgs)) ? pend.msgs : [];
+    let desde = 0;
+    for(let k=m.length-1; k>=0; k--){ if(m[k] && m[k].role==="user" && typeof m[k].content==="string"){ desde=k; break; } }
+    const usadas=[];
+    for(let k=desde; k<m.length; k++){
+      const c = m[k] && m[k].content;
+      if(Array.isArray(c)) c.forEach(b=>{ if(b && b.type==="tool_use" && b.name) usadas.push(b.name); });
+    }
+    return usadas;
+  }catch(_){ return []; }
+}
+
+function avisarSiDijoQueHizo(txt, c, usadas){
+  try{
+    const t = String(txt || "");
+    if(!t || !c) return;
+    const u = Array.isArray(usadas) ? usadas : [];
+    const fallos = DIJO_QUE_HIZO.filter(a => a.re.test(t) && !a.manos.some(m => u.indexOf(m) >= 0));
+    if(!fallos.length) return;
+    const manos = [...new Set(fallos.reduce((s,f)=>s.concat(f.manos),[]))].slice(0,4);
+    c.msgs.push({ role:"assistant", content:
+      "⚠️ ALTO, REY — ME CORRIJO A MÍ MISMO.\n\n"
+      + "Ahí arriba te he dado por hecho **" + fallos.map(f=>f.que).join("** y **") + "**, y NO he usado "
+      + "ninguna de las manos que hacen eso (" + manos.join(", ") + "). O sea: **no he cambiado nada en tu sistema.**\n\n"
+      + "No te fíes de ese mensaje. Pídemelo otra vez y lo hago de verdad — y si no puedo, te digo por qué "
+      + "en vez de darlo por hecho." });
+  }catch(_){}
+}
+
 function iaPlanSemanal(){
   /* 🗓️ v7.136 — LOS DOS PARES, cada uno con lo suyo.
      Antes esto leía un plan Único. Rey opera EUR/USD y GBP/USD y el 13-09 Roberto le dijo que
@@ -16171,6 +16274,24 @@ const EJEC_NOMBRES={ pares:"Pares", riesgoPct:"Riesgo % por operación", maxOpsD
   operarCualquiera:"🔐 Operar cualquier cuenta sin preguntar" };
 function describeTool(name, i){
   i=i||{};
+  /* 📞 v7.200 — LAS DOS QUE TOCAN A OTRA PERSONA, EN CRISTIANO.
+     Auditado el 21-09: `llamar` y `whatsapp` NO tenían rama aquí y caían al final del todo,
+     que devuelve `name + JSON.stringify(input)`. O sea que la tarjeta decía, literal:
+         llamar {"numero":"+595981234567","quien":"Sonia"}
+     Y esa tarjeta es justo la que confirmarTool describe como «la red por si entendió mal un
+     nombre, que buscando Sonia salen diez». Una red de seguridad escrita en JSON no protege
+     a nadie: Rey aprueba lo que no lee ([[apex-pulsar-no-basta]]).
+     El número va ENTERO a propósito: si Roberto cogió el contacto equivocado, lo único que lo
+     delata es el número, no el nombre. */
+  if(name==="llamar") return "📞 LLAMAR a "+(i.quien||"?")+"\n"+(i.numero||"(sin número)")
+    +"\n\n⚠️ Comprueba el número: si no es esa persona, cancela.";
+  if(name==="whatsapp"){
+    const q=i.quien||"?";
+    if(i.accion==="voz")  return "📞 Llamar a "+q+" por WhatsApp\n\n⚠️ Si no es esa persona, cancela.";
+    if(i.accion==="video") return "📹 VIDEOLLAMADA a "+q+" por WhatsApp\n\n⚠️ Si no es esa persona, cancela.";
+    return "💬 Abrir el WhatsApp de "+q+(i.texto?("\n\nMensaje que te dejo ESCRITO (lo envías tú, Android no me deja enviarlo):\n«"+String(i.texto).slice(0,300)+"»"):"\n\n(sin mensaje: solo abro la conversación)")
+      +"\n\n⚠️ Si no es esa persona, cancela.";
+  }
   if(name==="crear_aviso") return "⏰ Crear aviso — "+(i.hora||"?")+" · "+(i.tit||"")+"\n"+(i.msg||"")+"\n("+diasLabel(i.dias||"LV")+" · "+(i.tipo||"normal")+")"+(i.destino&&irDestinoLabel(i.destino)?("\nAl tocarla abre: "+irDestinoLabel(i.destino)):"");
   if(name==="editar_aviso"){ const onTxt = i.on===false?"→ APAGAR (no sonará)":i.on===true?"→ ACTIVAR":null;
     return "✏️ Editar el aviso de las "+(i.hora_actual||"?")+"\n"+[onTxt,i.hora&&("→ hora "+i.hora),i.tit&&("→ título "+i.tit),i.msg&&("→ mensaje “"+i.msg+"”"),i.dias&&("→ días "+i.dias),i.tipo&&("→ tipo "+i.tipo),i.destino&&irDestinoLabel(i.destino)&&("→ al tocarla abre "+irDestinoLabel(i.destino))].filter(Boolean).join("\n"); }
@@ -17527,6 +17648,10 @@ async function iaBgResuelto(jobId, d){
   c.msgs.push({role:"assistant",content: txt || "⚠️ No me llegó respuesta, reintenta."});
   /* 🕵️ v7.136 — ¿DIJO QUE GUARDÓ EL PLAN Y NO LO GUARDÓ? */
   try{ avisarSiPrometioGuardar(txt, c); }catch(_){}
+  /* 🕵️ v7.200 — ¿DIJO QUE HIZO CUALQUIER OTRA COSA Y NO LA HIZO?
+     El de arriba mira el plan comprobando su fecha. Éste mira las demás comprobando algo que
+     no se puede falsear: si no se llamó a la mano, la acción NO OCURRIÓ. */
+  try{ avisarSiDijoQueHizo(txt, c, manosDeEstaVuelta(pend)); }catch(_){}
   iaGuardarConvs();
   pintarIAChat();
   /* 👄 v7.35 — Y QUE MUEVA LA BOCA AL CONTESTAR. Rey (05-09): "el cuerpo está… sin mover
@@ -17618,7 +17743,42 @@ function iaVigilarBusy(){
     if(!IA.busy) return;
     IA.busy=false;
     try{ preguntaTraza("saltó el seguro: la respuesta no llegó a tiempo"); preguntaParteAlaNube("saltó el seguro"); }catch(_){}
-    try{ const c=iaConvAct(); if(c){ c.msgs.push(iaMsgFallo("")); iaGuardarConvs(); } }catch(_){}
+    /* 🩺 v7.200 — Y SI LO QUE PASA ES QUE HAY UNA TARJETA SIN CONTESTAR, SE DICE.
+       Rey, el 21-09: «al quedarse tupido, en vez de decirme: hay un problema, las tarjetas no
+       están saliendo, mira tal cosa con Claud».
+       Eso es EXACTAMENTE lo que le pasó el 20-09: Roberto pensó, sacó la tarjeta cuatro veces
+       y la tarjeta no se pintaba (un comentario sin cerrar se comía el dibujo). Rey se quedó
+       una hora mirando los puntitos sin ninguna pista, y yo perdí la tarde buscando por otro
+       lado ([[apex-el-codigo-perfecto-dentro-de-un-comentario]]).
+       La app SÍ puede saberlo: si el seguro salta y hay una tarjeta esperando, o esa tarjeta
+       está en pantalla y Rey no la ha visto, o no se pintó. Las dos cosas hay que decirlas —
+       y con el nombre de la pieza, para que Claud pueda ir directo. Un aviso sin el dato
+       técnico obliga a repetir la búsqueda entera. */
+    try{
+      const c=iaConvAct();
+      if(c){
+        const pendi=(typeof IA_TOOL_PEND!=="undefined"&&Array.isArray(IA_TOOL_PEND))?IA_TOOL_PEND.filter(p=>p.estado==="pendiente"):[];
+        if(pendi.length){
+          let enPantalla=false;
+          try{ const card=document.querySelector(".ia-tool");
+            const ov=document.getElementById("iaOv");
+            const cs=card?getComputedStyle(card):null;
+            enPantalla=!!(card && cs && cs.display!=="none" && cs.visibility!=="hidden"
+                          && ov && ov.classList.contains("show"));
+          }catch(_){}
+          c.msgs.push({ role:"assistant", fallo:true, content:
+            "⚠️ **REY, TENGO UN PROBLEMA — Y ES MÍO.**\n\n"
+            + "Te pedí confirmación para **"+pendi.map(p=>(typeof describeTool==="function"?String(describeTool(p.tu.name,p.tu.input)).split("\n")[0]:p.tu.name)).join("** y **")+"** "
+            + "y llevo "+Math.round(IA_ESPERA_MAX/60000)+" minutos esperando tu sí o tu no. Por eso me quedé parado: **no estaba pensando, estaba esperándote.**\n\n"
+            + (enPantalla
+                ? "La tarjeta está en pantalla ahora mismo, justo aquí abajo. Contéstala y sigo."
+                : "**Y no la veo en tu pantalla.** Si tú tampoco la ves, es una avería mía: la tarjeta se crea pero no se dibuja.\n\n"
+                  + "👉 Díselo a Claud con estas palabras: «la tarjeta de "+pendi[0].tu.name+" no se pinta — mira `iaPintarTools` y `confirmarTool` en app.js».")
+            + "\n\nMientras tanto **no he tocado nada** de tu sistema." });
+          iaGuardarConvs();
+        } else { c.msgs.push(iaMsgFallo("")); iaGuardarConvs(); }
+      }
+    }catch(_){ try{ const c=iaConvAct(); if(c){ c.msgs.push(iaMsgFallo("")); iaGuardarConvs(); } }catch(_){} }
     pintarIAChat();
     toast("Ya puedes escribir: la respuesta anterior no llegó");
   }, IA_ESPERA_MAX);

@@ -1,37 +1,70 @@
-APEX v7.199 — TRADING DESK
+APEX v7.200 — TRADING DESK
 =========================
 
-🃏 LAS TARJETAS VUELVEN A SALIR — y Roberto deja de ser una estatua
+🕵️ ROBERTO YA NO PUEDE DARTE POR HECHO LO QUE NO HIZO
 
-Rey, el 20-09 por la noche: «se queda tupido como si no supiera qué hacer ni nada, es
-como Roberto vacío, le estoy pidiendo las cosas a una estatua».
+Rey, el 21-09: «ahora me está confirmando cosas que no está haciendo y me las da por
+realizadas… si a la hora del backtesting me dice que registró la operación y pierdo
+datos… ya no le tengo confianza».
 
-No estaba vacío. La nube lo tenía apuntado: CUATRO veces esa noche Roberto pensó
-(18, 28, 68 y 71 segundos), decidió, y pidió las manos. El rastro de su propio teléfono
-decía, al segundo, «tarjeta a la vista». En su pantalla no salió NADA.
+LO QUE PASÓ, exacto. Le pidió reemplazar y FIJAR el chat del análisis semanal. Roberto
+llamó dos veces a guardar_plan_semanal (que guarda los DATOS del plan) y nunca tocó
+organizar_chat, que es la única mano que fija un chat. Y escribió: «los dos planes
+quedaron reemplazados y FIJADOS». En su pantalla, el análisis del 15/09 seguía fijado.
 
-LA CAUSA: un comentario abierto y SIN CERRAR, colado en la tanda v7.170 en TRES sitios
-— y los tres son las funciones que pintan tarjetas en el chat. El comentario se tragaba
-las once líneas siguientes, o sea el dibujo entero de la tarjeta.
+Ya existía un guardián para esto desde la v7.136… pero cubría UNA de sus 54 manos: el
+plan. Ahora cubre las que le pueden costar datos: fijar/desfijar, borrar, registrar una
+operación, crear avisos, reemplazar, guardar en memoria y tocar el Ejecutor.
 
-Medido ejecutando las tres funciones, antes y después:
+Y es EXACTO, no una sospecha: fijar un chat solo ocurre llamando a su mano. Si el texto
+dice «fijé» y en esa vuelta no se llamó a organizar_chat, no se fijó nada. Roberto se
+corrige solo, en el chat, diciendo qué mano faltó.
 
-    la tarjeta de confirmación   0  ->  1
-    la tarjeta de la recarga     0  ->  1     (por eso no pudo anotar sus 20 dólares,
-                                               ni le salió el aviso de «sin crédito»)
-    la tarjeta del Ejecutor    revienta -> 1  (daba «card is not defined»: se comió la
-                                               línea que la creaba pero no la que la usa)
+⚠️ Un fallo mío dentro del arreglo, que aparece porque se probó ejecutando: en JavaScript
+la «é» no cuenta como letra, así que /\bregistré\b/ NO CASA NUNCA. El guardián parecía
+funcionar porque el único caso que cazaba («fijados») no llevaba tilde. «registré la
+operación», «borré el chat» y «cambié las reglas» pasaban limpias. Corregido y probado.
 
-Y UN SEGUNDO FALLO, del mismo sitio: la guarda que debía ABRIR el chat para enseñar la
-tarjeta miraba si EXISTÍA el chat — y existe siempre, porque se monta al arrancar y
-cerrarlo solo lo esconde. Así que no se abría nunca: pidiendo algo por voz o desde el
-cuerpo flotante, la tarjeta se pintaba en un panel invisible. Ahora mira si está ABIERTO.
+🔇 Y CUANDO SE QUEDE ATASCADO, LO DICE
+Rey: «al quedarse tupido, en vez de decirme: hay un problema, las tarjetas no están
+saliendo, mira tal cosa con Claud». Ahora, si lleva minutos parado esperando una tarjeta,
+lo dice con esas palabras — y si la tarjeta NO está en pantalla, le da a Rey el nombre
+exacto de la pieza para que Claud vaya directo, sin repetir la búsqueda entera.
 
-POR QUÉ NO LO VIO NINGÚN BANCO: los 286 que había LEEN el código. Y el código estaba
-escrito, completo y correcto — solo que dentro de un comentario. Un lector de texto no
-distingue eso; un intérprete sí. El banco nuevo (test-las-tarjetas-se-pintan) no lee:
-EJECUTA las tres funciones y cuenta las tarjetas. Se comprobó que se pone rojo contra el
-fichero de ayer y verde contra éste.
+📞 LA TARJETA DE LLAMAR Y WHATSAPP, EN CRISTIANO
+Auditado: no tenían texto propio y caían al final del todo, que devuelve el volcado crudo.
+La tarjeta decía, literal: llamar {"numero":"+595981234567","quien":"Sonia"}. Y esa
+tarjeta es justo la red por si entendió mal un nombre. Ahora sale el nombre, el número
+entero y un aviso de que compruebe.
+
+🗂️ EL MAPA DE CHATS DEJA DE MENTIRLE
+Se le decía «TU VISTA TOTAL» y solo veía los fijados, los importantes y los 6 últimos.
+Con eso era imposible que cumpliera la limpieza dominical que Rey echa en falta: los
+candidatos a borrar son los VIEJOS, que eran los únicos que no veía. Ahora ve también los
+6 más viejos, y se le dice exactamente lo que ve y lo que no.
+
+✂️ EL PARTE DEL EJECUTOR, CON LA GESTIÓN DENTRO
+Rey: «en el parte no dice dónde debe cerrar según los parciales ni lo marca en el gráfico».
+El aviso daba entrada, SL, TP y riesgo, y se callaba los dos niveles que deciden el
+resultado. Con su operación real de hoy habría dicho:
+
+    🛡️ BE a 1R    → 1.14664
+    ✂️ Parcial 80% a 1.5R → 1.14628 (cierra 2.48 de 3.1 lotes)
+    🎯 TP a 2R    → 1.14591
+
+Los números salen de su propia configuración, la MISMA que usa el Ejecutor para actuar —
+aquí no se recalcula nada. Y esos niveles viajan ya a la captura: el Puente v4.31 los
+dibuja en el gráfico. Si la nube no los manda, no se dibuja nada: un precio inventado en
+su gráfico sería peor que el hueco.
+
+🖥️ Y LA PANTALLA NEGRA QUE VOLVÍA
+Cuatro tareas suyas llamaban a powershell.exe directamente y Windows les abre la consola
+antes de poder esconderla. El 18-09 arreglé UNA y dejé las otras cuatro con el mismo
+fallo. Ahora las siete van por un envoltorio callado, probado ejecutándolo.
+
+🔬 Y QUEDA LA HERRAMIENTA: herramientas/auditar-roberto.cjs cruza las cuatro piezas de cada
+una de sus 54 manos (declarada, descrita, ejecutable, que conteste), sus visiones y sus
+reglas. Validada en los dos sentidos: 4 hallazgos contra el fichero de ayer, 0 contra éste.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
