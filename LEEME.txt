@@ -1,47 +1,45 @@
-APEX v7.206 — TRADING DESK
+APEX v7.207 — TRADING DESK
 =========================
 
-🔴 PLAN «20% REY» · PUNTO 1 — ROBERTO YA VE LA OPERACIÓN QUE REY TIENE ABIERTA
+📡 PLAN «20% REY» · PUNTO 2 — LOS AVISOS DE REY YA TIENEN DOS CAMINOS
 
-Su regla del 15-09: el producto es Rey operando mejor, y un arreglo que mejora cómo VE,
-ENTIENDE y DECIDE vale más que uno que mejore el bot.
+MEDIDO EL 21-09:   GET /push/count  →  { "subs": 0 }
 
-MEDIDO EL 21-09, simulando su VENTA real de esa mañana (EURUSD, −$151,9, VIVA):
+Rey tenía UN SOLO camino para enterarse de todo: el vigía de la APK preguntándole a la nube
+cada pocos minutos. Ese bucle vive DENTRO de la app, y Android duerme las apps para ahorrar
+batería. Si lo dormía —o si Apex se cerraba, o si se quedaba sin batería un rato— no le
+llegaba NADA: ni la alarma del indicador, ni la entrada del Ejecutor, ni un veto. Y lo peor:
+no se enteraba de que no se estaba enterando.
 
-    Roberto leía:  «[🤖 EL EJECUTOR — ÚLTIMOS 7 DÍAS] … sin nada registrado»
-    ¿veía la posición viva?        NO
-    ¿veía el precio de entrada?    NO
-    ¿veía dónde iba el BE/parcial? NO
+FCM lo entrega el propio sistema de Google, al que Android NO duerme. No sustituye al vigía:
+lo acompaña. Dos caminos independientes para el mismo hecho.
 
-Con dinero dentro, si Rey le preguntaba «¿cómo va lo mío?», le contestaba que no tenía nada.
-El peor momento posible para estar ciego: es JUSTO cuando hay decisiones por delante —mover
-el stop, sacar parcial, dejar correr— y es para lo que construyó todo esto.
+CÓMO QUEDÓ
+· la APK trae un cartero de Firebase que registra el teléfono solo al abrir Apex;
+· el worker firma la credencial de Rey (que vive en Cloudflare, nunca en el código ni en la
+  APK), pide permiso a Google y entrega el aviso con prioridad alta;
+· y el aviso que llega por Firebase se pinta por EL MISMO sitio que los de siempre: mismo
+  canal, misma agrupación, mismo toque que abre el gráfico del par, mismo «ya la vi».
+  UN pintor, dos carteros — dos pintores acaban enseñando cosas distintas.
 
-AHORA LEE ESTO, y va lo PRIMERO de su contexto cuando hay algo abierto:
+LAS TRAMPAS QUE CASI SE LO COMEN, todas medidas:
+· el envío tenía que ir ANTES del atajo de «no hay suscriptores del navegador» — que con
+  subs: 0 se dispara SIEMPRE. Detrás, no se habría ejecutado NUNCA y nadie lo habría notado;
+· hay que ESPERAR el envío: una promesa suelta en Cloudflare se corta al terminar la petición
+  y el aviso se pierde a medias (el mismo fallo que mataba los análisis largos);
+· en FCM v1 todo lo que viaja tiene que ser TEXTO: un número o un booleano y Google tira el
+  mensaje entero con un 400, sin decir cuál campo fue;
+· y las piezas (google-services.json, el cartero y el build.gradle con la librería) viven en
+  el PROYECTO, no solo en apex-apk/ — esa carpeta está fuera del respaldo cifrado, y
+  reconstruir la APK en otra PC habría dejado a Rey sin avisos sin avisar.
 
-    ▸ VENTA EURUSD · 3.1 lotes · entrada 1.14737 · abierta a las 21/09 05:31
-       ahora 1.14786 · P/L $-151.9  →  va a -0.67R
-       stop 1.1481 · objetivo 1.14591
-       🛡️ mueve el stop a la entrada al llegar a 1R → 1.14664  (le faltan 1.67R)
-       ✂️ cierra el 80% al llegar a 1.5R → 1.14628 (serían 2.48 de 3.1 lotes)  (le faltan 2.17R)
-       🎯 objetivo a 2R → 1.14591
+🩺 Y SE PUEDE MIRAR: GET /push/fcm dice si la credencial está puesta, qué teléfonos hay
+registrados y cómo fue el último envío. Sin eso, «no me llegan los avisos» no se diagnostica.
 
-Los R importan más que los dólares: el dinero depende del lote, los R dependen de su plan.
-
-⚠️ LA TRAMPA QUE CASI LO ROMPE: cuando el break-even se hace, el stop queda EN la entrada y
-la distancia entrada−SL es CERO — todos los R saldrían infinitos o en blanco justo en la
-SEGUNDA MITAD de la operación, que es cuando Rey más mira la pantalla. El riesgo original se
-recupera del objetivo (|TP − entrada| ÷ su R objetivo). Probado: con el BE hecho dice «el
-break-even ESTÁ HECHO, desde aquí no pierde», calcula +1.19R y deja de repetirle algo ya hecho.
-
-Y lo que no se sabe NO SALE: sin datos del Ejecutor, ni una línea. Mejor un hueco que un
-número inventado en una operación con su dinero dentro.
-
-🖲️ LA REVISIÓN DE BOTONES, DE PASO
-19 secciones · 202 botones · 197 responden · 0 rotos. Los 5 «sin manejador» eran falsos: ntFF
-es un enlace <a href> a ForexFactory y kA/kB/kC/kN son la leyenda de grados con
-pointer-events:none. La revisión ya distingue las dos cosas: un revisor que grita en falso
-deja de leerse, y entonces el día que haya un botón muerto de verdad nadie le hará caso.
+⚠️ Un fallo mío por el camino: la herramienta que le dice a Rey qué subir le mandó a buscar el
+worker 5.206 cuando yo NO lo había puesto en su carpeta. Fue él quien tuvo que venir a
+decírmelo, con el FCM a medias esperando. Ahora esa herramienta COMPRUEBA que el fichero esté
+de verdad ahí, y si no está se lo dice: «lo construí y se me olvidó ponerlo — no lo busques».
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
