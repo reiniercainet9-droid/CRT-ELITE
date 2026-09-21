@@ -236,6 +236,15 @@ button{cursor:pointer;border:none;background:none}
   border-radius:11px;font-size:13.5px;font-weight:700;line-height:1;
   background:rgba(30,36,66,.94);border:1px solid rgba(255,255,255,.15);color:#f4efe2}
 .foto-ov .fbtn:active{background:rgba(52,60,104,.96)}
+/* 👁️ v7.204 (21-09) — LA BARRA SE APARTA SOLA. Rey, con cuatro capturas suyas delante:
+   «toda la información está tapada por los botones y carteles». Y era verdad: la barra va
+   por ENCIMA de la foto (position:absolute) y, girando el teléfono, se pone en columna A LA
+   DERECHA — justo donde el indicador pinta su tabla de lectura, que es el dato más valioso
+   de la imagen. La red de seguridad tapando lo que vino a enseñar.
+   No se quita: se aparta a los 3,5 s y vuelve con un toque, como cualquier visor de fotos.
+   Sigue ocupando su sitio (nada salta) y deja de robar toques mientras está apartada. */
+.foto-ov .fbar{transition:opacity .25s}
+.foto-ov .fbar.apartada{opacity:0;pointer-events:none}
 .foto-ov .fbtn.gold{background:var(--gold);color:#1A1200;border-color:var(--gold)}
 .foto-ov .fbtn.danger{background:rgba(242,109,109,.16);border-color:rgba(242,109,109,.5);color:#ff8a8a}
 .foto-ov .fmeta{color:#d0d0d0;font-size:11px;flex:1 1 100%;text-align:center;margin-bottom:2px}

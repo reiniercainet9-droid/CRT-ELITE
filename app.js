@@ -324,7 +324,11 @@ async function abrirFoto(id, meta){
   ov.style.cssText="position:fixed;inset:0;z-index:9999;background:#000;display:flex;align-items:center;justify-content:center;overflow:hidden;touch-action:none";
   ov.innerHTML='<div style="color:#ccc;font-size:13px">Cargando…<br><span style="font-size:11px;opacity:.6">(toca para cerrar)</span></div>';
   document.body.appendChild(ov);
-  const cerrar=()=>{ try{ window.removeEventListener("resize",ajustar); }catch(_){} ov.remove(); };
+  const cerrar=()=>{ try{ window.removeEventListener("resize",ajustar); }catch(_){}
+    /* v7.204: y se apaga el reloj de la barra — un temporizador vivo sobre un visor ya
+       cerrado es de lo que se hacen los fallos raros de los que nadie encuentra la causa */
+    try{ if(ov._pararBarra) ov._pararBarra(); }catch(_){}
+    ov.remove(); };
   /* 🚪 v7.174 (17-09) — SE PUEDE CERRAR DESDE EL PRIMER SEGUNDO.
      Esto tapa la pantalla ENTERA (inset:0, z-index 9999) y hasta ahora solo se le ponía la
      salida en la rama de error. Si la foto tardaba —o no llegaba nunca, que es lo que hace un
@@ -353,6 +357,21 @@ async function abrirFoto(id, meta){
       '<button class="fbtn gold" id="fClose">Cerrar</button>'+
     '</div>';
 
+  /* 👁️ v7.204 — LA BARRA SE APARTA SOLA A LOS 3,5 s Y VUELVE CON UN TOQUE.
+     Rey (21-09), con cuatro capturas suyas: «toda la información está tapada por los botones
+     y carteles». Girando el teléfono la barra se pone en columna a la derecha, encima de la
+     tabla de lectura del indicador — lo más valioso de la foto.
+     Se aparta, no se quita: un toque la trae. Y se apaga el reloj al cerrar el visor, que un
+     temporizador vivo sobre un visor cerrado es de lo que se hacen los fallos raros. */
+  { const barra=$("#fBar");
+    let relojBarra=null;
+    const apartar=()=>{ try{ if(barra) barra.classList.add("apartada"); }catch(_){} };
+    const traer=()=>{ try{ if(!barra) return; barra.classList.remove("apartada");
+        clearTimeout(relojBarra); relojBarra=setTimeout(apartar, 3500); }catch(_){} };
+    traer();
+    try{ ov.addEventListener("pointerdown", traer, true); }catch(_){}
+    ov._pararBarra = ()=>{ try{ clearTimeout(relojBarra); }catch(_){} };
+  }
   const im=$("#fImg"), zTxt=$("#fZoom");
   /* ⚠️ esc0 EMPIEZA EN 0 A PROPOSITO. Con esc0=1 la foto se abria al 314% —recortada— porque
      la condicion de abajo solo la recolocaba si era MENOR que la escala de encaje, y 1 es

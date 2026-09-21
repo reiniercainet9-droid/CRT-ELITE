@@ -1,66 +1,40 @@
-APEX v7.203 — TRADING DESK
+APEX v7.204 — TRADING DESK
 =========================
 
-🔬 AUDITORÍA DE ROBERTO — VUELTA 2 COMPLETA (memoria · razonamiento · manos · voz)
+📸 LAS CAPTURAS YA SE PUEDEN ESTUDIAR — tres averías distintas, en tres sitios distintos
 
-🧠 SU MEMORIA — «LO QUE SABES DE REY» NO HABLABA DE REY
+Rey (21-09), con cuatro pantallazos suyos: «dime qué se puede estudiar ahí… gire el teléfono
+como lo gire no se ve nada, toda la información está tapada por los botones y carteles. Y
+además la foto es tirada al final de la pantalla, en vez de centralizar donde verdaderamente
+fue hecha la operación».
 
-Tres sitios le pasaban un bloque con ese título y lo llenaban con las 8 últimas cosas
-guardadas. Uno de esos sitios es el VETO: el que decide si entra su dinero. Medido en su
-memoria viva (60 recuerdos), lo que le llegaba:
+1) SE FOTOGRAFIABA LA VENTANA, NO EL GRÁFICO
+El recorte era {x:0, y:0, ancho, alto} — la página entera. Cada foto suya llevaba dentro la
+barra de dibujo, el buscador de símbolo, el panel derecho y la barra de abajo.
+Probado sacando las dos fotos de su gráfico por el mismo camino que usa el Puente:
 
-    🪞 (me miré) la caída del puente+Ejecutor
-    🪞 (me miré) faltaban 2 avisos de TradingView
-    🧠 MI MEMORIA SE CONSOLIDA SOLA
-    📋 SISTEMA AL DÍA (20/09)
-    📋 SISTEMA AL DÍA (20/09)          ← y repetido
-    🪞 (me miré) solté «Ejecutor CAÍDO»
-    🪞 (me miré) cinco «Hubo un problema»
-    🪞 (me miré) 106 min ciego al gráfico
+    ANTES:  2716 × 1364 px · 312 KB
+    AHORA:  2506 × 1202 px · 221 KB
+    el 19% de cada captura era marco, y pesa un 29% menos (cuenta en 4G)
 
-8 de 8 hablaban de Roberto. Ninguno de Rey. Justo al decidir sobre una entrada, su fuga raíz
-(«prisa por recuperar»), su regla dura del fondeo y lo que le cuesta cada dólar no le
-llegaban. La causa: desde que Roberto se mira cada noche y yo le dejo la ficha del sistema en
-cada entrega, «las últimas guardadas» son SIEMPRE suyas — el 20% de su memoria (12 de 60).
-Ahora recibe 4 de su perfil + 4 de lo que está viviendo. Probado con su memoria real: cero.
+Se queda el eje de precios y su tabla CRT Elite, que la pinta el indicador DENTRO del gráfico.
+⚠️ Se probó también .chart-gui-wrapper, que parece más limpio: deja FUERA el eje de precios.
+Una captura de una operación sin eje de precios no se puede estudiar. Descartado.
 
-🃏 Y la ficha «única» estaba duplicada. No era el anti-duplicados: mi herramienta borraba las
-viejas LEYENDO la lista, y las lecturas de la nube vienen cacheadas — con tres entregas en un
-día, una se coló. Ahora el reemplazo lo hace la nube DENTRO de la misma escritura.
+2) SU ENTRADA SALÍA PEGADA AL BORDE DERECHO
+No estaba mal calculado: se le pedía al gráfico algo que todavía no había pasado. El encuadre
+pedía 45 min POR DELANTE de la entrada, y en el momento de entrar NO EXISTEN velas futuras —
+el recorte se topaba con la última vela cargada.
+Ahora se pide HUECO VACÍO (30% del ancho), que es lo único que sí se puede tener: la entrada
+cae a dos tercios de la foto y se ve de dónde venía el precio Y hacia dónde va. Solo en las
+entradas: al cerrar, la operación ya ocupa su sitio.
+⚠️ Esto se lo di por arreglado el 15-09 y el 16-09. Las dos veces miré la altura y la escala.
+El encuadre a la derecha no lo miré ninguna de las dos.
 
-🏍️ SU RAZONAMIENTO — NO SABÍA DÓNDE ESTABA REY
-
-Se descargó su cerebro de la nube y se midió: 90.062 caracteres, ~22.500 tokens. Sin manos
-fantasma, sin leyes muertas, y las 54 manos con su ley en algún sitio. Pero:
-
-    «modo moto» → NO APARECE NI UNA VEZ
-
-Lo único que le llegaba desde el casco era un emoji 🏍️. Y debajo, motoCorto() le recorta la
-respuesta a 220 caracteres: escribía 800, Rey oía 220, y los otros 580 se pagan igual — la
-salida es el token más caro. Eso explica «la respuesta llega cortada» del 20-09: no era un
-fallo, es que no sabía dónde estaba él. Ahora le va dicho, con DOS avisos distintos:
-· en la moto: 2 frases, hablado, sin listas, SIN tarjetas (no puede tocar), y «no te entendí»;
-· desde fuera de Apex: corto y hablado, pero ahí SÍ puede sacarle tarjetas.
-
-🖐️ SU MANO SOBRE EL MODO MOTO, QUE LE FALTABA
-
-Rey (20-09): «Roberto debe tener todas sus manos y visiones en todos los casos». Lo VEÍA pero
-no podía encenderlo ni apagarlo. Media mano, y justo la que más falta hace cuando no puede
-tocar el teléfono. Ya la tiene, sin tarjeta (conduciendo no puede confirmar nada), sin
-reabrir lo ya abierto (le pitaría en la oreja) y comprobando que de verdad quedó como dijo.
-
-⚠️ UNA MANO SIN DUEÑO YA NO HACE OTRA COSA EN SILENCIO
-
-En las manos de la nube había un `else` pelado que hacía de borrar_memoria. Funciona — pero
-se tragaba CUALQUIER mano futura que se añadiera a la lista sin su rama, y la trataría como
-un borrado de su memoria. Ahora se identifica y Roberto lo dice en vez de callárselo.
-
-🚧 Y UN GUARDIÁN PARA MÍ: EL WORKER QUE ESTÁ EN VIVO NO SE TOCA
-
-Me pasó TRES veces el mismo día: editar la versión ya desplegada. Si se cuela, los cambios
-acaban en su carpeta con el nombre de una versión que ya está arriba y la herramienta le dice
-«nada que subir». El banco nuevo lo caza y dice exactamente cómo arreglarlo — y media hora
-después de ponerlo me cazó a mí.
+3) LOS BOTONES DEL VISOR IBAN ENCIMA DE LA FOTO
+Y girando el teléfono se ponen en columna A LA DERECHA, justo sobre la tabla de lectura del
+indicador — el dato más valioso de la imagen. La barra que le sirve para compartir tapaba lo
+que vino a enseñar. Ahora se aparta sola a los 3,5 s y vuelve con un toque.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
