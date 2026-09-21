@@ -1,45 +1,51 @@
-APEX v7.207 — TRADING DESK
+APEX v7.208 — TRADING DESK
 =========================
 
-📡 PLAN «20% REY» · PUNTO 2 — LOS AVISOS DE REY YA TIENEN DOS CAMINOS
+🎙️ EL BOTÓN DEL CASCO YA TIENE A QUIEN LLAMAR
 
-MEDIDO EL 21-09:   GET /push/count  →  { "subs": 0 }
+Apretabas el botón del casco y se abrían los AJUSTES en vez de Roberto.
+Lo medí en tu teléfono por cable y el fallo era otro del que yo creía:
 
-Rey tenía UN SOLO camino para enterarse de todo: el vigía de la APK preguntándole a la nube
-cada pocos minutos. Ese bucle vive DENTRO de la app, y Android duerme las apps para ahorrar
-batería. Si lo dormía —o si Apex se cerraba, o si se quedaba sin batería un rato— no le
-llegaba NADA: ni la alarma del indicador, ni la entrada del Ejecutor, ni un veto. Y lo peor:
-no se enteraba de que no se estaba enterando.
+Android tiene DOS casillas de asistente, y una de las dos ya era Apex —
+por eso yo lo daba por medio hecho:
 
-FCM lo entrega el propio sistema de Google, al que Android NO duerme. No sustituye al vigía:
-lo acompaña. Dos caminos independientes para el mismo hecho.
+   · la del GESTO (deslizar la esquina) ......... ya era Apex  ✔
+   · la de MANOS LIBRES (el casco, el coche) ... ESTABA VACÍA  ✘
 
-CÓMO QUEDÓ
-· la APK trae un cartero de Firebase que registra el teléfono solo al abrir Apex;
-· el worker firma la credencial de Rey (que vive en Cloudflare, nunca en el código ni en la
-  APK), pide permiso a Google y entrega el aviso con prioridad alta;
-· y el aviso que llega por Firebase se pinta por EL MISMO sitio que los de siempre: mismo
-  canal, misma agrupación, mismo toque que abre el gráfico del par, mismo «ya la vi».
-  UN pintor, dos carteros — dos pintores acaban enseñando cosas distintas.
+La de manos libres solo la puede ocupar una app que se declare asistente
+de voz, y Apex no se declaraba. Android no tenía a quién dársela.
+El gesto funcionando era justo lo que tapaba el fallo.
 
-LAS TRAMPAS QUE CASI SE LO COMEN, todas medidas:
-· el envío tenía que ir ANTES del atajo de «no hay suscriptores del navegador» — que con
-  subs: 0 se dispara SIEMPRE. Detrás, no se habría ejecutado NUNCA y nadie lo habría notado;
-· hay que ESPERAR el envío: una promesa suelta en Cloudflare se corta al terminar la petición
-  y el aviso se pierde a medias (el mismo fallo que mataba los análisis largos);
-· en FCM v1 todo lo que viaja tiene que ser TEXTO: un número o un booleano y Google tira el
-  mensaje entero con un 400, sin decir cuál campo fue;
-· y las piezas (google-services.json, el cartero y el build.gradle con la librería) viven en
-  el PROYECTO, no solo en apex-apk/ — esa carpeta está fuera del respaldo cifrado, y
-  reconstruir la APK en otra PC habría dejado a Rey sin avisos sin avisar.
+👉 TE TOCA DAR DOS TOQUES, UNA SOLA VEZ:
+   Ajustes → Aplicaciones → Aplicaciones predeterminadas →
+   "Aplicación de asistencia digital" → elige Apex
+   (o busca "asistencia" en el buscador de Ajustes)
 
-🩺 Y SE PUEDE MIRAR: GET /push/fcm dice si la credencial está puesta, qué teléfonos hay
-registrados y cómo fue el último envío. Sin eso, «no me llegan los avisos» no se diagnostica.
+   Ese ajuste NO te lo toco yo: es tu teléfono y es tu decisión.
+   Lo tienes paso a paso en "LEEME - el boton del casco (2 toques).txt".
 
-⚠️ Un fallo mío por el camino: la herramienta que le dice a Rey qué subir le mandó a buscar el
-worker 5.206 cuando yo NO lo había puesto en su carpeta. Fue él quien tuvo que venir a
-decírmelo, con el FCM a medias esperando. Ahora esa herramienta COMPRUEBA que el fichero esté
-de verdad ahí, y si no está se lo dice: «lo construí y se me olvidó ponerlo — no lo busques».
+NO abre ningún micro por su cuenta. Nada de "Oye Roberto" — eso lo
+quitaste tú el 16-09 por el pitido y sigue quitado. El botón solo
+ENCIENDE el modo moto; de ahí en adelante escucha el micro de siempre,
+el que no pita. Y NO se abre con el teléfono bloqueado: dentro de Apex
+están tu cuenta y tus posiciones.
+
+
+💰 Y EN LA NUBE (worker 5.207, ya subido por ti)
+
+Tu chat no tenía un camino, tenía DOS, y cada pregunta que usa una mano
+pasa por los dos. Un arreglo del 19-09 se aplicó solo a uno de ellos: el
+otro llevaba 28 versiones montando el mensaje distinto, y como el caché
+va en orden, eso hacía pagar de nuevo TODO lo que venía detrás —
+unos 16.500 tokens en cada pregunta.
+
+Y había un daño que no era dinero: por ese camino Roberto no sabía que
+no puede ver vídeos. Se portaba distinto según por dónde entrara tu
+pregunta. Ahora los dos caminos le dicen exactamente lo mismo.
+
+Nadie lo cazó en 28 versiones porque el banco que lo vigilaba daba verde
+en falso: buscaba la línea dentro del código y la encontraba dentro de un
+comentario mío que citaba el código viejo. Ese banco ya está corregido.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
