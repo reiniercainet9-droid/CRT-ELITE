@@ -16983,9 +16983,17 @@ function iaToolNo(p, card){
 /* Rey decidió en su cuerpo flotante (dos botones en la nubecita): es la MISMA decisión. */
 function iaConfirmarDesdeFuera(si){
   try{
+    /* 🎫 v7.201 — la tarjeta del CEREBRO va primero, y no es un detalle de orden: lleva las
+       clases «ia-tool ia-cerebro», así que el querySelector(".ia-tool") de abajo la
+       encontraría a ella y el toque de Rey acabaría en la maquinaria de las manos, que para
+       esta tarjeta no existe. Su toque desde fuera tiene que hacer lo que ve, no otra cosa
+       ([[apex-toque-solo-en-su-cuerpo]]). */
+    if(typeof IA!=="undefined" && typeof IA.cerebroFuera === "function"){
+      const f = IA.cerebroFuera; IA.cerebroFuera = null; f(!!si); return;
+    }
     const p = IA_TOOL_PEND.find(x=>x.estado==="pendiente");
     if(!p) return;
-    const card = document.querySelector(".ia-tool");
+    const card = document.querySelector(".ia-tool:not(.ia-cerebro)");
     if(si) iaToolSi(p, card); else iaToolNo(p, card);
     try{ iaPintarTools(); }catch(_){}
   }catch(_){}
@@ -17155,6 +17163,10 @@ function iaPintarTools(){
   });
   /* 🖐️ v7.170 — solo baja si Rey YA estaba abajo. Antes, cada tarjeta que se pintaba le
      arrastraba al final aunque estuviera leyendo arriba ([[apex-no-le-quitan-el-sitio]]). */
+  /* 🎫 v7.201 — y la del cerebro con ellas: pintarIAChat() borra el contenedor entero, asi
+     que si no se repinta aqui desaparece al primer repintado y Rey se queda esperando una
+     tarjeta invisible ([[apex-el-codigo-perfecto-dentro-de-un-comentario]]) */
+  try{ iaPintarCerebro(); }catch(_){}
   try{ if(_yaAbajo) cont.scrollTop=cont.scrollHeight; }catch(_){}
 }
 /* Bucle de conversación con herramientas: maneja texto, errores y acciones a confirmar */
@@ -17339,8 +17351,129 @@ const _iaPolling={};
    Roberto tarda en pensar, en cualquier red. La app GENERA el jobId ella misma: si
    la conexión del móvil se corta a mitad, el worker sigue con waitUntil y la app
    recupera EL MISMO trabajo por el camino clásico (sondeo + push) — jamás lo duplica. */
+/* ══════════════════════════════════════════════════════════════════════════════
+   🎫 v7.201 — CON QUÉ CEREBRO TE VOY A CONTESTAR, ANTES DE GASTAR
+   ═════════════════════════════════════════════════════════════════════════════
+   Rey, el 21-09, con su saldo delante:
+
+     «Roberto debe seguir poniéndome la tarjeta de con cuál cosa me va a responder, porque me
+      está gastando demasiado… ese automático prefiero que funcione cuando esté en el modo
+      moto solamente, o sea, como estoy conduciendo o entrenando con él activado y no puedo
+      confirmarle tarjeta; pero estando apagado el modo moto sí debe sacarme la tarjeta»
+
+   Es su ley de siempre llevada al dinero: nada gasta solo ([[apex-nada-obligatorio-nada-gasta-solo]]).
+   El automático NO se quita: se queda para cuando él no puede decidir, que es para lo que se
+   hizo. Con el modo moto apagado, decide él.
+
+   MEDIDO el 21-09, y por eso importa: 4 mensajes de chat = $2,89, el 74% del gasto del día.
+   Un análisis con el cerebro caro y el caché frío cuesta ~$1,75 SOLO en cargarle el contexto,
+   antes de pensar nada. Que Rey vea eso antes y pueda decir «hoy no» vale más que cualquier
+   optimización que yo le meta por debajo.
+
+   ⚠️ A PRUEBA DE TODO: si no hay red, si la nube tarda, si algo falla — se devuelve null y
+   todo sigue EXACTAMENTE como hasta hoy (automático). Preguntar con qué cerebro contestar
+   jamás puede impedir que Roberto conteste ([[apex-nada-bloquea-el-hilo]]). */
+function iaTextoUltimaPregunta(msgs){
+  try{
+    const l = Array.isArray(msgs) ? msgs : [];
+    for(let i=l.length-1;i>=0;i--){
+      const m=l[i]; if(!m || m.role!=="user") continue;
+      const c=m.content;
+      if(typeof c==="string" && c.trim()) return c.split("=== CONTEXTO VIVO")[0].trim();
+      if(!Array.isArray(c)) continue;
+      if(c.some(b=>b&&b.type==="tool_result")) continue;
+      const t=c.filter(b=>b&&b.type==="text").map(b=>b.text||"").join(" ").trim();
+      if(t) return t.split("=== CONTEXTO VIVO")[0].trim();
+    }
+  }catch(_){}
+  return "";
+}
+
+/* ⚠️ LA TARJETA TIENE QUE SOBREVIVIR A LOS REPINTADOS. pintarIAChat() hace
+   `m.innerHTML = …`, o sea BORRA el contenedor entero. Si la tarjeta viviera solo como un
+   nodo suelto, desaparecería de la pantalla al primer repintado y Rey se quedaría esperando
+   una tarjeta invisible con Roberto parado — que es EXACTAMENTE el fallo que le costó el
+   domingo entero ([[apex-el-codigo-perfecto-dentro-de-un-comentario]]).
+   Por eso el estado vive aquí y se REPINTA desde iaPintarTools(), igual que las de manos. */
+let IA_CEREBRO_PEND = null;
+
+function iaPintarCerebro(){
+  const cont=$("#iaMsgs"); if(!cont) return;
+  try{ cont.querySelectorAll(".ia-cerebro").forEach(n=>n.remove()); }catch(_){}
+  const p = IA_CEREBRO_PEND; if(!p) return;
+  const caro = p.sug.motor==="opus";
+  const card=el("div","ia-cerebro");   /* clase propia: NO lleva «ia-tool», para que la
+                                          maquinaria de las manos no la confunda con una suya */
+  card.innerHTML=`<div class="ia-tool-h">🎫 ¿Con qué cerebro te contesto?</div>
+      <div class="ia-tool-d">Recomiendo: <b>${esc(caro?"🧠 A fondo":"⚡ Ágil")}</b>${p.sug.porque?("\n"+esc(p.sug.porque)):""}
+\n⚡ Ágil — rápido y barato, para lo que ya se sabe.
+🧠 A fondo — piensa de verdad, para análisis y decisiones con dinero detrás.</div>
+      <div class="ia-tool-bar"><button class="btn ia-cb-agil">⚡ Ágil</button><button class="btn gold ia-cb-fondo">🧠 A fondo</button></div>`;
+  cont.appendChild(card);
+  try{ const b=caro?card.querySelector(".ia-cb-fondo"):card.querySelector(".ia-cb-agil"); if(b) b.style.outline="2px solid var(--gold)"; }catch(_){}
+  card.querySelector(".ia-cb-agil").onclick=()=>p.fin("sonnet");
+  card.querySelector(".ia-cb-fondo").onclick=()=>p.fin("opus");
+}
+
+/* pinta la tarjeta y espera su toque. Devuelve "opus" | "sonnet" | null (null = como siempre) */
+function iaTarjetaCerebro(sug){
+  return new Promise(resolve=>{
+    let resuelto=false;
+    const fin=(v)=>{ if(resuelto) return; resuelto=true;
+      IA_CEREBRO_PEND=null;
+      try{ IA.cerebroFuera=null; }catch(_){}
+      try{ const c=$("#iaMsgs"); if(c) c.querySelectorAll(".ia-cerebro").forEach(n=>n.remove()); }catch(_){}
+      try{ iaTarjetaCuerpoFuera(""); }catch(_){}
+      resolve(v); };
+    if(!$("#iaMsgs")){ resolve(null); return; }
+    /* el mismo guardia que las tarjetas de manos: si el chat está CERRADO se abre, porque si
+       no la tarjeta se pinta dentro de un panel invisible — el fallo del 20-09 */
+    try{ const ov=$("#iaOv"); if((!ov||!ov.classList.contains("show")) && typeof abrirIA==="function") abrirIA(); }catch(_){}
+    const caro = sug.motor==="opus";
+    /* 🖐️ se mira si Rey estaba pegado abajo ANTES de añadir nada: al añadir la tarjeta el
+       contenido crece, y mirarlo después daría SIEMPRE «no estaba abajo» — con eso la tarjeta
+       aparecería fuera de la pantalla y él no la vería ([[apex-no-le-quitan-el-sitio]]).
+       Y al revés tampoco vale arrastrarle al final si estaba leyendo arriba. */
+    let _abajoCb = true;
+    try{ const c0=$("#iaMsgs"); _abajoCb = (typeof pegadoAbajo!=="function") || pegadoAbajo(c0); }catch(_){}
+    IA_CEREBRO_PEND = { sug, fin };
+    iaPintarCerebro();
+    try{ if(_abajoCb){ const cont=$("#iaMsgs"); cont.scrollTop=cont.scrollHeight; } }catch(_){}
+    /* 🎈 y en su cuerpo flotante, para decidir sin abrir Apex (lo pidió así el 21-09) */
+    try{ const PV=vozNativa(); if(PV&&PV.robertoTarjeta) PV.robertoTarjeta({texto:"🎫 ¿Con qué cerebro te contesto?\nRecomiendo: "+(caro?"🧠 A fondo":"⚡ Ágil")+"\n✓ = lo recomendado · ✕ = el otro"}); }catch(_){}
+    try{ IA.cerebroFuera = (si)=>fin(si ? (caro?"opus":"sonnet") : (caro?"sonnet":"opus")); }catch(_){}
+    try{ if(navigator.vibrate) navigator.vibrate([90,50,90]); }catch(_){}
+    /* ⏳ si no la contesta en 2 minutos, sigue como siempre: preguntar con qué cerebro
+       contestar jamás puede impedir que Roberto conteste ([[apex-nada-bloquea-el-hilo]]) */
+    setTimeout(()=>fin(null), 120000);
+  });
+}
+
+async function iaCerebroDeEstaPregunta(msgs){
+  try{
+    if(typeof MOTO!=="undefined" && MOTO && MOTO.on) return null;   /* conduciendo: elige él */
+    if(typeof iaMotor==="function" && iaMotor()==="opus") return null;  /* ya lo fijó Rey en ⚙️ */
+    const q = iaTextoUltimaPregunta(msgs);
+    if(!q || q.length < 4) return null;
+    const ctl = (typeof AbortController!=="undefined") ? new AbortController() : null;
+    const tt = ctl ? setTimeout(()=>{ try{ ctl.abort(); }catch(_){} }, 7000) : null;
+    let sug=null;
+    try{
+      const r=await fetch(iaBase()+"/cerebro/sugerir",{method:"POST",headers:{"content-type":"application/json"},
+        body:JSON.stringify({texto:q.slice(0,1200)}), signal: ctl?ctl.signal:undefined});
+      sug=await r.json().catch(()=>null);
+    }finally{ if(tt) clearTimeout(tt); }
+    if(!sug || !sug.ok || !sug.motor) return null;
+    return await iaTarjetaCerebro(sug);
+  }catch(_){ return null; }
+}
+
 async function iaBgStart(msgs, c, motor){
-  const motorMsg = motor || iaMotor();   /* el motor de ESTA consulta viaja con su trabajo */
+  /* 🎫 v7.201 — con el modo moto APAGADO, Rey elige. Con el modo moto encendido, ni se le
+     pregunta: va conduciendo o entrenando y no puede tocar nada. */
+  let motorFijo = null;
+  if(!motor){ try{ motorFijo = await iaCerebroDeEstaPregunta(msgs); }catch(_){ motorFijo=null; } }
+  const motorMsg = motorFijo || motor || iaMotor();   /* el motor de ESTA consulta viaja con su trabajo */
   IA.busy=true; pintarIAChat(); iaVigilarBusy();   /* 🛟 nunca se queda bloqueado */
   const jobId = Date.now().toString(36)+Math.random().toString(36).slice(2,8);
   iaPendGuardar({ jobId, convId:c.id, msgs, motor:motorMsg, ts:Date.now() });
@@ -17348,7 +17481,7 @@ async function iaBgStart(msgs, c, motor){
     const ctl = (typeof AbortController!=="undefined") ? new AbortController() : null;
     const tmr = ctl ? setTimeout(()=>{ try{ ctl.abort(); }catch(_){} }, 150000) : null;
     const r=await fetch(iaBase()+"/chat/bg",{method:"POST",headers:{"content-type":"application/json"},
-      body:JSON.stringify({jobId, sostener:true, system:iaSystemFull(), messages:msgs, clientTools:IA_TOOLS, motor:motorMsg}),
+      body:JSON.stringify({jobId, sostener:true, system:iaSystemFull(), messages:msgs, clientTools:IA_TOOLS, motor:motorMsg, motorFijo}),
       signal: ctl?ctl.signal:undefined});
     if(tmr) clearTimeout(tmr);
     const d=await r.json().catch(()=>({}));

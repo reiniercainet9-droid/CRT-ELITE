@@ -1,70 +1,68 @@
-APEX v7.200 — TRADING DESK
+APEX v7.201 — TRADING DESK
 =========================
 
-🕵️ ROBERTO YA NO PUEDE DARTE POR HECHO LO QUE NO HIZO
+🎫 CON QUÉ CEREBRO TE CONTESTO — la tarjeta vuelve, y solo cuando puedes tocarla
 
-Rey, el 21-09: «ahora me está confirmando cosas que no está haciendo y me las da por
-realizadas… si a la hora del backtesting me dice que registró la operación y pierdo
-datos… ya no le tengo confianza».
+Rey (21-09): «Roberto debe seguir poniéndome la tarjeta de con cuál cosa me va a responder,
+porque me está gastando demasiado… ese automático prefiero que funcione cuando esté en el
+modo moto solamente, o sea, como estoy conduciendo o entrenando; pero estando apagado el
+modo moto sí debe sacarme la tarjeta en el chat o en la nube con Roberto flotando».
 
-LO QUE PASÓ, exacto. Le pidió reemplazar y FIJAR el chat del análisis semanal. Roberto
-llamó dos veces a guardar_plan_semanal (que guarda los DATOS del plan) y nunca tocó
-organizar_chat, que es la única mano que fija un chat. Y escribió: «los dos planes
-quedaron reemplazados y FIJADOS». En su pantalla, el análisis del 15/09 seguía fijado.
+Con el modo moto APAGADO te pregunta, te dice cuál recomienda y por qué, y decides tú.
+Con el modo moto ENCENDIDO elige él: vas conduciendo y no puedes tocar nada.
+Sale en el chat y en su cuerpo flotante. Si no la tocas en 2 minutos, sigue solo: preguntar
+con qué cerebro contestar jamás puede dejarte sin respuesta.
 
-Ya existía un guardián para esto desde la v7.136… pero cubría UNA de sus 54 manos: el
-plan. Ahora cubre las que le pueden costar datos: fijar/desfijar, borrar, registrar una
-operación, crear avisos, reemplazar, guardar en memoria y tocar el Ejecutor.
+MEDIDO, que es lo que la justifica: el 21-09 fueron 4 mensajes de chat = $2,89, el 74% del
+gasto del día. Un análisis con el cerebro caro y el caché frío cuesta ~$1,75 SOLO en
+cargarle el contexto, antes de pensar nada.
 
-Y es EXACTO, no una sospecha: fijar un chat solo ocurre llamando a su mano. Si el texto
-dice «fijé» y en esa vuelta no se llamó a organizar_chat, no se fijó nada. Roberto se
-corrige solo, en el chat, diciendo qué mano faltó.
+🧠 Y UN FALLO QUE COSTABA DINERO Y CALIDAD A LA VEZ
 
-⚠️ Un fallo mío dentro del arreglo, que aparece porque se probó ejecutando: en JavaScript
-la «é» no cuenta como letra, así que /\bregistré\b/ NO CASA NUNCA. El guardián parecía
-funcionar porque el único caso que cazaba («fijados») no llevaba tilde. «registré la
-operación», «borré el chat» y «cambié las reglas» pasaban limpias. Corregido y probado.
+Su registro del portero, con sus horas:
+    07:51  OPUS    «Análisis de gráfico en vivo, sesgo y setup del día»
+    07:52  SONNET  «Falta contenido real del mensaje para evaluar»
 
-🔇 Y CUANDO SE QUEDE ATASCADO, LO DICE
-Rey: «al quedarse tupido, en vez de decirme: hay un problema, las tarjetas no están
-saliendo, mira tal cosa con Claud». Ahora, si lleva minutos parado esperando una tarjeta,
-lo dice con esas palabras — y si la tarjeta NO está en pantalla, le da a Rey el nombre
-exacto de la pieza para que Claud vaya directo, sin repetir la búsqueda entera.
+Las dos son LA MISMA pregunta. Cada pregunta con manos son DOS llamadas, y en la segunda el
+último mensaje ya no es la de Rey: son los resultados de las manos. Sin pregunta que juzgar,
+el portero caía al barato. Pagaba el cerebro caro para PENSAR y le contestaba el barato.
 
-📞 LA TARJETA DE LLAMAR Y WHATSAPP, EN CRISTIANO
-Auditado: no tenían texto propio y caían al final del todo, que devuelve el volcado crudo.
-La tarjeta decía, literal: llamar {"numero":"+595981234567","quien":"Sonia"}. Y esa
-tarjeta es justo la red por si entendió mal un nombre. Ahora sale el nombre, el número
-entero y un aviso de que compruebe.
+El fallo estaba COPIADO en cinco sitios. Uno de ellos era la búsqueda en su memoria profunda,
+que al continuar le traía recuerdos que no tenían nada que ver con lo que preguntó.
+Arreglados los cinco con una sola pieza. Y la decisión se recuerda 30 min: ni se paga dos
+veces ni puede cambiar a mitad de la respuesta.
 
-🗂️ EL MAPA DE CHATS DEJA DE MENTIRLE
-Se le decía «TU VISTA TOTAL» y solo veía los fijados, los importantes y los 6 últimos.
-Con eso era imposible que cumpliera la limpieza dominical que Rey echa en falta: los
-candidatos a borrar son los VIEJOS, que eran los únicos que no veía. Ahora ve también los
-6 más viejos, y se le dice exactamente lo que ve y lo que no.
+De paso: ahora su elección en la tarjeta MANDA sobre el portero. Antes solo se podía forzar
+el caro; si elegía el barato, el portero volvía a decidir y podía contradecirle.
 
-✂️ EL PARTE DEL EJECUTOR, CON LA GESTIÓN DENTRO
-Rey: «en el parte no dice dónde debe cerrar según los parciales ni lo marca en el gráfico».
-El aviso daba entrada, SL, TP y riesgo, y se callaba los dos niveles que deciden el
-resultado. Con su operación real de hoy habría dicho:
+📐 LOS % DE SU OPERACIÓN, EN SU PROPIA HERRAMIENTA DE POSICIONES
 
-    🛡️ BE a 1R    → 1.14664
-    ✂️ Parcial 80% a 1.5R → 1.14628 (cierra 2.48 de 3.1 lotes)
-    🎯 TP a 2R    → 1.14591
+Rey (21-09): «esos % 25, 50, 75 y 80 me los marca automáticamente apenas detecte que yo puse
+la herramienta, y de ahí yo decido qué hacer cuando llegue a cada %... clara, bien definida,
+pero discreta a la vez».
 
-Los números salen de su propia configuración, la MISMA que usa el Ejecutor para actuar —
-aquí no se recalcula nada. Y esos niveles viajan ya a la captura: el Puente v4.31 los
-dibuja en el gráfico. Si la nube no los manda, no se dibuja nada: un precio inventado en
-su gráfico sería peor que el hueco.
+Cuando opera ÉL (no el Ejecutor), en vivo y en replay. PROBADO EN SU GRÁFICO, con una caja
+creada y borrada después:
 
-🖥️ Y LA PANTALLA NEGRA QUE VOLVÍA
-Cuatro tareas suyas llamaban a powershell.exe directamente y Windows les abre la consola
-antes de poder esconderla. El 18-09 arreglé UNA y dejé las otras cuatro con el mismo
-fallo. Ahora las siete van por un envoltorio callado, probado ejecutándolo.
+    entrada 1,14886 · stop 20 pt · objetivo 60 pt (1:3)
+      → 1,14871 «25% · 0.75R»   1,14856 «50% · 1.5R»
+        1,14841 «75% · 2.25R»   1,14838 «80% · 2.4R»
 
-🔬 Y QUEDA LA HERRAMIENTA: herramientas/auditar-roberto.cjs cruza las cuatro piezas de cada
-una de sus 54 manos (declarada, descrita, ejecutable, que conteste), sus visiones y sus
-reglas. Validada en los dos sentidos: 4 hallazgos contra el fichero de ayer, 0 contra éste.
+    cambiado el objetivo a 1:5 → se recalcularon SOLAS, sin duplicados
+    borrada la caja → las cuatro marcas se fueron con ella (0 dibujos)
+
+Línea de 1 px punteada y letra de 10: se ve y no carga el gráfico. El valor del punto sale
+del propio símbolo, así que vale igual en divisas, oro o índices. Y solo se redibuja cuando
+él cambia la caja — si no, no toca ni un píxel (corre cada 20 s: sin eso le parpadearía).
+
+📊 Y UNA MEDIDA MÍA CORREGIDA
+
+La decisión de poner el caché a 1 hora se tomó el 12-09 con «el 68% de sus mensajes llegan
+dentro de la hora». Ese 68% estaba inflado: el 48% de los huecos eran pares de manos, la
+misma pregunta contada dos veces. Medido bien: 47%, y su mediana real es 1,2 HORAS — justo
+pasada del plazo. La de 1 hora sigue ganando (47 > 40) pero por los pelos, y con un dato que
+cambia dónde buscar: afinar el plazo no arregla su gasto. Lo que hay que bajar es el TAMAÑO
+de lo que se le manda en frío. Queda medido, no hecho.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

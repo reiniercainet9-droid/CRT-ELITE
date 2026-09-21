@@ -911,6 +911,12 @@ html.rob-anim-min .fab.rob-cuerpo.alerta{animation:none!important}
 .av-btn.del{padding:9px 12px;background:rgba(255,107,122,.10);border-color:rgba(255,107,122,.4);color:var(--red)}
 /* ---- Tarjeta de confirmación de acciones de Roberto ---- */
 .ia-tool{background:linear-gradient(180deg,rgba(107,138,255,.12),var(--card2));border:1px solid var(--blue);border-radius:14px;padding:13px 15px;margin:8px 0;animation:fi .2s}
+/* 🎫 v7.201 — la tarjeta del CEREBRO. Mismo cuerpo que la de manos para que se lea igual,
+   pero en dorado en vez de azul: no es una acción sobre su sistema, es una decisión de GASTO.
+   Lleva clase propia (sin .ia-tool) a propósito: la maquinaria de las manos busca .ia-tool y
+   si la compartiera, el toque desde su cuerpo flotante acabaría en el sitio equivocado. */
+.ia-cerebro{background:linear-gradient(180deg,rgba(232,185,95,.13),var(--card2));border:1px solid var(--gold);border-radius:14px;padding:13px 15px;margin:8px 0;animation:fi .2s}
+.ia-cerebro .ia-tool-h{color:var(--gold)}
 .ia-tool-h{font-weight:800;font-size:14px;color:var(--blue);margin-bottom:8px}
 .ia-tool-d{font-size:14px;color:var(--txt);line-height:1.45;white-space:pre-wrap;background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
 .ia-tool-bar{display:flex;gap:9px;margin-top:11px}
