@@ -15297,6 +15297,90 @@ function iaEjecutorArchivo(){
   }catch(_){ return ""; }
 }
 
+/* ══════════════════════════════════════════════════════════════════════════════
+   🔴 v7.206 (21-09) — LA OPERACIÓN QUE REY TIENE ABIERTA AHORA MISMO
+   ═════════════════════════════════════════════════════════════════════════════
+   Plan «20% Rey», punto 1. Su regla del 15-09: *el producto es Rey operando mejor*, y un
+   arreglo que mejora cómo VE, ENTIENDE y DECIDE vale más que uno que mejore el bot.
+
+   MEDIDO EL 21-09, simulando su VENTA real de esa mañana (EURUSD, −$151,9 VIVA):
+
+       Roberto leía:  «[🤖 EL EJECUTOR — ÚLTIMOS 7 DÍAS] … sin nada registrado»
+       ¿veía la posición viva?        NO
+       ¿veía el precio de entrada?    NO
+       ¿veía dónde iba el BE/parcial? NO
+
+   Con dinero dentro y la operación abierta, si Rey le preguntaba «¿cómo va lo mío?», Roberto
+   le contestaba que no tenía nada. El peor momento posible para estar ciego: es JUSTO cuando
+   hay decisiones que tomar (mover el stop, sacar parcial, dejar correr) y es para lo que Rey
+   construyó todo esto.
+
+   QUÉ SE LE DA, y de dónde sale cada número:
+     · la posición tal cual la manda el Ejecutor desde MT5 (entrada, SL, TP, precio, P/L);
+     · a cuántos R va AHORA, calculado con su riesgo real;
+     · dónde mueve el stop y dónde saca el parcial, de SU configuración (la misma fuente que
+       usa el bot para actuar — si un día no cuadran, cuadran mal los dos a la vez);
+     · y si el BE YA está hecho, que se ve sin preguntarle a nadie: el stop está en la entrada.
+
+   ⚠️ EL RIESGO SE MIDE BIEN AUNQUE EL STOP YA SE HAYA MOVIDO. Si el SL está en la entrada, la
+   distancia entrada-SL es CERO y todos los R saldrían infinitos o en blanco. En ese caso el
+   riesgo original se recupera del objetivo: |TP − entrada| ÷ su R objetivo.
+   ⚠️ Y LO QUE NO SE SABE, NO SALE. Ni un número inventado en una operación con su dinero
+   dentro ([[apex-roberto-no-inventa]], [[apex-las-cuentas-del-ejecutor]]). */
+function iaPosicionesVivas(){
+  try{
+    const d = (typeof EJEC_CACHE!=="undefined" && EJEC_CACHE) ? EJEC_CACHE.d : null;
+    if(!d) return "";
+    const poss = ((d.live||{}).posiciones)||[];
+    if(!poss.length) return "[🔴 POSICIONES ABIERTAS AHORA: ninguna. El Ejecutor no tiene nada vivo en MT5 en este momento.]\n";
+    const cfg = d.cfg || {};
+    const rrObj = Number(cfg.objetivoRR||2) || 2;
+    const filas = poss.map(p=>{
+      const ent=Number(p.entrada), sl=Number(p.sl), tp=Number(p.tp), ahora=Number(p.actual);
+      const esLong = String(p.dir||"").toUpperCase()==="COMPRA";
+      const dec = (String(p.entrada).split(".")[1]||"").length || 5;
+      /* el riesgo ORIGINAL, aunque el stop ya esté movido a la entrada */
+      let riesgo = (isFinite(ent)&&isFinite(sl)) ? Math.abs(ent-sl) : NaN;
+      const beHecho = isFinite(riesgo) && riesgo < Math.pow(10,-dec)*2;   /* el stop está EN la entrada */
+      if(beHecho && isFinite(tp) && isFinite(ent)) riesgo = Math.abs(tp-ent)/rrObj;
+      const aPrecio = (r)=> (ent + (esLong?1:-1)*riesgo*r).toFixed(dec);
+      const rAhora = (isFinite(riesgo)&&riesgo>0&&isFinite(ahora))
+        ? Math.round(((esLong?(ahora-ent):(ent-ahora))/riesgo)*100)/100 : null;
+      const l=[];
+      l.push("  ▸ "+(p.dir||"?")+" "+(p.sym||"?")+" · "+(p.lote!=null?p.lote+" lotes":"")
+        +" · entrada "+(p.entrada!=null?p.entrada:"?")
+        +(p.abierta?(" · abierta a las "+p.abierta):"")
+        +" · ticket "+(p.ticket||"?"));
+      l.push("     ahora "+(p.actual!=null?p.actual:"?")+" · P/L $"+(p.pl!=null?p.pl:"?")
+        +(rAhora!==null?("  →  va a "+(rAhora>=0?"+":"")+rAhora+"R"):""));
+      l.push("     stop "+(p.sl!=null?p.sl:"sin stop")+(beHecho?"  ⬅️ YA EN LA ENTRADA: el break-even ESTÁ HECHO, desde aquí no pierde":"")
+        +" · objetivo "+(p.tp!=null?p.tp:"sin objetivo"));
+      if(isFinite(riesgo) && riesgo>0){
+        if(cfg.beActivo && !beHecho){
+          const rBe=Number(cfg.beEnR||1);
+          l.push("     🛡️ mueve el stop a la entrada al llegar a "+rBe+"R → "+aPrecio(rBe)+(rAhora!==null?("  (le faltan "+Math.max(0,Math.round((rBe-rAhora)*100)/100)+"R)"):""));
+        }
+        if(cfg.parcialActivo){
+          const rPa=Number(cfg.parcialEnR||1), pct=Number(cfg.parcialPct||50);
+          const lotes = (Number(p.lote)? (Math.round(Number(p.lote)*pct)/100) : null);
+          l.push("     ✂️ cierra el "+pct+"% al llegar a "+rPa+"R → "+aPrecio(rPa)
+            +(lotes!==null?(" (serían "+lotes+" de "+p.lote+" lotes)"):"")
+            +(rAhora!==null?("  (le faltan "+Math.max(0,Math.round((rPa-rAhora)*100)/100)+"R)"):""));
+        }
+        if(isFinite(tp)) l.push("     🎯 objetivo a "+(Math.round((Math.abs(tp-ent)/riesgo)*100)/100)+"R → "+tp);
+      }
+      if(p.mfe!=null || p.mae!=null)
+        l.push("     recorrido: lo mejor que llegó a ir "+(p.mfe!=null?("+"+p.mfe+"R"):"?")+" · lo peor "+(p.mae!=null?("−"+p.mae+"R"):"?"));
+      return l.join("\n");
+    });
+    return "[🔴 LO QUE REY TIENE ABIERTO AHORA MISMO — "+poss.length+" posición(es) vivas en MT5, leídas del Ejecutor]\n"
+      + "  ⚠️ ESTO ES LO MÁS IMPORTANTE DEL CONTEXTO cuando hay algo abierto: es su dinero, ahora, con decisiones por delante.\n"
+      + "  Si te pregunta «cómo va lo mío» o «qué hago», contesta CON ESTOS NÚMEROS y JAMÁS digas que no tiene nada abierto.\n"
+      + "  Los niveles de gestión salen de SU configuración del Ejecutor, la misma que usa el bot para actuar.\n"
+      + filas.join("\n") + "\n";
+  }catch(_){ return ""; }
+}
+
 function iaEjecutorHoy(){
   try{
     const d = EJEC_CACHE.d;
@@ -18550,7 +18634,7 @@ async function iaEnviar(textoForzado, promptExtra){
      viaja en su bloque ESTABLE (idéntico byte a byte al que luego va en el historial) con la
      marca de caché puesta AQUÍ MISMO, y el contexto vivo va DETRÁS de la marca, en su propio
      bloque, a precio normal (1×). El worker v5.68 respeta esta marca y no la pisa. */
-  const inj="=== CONTEXTO VIVO DE LA APP (datos de AHORA MISMO; el mensaje de Rey es el bloque anterior) ===\n"+entTxt+climaTxt+iaReloj()+"\n"+grafTxt+calTxt+iaContexto()+"\n"+iaEstrategiaDef()+"\n"+guardianRiesgo()+"\n"+iaPlan()+"\n"+iaAciertos()+"\n"+(estadoRecuperacionFreno().block||"")+iaFugas()+"\n"+iaRacha()+"\n"+iaPatrones()+"\n"+iaDatosSueltos()+"\n"+iaHitos()+"\n"+iaChats()+"\n"+iaPendientes()+"\n"+iaPlanSemanal()+"\n"+iaAvisos()+"\n"+iaEntradasAbiertas()+iaEjecutorArchivo()+iaEjecutorHoy()+iaTemplo()+iaLeyes(texto)+marco+"\n=== FIN DEL CONTEXTO — responde al mensaje de Rey del bloque anterior ===";
+  const inj="=== CONTEXTO VIVO DE LA APP (datos de AHORA MISMO; el mensaje de Rey es el bloque anterior) ===\n"+entTxt+climaTxt+iaReloj()+"\n"+grafTxt+calTxt+iaContexto()+"\n"+iaEstrategiaDef()+"\n"+guardianRiesgo()+"\n"+iaPlan()+"\n"+iaAciertos()+"\n"+(estadoRecuperacionFreno().block||"")+iaFugas()+"\n"+iaRacha()+"\n"+iaPatrones()+"\n"+iaDatosSueltos()+"\n"+iaHitos()+"\n"+iaChats()+"\n"+iaPendientes()+"\n"+iaPlanSemanal()+"\n"+iaAvisos()+"\n"+iaPosicionesVivas()+iaEntradasAbiertas()+iaEjecutorArchivo()+iaEjecutorHoy()+iaTemplo()+iaLeyes(texto)+marco+"\n=== FIN DEL CONTEXTO — responde al mensaje de Rey del bloque anterior ===";
   const last=msgs[msgs.length-1];
   const textoMsg=c.msgs[c.msgs.length-1].content;   /* EXACTAMENTE lo guardado (texto + nota del doc) */
   let bloquesMsg = Array.isArray(last.content) ? last.content.filter(b=>b.type==="image") : [];   /* la foto va delante */

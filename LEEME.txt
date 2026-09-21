@@ -1,34 +1,47 @@
-APEX v7.205 — TRADING DESK
+APEX v7.206 — TRADING DESK
 =========================
 
-📐 SUS MARCAS, AHORA CON LA MANO Y LOS OJOS DE ROBERTO — y el fantasma de la galería, fuera
+🔴 PLAN «20% REY» · PUNTO 1 — ROBERTO YA VE LA OPERACIÓN QUE REY TIENE ABIERTA
 
-🖐️ LA MANO Y LA VISIÓN (ley de Rey: cada cosa nueva llega con las dos, o no está terminada)
-Las marcas de sus % nacieron esta mañana sin ninguna de las dos: no podía decirle «quítame
-las marcas» y Roberto no podía ni ver si estaban puestas.
-· MANO: marcas_posicion — encenderlas o apagarlas. Con tarjeta, porque es su gráfico. Y al
-  apagarlas RETIRA las que ya estén puestas, no solo deja de pintar: apagar a medias le
-  dejaría el gráfico con marcas viejas que ya no se actualizan.
-· VISIÓN: dentro de lo que Roberto ve del gráfico aparece «📐 MARCAS DE SUS %: ENCENDIDAS ·
-  2 caja(s) marcada(s) ahora mismo». Sin esto podría apagárselas y contestarle «no lo sé».
-· El interruptor vive en un fichero junto al Puente: si Rey las apaga y el guardián relanza
-  el Puente, NO vuelven solas.
+Su regla del 15-09: el producto es Rey operando mejor, y un arreglo que mejora cómo VE,
+ENTIENDE y DECIDE vale más que uno que mejore el bot.
 
-👻 LA FOTO QUE NO SE VEÍA — y el fallo que destapó
-Rey (21-09): «hay una foto ahí que no se ve». Era una captura que dejó una prueba MÍA en su
-galería. Pero al mirarlo apareció un fallo suyo, no mío:
-cuando él borra una captura automática, la app la quita de su galería y borra la imagen de la
-nube… pero la ENTRADA se queda en la lista de la nube. En la siguiente sincronización vuelve,
-ya sin imagen: un fantasma «no disponible» que reaparece cada vez que abre Apex.
-Arreglado por los dos lados: la app recuerda lo que borra (y esa lista SUBE A LA NUBE — si no,
-los fantasmas volverían al cambiar de teléfono; me lo cazó un banco), y la nube limpia la
-lista, no solo la imagen.
+MEDIDO EL 21-09, simulando su VENTA real de esa mañana (EURUSD, −$151,9, VIVA):
 
-⚠️ Y UN AVISO QUE FALTABA EN MI PROPIA HERRAMIENTA
-publicar-web decía «ya está publicada esa versión: no toco nada» cuando el PAQUETE estaba al
-día pero el PROYECTO iba por delante. Correcto para el paquete, y engañoso: los cambios no
-llegaban a Rey y nadie se enteraba. Me pasó hoy con la 7.205. Ahora dice el número exacto de
-las dos y qué falta hacer.
+    Roberto leía:  «[🤖 EL EJECUTOR — ÚLTIMOS 7 DÍAS] … sin nada registrado»
+    ¿veía la posición viva?        NO
+    ¿veía el precio de entrada?    NO
+    ¿veía dónde iba el BE/parcial? NO
+
+Con dinero dentro, si Rey le preguntaba «¿cómo va lo mío?», le contestaba que no tenía nada.
+El peor momento posible para estar ciego: es JUSTO cuando hay decisiones por delante —mover
+el stop, sacar parcial, dejar correr— y es para lo que construyó todo esto.
+
+AHORA LEE ESTO, y va lo PRIMERO de su contexto cuando hay algo abierto:
+
+    ▸ VENTA EURUSD · 3.1 lotes · entrada 1.14737 · abierta a las 21/09 05:31
+       ahora 1.14786 · P/L $-151.9  →  va a -0.67R
+       stop 1.1481 · objetivo 1.14591
+       🛡️ mueve el stop a la entrada al llegar a 1R → 1.14664  (le faltan 1.67R)
+       ✂️ cierra el 80% al llegar a 1.5R → 1.14628 (serían 2.48 de 3.1 lotes)  (le faltan 2.17R)
+       🎯 objetivo a 2R → 1.14591
+
+Los R importan más que los dólares: el dinero depende del lote, los R dependen de su plan.
+
+⚠️ LA TRAMPA QUE CASI LO ROMPE: cuando el break-even se hace, el stop queda EN la entrada y
+la distancia entrada−SL es CERO — todos los R saldrían infinitos o en blanco justo en la
+SEGUNDA MITAD de la operación, que es cuando Rey más mira la pantalla. El riesgo original se
+recupera del objetivo (|TP − entrada| ÷ su R objetivo). Probado: con el BE hecho dice «el
+break-even ESTÁ HECHO, desde aquí no pierde», calcula +1.19R y deja de repetirle algo ya hecho.
+
+Y lo que no se sabe NO SALE: sin datos del Ejecutor, ni una línea. Mejor un hueco que un
+número inventado en una operación con su dinero dentro.
+
+🖲️ LA REVISIÓN DE BOTONES, DE PASO
+19 secciones · 202 botones · 197 responden · 0 rotos. Los 5 «sin manejador» eran falsos: ntFF
+es un enlace <a href> a ForexFactory y kA/kB/kC/kN son la leyenda de grados con
+pointer-events:none. La revisión ya distingue las dos cosas: un revisor que grita en falso
+deja de leerse, y entonces el día que haya un botón muerto de verdad nadie le hará caso.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
