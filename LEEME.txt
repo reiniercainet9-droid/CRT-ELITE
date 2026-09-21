@@ -1,40 +1,34 @@
-APEX v7.204 — TRADING DESK
+APEX v7.205 — TRADING DESK
 =========================
 
-📸 LAS CAPTURAS YA SE PUEDEN ESTUDIAR — tres averías distintas, en tres sitios distintos
+📐 SUS MARCAS, AHORA CON LA MANO Y LOS OJOS DE ROBERTO — y el fantasma de la galería, fuera
 
-Rey (21-09), con cuatro pantallazos suyos: «dime qué se puede estudiar ahí… gire el teléfono
-como lo gire no se ve nada, toda la información está tapada por los botones y carteles. Y
-además la foto es tirada al final de la pantalla, en vez de centralizar donde verdaderamente
-fue hecha la operación».
+🖐️ LA MANO Y LA VISIÓN (ley de Rey: cada cosa nueva llega con las dos, o no está terminada)
+Las marcas de sus % nacieron esta mañana sin ninguna de las dos: no podía decirle «quítame
+las marcas» y Roberto no podía ni ver si estaban puestas.
+· MANO: marcas_posicion — encenderlas o apagarlas. Con tarjeta, porque es su gráfico. Y al
+  apagarlas RETIRA las que ya estén puestas, no solo deja de pintar: apagar a medias le
+  dejaría el gráfico con marcas viejas que ya no se actualizan.
+· VISIÓN: dentro de lo que Roberto ve del gráfico aparece «📐 MARCAS DE SUS %: ENCENDIDAS ·
+  2 caja(s) marcada(s) ahora mismo». Sin esto podría apagárselas y contestarle «no lo sé».
+· El interruptor vive en un fichero junto al Puente: si Rey las apaga y el guardián relanza
+  el Puente, NO vuelven solas.
 
-1) SE FOTOGRAFIABA LA VENTANA, NO EL GRÁFICO
-El recorte era {x:0, y:0, ancho, alto} — la página entera. Cada foto suya llevaba dentro la
-barra de dibujo, el buscador de símbolo, el panel derecho y la barra de abajo.
-Probado sacando las dos fotos de su gráfico por el mismo camino que usa el Puente:
+👻 LA FOTO QUE NO SE VEÍA — y el fallo que destapó
+Rey (21-09): «hay una foto ahí que no se ve». Era una captura que dejó una prueba MÍA en su
+galería. Pero al mirarlo apareció un fallo suyo, no mío:
+cuando él borra una captura automática, la app la quita de su galería y borra la imagen de la
+nube… pero la ENTRADA se queda en la lista de la nube. En la siguiente sincronización vuelve,
+ya sin imagen: un fantasma «no disponible» que reaparece cada vez que abre Apex.
+Arreglado por los dos lados: la app recuerda lo que borra (y esa lista SUBE A LA NUBE — si no,
+los fantasmas volverían al cambiar de teléfono; me lo cazó un banco), y la nube limpia la
+lista, no solo la imagen.
 
-    ANTES:  2716 × 1364 px · 312 KB
-    AHORA:  2506 × 1202 px · 221 KB
-    el 19% de cada captura era marco, y pesa un 29% menos (cuenta en 4G)
-
-Se queda el eje de precios y su tabla CRT Elite, que la pinta el indicador DENTRO del gráfico.
-⚠️ Se probó también .chart-gui-wrapper, que parece más limpio: deja FUERA el eje de precios.
-Una captura de una operación sin eje de precios no se puede estudiar. Descartado.
-
-2) SU ENTRADA SALÍA PEGADA AL BORDE DERECHO
-No estaba mal calculado: se le pedía al gráfico algo que todavía no había pasado. El encuadre
-pedía 45 min POR DELANTE de la entrada, y en el momento de entrar NO EXISTEN velas futuras —
-el recorte se topaba con la última vela cargada.
-Ahora se pide HUECO VACÍO (30% del ancho), que es lo único que sí se puede tener: la entrada
-cae a dos tercios de la foto y se ve de dónde venía el precio Y hacia dónde va. Solo en las
-entradas: al cerrar, la operación ya ocupa su sitio.
-⚠️ Esto se lo di por arreglado el 15-09 y el 16-09. Las dos veces miré la altura y la escala.
-El encuadre a la derecha no lo miré ninguna de las dos.
-
-3) LOS BOTONES DEL VISOR IBAN ENCIMA DE LA FOTO
-Y girando el teléfono se ponen en columna A LA DERECHA, justo sobre la tabla de lectura del
-indicador — el dato más valioso de la imagen. La barra que le sirve para compartir tapaba lo
-que vino a enseñar. Ahora se aparta sola a los 3,5 s y vuelve con un toque.
+⚠️ Y UN AVISO QUE FALTABA EN MI PROPIA HERRAMIENTA
+publicar-web decía «ya está publicada esa versión: no toco nada» cuando el PAQUETE estaba al
+día pero el PROYECTO iba por delante. Correcto para el paquete, y engañoso: los cambios no
+llegaban a Rey y nadie se enteraba. Me pasó hoy con la 7.205. Ahora dice el número exacto de
+las dos y qué falta hacer.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

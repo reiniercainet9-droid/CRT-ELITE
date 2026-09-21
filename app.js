@@ -47,7 +47,7 @@ const save = (k,v)=>{ try{ localStorage.setItem(k,JSON.stringify(v)); nubeMarcar
    En otro móvil, con el mismo código, restaura todo intacto (nada se pierde).
    No usa claves del sistema (el repo es público): el código ES la llave.
    ============================================================ */
-const NUBE_KEYS = ["crtelite_trades_v2","crtelite_cuentas_v3","crtelite_reminders_v3","crtelite_chk_v2","crtelite_conf_v2","crtelite_reglas_v2","crtelite_balance_v2","crtelite_ctx_v3","crtelite_estrategias_v3","crtelite_estrdefs_v1","crtelite_pares_v3","crtelite_calpares_v3","crtelite_notif_v3","crtelite_vigila_v3","crtelite_fabpos_v3","crtelite_iavoz_v3","crtelite_shots_v1","crtelite_ventanas_v1","crtelite_plansem_v1","crtelite_iaconvs_v3","crtelite_iaact_v3","crtelite_ejectrades_v1","crtelite_llamamodo",
+const NUBE_KEYS = ["crtelite_trades_v2","crtelite_cuentas_v3","crtelite_reminders_v3","crtelite_chk_v2","crtelite_conf_v2","crtelite_reglas_v2","crtelite_balance_v2","crtelite_ctx_v3","crtelite_estrategias_v3","crtelite_estrdefs_v1","crtelite_pares_v3","crtelite_calpares_v3","crtelite_notif_v3","crtelite_vigila_v3","crtelite_fabpos_v3","crtelite_iavoz_v3","crtelite_shots_v1","crtelite_shots_borradas","crtelite_ventanas_v1","crtelite_plansem_v1","crtelite_iaconvs_v3","crtelite_iaact_v3","crtelite_ejectrades_v1","crtelite_llamamodo",
   /* 🧭 v6.96 — LO QUE FALTABA, y lo descubrió Rey: "en la APK no me deja pasar a la fase 3
      cuando en la web ya estoy en ella". Su PLAN no viajaba, así que su progreso vivía en
      un solo aparato… y si perdía el teléfono, en ninguno. Con él van los VEREDICTOS de
@@ -108,6 +108,7 @@ const NUBE_NOMBRES = {
   "crtelite_fabpos_v3":"dónde dejaste el botón de Roberto",
   "crtelite_iavoz_v3":"la voz de Roberto",
   "crtelite_shots_v1":"tus capturas de pantalla",
+  "crtelite_shots_borradas":"las capturas que borraste (para que no vuelvan)",
   "crtelite_ventanas_v1":"tus ventanas y killzones",
   "crtelite_plansem_v1":"tu plan de la semana",
   /* 🛡️ v7.160 — en el respaldo se ve con su nombre, no en crudo: cuando Rey abra la
@@ -516,8 +517,22 @@ async function abrirFoto(id, meta){
   };
 }
 
+/* 👻 v7.205 (21-09) — UNA CAPTURA BORRADA NO PUEDE VOLVER.
+   Rey, el 21-09, con su galería delante: «hay una foto ahí que no se ve».
+   LO QUE PASABA: al borrar una captura AUTOMÁTICA, la app la quitaba de su galería y borraba
+   la imagen de la nube… pero la ENTRADA se quedaba en la lista de la nube (autoshots). En la
+   siguiente sincronización syncAutoShots la volvía a meter — ya sin imagen. Un fantasma
+   «no disponible» que vuelve cada vez que abre Apex, para siempre.
+   Ahora se apunta el id en una lista de borradas y la sincronización no lo vuelve a traer.
+   La lista se guarda topada: son ids cortos, pero nada crece sin límite en su teléfono. */
+function capturasBorradas(){ try{ return JSON.parse(localStorage.getItem("crtelite_shots_borradas")||"[]"); }catch(_){ return []; } }
+function apuntarCapturaBorrada(id){
+  try{ const l=capturasBorradas(); if(l.indexOf(id)<0){ l.push(id); localStorage.setItem("crtelite_shots_borradas", JSON.stringify(l.slice(-300))); } }catch(_){}
+}
+
 function borrarCaptura(id){
   let cambio=false;
+  apuntarCapturaBorrada(id);
   const n=SHOTS.length; SHOTS=SHOTS.filter(s=>s.id!==id); if(SHOTS.length!==n){ save(K.shots,SHOTS); cambio=true; }
   TRADES.forEach(t=>{
     if(t.shotOpen===id){ delete t.shotOpen; cambio=true; }
@@ -1318,6 +1333,7 @@ function syncAutoShots(){
       let n=0;
       d.shots.forEach(s=>{
         if(!s || !s.id || SHOTS.some(x=>x.id===s.id)) return;
+        if(capturasBorradas().indexOf(s.id)>=0) return;   /* v7.205: la borró Rey — no vuelve */
         const dt=new Date(s.ts||Date.now());
         const f=dt.getFullYear()+"-"+String(dt.getMonth()+1).padStart(2,"0")+"-"+String(dt.getDate()).padStart(2,"0");
         SHOTS.unshift({ id:s.id, fecha:f, par:(s.sym||"—"), tipo:"Auto-entrada", ts:s.ts||Date.now() });
@@ -15815,7 +15831,16 @@ async function iaGrafico(){
     const pares=Array.isArray(d.pares)?d.pares:(d.estado?[d.estado]:[]);
     if(!d || !d.viva || !pares.length)
       return "[👁️ GRÁFICO EN VIVO: la PC de Rey NO está conectada ahora (sin lectura fresca del puente). Si te pide análisis del gráfico en vivo, dile con cariño que encienda la PC y abra el 'Puente Apex' (doble clic en 'Arrancar Puente Apex'). NO inventes niveles ni digas que ves el gráfico si no está vivo.]";
+    /* 📐 v7.205 — SUS MARCAS, DENTRO DE LO QUE ROBERTO VE DEL GRÁFICO.
+       Ley de Rey: cada cosa nueva le llega como mano Y como visión. Con la mano sola,
+       Roberto podría apagárselas y no saber decirle si están puestas — y contestaría «no lo
+       sé» sobre algo que tiene delante ([[apex-mano-y-vision-en-todo-lo-nuevo]]). */
+    let marcasTxt="";
+    try{ if(d.marcas){ marcasTxt = "📐 MARCAS DE SUS %: "+(d.marcas.on?"ENCENDIDAS":"APAGADAS")
+      +(d.marcas.on?(" · "+(d.marcas.cajas||0)+" caja(s) de posición marcada(s) ahora mismo"):"")
+      +". Cuando Rey pone su herramienta de posiciones se le marcan solas el 25, 50, 75 y 80% del camino de la entrada al TP, con su múltiplo R. Puedes encenderlas o apagarlas con marcas_posicion.\n"; } }catch(_){}
     let s="[👁️ GRÁFICOS EN VIVO ("+pares.length+" par(es), leído(s) hace "+(d.edad_seg||0)+"s por el Puente Apex — ES REAL, úsalo como verdad):\n";
+    s+=marcasTxt;
     pares.forEach(e=>{
       s+="\n── "+(e.symbol||"?")+" · TF "+(e.resolution||"?")+" · Precio "+(e.price!=null?e.price:"?")+" ──\n";
       if(Array.isArray(e.tablas) && e.tablas.length){ e.tablas.forEach(t=>(t.rows||[]).forEach(row=>{ s+="   "+row+"\n"; })); }
@@ -16287,6 +16312,11 @@ const IA_TOOLS = [
      Encenderlo tampoco gasta solo: lo está pidiendo ÉL ([[apex-nada-obligatorio-nada-gasta-solo]]). */
   { name:"modo_moto", description:"ENCIENDE o APAGA el modo moto (manos libres por el casco). Úsalo cuando Rey te lo pida de palabra: «enciende el modo moto», «modo moto», «apágalo», «ya puedo mirar la pantalla». Encendido, te escucha por el casco y tú le contestas hablado y corto. Es instantáneo y reversible: se aplica SIN tarjeta, porque si te lo pide conduciendo no puede tocar nada. Si te pide APAGARLO, hazlo siempre — jamás discutas eso.",
     input_schema:{ type:"object", properties:{ on:{type:"boolean",description:"true lo enciende, false lo apaga"} }, required:["on"] } },
+  /* 📐 v7.205 — LA MANO SOBRE SUS MARCAS DE LA HERRAMIENTA DE POSICIONES.
+     Ley de Rey: cada cosa nueva le llega a Roberto como MANO y como VISIÓN, o no está
+     terminada ([[apex-mano-y-vision-en-todo-lo-nuevo]]). Las marcas nacieron hoy sin las dos. */
+  { name:"marcas_posicion", description:"ENCIENDE o APAGA las marcas automáticas de los % (25, 50, 75 y 80% del camino de la entrada al TP) que se pintan solas dentro de la herramienta de posiciones de Rey cuando la pone en su gráfico. Úsalo cuando te diga «quítame las marcas», «me ensucian el gráfico», «vuelve a ponerlas». Necesita su PC con el Puente. El cambio se ve en el gráfico en menos de 20 segundos. Rey lo aprueba con tarjeta: es su gráfico.",
+    input_schema:{ type:"object", properties:{ on:{type:"boolean",description:"true las enciende, false las apaga y quita las que haya"} }, required:["on"] } },
   { name:"tema_apex", description:"Cambia el TEMA VISUAL de Apex y del chat: 'claro' (☀️ para ver bien a plena luz del sol) u 'oscuro' (🌙 el clásico de la app). Úsalo cuando Rey te lo pida de palabra ('ponme el modo claro'). Es cosmético, instantáneo y reversible: se aplica SIN tarjeta.",
     input_schema:{ type:"object", properties:{ tema:{type:"string",enum:["claro","oscuro"]} }, required:["tema"] } },
   { name:"estrategia_vigente", description:"Marca una estrategia como ⭐ VIGENTE: la que MANDA en el 🤖 Ejecutor y en los análisis de señales (solo puede haber una). REGLA DURA: solo estrategias en estado ✅ Aprobada (pasaron el laboratorio con backtest y Rey las aprobó). OJO honestidad: hoy el Ejecutor solo sabe ejecutar señales de CRT Elite — si Rey pone vigente otra estrategia, adviértele que ejecutarla de verdad requiere que Claude le construya sus señales/reglas en una tanda de código. SIEMPRE con tarjeta.",
@@ -16408,6 +16438,9 @@ function describeTool(name, i){
   if(name==="estado_estrategia") return "📚 Mover \""+(i.nombre||CTX.estrategia)+"\" a estado "+(({borrador:"💡 Borrador",laboratorio:"🧪 En laboratorio",aprobada:"✅ Aprobada",archivada:"📦 Archivada"})[i.estado]||i.estado)+(i.motivo?("\nPorque: "+i.motivo):"");
   if(name==="estrategia_vigente") return "⭐ Poner VIGENTE la estrategia \""+(i.nombre||"?")+"\" — desde ya es la que manda en el 🤖 Ejecutor y en los análisis de señales";
   if(name==="modo_moto") return (i.on?"🏍️ ENCENDER el modo moto (te escucho por el casco y te contesto hablado)":"🏍️ APAGAR el modo moto");
+  if(name==="marcas_posicion") return i.on
+    ? "📐 ENCENDER las marcas de tus % (25 · 50 · 75 · 80% del camino al TP) en tu herramienta de posiciones"
+    : "📐 APAGAR las marcas de tus % y quitar las que estén puestas en el gráfico";
   if(name==="tema_apex") return "🌗 Cambiar el tema de Apex a modo "+(i.tema==="claro"?"☀️ CLARO":"🌙 OSCURO");
   if(name==="guardar_saber") return "📖 Guardar en su biblioteca: “"+String(i.texto||"").slice(0,140)+"”"+(i.fuente?(" (de: "+i.fuente+")"):"");
   return name+" "+JSON.stringify(i);
@@ -16710,6 +16743,9 @@ async function ejecutarTool(name, i){
       else if(name==="borrar_dibujos"){ if(i.todo===true) params.todo=true; }
       if(i.target) params.target=i.target;
       return await enviarComando(name, params);
+    }
+    if(name==="marcas_posicion"){
+      return await enviarComando("marcas_posicion", { on: !!i.on });
     }
     if(name==="revisar_indicador"){
       const params={}; if(i.target) params.target=i.target;
