@@ -1,58 +1,37 @@
-APEX v7.198 — TRADING DESK
+APEX v7.199 — TRADING DESK
 =========================
 
-v7.192 — 20-09-2026 · LOS DOS FALLOS DEL MODO MOTO
+🃏 LAS TARJETAS VUELVEN A SALIR — y Roberto deja de ser una estatua
 
-Tu aviso: «me está escuchando pero no me está entendiendo bien».
+Rey, el 20-09 por la noche: «se queda tupido como si no supiera qué hacer ni nada, es
+como Roberto vacío, le estoy pidiendo las cosas a una estatua».
 
-Lo primero: me equivoqué al diagnosticarlo. Te dije que a Roberto le había
-atado las manos. Después lo probé contra la nube con seis preguntas y no era
-eso: la hora te la contesta bien, y lo de mirar tu sistema, tus recuerdos o
-tus ganancias lo escala como debe. Cuatro de seis, correctas.
+No estaba vacío. La nube lo tenía apuntado: CUATRO veces esa noche Roberto pensó
+(18, 28, 68 y 71 segundos), decidió, y pidió las manos. El rastro de su propio teléfono
+decía, al segundo, «tarjeta a la vista». En su pantalla no salió NADA.
 
-Lo que sí falla son las otras dos, y es peor de lo que yo dije:
+LA CAUSA: un comentario abierto y SIN CERRAR, colado en la tanda v7.170 en TRES sitios
+— y los tres son las funciones que pintan tarjetas en el chat. El comentario se tragaba
+las once líneas siguientes, o sea el dibujo entero de la tarjeta.
 
-   «apúntame un aviso para mañana a las nueve»  ->  «Dale, te pongo el aviso»
-   «pon música»                                 ->  «Dale, ¿qué tipo te pongo?»
+Medido ejecutando las tres funciones, antes y después:
 
-Te dice que SÍ y no hace nada, porque por el camino rápido no tiene manos.
-Con un «no puedo» lo haces tú. Con un «dale» te quedas esperando un aviso que
-no va a sonar nunca.
+    la tarjeta de confirmación   0  ->  1
+    la tarjeta de la recarga     0  ->  1     (por eso no pudo anotar sus 20 dólares,
+                                               ni le salió el aviso de «sin crédito»)
+    la tarjeta del Ejecutor    revienta -> 1  (daba «card is not defined»: se comió la
+                                               línea que la creaba pero no la que la usa)
 
-ARREGLO 1 (worker 5.193, lo subes tú)
-   Antes de decir «dale», «vale», «ahora mismo» o «te lo pongo», mira si tiene
-   la mano. Si no la tiene, escala. Prometer y no cumplir es lo único peor que
-   rendirse.
+Y UN SEGUNDO FALLO, del mismo sitio: la guarda que debía ABRIR el chat para enseñar la
+tarjeta miraba si EXISTÍA el chat — y existe siempre, porque se monta al arrancar y
+cerrarlo solo lo esconde. Así que no se abría nunca: pidiendo algo por voz o desde el
+cuerpo flotante, la tarjeta se pintaba en un panel invisible. Ahora mira si está ABIERTO.
 
-ARREGLO 2 (app 7.192 + APK)
-   Las frases te llegaban en cachos de 16 a 42 letras. La oreja no tenía la
-   culpa: contesta en menos de medio segundo. El fallo era mío, en el ciclo:
-
-       pedir ruta -> grabar -> SOLTAR ruta -> hablar -> pedir ruta -> ...
-
-   Montaba y tiraba el enlace de tu casco en CADA frase. Montarlo cuesta unos
-   640 ms en tu RS62, más 350 de respiro, más 600 en los que ni se mide. Tú,
-   que ya habías oído «te escucho», empezabas a hablar dentro de ese hueco y
-   el principio de cada frase se perdía. Y tirar la ruta mientras Roberto
-   habla corta lo que está sonando: por eso también te cortaba las respuestas.
-
-   Ahora la ruta se abre UNA vez y dura toda la conversación. Sin dejarla
-   pedida a su suerte: la suelta el botón de parar, la suelta si Android mata
-   Apex, y un vigilante la suelta sola a los 90 segundos si nadie la toca.
-
-ARREGLO 3 (auditoría)
-   Te decía «oreja rápida · media 1716 ms». El número era real pero era la
-   media de las DOS orejas mezcladas. La rápida va a 402 ms. Un número bueno
-   con la etiqueta equivocada miente igual que uno falso. Corregido: ahora
-   enseña la media de la oreja que de verdad está oyendo, y te avisa si se
-   está cayendo a la lenta.
-
-LO QUE NO TE DOY POR BUENO TODAVÍA
-   Lo del casco compila limpio y sus bancos pasan, pero eso no es oírte. Hay
-   que probarlo contigo hablando, por cable. Y hay algo concreto que te voy a
-   preguntar: con el enlace abierto todo el rato, muchos Android suspenden el
-   canal de música, así que la voz de Roberto puede sonar más apagada que
-   antes. Lo vas a notar. Quiero saber cómo suena antes de darlo por hecho.
+POR QUÉ NO LO VIO NINGÚN BANCO: los 286 que había LEEN el código. Y el código estaba
+escrito, completo y correcto — solo que dentro de un comentario. Un lector de texto no
+distingue eso; un intérprete sí. El banco nuevo (test-las-tarjetas-se-pintan) no lee:
+EJECUTA las tres funciones y cuenta las tarjetas. Se comprobó que se pone rojo contra el
+fichero de ayer y verde contra éste.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

@@ -1996,7 +1996,15 @@ function tarjetaRecarga(rec){
   /* 🖐️ v7.170 — se mira si estaba pegado abajo ANTES de añadir nada: al añadir la tarjeta
      el contenido crece y mirarlo después daría siempre «no» ([[apex-no-le-quitan-el-sitio]]). */
   const _yaAbajo = (typeof pegadoAbajo==="function") ? pegadoAbajo(cont) : true;
-  /* 🖐️ v7.170 — se apunta si estaba pegado abajo ANTES de añadir nada: si se mira
+  /* ⚠️ 21-09 — ESTA LINEA ERA UN COMENTARIO ABIERTO Y SIN CERRAR, y se tragaba TODO lo
+     que venia detras hasta el siguiente cierre: el bucle entero que dibuja la tarjeta.
+     Estaba igual de roto en TRES sitios (tarjetaRecarga, tarjetaEjecutor y iaPintarTools),
+     los tres de la misma tanda v7.170, y los tres pintan tarjetas en el chat. Resultado:
+     Roberto pedia manos, la nube lo apuntaba («pidio manos») y el rastro del telefono decia
+     «tarjeta a la vista»... y en la pantalla de Rey no salia NADA, ni con el chat abierto.
+     Tampoco salia la tarjeta para anotar su recarga, por eso no pudo registrar sus 20 dolares.
+     Probado EJECUTANDO cada funcion con un DOM de mentira: antes 0 tarjetas, ahora 1.
+     [[apex-una-coma-se-come-la-pantalla]] — misma familia, otra puntuacion. */
   cont.querySelectorAll(".ia-recarga").forEach(n=>n.remove());
   const card=el("div","ia-tool ia-recarga");
   card.innerHTML=
@@ -2402,7 +2410,15 @@ function tarjetaEjecutor(d){
   /* 🖐️ v7.170 — se mira si estaba pegado abajo ANTES de añadir nada: al añadir la tarjeta
      el contenido crece y mirarlo después daría siempre «no» ([[apex-no-le-quitan-el-sitio]]). */
   const _yaAbajo = (typeof pegadoAbajo==="function") ? pegadoAbajo(cont) : true;
-  /* 🖐️ v7.170 — se apunta si estaba pegado abajo ANTES de añadir nada: si se mira
+  /* ⚠️ 21-09 — ESTA LINEA ERA UN COMENTARIO ABIERTO Y SIN CERRAR, y se tragaba TODO lo
+     que venia detras hasta el siguiente cierre: el bucle entero que dibuja la tarjeta.
+     Estaba igual de roto en TRES sitios (tarjetaRecarga, tarjetaEjecutor y iaPintarTools),
+     los tres de la misma tanda v7.170, y los tres pintan tarjetas en el chat. Resultado:
+     Roberto pedia manos, la nube lo apuntaba («pidio manos») y el rastro del telefono decia
+     «tarjeta a la vista»... y en la pantalla de Rey no salia NADA, ni con el chat abierto.
+     Tampoco salia la tarjeta para anotar su recarga, por eso no pudo registrar sus 20 dolares.
+     Probado EJECUTANDO cada funcion con un DOM de mentira: antes 0 tarjetas, ahora 1.
+     [[apex-una-coma-se-come-la-pantalla]] — misma familia, otra puntuacion. */
   cont.querySelectorAll(".ia-ejec").forEach(n=>n.remove());
   const cfg=d.cfg||{};
   const card=el("div","ia-tool ia-ejec");
@@ -16781,7 +16797,14 @@ function confirmarTool(tu){
   }
   return new Promise(resolve=>{
     /* si el chat está cerrado, se ABRE: nunca más una confirmación cancelada a espaldas de Rey */
-    if(!$("#iaMsgs") && typeof abrirIA==="function"){ try{ abrirIA(); }catch(_){} }
+    /* ⚠️ 21-09 — antes se miraba si EXISTIA #iaMsgs, y existe SIEMPRE: iaInit() monta el
+       chat entero al arrancar y cerrarlo solo le quita la clase show (el CSS lo esconde con
+       visibility:hidden). Asi que abrirIA() no se llamaba NUNCA, y con el chat cerrado la
+       tarjeta se pintaba dentro de un panel invisible: Rey pedia algo por voz o desde el
+       cuerpo flotante, Roberto le sacaba la tarjeta, y el no veia nada. Ahora se mira si
+       esta ABIERTO, que es lo que este guardia queria decir desde el principio. */
+    const _ovIA = $("#iaOv");
+    if((!_ovIA || !_ovIA.classList.contains("show")) && typeof abrirIA==="function"){ try{ abrirIA(); }catch(_){} }
     const p = { tu, resolve, estado:"pendiente" };
     IA_TOOL_PEND.push(p);
     iaPintarTools();
@@ -16990,7 +17013,15 @@ function iaPintarTools(){
   /* 🖐️ v7.170 — se mira si estaba pegado abajo ANTES de añadir nada: al añadir la tarjeta
      el contenido crece y mirarlo después daría siempre «no» ([[apex-no-le-quitan-el-sitio]]). */
   const _yaAbajo = (typeof pegadoAbajo==="function") ? pegadoAbajo(cont) : true;
-  /* 🖐️ v7.170 — se apunta si estaba pegado abajo ANTES de añadir nada: si se mira
+  /* ⚠️ 21-09 — ESTA LINEA ERA UN COMENTARIO ABIERTO Y SIN CERRAR, y se tragaba TODO lo
+     que venia detras hasta el siguiente cierre: el bucle entero que dibuja la tarjeta.
+     Estaba igual de roto en TRES sitios (tarjetaRecarga, tarjetaEjecutor y iaPintarTools),
+     los tres de la misma tanda v7.170, y los tres pintan tarjetas en el chat. Resultado:
+     Roberto pedia manos, la nube lo apuntaba («pidio manos») y el rastro del telefono decia
+     «tarjeta a la vista»... y en la pantalla de Rey no salia NADA, ni con el chat abierto.
+     Tampoco salia la tarjeta para anotar su recarga, por eso no pudo registrar sus 20 dolares.
+     Probado EJECUTANDO cada funcion con un DOM de mentira: antes 0 tarjetas, ahora 1.
+     [[apex-una-coma-se-come-la-pantalla]] — misma familia, otra puntuacion. */
   cont.querySelectorAll(".ia-tool").forEach(n=>n.remove());
   IA_TOOL_PEND.filter(p=>p.estado==="pendiente").forEach(p=>{
     const card=el("div","ia-tool");
