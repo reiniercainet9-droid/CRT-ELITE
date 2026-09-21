@@ -1,68 +1,66 @@
-APEX v7.201 — TRADING DESK
+APEX v7.203 — TRADING DESK
 =========================
 
-🎫 CON QUÉ CEREBRO TE CONTESTO — la tarjeta vuelve, y solo cuando puedes tocarla
+🔬 AUDITORÍA DE ROBERTO — VUELTA 2 COMPLETA (memoria · razonamiento · manos · voz)
 
-Rey (21-09): «Roberto debe seguir poniéndome la tarjeta de con cuál cosa me va a responder,
-porque me está gastando demasiado… ese automático prefiero que funcione cuando esté en el
-modo moto solamente, o sea, como estoy conduciendo o entrenando; pero estando apagado el
-modo moto sí debe sacarme la tarjeta en el chat o en la nube con Roberto flotando».
+🧠 SU MEMORIA — «LO QUE SABES DE REY» NO HABLABA DE REY
 
-Con el modo moto APAGADO te pregunta, te dice cuál recomienda y por qué, y decides tú.
-Con el modo moto ENCENDIDO elige él: vas conduciendo y no puedes tocar nada.
-Sale en el chat y en su cuerpo flotante. Si no la tocas en 2 minutos, sigue solo: preguntar
-con qué cerebro contestar jamás puede dejarte sin respuesta.
+Tres sitios le pasaban un bloque con ese título y lo llenaban con las 8 últimas cosas
+guardadas. Uno de esos sitios es el VETO: el que decide si entra su dinero. Medido en su
+memoria viva (60 recuerdos), lo que le llegaba:
 
-MEDIDO, que es lo que la justifica: el 21-09 fueron 4 mensajes de chat = $2,89, el 74% del
-gasto del día. Un análisis con el cerebro caro y el caché frío cuesta ~$1,75 SOLO en
-cargarle el contexto, antes de pensar nada.
+    🪞 (me miré) la caída del puente+Ejecutor
+    🪞 (me miré) faltaban 2 avisos de TradingView
+    🧠 MI MEMORIA SE CONSOLIDA SOLA
+    📋 SISTEMA AL DÍA (20/09)
+    📋 SISTEMA AL DÍA (20/09)          ← y repetido
+    🪞 (me miré) solté «Ejecutor CAÍDO»
+    🪞 (me miré) cinco «Hubo un problema»
+    🪞 (me miré) 106 min ciego al gráfico
 
-🧠 Y UN FALLO QUE COSTABA DINERO Y CALIDAD A LA VEZ
+8 de 8 hablaban de Roberto. Ninguno de Rey. Justo al decidir sobre una entrada, su fuga raíz
+(«prisa por recuperar»), su regla dura del fondeo y lo que le cuesta cada dólar no le
+llegaban. La causa: desde que Roberto se mira cada noche y yo le dejo la ficha del sistema en
+cada entrega, «las últimas guardadas» son SIEMPRE suyas — el 20% de su memoria (12 de 60).
+Ahora recibe 4 de su perfil + 4 de lo que está viviendo. Probado con su memoria real: cero.
 
-Su registro del portero, con sus horas:
-    07:51  OPUS    «Análisis de gráfico en vivo, sesgo y setup del día»
-    07:52  SONNET  «Falta contenido real del mensaje para evaluar»
+🃏 Y la ficha «única» estaba duplicada. No era el anti-duplicados: mi herramienta borraba las
+viejas LEYENDO la lista, y las lecturas de la nube vienen cacheadas — con tres entregas en un
+día, una se coló. Ahora el reemplazo lo hace la nube DENTRO de la misma escritura.
 
-Las dos son LA MISMA pregunta. Cada pregunta con manos son DOS llamadas, y en la segunda el
-último mensaje ya no es la de Rey: son los resultados de las manos. Sin pregunta que juzgar,
-el portero caía al barato. Pagaba el cerebro caro para PENSAR y le contestaba el barato.
+🏍️ SU RAZONAMIENTO — NO SABÍA DÓNDE ESTABA REY
 
-El fallo estaba COPIADO en cinco sitios. Uno de ellos era la búsqueda en su memoria profunda,
-que al continuar le traía recuerdos que no tenían nada que ver con lo que preguntó.
-Arreglados los cinco con una sola pieza. Y la decisión se recuerda 30 min: ni se paga dos
-veces ni puede cambiar a mitad de la respuesta.
+Se descargó su cerebro de la nube y se midió: 90.062 caracteres, ~22.500 tokens. Sin manos
+fantasma, sin leyes muertas, y las 54 manos con su ley en algún sitio. Pero:
 
-De paso: ahora su elección en la tarjeta MANDA sobre el portero. Antes solo se podía forzar
-el caro; si elegía el barato, el portero volvía a decidir y podía contradecirle.
+    «modo moto» → NO APARECE NI UNA VEZ
 
-📐 LOS % DE SU OPERACIÓN, EN SU PROPIA HERRAMIENTA DE POSICIONES
+Lo único que le llegaba desde el casco era un emoji 🏍️. Y debajo, motoCorto() le recorta la
+respuesta a 220 caracteres: escribía 800, Rey oía 220, y los otros 580 se pagan igual — la
+salida es el token más caro. Eso explica «la respuesta llega cortada» del 20-09: no era un
+fallo, es que no sabía dónde estaba él. Ahora le va dicho, con DOS avisos distintos:
+· en la moto: 2 frases, hablado, sin listas, SIN tarjetas (no puede tocar), y «no te entendí»;
+· desde fuera de Apex: corto y hablado, pero ahí SÍ puede sacarle tarjetas.
 
-Rey (21-09): «esos % 25, 50, 75 y 80 me los marca automáticamente apenas detecte que yo puse
-la herramienta, y de ahí yo decido qué hacer cuando llegue a cada %... clara, bien definida,
-pero discreta a la vez».
+🖐️ SU MANO SOBRE EL MODO MOTO, QUE LE FALTABA
 
-Cuando opera ÉL (no el Ejecutor), en vivo y en replay. PROBADO EN SU GRÁFICO, con una caja
-creada y borrada después:
+Rey (20-09): «Roberto debe tener todas sus manos y visiones en todos los casos». Lo VEÍA pero
+no podía encenderlo ni apagarlo. Media mano, y justo la que más falta hace cuando no puede
+tocar el teléfono. Ya la tiene, sin tarjeta (conduciendo no puede confirmar nada), sin
+reabrir lo ya abierto (le pitaría en la oreja) y comprobando que de verdad quedó como dijo.
 
-    entrada 1,14886 · stop 20 pt · objetivo 60 pt (1:3)
-      → 1,14871 «25% · 0.75R»   1,14856 «50% · 1.5R»
-        1,14841 «75% · 2.25R»   1,14838 «80% · 2.4R»
+⚠️ UNA MANO SIN DUEÑO YA NO HACE OTRA COSA EN SILENCIO
 
-    cambiado el objetivo a 1:5 → se recalcularon SOLAS, sin duplicados
-    borrada la caja → las cuatro marcas se fueron con ella (0 dibujos)
+En las manos de la nube había un `else` pelado que hacía de borrar_memoria. Funciona — pero
+se tragaba CUALQUIER mano futura que se añadiera a la lista sin su rama, y la trataría como
+un borrado de su memoria. Ahora se identifica y Roberto lo dice en vez de callárselo.
 
-Línea de 1 px punteada y letra de 10: se ve y no carga el gráfico. El valor del punto sale
-del propio símbolo, así que vale igual en divisas, oro o índices. Y solo se redibuja cuando
-él cambia la caja — si no, no toca ni un píxel (corre cada 20 s: sin eso le parpadearía).
+🚧 Y UN GUARDIÁN PARA MÍ: EL WORKER QUE ESTÁ EN VIVO NO SE TOCA
 
-📊 Y UNA MEDIDA MÍA CORREGIDA
-
-La decisión de poner el caché a 1 hora se tomó el 12-09 con «el 68% de sus mensajes llegan
-dentro de la hora». Ese 68% estaba inflado: el 48% de los huecos eran pares de manos, la
-misma pregunta contada dos veces. Medido bien: 47%, y su mediana real es 1,2 HORAS — justo
-pasada del plazo. La de 1 hora sigue ganando (47 > 40) pero por los pelos, y con un dato que
-cambia dónde buscar: afinar el plazo no arregla su gasto. Lo que hay que bajar es el TAMAÑO
-de lo que se le manda en frío. Queda medido, no hecho.
+Me pasó TRES veces el mismo día: editar la versión ya desplegada. Si se cuela, los cambios
+acaban en su carpeta con el nombre de una versión que ya está arriba y la herramienta le dice
+«nada que subir». El banco nuevo lo caza y dice exactamente cómo arreglarlo — y media hora
+después de ponerlo me cazó a mí.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

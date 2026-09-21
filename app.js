@@ -12935,7 +12935,7 @@ function iaDesdeFuera(texto){
        pasado, el último apunte era de la mañana. Un diagnóstico que solo llega cuando todo
        fue bien no sirve para nada — justo lo que hace falta es el rastro del que falló. */
     if(typeof preguntaParteAlaNube==="function") preguntaParteAlaNube("salió de Apex");
-    iaEnviar(dicho);
+    iaEnviar(dicho, FUERA_PROM);   /* v7.202: le va dicho que es POR VOZ y con Apex cerrada */
   }catch(_){}
 }
 /* ══════════════════════════════════════════════════════════════════════════════
@@ -13353,6 +13353,44 @@ async function motoArrancar(){
    dos frases» — es la misma regla que se le da a la nube (max 220), así que aquí también.
    Se corta en el FINAL DE FRASE anterior al tope, nunca a mitad de palabra: en el clima eso
    deja justo lo de ahora y tira el pronóstico, que es exactamente lo que preguntó. */
+/* 🏍️ v7.202 (21-09) — ROBERTO TIENE QUE SABER QUE REY VA EN LA MOTO
+   ═════════════════════════════════════════════════════════════════════════════
+   Auditado el 21-09, mirando su razonamiento: **«modo moto» no aparece NI UNA VEZ en su
+   cerebro de la nube**, y lo único que le llegaba al hablarle desde el casco era un emoji
+   🏍️ delante del mensaje. Un emoji no es una instrucción.
+
+   LO QUE PASABA, y cuesta por los dos lados:
+     · Roberto contestaba como si Rey estuviera sentado leyendo: párrafos, listas, detalle.
+     · Y justo debajo, motoCorto() le CORTA la respuesta a 220 caracteres.
+   O sea que escribía 800 y Rey oía 220. Los otros 580 se pagan igual —y la salida es el token
+   MÁS CARO de todos— para tirarlos a la basura. Y encima la frase le llega cortada, que es de
+   lo que Rey se quejó el 20-09 («mira la respuesta, después de decirme que llega cortada»).
+
+   Decirle DÓNDE está no es un adorno: cambia lo que tiene que decir. Al volante no se le
+   puede soltar una lista de cinco puntos ni pedirle que mire una tarjeta.
+   ⚠️ No se le dice qué contestar, solo CÓMO y dónde está: lo que piense sigue siendo suyo
+   ([[apex-roberto-no-obedece-deduce]]). */
+/* 🎤 v7.202 — Y LO MISMO CUANDO LE HABLA DESDE FUERA DE APEX.
+   Este camino es distinto del de la moto y se auditó aparte: Rey le habla al cuerpo flotante
+   con Apex cerrada, y la respuesta se la DICE la voz (iaRespuestaFuera). Aquí sí puede tocar
+   —tiene los dos botones de la nubecita— así que las tarjetas SÍ valen; lo que no vale es
+   contestarle con un párrafo que hay que escuchar de pie en mitad de la calle.
+   Le llegaba `iaEnviar(dicho)` a pelo, sin decirle ni que era por voz. */
+const FUERA_PROM = "🎤 CONTEXTO: Rey te habla POR VOZ con Apex cerrada, desde tu cuerpo flotante. "
+  + "Lo que escribas se lo va a LEER la voz en alto; no está leyendo una pantalla.\n"
+  + "· Contesta hablado y corto: 3 frases como máximo, sin listas, sin tablas y sin markdown.\n"
+  + "· Lo importante en la primera frase.\n"
+  + "· SÍ puedes sacarle una tarjeta si hace falta su ✓ (tiene los botones a mano), pero dile de viva voz qué le estás pidiendo.\n"
+  + "· Si no le entendiste, dile «no te entendí, repite» y nada más.";
+
+const MOTO_PROM = "🏍️ CONTEXTO: Rey te está hablando POR VOZ desde el casco, CONDUCIENDO o entrenando. "
+  + "No puede leer, no puede tocar nada y no va a ver ninguna tarjeta. Lo que escribas se lo van a LEER en voz alta.\n"
+  + "· Contesta en 2 frases CORTAS como máximo, habladas, sin listas, sin tablas, sin markdown y sin emojis sueltos.\n"
+  + "· Ve al grano en la primera frase: si se corta, que lo importante ya esté dicho.\n"
+  + "· Números redondos y pocos: al volante no se retiene «1.14737».\n"
+  + "· Si hace falta algo que él tendría que TOCAR o mirar, no lo hagas: dile en una frase que se lo dejas para cuando pare.\n"
+  + "· Y si no le entendiste, dile «no te entendí, repite» y nada más — jamás adivines.";
+
 function motoCorto(t){
   const s = String(t||"").trim();
   if(s.length <= 220) return s;
@@ -13458,7 +13496,9 @@ async function motoCiclo(){
     const esMalentendido = /no te (entend|cog|pill|escuch)|no consegu[í i] entenderte|rep[í i]t|no me lleg|no s[eé] a qu[eé]|lleg[oó] cortad/i
       .test(String(r.decir || ""));
     if(r.camino === "escala" && !esMalentendido){
-      try{ if(typeof iaEnviar === "function") iaEnviar("🏍️ " + dicho); }catch(_){}
+      /* v7.202 — y le va DICHO que Rey está en la moto: sin esto contesta como si estuviera
+         sentado leyendo, motoCorto() le recorta a 220 y Rey paga los caracteres que no oye */
+      try{ if(typeof iaEnviar === "function") iaEnviar("🏍️ " + dicho, MOTO_PROM); }catch(_){}
     }
   }
 }
@@ -16217,6 +16257,17 @@ const IA_TOOLS = [
     input_schema:{ type:"object", properties:{ nombre:{type:"string",description:"(opcional) estrategia a mover; por defecto la activa"}, estado:{type:"string",enum:["borrador","laboratorio","aprobada","archivada"]}, motivo:{type:"string",description:"por qué cambia de estado, 1 frase"} }, required:["estado"] } },
   { name:"guardar_saber", description:"📖 Guarda un SABER en tu BIBLIOTECA de conocimiento permanente (tu cerebro vectorial — separado de tu memoria de Rey). Úsalo al ESTUDIAR un documento, clase, artículo o enlace que Rey te comparta: destila sus 3-8 ideas más valiosas y guárdalas UNA POR UNA (cada saber = 1 principio claro en 2-4 frases, ≤450 caracteres, que se entienda solo sin el documento). Así lo estudiado queda TUYO para siempre y te vuelve por significado cuando una charla lo toque. Automático (sin tarjeta). NO lo uses para datos de Rey (eso es guardar_memoria).",
     input_schema:{ type:"object", properties:{ texto:{type:"string",description:"El saber destilado, claro y auto-contenido (≤450 caracteres)"}, tema:{type:"string",enum:["estrategia","gestion","psicologia","mercado","pares","indicador","general"],description:"Área del saber"}, fuente:{type:"string",description:"(opcional) de dónde salió, corto: 'PDF Liquidez ICT', 'clase de fondos'"} }, required:["texto"] } },
+  /* 🏍️ v7.203 (21-09) — LA MANO DEL MODO MOTO, QUE LE FALTABA.
+     Rey, el 20-09: «Recuerda que Roberto debe tener todas sus manos y visiones en todos los
+     casos». Auditado el 21-09: VE el modo moto (sabe si está encendido) pero no podía
+     encenderlo ni apagarlo. Media mano. Y es la que más falta le hace justo cuando Rey no
+     puede tocar el teléfono: el 20-09 se quedó sin poder encenderlo con el casco puesto.
+     VA SIN TARJETA a propósito, como colgar o pausar la música: cuando Rey dice «apaga el
+     modo moto» quiere apagarlo YA, y pedirle que toque una tarjeta para dejar de usar las
+     manos libres es justo lo contrario de lo que vino a hacer ([[apex-manos-en-el-telefono]]).
+     Encenderlo tampoco gasta solo: lo está pidiendo ÉL ([[apex-nada-obligatorio-nada-gasta-solo]]). */
+  { name:"modo_moto", description:"ENCIENDE o APAGA el modo moto (manos libres por el casco). Úsalo cuando Rey te lo pida de palabra: «enciende el modo moto», «modo moto», «apágalo», «ya puedo mirar la pantalla». Encendido, te escucha por el casco y tú le contestas hablado y corto. Es instantáneo y reversible: se aplica SIN tarjeta, porque si te lo pide conduciendo no puede tocar nada. Si te pide APAGARLO, hazlo siempre — jamás discutas eso.",
+    input_schema:{ type:"object", properties:{ on:{type:"boolean",description:"true lo enciende, false lo apaga"} }, required:["on"] } },
   { name:"tema_apex", description:"Cambia el TEMA VISUAL de Apex y del chat: 'claro' (☀️ para ver bien a plena luz del sol) u 'oscuro' (🌙 el clásico de la app). Úsalo cuando Rey te lo pida de palabra ('ponme el modo claro'). Es cosmético, instantáneo y reversible: se aplica SIN tarjeta.",
     input_schema:{ type:"object", properties:{ tema:{type:"string",enum:["claro","oscuro"]} }, required:["tema"] } },
   { name:"estrategia_vigente", description:"Marca una estrategia como ⭐ VIGENTE: la que MANDA en el 🤖 Ejecutor y en los análisis de señales (solo puede haber una). REGLA DURA: solo estrategias en estado ✅ Aprobada (pasaron el laboratorio con backtest y Rey las aprobó). OJO honestidad: hoy el Ejecutor solo sabe ejecutar señales de CRT Elite — si Rey pone vigente otra estrategia, adviértele que ejecutarla de verdad requiere que Claude le construya sus señales/reglas en una tanda de código. SIEMPRE con tarjeta.",
@@ -16337,6 +16388,7 @@ function describeTool(name, i){
   if(name==="crear_estrategia") return "📚 Crear la estrategia \""+(i.nombre||"?")+"\" en el laboratorio (nace 💡 Borrador)"+(i.instrumento?("\n→ instrumento: "+i.instrumento):"")+(i.ajustes?("\n→ primeras reglas: "+String(i.ajustes).slice(0,200)):"");
   if(name==="estado_estrategia") return "📚 Mover \""+(i.nombre||CTX.estrategia)+"\" a estado "+(({borrador:"💡 Borrador",laboratorio:"🧪 En laboratorio",aprobada:"✅ Aprobada",archivada:"📦 Archivada"})[i.estado]||i.estado)+(i.motivo?("\nPorque: "+i.motivo):"");
   if(name==="estrategia_vigente") return "⭐ Poner VIGENTE la estrategia \""+(i.nombre||"?")+"\" — desde ya es la que manda en el 🤖 Ejecutor y en los análisis de señales";
+  if(name==="modo_moto") return (i.on?"🏍️ ENCENDER el modo moto (te escucho por el casco y te contesto hablado)":"🏍️ APAGAR el modo moto");
   if(name==="tema_apex") return "🌗 Cambiar el tema de Apex a modo "+(i.tema==="claro"?"☀️ CLARO":"🌙 OSCURO");
   if(name==="guardar_saber") return "📖 Guardar en su biblioteca: “"+String(i.texto||"").slice(0,140)+"”"+(i.fuente?(" (de: "+i.fuente+")"):"");
   return name+" "+JSON.stringify(i);
@@ -16734,6 +16786,21 @@ async function ejecutarTool(name, i){
         return {ok:false,msg:"La biblioteca no lo aceptó ("+(x&&x.error||"¿worker v5.103?")+")"};
       }catch(_){ return {ok:false,msg:"Sin conexión — el saber NO se guardó, reintenta"}; }
     }
+    if(name==="modo_moto"){
+      /* 🏍️ v7.203 — su mano sobre el modo moto. Se comprueba el estado ANTES de tocar nada:
+         encender lo ya encendido reabriría la ruta del casco y le pitaría en la oreja. */
+      const quiere = !!i.on;
+      const ahora = (typeof MOTO!=="undefined" && MOTO) ? !!MOTO.on : false;
+      if(quiere === ahora) return {ok:true, msg:"El modo moto ya estaba "+(ahora?"encendido":"apagado")+"."};
+      try{
+        if(quiere){ if(typeof motoArrancar!=="function") return {ok:false,msg:"No puedo encender el modo moto en esta versión."}; await motoArrancar(); }
+        else{ if(typeof motoParar!=="function") return {ok:false,msg:"No puedo apagar el modo moto en esta versión."}; motoParar(); }
+      }catch(err){ return {ok:false, msg:"No pude "+(quiere?"encenderlo":"apagarlo")+": "+err}; }
+      const quedo = (typeof MOTO!=="undefined" && MOTO) ? !!MOTO.on : quiere;
+      /* y se dice lo que QUEDÓ, no lo que se pidió: si no arrancó, Rey tiene que saberlo */
+      if(quedo !== quiere) return {ok:false, msg:"Le di a "+(quiere?"encender":"apagar")+" el modo moto y NO se aplicó. Míralo tú en el botón 🏍️."};
+      return {ok:true, msg:quedo?"🏍️ Modo moto ENCENDIDO — te escucho por el casco.":"🏍️ Modo moto apagado."};
+    }
     if(name==="tema_apex"){   /* 🌗 v6.38 — automática (cosmética y reversible) */
       if(i.tema!=="claro" && i.tema!=="oscuro") return {ok:false,msg:"Tema inválido: usa 'claro' u 'oscuro'"};
       temaAplicar(i.tema);
@@ -16907,7 +16974,9 @@ function confirmarTool(tu){
      rápido. Las que SÍ llevan tarjeta son las que le suenan a OTRA PERSONA — llamar y
      WhatsApp — y ahí la tarjeta no es burocracia: es la red por si entendió mal un nombre,
      que buscando «Sonia» salen diez. */
-  if(tu.name==="abrir_app" || tu.name==="buscar_contacto" || tu.name==="colgar"
+  /* 🏍️ v7.203 — modo_moto entra aquí por el mismo motivo que colgar: si Rey lo pide
+     conduciendo, no puede tocar una tarjeta. Y apagarlo es SIEMPRE lo prudente. */
+  if(tu.name==="modo_moto" || tu.name==="abrir_app" || tu.name==="buscar_contacto" || tu.name==="colgar"
      || tu.name==="poner_musica" || tu.name==="mando_musica" || tu.name==="donde_estoy"){
     return (async()=>{ let res; try{ res=await ejecutarTool(tu.name, tu.input); }catch(e){ res={ok:false,msg:"Error: "+e}; }
       try{ if(res && res.msg && tu.name!=="buscar_contacto" && tu.name!=="donde_estoy") toast(res.msg); }catch(_){}
