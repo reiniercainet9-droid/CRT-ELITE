@@ -2238,6 +2238,13 @@ function ejecFormHTML(cfg){
     '<label style="font-size:.85em">Comisión por lote (ida y vuelta, $)<input class="inp ia-ejec-comlote" type="number" step="0.5" min="0" max="60" value="'+esc(String(cfg.comisionPorLote!=null?cfg.comisionPorLote:7))+'"></label>'+
     '<label style="grid-column:1/3;font-size:.85em">🛑 Veto (revisión ANTES de entrar)<select class="inp ia-ejec-veto"><option value="1"'+(cfg.veto!==false?" selected":"")+'>Activado — Roberto revisa noticias y contexto y puede frenar la entrada</option><option value="0"'+(cfg.veto===false?" selected":"")+'>Apagado — ejecuta directo con tus reglas</option></select></label>'+
     '<label style="font-size:.85em">Sin noticias fuertes (± minutos)<input class="inp ia-ejec-vetomin" type="number" step="5" min="5" max="120" value="'+esc(String(cfg.vetoNoticiasMin!=null?cfg.vetoNoticiasMin:15))+'"></label>'+
+    /* 🎤 v7.215 (22-09) — QUÉ IMPACTO FRENA, DECIDES TÚ.
+       Rey: «¿por qué no se detectó esa conferencia de prensa?… si el veto no detecta esa
+       conferencia de prensa?». «President Trump Speaks» SÍ salió en el calendario y SÍ se le
+       avisó 40 min antes; lo que no hizo fue frenar, porque venía marcado MEDIO y el veto
+       tenía «solo ALTO» clavado en el código. Una regla del Ejecutor que él no puede ver ni
+       cambiar no es suya ([[apex-reglas-en-manos-de-rey]]). */
+    '<label style="font-size:.85em">…y frena con impacto<select class="inp ia-ejec-vetoimp"><option value="alto"'+((String(cfg.vetoImpacto||"alto").toLowerCase()!=="medio")?" selected":"")+'>Solo ALTO</option><option value="medio"'+((String(cfg.vetoImpacto||"").toLowerCase()==="medio")?" selected":"")+'>ALTO y MEDIO</option></select></label>'+
     /* 🎤 v7.91 — EL VETO DE RUEDAS DE PRENSA, A LA VISTA Y EN SUS MANOS.
        Rey (10-09): «¿dónde está la configuración del veto tras una conferencia de prensa?…
        en la sección solo veo la de 15 minutos y la otra no sé ni dónde está… todas las reglas
@@ -2370,6 +2377,7 @@ function ejecLeerForm(root){
     comisionPorLote:parseFloat(q("ia-ejec-comlote").value),
     veto:q("ia-ejec-veto").value==="1",
     vetoNoticiasMin:parseInt(q("ia-ejec-vetomin").value,10),
+    vetoImpacto:(q("ia-ejec-vetoimp") ? q("ia-ejec-vetoimp").value : undefined),
     vetoRueda:q("ia-ejec-vrueda").value==="1",
     vetoRuedaAntes:parseInt(q("ia-ejec-vrantes").value,10),
     vetoRuedaMin:parseInt(q("ia-ejec-vrdesp").value,10),

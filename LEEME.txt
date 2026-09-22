@@ -1,27 +1,38 @@
-APEX v7.214 — TRADING DESK
+APEX v7.215 — TRADING DESK
 =========================
 
-🩹 TU GALERÍA ESTABA MUERTA, Y CALLADA
-   Tú: «no tengo aún ningún registro de la operación de hoy en mi galería».
-   Medido en tu propio teléfono: en la nube había 20 capturas, en tu Galería
-   39, y faltaban por bajar exactamente las 3 de hoy. La causa estaba en un
-   dato podrido guardado en tu app:
-       crtelite_shots_borradas = "null"
-   El código hacía `capturasBorradas().indexOf(id)` sobre eso y REVENTABA en
-   la primera captura que intentaba bajar. El error caía en un `.catch()`
-   VACÍO — así que tu Galería dejó de sincronizarse para siempre, sin un
-   mensaje y sin un rastro. Por eso ningún banco lo vio: el código estaba
-   bien para un dato bueno.
-   Ahora: un dato roto ya no puede tumbar una sección entera, y si la
-   sincronización falla TE LO DICE en la app, no en una consola que no miras.
-   (Tu Galería ya está reparada: pasó de 39 a 42 con las 3 de hoy dentro.)
+💳 UN AVISO YA NO TE COBRA POR TOCARLO
+   Tú: «la alarma de la posición la toqué y me salió en el chat para hacer un
+   análisis de la semana… me gastó crédito sin pedir ese análisis y sin poder
+   cancelarla».
+   La causa era mía y de un destino mal puesto: en la app, `rob:diario` NO es
+   la pestaña Diario — es «análisis del día», que llama al modelo y COBRA. Dos
+   avisos lo llevaban diciéndote «está esperándote en el 📒 Diario»:
+       ✍️ Entrada detectada   (lo llevaba desde que se escribió)
+       ⏳ Zona programada      (se lo puse yo hoy, copiando el error)
+   Cada vez que los tocabas pagabas algo que no pediste. Ahora:
+       «Entrada detectada» → abre la PESTAÑA del Diario. Gratis.
+       «Zona programada»   → te abre el GRÁFICO en ese par. Gratis.
+   Y hay un banco nuevo que recorre TODOS los avisos y da rojo si alguno
+   vuelve a cobrar al tocarlo sin advertirlo en su propio texto.
 
-🏷️ Y CADA FOTO DICE LO QUE ES
-   Todas se guardaban como «Auto-entrada», incluida la del CIERRE — que es
-   justo la que lleva la traza dibujada (caja de riesgo, objetivo, línea
-   entrada→salida, break-even y resultado). Ahora:
-       Auto-cierre  · Auto-entrada  · Tu posición
-   para que sepas qué estás mirando sin abrirlas una a una.
+🎤 QUÉ IMPACTO DE NOTICIA TE FRENA, LO DECIDES TÚ
+   Tú: «¿por qué no se detectó esa conferencia de prensa?… ¿y si el veto no
+   detecta esa conferencia de prensa antes de una entrada?».
+   Medido: «President Trump Speaks» SÍ estaba en el calendario (09:55 NY) y
+   Apex SÍ te avisó 40 min antes. Lo que no hizo fue FRENAR, porque venía
+   marcado MEDIO y el veto tenía «solo ALTO» clavado en el código — una regla
+   del Ejecutor que no podías ver ni cambiar.
+   Ahora en 🤖 Ejecutor → Tus reglas tienes:
+       «…y frena con impacto:  Solo ALTO  /  ALTO y MEDIO»
+   Por defecto se queda como estaba (solo ALTO): no te cambio el sistema sin
+   que lo pidas. Y el VIGÍA (el que te avisa cuando viene una noticia y tienes
+   una posición abierta) va bajo esa misma regla tuya, no bajo otra distinta.
+
+⏳ Y LA ZONA PROGRAMADA YA NO MIENTE CON EL RECORRIDO
+   Una zona esperando informaba «llegó a 2,29R a favor» de una entrada que no
+   ha ocurrido. El recorrido (MFE/MAE) ahora solo se cuenta desde que el
+   precio TOCA tu zona. Mientras espera: cuánto le falta y hacia dónde va.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
