@@ -2090,6 +2090,50 @@ function ejecFmtTs(ts){ const d=new Date(ts||0); return d.toLocaleDateString("es
 /* ── FUNCIONES COMPARTIDAS chip ↔ sección (v6.09): UNA sola config, UN solo guardado.
    El chip del chat y la pestaña 🤖 son dos ventanas al MISMO lugar (la nube del worker):
    guardes donde guardes, es la misma configuración — imposible que se desenlacen. ── */
+/* 🛡️ v7.212 — EN QUÉ ESTADO ESTÁ EL STOP DE UNA POSICIÓN VIVA.
+   Devuelve una línea que se lee de un vistazo, sin comparar precios de cinco decimales:
+     · «ya no puedes perder» cuando el stop está en la entrada o mejor  → eso ES el breakeven
+     · cuánto le falta al precio para llegar al breakeven cuando todavía no
+     · y grita si NO HAY STOP, que es lo único de aquí que es una avería de verdad
+   Nada de esto decide ni toca la operación: solo la cuenta. Si falta un dato, NO SE INVENTA
+   —se dice que no se sabe— porque un número inventado sobre dinero vivo es peor que ninguno
+   ([[apex-roberto-no-inventa]]). */
+function estadoStopHTML(p){
+  try{
+    const ent=Number(p&&p.entrada), sl=Number(p&&p.sl), act=Number(p&&p.actual);
+    const esCompra=String((p&&p.dir)||"").toUpperCase().indexOf("COMPRA")===0;
+    const caja=(txt,col)=>'<div style="margin-top:6px;font-size:.88em;color:'+col+'">'+txt+'</div>';
+    if(!isFinite(ent)) return caja("🛡️ Stop: no me llega la entrada, no lo puedo decir","#9aa4b2");
+    if(!isFinite(sl) || sl===0)
+      return caja("⛔ <b>SIN STOP</b> — esta posición no tiene protección puesta","#f23645");
+    /* el stop está «en la entrada o mejor»: para una compra, por encima; para una venta, por debajo */
+    const protegido = esCompra ? (sl>=ent) : (sl<=ent);
+    if(protegido){
+      const enLaEntrada = Math.abs(sl-ent) < 1e-9;
+      return caja("🛡️ <b>"+(enLaEntrada?"BREAKEVEN PUESTO":"STOP ASEGURADO")+"</b> — el stop está "
+        +(enLaEntrada?"en tu entrada":"por delante de tu entrada ("+sl+")")+", ya no puedes perder en esta operación","#089981");
+    }
+    /* todavía no: cuánto le falta al PRECIO para llegar a la entrada (que es donde irá el stop) */
+    if(!isFinite(act)) return caja("🛡️ Stop en "+sl+" — todavía por detrás de tu entrada","#e2a03f");
+    const aFavor = esCompra ? (act>ent) : (act<ent);
+    /* ⚠️ el tamaño del pip NO se saca de la entrada sola: String(1.1000) es "1.1" y los ceros
+       de la derecha se pierden, así que una entrada redonda de EURUSD parecería un par de
+       yenes y la distancia salía 100 veces menor (probado: decía 0,1 pips donde había 12).
+       Se mira el precio con MÁS decimales de los cuatro que hay, que es el que no miente.
+       Y si ninguno tiene decimales suficientes para saberlo, se dice la distancia en PRECIO y
+       no se llama «pips»: es preferible a soltar un número con la unidad equivocada. */
+    const decs=[ent,sl,act,Number(p&&p.tp)].filter(isFinite)
+      .map(x=>{ const d=String(x).split(".")[1]; return d?d.length:0; });
+    const dec=Math.max.apply(null,decs.concat(0));
+    const dif=Math.abs(act-ent);
+    const cuanto = dec>=4 ? (Math.round(dif/0.0001*10)/10+" pips")
+                 : dec>=2 ? (Math.round(dif/0.01*10)/10+" pips")
+                 : (dif.toFixed(Math.max(dec,2))+" de precio");
+    return caja("🛡️ Stop en "+sl+" — <b>todavía por detrás de tu entrada</b>. El precio va "
+      +(aFavor?"a favor":"en contra")+" y está a "+cuanto+" de tu entrada","#e2a03f");
+  }catch(_){ return ""; }
+}
+
 function ejecFormHTML(cfg){
   /* 🏢 v7.92 — EL EJECUTOR DEJA DE SER DE FUNDEDNEXT.
      Rey (10-09): «me dijiste que era para todo tipo de cuenta, mercado y moneda, pero en el
@@ -4249,6 +4293,17 @@ async function renderEjecutor(){
          donde yo determine y dejar correr lo que quede de la posición». */
       poss.map(p=>'<div style="margin-top:10px;padding-top:8px;border-top:1px solid rgba(255,255,255,.07)">'+
         '<div style="display:flex;align-items:center;gap:8px;margin-top:8px"><span style="flex:1">'+esc(p.dir+" "+p.sym)+' · lote '+p.lote+' @ '+p.entrada+' · SL '+p.sl+' · TP '+p.tp+' · <b>$'+p.pl+'</b></span><button class="btn ej-cerrar" data-tk="'+esc(String(p.ticket))+'">✖ Cerrar</button></div>'+
+        /* 🛡️ v7.212 — EL ESTADO DEL STOP, DICHO. Rey, el 22-09, con la operación corriendo:
+           «si ya llegó al 1R el Ejecutor no ha movido el SL? No me lo ha dicho que ya movió BE».
+           Y SÍ lo había movido — el SL estaba clavado en su entrada. Lo que fallaba es que esta
+           tarjeta enseñaba el número (SL 1.14597) y la entrada (@ 1.14597) sin decir en ninguna
+           parte que ESO significa break-even. Para saberlo había que comparar dos precios de
+           cinco decimales a ojo, o esperar un aviso que puede no verse.
+           Un estado que solo se anuncia UNA VEZ no es un estado: es un aviso. Si se pierde, se
+           perdió para siempre ([[apex-lo-que-corre-solo-falla-callado]]). Aquí se puede mirar
+           siempre que quiera, y no depende de que ninguna notificación llegue.
+           No hace falta ningún dato nuevo de la nube: sale de lo que ya viaja. */
+        estadoStopHTML(p)+
         '<div style="display:flex;gap:6px;margin-top:6px;align-items:center;flex-wrap:wrap">'+
           '<span class="desc" style="font-size:11.5px;opacity:.85">✂️ Cerrar parte y dejar correr:</span>'+
           [25,50,75].map(q=>'<button class="btn ej-parcial" data-tk="'+esc(String(p.ticket))+'" data-q="'+q+'" style="padding:3px 9px;font-size:.85em">'+q+'%</button>').join("")+

@@ -1,60 +1,27 @@
-APEX v7.211 — TRADING DESK
+APEX v7.212 — TRADING DESK
 =========================
 
-🎙️ EL BOTÓN DEL CASCO — AHORA SÍ, Y LA CAUSA ERA OTRA
+🛡️ EL ESTADO DE TU STOP, DICHO EN LA TARJETA
+   Hoy preguntaste si el Ejecutor había movido el SL a breakeven. SÍ lo había
+   movido (SL 1.14597 = tu entrada 1.14597) y el aviso salió bien. El fallo era
+   que la tarjeta enseñaba los dos números y en ningún sitio decía que ESO es un
+   breakeven: había que comparar dos precios de cinco decimales a ojo.
+   Ahora la tarjeta lo dice, siempre y sin depender de ningún aviso:
+       🛡️ BREAKEVEN PUESTO — el stop está en tu entrada, ya no puedes perder
+   Y si todavía no: cuánto le falta al precio, en pips, y si va a favor o en
+   contra. Si una posición se queda SIN STOP, lo grita.
 
-Con la 7.208 metí la pieza del asistente de voz. Android la aceptó
-(la casilla se llenó, el servicio quedó enlazado)… y tu botón siguió
-abriendo los ajustes. Así que lo medí con el registro del teléfono
-delante, a las 19:53:
-
-   START {act=android.intent.action.VOICE_COMMAND
-          cmp=com.google.android.googlequicksearchbox/…HandsFreeActivity}
-          from uid 1002   ← uid 1002 = el propio Bluetooth de Android
-   START {act=android.settings.VOICE_INPUT_SETTINGS
-          cmp=com.android.settings/.Settings$ManageAssistActivity}
-          from uid 10221  ← uid 10221 = la app de Google
-
-TU BOTÓN NO USA EL ASISTENTE DE VOZ DE ANDROID. Manda la orden por
-Bluetooth, y es el Bluetooth quien lanza un intent viejo llamado
-VOICE_COMMAND. Android busca qué app DECLARA ese intent — y la única
-era la de Google, que al no ser ya tu asistente te abría los ajustes.
-Apex no entraba en esa conversación en ningún momento.
-
-Y el fallo era mío, de manual: Apex COMPROBABA ese intent en el código
-desde la v7.197, pero el manifiesto nunca lo declaró. Android jamás se
-lo mandó, así que ese trozo de código no se ejecutó ni una sola vez.
-Escrito, correcto y muerto.
-
-
-LO QUE HACE AHORA
-
-Una puerta nueva que declara los TRES intents que usan los manos libres
-del mercado (no solo el de tu RS62: cambiar de casco no va a obligar a
-recompilar). Y lo importante es cómo se comporta:
-
-   · NO enseña nada. Es transparente y se cierra sola. Ni un parpadeo.
-   · FUNCIONA CON EL TELÉFONO BLOQUEADO, que es como lo llevas en el
-     bolsillo con guantes. Como no pinta nada, no expone tu cuenta.
-   · TU PANTALLA DE VERDAD SIGUE PIDIENDO DESBLOQUEO. Eso no cambia:
-     dentro de Apex están tu cuenta y tus posiciones.
-   · NO te enciende la pantalla en el bolsillo.
-   · Enciende el modo moto por el camino que ya estaba probado, y una
-     sola vez.
-
-
-👉 LA PRIMERA VEZ QUE LO APRIETES
-
-Android te va a preguntar: ¿Google o Apex? Elige APEX y marca SIEMPRE.
-Si no te lo pregunta y abre Google, quita a Google de la lista de apps
-predeterminadas de asistencia o dímelo y lo miro con el cable.
-
-
-🌧️ Y LO DE LA LETRA (venía de la 7.209)
-
-Dijiste "¿va a llover hoy?" y el casco te pegó la ese de "hoy" al verbo.
-Por esa letra la pregunta salía a la nube a cobrarse teniéndola el
-teléfono gratis. Ya reconoce las dos formas.
+📣 LA CABECERA DE LOS AVISOS DICE QUÉ HAY DENTRO
+   Medido en tu teléfono por cable: tus avisos SÍ llegaban y SEGUÍAN en la
+   bandeja, pero Android los pliega bajo una sola línea que decía
+       «Apex · 12 avisos»
+   la misma frase con doce citas del día dentro que con tu breakeven y una
+   alarma de entrada. Con el teléfono en el bolsillo leías «12 avisos» y
+   seguías. ESO era el silencio: nunca se perdió nada, estaba tapado.
+   Ahora la cabecera dice:
+       ⚠️ Apex · 2 avisos que mirar · 10 más
+   y lo que pesa (alarmas, Ejecutor, break-even, parciales) va DELANTE dentro
+   del grupo, no perdido entre las siete líneas que caben.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
