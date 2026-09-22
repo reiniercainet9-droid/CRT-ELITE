@@ -525,7 +525,24 @@ async function abrirFoto(id, meta){
    «no disponible» que vuelve cada vez que abre Apex, para siempre.
    Ahora se apunta el id en una lista de borradas y la sincronización no lo vuelve a traer.
    La lista se guarda topada: son ids cortos, pero nada crece sin límite en su teléfono. */
-function capturasBorradas(){ try{ return JSON.parse(localStorage.getItem("crtelite_shots_borradas")||"[]"); }catch(_){ return []; } }
+/* 🩹 v7.214 (22-09) — ESTO DEVOLVÍA `null` Y LE DEJÓ LA GALERÍA MUERTA.
+   Rey: «no tengo aún ningún registro de la operación de hoy en mi galería».
+   MEDIDO EN SU TELÉFONO: en la nube había 20 capturas, en su Galería 39, y faltaban por
+   bajar exactamente las 3 de hoy. La causa, leída de su propio localStorage:
+       crtelite_shots_borradas = "null"
+   `getItem` devuelve la CADENA "null", que es truthy, así que el `|| "[]"` no entraba;
+   `JSON.parse("null")` devuelve `null`; y quien lo usa hace `capturasBorradas().indexOf(id)`
+   → **TypeError** en la PRIMERA captura que intenta bajar. El error caía en un
+   `.catch(()=>{})` vacío y la Galería dejaba de sincronizarse PARA SIEMPRE, sin un mensaje,
+   sin un rastro y sin que ningún banco pudiera verlo.
+   Ahora: si lo que hay guardado no es una lista, es como si no hubiera nada. Un dato
+   corrupto no puede dejar muda una sección entera ([[apex-nada-le-deja-mudo]]). */
+function capturasBorradas(){
+  try{
+    const l = JSON.parse(localStorage.getItem("crtelite_shots_borradas") || "[]");
+    return Array.isArray(l) ? l : [];
+  }catch(_){ return []; }
+}
 function apuntarCapturaBorrada(id){
   try{ const l=capturasBorradas(); if(l.indexOf(id)<0){ l.push(id); localStorage.setItem("crtelite_shots_borradas", JSON.stringify(l.slice(-300))); } }catch(_){}
 }
@@ -1336,11 +1353,29 @@ function syncAutoShots(){
         if(capturasBorradas().indexOf(s.id)>=0) return;   /* v7.205: la borró Rey — no vuelve */
         const dt=new Date(s.ts||Date.now());
         const f=dt.getFullYear()+"-"+String(dt.getMonth()+1).padStart(2,"0")+"-"+String(dt.getDate()).padStart(2,"0");
-        SHOTS.unshift({ id:s.id, fecha:f, par:(s.sym||"—"), tipo:"Auto-entrada", ts:s.ts||Date.now() });
+        /* 🏷️ v7.214 — CADA FOTO DICE LO QUE ES. Todas se guardaban como «Auto-entrada»,
+           incluida la del CIERRE (que es la que lleva la traza dibujada: caja de riesgo,
+           objetivo, línea entrada→salida, BE y resultado). Para estudiar una operación hay
+           que poder distinguir de un vistazo cuál es cuál; con las dos llamadas igual, Rey
+           tiene que abrirlas una a una para saber qué está mirando.
+             ejecC… = el cierre del Ejecutor · ejec… = su entrada · auto… = una caja suya */
+        const tipoFoto = /^ejecC/.test(String(s.id)) ? "Auto-cierre"
+                       : /^ejec/.test(String(s.id)) ? "Auto-entrada"
+                       : "Tu posición";
+        SHOTS.unshift({ id:s.id, fecha:f, par:(s.sym||"—"), tipo:tipoFoto, ts:s.ts||Date.now() });
         n++;
       });
       if(n){ save(K.shots,SHOTS); toast("📸 "+n+" captura(s) de tu(s) entrada(s) guardada(s) en la Galería"); try{ if(typeof renderGaleria==="function") renderGaleria(); }catch(_){} }
-    }).catch(()=>{});
+    }).catch((e)=>{
+      /* 🔇 v7.214 — ESTE `.catch` VACÍO ES LO QUE ESCONDIÓ EL FALLO DURANTE DÍAS.
+         Un `null.indexOf(...)` reventaba aquí dentro, el catch se lo tragaba, y la Galería
+         de Rey dejaba de recibir capturas sin decir una palabra. Él lo descubrió mirando y
+         no encontrando la operación del día — que es justo lo que no puede volver a pasar
+         ([[apex-lo-que-corre-solo-falla-callado]]).
+         Ahora se dice. Y se dice EN LA APP, no solo en una consola que Rey no mira nunca. */
+      try{ console.warn("[apex] la Galería no pudo sincronizar:", e && e.message); }catch(_){}
+      try{ toast("⚠️ No pude traer tus capturas a la Galería: " + ((e && e.message) || "fallo desconocido")); }catch(_){}
+    });
   }catch(_){}
 }
 function syncPendientes(){
