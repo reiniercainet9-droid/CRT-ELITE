@@ -1,31 +1,45 @@
-APEX v7.216 — TRADING DESK
+APEX v7.217 — TRADING DESK
 =========================
 
-✂️ TU PARCIAL YA APARECE EN TUS MEDICIONES
-   Tú: «ahora está 1:2 R y con gestión de parciales en el transcurso de la
-   operación» — y tus estadísticas no podían verlo.
-   En tu operación del 22-09 el 75% del beneficio bruto salió POR EL PARCIAL
-   a 1,5R y solo el 25% por el TP, y «por dónde salió cada una» lo contaba
-   como UNA sola salida: «llegó al objetivo». Te mentía sobre por dónde sale
-   tu dinero de verdad.
-   No se podía arreglar en la pantalla: la operación no traía el dato. Ahora
-   el Ejecutor (v3.11) manda con cada salida cómo se gestionó —a qué R se
-   hizo el parcial, cuántos lotes, qué %, cuánto dejó y qué quedó corriendo,
-   más el R del break-even— y la pantalla reparte:
-       ✂️ parcial            +1,21R   (el 80% sacado a 1,51R)
-       🎯 llegó al objetivo  +0,24R   (el 20% que corrió hasta el TP)
-       ———————————————————— suman 1,45R, que es tu resultado real
-   Las operaciones viejas, que no traen el dato, se cuentan enteras como
-   siempre: no se reparte a ojo lo que no se midió.
+🐾 LA ZONA QUE ESPERA YA SE SIGUE DE VERDAD
+   El aviso «⏳ Zona programada» terminaba diciéndote: «Te aviso cuando SE
+   ACERQUE, cuando LLEGUE, y si la zona se enfría». De los tres, solo existía
+   el de LLEGUE. El sistema medía los otros dos —cuántos pips faltan, si se
+   acerca o se aleja, cuánto lleva esperando— y se los guardaba para él.
+   Te prometí algo que no cumplía, y eso es peor que no prometerlo.
+   Ahora salen los dos que faltaban, UNA sola vez cada uno:
+       🎯 Tu zona, a un paso  → a 5 pips o menos, con los pips exactos y
+                                cuánto llevaba esperando
+       🧊 Tu zona se enfría   → cuando se va al DOBLE de lejos de donde
+                                estaba al ponerla y ya pasó media hora
+   El de «se enfría» no te dice qué hacer: te dice lo que ha pasado y decides
+   tú. Y ninguno de los dos arranca nada de pago al tocarlo: te llevan al
+   gráfico.
 
-🤖 Y YA NO CONFUNDE TU ENTRADA CON LA DEL EJECUTOR
-   El Puente dibuja una caja sobre el gráfico para fotografiar la traza del
-   robot. Ese dibujo se contaba como una posición TUYA: el 22-09 te sacó una
-   captura como si fuera tuya y, 48 s después del «🤖 ENTRÉ» del Ejecutor, te
-   pidió «dime en qué libro la apunto» — de una operación que hizo el bot.
-   Ahora el sistema compara los números de cada caja con las operaciones del
-   Ejecutor: si coinciden, es del robot, se marca como tal y Roberto la
-   nombra «del EJECUTOR, no de Rey».
+📋 TUS AVISOS YA LLEVAN LO MISMO QUE LOS DEL EJECUTOR
+   Tú: «¿Roberto me las canta así mismo con todos los detalles?». No lo hacía.
+   El del robot llevaba lote, SL, TP, riesgo en $, grado y cómo lo iba a
+   gestionar. El TUYO decía «Detecté tu venta en GBPUSD (entrada 1.1490)» y se
+   acababa ahí — siendo las tuyas las que más pesan por tu propia regla del
+   20%. Los datos ya estaban guardados; solo no se te contaban.
+   Ahora «⏳ Zona programada» y «✍️ Entrada detectada» llevan:
+       SL 1.14708 · TP 1.14375 · R:R 1:2
+       📊 El gráfico ahora: sesgo bajista · zona premium · 4 confluencias
+   Lo que el panel no diga se queda en blanco: no se rellena a ojo.
+
+📸 Y LA ZONA QUE DIBUJAS SE FOTOGRAFÍA
+   Trabajaste esa sección «para después estudiar por ahí». De una zona que
+   todavía espera, la foto que hace falta es la del momento en que la pusiste:
+   luego se compara con dónde fue el precio de verdad. Ahora se saca sola al
+   dibujarla, se ficha sola en tu Galería, y sale con su nombre propio —
+   «Zona programada»— para que no se confunda con una entrada de verdad.
+
+⚠️ LO QUE ENCONTRÉ ESCRIBIENDO ESTO Y ARREGLÉ ANTES DE ENTREGARLO
+   La marca de «ya te avisé» se guardaba ANTES de este bloque, no después. Sin
+   tocarlo, el aviso «a un paso» te habría salido EN CADA VUELTA del Puente —
+   uno cada 20 segundos durante horas. El banco lo ejecuta 12 ciclos seguidos
+   y exige que salga una sola vez, porque un aviso repetido te enseña a
+   ignorarlos y entonces el día que llegue el bueno tampoco lo mirarás.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

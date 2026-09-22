@@ -1359,8 +1359,13 @@ function syncAutoShots(){
            que poder distinguir de un vistazo cuál es cuál; con las dos llamadas igual, Rey
            tiene que abrirlas una a una para saber qué está mirando.
              ejecC… = el cierre del Ejecutor · ejec… = su entrada · auto… = una caja suya */
+        /* v7.217: + zona… = una zona que Rey dibujó y TODAVÍA ESPERA. Es la foto del momento
+           en que la puso, que es justo la que hace falta para estudiar después si la zona
+           valía: se compara con dónde fue el precio. Sin nombre propio se habría llamado
+           «Tu posición» como las demás y no se distinguiría de una entrada de verdad. */
         const tipoFoto = /^ejecC/.test(String(s.id)) ? "Auto-cierre"
                        : /^ejec/.test(String(s.id)) ? "Auto-entrada"
+                       : /^zona/.test(String(s.id)) ? "Zona programada"
                        : "Tu posición";
         SHOTS.unshift({ id:s.id, fecha:f, par:(s.sym||"—"), tipo:tipoFoto, ts:s.ts||Date.now() });
         n++;
