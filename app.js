@@ -3359,6 +3359,14 @@ function apexEsperanza(ops){
     ["SL",    /\bSL\b|stop/i,                    "❌ tocó el stop"],
     ["tiempo",/tiempo|extremo H4|⏱/i,            "⏱ salida por tiempo"],
     ["BE",    /break.?even|\bBE\b/i,            "🛡️ break-even"],
+    /* ✂️ v7.213 — LA PUERTA QUE FALTABA. Rey opera hoy con parciales, así que la mayor
+       parte de su dinero NO sale por la puerta que dice el motivo: sale ANTES, en el
+       parcial. En su operación del 22-09, el 75% del beneficio bruto salió por el parcial
+       a 1,5R y solo el 25% por el TP — y la estadística lo contaba como UNA salida «TP».
+       Para poder repartirlo hace falta que la operación traiga el parcial dentro
+       (Ejecutor v3.11 en adelante); mientras no lo traiga, esta puerta queda vacía y se
+       dice, en vez de fingir un reparto que no se ha medido ([[apex-roberto-no-inventa]]). */
+    ["parcial", /parcial/i,                     "✂️ parcial"],
   ];
   const porSalida = {};
   l.forEach(o=>{
@@ -3370,7 +3378,36 @@ function apexEsperanza(ops){
   });
   Object.keys(porSalida).forEach(k=>{ porSalida[k].medio = porSalida[k].suma/porSalida[k].n; });
 
-  return { n:l.length, hayR, gan:gan.length, per:per.length, emp:emp.length,
+  /* ═══════════════════════════════════════════════════════════════════════════════
+     🧭 v7.213 — DOS FORMAS DE OPERAR NO SE PUEDEN SUMAR EN UN SOLO NÚMERO
+     ═══════════════════════════════════════════════════════════════════════════════
+     Rey, el 22-09, mirando esta pantalla: «¿sigue midiendo la salida por tiempo? Ya no
+     funciona así, yo quité la salida por tiempo, ahora está 1:2 R y con gestión de
+     parciales en el transcurso de la operación».
+     Y la pantalla le daba la razón: 8 de sus 17 operaciones (47%) salían por tiempo — una
+     regla que tiene APAGADA. Esperanza −0,03R y profit factor 0,93 salían de MEZCLAR dos
+     sistemas distintos, así que no describían ninguno de los dos.
+     Un número que mezcla regímenes no es un número pequeño: es un número que no significa
+     nada, y encima parece riguroso.
+     LA FRONTERA NO SE INVENTA: la marca la ÚLTIMA salida por tiempo que hubo. Todo lo
+     anterior es el sistema viejo; lo posterior corre con las reglas de ahora. No hace falta
+     ningún dato nuevo y no hay nada que adivinar. */
+  const ordenadas = l.slice().sort((a,b)=>a.ts-b.ts);
+  const iUltTiempo = (function(){
+    let i = -1;
+    ordenadas.forEach((o,k)=>{ if(/tiempo|extremo H4|⏱/i.test(String(o.motivo||""))) i = k; });
+    return i;
+  })();
+  const conReglasDeHoy = iUltTiempo >= 0 ? ordenadas.slice(iUltTiempo+1) : ordenadas;
+  const regimen = {
+    huboTiempo: (porSalida.tiempo && porSalida.tiempo.n) || 0,
+    nHoy: conReglasDeHoy.length,
+    desde: conReglasDeHoy.length ? conReglasDeHoy[0].ts : null,
+    rHoy: conReglasDeHoy.length ? conReglasDeHoy.reduce((s,o)=>s+v(o),0)/conReglasDeHoy.length : null,
+    ganHoy: conReglasDeHoy.filter(o=>v(o)>0).length,
+  };
+
+  return { n:l.length, hayR, gan:gan.length, per:per.length, emp:emp.length, regimen,
            wr, rGan, rPer, wrEmpate, esperanza, pf, rachaG, rachaP, porSalida,
            /* ¿hay ventaja? = acierta más de lo que necesita para empatar */
            ventaja: (wr!=null && wrEmpate!=null) ? (wr - wrEmpate) : null };
@@ -3466,6 +3503,16 @@ function espPanelHTML(e, titulo, subtitulo){
       '<thead><tr style="border-bottom:1px solid rgba(128,140,170,.3)"><th style="text-align:left;padding:5px;font-size:.72em;opacity:.65;text-transform:uppercase">salida</th><th style="text-align:right;padding:5px;font-size:.72em;opacity:.65">nº</th><th style="text-align:right;padding:5px;font-size:.72em;opacity:.65">%</th><th style="text-align:right;padding:5px;font-size:.72em;opacity:.65">media</th></tr></thead>'+
       '<tbody>'+filasP+'</tbody></table></div>'+
       ((e.porSalida.TP?0:1) && e.n>=3 ? '<div style="font-size:11.5px;color:#e2b341;margin-top:6px">⚠️ <b>Ninguna salió por el objetivo (TP).</b> Si el precio nunca llega ahí, el TP está puesto donde no toca y tu objetivo real es otro: hay que medirlo como tal.</div>' : "")+
+      /* 🧭 v7.213 — EL AVISO DE LOS DOS REGÍMENES, justo debajo de la tabla que lo provoca */
+      ((e.regimen && e.regimen.huboTiempo && e.regimen.nHoy < e.n) ? (
+        '<div style="font-size:11.8px;margin-top:8px;padding:8px;border-radius:8px;background:rgba(226,179,65,.10);border:1px solid rgba(226,179,65,.35)">'+
+        '<b style="color:#e2b341">🧭 Aquí hay DOS sistemas mezclados, y por eso los números de arriba no describen ninguno.</b><br>'+
+        '<b>'+e.regimen.huboTiempo+'</b> de estas '+e.n+' salieron por <b>tiempo</b>, una regla que tienes APAGADA. Son del sistema anterior.<br>'+
+        'Con tus reglas de hoy (1:2 R + parciales) llevas <b>'+e.regimen.nHoy+' operación(es)</b>'+
+        (e.regimen.nHoy ? (' · '+e.regimen.ganHoy+' ganada(s)'+(e.regimen.rHoy!=null?' · media '+(e.regimen.rHoy>=0?'+':'')+e.regimen.rHoy.toFixed(2)+'R':'')) : '')+'.<br>'+
+        '<span style="opacity:.9">Con eso no hay esperanza ni profit factor que valga: es el punto de partida, no un resultado. '+
+        'Lo que sí se lee desde el primer día es la FORMA de las salidas.</span></div>'
+      ) : "")+
     '</div>'+
 
     /* QUÉ SIGNIFICA */

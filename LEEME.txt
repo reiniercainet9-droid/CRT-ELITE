@@ -1,27 +1,24 @@
-APEX v7.212 — TRADING DESK
+APEX v7.213 — TRADING DESK
 =========================
 
-🛡️ EL ESTADO DE TU STOP, DICHO EN LA TARJETA
-   Hoy preguntaste si el Ejecutor había movido el SL a breakeven. SÍ lo había
-   movido (SL 1.14597 = tu entrada 1.14597) y el aviso salió bien. El fallo era
-   que la tarjeta enseñaba los dos números y en ningún sitio decía que ESO es un
-   breakeven: había que comparar dos precios de cinco decimales a ojo.
-   Ahora la tarjeta lo dice, siempre y sin depender de ningún aviso:
-       🛡️ BREAKEVEN PUESTO — el stop está en tu entrada, ya no puedes perder
-   Y si todavía no: cuánto le falta al precio, en pips, y si va a favor o en
-   contra. Si una posición se queda SIN STOP, lo grita.
+🧭 TUS MEDICIONES DEJAN DE MEZCLAR DOS SISTEMAS
+   Tú: «¿sigue midiendo la salida por tiempo? Ya no funciona así, yo la quité,
+   ahora está 1:2 R y con gestión de parciales».
+   Tenías razón y era peor de lo que parecía: 8 de tus 17 operaciones (47%)
+   salían por TIEMPO, una regla que tienes APAGADA. La esperanza de −0,03R y el
+   profit factor 0,93 salían de mezclar dos formas de operar distintas, así que
+   no describían ninguna de las dos.
+   Ahora la pantalla lo dice y te separa el número:
+       🧭 Aquí hay DOS sistemas mezclados
+       8 de estas 17 salieron por tiempo — son del sistema anterior
+       Con tus reglas de hoy llevas 4 operaciones · 1 ganada · media +0,04R
+   La frontera no se inventa: la marca la ÚLTIMA salida por tiempo que hubo.
 
-📣 LA CABECERA DE LOS AVISOS DICE QUÉ HAY DENTRO
-   Medido en tu teléfono por cable: tus avisos SÍ llegaban y SEGUÍAN en la
-   bandeja, pero Android los pliega bajo una sola línea que decía
-       «Apex · 12 avisos»
-   la misma frase con doce citas del día dentro que con tu breakeven y una
-   alarma de entrada. Con el teléfono en el bolsillo leías «12 avisos» y
-   seguías. ESO era el silencio: nunca se perdió nada, estaba tapado.
-   Ahora la cabecera dice:
-       ⚠️ Apex · 2 avisos que mirar · 10 más
-   y lo que pesa (alarmas, Ejecutor, break-even, parciales) va DELANTE dentro
-   del grupo, no perdido entre las siete líneas que caben.
+✂️ Y LA PUERTA DEL PARCIAL
+   En tu operación del 22-09, el 75% del beneficio bruto salió por el parcial a
+   1,5R y solo el 25% por el TP — y la estadística lo contaba como UNA salida
+   «llegó al objetivo». Ya existe la puerta «✂️ parcial» para repartirlo en
+   cuanto la operación traiga ese dato dentro.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
