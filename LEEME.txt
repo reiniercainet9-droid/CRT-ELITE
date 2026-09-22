@@ -1,38 +1,31 @@
-APEX v7.215 — TRADING DESK
+APEX v7.216 — TRADING DESK
 =========================
 
-💳 UN AVISO YA NO TE COBRA POR TOCARLO
-   Tú: «la alarma de la posición la toqué y me salió en el chat para hacer un
-   análisis de la semana… me gastó crédito sin pedir ese análisis y sin poder
-   cancelarla».
-   La causa era mía y de un destino mal puesto: en la app, `rob:diario` NO es
-   la pestaña Diario — es «análisis del día», que llama al modelo y COBRA. Dos
-   avisos lo llevaban diciéndote «está esperándote en el 📒 Diario»:
-       ✍️ Entrada detectada   (lo llevaba desde que se escribió)
-       ⏳ Zona programada      (se lo puse yo hoy, copiando el error)
-   Cada vez que los tocabas pagabas algo que no pediste. Ahora:
-       «Entrada detectada» → abre la PESTAÑA del Diario. Gratis.
-       «Zona programada»   → te abre el GRÁFICO en ese par. Gratis.
-   Y hay un banco nuevo que recorre TODOS los avisos y da rojo si alguno
-   vuelve a cobrar al tocarlo sin advertirlo en su propio texto.
+✂️ TU PARCIAL YA APARECE EN TUS MEDICIONES
+   Tú: «ahora está 1:2 R y con gestión de parciales en el transcurso de la
+   operación» — y tus estadísticas no podían verlo.
+   En tu operación del 22-09 el 75% del beneficio bruto salió POR EL PARCIAL
+   a 1,5R y solo el 25% por el TP, y «por dónde salió cada una» lo contaba
+   como UNA sola salida: «llegó al objetivo». Te mentía sobre por dónde sale
+   tu dinero de verdad.
+   No se podía arreglar en la pantalla: la operación no traía el dato. Ahora
+   el Ejecutor (v3.11) manda con cada salida cómo se gestionó —a qué R se
+   hizo el parcial, cuántos lotes, qué %, cuánto dejó y qué quedó corriendo,
+   más el R del break-even— y la pantalla reparte:
+       ✂️ parcial            +1,21R   (el 80% sacado a 1,51R)
+       🎯 llegó al objetivo  +0,24R   (el 20% que corrió hasta el TP)
+       ———————————————————— suman 1,45R, que es tu resultado real
+   Las operaciones viejas, que no traen el dato, se cuentan enteras como
+   siempre: no se reparte a ojo lo que no se midió.
 
-🎤 QUÉ IMPACTO DE NOTICIA TE FRENA, LO DECIDES TÚ
-   Tú: «¿por qué no se detectó esa conferencia de prensa?… ¿y si el veto no
-   detecta esa conferencia de prensa antes de una entrada?».
-   Medido: «President Trump Speaks» SÍ estaba en el calendario (09:55 NY) y
-   Apex SÍ te avisó 40 min antes. Lo que no hizo fue FRENAR, porque venía
-   marcado MEDIO y el veto tenía «solo ALTO» clavado en el código — una regla
-   del Ejecutor que no podías ver ni cambiar.
-   Ahora en 🤖 Ejecutor → Tus reglas tienes:
-       «…y frena con impacto:  Solo ALTO  /  ALTO y MEDIO»
-   Por defecto se queda como estaba (solo ALTO): no te cambio el sistema sin
-   que lo pidas. Y el VIGÍA (el que te avisa cuando viene una noticia y tienes
-   una posición abierta) va bajo esa misma regla tuya, no bajo otra distinta.
-
-⏳ Y LA ZONA PROGRAMADA YA NO MIENTE CON EL RECORRIDO
-   Una zona esperando informaba «llegó a 2,29R a favor» de una entrada que no
-   ha ocurrido. El recorrido (MFE/MAE) ahora solo se cuenta desde que el
-   precio TOCA tu zona. Mientras espera: cuánto le falta y hacia dónde va.
+🤖 Y YA NO CONFUNDE TU ENTRADA CON LA DEL EJECUTOR
+   El Puente dibuja una caja sobre el gráfico para fotografiar la traza del
+   robot. Ese dibujo se contaba como una posición TUYA: el 22-09 te sacó una
+   captura como si fuera tuya y, 48 s después del «🤖 ENTRÉ» del Ejecutor, te
+   pidió «dime en qué libro la apunto» — de una operación que hizo el bot.
+   Ahora el sistema compara los números de cada caja con las operaciones del
+   Ejecutor: si coinciden, es del robot, se marca como tal y Roberto la
+   nombra «del EJECUTOR, no de Rey».
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

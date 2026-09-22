@@ -3412,12 +3412,28 @@ function apexEsperanza(ops){
     ["parcial", /parcial/i,                     "✂️ parcial"],
   ];
   const porSalida = {};
+  const anota=(k,val)=>{ (porSalida[k]=porSalida[k]||{n:0,suma:0,etiqueta:(PUERTAS.find(x=>x[0]===k)||[,,k])[2]||k}).n++; porSalida[k].suma+=val; };
   l.forEach(o=>{
     const m = String(o.motivo||"");
     let k = m ? "otras" : "sin dato";
     for(const [id,re] of PUERTAS) if(re.test(m)){ k=id; break; }
-    (porSalida[k] = porSalida[k] || {n:0, suma:0, etiqueta:(PUERTAS.find(x=>x[0]===k)||[,,k])[2]||k}).n++;
-    porSalida[k].suma += v(o);
+    /* ✂️ v7.216 (22-09) — UNA OPERACION CON PARCIAL SALIO POR DOS PUERTAS, NO POR UNA.
+       Rey: «ahora esta 1:2 R y con gestion de parciales en el transcurso de la operacion».
+       En su operacion del 22-09 el 75% del beneficio bruto salio POR EL PARCIAL a 1,5R y solo
+       el 25% por el TP — y esto lo contaba como UNA sola salida «llego al objetivo», con lo
+       que «por donde salio cada una» mentia sobre por donde sale su dinero de verdad.
+       Desde el Ejecutor v3.11 la operacion trae el parcial dentro. Cuando lo trae, se parte:
+       el trozo que salio en el parcial cuenta en la puerta ✂️ y el resto en la suya.
+       Si NO lo trae (operaciones viejas), se cuenta entera como siempre: no se reparte a ojo
+       lo que no se midio ([[apex-roberto-no-inventa]]). */
+    const pct = Number(o.parcialPct);
+    if(o.parcialHecho===true && isFinite(pct) && pct>0 && pct<100 && isFinite(Number(o.parcialR))){
+      const total=v(o), fr=pct/100;
+      anota("parcial", Number(o.parcialR)*fr);   /* el trozo que se saco, al R al que se saco */
+      anota(k, total - Number(o.parcialR)*fr);   /* y lo que quedo, por la puerta que dice el motivo */
+      return;
+    }
+    anota(k, v(o));
   });
   Object.keys(porSalida).forEach(k=>{ porSalida[k].medio = porSalida[k].suma/porSalida[k].n; });
 
