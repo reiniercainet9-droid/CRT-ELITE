@@ -39,7 +39,15 @@ const K = {
   ejec:"crtelite_ejectrades_v1"
 };
 const load = (k,d)=>{ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):d; }catch(e){ return d; } };
-const save = (k,v)=>{ try{ localStorage.setItem(k,JSON.stringify(v)); nubeMarcar(); }catch(e){ toast("No se pudo guardar"); } };
+const save = (k,v)=>{ try{ localStorage.setItem(k,JSON.stringify(v)); nubeMarcar();
+  /* 📒 v7.220 — EL DIARIO SE ESPEJA A LA NUBE DESDE AQUÍ, NO DESDE DIECISIETE SITIOS.
+     El Diario se guarda en 17 lugares distintos (registrar, cerrar, editar, borrar, importar,
+     renombrar estrategia…). Enganchar la sincronización en cada uno es la trampa de la lista
+     fija de siempre: el que añada el sitio 18 se olvidará, y Roberto volverá a aprender de
+     medio Diario sin que nadie lo note ([[apex-declarar-no-es-dar]]). Enganchado AQUÍ, en el
+     único sitio por el que pasa TODO guardado, no hay forma de olvidarse. */
+  if(k===K.trades && typeof reyTradesSync==="function") reyTradesSync();
+}catch(e){ toast("No se pudo guardar"); } };
 
 /* ============================================================
    ☁️ RESPALDO EN LA NUBE — recupera Apex en CUALQUIER teléfono
@@ -564,6 +572,31 @@ function borrarCaptura(id){
 
 let TRADES = load(K.trades, []);
 let SHOTS  = load(K.shots, []);   // capturas sueltas (sin trade) para la Galería
+/* 🏷️ v7.217 — Y LAS QUE YA ESTABAN GUARDADAS TAMBIÉN DICEN LO QUE SON.
+   La v7.214 puso nombre a cada clase de foto, pero solo a las que llegaran DESPUÉS: en el
+   teléfono de Rey, 42 de sus 43 capturas seguían llamándose «Auto-entrada», incluidas todas
+   las de CIERRE — que son justo las que llevan la traza dibujada (caja de riesgo, objetivo,
+   línea entrada→salida, BE y resultado). O sea que el arreglo estaba hecho y él seguía
+   teniendo que abrirlas una a una para saber qué miraba, que era el problema original.
+   Medido en su teléfono antes de escribir esto: {"Tu posición":1,"Auto-entrada":42},
+   cero «Auto-cierre» teniendo cierres de sobra.
+   El rótulo se deduce del id, que no se inventa nada: `ejecC…` es un cierre y `ejec…` una
+   entrada. Se corre una sola vez y solo cambia el nombre; ni borra, ni reordena, ni toca
+   la foto ([[apex-la-prueba-se-guarda-cuando-pasa]]). */
+try {
+  let tocadas = 0;
+  SHOTS = (Array.isArray(SHOTS) ? SHOTS : []).map((s) => {
+    if (!s || !s.id) return s;
+    const debe = /^ejecC/.test(String(s.id)) ? "Auto-cierre"
+               : /^ejec/.test(String(s.id))  ? "Auto-entrada"
+               : /^zona/.test(String(s.id))  ? "Zona programada"
+               : /^auto/.test(String(s.id))  ? "Tu posición"
+               : null;                                  /* las manuales no se tocan */
+    if (debe && s.tipo !== debe) { tocadas++; return Object.assign({}, s, { tipo: debe }); }
+    return s;
+  });
+  if (tocadas) { save(K.shots, SHOTS); console.log("[galeria] " + tocadas + " captura(s) renombradas a lo que de verdad son"); }
+} catch (_) {}
 let PLANSEM = load(K.plansem, null);  // plan de la semana (bias/zonas/invalidación) persistente
 
 /* 🗓️ v7.136 — EL PLAN GUARDA LOS DOS PARES, NO UNO.
@@ -1598,6 +1631,45 @@ function patronesSync(){
     fetch(nubeUrl()+"/patrones",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({texto})})
       .then(r=>{ if(r&&r.ok){ try{ localStorage.setItem("crtelite_patsync",String(ahora)); }catch(_){} } }).catch(()=>{});
   }catch(_){}
+}
+/* ═══════════════════════════════════════════════════════════════════════════════════════
+   📒 v7.220 — SUS OPERACIONES VIAJAN A LA NUBE, PARA QUE ROBERTO APRENDA DE ÉL
+   ═══════════════════════════════════════════════════════════════════════════════════════
+   Rey (22-09): «los aprendizajes de Roberto no deben tener límites y mejorar con cada día de
+   MIS ERRORES, de sus errores y todo lo que sucede del día en todos los aspectos».
+   EL HUECO: el aprendizaje de las 20:00 corre en el CRON de la nube y su Diario vive AQUÍ,
+   en su teléfono. Por eso Roberto aprendía de lo que hacía el ROBOT y jamás de lo que hacía
+   ÉL — teniendo su fuga (el timing de entrada) anotada operación por operación.
+   Esto NO es su respaldo: es una copia compacta de los últimos 60 días, solo con lo que hace
+   falta para juzgar, y su respaldo cifrado sigue donde estaba sin tocarse.
+   Se manda al registrar y al cerrar una entrada, y como mucho una vez cada 10 minutos: lo que
+   corre solo no puede convertirse en un goteo de peticiones. */
+let _reySync=0;
+function reyTradesSync(forzar){
+  try{
+    /* se llama desde `save`, que corre también durante el arranque: si TRADES todavía no
+       existe no hay nada que mandar y no es un fallo */
+    if(typeof TRADES==="undefined" || !Array.isArray(TRADES)) return;
+    const ahora=Date.now();
+    if(!forzar && ahora-_reySync<10*60000) return;
+    _reySync=ahora;
+    const corte=new Date(ahora-60*86400000).toISOString().slice(0,10);
+    const trades=(Array.isArray(TRADES)?TRADES:[])
+      .filter(t=>t && String(t.fecha||"")>=corte)
+      .slice(-300)
+      .map(t=>({ id:t.id, fecha:t.fecha, hora:t.hora, modo:t.modo, par:t.par, dir:t.dir,
+                 abierta:t.abierta===true?true:undefined, res:t.res, r:t.r,
+                 setup:t.setup, ventana:t.ventana, momento:t.momento, bias:t.bias,
+                 zona:t.zona, nconf:t.nconf, mae:t.mae, mfe:t.mfe, nota:t.nota }));
+    if(!trades.length) return;
+    fetch(nubeUrl()+"/rey/trades",{method:"POST",headers:{"content-type":"application/json"},
+      body:JSON.stringify({trades})})
+      /* 🔇 y si falla, se DICE en la consola: lo que corre solo y falla callado se queda
+         roto para siempre ([[apex-lo-que-corre-solo-falla-callado]]). Sin toast: esto pasa
+         de fondo y Rey no tiene que enterarse de cada sincronización que sale bien. */
+      .then(r=>{ if(!r||!r.ok) console.warn("[diario] la nube no aceptó mis operaciones:", r&&r.status); })
+      .catch(e=>console.warn("[diario] no pude mandar mis operaciones a la nube:", e&&e.message));
+  }catch(e){ console.warn("[diario] reyTradesSync:", e&&e.message); }
 }
 /* Mini-bloque del contexto: solo el hallazgo TOP de cada libro (barato, ~1 línea). */
 function iaPatrones(){
@@ -16264,11 +16336,22 @@ function iaPlanSemanal(){
 
 /* Entradas ABIERTAS ya registradas en el Diario, para que Roberto NO las duplique
    y sepa cuáles posiciones del gráfico en vivo aún NO ha registrado (y las ofrezca). */
+/* 👁️ v7.219 — LOS DOS LIBROS, NO SOLO EL QUE ESTÉ ABIERTO.
+   Rey (22-09): «mis operaciones en real o en backtesting NO SE PUEDEN QUEDAR ATRÁS».
+   Esto filtraba por `t.modo===CTX.modo`, o sea por el libro que tuviera abierto en ese
+   momento: con Apex en 💵 REAL, sus entradas de 🎬 BACKTEST no existían para Roberto, y al
+   revés. Le podía ofrecer registrar por segunda vez una que ya tenía puesta en el otro libro,
+   o hablar de «no tienes nada abierto» teniendo una viva. Cada una se nombra con su libro
+   delante, porque mezclarlos en una misma cuenta sí sería un error ([[apex-backtest-fase1]]). */
 function iaEntradasAbiertas(){
-  const ab=(Array.isArray(TRADES)?TRADES:[]).filter(t=>t.abierta && t.modo===CTX.modo && t.estrategia===CTX.estrategia);
-  if(!ab.length) return "[📒 ENTRADAS ABIERTAS ya registradas en el Diario: ninguna. Si ves una posición en el gráfico en vivo, aún no la has registrado → ofrécele a Rey registrarla con registrar_entrada.]";
-  const filas=ab.map(t=>"  "+t.par+" "+t.dir+" ent "+(t.entrada!=null?t.entrada:"?")+(t.sl!=null?" SL "+t.sl:"")+(t.tp!=null?" TP "+t.tp:"")+(t.rr?" RR 1:"+t.rr:"")).join("\n");
-  return "[📒 ENTRADAS ABIERTAS ya registradas en el Diario (NO las vuelvas a registrar; si el gráfico muestra una posición que NO está en esta lista, ESA sí ofrécele registrarla):\n"+filas+"]";
+  const ab=(Array.isArray(TRADES)?TRADES:[]).filter(t=>t && t.abierta && t.estrategia===CTX.estrategia);
+  if(!ab.length) return "[📒 ENTRADAS ABIERTAS ya registradas en el Diario (los DOS libros): ninguna. Si ves una posición en el gráfico en vivo, aún no la has registrado → ofrécele a Rey registrarla con registrar_entrada. Y para juzgar cómo va operando, la mano es mirar_mis_entradas.]";
+  const fila=(t)=>"  "+(t.modo==="backtest"?"🎬":"💵")+" "+t.par+" "+t.dir+" ent "+(t.entrada!=null?t.entrada:"?")+(t.sl!=null?" SL "+t.sl:"")+(t.tp!=null?" TP "+t.tp:"")+(t.rr?" RR 1:"+t.rr:"")+(t.momento?" · '"+t.momento+"'":"")+(t.fecha?" · "+t.fecha:"");
+  const filas=ab.map(fila).join("\n");
+  const otras=ab.filter(t=>t.modo!==CTX.modo).length;
+  return "[📒 ENTRADAS ABIERTAS ya registradas en el Diario — LOS DOS LIBROS (💵 real · 🎬 backtest). NO las vuelvas a registrar; si el gráfico muestra una posición que NO está en esta lista, ESA sí ofrécele registrarla:\n"+filas
+    + (otras?("\n⚠️ "+otras+" de ellas NO son del libro que Rey tiene abierto ahora ("+(CTX.modo==="backtest"?"🎬 backtest":"💵 real")+"): existen igual, pero no mezcles sus cuentas."):"")
+    + "\nPara JUZGAR su forma de operar (historial, aciertos, R, y si entra en el toque o en confirmación) usa la mano mirar_mis_entradas.]";
 }
 
 /* Calendario en caché (10 min) para no golpear la red en cada mensaje a Roberto */
@@ -16400,6 +16483,23 @@ const IA_TOOLS = [
       mae:{type:"number",description:"MAE en R (máximo EN CONTRA). Tómalo del bloque en vivo de la posición si aparece (el puente lo calculó solo)."},
       mfe:{type:"number",description:"MFE en R (máximo A FAVOR). Tómalo del bloque en vivo de la posición si aparece."},
       nota:{type:"string"}
+    }, required:[] } },
+  /* 👁️ v7.219 — LA MANO QUE LE FALTABA A ROBERTO PARA JUZGAR LAS ENTRADAS DE REY.
+     Rey (22-09): «Roberto debe saber absolutamente todo — manos, visión y saber — y poder
+     JUZGAR todas mis entradas… mis operaciones en real o en backtesting no se pueden quedar
+     atrás. No quiero ese bache ni ninguno cuando me siente a trabajar con mi sistema».
+     LO QUE HABÍA: Roberto podía REGISTRAR entradas (registrar_entrada, cerrar_entrada) y no
+     podía LEERLAS. Del Diario solo veía las ABIERTAS y solo las del libro activo, así que si
+     Rey estaba en 💵 REAL sus operaciones de 🎬 BACKTEST no existían para él —y al revés—.
+     Para juzgar hace falta el historial, y el historial no llegaba ([[apex-declarar-no-es-dar]]).
+     Solo LEE: no cambia nada, no cuesta nada y no le saca a Rey ninguna tarjeta. */
+  { name:"mirar_mis_entradas", description:"LEE las operaciones del 📒 Diario de Rey —las SUYAS, no las del Ejecutor— para poder JUZGARLAS de verdad: abiertas y cerradas, del libro 💵 REAL y del 🎬 BACKTEST. Devuelve cada una con todo lo que hace falta para opinar (par, dirección, entrada/SL/TP/RR, setup, ventana, momento de entrada, bias, zona, confluencias, resultado en R, MAE y MFE) más las cuentas ya hechas del conjunto (cuántas, aciertos, R total, R medio, y cómo entró: en confirmación / en el toque / anticipando).\n\nÚSALO SIEMPRE que Rey te pida evaluar, juzgar, repasar o comparar sus entradas ('¿cómo voy?', '¿qué tal mis entradas?', 'evalúa la de hoy', '¿estoy mejorando?', '¿cómo van mis backtest?'), y ÚSALO ANTES de opinar sobre su forma de operar: sin los números delante estarías opinando de memoria, y eso es justo lo que él no quiere.\n\n⚠️ REAL y BACKTEST son libros DISTINTOS y no se mezclan nunca en una misma cuenta: el backtest es entrenamiento, el real es su dinero. Si le das un número, di de qué libro es. Por defecto trae el libro en el que está ahora mismo; pon modo:'ambos' cuando él compare o cuando no esté claro.\n\nY JUZGA, no recites: su fuga conocida es el TIMING (entrar en el toque en vez de esperar confirmación). Si ves ese patrón en los datos, díselo con el número en la mano.",
+    input_schema:{ type:"object", properties:{
+      modo:{type:"string",enum:["real","backtest","ambos"],description:"Qué libro mirar. Por defecto, el que Rey tenga abierto."},
+      estado:{type:"string",enum:["abiertas","cerradas","todas"],description:"Por defecto 'todas'."},
+      par:{type:"string",description:"Filtra por un par, ej. EUR/USD. Omítelo para todos."},
+      dias:{type:"number",description:"Solo las de los últimos N días. Omítelo para todo el historial."},
+      limite:{type:"number",description:"Cuántas devolver como máximo (por defecto 25, las más recientes). Las cuentas del conjunto se hacen con TODAS las que pasan el filtro, no solo con las que se devuelven."}
     }, required:[] } },
   { name:"capturar_grafico", description:"Pide al Puente una CAPTURA de pantalla del gráfico de un par (además de las automáticas de apertura/cierre). Úsalo cuando Rey diga 'saca captura' o quieras guardar una imagen para analizar. Tarda unos segundos (el Puente la sube a la nube). Si hay una entrada abierta de ese par, la foto se guarda en ella.",
     input_schema:{ type:"object", properties:{ par:{type:"string",description:"Par a capturar, ej. EUR/USD (di el que Rey esté operando)"} }, required:["par"] } },
@@ -16676,6 +16776,7 @@ function describeTool(name, i){
   if(name==="revisar_indicador") return "🔍 Leer y auditar los ajustes actuales del indicador CRT"+(i.target?(" ("+i.target+")"):"");
   if(name==="registrar_retiro") return "💰 Registrar RETIRO de $"+(i.monto!=null?i.monto:"?")+(i.cuenta?(" de "+i.cuenta):"")+(i.nota?("\nNota: "+i.nota):"");
   if(name==="buscar_memoria") return "🧠 Buscar en toda su memoria: “"+(i.consulta||"?")+"”";
+  if(name==="mirar_mis_entradas") return "📒 Leer tus entradas del Diario ["+(i.modo==="ambos"?"💵 REAL + 🎬 BACKTEST":i.modo==="backtest"?"🎬 BACKTEST":i.modo==="real"?"💵 REAL":"libro actual")+"]"+(i.par?(" · "+i.par):"")+(i.dias?(" · últimos "+i.dias+" días"):"");
   if(name==="guardar_memoria"){ const et={perfil:"🧍 Perfil",aprendizaje:"💡 Aprendizaje",preferencia:"⭐ Preferencia",patron:"📊 Patrón",resultado:"📓 Resultado"}; return "🧠 Roberto quiere RECORDAR esto en su memoria:\n"+(et[i.tipo]||"💡 Aprendizaje")+"\n“"+(i.texto||"")+"”"; }
   if(name==="borrar_memoria") return "🗑️ Roberto quiere BORRAR de su memoria el dato "+(i.id||"?");
   if(name==="ejecutor_switch") return (i.on?"🟢 ENCENDER el Ejecutor (queda en guardia: solo entra con señal 🔔 que pase tus reglas y el veto)":"🔴 DETENER el Ejecutor (deja de operar; solo observa)")+(i.motivo?("\nPorque: "+i.motivo):"");
@@ -17001,6 +17102,63 @@ async function ejecutarTool(name, i){
       const params={}; if(i.target) params.target=i.target;
       return await enviarComando("revisar_indicador", params);
     }
+    /* 👁️ v7.219 — LEER SUS ENTRADAS PARA PODER JUZGARLAS. Solo lee: ni guarda, ni cambia,
+       ni cuesta. Las cuentas se hacen con TODAS las que pasan el filtro; la lista se recorta
+       para no reventar el contexto, y se dice cuántas se dejaron fuera — un número calculado
+       sobre media muestra sin avisar es un número que miente ([[apex-roberto-no-inventa]]). */
+    if(name==="mirar_mis_entradas"){
+      const modo=String(i.modo||"").trim();
+      const libro=(modo==="real"||modo==="backtest")?modo:(modo==="ambos"?null:CTX.modo);
+      const estado=String(i.estado||"todas");
+      const par=String(i.par||"").trim().toUpperCase().replace(/[^A-Z]/g,"");
+      const lim=Math.max(1,Math.min(100,parseInt(i.limite)||25));
+      const desde=(i.dias!=null && !isNaN(parseInt(i.dias)))
+        ? new Date(Date.now()-parseInt(i.dias)*86400000).toISOString().slice(0,10) : null;
+      let ops=(Array.isArray(TRADES)?TRADES:[]).filter(t=>{
+        if(!t) return false;
+        if(libro && t.modo!==libro) return false;
+        if(estado==="abiertas" && !t.abierta) return false;
+        if(estado==="cerradas" && t.abierta) return false;
+        if(par && String(t.par||"").toUpperCase().replace(/[^A-Z]/g,"")!==par) return false;
+        if(desde && String(t.fecha||"")<desde) return false;
+        return true;
+      });
+      if(!ops.length) return {ok:true, msg:"No hay ninguna operación suya con ese filtro",
+        libro:(libro||"ambos"), total:0, entradas:[]};
+      ops.sort((a,b)=>String(b.fecha||"").localeCompare(String(a.fecha||"")) || (b.id||0)-(a.id||0));
+      /* las cuentas, con TODAS las que pasan el filtro */
+      const cerradas=ops.filter(t=>!t.abierta && typeof t.r==="number");
+      const cuentas=(lista)=>{
+        if(!lista.length) return null;
+        const rTot=lista.reduce((s,t)=>s+(t.r||0),0);
+        const gan=lista.filter(t=>(t.r||0)>0).length;
+        const mom={};
+        lista.forEach(t=>{ const k=t.momento||"sin anotar"; if(!mom[k]) mom[k]={n:0,r:0,g:0};
+          mom[k].n++; mom[k].r+=(t.r||0); if((t.r||0)>0) mom[k].g++; });
+        return { n:lista.length, ganadas:gan, aciertoPct:Math.round(gan/lista.length*100),
+          rTotal:Math.round(rTot*100)/100, rMedio:Math.round(rTot/lista.length*100)/100,
+          porMomento:Object.keys(mom).map(k=>({ momento:k, n:mom[k].n, ganadas:mom[k].g,
+            aciertoPct:Math.round(mom[k].g/mom[k].n*100), r:Math.round(mom[k].r*100)/100 })) };
+      };
+      const resumen=libro
+        ? { libro, cerradas:cuentas(cerradas) }
+        : { libro:"ambos",
+            real:cuentas(cerradas.filter(t=>t.modo==="real")),
+            backtest:cuentas(cerradas.filter(t=>t.modo==="backtest")) };
+      const cortada=ops.length>lim;
+      const entradas=ops.slice(0,lim).map(t=>({
+        fecha:t.fecha, hora:t.hora, libro:t.modo, par:t.par, dir:t.dir,
+        abierta:!!t.abierta, resultado:t.abierta?"abierta":(t.res||""), r:t.abierta?null:(t.r!=null?t.r:null),
+        entrada:t.entrada!=null?t.entrada:null, sl:t.sl!=null?t.sl:null, tp:t.tp!=null?t.tp:null,
+        rr:t.rr!=null?t.rr:null, riesgoPct:t.riesgoPct||"", setup:t.setup||"", ventana:t.ventana||"",
+        momento:t.momento||"", bias:t.bias||"", zona:t.zona||"", nconf:t.nconf||0, poi:t.poi||"",
+        mae:t.mae!=null?t.mae:null, mfe:t.mfe!=null?t.mfe:null, cuenta:t.cuenta||"", nota:t.nota||""
+      }));
+      return {ok:true, libro:(libro||"ambos"), total:ops.length, abiertas:ops.filter(t=>t.abierta).length,
+        devueltas:entradas.length,
+        aviso:cortada?("Se devuelven las "+entradas.length+" más recientes de "+ops.length+". Las cuentas del resumen SÍ están hechas con las "+ops.length+"."):"",
+        resumen, entradas};
+    }
     if(name==="buscar_memoria"){
       const q=String(i.consulta||"").trim().toLowerCase();
       const tema=String(i.tema||"").trim();
@@ -17287,7 +17445,10 @@ function confirmarTool(tu){
       try{ if(res && res.msg && tu.name!=="buscar_contacto" && tu.name!=="donde_estoy") toast(res.msg); }catch(_){}
       return {confirmed:true, res}; })();
   }
-  if(tu.name==="organizar_chat" || tu.name==="buscar_memoria" || tu.name==="marcar_paso_plan" || tu.name==="registrar_veredicto" || tu.name==="tema_apex" || tu.name==="guardar_saber" || tu.name==="idea_estado"){
+  /* v7.219: `mirar_mis_entradas` entra aquí porque SOLO LEE lo que ya es de Rey. Pedirle una
+     tarjeta para leer su propio Diario sería burocracia, y una tarjeta de más en mitad de un
+     análisis es una tarjeta que acaba aprobando sin mirar — que es peor que no tenerla. */
+  if(tu.name==="organizar_chat" || tu.name==="buscar_memoria" || tu.name==="mirar_mis_entradas" || tu.name==="marcar_paso_plan" || tu.name==="registrar_veredicto" || tu.name==="tema_apex" || tu.name==="guardar_saber" || tu.name==="idea_estado"){
     return (async()=>{ let res; try{ res=await ejecutarTool(tu.name, tu.input); }catch(e){ res={ok:false,msg:"Error: "+e}; } if(res&&res.ok&&(tu.name==="organizar_chat"||tu.name==="marcar_paso_plan")) toast(res.msg); return {confirmed:true, res}; })();
   }
   return new Promise(resolve=>{
