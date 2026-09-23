@@ -19233,13 +19233,26 @@ async function iaEnviar(textoForzado, promptExtra){
      no existe todavía es otra forma de inventarse una avería ([[apex-roberto-no-inventa]]).
      Por eso cada pieza dice si es un DATO (existe siempre; si falta, falló) o algo SUYO
      (sale de lo que él registre; si falta, es que aún no hay). */
+  /* 🧭 v7.229 — ESTABA EN LA LISTA Y NO SE LE MANDABA.
+     ─────────────────────────────────────────────────────────────────────────────────────
+     23-09. «Dónde estás» salía en el inventario —o sea, a Roberto se le DECÍA que lo tenía
+     delante, con la regla de oro «lo de la primera lista LO TIENES, no digas que no lo
+     sabes»— pero `iaDondeEstoy()` no entraba en el `inj` del camino principal del chat. Sólo
+     estaba en el otro camino, el de estudiar material. Así que en una conversación normal
+     Roberto tenía que hablar de dónde está Rey sin que nadie se lo hubiera dicho, y encima
+     con prohibido admitirlo. O se lo inventaba, o se contradecía.
+     Es otra vez lo mismo: declarado en una lista, cableado en otra
+     ([[apex-ningun-chip-nace-muerto]], [[apex-declarar-no-es-dar]]). Por eso ahora se calcula
+     UNA vez en esta variable y las dos listas beben de ella: si alguna se queda sin él, se
+     queda sin él en las dos y se nota. */
+  const dondeTxt = (typeof iaDondeEstoy==="function"?iaDondeEstoy():"");
   const _inv=[
     ["el tiempo de Timbó", climaTxt, "dato"],
     ["la hora y tu ventana de mercado", iaReloj(), "dato"],
     ["el gráfico en vivo por el Puente", grafTxt, "dato"],
     ["el calendario económico", calTxt, "dato"],
     ["tu teléfono (batería, red, memoria)", entTxt, "dato"],
-    ["dónde estás", (typeof iaDondeEstoy==="function"?iaDondeEstoy():""), "dato"],
+    ["dónde estás", dondeTxt, "dato"],
     ["tu contexto de trabajo", iaContexto(), "dato"],
     ["tu estrategia", iaEstrategiaDef(), "dato"],
     ["tus cuentas y tu riesgo", guardianRiesgo(), "dato"],
@@ -19272,7 +19285,7 @@ async function iaEnviar(textoForzado, promptExtra){
     + "Si está en la tercera, di que TODAVÍA NO HAY porque aún no lo ha registrado — no que falló." + NL
     + "❌ NUNCA digas que NO PUEDES consultar algo de estas listas ni que tienes esa limitación: SÍ puedes." + NL
     + "Decir «no puedo» sobre algo que sí tienes le hace dudar de ti, y con razón." + NL;
-  const inj=_cabecera+entTxt+climaTxt+iaReloj()+"\n"+grafTxt+calTxt+iaContexto()+"\n"+iaEstrategiaDef()+"\n"+guardianRiesgo()+"\n"+iaPlan()+"\n"+iaAciertos()+"\n"+(estadoRecuperacionFreno().block||"")+iaFugas()+"\n"+iaRacha()+"\n"+iaPatrones()+"\n"+iaDatosSueltos()+"\n"+iaHitos()+"\n"+iaChats()+"\n"+iaPendientes()+"\n"+iaPlanSemanal()+"\n"+iaAvisos()+"\n"+iaPosicionesVivas()+iaEntradasAbiertas()+iaEjecutorArchivo()+iaEjecutorHoy()+iaTemplo()+iaLeyes(texto)+marco+iaEjecutorCfgTxt()+iaNovedadesTxt()+"\n=== FIN DEL CONTEXTO — responde al mensaje de Rey del bloque anterior ===";
+  const inj=_cabecera+entTxt+dondeTxt+"\n"+climaTxt+iaReloj()+"\n"+grafTxt+calTxt+iaContexto()+"\n"+iaEstrategiaDef()+"\n"+guardianRiesgo()+"\n"+iaPlan()+"\n"+iaAciertos()+"\n"+(estadoRecuperacionFreno().block||"")+iaFugas()+"\n"+iaRacha()+"\n"+iaPatrones()+"\n"+iaDatosSueltos()+"\n"+iaHitos()+"\n"+iaChats()+"\n"+iaPendientes()+"\n"+iaPlanSemanal()+"\n"+iaAvisos()+"\n"+iaPosicionesVivas()+iaEntradasAbiertas()+iaEjecutorArchivo()+iaEjecutorHoy()+iaTemplo()+iaLeyes(texto)+marco+iaEjecutorCfgTxt()+iaNovedadesTxt()+"\n=== FIN DEL CONTEXTO — responde al mensaje de Rey del bloque anterior ===";
   const last=msgs[msgs.length-1];
   const textoMsg=c.msgs[c.msgs.length-1].content;   /* EXACTAMENTE lo guardado (texto + nota del doc) */
   let bloquesMsg = Array.isArray(last.content) ? last.content.filter(b=>b.type==="image") : [];   /* la foto va delante */

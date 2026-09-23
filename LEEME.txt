@@ -1,34 +1,36 @@
-APEX v7.228 — TRADING DESK
+APEX v7.229 — TRADING DESK
 =========================
 
-🖥️ LA BASE PARA TENER A ROBERTO TAMBIÉN EN TU PC
-   Antes de montar nada fui a mirar qué pasa cuando dos aparatos escriben, y
-   encontré algo que te habría costado operaciones de tu Diario sin enterarte.
+🛠️ ROBERTO SE ENTERA DE LO QUE HACEMOS, NO SOLO DE LO QUE HAY (la bitácora)
 
-   TU RESPALDO ES UN REEMPLAZO COMPLETO, y el único freno que había rechaza lo
-   que pese menos del 40% de lo guardado. Dos aparatos con datos PARECIDOS lo
-   pasan los dos, y EL ÚLTIMO QUE GUARDA GANA EN SILENCIO:
+Rey, 23-09, sobre el aviso «🕵️ Algo no me cuadra» con 6 caídas del Puente: «no está mal el
+avisar, sino que me da a entender que Roberto no sabe de nada en lo que se estaba tratando ni
+lo que se hizo, o sea no está informado… en ese aviso también me diría el motivo del porqué
+tantas caídas del Puente».
 
-       mañana, en la PC: registras una operación  → sube sola a los 4 segundos
-       tarde, el teléfono (que no la tiene): escribes algo → sube sola → LA BORRA
+· LA BITÁCORA. Cada cosa deliberada que toque su sistema se apunta ANTES de hacerla, con su
+  porqué, y Roberto la tiene delante en toda tarea que juzgue. Antes decía «no me cuadra»;
+  ahora dice «fue a propósito, para liberarte memoria, y ya está de vuelta». Un apunte no le
+  calla: le da el motivo. Sólo cubre su ventana de tiempo y sus etiquetas, así que una avería
+  de verdad se sigue viendo entera (probado en los dos sentidos, 21 pruebas).
 
-   Tamaños parecidos, el freno no salta, nadie avisa. Con UN aparato no pasaba
-   nunca; con DOS es cuestión de días.
+· EL MOTIVO DE LAS CAÍDAS, medido y no supuesto. No eran seis: eran menos, contadas de más.
+  Tres eran de las 02:00 de tres noches seguidas — su PC despierta a las 01:59:36 para «Apex
+  despertar Londres» y el Puente gritaba antes de que TradingView volviera. Ya no: un latido
+  en disco distingue «dormimos» de «se rompió», y el despertar da tiempo en vez de avisar.
 
-   AHORA cada aparato recuerda la fecha de la copia que vio por última vez. Si
-   la nube cambió DESPUÉS, no se pisa:
-     · si la subida es AUTOMÁTICA: no te salta ningún cartel (no has tocado
-       nada), pero tampoco se sube nada y te queda el aviso — ni se pisa ni se
-       calla.
-     · si la pides tú: te dice QUIÉN escribió y CUÁNDO, te recuerda que lo
-       normal es traer primero lo de la nube, y decides tú. Nunca fuerza antes
-       de preguntar.
+· EL `fs` QUE NO EXISTÍA. El Puente usaba `fs.` en cuatro sitios sin haberlo pedido; dentro de
+  try/catch eso falla en silencio. Llevaba meses matando dos cosas suyas: el candado que evita
+  avisos repetidos (su fichero no se creó jamás) y su interruptor de las marcas del gráfico,
+  que siempre respondía «No pude guardar el interruptor». Comprobado ejecutándolo antes y
+  después. ⚠️ El Puente hay que REINICIARLO para que lo coja.
 
-   ⚠️ Y una app vieja que todavía tengas instalada sigue respaldando igual: el
-   arreglo no puede dejar sin respaldo a una versión anterior.
+· UN BACHE DE LOS QUE MANDÓ QUITAR. «Dónde estás» salía en la lista de «📋 LO QUE SÍ TIENES
+  DELANTE» y NO se le mandaba en el chat normal — con la regla «nunca digas que no puedes»
+  encima. Arreglado, y ahora un banco compara las 34 cosas de las dos listas contra lo que de
+  verdad se envía.
 
-   Banco nuevo: 9/9, y EJECUTA el freno del worker con los cuatro casos (la
-   nube más nueva, la nube igual, tú forzando, y una app vieja sin la marca).
+Bancos nuevos: 4 (la bitácora, el despertar, los módulos sin pedir, lo prometido vs. lo enviado).
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
