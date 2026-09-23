@@ -2044,7 +2044,31 @@ async function iaEnviarBloques(bloques, resumenChat){
     new Promise(r=>setTimeout(r, 8000)),
   ]);
   /* 💰 v6.02: bloque ESTABLE (lo guardado) con la marca de caché + material + contexto vivo al final */
-  const inj="=== CONTEXTO VIVO DE LA APP (datos de AHORA MISMO) ===\n"+iaDondeEstoy()+"\n"+iaReloj()+"\n"+calTxt+iaContexto()+"\n"+iaEstrategiaDef()+"\n"+iaPlan()+"\n"+iaAciertos()+"\n"+iaFugas()+"\n"+iaRacha()+iaTemplo()+iaLeyes(resumenChat||"")+"\n=== FIN DEL CONTEXTO ===";
+  /* 📋 v7.225 — EL INVENTARIO TAMBIÉN POR ESTA VÍA, que es la de las capturas y el
+     material adjunto. Lo cazó `test-leyes-de-roberto`, que ya guardaba esta misma lección:
+     «mirar solo la primera vía fue lo que destapó que la de las capturas se había quedado
+     fuera». Si el inventario viviera solo en un camino, Roberto volvería a decir «no puedo»
+     justo cuando Rey le manda una foto ([[apex-las-dos-vias-del-chat]]). */
+  const _inv2=[["la hora y tu ventana de mercado", iaReloj(), "dato"],
+    ["dónde estás", iaDondeEstoy(), "dato"],
+    ["el calendario económico", calTxt, "dato"],
+    ["tu contexto de trabajo", iaContexto(), "dato"],
+    ["tu estrategia", iaEstrategiaDef(), "dato"],
+    ["tu plan del día", iaPlan(), "dato"],
+    ["tu templo", iaTemplo(), "dato"],
+    ["tus aciertos", iaAciertos(), "tuyo"],
+    ["tus fugas", iaFugas(), "tuyo"],
+    ["tu racha de disciplina", iaRacha(), "tuyo"]];
+  const _ll2=(x)=>String(x==null?"":x).trim().length>0;
+  const _NL2=String.fromCharCode(10);
+  const _cab2="=== CONTEXTO VIVO DE LA APP (datos de AHORA MISMO) ===" + _NL2
+    + "📋 LO QUE SÍ TIENES DELANTE: "+(_inv2.filter(x=>_ll2(x[1])).map(x=>x[0]).join(" · ")||"(nada)")+"." + _NL2
+    + (function(){var f=_inv2.filter(x=>!_ll2(x[1])&&x[2]==="dato").map(x=>x[0]);
+        return f.length? ("⚠️ NO TE LLEGÓ ESTA VEZ (existe, pero no vino): "+f.join(" · ")+"." + _NL2):"";})()
+    + (function(){var a=_inv2.filter(x=>!_ll2(x[1])&&x[2]==="tuyo").map(x=>x[0]);
+        return a.length? ("💭 TODAVÍA NO HAY (sale de lo que Rey registre): "+a.join(" · ")+"." + _NL2):"";})()
+    + "⛔ Lo de la primera lista LO TIENES: úsalo. ❌ NUNCA digas que NO PUEDES consultarlo." + _NL2;
+  const inj=_cab2+iaDondeEstoy()+"\n"+iaReloj()+"\n"+calTxt+iaContexto()+"\n"+iaEstrategiaDef()+"\n"+iaPlan()+"\n"+iaAciertos()+"\n"+iaFugas()+"\n"+iaRacha()+iaTemplo()+iaLeyes(resumenChat||"")+"\n=== FIN DEL CONTEXTO ===";
   const last=msgs[msgs.length-1];
   last.content=[{type:"text",text:c.msgs[c.msgs.length-1].content, cache_control:{type:"ephemeral",ttl:"1h"}}].concat(bloques).concat([{type:"text",text:inj}]);
   /* estudiar capturas / material adjunto = trabajo profundo: pregunta qué motor usar */
@@ -11580,12 +11604,29 @@ function refrescarSitio(){
    se hace. La nube lo guarda 30 min y aquí 20: abrir Apex diez veces no son diez consultas.
    Sale de Open-Meteo: gratis y SIN CLAVE, que es una cosa menos que se le puede caducar. */
 let _clima = null, _climaTs = 0;
+/* 🌦️ v7.226 — EL CLIMA QUE SE PERDÍA EN EL PRIMER MENSAJE.
+   Rey (23-09): «le pregunto por el clima de Timbó y me dice que no sabe el dato».
+   CAZADO EN VIVO con el inventario nuevo, justo después de instalarle la 7.225: el caché
+   local estaba vacío (la app acababa de arrancar), la PRIMERA llamada se quedó sin datos y
+   las siguientes fueron bien — 44 ms, 214 caracteres. O sea que fallaba exactamente en el
+   primer mensaje tras abrir Apex, que es cuando él pregunta.
+   DOS COSAS MAL, no una:
+     1. el tope era de 1,5 s, arbitrario: el bloque entero del contexto tiene 8 s de
+        presupuesto y esta pieza tarda 40-450 ms cuando la red va. En el arranque, con el
+        service worker y media docena de peticiones a la vez, 1,5 s se queda corto.
+     2. y lo peor: si la respuesta llegaba TARDE, se TIRABA. La carrera la descartaba y el
+        siguiente mensaje volvía a empezar de cero — podía fallar siempre.
+   Ahora: 3,5 s de tope, y la respuesta tardía SE GUARDA igual para el mensaje siguiente.
+   Un dato que llegó tarde sigue siendo un dato bueno; tirarlo es perderlo dos veces. */
 async function iaClimaTxt(){
   try{
     if(_clima && Date.now() - _climaTs < 20*60000) return _clima;
+    const pide = fetch(iaBase()+"/clima?dias=3", {cache:"no-store"}).then(x=>x.json());
+    /* aunque la carrera la pierda, si al final llega se guarda para la próxima vez */
+    pide.then(d=>{ if(d && d.ok && d.texto){ _clima=d.texto; _climaTs=Date.now(); } }).catch(()=>{});
     const r = await Promise.race([
-      fetch(iaBase()+"/clima?dias=3", {cache:"no-store"}).then(x=>x.json()),
-      new Promise(res=>setTimeout(()=>res(null), 1500))
+      pide,
+      new Promise(res=>setTimeout(()=>res(null), 3500))
     ]);
     if(!r || !r.ok || !r.texto) return _clima || "";
     _clima = r.texto; _climaTs = Date.now();
@@ -18043,13 +18084,20 @@ function iaPintarCerebro(){
       <div class="ia-tool-d">Recomiendo: <b>${esc(caro?"🧠 A fondo":"⚡ Ágil")}</b>${p.sug.porque?("\n"+esc(p.sug.porque)):""}
 \n⚡ Ágil — rápido y barato, para lo que ya se sabe.
 🧠 A fondo — piensa de verdad, para análisis y decisiones con dinero detrás.${esc(calor)}</div>
-      <div class="ia-tool-bar"><button class="btn ia-cb-agil">⚡ Ágil</button><button class="btn gold ia-cb-fondo">🧠 A fondo</button></div>`;
+      <div class="ia-tool-bar"><button class="btn ia-cb-agil">⚡ Ágil</button><button class="btn gold ia-cb-fondo">🧠 A fondo</button><button class="btn ia-cb-no">✖️ Cancelar</button></div>`;
   cont.appendChild(card);
   try{ const b=caro?card.querySelector(".ia-cb-fondo"):card.querySelector(".ia-cb-agil"); if(b) b.style.outline="2px solid var(--gold)"; }catch(_){}
   /* y al elegir se apunta cual queda caliente, que es lo que hace util el aviso de la
      proxima tarjeta. Sin esto el aviso diria siempre lo mismo y no serviria de nada. */
   card.querySelector(".ia-cb-agil").onclick=()=>{ iaMotorMarcarCaliente("sonnet"); p.fin("sonnet"); };
   card.querySelector(".ia-cb-fondo").onclick=()=>{ iaMotorMarcarCaliente("opus"); p.fin("opus"); };
+  /* ✖️ v7.224 — CANCELAR. Rey (23-09): «podría equivocarme al enviarle un mensaje y
+     debería poder cancelarlo para que no siga pensando… ahora mismo está pensando y debes
+     SÍ O SÍ elegir con qué motor, sin opción de cancelar».
+     Es su ley del 12-09 llevada al final: nada obligatorio, nada gasta solo
+     ([[apex-nada-obligatorio-nada-gasta-solo]]). Y aquí es dinero directo: cancelar ANTES
+     de elegir motor es cancelar ANTES de que se llame al modelo — coste CERO. */
+  card.querySelector(".ia-cb-no").onclick=()=>p.fin("__cancelar__");
 }
 
 /* pinta la tarjeta y espera su toque. Devuelve "opus" | "sonnet" | null (null = como siempre) */
@@ -18116,6 +18164,22 @@ async function iaBgStart(msgs, c, motor){
      pregunta: va conduciendo o entrenando y no puede tocar nada. */
   let motorFijo = null;
   if(!motor){ try{ motorFijo = await iaCerebroDeEstaPregunta(msgs); }catch(_){ motorFijo=null; } }
+  /* ✖️ v7.224 — SI REY CANCELA EN LA TARJETA, AQUI SE PARA TODO.
+     Rey (23-09): «podria equivocarme al enviarle un mensaje y deberia poder cancelarlo para
+     que no siga pensando». Cancelar en la tarjeta es cancelar ANTES de llamar al modelo:
+     coste CERO. Se le quita el mensaje del chat para que no quede a medias, y se le dice que
+     se cancelo — nada de desaparecer en silencio ([[apex-el-rechazo-no-es-mudo]]). */
+  if(motorFijo === "__cancelar__"){
+    try{
+      const ult = c.msgs[c.msgs.length-1];
+      if(ult && ult.role==="user") c.msgs.pop();          /* su mensaje no se queda colgando */
+      iaGuardarConvs();
+    }catch(_){}
+    IA.busy=false;
+    try{ pintarIAChat(); }catch(_){}
+    try{ toast("✖️ Cancelado — no se gastó nada"); }catch(_){}
+    return;
+  }
   const motorMsg = motorFijo || motor || iaMotor();   /* el motor de ESTA consulta viaja con su trabajo */
   IA.busy=true; pintarIAChat(); iaVigilarBusy();   /* 🛟 nunca se queda bloqueado */
   const jobId = Date.now().toString(36)+Math.random().toString(36).slice(2,8);
@@ -18565,7 +18629,11 @@ function iaCancelarEspera(){
   iaPendCargar().forEach(p=>iaPendBorrar(p.jobId));
   IA.busy=false; clearTimeout(_iaBusyGuard);
   pintarIAChat();
-  toast("Espera cancelada — ya puedes escribir");
+  /* ✖️ v7.224 — Y SE DICE LA VERDAD SOBRE EL DINERO. Esto para LA ESPERA, no lo que ya
+     esta pensando en la nube: los tokens que ya salieron, salieron. Decirle «cancelado» a
+     secas le haria creer que no se gasto nada, y con su saldo eso no es un detalle.
+     Para cancelar SIN gastar nada esta el ✖️ de la tarjeta, que corta ANTES de llamar. */
+  toast("Espera cancelada — ya puedes escribir (lo que ya empezó a pensarse sí se cobra)");
 }
 /* ═════════════════════════════════════════════════════════════════════
    ⚡ EL CEREBRO LOCAL — v7.115
@@ -19069,7 +19137,71 @@ async function iaEnviar(textoForzado, promptExtra){
      viaja en su bloque ESTABLE (idéntico byte a byte al que luego va en el historial) con la
      marca de caché puesta AQUÍ MISMO, y el contexto vivo va DETRÁS de la marca, en su propio
      bloque, a precio normal (1×). El worker v5.68 respeta esta marca y no la pisa. */
-  const inj="=== CONTEXTO VIVO DE LA APP (datos de AHORA MISMO; el mensaje de Rey es el bloque anterior) ===\n"+entTxt+climaTxt+iaReloj()+"\n"+grafTxt+calTxt+iaContexto()+"\n"+iaEstrategiaDef()+"\n"+guardianRiesgo()+"\n"+iaPlan()+"\n"+iaAciertos()+"\n"+(estadoRecuperacionFreno().block||"")+iaFugas()+"\n"+iaRacha()+"\n"+iaPatrones()+"\n"+iaDatosSueltos()+"\n"+iaHitos()+"\n"+iaChats()+"\n"+iaPendientes()+"\n"+iaPlanSemanal()+"\n"+iaAvisos()+"\n"+iaPosicionesVivas()+iaEntradasAbiertas()+iaEjecutorArchivo()+iaEjecutorHoy()+iaTemplo()+iaLeyes(texto)+marco+"\n=== FIN DEL CONTEXTO — responde al mensaje de Rey del bloque anterior ===";
+  /* ═══════════════════════════════════════════════════════════════════════════
+     📋 v7.224 — QUÉ TIENE DELANTE, Y QUÉ NO LE LLEGÓ. LOS BACHES DE REY.
+     ═══════════════════════════════════════════════════════════════════════════
+     Rey (23-09): «le pregunto por el clima de Timbó y me dice que no sabe el dato, que existen
+     esas limitaciones… estas cosas son las que me dejan con dudas de sus capacidades, y son
+     REPETITIVAS».
+     MEDIDO, y no era lo que parecía: el clima LE LLEGA siempre — 198 caracteres, 443 ms en el
+     peor intento en frío, con 1,5 s de margen. **Roberto TENÍA el dato delante y aun así dijo
+     que no podía consultarlo.**
+     LA CAUSA: en sus instrucciones hay una línea que dice «LÍMITE FÍSICO TUYO: NO puedes ver ni
+     oír vídeos»… y NO HAY NINGUNA que le diga lo que SÍ tiene. Ante la duda generaliza hacia
+     «no puedo». Y eso no es un fallo del clima: es de toda la familia — cualquier bloque que
+     un día no llegue produce la misma frase falsa.
+     EL ARREGLO: un inventario de lo que SÍ trae este mensaje y de lo que NO llegó, sacado de
+     las MISMAS variables que se pegan debajo (no de una lista escrita a mano, que se
+     desincronizaría en cuanto alguien añada un bloque). Y la regla en una frase: lo que no
+     llegó se dice «no me llegó», NUNCA «no puedo» ([[apex-roberto-no-inventa]]). */
+  /* ⚠️ v7.225 — TRES ESTADOS, NO DOS. Medido en su teléfono: de las 25 piezas le llegan 22
+     con datos reales, y TRES vienen vacías — fugas, racha y patrones. Pero NO están rotas:
+     necesitan operaciones registradas y su Diario está vacío.
+     Con dos estados yo habría creado un bache NUEVO: Roberto diría «no me llegó tu racha»
+     cuando la verdad es «todavía no tienes operaciones». Decir que falló algo que sencillamente
+     no existe todavía es otra forma de inventarse una avería ([[apex-roberto-no-inventa]]).
+     Por eso cada pieza dice si es un DATO (existe siempre; si falta, falló) o algo SUYO
+     (sale de lo que él registre; si falta, es que aún no hay). */
+  const _inv=[
+    ["el tiempo de Timbó", climaTxt, "dato"],
+    ["la hora y tu ventana de mercado", iaReloj(), "dato"],
+    ["el gráfico en vivo por el Puente", grafTxt, "dato"],
+    ["el calendario económico", calTxt, "dato"],
+    ["tu teléfono (batería, red, memoria)", entTxt, "dato"],
+    ["dónde estás", (typeof iaDondeEstoy==="function"?iaDondeEstoy():""), "dato"],
+    ["tu contexto de trabajo", iaContexto(), "dato"],
+    ["tu estrategia", iaEstrategiaDef(), "dato"],
+    ["tus cuentas y tu riesgo", guardianRiesgo(), "dato"],
+    ["tu plan del día", iaPlan(), "dato"],
+    ["tu plan semanal", iaPlanSemanal(), "dato"],
+    ["tus avisos", iaAvisos(), "dato"],
+    ["tu templo", iaTemplo(), "dato"],
+    ["tus chats", iaChats(), "dato"],
+    ["lo que el Ejecutor lleva hoy", iaEjecutorHoy(), "dato"],
+    ["el archivo del Ejecutor", iaEjecutorArchivo(), "dato"],
+    ["lo que tienes puesto en el gráfico", iaPosicionesVivas(), "tuyo"],
+    ["tus entradas abiertas del Diario", iaEntradasAbiertas(), "tuyo"],
+    ["tus aciertos", iaAciertos(), "tuyo"],
+    ["tus fugas", iaFugas(), "tuyo"],
+    ["tu racha de disciplina", iaRacha(), "tuyo"],
+    ["tus patrones minados", iaPatrones(), "tuyo"],
+    ["tus pendientes", iaPendientes(), "tuyo"],
+    ["tus hitos", iaHitos(), "tuyo"]];
+  const _lleno=(x)=>String(x==null?"":x).trim().length>0;
+  const _hay=_inv.filter(x=>_lleno(x[1])).map(x=>x[0]);
+  const _fallo=_inv.filter(x=>!_lleno(x[1]) && x[2]==="dato").map(x=>x[0]);
+  const _aun=_inv.filter(x=>!_lleno(x[1]) && x[2]==="tuyo").map(x=>x[0]);
+  const NL = String.fromCharCode(10);   /* salto de linea, sin pelearme con los escapes */
+  const _cabecera="=== CONTEXTO VIVO DE LA APP (datos de AHORA MISMO; el mensaje de Rey es el bloque anterior) ===" + NL
+    + "📋 LO QUE SÍ TIENES DELANTE EN ESTE MENSAJE: "+(_hay.join(" · ")||"(nada)")+"." + NL
+    + (_fallo.length ? ("⚠️ NO TE LLEGÓ ESTA VEZ (existe, pero no vino): "+_fallo.join(" · ")+"." + NL) : "")
+    + (_aun.length ? ("💭 TODAVÍA NO HAY (sale de lo que Rey registre, y aún no hay): "+_aun.join(" · ")+"." + NL) : "")
+    + "⛔ REGLA DE ORO: lo de la primera lista LO TIENES — úsalo, no preguntes por ello ni digas que no lo sabes." + NL
+    + "Si algo está en la segunda, di «no me llegó el dato en esta consulta» y ofrece mirarlo otra vez." + NL
+    + "Si está en la tercera, di que TODAVÍA NO HAY porque aún no lo ha registrado — no que falló." + NL
+    + "❌ NUNCA digas que NO PUEDES consultar algo de estas listas ni que tienes esa limitación: SÍ puedes." + NL
+    + "Decir «no puedo» sobre algo que sí tienes le hace dudar de ti, y con razón." + NL;
+  const inj=_cabecera+entTxt+climaTxt+iaReloj()+"\n"+grafTxt+calTxt+iaContexto()+"\n"+iaEstrategiaDef()+"\n"+guardianRiesgo()+"\n"+iaPlan()+"\n"+iaAciertos()+"\n"+(estadoRecuperacionFreno().block||"")+iaFugas()+"\n"+iaRacha()+"\n"+iaPatrones()+"\n"+iaDatosSueltos()+"\n"+iaHitos()+"\n"+iaChats()+"\n"+iaPendientes()+"\n"+iaPlanSemanal()+"\n"+iaAvisos()+"\n"+iaPosicionesVivas()+iaEntradasAbiertas()+iaEjecutorArchivo()+iaEjecutorHoy()+iaTemplo()+iaLeyes(texto)+marco+"\n=== FIN DEL CONTEXTO — responde al mensaje de Rey del bloque anterior ===";
   const last=msgs[msgs.length-1];
   const textoMsg=c.msgs[c.msgs.length-1].content;   /* EXACTAMENTE lo guardado (texto + nota del doc) */
   let bloquesMsg = Array.isArray(last.content) ? last.content.filter(b=>b.type==="image") : [];   /* la foto va delante */

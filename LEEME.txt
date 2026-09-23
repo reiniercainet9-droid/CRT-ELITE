@@ -1,47 +1,27 @@
-APEX v7.223 — TRADING DESK
+APEX v7.226 — TRADING DESK
 =========================
 
-🔥 LA TARJETA DEL CEREBRO YA TE DICE LO QUE CUESTA CAMBIAR
-   Tú, con $2,68 de saldo: «con este gasto no hay quien lo sostenga».
-   MEDIDO en tus llamadas de esta mañana, con la huella nueva del worker:
-       06:33  escribe 105.172  (crea la caché de SONNET)
-       06:33  lee     105.172  ✅ la reutiliza
-       06:40  escribe 107.231  ← cambiaste de cerebro: sonnet → opus
-       06:53  lee     105.076  ← volviste a sonnet y su caché SEGUÍA VIVA
+🌦️ EL CLIMA: CAZADO EN VIVO Y ARREGLADO DE RAIZ
+   El inventario nuevo lo pillo justo despues de instalarte la 7.225:
+       SI TIENE: la hora | el grafico | el calendario | tu telefono | ...
+       NO LLEGO: el tiempo de Timbo        <- en ese preciso momento
+   Tu cache local estaba vacio (la app acababa de arrancar), la PRIMERA
+   llamada se quedo sin datos, y las siguientes fueron bien: 44 ms, 214
+   caracteres. O sea que fallaba justo en el primer mensaje tras abrir Apex
+   — que es cuando tu preguntas.
 
-   La caché va POR MODELO. Cambiar de cerebro obliga a recargarle TODO su
-   contexto (~105.000 tokens) y crear caché se paga AL DOBLE. Ese día fueron
-   $1,70 de los $2,71 del chat: el 63%, en tener lo mismo guardado dos veces.
+   DOS COSAS MAL, NO UNA:
+     1. el tope era de 1,5 s, puesto a ojo. El bloque entero del contexto
+        tiene 8 s de presupuesto y esta pieza tarda 40-450 ms con la red
+        buena; en el arranque, con todo pidiendo a la vez, se queda corto.
+     2. y lo peor: si la respuesta llegaba TARDE, SE TIRABA. El siguiente
+        mensaje volvia a empezar de cero y podia fallar SIEMPRE.
+   Ahora: 3,5 s de tope, y la respuesta tardia SE GUARDA igual para el
+   mensaje siguiente. Un dato que llego tarde sigue siendo bueno.
 
-   NO TE QUITO LA ELECCIÓN — la tarjeta la pediste tú el 21-09 y es tu ley.
-   Lo que hace ahora es ponerte el número delante justo cuando decides:
-
-       🔥 ⚡ Ágil está CALIENTE (lo usaste hace 6 min): tu contexto ya está
-          cargado con él, casi no cuesta.
-       🧊 🧠 A fondo está frío: cargarle tus ~105.000 tokens cuesta ~$1,05
-          de una vez, antes de pensar nada.
-
-   Los dos botones siguen ahí. El número sale de la medida REAL de tu worker,
-   no de una constante: si el contexto adelgaza, el número baja solo. Y se
-   refresca como mucho una vez por hora, sin llamar a ningún modelo: mirar lo
-   que cuesta no puede costar.
-
-⚖️ Y EL WORKER 5.223 (en tu carpeta) VA A DECIR QUIÉN PESA
-   Descubrí que cada ida y vuelta hace crecer la conversación 30-40.000 tokens
-   cuando Roberto solo había dicho 8.000 — y cada turno reescribe todo lo
-   acumulado. Por eso una sesión larga es imposible: cada pregunta cuesta más
-   que la anterior.
-   Ya me equivoqué DOS veces deduciendo el culpable (creí que era el historial
-   del chat, y luego la mano de mirar el sistema, que devuelve 4.727 bytes).
-   Así que ahora el worker pesa cada bloque de la conversación y lo dice por su
-   nombre: el texto, lo que devuelven sus manos, su razonamiento o las
-   imágenes. Se acabó deducir.
-
-📏 Y UNA CORRECCIÓN DE LO QUE TE DIJE ANTES
-   El contexto vivo que la app le pega en cada mensaje mide 1.781 tokens, no
-   48.000 como te dije. Lo medí bloque por bloque en una copia aislada, y de
-   paso comprobé que NINGUNO de los 27 cambia entre un mensaje y el siguiente
-   — que es lo que importa para que la caché pegue.
+   Banco que lo ejecuta contra una red lenta de mentira: 6/6. Y te lo digo
+   tal cual: ese banco me dio rojo TRES veces y las tres era mi prueba mal
+   montada, no el arreglo. Lo deje escrito dentro.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
