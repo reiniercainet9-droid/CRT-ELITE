@@ -17963,6 +17963,55 @@ function iaTextoUltimaPregunta(msgs){
    una tarjeta invisible con Roberto parado — que es EXACTAMENTE el fallo que le costó el
    domingo entero ([[apex-el-codigo-perfecto-dentro-de-un-comentario]]).
    Por eso el estado vive aquí y se REPINTA desde iaPintarTools(), igual que las de manos. */
+/* ═════════════════════════════════════════════════════════════════════════════
+   🔥 v7.223 — QUÉ CEREBRO ESTÁ CALIENTE, Y CUÁNTO CUESTA CAMBIAR
+   ═════════════════════════════════════════════════════════════════════════════
+   Rey (23-09), con $2,68 de saldo: «con este gasto no hay quien lo sostenga».
+   MEDIDO en sus propias llamadas de esa mañana, con la huella del worker 5.222 delante:
+       06:33  escribe 105.172  (crea la caché de SONNET)
+       06:33  lee     105.172  ✅
+       06:40  escribe 107.231  ← cambió el MODELO: sonnet → opus
+       06:42  lee     107.231  ✅
+       06:53  lee     105.076  ← volvió a sonnet y su caché SEGUÍA VIVA
+   **La caché va POR MODELO.** Cambiar de cerebro obliga a volver a cargarle TODO su contexto
+   — cerebro, dossier, manos, memoria: ~105.000 tokens — y crear caché se paga al DOBLE.
+   Ese día fueron $1,70 de los $2,71 del chat: el 63%, en tener lo mismo guardado dos veces.
+   ⚠️ NO SE LE QUITA LA ELECCIÓN. La tarjeta la pidió ÉL el 21-09 y es su ley: nada gasta
+   solo, y no elegir por Rey ([[apex-no-elegir-por-rey]]). Lo que se hace es PONERLE EL NÚMERO
+   DELANTE en el momento de decidir, que es cuando sirve de algo. */
+function iaMotorCaliente(){
+  try{
+    const v=JSON.parse(localStorage.getItem("crtelite_motor_caliente")||"null");
+    if(!v||!v.motor||!v.ts) return null;
+    const min=Math.round((Date.now()-v.ts)/60000);
+    /* la caché del conocimiento dura 1 hora; pasada, está igual de fría que la otra */
+    return min<=60 ? { motor:v.motor, min } : null;
+  }catch(_){ return null; }
+}
+function iaMotorMarcarCaliente(motor){
+  try{ if(motor==="opus"||motor==="sonnet")
+    localStorage.setItem("crtelite_motor_caliente", JSON.stringify({motor, ts:Date.now()})); }catch(_){}
+}
+/* lo que cuesta cargarle el contexto desde cero, con SUS números. El tamaño se refresca
+   de `/diag/cache` como mucho una vez por hora (no llama a ningún modelo: no cuesta nada);
+   si no se puede, se usa lo último medido — 105.000 — y se dice que es aproximado. */
+function iaCosteRecarga(motor){
+  let tks=105000;
+  try{ const v=JSON.parse(localStorage.getItem("crtelite_prefijo_tks")||"null"); if(v&&v.tks>10000) tks=v.tks; }catch(_){}
+  const precio = motor==="opus" ? 5 : 3;     /* $ por millón de tokens de entrada */
+  return (tks*precio*2)/1e6;                 /* crear caché se paga al DOBLE */
+}
+function iaRefrescarPrefijo(){
+  try{
+    const v=JSON.parse(localStorage.getItem("crtelite_prefijo_tks")||"null");
+    if(v && Date.now()-v.ts < 3600000) return;
+    fetch(nubeUrl()+"/diag/cache",{cache:"no-store"}).then(r=>r.json()).then(d=>{
+      const f=(d&&d.filas)||[]; if(!f.length) return;
+      const tks=Math.max.apply(null, f.map(x=>Math.max(x.escrito||0, x.leido||0)));
+      if(tks>10000) localStorage.setItem("crtelite_prefijo_tks", JSON.stringify({tks, ts:Date.now()}));
+    }).catch(()=>{});
+  }catch(_){}
+}
 let IA_CEREBRO_PEND = null;
 
 function iaPintarCerebro(){
@@ -17972,19 +18021,45 @@ function iaPintarCerebro(){
   const caro = p.sug.motor==="opus";
   const card=el("div","ia-cerebro");   /* clase propia: NO lleva «ia-tool», para que la
                                           maquinaria de las manos no la confunda con una suya */
+  /* 🔥 v7.223 — EL NUMERO DELANTE, EN EL MOMENTO DE DECIDIR.
+     Cambiar de cerebro obliga a recargarle sus ~105.000 tokens de contexto, y crear cache se
+     paga AL DOBLE: medido el 23-09, $1,70 de los $2,71 que gasto el chat ese dia.
+     Aqui se le dice cual esta CALIENTE (contexto ya cargado, casi gratis) y cuanto cuesta el
+     otro. La decision sigue siendo suya, entera ([[apex-no-elegir-por-rey]]). */
+  let calor="";
+  try{
+    const c=iaMotorCaliente();
+    const nom=(m)=>m==="opus"?"🧠 A fondo":"⚡ Ágil";
+    if(c){
+      const otro = c.motor==="opus" ? "sonnet" : "opus";
+      let tks=105000;
+      try{ const v=JSON.parse(localStorage.getItem("crtelite_prefijo_tks")||"null"); if(v&&v.tks>10000) tks=v.tks; }catch(_){}
+      calor = "\n\n🔥 "+nom(c.motor)+" esta CALIENTE (lo usaste hace "+c.min+" min): tu contexto ya esta cargado con el, casi no cuesta."
+            + "\n🧊 "+nom(otro)+" esta frio: cargarle tus ~"+Math.round(tks/1000)+".000 tokens cuesta ~$"
+            + iaCosteRecarga(otro).toFixed(2)+" de una vez, antes de pensar nada.";
+    }
+  }catch(_){}
   card.innerHTML=`<div class="ia-tool-h">🎫 ¿Con qué cerebro te contesto?</div>
       <div class="ia-tool-d">Recomiendo: <b>${esc(caro?"🧠 A fondo":"⚡ Ágil")}</b>${p.sug.porque?("\n"+esc(p.sug.porque)):""}
 \n⚡ Ágil — rápido y barato, para lo que ya se sabe.
-🧠 A fondo — piensa de verdad, para análisis y decisiones con dinero detrás.</div>
+🧠 A fondo — piensa de verdad, para análisis y decisiones con dinero detrás.${esc(calor)}</div>
       <div class="ia-tool-bar"><button class="btn ia-cb-agil">⚡ Ágil</button><button class="btn gold ia-cb-fondo">🧠 A fondo</button></div>`;
   cont.appendChild(card);
   try{ const b=caro?card.querySelector(".ia-cb-fondo"):card.querySelector(".ia-cb-agil"); if(b) b.style.outline="2px solid var(--gold)"; }catch(_){}
-  card.querySelector(".ia-cb-agil").onclick=()=>p.fin("sonnet");
-  card.querySelector(".ia-cb-fondo").onclick=()=>p.fin("opus");
+  /* y al elegir se apunta cual queda caliente, que es lo que hace util el aviso de la
+     proxima tarjeta. Sin esto el aviso diria siempre lo mismo y no serviria de nada. */
+  card.querySelector(".ia-cb-agil").onclick=()=>{ iaMotorMarcarCaliente("sonnet"); p.fin("sonnet"); };
+  card.querySelector(".ia-cb-fondo").onclick=()=>{ iaMotorMarcarCaliente("opus"); p.fin("opus"); };
 }
 
 /* pinta la tarjeta y espera su toque. Devuelve "opus" | "sonnet" | null (null = como siempre) */
 function iaTarjetaCerebro(sug){
+  /* 🔄 v7.223 — y aqui se refresca el tamano de su contexto, como mucho una vez por
+     hora. Va AQUI y no en un rincon porque declarar no es dar: si no se llama desde el
+     camino que Rey usa, el numero del aviso se quedaria congelado para siempre
+     ([[apex-declarar-no-es-dar]]). No llama a ningun modelo: mirar lo que cuesta no
+     puede costar. */
+  try{ iaRefrescarPrefijo(); }catch(_){}
   return new Promise(resolve=>{
     let resuelto=false;
     const fin=(v)=>{ if(resuelto) return; resuelto=true;

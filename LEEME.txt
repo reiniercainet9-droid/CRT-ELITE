@@ -1,19 +1,47 @@
-APEX v7.222 — TRADING DESK
+APEX v7.223 — TRADING DESK
 =========================
 
-🔴 ARREGLO URGENTE DE LA 7.221: LOS CHIPS REVENTABAN AL TOCARLOS
-   En la 7.221 saqué la lista de acciones «arriba»… pero arriba del CUERPO
-   de una función, no del fichero: seguía siendo una variable local de esa
-   función. Los avisos funcionaban y CUALQUIER chip del chat reventaba al
-   tocarlo. Era peor que el fallo que venía a arreglar.
-   Mis tres bancos daban 8/8 porque LEEN el texto, y el texto estaba bien
-   escrito. Lo dijo tu teléfono en un segundo, al preguntarle a la app viva
-   si esa lista existía: «no está definida».
-   Ahora vive donde tiene que vivir, y el banco comprueba además que esté al
-   NIVEL DEL FICHERO — no solo que exista.
+🔥 LA TARJETA DEL CEREBRO YA TE DICE LO QUE CUESTA CAMBIAR
+   Tú, con $2,68 de saldo: «con este gasto no hay quien lo sostenga».
+   MEDIDO en tus llamadas de esta mañana, con la huella nueva del worker:
+       06:33  escribe 105.172  (crea la caché de SONNET)
+       06:33  lee     105.172  ✅ la reutiliza
+       06:40  escribe 107.231  ← cambiaste de cerebro: sonnet → opus
+       06:53  lee     105.076  ← volviste a sonnet y su caché SEGUÍA VIVA
 
-(y sigue todo lo de la 7.221: los 4 subchips del Templo, los 5 botones del
- guardián y el cuarto criterio del revisor de botones)
+   La caché va POR MODELO. Cambiar de cerebro obliga a recargarle TODO su
+   contexto (~105.000 tokens) y crear caché se paga AL DOBLE. Ese día fueron
+   $1,70 de los $2,71 del chat: el 63%, en tener lo mismo guardado dos veces.
+
+   NO TE QUITO LA ELECCIÓN — la tarjeta la pediste tú el 21-09 y es tu ley.
+   Lo que hace ahora es ponerte el número delante justo cuando decides:
+
+       🔥 ⚡ Ágil está CALIENTE (lo usaste hace 6 min): tu contexto ya está
+          cargado con él, casi no cuesta.
+       🧊 🧠 A fondo está frío: cargarle tus ~105.000 tokens cuesta ~$1,05
+          de una vez, antes de pensar nada.
+
+   Los dos botones siguen ahí. El número sale de la medida REAL de tu worker,
+   no de una constante: si el contexto adelgaza, el número baja solo. Y se
+   refresca como mucho una vez por hora, sin llamar a ningún modelo: mirar lo
+   que cuesta no puede costar.
+
+⚖️ Y EL WORKER 5.223 (en tu carpeta) VA A DECIR QUIÉN PESA
+   Descubrí que cada ida y vuelta hace crecer la conversación 30-40.000 tokens
+   cuando Roberto solo había dicho 8.000 — y cada turno reescribe todo lo
+   acumulado. Por eso una sesión larga es imposible: cada pregunta cuesta más
+   que la anterior.
+   Ya me equivoqué DOS veces deduciendo el culpable (creí que era el historial
+   del chat, y luego la mano de mirar el sistema, que devuelve 4.727 bytes).
+   Así que ahora el worker pesa cada bloque de la conversación y lo dice por su
+   nombre: el texto, lo que devuelven sus manos, su razonamiento o las
+   imágenes. Se acabó deducir.
+
+📏 Y UNA CORRECCIÓN DE LO QUE TE DIJE ANTES
+   El contexto vivo que la app le pega en cada mensaje mide 1.781 tokens, no
+   48.000 como te dije. Lo medí bloque por bloque en una copia aislada, y de
+   paso comprobé que NINGUNO de los 27 cambia entre un mensaje y el siguiente
+   — que es lo que importa para que la caché pegue.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
