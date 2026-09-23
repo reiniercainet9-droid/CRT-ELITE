@@ -2068,7 +2068,7 @@ async function iaEnviarBloques(bloques, resumenChat){
     + (function(){var a=_inv2.filter(x=>!_ll2(x[1])&&x[2]==="tuyo").map(x=>x[0]);
         return a.length? ("💭 TODAVÍA NO HAY (sale de lo que Rey registre): "+a.join(" · ")+"." + _NL2):"";})()
     + "⛔ Lo de la primera lista LO TIENES: úsalo. ❌ NUNCA digas que NO PUEDES consultarlo." + _NL2;
-  const inj=_cab2+iaDondeEstoy()+"\n"+iaReloj()+"\n"+calTxt+iaContexto()+"\n"+iaEstrategiaDef()+"\n"+iaPlan()+"\n"+iaAciertos()+"\n"+iaFugas()+"\n"+iaRacha()+iaTemplo()+iaLeyes(resumenChat||"")+"\n=== FIN DEL CONTEXTO ===";
+  const inj=_cab2+iaDondeEstoy()+"\n"+iaReloj()+"\n"+calTxt+iaContexto()+"\n"+iaEstrategiaDef()+"\n"+iaPlan()+"\n"+iaAciertos()+"\n"+iaFugas()+"\n"+iaRacha()+iaTemplo()+iaLeyes(resumenChat||"")+iaEjecutorCfgTxt()+iaNovedadesTxt()+"\n=== FIN DEL CONTEXTO ===";
   const last=msgs[msgs.length-1];
   last.content=[{type:"text",text:c.msgs[c.msgs.length-1].content, cache_control:{type:"ephemeral",ttl:"1h"}}].concat(bloques).concat([{type:"text",text:inj}]);
   /* estudiar capturas / material adjunto = trabajo profundo: pregunta qué motor usar */
@@ -11477,6 +11477,29 @@ function marcarRepasoVisto(){
 let _iaConoc = null;
 /* Arma el bloque de conocimiento (estrategia + indicador + perfil) desde los
    mismos datos que ve la app, para que la IA y la app nunca se contradigan. */
+/* ⚙️ v7.227 — las reglas del Ejecutor de Rey, AHORA EN EL CONTEXTO VIVO.
+   Vivían dentro del dossier cacheado y lo invalidaban cada vez que él tocaba una regla.
+   Mismo texto, mismo sitio en la lectura de Roberto, otro sobre. */
+function iaEjecutorCfgTxt(){
+  try{
+    const e=load(K.ejeccfg,null); if(!e || !e.cfg) return "";
+    const c=e.cfg;
+    return "[⚙️ CÓMO TIENE REY CONFIGURADO SU EJECUTOR AHORA MISMO (él lo decide, tú lo respetas):\n"
+      + "· objetivo: "+(c.objetivoRR!=null?c.objetivoRR+"R":"?")+"\n"
+      + "· break-even: "+(c.beActivo!==false?"SÍ":"NO")+(c.beEnR!=null?(" a "+c.beEnR+"R"):"")+"\n"
+      + "· salida por tiempo: "+(c.salidaTiempo===true?"SÍ":"NO")+((c.salidaTiempo===true&&c.salidaTiempoTF)?(" ("+c.salidaTiempoTF+")"):"")+"\n"
+      + "· parcial automático: "+(c.parcialActivo===true?"SÍ":"NO")+((c.parcialActivo===true)?(" — "+(c.parcialPct||50)+"% a "+(c.parcialEnR||1)+"R"):"")+"\n"
+      + "· riesgo: "+(c.riesgoPct!=null?c.riesgoPct+"%":"?")+" · tope del día: "+(c.maxOpsDia!=null?c.maxOpsDia:"?")+" ops · por sesión: "+(c.maxOpsSesion!=null?c.maxOpsSesion:"?")+"\n"
+      + "⚠️ PROHIBIDO señalarle como problema algo que dependa de una regla que ÉL TIENE APAGADA.\n"
+      + "Si vas a hablar de cómo entró o salió una operación, MIRA ESTOS NÚMEROS PRIMERO.]\n";
+  }catch(_){ return ""; }
+}
+/* 🆕 v7.227 — y lo que ha cambiado en su sistema desde que lo miró. También fuera del
+   caché: esta función GUARDA la foto nueva al leerla, así que cambia dos veces por cada
+   cambio. Dentro del bloque cacheado eso costaba ~$2 por cada versión que yo instalara. */
+function iaNovedadesTxt(){
+  try{ const nv=apexNovedades(); return nv && nv.texto ? (nv.texto+"\n") : ""; }catch(_){ return ""; }
+}
 function iaConocimiento(){
   if(_iaConoc) return _iaConoc;
   const R   = REGLAS.map((r,i)=>`  ${i+1}. ${r}`).join("\n");
@@ -11492,27 +11515,20 @@ function iaConocimiento(){
     PERFIL_REY+"\n\n"+
     MERCADOS_DOSSIER+"\n\n"+
     APEX_MAPA+"\n\n"+
-    /* ⚙️ v7.174 — SUS REGLAS DEL EJECUTOR, TAL COMO LAS TIENE AHORA.
-       Rey (17-09): «Roberto está volviendo a decirme lo de las salidas por tiempo y dándolo
-       como un detalle cuando ya las configuraciones están hechas en el Ejecutor por mí… si no
-       lo mantienes informado de cada detalle va a estar siempre discrepando conmigo».
-       Esto es justo lo que evita eso: que tenga sus números delante antes de juzgar. */
-    (function(){ try{
-      const e=load(K.ejeccfg,null); if(!e || !e.cfg) return "";
-      const c=e.cfg;
-      const si=(x)=>x===true?"SÍ":"NO";
-      return "[⚙️ CÓMO TIENE REY CONFIGURADO SU EJECUTOR AHORA MISMO (él lo decide, tú lo respetas):\n"
-        + "· objetivo: "+(c.objetivoRR!=null?c.objetivoRR+"R":"?")+"\n"
-        + "· break-even: "+(c.beActivo!==false?"SÍ":"NO")+(c.beEnR!=null?(" a "+c.beEnR+"R"):"")+"\n"
-        + "· salida por tiempo: "+(c.salidaTiempo===true?"SÍ":"NO")+((c.salidaTiempo===true&&c.salidaTiempoTF)?(" ("+c.salidaTiempoTF+")"):"")+"\n"
-        + "· parcial automático: "+(c.parcialActivo===true?"SÍ":"NO")+((c.parcialActivo===true)?(" — "+(c.parcialPct||50)+"% a "+(c.parcialEnR||1)+"R"):"")+"\n"
-        + "· riesgo: "+(c.riesgoPct!=null?c.riesgoPct+"%":"?")+" · tope del día: "+(c.maxOpsDia!=null?c.maxOpsDia:"?")+" ops · por sesión: "+(c.maxOpsSesion!=null?c.maxOpsSesion:"?")+"\n"
-        + "⚠️ PROHIBIDO señalarle como problema algo que dependa de una regla que ÉL TIENE APAGADA.\n"
-        + "Si vas a hablar de cómo entró o salió una operación, MIRA ESTOS NÚMEROS PRIMERO.]\n\n";
-    }catch(_){ return ""; } })()+
-    /* 🆕 v7.174 — y lo que ha cambiado desde que lo miró. Rey: «él debe saber
-       automáticamente qué es el movimiento y lo nuevo en mi sistema». */
-    (function(){ try{ const nv=apexNovedades(); return nv && nv.texto ? (nv.texto+"\n\n") : ""; }catch(_){ return ""; } })()+
+    /* 💰 v7.227 (23-09) — AQUÍ VIVÍAN LAS DOS COSAS QUE ROMPÍAN SU CACHÉ.
+       CAZADO con la huella del worker 5.222+: el bloque cacheado de 105.000 tokens cambiaba
+       de tamaño entre sesiones — 66.103 → 66.051 → 65.980 caracteres — y cada cambio obliga a
+       reescribirlo ENTERO al doble de precio: ~$1 cada vez.
+       LAS DOS CULPABLES, que estaban aquí dentro:
+         · la CONFIG DEL EJECUTOR, que cambia cuando Rey toca una regla suya;
+         · y `apexNovedades()`, que es peor: compara con la foto anterior y GUARDA la nueva,
+           así que la primera vez trae texto y la segunda ya no. Cambia DOS veces por cada
+           cambio — y lo disparo yo mismo cada vez que le instalo una versión.
+       Se van al CONTEXTO VIVO (`iaEjecutorCfgTxt()` y `iaNovedadesTxt()`), detrás de la marca
+       de caché: allí cuestan 1× y pueden cambiar cuanto quieran.
+       ⚠️ Roberto NO pierde ni una palabra: lee exactamente el mismo texto, en otro sitio del
+       sobre. Es el mismo arreglo que se le hizo a su memoria en la v5.179
+       ([[apex-la-cache-envenena-lo-que-va-detras]]). */
     PUENTE_DOSSIER+"\n\n"+
     "SU ESTRATEGIA CRT ELITE (SMC/ICT/CRT):\n"+
     "REGLA DE ORO (modelo de REVERSIÓN): SIN SWEEP = SIN SETUP. Si el precio no barrió liquidez con MECHA (no con cierre), NO hay operación de reversión, por muchas otras confluencias que haya.\n"+
@@ -19201,7 +19217,7 @@ async function iaEnviar(textoForzado, promptExtra){
     + "Si está en la tercera, di que TODAVÍA NO HAY porque aún no lo ha registrado — no que falló." + NL
     + "❌ NUNCA digas que NO PUEDES consultar algo de estas listas ni que tienes esa limitación: SÍ puedes." + NL
     + "Decir «no puedo» sobre algo que sí tienes le hace dudar de ti, y con razón." + NL;
-  const inj=_cabecera+entTxt+climaTxt+iaReloj()+"\n"+grafTxt+calTxt+iaContexto()+"\n"+iaEstrategiaDef()+"\n"+guardianRiesgo()+"\n"+iaPlan()+"\n"+iaAciertos()+"\n"+(estadoRecuperacionFreno().block||"")+iaFugas()+"\n"+iaRacha()+"\n"+iaPatrones()+"\n"+iaDatosSueltos()+"\n"+iaHitos()+"\n"+iaChats()+"\n"+iaPendientes()+"\n"+iaPlanSemanal()+"\n"+iaAvisos()+"\n"+iaPosicionesVivas()+iaEntradasAbiertas()+iaEjecutorArchivo()+iaEjecutorHoy()+iaTemplo()+iaLeyes(texto)+marco+"\n=== FIN DEL CONTEXTO — responde al mensaje de Rey del bloque anterior ===";
+  const inj=_cabecera+entTxt+climaTxt+iaReloj()+"\n"+grafTxt+calTxt+iaContexto()+"\n"+iaEstrategiaDef()+"\n"+guardianRiesgo()+"\n"+iaPlan()+"\n"+iaAciertos()+"\n"+(estadoRecuperacionFreno().block||"")+iaFugas()+"\n"+iaRacha()+"\n"+iaPatrones()+"\n"+iaDatosSueltos()+"\n"+iaHitos()+"\n"+iaChats()+"\n"+iaPendientes()+"\n"+iaPlanSemanal()+"\n"+iaAvisos()+"\n"+iaPosicionesVivas()+iaEntradasAbiertas()+iaEjecutorArchivo()+iaEjecutorHoy()+iaTemplo()+iaLeyes(texto)+marco+iaEjecutorCfgTxt()+iaNovedadesTxt()+"\n=== FIN DEL CONTEXTO — responde al mensaje de Rey del bloque anterior ===";
   const last=msgs[msgs.length-1];
   const textoMsg=c.msgs[c.msgs.length-1].content;   /* EXACTAMENTE lo guardado (texto + nota del doc) */
   let bloquesMsg = Array.isArray(last.content) ? last.content.filter(b=>b.type==="image") : [];   /* la foto va delante */
