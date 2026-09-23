@@ -197,6 +197,29 @@ async function nubeVerInforme(){
     "🤖 Operaciones del Ejecutor: "+n.ejec+"\n\n"+
     "Si estos números son los tuyos, tu respaldo está BIEN y no has perdido nada.");
 }
+/* ═════════════════════════════════════════════════════════════════════════════
+   🖥️ v7.228 — DOS APARATOS SIN PISARSE (la base para tener a Roberto tambien en la PC)
+   ═════════════════════════════════════════════════════════════════════════════
+   Rey (23-09) quiere a Roberto tambien en su PC. Antes de montar nada, esto:
+   el respaldo es un REEMPLAZO COMPLETO y el unico freno rechaza lo que pese menos del 40%.
+   Dos aparatos con datos parecidos pasan los dos y EL ULTIMO GANA EN SILENCIO:
+       manana en la PC: registra una operacion -> sube sola a los 4 s
+       tarde el telefono (que no la tiene): escribe algo -> sube sola -> LA BORRA
+   Con un solo aparato no pasaba; con dos es cuestion de dias, y sin un solo aviso.
+   AHORA: cada aparato recuerda la fecha de la copia que vio por ultima vez y la manda. Si la
+   nube cambio DESPUES, no se pisa: se le cuenta a Rey quien escribio y cuando, y decide el
+   ([[apex-no-elegir-por-rey]], [[apex-nada-en-un-solo-aparato]]). */
+const NUBE_BASE_KEY = "crtelite_nube_base_ts";
+function nubeBaseTs(){ try{ return parseInt(localStorage.getItem(NUBE_BASE_KEY)||"0",10)||0; }catch(_){ return 0; } }
+function nubeBaseTsPon(ts){ try{ if(ts) localStorage.setItem(NUBE_BASE_KEY, String(ts)); }catch(_){} }
+/* un nombre entendible, no un identificador: Rey tiene que leer «tu PC», no un codigo */
+function nubeAparato(){
+  try{
+    if(typeof vigiaPuente==="function" && vigiaPuente()) return "tu telefono (la APK)";
+    const movil = /Android|iPhone|iPad/i.test(navigator.userAgent||"");
+    return movil ? "el navegador de tu telefono" : "tu PC";
+  }catch(_){ return "un aparato"; }
+}
 async function nubeSubir(callado){
   const code=nubeCode(); if(!code) return {ok:false, err:"sin código"};
   /* 🗝️ v7.05 — EL SITIO DEFINITIVO. Rey pulsó SUBIR una y otra vez y siempre le salian 22
@@ -213,9 +236,33 @@ async function nubeSubir(callado){
       if(k===K.iaconvs){ try{ const cs=JSON.parse(v); (cs||[]).forEach(c=>(c.msgs||[]).forEach(m=>{ if(m.img) delete m.img; })); v=JSON.stringify(cs); }catch(_){}}
       data[k]=v; });
     const ts=nubeTs()||Date.now();
-    const r=await fetch(nubeUrl()+"/backup/set",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({code,ts,data})});
+    const r=await fetch(nubeUrl()+"/backup/set",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({code,ts,data,baseTs:nubeBaseTs(),aparato:nubeAparato()})});
     if(r.ok){
       const d=await r.json();
+      /* 🖥️ v7.228 — OTRO APARATO ESCRIBIO DESPUES: NO SE PISA.
+         Este es el caso que hace posible tener a Roberto en la PC sin perder nada. El freno
+         de abajo solo mira el TAMANO, y dos aparatos con datos parecidos lo pasan los dos.
+         ⚠️ Si la subida es AUTOMATICA no se pregunta nada (Rey no ha tocado nada y no puede
+         saltarle un cartel), pero TAMPOCO se pisa y TAMPOCO se calla: queda el aviso para
+         cuando abra ([[apex-lo-que-corre-solo-falla-callado]]). */
+      if(d && d.ok===false && d.motivo==="conflicto"){
+        const g=d.guardado||{};
+        const cuando=g.ts?new Date(g.ts).toLocaleString("es"):"despues";
+        const quien=g.aparato||"otro aparato";
+        const aviso="☁️ "+quien+" guardo cambios a las "+cuando+" y este aparato no los tiene.";
+        try{ localStorage.setItem("crtelite_nube_conflicto", JSON.stringify({ts:g.ts||0, quien, visto:false})); }catch(_){}
+        if(callado){ try{ toast(aviso+" No he subido nada para no borrarlos."); }catch(_){} return {ok:false, err:"conflicto"}; }
+        const seguro = await preguntar(
+          aviso+"\n\nSi subes lo de ESTE aparato, se pierde lo que guardo "+quien+".\n"+
+          "Lo normal es TRAER primero lo de la nube (☁️ Traer mis datos) y volver a guardar despues.\n\n"+
+          "¿Subir igualmente y reemplazar lo suyo?",
+          {titulo:"☁️ Hay cambios mas nuevos en la nube", si:"Subir igualmente", peligro:true});
+        if(!seguro){ toast("No se subio — lo de "+quien+" sigue intacto ✓"); return {ok:false, err:"cancelado"}; }
+        const rf=await fetch(nubeUrl()+"/backup/set",{method:"POST",headers:{"content-type":"application/json"},
+          body:JSON.stringify({code,ts,data,aparato:nubeAparato(),forzar:true})});
+        if(rf.ok){ const df=await rf.json(); if(df && df.ok){ nubeBaseTsPon(df.ts||ts); localStorage.setItem(NUBE_LAST_KEY,String(Date.now())); nubePintarEstado(); return {ok:true, claves:df.claves||0, bytes:df.bytes||0}; } }
+        return {ok:false, err:"no se pudo forzar"};
+      }
       /* 🛟 v6.59 — EL FRENO QUE FALTABA (31-08, casi le cuesta a Rey todo su historial):
          instaló la APK, que nace vacía, y pulsó "Guardar y respaldar" en vez de "Restaurar".
          Ahora el puente RECHAZA una subida mucho más pequeña que la guardada y aquí se le
@@ -234,10 +281,10 @@ async function nubeSubir(callado){
           "¿Es esto lo que quieres? (Si lo que buscabas era TRAER tus datos, cancela y usa \"☁️ TRAER mis datos desde la nube\")");
         if(!seguro){ toast("Respaldo cancelado — tus datos de la nube siguen intactos ✓"); return {ok:false, err:"cancelado"}; }
         const r2=await fetch(nubeUrl()+"/backup/set",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({code,ts,data,forzar:true})});
-        if(r2.ok){ const d2=await r2.json(); if(d2 && d2.ok){ localStorage.setItem(NUBE_LAST_KEY,String(Date.now())); nubePintarEstado(); return {ok:true, claves:d2.claves||Object.keys(data).length, bytes:d2.bytes||0}; } }
+        if(r2.ok){ const d2=await r2.json(); if(d2 && d2.ok){ nubeBaseTsPon((d&&d.ts)||ts); localStorage.setItem(NUBE_LAST_KEY,String(Date.now())); nubePintarEstado(); return {ok:true, claves:d2.claves||Object.keys(data).length, bytes:d2.bytes||0}; } }
         return {ok:false, err:"no se pudo forzar"};
       }
-      if(d && d.ok){ localStorage.setItem(NUBE_LAST_KEY,String(Date.now())); nubePintarEstado();
+      if(d && d.ok){ nubeBaseTsPon((d&&d.ts)||ts); localStorage.setItem(NUBE_LAST_KEY,String(Date.now())); nubePintarEstado();
         return {ok:true, claves:d.claves||Object.keys(data).length, bytes:d.bytes||0}; }
       return {ok:false, err:"el puente no lo aceptó"};
     }
@@ -258,6 +305,10 @@ async function nubeRescatar(){
     NUBE_RESTAURANDO=true;
     Object.keys(bk.data).forEach(k=>{ if(k.indexOf("crtelite_")===0){ try{ localStorage.setItem(k, bk.data[k]); }catch(_){}} });
     localStorage.setItem(NUBE_TS_KEY,String(bk.ts));
+    /* v7.228: al TRAER de la nube, este aparato pasa a tener esa copia como base. Sin
+       esto, su siguiente guardado se veria como un conflicto contra lo que acaba de
+       traerse, y Rey tendria que confirmar algo que ya decidio. */
+    try{ nubeBaseTsPon(bk.ts); }catch(_){}
     NUBE_RESTAURANDO=false;
     toast("🛟 Copia anterior recuperada — recargando…");
     setTimeout(()=>location.reload(), 900);
@@ -291,6 +342,10 @@ async function nubeRestaurar(auto){
     NUBE_RESTAURANDO=true;
     Object.keys(bk.data).forEach(k=>{ if(k.indexOf("crtelite_")===0){ try{ localStorage.setItem(k, bk.data[k]); }catch(_){}} });
     localStorage.setItem(NUBE_TS_KEY,String(bk.ts));
+    /* v7.228: al TRAER de la nube, este aparato pasa a tener esa copia como base. Sin
+       esto, su siguiente guardado se veria como un conflicto contra lo que acaba de
+       traerse, y Rey tendria que confirmar algo que ya decidio. */
+    try{ nubeBaseTsPon(bk.ts); }catch(_){}
     NUBE_RESTAURANDO=false;
     toast("☁️ Restaurado desde la nube — recargando…");
     setTimeout(()=>location.reload(), 900);

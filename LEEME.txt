@@ -1,39 +1,34 @@
-APEX v7.227 — TRADING DESK
+APEX v7.228 — TRADING DESK
 =========================
 
-💰 ENCONTRADO POR QUÉ TU CACHÉ SE RECREABA EN CADA SESIÓN
-   Con la huella nueva del worker, sobre tus llamadas reales:
-       12:23  bloque system #2 (1z01lxt:66103 → zc9q08:66051)   ← CAMBIÓ
-       15:28  bloque system #2 (zc9q08:66051 → mfpbq6:65980)    ← y otra vez
+🖥️ LA BASE PARA TENER A ROBERTO TAMBIÉN EN TU PC
+   Antes de montar nada fui a mirar qué pasa cuando dos aparatos escriben, y
+   encontré algo que te habría costado operaciones de tu Diario sin enterarte.
 
-   El bloque cacheado de ~105.000 tokens CAMBIABA DE TAMAÑO entre sesiones.
-   Y un bloque cacheado que cambia hay que reescribirlo ENTERO al doble de
-   precio: ~$1 cada vez. No era que la caché caducara — era que el contenido
-   se movía debajo.
+   TU RESPALDO ES UN REEMPLAZO COMPLETO, y el único freno que había rechaza lo
+   que pese menos del 40% de lo guardado. Dos aparatos con datos PARECIDOS lo
+   pasan los dos, y EL ÚLTIMO QUE GUARDA GANA EN SILENCIO:
 
-   LAS DOS CULPABLES, las dos metidas dentro del dossier:
-     · LA CONFIG DE TU EJECUTOR, que cambia cuando tocas una regla tuya.
-     · Y las NOVEDADES, que es peor: comparan con la foto anterior y GUARDAN
-       la nueva, así que la primera vez traen texto y la segunda ya no —
-       cambian DOS veces por cada cambio. Y eso lo disparo YO cada vez que te
-       instalo una versión.
+       mañana, en la PC: registras una operación  → sube sola a los 4 segundos
+       tarde, el teléfono (que no la tiene): escribes algo → sube sola → LA BORRA
 
-   Las dos se van al CONTEXTO VIVO, detrás de la marca de caché: ahí cuestan
-   1× y pueden cambiar cuanto quieran.
-   ⚠️ ROBERTO NO PIERDE NI UNA PALABRA. Lee exactamente el mismo texto, con
-   los mismos números de tus reglas. Solo cambia el sobre en el que viaja.
+   Tamaños parecidos, el freno no salta, nadie avisa. Con UN aparato no pasaba
+   nunca; con DOS es cuestión de días.
 
-   Es la CUARTA vez que este proyecto tropieza con lo mismo escrito de otra
-   forma (el cerebro pegado a la memoria, el dossier pegado a la memoria viva,
-   la memoria dentro del system… y ahora esto). La regla, ya con nombre:
-   UN BLOQUE CACHEADO NO PUEDE LLEVAR NADA QUE CAMBIE, por pequeño que sea.
-   Banco nuevo que lo vigila: 5/5, y comprueba también fechas, contadores y
-   azar — no solo estas dos.
+   AHORA cada aparato recuerda la fecha de la copia que vio por última vez. Si
+   la nube cambió DESPUÉS, no se pisa:
+     · si la subida es AUTOMÁTICA: no te salta ningún cartel (no has tocado
+       nada), pero tampoco se sube nada y te queda el aviso — ni se pisa ni se
+       calla.
+     · si la pides tú: te dice QUIÉN escribió y CUÁNDO, te recuerda que lo
+       normal es traer primero lo de la nube, y decides tú. Nunca fuerza antes
+       de preguntar.
 
-⏱️ Y LA CACHÉ DE 1 HORA YA ESTÁ FUNCIONANDO (worker 5.224)
-   Comprobado en tus dos mensajes nuevos: a las 15:28 escribió 105.446 y a
-   las 15:30 LEYÓ 105.016 — reutilizada. Y el reparto de tu contador confirma
-   que lo nuevo va todo a 1 hora y nada a 5 minutos.
+   ⚠️ Y una app vieja que todavía tengas instalada sigue respaldando igual: el
+   arreglo no puede dejar sin respaldo a una versión anterior.
+
+   Banco nuevo: 9/9, y EJECUTA el freno del worker con los cuatro casos (la
+   nube más nueva, la nube igual, tú forzando, y una app vieja sin la marca).
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
