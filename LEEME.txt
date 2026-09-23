@@ -1,48 +1,19 @@
-APEX v7.220 — TRADING DESK
+APEX v7.222 — TRADING DESK
 =========================
 
-🌱 ROBERTO APRENDE DEL DÍA ENTERO, NO SOLO DEL ROBOT
-   Tú: «los aprendizajes de Roberto no deben tener límites y mejorar con cada
-   día de MIS errores, de sus errores y todo lo que sucede del día en todos
-   los aspectos».
-   Fui a mirarlo y era tres veces más estrecho de lo que parecía:
+🔴 ARREGLO URGENTE DE LA 7.221: LOS CHIPS REVENTABAN AL TOCARLOS
+   En la 7.221 saqué la lista de acciones «arriba»… pero arriba del CUERPO
+   de una función, no del fichero: seguía siendo una variable local de esa
+   función. Los avisos funcionaban y CUALQUIER chip del chat reventaba al
+   tocarlo. Era peor que el fallo que venía a arreglar.
+   Mis tres bancos daban 8/8 porque LEEN el texto, y el texto estaba bien
+   escrito. Lo dijo tu teléfono en un segundo, al preguntarle a la app viva
+   si esa lista existía: «no está definida».
+   Ahora vive donde tiene que vivir, y el banco comprueba además que esté al
+   NIVEL DEL FICHERO — no solo que exista.
 
-      lo que había                      lo que hay ahora
-      ─────────────────────────────     ──────────────────────────────────
-      solo las operaciones DEL ROBOT    LAS TUYAS PRIMERO (real y backtest),
-                                        y las del robot después
-      si el robot no operaba, no        solo se calla si no pasó nada en
-      aprendía NADA                     NINGUNA de las cuatro fuentes
-      lo que se FRENÓ no enseñaba       una señal que no se tomó enseña
-                                        tanto como una tomada
-      las AVERÍAS no enseñaban          si te quedaste ciego o se cayó algo:
-                                        ¿con qué dato lo habría visto venir?
-      tope de 3 lecciones (lo puse yo)  hasta 6, y con la orden de NO forzar
-                                        el número
-
-   LA RAZÓN DE FONDO de que no aprendiera de ti era física: el aprendizaje
-   corre en el reloj de la NUBE y tu Diario vive en TU TELÉFONO. Ahora la app
-   espeja tus operaciones a la nube —copia compacta de 60 días, solo lo que
-   hace falta para juzgar— y tu respaldo cifrado no se toca.
-   Y lo enganché DENTRO de `save`, que es el único sitio por el que pasan los
-   17 guardados distintos del Diario: así no hay forma de que mañana alguien
-   añada el sitio 18 y se olvide, que es como se pierden estas cosas.
-
-   Al destilador se le dice ahora, con todas las letras, que LAS TUYAS PESAN
-   MÁS que las del robot y dónde está tu fuga conocida (el timing de entrada),
-   que es justo lo que el campo «momento» de cada operación tuya permite
-   medir. Y que el backtest es entrenamiento: se aprende de él, pero sus
-   cuentas NO se mezclan con las de tu dinero.
-
-📅 Y NINGÚN RECUERDO SUYO PUEDE VOLVER A DECIR «HOY»
-   La lección del 21-09 empezaba «La única operación de HOY fue un EURUSD
-   sell…». Releída al día siguiente, con la lista de cierres vacía, fue la
-   única operación que Roberto «veía» — y de ahí salió el «no te lo explico
-   porque no lo sé» de tu notificación. Corregí los tres recuerdos que
-   caducaban (cambiando solo las palabras, comprobando que la versión nueva
-   estaba guardada ANTES de borrar la vieja) y ahora tanto el aprendizaje del
-   día como el espejo tienen PROHIBIDO escribir «hoy», «ayer» o «ahora»:
-   escriben la fecha exacta.
+(y sigue todo lo de la 7.221: los 4 subchips del Templo, los 5 botones del
+ guardián y el cuarto criterio del revisor de botones)
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

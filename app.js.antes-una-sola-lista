@@ -1243,22 +1243,14 @@ function guardiaPinta(){
     }; });
   }catch(e){ console.log("[apex] guardia:", e.message); }
 }
-/* 🧪 v7.221 — ESTOS CINCO BOTONES NO LLEVABAN A NINGUNA PARTE.
-   Los cazó el criterio nuevo de `revision-botones.cjs` («responde pero no se notó NADA»),
-   el mismo día que Rey encontró muertos los cuatro subchips del 🏛️ Templo.
-   LA CAUSA: `irDestino` espera el destino CON PREFIJO (`tab:diario` / `rob:algo`); con
-   `"diario"` a secas cae por los dos `if` y hace RETURN sin decir nada. Así que «🧭 Ver mi
-   plan», «🗓️ Escribirlo» y los demás de las tarjetas del guardián no abrían nada.
-   Y el de backtest era el peor: SÍ le cambiaba el libro a 🎬 y SÍ sacaba el aviso, pero
-   le dejaba donde estaba — parecía que había funcionado ([[apex-pulsar-no-basta]]). */
 function guardiaIr(acc){
   try{
-    if(acc==="backtest"){ CTX.modo="backtest"; save(K.ctx,CTX); irDestino("tab:diario"); toast("🎬 Libro de backtesting — registra la vela"); }
-    else if(acc==="huecos"){ irDestino("tab:diario"); }
+    if(acc==="backtest"){ CTX.modo="backtest"; save(K.ctx,CTX); irDestino("diario"); toast("🎬 Libro de backtesting — registra la vela"); }
+    else if(acc==="huecos"){ irDestino("diario"); }
     else if(acc==="revisar"){ if(typeof abrirIA==="function") abrirIA(); }
-    else if(acc==="plansem"){ irDestino("tab:analisis"); }
-    else if(acc==="ejecutor"){ irDestino("tab:ejecutor"); }
-    else if(acc==="plan"){ irDestino("tab:arranque"); }
+    else if(acc==="plansem"){ irDestino("analisis"); }
+    else if(acc==="ejecutor"){ irDestino("ejecutor"); }
+    else if(acc==="plan"){ irDestino("arranque"); }
   }catch(_){}
 }
 
@@ -5587,33 +5579,20 @@ function consumirParam(nombre){
     return v;
   }catch(_){ return null; }
 }
-/* ⚠️ v7.221b — Y TIENE QUE ESTAR AQUI FUERA, NO DENTRO DE `irDestino`.
-   Lo saque «arriba» y lo dejé arriba DE SU CUERPO: seguía siendo una variable LOCAL de
-   esa función. `irDestino` funcionaba y `iaCablearChips` reventaba con ReferenceError
-   al tocar CUALQUIER chip — peor que el fallo que venía a arreglar.
-   Los bancos daban 7/7 porque LEEN el texto y el texto estaba bien escrito; el
-   teléfono lo dijo en un segundo ([[apex-auditar-es-ejecutar]], [[apex-pulsar-no-basta]]).
-   Si alguien vuelve a moverlo dentro de una función, los chips se caen otra vez. */
-/* ═══════════════════════════════════════════════════════════════════════════════════
-   🖐️ v7.221 — UNA SOLA LISTA DE ACCIONES (los 4 chips muertos del 🏛️ Templo)
-   ═══════════════════════════════════════════════════════════════════════════════════
-   Rey (23-09): «¿evaluarme la semana, ayuno, voy bien de nivel y respiración? Ninguno
-   funciona… y es algo que siempre te recalco antes de cada entrega: que todo y cada cosa
-   dentro de Apex esté funcionando como debe».
-   TENÍA RAZÓN, y eran EXACTAMENTE esos cuatro — comprobado cruzando las dos listas.
-   LA CAUSA: los chips se DECLARAN en una lista (`act:"temploSemana"`) y se CABLEAN a mano
-   en OTRA, dentro de `iaCablearChips`, con una cadena de `if` escrita una por una. Los
-   cuatro del Templo se declararon y nadie los añadió a la segunda: al tocarlos caían al
-   `iaEnviar(b.dataset.q)` del final con `q` vacío, y no pasaba NADA. Y lo peor: SÍ estaban
-   en el despacho de los avisos (`rob:`), así que desde una notificación funcionaban — por
-   eso parecían hechos.
-   ⚠️ Y POR QUÉ `revision-botones.cjs` DIO VERDE: mira si el botón TIENE manejador, y lo
-   tenía. Un botón que responde y no hace nada pasa esa prueba
-   ([[apex-pulsar-no-basta]], [[apex-declarar-no-es-dar]]).
-   EL ARREGLO NO ES AÑADIR CUATRO `if`: es que haya UNA sola lista. Este mapa vivía dentro
-   de `irDestino`; ahora vive aquí y lo usan LOS DOS caminos — los avisos y los chips —,
-   así que un chip nuevo no puede volver a nacer muerto. */
-const ACCIONES_ROBERTO = {
+function irDestino(v){
+  const s=String(v||"");
+  if(!s) return;
+  if(s.indexOf("tab:")===0){
+    const id=s.slice(4);
+    if(TABS.some(t=>t.id===id)) irA(id);
+    return;
+  }
+  if(s.indexOf("rob:")!==0) return;
+  const acc=s.slice(4);
+  if(typeof abrirIA==="function") abrirIA();
+  /* v6.05: chips de pregunta directa — abre el chat y lanza la misma consulta del chip */
+  if(acc.indexOf("q:")===0){ const q=IA_CHIP_QS[acc.slice(2)]; if(q) setTimeout(()=>iaEnviar(q), 260); return; }
+  const F={
     memoria: ()=>verMemoria(),
     gasto:   ()=>verGasto(),
     aciertos:()=>verAciertos(),
@@ -5648,36 +5627,9 @@ const ACCIONES_ROBERTO = {
     ejecutor:()=>verEjecutor(),
     avisos:  ()=>verAvisos(),
     hilo:    ()=>abrirHiloDia(),
-    chat:    ()=>{},
-    /* v7.221 - ESTAS OCHO SOLO VIVIAN EN LA CADENA DE LOS CHIPS, no aqui. Al juntar las
-       dos listas en una habria borrado ocho botones que SI funcionaban: juntar listas
-       tira en silencio lo que solo estaba en una de ellas. Se comprobo cruzandolas antes
-       de tocar nada, y el banco test-ningun-chip-nace-muerto.cjs lo vigila desde ahora. */
-    reintentar: ()=>iaReintentar(),
-    patrones:   ()=>patronesOcultos(),
-    torneo:     ()=>torneoTres(),
-    ideas:      ()=>verIdeas(),
-    auditoria:  ()=>auditoriaEjecutor(),
-    libro:      ()=>libroSenales(),
-    noche:      ()=>revisionNoche(),
-    cadena:     ()=>revisionCadena()
+    chat:    ()=>{}
   };
-;
-
-function irDestino(v){
-  const s=String(v||"");
-  if(!s) return;
-  if(s.indexOf("tab:")===0){
-    const id=s.slice(4);
-    if(TABS.some(t=>t.id===id)) irA(id);
-    return;
-  }
-  if(s.indexOf("rob:")!==0) return;
-  const acc=s.slice(4);
-  if(typeof abrirIA==="function") abrirIA();
-  /* v6.05: chips de pregunta directa — abre el chat y lanza la misma consulta del chip */
-  if(acc.indexOf("q:")===0){ const q=IA_CHIP_QS[acc.slice(2)]; if(q) setTimeout(()=>iaEnviar(q), 260); return; }
-  const fn=ACCIONES_ROBERTO[acc];
+  const fn=F[acc];
   if(fn) setTimeout(fn, 260);
 }
 
@@ -11789,24 +11741,39 @@ function iaPintarChips(){
 }
 /* El MISMO despacho de siempre, chip por chip (ni una función cambió) + los 2 cierres nuevos */
 function iaCablearChips(){
-  /* 🖐️ v7.221 — del MISMO mapa que los avisos. Aquí había una cadena de 31 `if`
-     escritos a mano, y los 4 del Templo nunca llegaron a ella. Ahora la acción de un chip
-     sale de `ACCIONES_ROBERTO`, que es la única lista.
-     ⚠️ Y SI UN CHIP NO TIENE ACCIÓN, SE DICE. Antes caía en `iaEnviar(undefined)` y se
-     quedaba mudo: un botón que no hace nada y no se queja se queda roto para siempre
-     ([[apex-lo-que-corre-solo-falla-callado]]). */
   document.querySelectorAll("#iaQuick .ia-chip").forEach(b=>{ b.onclick=()=>{
-    const a=b.dataset.act;
-    if(a){
-      const fn=ACCIONES_ROBERTO[a];
-      if(typeof fn==="function") return fn();
-      console.warn("[chips] el chip \""+(b.textContent||a)+"\" no tiene acción: "+a);
-      toast("Ese botón no está conectado todavía — dímelo y lo arreglo");
-      return;
-    }
-    if(b.dataset.q) return iaEnviar(b.dataset.q);
-    console.warn("[chips] chip sin acción ni pregunta:", b.textContent);
-    toast("Ese botón no está conectado todavía — dímelo y lo arreglo");
+    if(b.dataset.act==="semanal") return analisisSemanal();
+    if(b.dataset.act==="diario")  return analisisDiario();
+    if(b.dataset.act==="checkemo") return checkEmocional();
+    if(b.dataset.act==="midia")    return mentorVida();
+    if(b.dataset.act==="parte")    return parteMatutino();
+    if(b.dataset.act==="avisos")   return verAvisos();
+    if(b.dataset.act==="reintentar") return iaReintentar();
+    if(b.dataset.act==="plan")     return preguntarPlan();
+    if(b.dataset.act==="aciertos") return verAciertos();
+    if(b.dataset.act==="gasto")    return verGasto();
+    if(b.dataset.act==="memoria")  return verMemoria();
+    if(b.dataset.act==="capturas") return estudiarCapturas();
+    if(b.dataset.act==="gonogo")   return goNoGo();
+    if(b.dataset.act==="progreso") return progresoRoberto();
+    if(b.dataset.act==="escalado") return escaladoRoberto();
+    if(b.dataset.act==="comparar") return compararPares();
+    if(b.dataset.act==="replay")   return practicaReplay();
+    if(b.dataset.act==="ejecutor") return verEjecutor();
+    if(b.dataset.act==="cierredia")    return evalDia();      /* 🆕 v6.30 */
+    if(b.dataset.act==="cierresemana") return evalSemana();   /* 🆕 v6.30 */
+    if(b.dataset.act==="estrategias")  return estrategiasLab(); /* 🆕 v6.32 */
+    if(b.dataset.act==="simulacro")    return simulacroExamen(); /* 🆕 v6.34 */
+    if(b.dataset.act==="gemelo")       return gemeloDisciplinado(); /* 🆕 v6.35 */
+    if(b.dataset.act==="repaso")       return repasoLecciones(); /* 🆕 v6.39 */
+    if(b.dataset.act==="patrones")     return patronesOcultos(); /* 🆕 v6.43 */
+    if(b.dataset.act==="torneo")       return torneoTres();      /* 🆕 v6.43 */
+    if(b.dataset.act==="ideas")        return verIdeas();        /* 🆕 v6.43 */
+    if(b.dataset.act==="auditoria")    return auditoriaEjecutor(); /* 🆕 v6.45 */
+    if(b.dataset.act==="libro")        return libroSenales();     /* 📊 v7.08 */
+    if(b.dataset.act==="noche")        return revisionNoche();    /* 🌙 v7.10 */
+    if(b.dataset.act==="cadena")       return revisionCadena();   /* 🩺 v7.21 */
+    iaEnviar(b.dataset.q);
   }; });
 }
 function iaTemaChat(titulo){
