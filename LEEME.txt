@@ -1,36 +1,32 @@
-APEX v7.229 — TRADING DESK
+APEX v7.230 — TRADING DESK
 =========================
 
-🛠️ ROBERTO SE ENTERA DE LO QUE HACEMOS, NO SOLO DE LO QUE HAY (la bitácora)
+⏳ UN AVISO DESCARTADO POR VIEJO YA NO DESAPARECE EN SILENCIO
 
-Rey, 23-09, sobre el aviso «🕵️ Algo no me cuadra» con 6 caídas del Puente: «no está mal el
-avisar, sino que me da a entender que Roberto no sabe de nada en lo que se estaba tratando ni
-lo que se hizo, o sea no está informado… en ese aviso también me diría el motivo del porqué
-tantas caídas del Puente».
+Rey, 24-09: «no me ha llegado ni una sola alarma». Seguida la cadena entera, eslabón por
+eslabón, y medido en su propio teléfono:
 
-· LA BITÁCORA. Cada cosa deliberada que toque su sistema se apunta ANTES de hacerla, con su
-  porqué, y Roberto la tiene delante en toda tarea que juzgue. Antes decía «no me cuadra»;
-  ahora dice «fue a propósito, para liberarte memoria, y ya está de vuelta». Un apunte no le
-  calla: le da el motivo. Sólo cubre su ventana de tiempo y sus etiquetas, así que una avería
-  de verdad se sigue viendo entera (probado en los dos sentidos, 21 pruebas).
+· La nube mandó las 12 alarmas del día y les pegó la lectura de Roberto. ✅
+· El vigía de la APK las recibió… y las encontró con MÁS DE 45 MINUTOS, porque Android le
+  tenía preguntando cada 299 segundos en vez de cada 15. Así que las dio por caducadas y las
+  marcó como vistas SIN UNA PALABRA. Su fichero tenía 60 avisos «vistos» que él no vio nunca.
 
-· EL MOTIVO DE LAS CAÍDAS, medido y no supuesto. No eran seis: eran menos, contadas de más.
-  Tres eran de las 02:00 de tres noches seguidas — su PC despierta a las 01:59:36 para «Apex
-  despertar Londres» y el Puente gritaba antes de que TradingView volviera. Ya no: un latido
-  en disco distingue «dormimos» de «se rompió», y el despertar da tiempo en vez de avisar.
+La regla de no enseñar un aviso viejo es BUENA y se queda: una alarma de entrada de hace horas
+apunta a un precio que ya no existe, y meterle ahí es peor que callarse. Lo que no puede seguir
+es el SILENCIO.
 
-· EL `fs` QUE NO EXISTÍA. El Puente usaba `fs.` en cuatro sitios sin haberlo pedido; dentro de
-  try/catch eso falla en silencio. Llevaba meses matando dos cosas suyas: el candado que evita
-  avisos repetidos (su fichero no se creó jamás) y su interruptor de las marcas del gráfico,
-  que siempre respondía «No pude guardar el interruptor». Comprobado ejecutándolo antes y
-  después. ⚠️ El Puente hay que REINICIARLO para que lo coja.
+Ahora, si hubo señales y le llegaron tarde, se lo dice: UNA notificación con la cuenta y los
+títulos («⏳ 4 aviso(s) te llegaron TARDE»), no una avalancha. Eso le dice algo que él puede
+arreglar: que su teléfono no le está dejando avisar a tiempo.
 
-· UN BACHE DE LOS QUE MANDÓ QUITAR. «Dónde estás» salía en la lista de «📋 LO QUE SÍ TIENES
-  DELANTE» y NO se le mandaba en el chat normal — con la regla «nunca digas que no puedes»
-  encima. Arreglado, y ahora un banco compara las 34 cosas de las dos listas contra lo que de
-  verdad se envía.
+También arreglado, de paso: un banco suyo comprobaba esto dentro de una ventana fija de 140
+caracteres y se puso rojo solo al crecer el bloque. Ahora cuenta llaves.
 
-Bancos nuevos: 4 (la bitácora, el despertar, los módulos sin pedir, lo prometido vs. lo enviado).
+⚠️ SIGUE ABIERTO, y no me lo invento: Firebase —el camino que Android no puede dormir— acepta
+los envíos (ok, 1 teléfono, 0 fallidos) y en el registro COMPLETO del teléfono no aparece ni
+una línea. Token correcto y actual, servicio declarado, permiso concedido, app exenta del
+ahorro de batería, WiFi y LTE con ping al 0%. El worker 5.228 trae un interruptor de
+diagnóstico para distinguir si el canal está muerto o si es el tipo de mensaje.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
