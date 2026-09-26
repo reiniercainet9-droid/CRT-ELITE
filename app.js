@@ -2353,7 +2353,18 @@ function ejecFormHTML(cfg){
        antes descartaba— pero vivía escondida dentro del programa de la PC. Rey (10-09):
        «todas las reglas del Ejecutor deben ser configurables, no quedar clavadas dentro».
        El corte va en hora de NUEVA YORK porque es la hora del gráfico, no la suya. */
-    '<label style="font-size:.85em">🎯 Entradas por SESIÓN (Londres y NY van aparte)<input class="inp ia-ejec-maxopsses" type="number" step="1" min="1" max="10" value="'+esc(String(cfg.maxOpsSesion!=null?cfg.maxOpsSesion:1))+'"></label>'+
+    /* 💰 v7.233 (26-09) — EL TOPE DE SESIÓN CUENTA RIESGO, NO OPERACIONES.
+       Rey (24-09): «puede ser en el mismo par si solo ha utilizado el 0,50% del riesgo,
+       ganado o perdido, pero más en la sesión de NY: porque Londres es la primera ventana,
+       entonces si está en Londres, gane o pierda ese 0,50, debe dejar una oportunidad para
+       NY. Ahora si es en NY y se da esa oportunidad como pasó ahora, debe utilizarla, las dos.»
+       «Entradas por SESIÓN» frenaba a NY aunque Londres no hubiera operado nada, y el día se
+       quedaba con la mitad del riesgo sin usar. Se sustituye por su presupuesto de riesgo.
+       Los tres van aquí porque si no los ve en su sección, la regla no existe
+       ([[apex-reglas-en-manos-de-rey]]). */
+    '<label style="font-size:.85em">💰 Riesgo del DÍA (%) — el presupuesto entre todas las sesiones<input class="inp ia-ejec-riesgodia" type="number" step="0.1" min="0.1" max="10" value="'+esc(String(cfg.riesgoDiaPct!=null?cfg.riesgoDiaPct:1))+'"></label>'+
+    '<label style="font-size:.85em">💰 Lo máximo que gasta LONDRES (%) — el resto queda para NY<input class="inp ia-ejec-riesgolon" type="number" step="0.1" min="0" max="10" value="'+esc(String(cfg.riesgoLondresPct!=null?cfg.riesgoLondresPct:0.5))+'"></label>'+
+    '<label style="font-size:.85em"><input class="ia-ejec-reservany" type="checkbox"'+((cfg.reservaParaNY!==false)?' checked':'')+'> Londres RESERVA para Nueva York <span style="opacity:.7">(si lo apagas, las dos sesiones pueden gastar todo el día)</span></label>'+
     '<label style="font-size:.85em">Hora NY que separa Londres de NY<input class="inp ia-ejec-cortesesion" type="number" step="1" min="0" max="23" value="'+esc(String(cfg.corteSesionNY!=null?cfg.corteSesionNY:6))+'"></label>'+
     /* 🎛️ v7.159 (16-09) — LA GESTIÓN DE LA OPERACIÓN, QUE HASTA HOY NO SE VEÍA.
        El break-even, la salida por tiempo y el objetivo vivían CLAVADOS dentro del programa
@@ -2517,6 +2528,10 @@ function ejecLeerForm(root){
     maxOpsDia:parseInt(q("ia-ejec-maxops").value,10),
     /* si el formulario es viejo y no los trae, van undefined y la nube deja lo que ya hay */
     maxOpsSesion:(q("ia-ejec-maxopsses") ? parseInt(q("ia-ejec-maxopsses").value,10) : undefined),
+    /* 💰 v7.233 — el presupuesto de riesgo, que sustituyó al tope por operaciones */
+    riesgoDiaPct:(q("ia-ejec-riesgodia") ? parseFloat(q("ia-ejec-riesgodia").value) : undefined),
+    riesgoLondresPct:(q("ia-ejec-riesgolon") ? parseFloat(q("ia-ejec-riesgolon").value) : undefined),
+    reservaParaNY:(q("ia-ejec-reservany") ? !!q("ia-ejec-reservany").checked : undefined),
     /* 🎛️ v7.159 — la gestión. Igual que arriba: si el formulario es viejo y no los trae, van
        undefined y la nube deja lo que ya hay. Nunca se le borra un ajuste por no verlo. */
     beActivo:(q("ia-ejec-beon") ? q("ia-ejec-beon").value==="1" : undefined),
@@ -11544,7 +11559,11 @@ function iaEjecutorCfgTxt(){
       + "· break-even: "+(c.beActivo!==false?"SÍ":"NO")+(c.beEnR!=null?(" a "+c.beEnR+"R"):"")+"\n"
       + "· salida por tiempo: "+(c.salidaTiempo===true?"SÍ":"NO")+((c.salidaTiempo===true&&c.salidaTiempoTF)?(" ("+c.salidaTiempoTF+")"):"")+"\n"
       + "· parcial automático: "+(c.parcialActivo===true?"SÍ":"NO")+((c.parcialActivo===true)?(" — "+(c.parcialPct||50)+"% a "+(c.parcialEnR||1)+"R"):"")+"\n"
-      + "· riesgo: "+(c.riesgoPct!=null?c.riesgoPct+"%":"?")+" · tope del día: "+(c.maxOpsDia!=null?c.maxOpsDia:"?")+" ops · por sesión: "+(c.maxOpsSesion!=null?c.maxOpsSesion:"?")+"\n"
+      /* 💰 v7.233 — Roberto tiene que saber la regla NUEVA, no la vieja: el tope va por
+         RIESGO. Si le dejo «por sesión: 1» le hago decirle a Rey algo que ya no es verdad
+         ([[apex-roberto-no-inventa]]). */
+      + "· riesgo: "+(c.riesgoPct!=null?c.riesgoPct+"%":"?")+" por entrada · tope del día: "+(c.maxOpsDia!=null?c.maxOpsDia:"?")+" ops\n"
+      + "· presupuesto de riesgo: "+(c.riesgoDiaPct!=null?c.riesgoDiaPct+"%":"1%")+" al día · Londres gasta como mucho "+(c.riesgoLondresPct!=null?c.riesgoLondresPct+"%":"0.5%")+((c.reservaParaNY!==false)?" y RESERVA el resto para NY (si Londres no opera, en NY caben las dos)":" — reserva APAGADA: las dos sesiones pueden gastar todo el día")+"\n"
       + "⚠️ PROHIBIDO señalarle como problema algo que dependa de una regla que ÉL TIENE APAGADA.\n"
       + "Si vas a hablar de cómo entró o salió una operación, MIRA ESTOS NÚMEROS PRIMERO.]\n";
   }catch(_){ return ""; }

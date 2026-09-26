@@ -1,22 +1,23 @@
-APEX v7.232 — TRADING DESK
+APEX v7.233 — TRADING DESK
 =========================
 
-🗣️ FIREBASE YA TE CANTA LOS AVISOS (v7.231)
-   Un aviso tenía DOS caminos y solo uno hablaba:
-       por la RONDA del vigía  ->  mostrar() + avisarBurbuja()   <- HABLA
-       por FIREBASE            ->  mostrar()                      <- MUDO
-   Y Firebase es el que te entrega PRIMERO. Así que lo veías al instante
-   y nadie te lo decía hasta que la ronda lo pillaba, 2-5 minutos después.
-   Medido el 26-09: la ronda iba 285 s tarde donde tocaban 120.
-   Eso era tu "las notificaciones están demorando en llegar".
+💰 EL TOPE DEL EJECUTOR CUENTA RIESGO, NO OPERACIONES (tu regla del 24-09)
+   Antes: "Entradas por SESIÓN = 1" contaba OPERACIONES, así que Nueva York
+   solo podía entrar una vez AUNQUE LONDRES NO HUBIERA OPERADO NADA — y el
+   día se quedaba con la mitad del riesgo sin usar.
 
-🔊 EL VOLUMEN, EN EL RASTRO DEL TELÉFONO (v7.232)
-   El 24-09 pasaste una tarde sin oír nada y yo busqué la avería en el
-   código. Al día siguiente: "el error es mío, tenía el volumen bajo".
-   El rastro de la voz apuntaba interruptor, motor y cuerpo — las tres
-   decían que sí mientras tú no oías nada. Le faltaba el dato que lo
-   explicaba. Ahora mide STREAM_MUSIC y el parte de salud se pone ROJO
-   si el volumen está a cero. Si no lo sabe, lo DICE.
+   Ahora, con tus palabras:
+     · el DÍA tiene        1,00 % de presupuesto de riesgo
+     · LONDRES gasta hasta 0,50 % y RESERVA el resto para NY
+     · NUEVA YORK gasta    lo que quede → si Londres no operó, entran LAS DOS
+     · el MISMO PAR vale mientras quede presupuesto (una cerrada no bloquea)
+
+   Tres ajustes nuevos en tu sección 🤖, todos tuyos:
+     💰 Riesgo del DÍA (%)
+     💰 Lo máximo que gasta LONDRES (%)
+     ☑ Londres RESERVA para Nueva York
+
+   Y si te frena, te lo dice con tus números y nombrando que es TU regla.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
