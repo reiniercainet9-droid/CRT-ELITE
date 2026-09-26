@@ -1,23 +1,27 @@
-APEX v7.233 — TRADING DESK
+APEX v7.234 — TRADING DESK
 =========================
 
-💰 EL TOPE DEL EJECUTOR CUENTA RIESGO, NO OPERACIONES (tu regla del 24-09)
-   Antes: "Entradas por SESIÓN = 1" contaba OPERACIONES, así que Nueva York
-   solo podía entrar una vez AUNQUE LONDRES NO HUBIERA OPERADO NADA — y el
-   día se quedaba con la mitad del riesgo sin usar.
+☁️ EL CARTEL DEL CONFLICTO DE NUBE — ARREGLADO
+   Tu teléfono llevaba desde el 25-09 sin poder respaldar. El cartel decía:
+   "tu telefono (la APK) guardo cambios a las 25/9/2026 12:33:54 y este
+    aparato no los tiene".
 
-   Ahora, con tus palabras:
-     · el DÍA tiene        1,00 % de presupuesto de riesgo
-     · LONDRES gasta hasta 0,50 % y RESERVA el resto para NY
-     · NUEVA YORK gasta    lo que quede → si Londres no operó, entran LAS DOS
-     · el MISMO PAR vale mientras quede presupuesto (una cerrada no bloquea)
+   MEDIDO por cable: tu baseTs era de las 12:33:33 y la nube guardó a las
+   12:33:54 — 21 SEGUNDOS después, y DEL MISMO APARATO. Subiste dos veces
+   seguidas, la segunda entró, y el teléfono se quedó con la marca de la
+   primera. Desde entonces el freno saltaba siempre.
 
-   Tres ajustes nuevos en tu sección 🤖, todos tuyos:
-     💰 Riesgo del DÍA (%)
-     💰 Lo máximo que gasta LONDRES (%)
-     ☑ Londres RESERVA para Nueva York
+   No perdiste nada (111 claves intactas), pero tus cambios de configuración
+   NO se estaban respaldando y el sistema no te lo decía así de claro.
 
-   Y si te frena, te lo dice con tus números y nombrando que es TU regla.
+   AHORA: cada aparato tiene identificador propio. Un aparato no puede
+   pisarse a sí mismo. Y el freno entre aparatos DISTINTOS sigue entero,
+   que es lo que permite tener a Roberto en la PC sin perder nada.
+
+🗣️ LA VENTANA DEL PUENTE YA NO GRITA POR UN TROPIEZO
+   "NO pude leer EURUSD" y "error" sonaban a rotura cuando el Puente solo
+   iba lento y se recuperaba solo. Ahora dice "va lento (1/3): le doy otra
+   vuelta, no es una caída", y solo a la TERCERA seguida habla claro.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

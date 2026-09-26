@@ -220,6 +220,35 @@ function nubeAparato(){
     return movil ? "el navegador de tu telefono" : "tu PC";
   }catch(_){ return "un aparato"; }
 }
+/* 🆔 v7.234 (26-09) — CADA APARATO CON SU IDENTIFICADOR PROPIO.
+   ═══════════════════════════════════════════════════════════════════════════════════════
+   Rey mandó foto de este cartel en su teléfono:
+     «☁️ tu telefono (la APK) guardo cambios a las 25/9/2026, 12:33:54 y este aparato no los
+      tiene. No he subido nada para no borrarlos.»
+   MEDIDO por cable: su `baseTs` era de las 12:33:33 y la nube guardó a las 12:33:54 — 21
+   segundos después, DEL MISMO APARATO. El 25-09 subió dos veces seguidas (un guardado
+   automático encima de uno suyo), la segunda entró en la nube y el teléfono se quedó
+   apuntando la marca de la primera. Desde entonces se negaba a subir: **sus cambios de
+   configuración llevaban un día sin respaldarse y el sistema no se lo decía así de claro.**
+
+   El freno de la v5.225 hace lo correcto —dos aparatos no pueden pisarse sin que Rey se
+   entere— pero solo comparaba FECHAS, nunca QUIÉN. Y un aparato no puede pisarse a sí mismo.
+
+   POR QUÉ UN ID Y NO EL NOMBRE: los nombres son tres («tu telefono (la APK)», «el navegador
+   de tu telefono», «tu PC»), así que hoy bastarían. Pero el día que Rey tenga DOS teléfonos
+   con la APK, los dos dirían lo mismo y volveríamos al agujero que este freno vino a tapar.
+   El identificador nace una vez, vive en el aparato y no viaja en el respaldo. */
+const NUBE_APARATO_ID_KEY = "crtelite_nube_aparato_id";
+function nubeAparatoId(){
+  try{
+    let id = localStorage.getItem(NUBE_APARATO_ID_KEY);
+    if(!id){
+      id = (Date.now().toString(36) + Math.random().toString(36).slice(2, 10));
+      localStorage.setItem(NUBE_APARATO_ID_KEY, id);
+    }
+    return id;
+  }catch(_){ return ""; }
+}
 async function nubeSubir(callado){
   const code=nubeCode(); if(!code) return {ok:false, err:"sin código"};
   /* 🗝️ v7.05 — EL SITIO DEFINITIVO. Rey pulsó SUBIR una y otra vez y siempre le salian 22
@@ -236,7 +265,7 @@ async function nubeSubir(callado){
       if(k===K.iaconvs){ try{ const cs=JSON.parse(v); (cs||[]).forEach(c=>(c.msgs||[]).forEach(m=>{ if(m.img) delete m.img; })); v=JSON.stringify(cs); }catch(_){}}
       data[k]=v; });
     const ts=nubeTs()||Date.now();
-    const r=await fetch(nubeUrl()+"/backup/set",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({code,ts,data,baseTs:nubeBaseTs(),aparato:nubeAparato()})});
+    const r=await fetch(nubeUrl()+"/backup/set",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({code,ts,data,baseTs:nubeBaseTs(),aparato:nubeAparato(),aparatoId:nubeAparatoId()})});
     if(r.ok){
       const d=await r.json();
       /* 🖥️ v7.228 — OTRO APARATO ESCRIBIO DESPUES: NO SE PISA.
@@ -259,7 +288,7 @@ async function nubeSubir(callado){
           {titulo:"☁️ Hay cambios mas nuevos en la nube", si:"Subir igualmente", peligro:true});
         if(!seguro){ toast("No se subio — lo de "+quien+" sigue intacto ✓"); return {ok:false, err:"cancelado"}; }
         const rf=await fetch(nubeUrl()+"/backup/set",{method:"POST",headers:{"content-type":"application/json"},
-          body:JSON.stringify({code,ts,data,aparato:nubeAparato(),forzar:true})});
+          body:JSON.stringify({code,ts,data,aparato:nubeAparato(),aparatoId:nubeAparatoId(),forzar:true})});
         if(rf.ok){ const df=await rf.json(); if(df && df.ok){ nubeBaseTsPon(df.ts||ts); localStorage.setItem(NUBE_LAST_KEY,String(Date.now())); nubePintarEstado(); return {ok:true, claves:df.claves||0, bytes:df.bytes||0}; } }
         return {ok:false, err:"no se pudo forzar"};
       }
