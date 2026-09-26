@@ -1,32 +1,22 @@
-APEX v7.230 — TRADING DESK
+APEX v7.232 — TRADING DESK
 =========================
 
-⏳ UN AVISO DESCARTADO POR VIEJO YA NO DESAPARECE EN SILENCIO
+🗣️ FIREBASE YA TE CANTA LOS AVISOS (v7.231)
+   Un aviso tenía DOS caminos y solo uno hablaba:
+       por la RONDA del vigía  ->  mostrar() + avisarBurbuja()   <- HABLA
+       por FIREBASE            ->  mostrar()                      <- MUDO
+   Y Firebase es el que te entrega PRIMERO. Así que lo veías al instante
+   y nadie te lo decía hasta que la ronda lo pillaba, 2-5 minutos después.
+   Medido el 26-09: la ronda iba 285 s tarde donde tocaban 120.
+   Eso era tu "las notificaciones están demorando en llegar".
 
-Rey, 24-09: «no me ha llegado ni una sola alarma». Seguida la cadena entera, eslabón por
-eslabón, y medido en su propio teléfono:
-
-· La nube mandó las 12 alarmas del día y les pegó la lectura de Roberto. ✅
-· El vigía de la APK las recibió… y las encontró con MÁS DE 45 MINUTOS, porque Android le
-  tenía preguntando cada 299 segundos en vez de cada 15. Así que las dio por caducadas y las
-  marcó como vistas SIN UNA PALABRA. Su fichero tenía 60 avisos «vistos» que él no vio nunca.
-
-La regla de no enseñar un aviso viejo es BUENA y se queda: una alarma de entrada de hace horas
-apunta a un precio que ya no existe, y meterle ahí es peor que callarse. Lo que no puede seguir
-es el SILENCIO.
-
-Ahora, si hubo señales y le llegaron tarde, se lo dice: UNA notificación con la cuenta y los
-títulos («⏳ 4 aviso(s) te llegaron TARDE»), no una avalancha. Eso le dice algo que él puede
-arreglar: que su teléfono no le está dejando avisar a tiempo.
-
-También arreglado, de paso: un banco suyo comprobaba esto dentro de una ventana fija de 140
-caracteres y se puso rojo solo al crecer el bloque. Ahora cuenta llaves.
-
-⚠️ SIGUE ABIERTO, y no me lo invento: Firebase —el camino que Android no puede dormir— acepta
-los envíos (ok, 1 teléfono, 0 fallidos) y en el registro COMPLETO del teléfono no aparece ni
-una línea. Token correcto y actual, servicio declarado, permiso concedido, app exenta del
-ahorro de batería, WiFi y LTE con ping al 0%. El worker 5.228 trae un interruptor de
-diagnóstico para distinguir si el canal está muerto o si es el tipo de mensaje.
+🔊 EL VOLUMEN, EN EL RASTRO DEL TELÉFONO (v7.232)
+   El 24-09 pasaste una tarde sin oír nada y yo busqué la avería en el
+   código. Al día siguiente: "el error es mío, tenía el volumen bajo".
+   El rastro de la voz apuntaba interruptor, motor y cuerpo — las tres
+   decían que sí mientras tú no oías nada. Le faltaba el dato que lo
+   explicaba. Ahora mide STREAM_MUSIC y el parte de salud se pone ROJO
+   si el volumen está a cero. Si no lo sabe, lo DICE.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
