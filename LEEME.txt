@@ -1,26 +1,50 @@
-APEX v7.235 — TRADING DESK
+APEX v7.236 — TRADING DESK
 =========================
 
-🎙️ EL RASTRO DE LA OREJA EN LA MOTO
-   Me dijiste que con tu manos libres NUEVO Roberto te entiende peor.
-   Fui a mirar tus números y no había NINGUNO: tu teléfono mide en cada
-   grabación el pico real de tu voz, cuánto la amplifica, cuántas
-   muestras quedan saturadas y lo que tarda la ruta del casco... y todo
-   eso moría ahí mismo.
+🎧 ROBERTO TE CONTESTA POR EL CASCO (y por eso ahora te entiende)
 
-   Así que ante un "no me entiende" yo solo podía ADIVINAR. Y adivinar
-   sobre tu voz ya costó dos días el 20-09: el fallo era una línea de
-   ganancia y se resolvió mirando el audio guardado, no el código.
+Tu queja: «Roberto no me entiende muy bien» y «le dije que cerrara el modo moto
+y no me dijo lo de siempre». Eran LA MISMA avería, y el rastro del oído de la
+7.235 la destapó con tus propios números.
 
-   Ahora cada frase deja su rastro (las 12 últimas) en APEX-DIAG-MOTO:
-     · lo que OYÓ          para saber si falla el micro o el modelo
-     · picoReal/saturadas  ¿te está saturando la voz?
-     · ganancia            ¿cuánto hubo que subirte?
-     · suelo/umbral        ¿cuánto ruido había?
-     · manosLibres         CON CUÁL estabas  <- el dato que cambia en tu caso
+El mando SÍ cazaba tu frase (comprobado). Lo que pasaba es que Roberto hablaba
+por el canal de MÚSICA. Con el enlace del casco abierto para oírte, Android no
+puede sacar música por ahí: suspende el enlace, se lleva la voz al altavoz, y
+deja la ruta tirada. Dos daños de un solo fallo:
+  · su respuesta salía por el teléfono en tu bolsillo, no por tu casco;
+  · el enlace había que montarlo otra vez en la frase siguiente — 180 a 454 ms
+    medidos — y en ese hueco se cae el principio de lo que dices.
 
-   Ese último no existía: habría guardado todo menos lo que hay que
-   comparar.
+Tus seis frases, medidas:
+  13:01:00  ¿qué hora hay?        pico 26146   ruta REUTILIZADA
+  13:01:17  clima en Timbó        pico 29877   ruta nueva  400 ms
+  13:01:49  mi ubicación          pico 26568   ruta nueva  180 ms
+  13:02:09  «Serra móðu móti»     pico 32531   ruta nueva  454 ms
+  13:02:26  «Apar en muður mótur» pico 32767   ruta nueva  383 ms
+  13:02:41  Cierra el modo moto   pico 28513   ruta nueva  414 ms
+
+Desde la 7.236, con el modo moto abierto habla por el canal de la LLAMADA: el
+mismo por el que tú le hablas. Fuera del modo moto no cambia nada — cuando te
+lee una alarma con el teléfono en la mano sigue saliendo por el altavoz.
+
+🎚️ Y TU MANOS LIBRES NUEVO ENTRA SATURADO
+
+Las dos frases que salieron en otro idioma son las dos de pico más alto: 32531
+y 32767. El 32767 es el techo exacto de la escala. Las cuatro que entendió
+iban por debajo de 29900.
+
+Lo grave: el diagnóstico decía «saturadas: 0», porque ese contador solo medía
+lo que recortaba MI ganancia — y con tu manos libres nuevo la ganancia no se
+aplica nunca, porque entra fuerte. Un medidor que no puede dar un número malo
+no está midiendo. Ahora se cuentan las muestras que llegan ya pegadas al techo.
+
+CÓMO SE COMPRUEBA QUE FUNCIONÓ, con dato y no con fe: en tu próxima prueba,
+rutaReusada tiene que decir SÍ de la segunda frase en adelante. Si sigue
+diciendo no, este arreglo no era, y te lo digo.
+
+Banco nuevo: test-roberto-contesta-por-el-casco.cjs (12/12). Vigila también que
+el mando de cerrar NO se dispare con «cierra la posición de GBPUSD», que en
+marcha sería peor que no cerrarse.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

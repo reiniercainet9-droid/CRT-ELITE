@@ -13932,6 +13932,9 @@ async function motoCiclo(){
       const r = {
         oyo: dicho || "(nada)",
         picoReal: g.picoReal, saturadas: g.saturadas, ganancia: g.ganancia,
+        /* 27-09 — los dos que faltaban para no volver a adivinar: si entra recortada del
+           micro, y si Roberto contestó por el casco o se fue por música/altavoz. */
+        satEntrada: g.saturadasEntrada, porLlamada: g.hablePorLlamada,
         suelo: g.suelo, umbral: g.umbral, trozos: g.trozos,
         msRuta: g.msRuta, rutaReusada: g.rutaReusada,
         manosLibres: (MOTO && MOTO.quien) || "",
