@@ -1,50 +1,42 @@
-APEX v7.236 — TRADING DESK
+APEX v7.237 — TRADING DESK
 =========================
 
-🎧 ROBERTO TE CONTESTA POR EL CASCO (y por eso ahora te entiende)
+💤 EL FIN DE SEMANA, ROBERTO DEJA DE PENSAR SOBRE EL MERCADO
 
-Tu queja: «Roberto no me entiende muy bien» y «le dije que cerrara el modo moto
-y no me dijo lo de siempre». Eran LA MISMA avería, y el rastro del oído de la
-7.235 la destapó con tus propios números.
+Rey, 27-09: «sigo sin utilizar a Roberto en el chat y menos estos días sin
+mercado abierto y el gasto va a full, queda 9 de 20 dólares».
 
-El mando SÍ cazaba tu frase (comprobado). Lo que pasaba es que Roberto hablaba
-por el canal de MÚSICA. Con el enlace del casco abierto para oírte, Android no
-puede sacar música por ahí: suspende el enlace, se lleva la voz al altavoz, y
-deja la ruta tirada. Dos daños de un solo fallo:
-  · su respuesta salía por el teléfono en tu bolsillo, no por tu casco;
-  · el enlace había que montarlo otra vez en la frase siguiente — 180 a 454 ms
-    medidos — y en ese hueco se cae el principio de lo que dices.
+MEDIDO ese mismo domingo, mercado cerrado y sin una palabra suya en el chat:
+   repaso 0,66 · superrepaso 0,24 · consolidar 0,21 · entorno 0,21
+   · pensadero 0,20 · dossier 0,19      =  $1,72
+$1,72 de un día en el que NO HABÍA MERCADO QUE PENSAR. A ese ritmo su saldo
+se iba en cinco días sin hablarle ni una vez.
 
-Tus seis frases, medidas:
-  13:01:00  ¿qué hora hay?        pico 26146   ruta REUTILIZADA
-  13:01:17  clima en Timbó        pico 29877   ruta nueva  400 ms
-  13:01:49  mi ubicación          pico 26568   ruta nueva  180 ms
-  13:02:09  «Serra móðu móti»     pico 32531   ruta nueva  454 ms
-  13:02:26  «Apar en muður mótur» pico 32767   ruta nueva  383 ms
-  13:02:41  Cierra el modo moto   pico 28513   ruta nueva  414 ms
+Desde ahora, con el mercado cerrado (sábado entero, viernes noche a domingo
+tarde) descansan los NUEVE trabajos que miran el mercado y el sistema:
+pensadero, dossier, entorno, espejo, consolidar-memoria, superrepaso,
+informe de aprendizaje, análisis de avisos y proactivo.
 
-Desde la 7.236, con el modo moto abierto habla por el canal de la LLAMADA: el
-mismo por el que tú le hablas. Fuera del modo moto no cambia nada — cuando te
-lee una alarma con el teléfono en la mano sigue saliendo por el altavoz.
+LO QUE **NO** DESCANSA, y está vigilado por un banco para que no se cuele:
+  · su repaso — es su disciplina, no el mercado; el fin de semana también se vive
+  · el mentor de vida — justo el domingo es cuando más sentido tiene
+  · las lecciones de la semana — se hacen el domingo a propósito
+  · y NADA de lo que vigila que el sistema siga en pie: Puente caído, Ejecutor
+    caído, sus avisos, las killzones, el riesgo de su cuenta, el vigía.
+    Eso no se calla NUNCA.
 
-🎚️ Y TU MANOS LIBRES NUEVO ENTRA SATURADO
+EL INTERRUPTOR ES SUYO Y ESTÁ A LA VISTA: 🧠 Roberto → 💤 El fin de semana.
+Un toque y vuelve a pensar los sábados y domingos. Por dentro son nueve
+interruptores, uno por trabajo, por si algún día quiere uno suelto.
 
-Las dos frases que salieron en otro idioma son las dos de pico más alto: 32531
-y 32767. El 32767 es el techo exacto de la escala. Las cuatro que entendió
-iban por debajo de 29900.
+🔎 Y EL GASTO YA GUARDA CON QUÉ CEREBRO SE PENSÓ
 
-Lo grave: el diagnóstico decía «saturadas: 0», porque ese contador solo medía
-lo que recortaba MI ganancia — y con tu manos libres nuevo la ganancia no se
-aplica nunca, porque entra fuerte. Un medidor que no puede dar un número malo
-no está midiendo. Ahora se cuentan las muestras que llegan ya pegadas al techo.
+El informe guardaba las fichas y el coste, pero no el modelo. Por eso no se
+podía saber cuántas veces Roberto escala al cerebro grande ni lo que cuesta —
+y cualquier recorte era adivinar. Ahora se guarda. Mañana se puede decir con
+el número delante: «el repaso escaló N veces y eso costó X».
 
-CÓMO SE COMPRUEBA QUE FUNCIONÓ, con dato y no con fe: en tu próxima prueba,
-rutaReusada tiene que decir SÍ de la segunda frase en adelante. Si sigue
-diciendo no, este arreglo no era, y te lo digo.
-
-Banco nuevo: test-roberto-contesta-por-el-casco.cjs (12/12). Vigila también que
-el mando de cerrar NO se dispare con «cierra la posición de GBPUSD», que en
-marcha sería peor que no cerrarse.
+Banco nuevo: test-el-finde-no-se-piensa-el-mercado.cjs (9/9).
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

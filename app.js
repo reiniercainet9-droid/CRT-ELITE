@@ -12233,6 +12233,13 @@ function iaInit(){
           <button data-cereb="nunca">🏎️ Nunca</button>
         </div>
         <div class="note" style="text-align:left;margin:0 0 14px" id="iaCerebroNota">Esto es para lo que Roberto hace <b>sin que le preguntes</b>: tus repasos, el dossier del amanecer, la lectura de las alarmas, el veto del Ejecutor.<br><br>🎯 <b>Automático</b>: piensa con el cerebro grande, y <b>se pone a fondo solo cuando hay motivo</b> — tienes una posición abierta, la cuenta es real, el Puente está ciego, o te ha tenido que corregir hoy. Y si al mirar los datos ve que la cosa no es de despachar, <b>él pide otra vuelta</b>.<br>💸 <b>Ahorro</b>: cerebro barato para lo rutinario y el grande <b>solo</b> cuando hay motivo. Es donde el cerebro caro se gana el dinero.<br>🧠 <b>Siempre a fondo</b>: lo más caro, casi nunca hace falta.<br>🏎️ <b>Nunca</b>: todo al barato, como antes del 18-09.</div>
+        <!-- 💤 v7.237 — EL DESCANSO DEL FIN DE SEMANA, con su interruptor a la vista.
+             Rey (27-09): «sigo sin utilizar a Roberto en el chat y menos estos dias sin
+             mercado abierto y el gasto va a full». Medido ese domingo: 1,72 dolares de un dia
+             sin mercado que pensar. Su ley: si no lo ve en la seccion, no existe. -->
+        <div class="fl">💤 El fin de semana</div>
+        <button class="btn" id="iaFindeToggle" style="margin-bottom:6px">💤 Descansa el fin de semana: sí</button>
+        <div class="note" style="text-align:left;margin:0 0 14px" id="iaFindeNota">Con el mercado cerrado (sábado, y viernes noche a domingo tarde), Roberto <b>deja de pensar sobre el mercado</b>: el dossier, el pensadero, el entorno, el espejo y el superrepaso descansan.<br><br>Lo que <b>NO</b> descansa: tu repaso, el mentor de vida, las lecciones de la semana, y <b>nada</b> de lo que vigila que el sistema siga en pie — eso no se calla nunca.<br><br>Medido el domingo 27-09: un día sin mercado y sin hablarle costaba <b>$1,72</b>.</div>
         <div class="fl">🛡️ Roberto vigilante</div>
         <button class="btn" id="iaVigilaToggle" style="margin-bottom:6px">🛡️ Vigilante: activado</button>
         <button class="btn" id="iaHistRob" style="margin-bottom:6px">🗒️ Historial de Roberto (qué ha cambiado)</button>
@@ -12467,6 +12474,30 @@ function iaInit(){
       vp.onclick=()=>iaHablar("Hola Rey, soy Roberto, tu mentor de trading. Estoy listo para ayudarte a pasar tus fondeos y escalar tu capital.", -1); }
   }
   /* 🧠 v7.177 — EL CEREBRO DE LO QUE ROBERTO HACE SOLO, con su interruptor a la vista */
+  /* 💤 v7.237 — el descanso del fin de semana. Un solo toque enciende o apaga los nueve
+     trabajos que miran el mercado; el detalle por trabajo vive en `cfg:finde` de la nube. */
+  { const bF=$("#iaFindeToggle");
+    const pintaF=(descansa)=>{ if(!bF) return;
+      bF.textContent = descansa ? "💤 Descansa el fin de semana: sí" : "🔆 Descansa el fin de semana: no";
+      bF.classList.toggle("on", !!descansa); };
+    const cargarF=async()=>{
+      try{ const r=await traerConTiempo(nubeUrl()+"/finde",{cache:"no-store"},9000);
+        const d=await r.json(); pintaF(!(d&&d.cfg&&d.cfg.apagado));
+      }catch(_){ pintaF(true); } };
+    if(bF) bF.onclick=async()=>{
+      const ahora = bF.classList.contains("on");
+      pintaF(!ahora);                       /* su toque se ve al instante */
+      try{
+        const r=await traerConTiempo(nubeUrl()+"/finde",{method:"POST",headers:{"content-type":"application/json"},
+              body:JSON.stringify({apagado: ahora})},9000);
+        const d=await r.json();
+        if(d&&d.ok) toast(ahora ? "🔆 Seguirá pensando también el fin de semana (gasta más)"
+                                 : "💤 El fin de semana descansa — te ahorra sobre $1 al día");
+        else { toast("No pude guardarlo — vuelve a tocarlo"); cargarF(); }
+      }catch(_){ toast("No pude guardarlo: revisa tu internet"); cargarF(); }
+    };
+    cargarF();
+  }
   { const pinta=(modo)=>{
       [...document.querySelectorAll("#iaCerebroSeg [data-cereb], #iaCerebroSeg2 [data-cereb]")]
         .forEach(b=>b.classList.toggle("on", b.dataset.cereb===modo));
