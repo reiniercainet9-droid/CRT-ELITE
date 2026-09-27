@@ -13803,7 +13803,10 @@ async function motoArrancar(){
       + "No grabo del micrófono del teléfono a escondidas: en marcha solo te daría viento y ropa.");
     return;
   }
-  MOTO = { on:true, parar:false, vueltas:0 };
+  /* 🎙️ v7.235 — se guarda CON QUÉ manos libres, porque es el dato que cambia la calidad.
+     Rey estrenó uno mejor y Roberto empezó a entenderle peor: sin saber cuál llevaba puesto
+     no hay forma de comparar una sesión con otra ([[apex-el-oido-va-y-viene]]). */
+  MOTO = { on:true, parar:false, vueltas:0, calladoDesde:0, quien:String((quien && quien.manosLibres) || "") };
   motoUI();
   try{ toast("🏍️ Modo moto con «"+quien.manosLibres+"»"); }catch(_){}
   await motoDecir("Modo moto. Te escucho, Rey.");
@@ -13907,6 +13910,40 @@ async function motoCiclo(){
         body: JSON.stringify({ audio:g.wav, idioma:"es" }) });
       const j = await q.json();
       dicho = String((j && j.texto) || "").trim();
+    }catch(_){}
+    /* 🎙️ v7.235 (26-09) — EL RASTRO DE LA OREJA, QUE NO GUARDABA NADIE.
+       ═══════════════════════════════════════════════════════════════════════════════════
+       Rey, con un manos libres NUEVO y mejor: «Roberto no me entiende muy bien».
+       Y yo no tenía NADA que mirar. Su teléfono mide en CADA grabación el pico real, la
+       ganancia que le aplicó, cuántas muestras quedaron saturadas y lo que tardó la ruta…
+       y todo eso moría en la respuesta del plugin. Así que la única forma de ayudarle era
+       adivinar — y adivinar sobre su voz ya nos costó DOS DÍAS el 20-09, cuando el fallo
+       era una línea de ganancia y se resolvió mirando el audio guardado, no el código
+       ([[apex-auditar-es-ejecutar]], [[apex-declarar-no-es-dar]]).
+       Aquí se guarda lo que hace falta para diagnosticar sin conjeturas:
+         · picoReal y saturadas → ¿le está saturando la voz? (eso hace oír una palabra por otra)
+         · ganancia             → ¿cuánto hubo que subirle? un manos libres bueno pide menos
+         · suelo y umbral       → ¿cuánto ruido había? (en la moto es mucho)
+         · lo que la oreja OYÓ  → sin esto no se puede saber si falla el micro o el modelo
+       Son datos de Rey en la nube de Rey. Y va en un `try` que no puede tocar el ciclo:
+       si esto fallara, el modo moto sigue igual — un diagnóstico jamás puede romper lo
+       que viene a diagnosticar. */
+    try{
+      const r = {
+        oyo: dicho || "(nada)",
+        picoReal: g.picoReal, saturadas: g.saturadas, ganancia: g.ganancia,
+        suelo: g.suelo, umbral: g.umbral, trozos: g.trozos,
+        msRuta: g.msRuta, rutaReusada: g.rutaReusada,
+        manosLibres: (MOTO && MOTO.quien) || "",
+        vuelta: MOTO.vueltas, cuando: new Date().toISOString(),
+      };
+      let hist = [];
+      try{ hist = JSON.parse(localStorage.getItem("crtelite_diagmoto")||"[]"); }catch(_){}
+      hist.unshift(r); hist = hist.slice(0, 12);      /* las 12 últimas: suficiente y ligero */
+      localStorage.setItem("crtelite_diagmoto", JSON.stringify(hist));
+      fetch(nubeUrl()+"/backup/set",{method:"POST",headers:{"content-type":"application/json"},
+        body: JSON.stringify({ code:"APEX-DIAG-MOTO", ts:Date.now(), forzar:true,
+                               data:{ crtelite_diagmoto: JSON.stringify(hist) } })}).catch(()=>{});
     }catch(_){}
     if(!dicho){ await motoDecir("No conseguí entenderte. Repítemelo."); continue; }
     if(MOTO.parar) break;

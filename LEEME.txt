@@ -1,27 +1,26 @@
-APEX v7.234 — TRADING DESK
+APEX v7.235 — TRADING DESK
 =========================
 
-☁️ EL CARTEL DEL CONFLICTO DE NUBE — ARREGLADO
-   Tu teléfono llevaba desde el 25-09 sin poder respaldar. El cartel decía:
-   "tu telefono (la APK) guardo cambios a las 25/9/2026 12:33:54 y este
-    aparato no los tiene".
+🎙️ EL RASTRO DE LA OREJA EN LA MOTO
+   Me dijiste que con tu manos libres NUEVO Roberto te entiende peor.
+   Fui a mirar tus números y no había NINGUNO: tu teléfono mide en cada
+   grabación el pico real de tu voz, cuánto la amplifica, cuántas
+   muestras quedan saturadas y lo que tarda la ruta del casco... y todo
+   eso moría ahí mismo.
 
-   MEDIDO por cable: tu baseTs era de las 12:33:33 y la nube guardó a las
-   12:33:54 — 21 SEGUNDOS después, y DEL MISMO APARATO. Subiste dos veces
-   seguidas, la segunda entró, y el teléfono se quedó con la marca de la
-   primera. Desde entonces el freno saltaba siempre.
+   Así que ante un "no me entiende" yo solo podía ADIVINAR. Y adivinar
+   sobre tu voz ya costó dos días el 20-09: el fallo era una línea de
+   ganancia y se resolvió mirando el audio guardado, no el código.
 
-   No perdiste nada (111 claves intactas), pero tus cambios de configuración
-   NO se estaban respaldando y el sistema no te lo decía así de claro.
+   Ahora cada frase deja su rastro (las 12 últimas) en APEX-DIAG-MOTO:
+     · lo que OYÓ          para saber si falla el micro o el modelo
+     · picoReal/saturadas  ¿te está saturando la voz?
+     · ganancia            ¿cuánto hubo que subirte?
+     · suelo/umbral        ¿cuánto ruido había?
+     · manosLibres         CON CUÁL estabas  <- el dato que cambia en tu caso
 
-   AHORA: cada aparato tiene identificador propio. Un aparato no puede
-   pisarse a sí mismo. Y el freno entre aparatos DISTINTOS sigue entero,
-   que es lo que permite tener a Roberto en la PC sin perder nada.
-
-🗣️ LA VENTANA DEL PUENTE YA NO GRITA POR UN TROPIEZO
-   "NO pude leer EURUSD" y "error" sonaban a rotura cuando el Puente solo
-   iba lento y se recuperaba solo. Ahora dice "va lento (1/3): le doy otra
-   vuelta, no es una caída", y solo a la TERCERA seguida habla claro.
+   Ese último no existía: habría guardado todo menos lo que hay que
+   comparar.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
