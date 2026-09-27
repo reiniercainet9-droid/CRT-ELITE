@@ -12482,7 +12482,10 @@ function iaInit(){
       bF.classList.toggle("on", !!descansa); };
     const cargarF=async()=>{
       try{ const r=await traerConTiempo(nubeUrl()+"/finde",{cache:"no-store"},9000);
-        const d=await r.json(); pintaF(!(d&&d.cfg&&d.cfg.apagado));
+        /* 27-09: se pinta lo que el worker DICE que pasa, no lo que yo deduzca de su
+           configuracion. Deducirlo aqui hizo que el boton dijera «descansa: si» con el
+           worker sin descansar. */
+        const d=await r.json(); pintaF(!!(d&&d.descansando));
       }catch(_){ pintaF(true); } };
     if(bF) bF.onclick=async()=>{
       const ahora = bF.classList.contains("on");

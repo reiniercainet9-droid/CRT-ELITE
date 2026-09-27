@@ -1,42 +1,31 @@
-APEX v7.237 — TRADING DESK
+APEX v7.238 — TRADING DESK
 =========================
 
-💤 EL FIN DE SEMANA, ROBERTO DEJA DE PENSAR SOBRE EL MERCADO
+🗣️ EL BOTÓN DEL FIN DE SEMANA DECÍA LO CONTRARIO DE LO QUE PASABA
 
-Rey, 27-09: «sigo sin utilizar a Roberto en el chat y menos estos días sin
-mercado abierto y el gasto va a full, queda 9 de 20 dólares».
+Al instalar la 7.237 y mirar el interruptor nuevo EJECUTÁNDOLO en el
+teléfono, decía:
 
-MEDIDO ese mismo domingo, mercado cerrado y sin una palabra suya en el chat:
-   repaso 0,66 · superrepaso 0,24 · consolidar 0,21 · entorno 0,21
-   · pensadero 0,20 · dossier 0,19      =  $1,72
-$1,72 de un día en el que NO HABÍA MERCADO QUE PENSAR. A ese ritmo su saldo
-se iba en cinco días sin hablarle ni una vez.
+      💤 Descansa el fin de semana: sí
 
-Desde ahora, con el mercado cerrado (sábado entero, viernes noche a domingo
-tarde) descansan los NUEVE trabajos que miran el mercado y el sistema:
-pensadero, dossier, entorno, espejo, consolidar-memoria, superrepaso,
-informe de aprendizaje, análisis de avisos y proactivo.
+...con el worker 5.237 ya configurado para NO descansar. Mentía.
 
-LO QUE **NO** DESCANSA, y está vigilado por un banco para que no se cuele:
-  · su repaso — es su disciplina, no el mercado; el fin de semana también se vive
-  · el mentor de vida — justo el domingo es cuando más sentido tiene
-  · las lecciones de la semana — se hacen el domingo a propósito
-  · y NADA de lo que vigila que el sistema siga en pie: Puente caído, Ejecutor
-    caído, sus avisos, las killzones, el riesgo de su cuenta, el vigía.
-    Eso no se calla NUNCA.
+POR QUÉ: la app DEDUCÍA el estado mirando la configuración de la nube en
+vez de preguntarlo. Con la configuración vacía (que es lo normal ahora que
+el descanso está apagado de fábrica) su cuenta daba "sí".
 
-EL INTERRUPTOR ES SUYO Y ESTÁ A LA VISTA: 🧠 Roberto → 💤 El fin de semana.
-Un toque y vuelve a pensar los sábados y domingos. Por dentro son nueve
-interruptores, uno por trabajo, por si algún día quiere uno suelto.
+ARREGLO: la verdad se calcula en UN SOLO SITIO — el worker, con la MISMA
+regla que decide de verdad — y la app solo la pinta. Dos sitios donde vive
+la misma verdad se desincronizan en silencio, y eso es exactamente lo que
+pasó aquí.
 
-🔎 Y EL GASTO YA GUARDA CON QUÉ CEREBRO SE PENSÓ
+El banco ahora falla si la app vuelve a deducirlo por su cuenta.
 
-El informe guardaba las fichas y el coste, pero no el modelo. Por eso no se
-podía saber cuántas veces Roberto escala al cerebro grande ni lo que cuesta —
-y cualquier recorte era adivinar. Ahora se guarda. Mañana se puede decir con
-el número delante: «el repaso escaló N veces y eso costó X».
+⚠️ NO CAMBIA NADA DE LO QUE HACE EL SISTEMA: Roberto ya NO descansaba los
+fines de semana (eso lo decide la huella, sin interruptor). Lo único que
+estaba mal era el cartel.
 
-Banco nuevo: test-el-finde-no-se-piensa-el-mercado.cjs (9/9).
+Banco: test-el-finde-no-se-piensa-el-mercado.cjs (11/11).
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
