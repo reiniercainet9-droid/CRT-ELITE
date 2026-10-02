@@ -1,31 +1,45 @@
-APEX v7.238 — TRADING DESK
+APEX v7.239 — TRADING DESK
 =========================
 
-🗣️ EL BOTÓN DEL FIN DE SEMANA DECÍA LO CONTRARIO DE LO QUE PASABA
+⏰ TUS AVISOS DEL SISTEMA, POR FIN A LA VISTA
 
-Al instalar la 7.237 y mirar el interruptor nuevo EJECUTÁNDOLO en el
-teléfono, decía:
+Recibías seis avisos que no salían en ninguna parte y no podías mover ni apagar.
+Ahora están en ⏰ Avisos, en una sección ⚙️ Del sistema, cada uno con su hora y su
+interruptor:
 
-      💤 Descansa el fin de semana: sí
+  🌅 Repaso de la mañana      · vive en tu teléfono
+  🌆 Repaso de la tarde       · vive en tu teléfono
+  🤖 Cierre del día           · vive en la nube (llega sin la PC)
+  🤖 Cierre de semana         · vive en la nube
+  🎬 Práctica con Replay      · vive en la nube
+  💡 Revisión del sistema     · vive en la nube
 
-...con el worker 5.237 ya configurado para NO descansar. Mentía.
+No tienen papelera a propósito: la hora y el interruptor son tuyos, el aviso no.
+Así no te quitas el cierre de semana creyendo que apagas un recordatorio.
 
-POR QUÉ: la app DEDUCÍA el estado mirando la configuración de la nube en
-vez de preguntarlo. Con la configuración vacía (que es lo normal ahora que
-el descanso está apagado de fábrica) su cuenta daba "sí".
 
-ARREGLO: la verdad se calcula en UN SOLO SITIO — el worker, con la MISMA
-regla que decide de verdad — y la app solo la pinta. Dos sitios donde vive
-la misma verdad se desincronizan en silencio, y eso es exactamente lo que
-pasó aquí.
+🔗 EL LOTE SALE DE LA CUENTA QUE TIENES ABIERTA
 
-El banco ahora falla si la app vuelve a deducirlo por su cuenta.
+Tus cuentas ya eran tuyas y completas, pero nada las ataba a la cuenta de MT5. Con
+tres registradas, el lote salía del riesgo general para todas — un examen de 6k y una
+fondeada recibían el mismo cálculo.
 
-⚠️ NO CAMBIA NADA DE LO QUE HACE EL SISTEMA: Roberto ya NO descansaba los
-fines de semana (eso lo decide la huella, sin interruptor). Lo único que
-estaba mal era el cartel.
+Cada ficha lleva ahora su Nº de cuenta en MT5. Apex mira cuál tienes abierta, busca su
+ficha, y de ahí salen el lote y la pared. El aviso te dice de qué cuenta habla:
 
-Banco: test-el-finde-no-se-piensa-el-mercado.cjs (11/11).
+  📁 FundedNext 6k · Fondeada · pared 6%
+
+Y si la cuenta abierta no tiene ficha, te lo dice en vez de callarse.
+
+  👉 LO QUE TE TOCA: en 🏦 Cuentas, abre cada ficha y ponle su número de MT5
+     (lo ves arriba en MetaTrader, junto al servidor). Una vez por cuenta.
+
+Desde entonces, estrenar empresa es: conectarla en MT5 y rellenar su ficha. Nada más.
+
+
+🧪 Y UN DETALLE: tus cuentas demo ya no pueden dispararte el aviso de «cuenta en
+peligro». Suben sus datos para que el lote salga bien, pero no hay nada que proteger
+en una demo.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

@@ -7135,12 +7135,166 @@ function viewAvisos(){
     <div id="avBody"></div>`;
   return v;
 }
+
+/* ══════════════════════════════════════════════════════════════════════════════════════
+   ⏰ LOS AVISOS DEL SISTEMA — v7.239 (02-10)
+   ══════════════════════════════════════════════════════════════════════════════════════
+   Rey, con dos notificaciones delante: «estos dos avisos no están en los avisos programados,
+   ¿de dónde vienen esos avisos?».
+
+   Venían de dos sitios que él no podía ver, y eran SEIS en total:
+     · 🌅 Repaso de la mañana y 🌆 Repaso de la tarde → viven en SU TELÉFONO (crtelite_repaso_v1),
+       puestos en el reloj de Android por el vigía. `repasoGuardar()` existía desde el 16-09 y
+       no la llamaba nadie: no había pantalla.
+     · 🤖 Cierre del día, 🤖 Cierre de semana, 🎬 Práctica con Replay y 💡 Revisión del sistema
+       → viven en la NUBE (cfg:proactivo). Había ruta para leerlos, pero la de escribir pedía
+       token y la app no tiene, así que tampoco había pantalla.
+
+   Seis avisos que recibía cada semana sin poder moverlos ni apagarlos. Su ley es justo la
+   contraria: si no lo ve en la sección, no existe ([[apex-reglas-en-manos-de-rey]]).
+   Se pintan aparte de los suyos y SIN papelera: no son suyos para borrarlos, son del sistema
+   — pero la hora y el interruptor sí son de él.
+   ══════════════════════════════════════════════════════════════════════════════════════ */
+let PROA_CACHE = null;
+
+async function proaLeer(){
+  if(PROA_CACHE) return PROA_CACHE;
+  try{
+    const r = await fetch(IA.url.replace(/\/+$/,"")+"/proactivo");
+    const j = await r.json();
+    if(j && j.cfg) PROA_CACHE = j.cfg;
+  }catch(_){}
+  return PROA_CACHE;
+}
+
+async function proaGuardar(clave, cambio){
+  const c = await proaLeer(); if(!c) { toast("Sin conexión: no pude guardarlo"); return false; }
+  c[clave] = Object.assign({}, c[clave]||{}, cambio||{});
+  try{
+    const r = await fetch(IA.url.replace(/\/+$/,"")+"/proactivo/set",{ method:"POST",
+      headers:{"content-type":"application/json"}, body: JSON.stringify({ [clave]: c[clave] }) });
+    const j = await r.json();
+    if(j && j.cfg) PROA_CACHE = j.cfg;
+    return !!(j && j.ok && j.tocadas);
+  }catch(_){ toast("Sin conexión: no pude guardarlo"); return false; }
+}
+
+/* la lista unificada: de dónde sale cada uno, a qué hora y si está encendido */
+async function avisosDelSistema(){
+  const out = [];
+  const rc = repasoCfg();
+  out.push({ id:"repaso0", fuente:"repaso", campo:"manana", on:!!rc.on, hora:rc.manana,
+             tit:"🌅 Repaso de la mañana", dias:"todos los días",
+             msg:"Roberto te dice qué te toca hoy y qué arrastras sin hacer.",
+             donde:"en tu teléfono (reloj de Android)" });
+  out.push({ id:"repaso1", fuente:"repaso", campo:"tarde", on:!!rc.on, hora:rc.tarde,
+             tit:"🌆 Repaso de la tarde", dias:"todos los días",
+             msg:"Roberto te dice qué hiciste, qué no, y qué cerrar hoy.",
+             donde:"en tu teléfono (reloj de Android)" });
+  const c = await proaLeer();
+  if(c){
+    const F = [
+      ["evalDia",   "🤖 Cierre del día",        "Evaluamos juntos tu entrada de hoy — o el día, si no operaste."],
+      ["evalSemana","🤖 Cierre de semana",      "Sacamos los números de tu semana y la evaluamos juntos."],
+      ["backtest",  "🎬 Práctica con Replay",   "El gimnasio del trader: Roberto dirige la práctica."],
+      ["mejoras",   "💡 Revisión del sistema",  "Roberto repasa el sistema y te propone qué mejorar."],
+    ];
+    for(const [k,t,m] of F){
+      const v = c[k]||{};
+      out.push({ id:k, fuente:"proa", on:v.on!==false, hora:v.hora||"--:--", tit:t, msg:m,
+                 dias: v.dias ? diasLabel(v.dias) : "cada semana", donde:"en la nube (sin tu PC)" });
+    }
+  }
+  return out;
+}
+
+async function sistemaToggle(id){
+  const L = await avisosDelSistema(); const a = L.find(x=>x.id===id); if(!a) return;
+  if(a.fuente==="repaso"){
+    /* los dos repasos comparten UN interruptor: es el mismo trabajo de Roberto a dos horas */
+    repasoGuardar({ on: !a.on });
+    try{ await repasoAlReloj(); }catch(_){}
+    toast(!a.on ? "Repasos encendidos" : "Repasos apagados");
+  } else {
+    const ok = await proaGuardar(id, { on: !a.on });
+    if(ok) toast(!a.on ? "Encendido" : "Apagado");
+  }
+  renderAvisos();
+}
+
+async function sistemaHora(id){
+  const L = await avisosDelSistema(); const a = L.find(x=>x.id===id); if(!a) return;
+  const h = await pedirHora(a.tit, a.hora);
+  if(!h || h===a.hora) return;
+  if(a.fuente==="repaso"){
+    repasoGuardar({ [a.campo]: h });
+    try{ await repasoAlReloj(); }catch(_){}
+  } else {
+    if(!(await proaGuardar(id, { hora: h }))) return;
+  }
+  toast(a.tit + " → " + h);
+  renderAvisos();
+}
+
+/* una ventana propia, nunca prompt(): confirm/alert/prompt congelan Apex en Android
+   ([[apex-nada-bloquea-el-hilo]]) */
+function pedirHora(titulo, actual){
+  return new Promise((res)=>{
+    const ov=el("div","menu-ov show"); ov.style.zIndex=99999;
+    ov.innerHTML=`<div class="menu-sheet" style="max-width:340px">
+      <div class="menu-h"><div class="t">${esc(titulo)}</div><button class="x" data-x>✕</button></div>
+      <div style="padding:14px 16px 18px">
+        <div class="desc" style="margin-bottom:10px">¿A qué hora quieres que te llegue?</div>
+        <input type="time" id="phHora" value="${esc(actual||"")}" style="width:100%;font-size:22px;padding:10px;text-align:center">
+        <button class="btn" id="phOk" style="width:100%;margin-top:14px">Guardar</button>
+      </div></div>`;
+    document.body.appendChild(ov);
+    const fin=(v)=>{ try{ov.remove();}catch(_){} res(v); };
+    ov.onclick=(e)=>{ if(e.target===ov) fin(null); };
+    ov.querySelector("[data-x]").onclick=()=>fin(null);
+    ov.querySelector("#phOk").onclick=()=>fin((ov.querySelector("#phHora").value||"").trim()||null);
+  });
+}
+
+async function pintarAvisosDelSistema(){
+  const caja=$("#avSistema"); if(!caja) return;
+  const L = await avisosDelSistema();
+  if(!L.length){ caja.innerHTML=""; return; }
+  caja.innerHTML =
+    `<div class="card" style="margin-top:14px">
+       <div class="h2" style="margin:0 0 4px">⚙️ Del sistema</div>
+       <div class="desc" style="margin:0 0 10px;font-size:12px">Estos no los creaste tú: los pone Apex. Puedes cambiarles la hora y apagarlos, pero no borrarlos.</div>
+     </div>` +
+    L.map(a=>`
+    <div class="card av ${a.on?"":"av-off"}">
+      <div class="av-top">
+        <div class="av-hora" data-hora="${a.id}" style="text-decoration:underline dotted">${esc(a.hora)}</div>
+        <div class="av-tit">${esc(a.tit)}</div>
+        <button class="av-sw ${a.on?"on":""}" data-stog="${a.id}" aria-label="Activar/desactivar"><span></span></button>
+      </div>
+      <div class="av-msg">${esc(a.msg)}</div>
+      <div class="av-foot">
+        <span class="av-tag">${esc(a.dias)}</span>
+        <span class="av-tag">${esc(a.donde)}</span>
+        <span class="av-actions"><button class="btn av-btn" data-hora2="${a.id}">🕐 Cambiar la hora</button></span>
+      </div>
+    </div>`).join("");
+  caja.querySelectorAll("[data-stog]").forEach(b=>b.onclick=(e)=>{ e.stopPropagation(); sistemaToggle(b.dataset.stog); });
+  caja.querySelectorAll("[data-hora]").forEach(b=>b.onclick=(e)=>{ e.stopPropagation(); sistemaHora(b.dataset.hora); });
+  caja.querySelectorAll("[data-hora2]").forEach(b=>b.onclick=(e)=>{ e.stopPropagation(); sistemaHora(b.dataset.hora2); });
+}
 function renderAvisos(){
   const nb=$("#avNuevo"); if(nb) nb.onclick=()=>avisoModal(null);
   const body=$("#avBody"); if(!body) return;
+  /* 🧱 v7.239 — la caja de los del sistema se crea SIEMPRE, y antes de cualquier salida.
+     Si se quedara dentro del camino largo, Rey sin avisos propios seguiría sin poder ver
+     los seis del sistema — que es justo el caso en el que más falta le hacen. */
+  let cajaSis=$("#avSistema");
+  if(!cajaSis){ cajaSis=el("div",""); cajaSis.id="avSistema"; body.parentNode.insertBefore(cajaSis, body.nextSibling); }
+  pintarAvisosDelSistema();
   if(!REMINDERS.length){
-    body.innerHTML=`<div class="card"><div class="empty"><div class="t">Sin avisos</div>
-      <div class="s">Toca ＋ Nuevo para crear tu primer recordatorio (o pídeselo a Roberto).</div></div></div>`;
+    body.innerHTML=`<div class="card"><div class="empty"><div class="t">Sin avisos tuyos</div>
+      <div class="s">Toca ＋ Nuevo para crear tu primer recordatorio (o pídeselo a Roberto). Abajo tienes los que pone Apex.</div></div></div>`;
     return;
   }
   const ord=REMINDERS.slice().sort((a,b)=>String(a.hora).localeCompare(String(b.hora)));
@@ -10770,7 +10924,10 @@ function guardianRiesgo(){
 /* 🛡️ GUARDIÁN PROACTIVO — resumen compacto del PELIGRO de cada cuenta REAL (no demo),
    para sincronizar a la nube y que te avise (app cerrada) al acercarte al límite. */
 function riesgoResumen(){
-  const cuentas=(Array.isArray(CUENTAS)?CUENTAS:[]).filter(c=>c.fase!=="Cerrada" && !/Demo/i.test(c.fase||""));
+  /* 🧪 v7.239 — las DEMO tambien suben. Para el AVISO de peligro no cuentan (no hay nada que
+     perder), pero para el LOTE si: si Rey esta practicando en demo, el lote que le canto tiene
+     que salir de esa demo, no del aire. El filtro de peligro se hace abajo, por `peor`. */
+  const cuentas=(Array.isArray(CUENTAS)?CUENTAS:[]).filter(c=>c.fase!=="Cerrada");
   const hoy=hoyISO();
   const nivel=(usado,limite)=>{ if(!(limite>0)) return 0; const fl=(limite-usado)/limite; if(fl<=0) return 3; if(fl<=0.3) return 2; if(fl<=0.5) return 1; return 0; };
   const out=[];
@@ -10785,8 +10942,26 @@ function riesgoResumen(){
     const usadoTot=st.progresoPct<0?Math.abs(st.progresoPct):0;
     const margenDia=ddDaily>0?Math.max(0,ddDaily-usadoDia):null;
     const margenTot=ddMax>0?Math.max(0,ddMax-usadoTot):null;
-    const peor=Math.max(ddDaily>0?nivel(usadoDia,ddDaily):0, ddMax>0?nivel(usadoTot,ddMax):0);
-    out.push({ alias:(c.alias||c.firma||"Cuenta"), peor, mDia:margenDia!=null?+r1(margenDia):null, mTot:margenTot!=null?+r1(margenTot):null });
+    /* 🧪 v7.239 — UNA DEMO NUNCA ESTA EN PELIGRO, PORQUE NO HAY NADA QUE PROTEGER.
+       Al dejar subir tambien las demo (para que el lote salga de la cuenta que Rey tiene
+       abierta de verdad), su `peor` habria disparado el aviso 🔔 Cuenta en peligro de una
+       cuenta de practica. El worker filtra por `peor`, pero `peor` no sabe que es una demo:
+       se lo decimos aqui. Sus datos siguen viajando enteros — lo unico que no viaja es la
+       alarma ([[apex-nada-que-rey-tenga-que-recordar]], [[apex-nube-solo-lo-que-importa]]). */
+    const esDemo = /demo/i.test(c.fase||"") || /demo/i.test(c.alias||"");
+    const peor = esDemo ? 0 : Math.max(ddDaily>0?nivel(usadoDia,ddDaily):0, ddMax>0?nivel(usadoTot,ddMax):0);
+    /* 🔗 v7.239 — LA FICHA VIAJA CON SU NUMERO DE MT5 Y SU RIESGO.
+       Hasta hoy esto solo subia el MARGEN que le queda a cada cuenta, que sirve para el aviso
+       de "cuenta en peligro" y para nada mas. Pero el Puente, al cantarle el lote, necesita
+       saber de QUE cuenta son el riesgo y la pared — y con tres cuentas registradas no tenia
+       forma de saberlo: usaba el riesgo general del Ejecutor para todas.
+       Con el numero de MT5 aqui dentro, el Puente mira que cuenta tiene Rey abierta y coge
+       SU riesgo y SU pared. Cambiar de empresa deja de pasar por mi
+       ([[apex-la-pared-tiene-que-ser-de-esta-cuenta]], [[apex-rey-es-el-principal]]). */
+    out.push({ alias:(c.alias||c.firma||"Cuenta"), peor,
+      mDia:margenDia!=null?+r1(margenDia):null, mTot:margenTot!=null?+r1(margenTot):null,
+      mt5:String(c.mt5||"").replace(/\D/g,""), riesgoPct, fase:String(c.fase||""),
+      capital:+c.capital||null, ddMaxPct:ddMax||null, ddDailyPct:ddDaily||null });
   });
   return out;
 }
@@ -10997,6 +11172,18 @@ function cuentaModal(id){
       <div><div class="fl">Capital ($)</div><input class="inp" id="ac_capital" inputmode="decimal" placeholder="100000" value="${val("capital")}"></div>
       <div><div class="fl">Riesgo por trade (%)</div><input class="inp" id="ac_riesgo" inputmode="decimal" placeholder="0.5" value="${val("riesgoPct","0.5")}"></div>
     </div>
+    <!-- 🔗 v7.239 (02-10) — EL NUMERO DE MT5 ES LO QUE ATA ESTA FICHA A LA CUENTA DE VERDAD.
+         Rey: "esos datos no pueden ser configurables para cuando cambie de cuentas? hoy es
+         FundedNext, manana puede ser otra; entonces dependeria de que tu los cambies".
+         Tenia razon en el fondo: la ficha ya era suya y completa, pero NADA la ataba a la
+         cuenta abierta en MT5. Sin esto, con tres cuentas registradas el sistema no sabe en
+         cual esta operando, y el lote sale del riesgo general en vez del de ESTA cuenta.
+         Con el numero puesto, estrenar empresa es: conectarla en MT5 y rellenar su ficha.
+         ([[apex-la-pared-tiene-que-ser-de-esta-cuenta]], [[apex-candado-sin-fichero]]) -->
+    <div class="fld"><div class="fl">Nº de cuenta en MT5 — con esto Apex sabe que esta cuenta es la que tienes abierta</div>
+      <input class="inp" id="ac_mt5" inputmode="numeric" placeholder="61587406" value="${val("mt5")}">
+      <div class="desc" style="font-size:11px;margin-top:4px">Lo ves arriba del todo en MetaTrader 5, junto al nombre del servidor. Si lo dejas vacío, esta cuenta no se usará para calcular tu lote.</div>
+    </div>
     <div class="fl" style="color:var(--gold);margin-top:6px">Reglas de la firma</div>
     <div class="g2">
       <div><div class="fl">Drawdown máx (%)</div><input class="inp" id="ac_ddmax" inputmode="decimal" placeholder="10" value="${val("ddMaxPct")}"></div>
@@ -11039,13 +11226,24 @@ function cuentaModal(id){
   const dt=$("#ac_ddtipo"); if(dt) dt.addEventListener("change",()=>{ dt.dataset.tocado="1"; });
   const bf=$("#ac_iaFill"); if(bf) bf.onclick=rellenarReglasIA;
 }
+/* 🔗 v7.239 — ¿CUAL DE SUS CUENTAS ES LA QUE TIENE ABIERTA EN MT5?
+   El Puente lee cada 5 min la cuenta y el balance que Rey tiene abiertos en MT5 y los sube
+   a la nube. Aqui se busca la FICHA que lleva ese numero: de ella salen su riesgo, su pared
+   y su fase. Si no hay ninguna con ese numero, se dice — no se adivina, porque adivinar una
+   pared es adivinar cuanto puede perder ([[apex-roberto-no-inventa]]). */
+function cuentaAbiertaEnMT5(numero){
+  const n = String(numero || "").replace(/\D/g, "");
+  if (!n) return null;
+  return (CUENTAS || []).find(c => String(c.mt5 || "").replace(/\D/g, "") === n) || null;
+}
+
 function guardarCuentaForm(id){
   const g=(i)=>{ const e=$("#"+i); return e?e.value.trim():""; };
   const alias=g("ac_alias"), firma=g("ac_firma");
   if(!alias && !firma){ toast("Ponle al menos un alias o la firma"); return; }
   const datos={
     alias, firma, fase:g("ac_fase")||"Examen F1",
-    capital:g("ac_capital"), riesgoPct:g("ac_riesgo")||"0.5",
+    capital:g("ac_capital"), riesgoPct:g("ac_riesgo")||"0.5", mt5:g("ac_mt5"),
     ddMaxPct:g("ac_ddmax"), ddTipo:g("ac_ddtipo"), ddDailyPct:g("ac_dddaily"),
     targetPct:g("ac_target"), diasMin:g("ac_diasmin"), precio:g("ac_precio"), splitPct:g("ac_split"),
     balance:g("ac_balance"), retiros:g("ac_retiros"), reinvertido:g("ac_reinv"),
@@ -12718,8 +12916,27 @@ function cerrarIA(){ $("#iaOv").classList.remove("show"); iaVozParar(); }
 /* Renderiza las respuestas de Roberto como markdown VIVO: tablas, encabezados,
    listas, citas, código, negritas, enlaces y emojis. Escapa el HTML primero
    (seguro) y luego aplica el formato. */
+/* 🧹 02-10 — LOS MARCADORES DE SU MEMORIA NO SE LE ENSEÑAN A REY.
+   Rey lo vio en una respuesta: al final le salía un «[[analiza]]» suelto.
+   No es un fallo del modelo nuevo: los recuerdos y las lecciones de Roberto se enlazan entre
+   sí con [[nombre]], igual que una libreta con referencias cruzadas. Esas referencias viajan
+   en el contexto, y cualquier modelo puede IMITAR el patrón y escribir uno de su cosecha.
+   Son notas internas: a Rey le ensucian la respuesta y no le dicen nada
+   ([[apex-nube-solo-lo-que-importa]]).
+   Se limpian al PINTAR y no antes: lo que Roberto escribió se guarda tal cual, por si algún
+   día hace falta saber qué dijo de verdad ([[apex-la-prueba-se-guarda-cuando-pasa]]). */
+function sinMarcadoresDeMemoria(t){
+  try{
+    return String(t==null?"":t)
+      .replace(/^[ \t]*\[\[[^\]\n]{1,60}\]\][ \t]*$/gm, "")   /* uno solo en su línea */
+      .replace(/\s*\[\[([^\]\n]{1,60})\]\]/g, "")              /* y los pegados al texto */
+      .replace(/\n{3,}/g, "\n\n")
+      .trim();
+  }catch(_){ return t; }
+}
+
 function fmtIA(s){
-  const lines = String(s==null?"":s).replace(/\r\n?/g,"\n").split("\n");
+  const lines = sinMarcadoresDeMemoria(s).replace(/\r\n?/g,"\n").split("\n");
   const inline = (t)=> esc(t)
     .replace(/`([^`]+)`/g,'<code>$1</code>')
     .replace(/\*\*(.+?)\*\*/g,'<b>$1</b>')
@@ -18248,6 +18465,46 @@ function iaRefrescarPrefijo(){
 }
 let IA_CEREBRO_PEND = null;
 
+/* 🏷️ 02-10 — LA TARJETA DICE QUÉ CEREBRO VA A CONTESTAR, Y QUÉ SABE HACER.
+   ═══════════════════════════════════════════════════════════════════════════════════════
+   Rey, 02-10, tras independizar a Roberto de Anthropic: «me preguntó ágil o a fondo pero no
+   especifica cuál es, ejemplo R1, Gemini, Claude… eso debería ir en la tarjeta de
+   confirmación». Y después: «ponle a cada modelo lo que hace con emojis, o sea que no
+   ensucie la tarjeta cargada de cosas escritas, lo más simple posible».
+
+   Desde hoy «ágil» y «a fondo» ya NO son siempre el mismo modelo: él puede cambiarlos por
+   tarea. Elegir sin saber cuál es, es elegir a ciegas ([[apex-reglas-en-manos-de-rey]]).
+
+   El worker ya lo sabe (`/cfg/cerebros`), así que se le pregunta UNA vez por sesión y se
+   guarda. Si no contesta, la tarjeta sale como siempre: una tarjeta sin el nombre del
+   modelo sigue sirviendo; una tarjeta que no sale, no ([[apex-nada-bloquea-el-hilo]]).
+
+   Y se cambian las dos líneas de texto largas por DOS líneas con el dato:
+       ⚡ Ágil · gemini-2.5-flash-lite 🤲👁️
+       🧠 A fondo · gemini-2.5-flash 🤲👁️
+   🤲 = puede hacer cosas (mirar su sistema, cerrar, abrir) · 👁️ = ve sus capturas. */
+let IA_CEREBROS_CACHE = null;
+async function iaCerebrosDisponibles(){
+  if(IA_CEREBROS_CACHE) return IA_CEREBROS_CACHE;
+  try{
+    const ctl = (typeof AbortController!=="undefined") ? new AbortController() : null;
+    const tt = ctl ? setTimeout(()=>{ try{ ctl.abort(); }catch(_){} }, 4000) : null;
+    const r = await fetch(iaBase()+"/cfg/cerebros", { signal: ctl?ctl.signal:undefined });
+    if(tt) clearTimeout(tt);
+    const j = await r.json();
+    if(!j || !j.tareas) return null;
+    const bus = (t)=>(j.tareas||[]).find(x=>x.tarea===t) || null;
+    IA_CEREBROS_CACHE = { agil: bus("chat"), fondo: bus("analisis") || bus("chat") };
+    return IA_CEREBROS_CACHE;
+  }catch(_){ return null; }
+}
+/* una línea por modo, con el nombre corto y lo que sabe hacer. Nada más. */
+function iaLineaCerebro(icono, nombre, t){
+  if(!t) return icono+" "+nombre;
+  const m = t.modelo ? String(t.modelo).split("/").pop() : "claude";
+  return icono+" "+nombre+" · "+m+(t.necesitaManos?" 🤲":"")+(t.necesitaVision?"👁️":"");
+}
+
 function iaPintarCerebro(){
   const cont=$("#iaMsgs"); if(!cont) return;
   try{ cont.querySelectorAll(".ia-cerebro").forEach(n=>n.remove()); }catch(_){}
@@ -18260,6 +18517,12 @@ function iaPintarCerebro(){
      paga AL DOBLE: medido el 23-09, $1,70 de los $2,71 que gasto el chat ese dia.
      Aqui se le dice cual esta CALIENTE (contexto ya cargado, casi gratis) y cuanto cuesta el
      otro. La decision sigue siendo suya, entera ([[apex-no-elegir-por-rey]]). */
+  /* las dos líneas del cerebro: si no se pudo preguntar, se queda lo de siempre */
+  let _lineas = "⚡ Ágil — rápido y barato, para lo que ya se sabe.\n🧠 A fondo — piensa de verdad, para análisis y decisiones con dinero detrás.";
+  try{
+    const cc = IA_CEREBROS_CACHE;
+    if(cc) _lineas = iaLineaCerebro("⚡","Ágil",cc.agil) + "\n" + iaLineaCerebro("🧠","A fondo",cc.fondo);
+  }catch(_){}
   let calor="";
   try{
     const c=iaMotorCaliente();
@@ -18275,8 +18538,7 @@ function iaPintarCerebro(){
   }catch(_){}
   card.innerHTML=`<div class="ia-tool-h">🎫 ¿Con qué cerebro te contesto?</div>
       <div class="ia-tool-d">Recomiendo: <b>${esc(caro?"🧠 A fondo":"⚡ Ágil")}</b>${p.sug.porque?("\n"+esc(p.sug.porque)):""}
-\n⚡ Ágil — rápido y barato, para lo que ya se sabe.
-🧠 A fondo — piensa de verdad, para análisis y decisiones con dinero detrás.${esc(calor)}</div>
+\n${esc(_lineas)}${esc(calor)}</div>
       <div class="ia-tool-bar"><button class="btn ia-cb-agil">⚡ Ágil</button><button class="btn gold ia-cb-fondo">🧠 A fondo</button><button class="btn ia-cb-no">✖️ Cancelar</button></div>`;
   cont.appendChild(card);
   try{ const b=caro?card.querySelector(".ia-cb-fondo"):card.querySelector(".ia-cb-agil"); if(b) b.style.outline="2px solid var(--gold)"; }catch(_){}
@@ -18343,6 +18605,7 @@ async function iaCerebroDeEstaPregunta(msgs){
     const tt = ctl ? setTimeout(()=>{ try{ ctl.abort(); }catch(_){} }, 7000) : null;
     let sug=null;
     try{
+      try{ iaCerebrosDisponibles(); }catch(_){}   /* en paralelo: para cuando se pinte la tarjeta ya está */
       const r=await fetch(iaBase()+"/cerebro/sugerir",{method:"POST",headers:{"content-type":"application/json"},
         body:JSON.stringify({texto:q.slice(0,1200)}), signal: ctl?ctl.signal:undefined});
       sug=await r.json().catch(()=>null);
