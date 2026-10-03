@@ -870,6 +870,31 @@ const GUARDIA_DEF = { on:true, hora:"20:00", quitadas:[] };
 function guardiaCfg(){ const c=load(K.guardia, null); return Object.assign({}, GUARDIA_DEF, c||{}); }
 function guardiaGuardar(c){ save(K.guardia, Object.assign({}, guardiaCfg(), c||{})); }
 
+/* 🔁 v7.242 (03-10) — UN AVISO QUE YA ESTÁ AHÍ NO SE VUELVE A ESCRIBIR.
+   ══════════════════════════════════════════════════════════════════════════════════════
+   Rey: «me repite las respuestas». MEDIDO leyendo sus 26 chats desde su teléfono por
+   cable, el guardián le había escrito el MISMO aviso dos veces EN EL MISMO MINUTO:
+       1/10 08:42 ×2 · 2/10 07:01 ×2 · 29/9 11:11 ×2
+       «🛡️ No has registrado ni UNA operación en backtesting»
+   No era el aviso diario —ése es a propósito, una vez al día mientras siga pendiente—:
+   era el mismo texto dos veces seguidas.
+
+   La guardia por firma de `guardiaRobertoHabla` escribe ANTES de empujar, así que dos
+   llamadas seguidas deberían frenarse, y aun así pasaba. En vez de seguir persiguiendo
+   por qué camino se cuela, se comprueba lo único que de verdad importa y es verificable:
+   si ese texto YA está en el chat, no se escribe otra vez. Es lo mismo que ya hace
+   `ofrecerEnChat` con sus ofertas, y cierra el caso venga por donde venga
+   ([[apex-una-casilla-compartida-pierde-avisos]], [[apex-nube-solo-lo-que-importa]]). */
+function _yaEstaEsteAviso(c, texto){
+  try{
+    if(!c || !Array.isArray(c.msgs) || !texto) return false;
+    const t = String(texto).slice(0, 200);
+    /* solo los últimos 12: un aviso viejo del mismo día SÍ puede volver si él lo despachó */
+    return c.msgs.slice(-12).some(m => m && m.role === "assistant"
+      && String(m.content || "").slice(0, 200) === t);
+  }catch(_){ return false; }
+}
+
 /* Cuántos días hace del último trade de un libro (null = nunca hubo ninguno) */
 function guardiaDiasDesde(modo){
   try{
@@ -1074,6 +1099,28 @@ async function repasoPedir(momento, aMano){
     const hecho=load(K.repasohecho,{}) || {};
     const marca=dia+":"+momento;
     if(!aMano && hecho[marca]) return;            /* uno por momento y día */
+    /* 🧠 v7.242 (03-10) — LA MARCA SE PONE ANTES DE PREGUNTAR, NO DESPUÉS.
+       ═════════════════════════════════════════════════════════════════════════════════
+       Rey: «al decirme las respuestas del chat me repite las respuestas dos veces».
+       Y no era la voz: MEDIDO en su teléfono, su chat tenía DOS mensajes seguidos de
+       Roberto —«🌅 Repaso de la mañana · 2026-10-03» dos veces, 1.167 y 1.369 caracteres—
+       sin ninguna pregunta suya entre medias. No es un texto duplicado: son dos repasos
+       de verdad, cada uno con su llamada y su coste.
+
+       LA CARRERA: este guardia miraba `hecho[marca]`… y la marca se escribía DESPUÉS del
+       `await` que pide el repaso, que tarda segundos porque Roberto está pensando. Dos
+       llamadas dentro de esa ventana pasan las dos. Y se llama desde `renderHoy()`, que
+       corre CADA VEZ que Rey entra en 🎯 Hoy — entrar, salir y volver bastaba.
+       ⚠️ Y mi arreglo del botón atrás (v7.239) lo hizo MÁS probable: ahora «atrás»
+       devuelve a Hoy, así que vuelve a pasar por aquí.
+
+       Se cierra por dos sitios: un pestillo en memoria para las llamadas a la vez, y la
+       marca puesta ANTES de preguntar. Si la petición falla, la marca se quita para que
+       pueda reintentarse — fallar no puede dejarle sin repaso en todo el día
+       ([[apex-una-casilla-compartida-pierde-avisos]], [[apex-nada-le-deja-mudo]]). */
+    if(repasoPedir._enVuelo) return;              /* ya hay uno pensando ahora mismo */
+    repasoPedir._enVuelo = true;
+    if(!aMano){ hecho[marca]=Date.now(); save(K.repasohecho,hecho); }
     let d=null;
     try{
       const r=await fetch(nubeUrl()+"/repaso/roberto",{method:"POST",
@@ -1081,7 +1128,13 @@ async function repasoPedir(momento, aMano){
         body:JSON.stringify({ momento, dia, datos:repasoDatos(momento) })});
       d=await r.json();
     }catch(_){ d={ok:false}; }
-    if(!d || !d.ok){ if(aMano) toast("No pude hacer el repaso: "+((d&&d.error)||"sin conexión")); return; }
+    repasoPedir._enVuelo = false;
+    if(!d || !d.ok){
+      /* no salió: se borra la marca para poder reintentarlo luego */
+      if(!aMano){ delete hecho[marca]; save(K.repasohecho,hecho); }
+      if(aMano) toast("No pude hacer el repaso: "+((d&&d.error)||"sin conexión"));
+      return;
+    }
     hecho[marca]=Date.now(); save(K.repasohecho,hecho);
     const tit = momento==="tarde" ? "🌆 Repaso de la tarde" : "🌅 Repaso de la mañana";
     try{
@@ -1273,8 +1326,9 @@ function guardiaRobertoHabla(){
     /* 2) y lo deja ESCRITO en su chat, para que pueda releerlo y contestarle */
     try{
       const c=(typeof iaConvDeTema==="function") ? iaConvDeTema("🛡️ Lo que te estoy exigiendo") : null;
-      if(c){
-        c.msgs.push({role:"assistant",content:"🛡️ **"+x0tit(h)+"**\n\n"+txt+"\n\n_Lo tienes en 🎯 Hoy con el botón para hacerlo. Si no quieres que te lo exija, ahí mismo lo quitas._"});
+      const _aviso = "🛡️ **"+x0tit(h)+"**\n\n"+txt+"\n\n_Lo tienes en 🎯 Hoy con el botón para hacerlo. Si no quieres que te lo exija, ahí mismo lo quitas._";
+      if(c && !_yaEstaEsteAviso(c, _aviso)){
+        c.msgs.push({role:"assistant",content:_aviso});
         iaGuardarConvs();
         const abierta=(typeof iaConvAct==="function") && iaConvAct() && iaConvAct().id===c.id;
         if(abierta) pintarIAChat();
@@ -14406,7 +14460,32 @@ function motoUI(){
   }catch(_){}
 }
 
+/* 🔂 v7.242 (03-10) — LA MISMA RESPUESTA NO SE LEE DOS VECES.
+   ══════════════════════════════════════════════════════════════════════════════════════
+   Rey: «al Roberto decirme las respuestas del chat él me repite las respuestas dos veces»,
+   y al preguntarle lo precisó: lo que se repite es LA VOZ, no el texto.
+
+   COMPROBADO primero en sus 26 chats, leyéndolos de su teléfono: CERO respuestas
+   duplicadas en el texto. Así que el doble estaba en el camino de la voz. Y ahí hay TRES
+   puertas que leen la última respuesta en alto —`iaLoop`, `iaBgResuelto` y `iaMostrarJob`—
+   y solo la última mira si ya estaba (`!ya`). Una respuesta que pasa por dos de ellas se
+   lee dos veces, y pasa: el trabajo en segundo plano y el toque en la notificación son
+   caminos distintos para la MISMA respuesta.
+
+   La guardia va AQUÍ, que es por donde pasan todas, en vez de atar cada puerta: así
+   también cubre la próxima que alguien añada ([[apex-una-casilla-compartida-pierde-avisos]],
+   [[apex-tres-voces-de-roberto]]).
+
+   ⚠️ Y NO le quita el poder volver a escucharlo: solo se bloquea lo que se pide OTRA VEZ
+   dentro de 3 segundos, que es un rebote de dos caminos, nunca él tocando 🔊 Escuchar.
+   Un plazo largo le habría roto el botón, que es peor que el fallo. */
+let _vozYaLeido = "", _vozYaLeidoTs = 0;
 function iaHablar(texto, idx, yaLimpio){
+  try{
+    const _huella = String(texto || "").slice(0, 140);
+    if(_huella && _huella === _vozYaLeido && (Date.now() - _vozYaLeidoTs) < 3000) return;
+    _vozYaLeido = _huella; _vozYaLeidoTs = Date.now();
+  }catch(_){}
   /* 📱 dentro de la APK: la voz del propio Android */
   const PV = vozNativa();
   if(PV){
@@ -18422,7 +18501,7 @@ async function robertoVigila(evento){
   }catch(_){}
 }
 function robertoAlerta(text){
-  try{ const c=iaConvAct(); if(c){ c.msgs.push({role:"assistant",content:"🛡️ "+text}); iaGuardarConvs(); const ov=$("#iaOv"); if(ov && ov.classList.contains("show")) pintarIAChat(); } }catch(_){}
+  try{ const c=iaConvAct(); if(c && !_yaEstaEsteAviso(c, "🛡️ "+text)){ c.msgs.push({role:"assistant",content:"🛡️ "+text}); iaGuardarConvs(); const ov=$("#iaOv"); if(ov && ov.classList.contains("show")) pintarIAChat(); } }catch(_){}
   mostrarBannerRoberto(text);
   try{ if(IA.voz && IA.voz.on) iaHablar(text,-1); }catch(_){}
 }

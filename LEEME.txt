@@ -1,53 +1,41 @@
-APEX v7.241 — TRADING DESK
+APEX v7.242 — TRADING DESK
 =========================
 
-⬅️ EL BOTÓN ATRÁS, DE VERDAD
+🔂 ROBERTO YA NO TE REPITE LAS RESPUESTAS
 
-Antes, al darle atrás para salir de una sección, Apex se cerraba. Ahora:
+Lo que se repetía era LA VOZ, no el texto. Se leyeron tus 26 chats enteros desde
+tu teléfono y no había ni una respuesta duplicada escrita: llegaba una vez y se
+leía dos.
 
-  1. ¿hay una ventana abierta?  → se cierra ESA, y te quedas donde estabas
-  2. ¿estás en una sección?     → vuelves a la anterior, y al final a 🎯 Hoy
-  3. ¿estás en 🎯 Hoy?          → ahí sí sale, como cualquier app
+La causa: TRES caminos distintos leen en alto la última respuesta, y solo uno
+comprobaba si ya estaba. Una respuesta que pasa por dos de ellos se oye dos
+veces — y pasa, porque el trabajo en segundo plano y el toque en la notificación
+son caminos distintos para la misma respuesta.
 
-Lo arreglé primero en el lado web y lo probé mal (desde dentro de la página).
-Tú dijiste que seguía cerrándose y tenías razón: la tecla física de Android no
-pasa por ahí. Ahora Android le PREGUNTA a Apex antes de esconderla.
-
-
-📐 LAS TARJETAS SE PLIEGAN TODAS O NINGUNA
-
-En ⏰ Avisos tenías dos tarjetas sin «▸ ver» entre dieciocho plegadas. Eran las
-de texto más corto, y un listón mío las dejaba fuera por unos píxeles. En una
-lista de cosas iguales eso no parece una excepción: parece algo roto.
-Ahora, si la mayoría se pliega, las rezagadas también.
+La guardia está ahora dentro de la propia voz, así que cubre los tres. Y con un
+plazo corto a propósito: mata el rebote pero NO te quita volver a tocar
+🔊 Escuchar cuando tú quieras.
 
 
-⏰ TUS AVISOS DEL SISTEMA, A LA VISTA
+🧠 EL REPASO SE PIDE UNA SOLA VEZ
 
-Recibías seis avisos que no salían en ninguna parte. Están en ⏰ Avisos, abajo,
-en ⚙️ Del sistema, cada uno con su hora y su interruptor:
+Esta mañana te llegaron DOS repasos distintos seguidos, sin pregunta tuya entre
+medias. No era un texto duplicado: eran dos repasos de verdad, cada uno con su
+llamada pagada.
 
-  🌅 Repaso de la mañana · 🌆 Repaso de la tarde
-  🤖 Cierre del día · 🤖 Cierre de semana
-  🎬 Práctica con Replay · 💡 Revisión del sistema
+La comprobación de «¿ya se hizo hoy?» se marcaba DESPUÉS de pedirlo, y pedirlo
+tarda segundos. Entrar, salir y volver a 🎯 Hoy bastaba para que pasaran los dos.
+Ahora la marca se pone antes, y si falla se deshace para poder reintentarlo.
 
-
-🔗 EL LOTE SALE DE LA CUENTA QUE TIENES ABIERTA
-
-Cada ficha de 🏦 Cuentas lleva ahora su Nº de cuenta en MT5. Apex mira cuál
-tienes abierta, busca su ficha, y de ahí salen el lote y la pared.
-
-  👉 LO QUE TE TOCA: abre cada ficha y ponle su número (lo ves arriba en
-     MetaTrader, junto al servidor). El de tu Pepperstone Demo es 61587406.
-
-Hasta que no lo pongas, el lote sale del riesgo general y no del de esa cuenta.
+  👉 Esto además te ahorra dinero: antes eran dos llamadas al modelo, ahora una.
 
 
-📅 ROBERTO YA NO SE EQUIVOCA DE DÍA
+🛡️ EL GUARDIÁN NO REPITE EL MISMO AVISO
 
-Te dijo «hoy sábado 5 de octubre» siendo sábado 3. El dato lo tenía, pero
-abreviado y rodeado de otras fechas. Ahora le llega entera, con año, y mandando
-sobre cualquier otra que vea.
+Medido en tus chats: el mismo aviso dos veces en el mismo minuto, tres días
+distintos (1/10, 2/10 y 29/9). Ahora, si ese aviso ya está escrito ahí, no se
+escribe otra vez. El recordatorio diario sigue igual: si algo sigue pendiente,
+te lo seguirá diciendo una vez al día.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
