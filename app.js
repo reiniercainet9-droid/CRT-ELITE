@@ -4387,6 +4387,7 @@ function plegarTarjetas(sec, caja, opciones){
       cont.querySelectorAll('.card[data-pleg="no"]').forEach(c=>{ delete c.dataset.pleg; });
     }
     if(largoSec > antes) cont.dataset.plegLargo = String(Math.round(largoSec*100)/100);
+    const rezagadas = [];
     cont.querySelectorAll(".card").forEach(card=>{
       if(card.dataset.pleg) return;                 /* ya tiene su pliegue puesto */
       const tit = card.querySelector(PLEG_TITULOS);
@@ -4421,9 +4422,43 @@ function plegarTarjetas(sec, caja, opciones){
          segunda pasada ya ni las miraba.
          Si aún no mide nada, no se decide nada: se deja para la siguiente pasada. */
       if(hay <= 0) return;
-      /* ⚠️ lo de dos líneas sigue sin plegarse: esconder dos líneas es esconder por esconder */
-      if(hay < alto * o.desde && !localStorage.getItem(plegKey(sec,texto))) { card.dataset.pleg="no"; return; }
+      /* 📐 v7.239 (02-10) — EN UNA LISTA, O SE PLIEGAN TODAS O NINGUNA.
+         ───────────────────────────────────────────────────────────────────────────────
+         Rey, con la foto de sus avisos delante: «los otros están ocultos, le doy a ver y se
+         abren; esos dos que ves no tienen ni ocultar ni ver».
 
+         Y tenía razón. Eran «⚠️ NY almuerzo en 15 min» y «🚫 Sesión cerrada»: los dos avisos
+         con el texto MÁS CORTO de los veinte. El listón de abajo («esconder dos líneas es
+         esconder por esconder») los dejaba fuera por unos pocos píxeles, y en una lista donde
+         las otras dieciocho SÍ se pliegan, dos abiertas no parecen una excepción con criterio:
+         parecen dos tarjetas rotas.
+
+         El listón sigue valiendo para una sección variada, donde hay tarjetas de todo tipo.
+         Lo que no vale es dentro de una LISTA de cosas iguales. Así que la corta ya no se
+         descarta a la primera: se aparta, y al final se mira cómo quedó la sección. Si la
+         mayoría se plegó, estas se pliegan también — la consistencia vale más que ahorrar
+         dos renglones ([[apex-las-secciones-se-pliegan]], [[apex-mostrar-no-puede-apagar-un-filtro]]). */
+      if(hay < alto * o.desde && !localStorage.getItem(plegKey(sec,texto))) {
+        rezagadas.push({ card, cabecera, resto, texto, hay });
+        return;
+      }
+
+      plegarUna(card, cabecera, resto, texto, hay);
+    });
+
+    /* 📐 v7.239: la segunda vuelta — las que se quedaron cortas, si la sección se plegó */
+    const plegadas = cont.querySelectorAll('.card[data-pleg="si"]').length;
+    rezagadas.forEach(r=>{
+      if(plegadas >= 2) plegarUna(r.card, r.cabecera, r.resto, r.texto, r.hay);
+      else r.card.dataset.pleg = "no";   /* sección sin plegar: no se inventa un pliegue */
+    });
+
+    /* ⚠️ `hay` —lo que mide el contenido— VIAJA COMO ARGUMENTO.
+       Al sacar este bloque fuera del bucle me lo dejé dentro, y reventaba con
+       «hay is not defined»… dentro del try/catch de abajo, o sea EN SILENCIO y sin plegar
+       NADA en ninguna sección. Lo cazó el banco EJECUTÁNDOLO; leyendo el código habría
+       pasado por bueno ([[apex-lo-que-corre-solo-falla-callado]], [[apex-auditar-es-ejecutar]]). */
+    function plegarUna(card, cabecera, resto, texto, hay){
       const env = document.createElement("div");
       resto.forEach(x=> env.appendChild(x));        /* se MUEVEN, no se recrean */
       card.appendChild(env);
@@ -4471,7 +4506,7 @@ function plegarTarjetas(sec, caja, opciones){
         pintar();
       });
       pintar();
-    });
+    }
   }catch(e){ console.log("[apex] plegables:", e.message); }
 }
 
@@ -7409,7 +7444,102 @@ const TABS=[
 ];
 let TAB="hoy";
 
+
+/* ══════════════════════════════════════════════════════════════════════════════════════
+   ⬅️ EL BOTÓN ATRÁS — v7.239 (02-10)
+   ══════════════════════════════════════════════════════════════════════════════════════
+   Rey: «cada vez que le pongo para atrás para salir de una sección, la APK se cierra en vez
+   de ir a la sección principal o atrás donde estaba; solo se cierra».
+
+   Y no era un fallo de Android: Apex NO manejaba el botón atrás en absoluto. Solo UNA
+   ventana del informe usaba historial; todo lo demás —cambiar de sección, abrir el menú ☰,
+   abrir una tarjeta, abrir a Roberto— no dejaba rastro ninguno. Para Android, estar en el
+   Diario y estar recién abierto son la misma pantalla: no hay nada que desapilar, así que
+   atrás = salir.
+
+   Se arregla con el historial del propio navegador, SIN plugin nuevo (la APK solo tiene
+   @capacitor/core, android y cli — meter uno obliga a tocar el Android y a arriesgar la
+   compilación [[apex-metodo-sin-retrocesos]]). Cada cambio de sección y cada ventana dejan
+   su huella, y atrás las deshace en orden:
+
+     1. ¿Hay una ventana abierta? → se cierra ESA (la de encima), y nada más.
+     2. ¿Está en una sección que no es 🎯 Hoy? → vuelve a Hoy.
+     3. ¿Está en Hoy? → ahí sí sale, que es lo que Android espera.
+
+   Lo mismo vale en la web: es historial del navegador, no nada de Capacitor.
+   ══════════════════════════════════════════════════════════════════════════════════════ */
+const ATRAS_RAIZ = "hoy";
+let atrasVolver = false;        /* true mientras navegamos POR el botón atrás: no se apila */
+
+/* las ventanas que se cierran con atrás, de la de encima a la de abajo */
+function ventanaDeEncima(){
+  const vistas = [...document.querySelectorAll(".menu-ov, .modal-ov, .ov, [data-ventana]")]
+    .filter(o => o.offsetParent !== null || o.classList.contains("show"));
+  return vistas.length ? vistas[vistas.length - 1] : null;
+}
+
+function cerrarVentanaDeEncima(){
+  const o = ventanaDeEncima();
+  if(!o) return false;
+  /* si la ventana trae su propia manera de cerrarse, se usa la suya: puede tener que
+     guardar algo o devolver un valor ([[apex-la-ventana-va-encima]]) */
+  const x = o.querySelector("[data-x], .menu-h .x, .modal-x, .cerrar");
+  if(x){ try{ x.click(); return true; }catch(_){} }
+  try{ o.classList.remove("show"); }catch(_){}
+  setTimeout(()=>{ try{ if(o.parentNode) o.remove(); }catch(_){} }, 220);
+  return true;
+}
+
+function atrasApilar(id){
+  if(atrasVolver) return;                       /* venimos DEL atrás: no se apila de vuelta */
+  try{ history.pushState({ apexTab:id }, ""); }catch(_){}
+}
+
+/* ⬅️ v7.239b — LO QUE ANDROID PREGUNTA ANTES DE ESCONDER APEX.
+   ══════════════════════════════════════════════════════════════════════════════════════
+   El historial y `popstate` de aquí abajo valen en el navegador, pero la TECLA FÍSICA de
+   Android no pasa por ellos: Capacitor esconde la Activity sin mirar nada. Medido en el
+   teléfono de Rey: Apex se iba al fondo con DIEZ entradas de historial esperando.
+   Así que MainActivity llama a esta función y hace caso de lo que devuelva:
+     true  → Apex ya lo ha deshecho (una ventana o una sección), Android no toca nada
+     false → no había nada que deshacer, que se esconda como cualquier app
+   Es la MISMA decisión que el popstate de abajo, escrita en un solo sitio para que las dos
+   puertas —la del navegador y la de Android— no puedan decir cosas distintas
+   ([[apex-pulsar-no-basta]], [[apex-tres-voces-de-roberto]]). */
+window.apexAtras = function(){
+  try{
+    if(cerrarVentanaDeEncima()) return true;        /* 1) una ventana se come el atrás */
+    if(typeof TAB!=="undefined" && TAB !== ATRAS_RAIZ){
+      atrasVolver = true;
+      try{ irA(ATRAS_RAIZ); } finally { atrasVolver = false; }
+      return true;                                   /* 2) vuelve a 🎯 Hoy */
+    }
+  }catch(_){}
+  return false;                                      /* 3) en Hoy y sin ventanas: que salga */
+};
+
+function atrasArrancar(){
+  try{ history.replaceState({ apexTab: ATRAS_RAIZ, raiz:true }, ""); }catch(_){}
+  window.addEventListener("popstate", (e)=>{
+    /* 1) una ventana abierta se come el atrás, y se repone la huella para no gastarla */
+    if(cerrarVentanaDeEncima()){
+      try{ history.pushState({ apexTab: TAB }, ""); }catch(_){}
+      return;
+    }
+    const st = (e && e.state) || {};
+    /* 2) a la sección que tocaba, o a Hoy si no sabemos de dónde venimos */
+    const destino = st.apexTab || ATRAS_RAIZ;
+    if(destino === TAB && TAB !== ATRAS_RAIZ){
+      atrasVolver = true; try{ irA(ATRAS_RAIZ); } finally { atrasVolver = false; }
+      return;
+    }
+    atrasVolver = true; try{ irA(destino); } finally { atrasVolver = false; }
+    /* 3) si ya estaba en Hoy, no se repone nada: el siguiente atrás cierra Apex,
+       que es justo lo que Android espera desde la pantalla principal */
+  });
+}
 function irA(id){
+  if(id!==TAB) atrasApilar(id);   /* ⬅️ v7.239: deja huella para el botón atrás */
   TAB=id;
   document.querySelectorAll(".view").forEach(v=>v.classList.toggle("on",v.id==="v-"+id));
   document.querySelectorAll("#nav button").forEach(b=>b.classList.toggle("on",b.dataset.t===id));
@@ -16570,6 +16700,21 @@ function iaDondeEstoy(){
 function iaReloj(){
   try{
     const now=new Date();
+    /* 📅 v7.241 (03-10) — LA FECHA, ENTERA Y UNA SOLA VEZ.
+       ───────────────────────────────────────────────────────────────────────────────
+       Rey, esta mañana, con la respuesta de Roberto delante: le dijo «según el calendario
+       real, hoy SÁBADO 5 DE OCTUBRE» — y era sábado 3.
+
+       El dato SÍ estaba: esta misma línea le daba «sábado, 03 oct, 07:27». Pero abreviado,
+       sin año, y rodeado de otras fechas sueltas (las de los eventos del calendario). Entre
+       todas ellas se fue a una que no era. Su frase «según el calendario real» delata de
+       dónde creyó sacarla.
+
+       No se persigue qué token leyó mal: se le pone la fecha ESCRITA ENTERA, con año y con
+       el día en número y en letra, y se le dice que esa manda sobre cualquier otra que vea.
+       Equivocarse de día le desplaza las sesiones, las noticias y su rutina entera
+       ([[apex-roberto-no-inventa]], [[apex-reloj-mercado-vs-reloj-rey]]). */
+    const fechaEntera=new Intl.DateTimeFormat("es",{timeZone:"America/Sao_Paulo",weekday:"long",day:"numeric",month:"long",year:"numeric"}).format(now);
     const brasil=new Intl.DateTimeFormat("es",{timeZone:"America/Sao_Paulo",weekday:"long",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit",hour12:false}).format(now);
     const ny=new Intl.DateTimeFormat("es",{timeZone:"America/New_York",weekday:"long",hour:"2-digit",minute:"2-digit",hour12:false}).format(now);
     const p=new Intl.DateTimeFormat("en-US",{timeZone:"America/New_York",hour:"2-digit",minute:"2-digit",hour12:false,weekday:"short"}).formatToParts(now);
@@ -16590,7 +16735,7 @@ function iaReloj(){
     let extra="";
     if(!finde && t>=690 && t<810) extra=" — ojo: NY Lunch (11:30–1:30 NY), trampas, no operar";
     if(wd==="Fri" && t>=720) extra=" — viernes tras 12 PM NY: solo gestión, nada nuevo";
-    return `[Reloj EN VIVO del teléfono del alumno] Hora Brasil (UTC−3): ${brasil}. Hora Nueva York: ${ny}. Por el reloj, ventana: ${vent}${extra}. Usa esta hora con confianza para responder cualquier duda de horario. La fila 'Killzone' del panel del indicador sigue siendo la fuente de verdad FINAL: si el reloj y el panel se contradicen, manda el panel y dilo en una línea.`;
+    return `[Reloj EN VIVO del teléfono del alumno] ⚠️ HOY ES EXACTAMENTE: ${fechaEntera}. Esta fecha MANDA sobre cualquier otra que veas en el calendario o en tus datos: si algo no cuadra, la buena es ésta, y NUNCA le digas a Rey un día distinto. Hora Brasil (UTC−3): ${brasil}. Hora Nueva York: ${ny}. Por el reloj, ventana: ${vent}${extra}. Usa esta hora con confianza para responder cualquier duda de horario. La fila 'Killzone' del panel del indicador sigue siendo la fuente de verdad FINAL: si el reloj y el panel se contradicen, manda el panel y dilo en una línea.`;
   }catch(e){ return "[Reloj] no disponible en este dispositivo."; }
 }
 
@@ -19909,6 +20054,7 @@ function init(){
   const ba=$("#btnAyuda"); if(ba) ba.onclick=()=>abrirAyuda(TAB);
   const bv=$("#ventEdit"); if(bv) bv.onclick=(e)=>{ e.stopPropagation(); abrirVentanasCfg(); };
   const bm=$("#btnMenu"); if(bm) bm.onclick=abrirMenu;
+  try{ atrasArrancar(); }catch(_){}   /* ⬅️ v7.239: el botón atrás navega, no cierra */
   iaInit();          /* inicializa el puente (IA.url) ANTES de mostrar Noticias, que lo necesita */
   iaResumePend();    /* recupera respuestas de Roberto que terminaron con la app cerrada */
   setTimeout(syncPendientes, 1500);   /* informa a la nube cuántas cosas 🔍 hay pendientes (para el aviso periódico) */

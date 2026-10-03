@@ -1,45 +1,53 @@
-APEX v7.239 — TRADING DESK
+APEX v7.241 — TRADING DESK
 =========================
 
-⏰ TUS AVISOS DEL SISTEMA, POR FIN A LA VISTA
+⬅️ EL BOTÓN ATRÁS, DE VERDAD
 
-Recibías seis avisos que no salían en ninguna parte y no podías mover ni apagar.
-Ahora están en ⏰ Avisos, en una sección ⚙️ Del sistema, cada uno con su hora y su
-interruptor:
+Antes, al darle atrás para salir de una sección, Apex se cerraba. Ahora:
 
-  🌅 Repaso de la mañana      · vive en tu teléfono
-  🌆 Repaso de la tarde       · vive en tu teléfono
-  🤖 Cierre del día           · vive en la nube (llega sin la PC)
-  🤖 Cierre de semana         · vive en la nube
-  🎬 Práctica con Replay      · vive en la nube
-  💡 Revisión del sistema     · vive en la nube
+  1. ¿hay una ventana abierta?  → se cierra ESA, y te quedas donde estabas
+  2. ¿estás en una sección?     → vuelves a la anterior, y al final a 🎯 Hoy
+  3. ¿estás en 🎯 Hoy?          → ahí sí sale, como cualquier app
 
-No tienen papelera a propósito: la hora y el interruptor son tuyos, el aviso no.
-Así no te quitas el cierre de semana creyendo que apagas un recordatorio.
+Lo arreglé primero en el lado web y lo probé mal (desde dentro de la página).
+Tú dijiste que seguía cerrándose y tenías razón: la tecla física de Android no
+pasa por ahí. Ahora Android le PREGUNTA a Apex antes de esconderla.
+
+
+📐 LAS TARJETAS SE PLIEGAN TODAS O NINGUNA
+
+En ⏰ Avisos tenías dos tarjetas sin «▸ ver» entre dieciocho plegadas. Eran las
+de texto más corto, y un listón mío las dejaba fuera por unos píxeles. En una
+lista de cosas iguales eso no parece una excepción: parece algo roto.
+Ahora, si la mayoría se pliega, las rezagadas también.
+
+
+⏰ TUS AVISOS DEL SISTEMA, A LA VISTA
+
+Recibías seis avisos que no salían en ninguna parte. Están en ⏰ Avisos, abajo,
+en ⚙️ Del sistema, cada uno con su hora y su interruptor:
+
+  🌅 Repaso de la mañana · 🌆 Repaso de la tarde
+  🤖 Cierre del día · 🤖 Cierre de semana
+  🎬 Práctica con Replay · 💡 Revisión del sistema
 
 
 🔗 EL LOTE SALE DE LA CUENTA QUE TIENES ABIERTA
 
-Tus cuentas ya eran tuyas y completas, pero nada las ataba a la cuenta de MT5. Con
-tres registradas, el lote salía del riesgo general para todas — un examen de 6k y una
-fondeada recibían el mismo cálculo.
+Cada ficha de 🏦 Cuentas lleva ahora su Nº de cuenta en MT5. Apex mira cuál
+tienes abierta, busca su ficha, y de ahí salen el lote y la pared.
 
-Cada ficha lleva ahora su Nº de cuenta en MT5. Apex mira cuál tienes abierta, busca su
-ficha, y de ahí salen el lote y la pared. El aviso te dice de qué cuenta habla:
+  👉 LO QUE TE TOCA: abre cada ficha y ponle su número (lo ves arriba en
+     MetaTrader, junto al servidor). El de tu Pepperstone Demo es 61587406.
 
-  📁 FundedNext 6k · Fondeada · pared 6%
-
-Y si la cuenta abierta no tiene ficha, te lo dice en vez de callarse.
-
-  👉 LO QUE TE TOCA: en 🏦 Cuentas, abre cada ficha y ponle su número de MT5
-     (lo ves arriba en MetaTrader, junto al servidor). Una vez por cuenta.
-
-Desde entonces, estrenar empresa es: conectarla en MT5 y rellenar su ficha. Nada más.
+Hasta que no lo pongas, el lote sale del riesgo general y no del de esa cuenta.
 
 
-🧪 Y UN DETALLE: tus cuentas demo ya no pueden dispararte el aviso de «cuenta en
-peligro». Suben sus datos para que el lote salga bien, pero no hay nada que proteger
-en una demo.
+📅 ROBERTO YA NO SE EQUIVOCA DE DÍA
+
+Te dijo «hoy sábado 5 de octubre» siendo sábado 3. El dato lo tenía, pero
+abreviado y rodeado de otras fechas. Ahora le llega entera, con año, y mandando
+sobre cualquier otra que vea.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
