@@ -1,41 +1,42 @@
-APEX v7.242 — TRADING DESK
+APEX v7.243 — TRADING DESK
 =========================
 
-🔂 ROBERTO YA NO TE REPITE LAS RESPUESTAS
+QUE TRAE LA 7.243
+=================
 
-Lo que se repetía era LA VOZ, no el texto. Se leyeron tus 26 chats enteros desde
-tu teléfono y no había ni una respuesta duplicada escrita: llegaba una vez y se
-leía dos.
+Una sola cosa, pero te arregla siete sitios.
 
-La causa: TRES caminos distintos leen en alto la última respuesta, y solo uno
-comprobaba si ya estaba. Una respuesta que pasa por dos de ellos se oye dos
-veces — y pasa, porque el trabajo en segundo plano y el toque en la notificación
-son caminos distintos para la misma respuesta.
+ROBERTO YA TE LEE BIEN LAS DURACIONES
+-------------------------------------
+Rey, esta manana, con el aviso del Puente delante:
+  «la hora es solo el aviso, porque esta bien escrito; sino como me
+   lo canto Roberto. Recuerda que los avisos salen pero el me los
+   lee: debe leerlo bien como se debe, porque si no me confunde.»
 
-La guardia está ahora dentro de la propia voz, así que cubre los tres. Y con un
-plazo corto a propósito: mata el rebote pero NO te quita volver a tocar
-🔊 Escuchar cuando tú quieras.
+El texto decia «Estuvo sin ver desde las 21:45 (10 h 40 min)» y tu
+entendiste las diez de la manana. El numero era correcto. Lo que
+fallaba era la VOZ: la tabla que traduce el texto antes de leerlo
+solo miraba la H MAYUSCULA, asi que «10 h 40 min» te lo canto como
+«diez hache, cuarenta minutos» — y pegado a «desde las 21:45» eso
+suena a otra hora de reloj.
 
+Ahora traduce tambien la h minuscula. Comprobado EN TU TELEFONO,
+preguntandole a la Apex que corre en el:
 
-🧠 EL REPASO SE PIDE UNA SOLA VEZ
+  "Estuvo 10 horas y 41 minutos sin ver tu grafico, desde las 21:45."
+  "puesta hace 3 horas, lleva esperando 2 horas, durmio ~7 horas,
+   1 hora 30 minutos."
 
-Esta mañana te llegaron DOS repasos distintos seguidos, sin pregunta tuya entre
-medias. No era un texto duplicado: eran dos repasos de verdad, cada uno con su
-llamada pagada.
+Con sus singulares bien: «1 hora», no «1 horas».
 
-La comprobación de «¿ya se hizo hoy?» se marcaba DESPUÉS de pedirlo, y pedirlo
-tarda segundos. Entrar, salir y volver a 🎯 Hoy bastaba para que pasaran los dos.
-Ahora la marca se pone antes, y si falla se deshace para poder reintentarlo.
-
-  👉 Esto además te ahorra dinero: antes eran dos llamadas al modelo, ahora una.
-
-
-🛡️ EL GUARDIÁN NO REPITE EL MISMO AVISO
-
-Medido en tus chats: el mismo aviso dos veces en el mismo minuto, tres días
-distintos (1/10, 2/10 y 29/9). Ahora, si ese aviso ya está escrito ahí, no se
-escribe otra vez. El recordatorio diario sigue igual: si algo sigue pendiente,
-te lo seguirá diciendo una vez al día.
+POR QUE IMPORTA MAS DE LO QUE PARECE
+------------------------------------
+No era solo ese aviso. En el worker hay SEIS textos mas que te arman
+duraciones con « h » y que Roberto te lee igual de mal:
+  · «puesta hace 3 h»        · «lleva esperando 2 h»
+  · la duracion de una operacion
+  · «Estuvo 1,5 h sin responder»
+  · «parece que durmio ~7 h» · «de las 23:00 a las 6:00 (7 h)»
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

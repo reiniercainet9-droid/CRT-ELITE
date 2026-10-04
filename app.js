@@ -13227,7 +13227,13 @@ const PARA_LA_VOZ = [
   [/(\d+)\s*°\s*C\b/g, "$1 grados"],
   [/(\d+)\s*°(?!\w)/g, "$1 grados"],
   /* las temporalidades, en horas y minutos */
-  [/\b(\d+)\s*H\b/g, "$1 horas"],
+  /* 🗣️ 04-10 — Y LA HACHE MINÚSCULA TAMBIÉN. Rey, con el aviso del Puente delante: «me lo
+     cantó mal, entendí las diez de la mañana». El texto decía «10 h 40 min»: la regla de los
+     minutos SÍ pillaba «min», pero ésta solo miraba la H MAYÚSCULA, así que la voz decía
+     «diez hache, cuarenta minutos» — y pegado a un «desde las 21:45» eso suena a otra hora de
+     reloj. Lo que a él le llega no es el texto, es la voz; un dato bien traído que se dice mal
+     es un dato perdido ([[apex-el-oido-se-moria-de-pie]], [[apex-tres-voces-de-roberto]]). */
+  [/\b(\d+)\s*[hH]\b/g, "$1 horas"],
   [/\b1\s*horas\b/g, "1 hora"],
   [/\b(\d+)\s*[mM]in\b/g, "$1 minutos"],
   [/\b(\d+)\s*[mM]\b(?!\w)/g, "$1 minutos"],
