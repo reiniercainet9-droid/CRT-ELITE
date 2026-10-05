@@ -9745,20 +9745,10 @@ function metricas(list){
 function cortePor(list,fn){
   const g={};
   list.forEach(t=>{ const k=fn(t); if(k==null||k==="") return; (g[k]=g[k]||[]).push(t); });
-  /* 🧯 05-10 — UN GRUPO DE SOLO ABIERTAS NO TIENE ESTADISTICAS, Y NO PUEDE TUMBAR EL CHAT.
-     metricas() descarta las operaciones ABIERTAS y devuelve null si no queda ninguna cerrada.
-     Aqui se hacia m.n sin mirar: con una sola operacion abierta en el Diario (su GBP/USD del
-     05-10, la que no se llego a cerrar) el grupo de ese par — y el de su sesion, y el de su
-     grado — se quedaba vacio, metricas devolvia null y reventaba. Como esto corre dentro de
-     iaContexto(), la excepcion mataba iaEnviar() ENTERO: sus preguntas complejas no llegaban
-     ni a salir del telefono. La hora y el clima seguian bien porque los resuelve el cerebro
-     local y no pasan por aqui — por eso parecia que Roberto "se quedaba pensando".
-     Un grupo sin nada cerrado simplemente no entra en el ranking. [[apex-nada-le-deja-mudo]] */
   return Object.keys(g).map(k=>{
     const m=metricas(g[k]);
-    if(!m) return null;
     return { k, n:m.n, wr:m.wr, exp:m.exp, rNeto:m.rNeto, pf:m.pf, avgW:m.avgW, avgL:m.avgL, dd:m.dd };
-  }).filter(Boolean).sort((a,b)=>b.exp-a.exp);
+  }).sort((a,b)=>b.exp-a.exp);
 }
 
 function fmtPF(pf){ return pf===Infinity ? "∞" : r2(pf); }

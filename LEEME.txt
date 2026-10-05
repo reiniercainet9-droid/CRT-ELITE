@@ -1,42 +1,17 @@
-APEX v7.243 — TRADING DESK
+APEX v7.244 — TRADING DESK
 =========================
 
-QUE TRAE LA 7.243
-=================
+🔇 Una operación ABIERTA en el Diario ya no deja a Roberto sin contestar.
 
-Una sola cosa, pero te arregla siete sitios.
+Con tu GBP/USD abierta, el resumen que Roberto se lleva de tu Diario reventaba al agrupar
+por par, por sesión y por grado: esos grupos se quedaban sin ninguna operación cerrada y el
+cálculo no lo comprobaba. La excepción mataba el envío entero, así que tus preguntas
+complejas NO llegaban a salir del teléfono — se quedaba "pensando" hasta rendirse.
+La hora y el clima seguían bien porque los resuelve el cerebro local y no pasan por ahí.
 
-ROBERTO YA TE LEE BIEN LAS DURACIONES
--------------------------------------
-Rey, esta manana, con el aviso del Puente delante:
-  «la hora es solo el aviso, porque esta bien escrito; sino como me
-   lo canto Roberto. Recuerda que los avisos salen pero el me los
-   lee: debe leerlo bien como se debe, porque si no me confunde.»
+También arregla la sección 📊 Análisis, que se quedaba en blanco por lo mismo.
 
-El texto decia «Estuvo sin ver desde las 21:45 (10 h 40 min)» y tu
-entendiste las diez de la manana. El numero era correcto. Lo que
-fallaba era la VOZ: la tabla que traduce el texto antes de leerlo
-solo miraba la H MAYUSCULA, asi que «10 h 40 min» te lo canto como
-«diez hache, cuarenta minutos» — y pegado a «desde las 21:45» eso
-suena a otra hora de reloj.
-
-Ahora traduce tambien la h minuscula. Comprobado EN TU TELEFONO,
-preguntandole a la Apex que corre en el:
-
-  "Estuvo 10 horas y 41 minutos sin ver tu grafico, desde las 21:45."
-  "puesta hace 3 horas, lleva esperando 2 horas, durmio ~7 horas,
-   1 hora 30 minutos."
-
-Con sus singulares bien: «1 hora», no «1 horas».
-
-POR QUE IMPORTA MAS DE LO QUE PARECE
-------------------------------------
-No era solo ese aviso. En el worker hay SEIS textos mas que te arman
-duraciones con « h » y que Roberto te lee igual de mal:
-  · «puesta hace 3 h»        · «lleva esperando 2 h»
-  · la duracion de una operacion
-  · «Estuvo 1,5 h sin responder»
-  · «parece que durmio ~7 h» · «de las 23:00 a las 6:00 (7 h)»
+Un grupo sin nada cerrado simplemente no entra en el ranking.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
