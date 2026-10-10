@@ -1,51 +1,51 @@
-APEX v7.249 — TRADING DESK
+APEX v7.250 — TRADING DESK
 =========================
 
-🔇 AL DESLIZAR EL AVISO, SE CALLA · Y UN BOTÓN PARA CALLARLO SIN PERDERLO
+🔇 AL DESLIZAR EL AVISO SE CALLA · BOTÓN PARA CALLAR SIN PERDERLO · Y LA PRUEBA YA HABLA
 
-Rey, pediste dos cosas y están las dos. Son distintas a propósito:
-
+── 1) LAS DOS COSAS QUE PEDISTE ────────────────────────────────────────────────────────
   · DESLIZARLO  → se lleva el aviso Y lo calla.
   · 🔇 Callar   → lo calla y el aviso SE QUEDA en tu bandeja para leerlo después.
 
-── POR QUÉ SEGUÍA HABLANDO, QUE NO ERA LO QUE PARECÍA ──────────────────────────────────
-Deslizarlo SÍ hacía algo: frenaba la repetición durante 6 minutos para que la alarma no te
-volviera a sonar. Pero la frase que estaba sonando EN ESE MOMENTO no la paraba nadie.
-Frenar el futuro no es callar el presente — y lo que tú oías era el presente.
+POR QUÉ SEGUÍA HABLANDO: deslizarlo sí hacía algo —frenaba la repetición 6 minutos— pero la
+frase que sonaba EN ESE MOMENTO no la paraba nadie. Frenar el futuro no es callar el
+presente. Y hay DOS motores de voz en la app (uno con Apex abierta, otro con Apex cerrada o
+el cuerpo flotante puesto): callar uno dejaba al otro hablando. Ahora se callan los dos y se
+vacía la cola.
 
-Y había una segunda mitad, que es la que lo hacía difícil de ver: dentro de Apex viven DOS
-motores de voz distintos. Uno habla cuando Apex está abierta y otro cuando está cerrada o
-tienes el cuerpo flotante puesto. Callar uno deja al otro hablando — y para ti eso no es
-haberse callado. Ahora se callan LOS DOS por la misma puerta, y se vacía también la cola:
-si no, se callaba la frase que sonaba y entraba la siguiente detrás.
+PROBADO EN TU TELÉFONO, POR CABLE, con los tiempos delante:
+   20:46:41  HABLANDO (aviso): Prueba de Roberto. Aquí estoy, en tu pan...
+   20:46:43  CALLANDO (deslizó el aviso): habla vigia (aviso), en cola 0
+Estaba hablando, deslicé, y se cortó a los 2,6 segundos.
 
-── EL BOTÓN 🔇 CALLAR ──────────────────────────────────────────────────────────────────
-Sale en TODOS los avisos que hablan, no solo en los que insisten: una sola frase a
-destiempo ya es el problema que describiste.
-Va EL PRIMERO de los botones, porque Android solo enseña tres y ése es el urgente: estás en
-una llamada y el teléfono te está hablando, no es momento de buscar.
-Y está también en la cabecera del grupo, porque con el grupo plegado es lo único que ves.
+El botón 🔇 Callar sale EL PRIMERO (Android solo enseña tres y ése es el urgente si estás en
+una llamada), en TODAS las que hablan, y también en la cabecera del grupo.
 
-Lo que hace: calla la voz y frena esa alarma 6 minutos (si la callaste es porque en ese rato
-no puedes oírla). Lo que NO hace: quitarte el aviso. Se queda entero, con su texto, en la
-bandeja.
+⚠️ TOCAR el aviso sigue SIN callar, como pediste el 16 de septiembre: abre el gráfico
+directamente y Roberto te lo sigue leyendo mientras miras las velas.
 
-── LO QUE NO SE TOCÓ, A PROPÓSITO ──────────────────────────────────────────────────────
-TOCAR el aviso sigue SIN callar. Eso lo pediste tú el 16 de septiembre: «al tocarla que abra
-directamente el gráfico; Roberto sigue hablando, pero yo al tocarla ya estoy en el gráfico».
-La lectura va por la voz mientras miras las velas. Sigue igual.
+── 2) 🩹 Y DE PASO: TU BOTÓN DE PROBAR AVISOS NO HABLABA ───────────────────────────────
+Esto lo encontraste tú diciéndome «salieron pero no habló nada». Y tenías razón, pero no era
+el arreglo de arriba: tu botón «📲 Probar un aviso AHORA» solo hablaba si tenías el CUERPO
+FLOTANTE puesto. Medido en tu teléfono en ese momento: tu voz encendida y el cuerpo apagado.
+Tus avisos DE VERDAD sí te hablaban siempre — eso está comprobado y no cambió. El que estaba
+roto era el probador. Ya habla sin el cuerpo puesto.
 
-── Y TAMBIÉN EN LA WEB ─────────────────────────────────────────────────────────────────
-El mismo arreglo en la web, que es tu respaldo: deslizar calla, y la notificación trae su
-botón de callar. Arreglar solo la APK sería dejarte dos Robertos, uno arreglado y otro no.
+── 3) 📮 Y CALLAR AHORA DEJA RASTRO ────────────────────────────────────────────────────
+Cada vez que algo calla la voz queda apuntado con el motivo («deslizó el aviso», «pulsó el
+botón», «deslizó la cabecera»). Hoy me hizo falta: sin eso no podía saber si deslizar había
+cortado la voz o si la frase había terminado sola. Y a ti te sirve el día que digas «se calló
+solo» o «no se calla».
 
 ── LO QUE TE TOCA A TI ─────────────────────────────────────────────────────────────────
-⚠️ La APK 7.249 está compilada y comprobada por dentro, pero NO está probada en tu moto g54:
-se te desconectó el cable mientras la compilaba. Tu ley es que nada se instala sin probarlo
-por cable, así que NO la instales todavía. Conecta el teléfono y dímelo: la instalo, la
-pruebo y entonces sí.
+Dar un toque al botón 🔇 Callar en el próximo aviso y decirme si se calla y se queda el
+aviso. Es lo único que no pude probar yo: pulsarlo necesita manejar tu bandeja a ciegas y
+preferí no seguir haciéndolo (ver abajo).
 
-La web 7.249 sí está publicada: ésa no necesita cable.
+⚠️ Y revisa tu bandeja: mientras probaba, deslicé a ciegas varias veces para descartar MIS
+avisos de prueba, y en esa zona también tenías notificaciones tuyas (Instagram, Gmail,
+YouTube…). Puede que descartara alguna sin querer. No se borra nada de las apps, solo el
+aviso de la bandeja, pero mírala por si echas algo en falta.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
