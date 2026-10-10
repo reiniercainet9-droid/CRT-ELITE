@@ -72,7 +72,8 @@ Hasta que lo subas: los avisos de margen agrupados y su botón de apagado no hac
 aviso de tu parcial seguirá hablando en R, y tu respuesta del chat seguirá llegando como
 «Roberto te respondió». Apex ya entiende los dos títulos a propósito, para que durante ese
 hueco Roberto no se quede sin gesto ni sin nubecita.
-Y el Ejecutor: hay que reiniciarlo para que coja el v3.15 (con las posiciones cerradas).
+Y el Ejecutor: no hay que reiniciar nada. Lo tienes APAGADO desde el 2 de octubre, así que
+cogerá el v3.15 solo, la próxima vez que lo arranques.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
