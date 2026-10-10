@@ -3,7 +3,7 @@
    Todo el contenido del plan operativo de Rey.
    ============================================================ */
 
-const APP_VERSION = "7.244";
+const APP_VERSION = "7.246";
 
 /* --- CHECKLIST OPERATIVO (4 bloques) --- */
 const CHECKLIST = [
@@ -78,6 +78,31 @@ const VENTANAS = [
 ];
 
 const VENTANAS_DIARIO = ["Pre-NY Kill Zone","NY Apertura","Londres","Fuera de ventana"];
+
+/* 🚪 POR DÓNDE SALIÓ LA OPERACIÓN (v7.245, 09-10)
+   ═══════════════════════════════════════════════════════════════════════════════════════
+   Rey, 09-10: «dice NINGUNA SALIÓ POR TP y eso está mal, TODAS mis ganadoras salieron en TP
+   gestionando los parciales».
+   Hasta hoy el campo `motivo` solo lo escribía el Ejecutor. Con el Ejecutor apagado y Rey
+   registrando a mano, ese campo estaba SIEMPRE vacío → todas sus operaciones caían en
+   «sin dato» y la tarjeta del Diario le decía que ninguna llegó al objetivo.
+   ⚠️ EL TEXTO DE CADA UNA NO ES DECORACIÓN. El clasificador de salidas (app.js, PUERTAS)
+   reconoce la puerta buscando palabras DENTRO de este texto, y revisa en orden: TP, SL,
+   tiempo, BE, parcial, manual. Por eso:
+     · el de TP dice «TP» y el de SL dice «SL»;
+     · el de break-even NO puede decir «TP» ni «stop», o se contaría en otra puerta;
+     · el de tiempo lleva la palabra «tiempo»;
+     · el de a-mano lleva «a mano».
+   Si se cambia un texto aquí, hay que comprobar contra PUERTAS. El banco
+   `test-por-donde-salio-cada-una.cjs` lo vigila ejecutando el clasificador de verdad. */
+const SALIDAS_DIARIO = [
+  { v:"",                                  t:"— no lo sé / no lo digo —" },
+  { v:"🎯 TP — llegó al objetivo",          t:"🎯 TP — llegó al objetivo" },
+  { v:"❌ SL — tocó el stop",               t:"❌ SL — tocó el stop" },
+  { v:"🛡️ Break-even — salí sin perder",   t:"🛡️ Break-even — salí sin perder" },
+  { v:"✋ La cerré a mano por criterio",    t:"✋ La cerré a mano por criterio" },
+  { v:"⏱ Por tiempo — acabó la ventana",   t:"⏱ Por tiempo — acabó la ventana" },
+];
 
 /* --- PARES PARA LA CALCULADORA DE LOTAJE (v3.2) --- */
 const PARES_CALC = ["EUR/USD","GBP/USD","AUD/USD","NZD/USD","USD/JPY","USD/CAD","USD/CHF","EUR/JPY","GBP/JPY","EUR/GBP","Otro"];

@@ -372,6 +372,23 @@ const ROB_AVISOS = [
   /* 💼 sus cuentas en peligro (v7.22): el aviso que la nube manda al abrir cada ventana si
      una cuenta suya va justa de margen. Por título dice de QUÉ cuenta habla y cuánto le
      queda; la regla del mercado decía "para hoy" cuando el aviso solo pedía tenerlo presente. */
+  /* 📦 v7.246 (10-10) — VARIAS CUENTAS EN UN SOLO AVISO.
+     El worker 5.269 dejó de mandar un aviso POR CUENTA (era la ráfaga que Rey oía pisándose)
+     y ahora manda uno con todas. Ese título lleva un número donde antes iba el alias, así
+     que SIN ESTO Roberto leería «aviso de tu cuenta 2 cuentas: va justa de margen».
+     ⚠️ VAN ANTES que las de una sola cuenta A PROPÓSITO: la primera regla que encaja gana, y
+     `/^🔔 .+ en peligro$/` también encaja con «🔔 2 cuentas en peligro»
+     ([[apex-tres-voces-de-roberto]]: el orden de las reglas importa). */
+  { id:"cuentas_peligro", gesto:"vigila", re:/^🔔 \d+ cuentas en peligro$/,
+    lee:(b,t)=>{
+      const n = (String(t||"").match(/^🔔 (\d+) cuentas/) || [])[1] || "varias";
+      return { frase:"Rey, " + n + " de tus cuentas van justas de margen. Tenlo presente antes de cualquier entrada de hoy." };
+    } },
+  { id:"cuentas_limite", gesto:"frena", re:/^🔴 \d+ cuentas AL LÍMITE$/,
+    lee:(b,t)=>{
+      const n = (String(t||"").match(/^🔴 (\d+) cuentas/) || [])[1] || "varias";
+      return { frase:"Rey, tienes " + n + " cuentas al límite. En las marcadas en rojo hoy no se opera. Protégelas." };
+    } },
   { id:"cuenta_peligro", gesto:"vigila", re:/^🔔 .+ en peligro$/,
     lee:(b,t)=>{
       const alias = (String(t||"").match(/^🔔 (.+) en peligro$/) || [])[1] || "tu cuenta";

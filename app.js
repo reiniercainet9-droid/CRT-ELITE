@@ -1347,7 +1347,7 @@ function guardiaDiloEnVozAlta(txt){
     if(!txt) return false;
     if(!(IA && IA.voz && IA.voz.on)) return false;   /* su interruptor manda */
     if(typeof iaHablar!=="function") return false;
-    iaHablar(txt, -1);
+    iaHablar(txt, -1, false, (typeof VOZ_AVISO==="number"?VOZ_AVISO:2));   /* 🎚️ v7.246: es un aviso, no una charla */
     return true;
   }catch(_){ return false; }
 }
@@ -2052,7 +2052,9 @@ async function abrirHiloDia(){
   if(!c.msgs.length) c.msgs.push({role:"assistant",content:"## 📥 Avisos de hoy\n\nTodavía no ha llegado ningún aviso hoy. Cuando llegue uno, tócalo en el teléfono y aterrizas AQUÍ, con el día completo en orden — y si mi voz está encendida (⚙️), te lo leo."});
   iaGuardarConvs(); pintarIAChat();
   /* 🔊 leer el último aviso del día al aterrizar (voz opcional de Roberto) */
-  try{ if(avHoy.length && IA.voz && IA.voz.on){ const u=avHoy[avHoy.length-1]; iaHablar((u.t||"Aviso")+". "+(u.b||""), -1); } }catch(_){}
+  /* 🎚️ v7.246 — el escalón sale de SU TÍTULO: si el aviso es una alarma del indicador,
+     manda como alarma; si no, como aviso. Nunca como charla, que se adelantaría. */
+  try{ if(avHoy.length && IA.voz && IA.voz.on){ const u=avHoy[avHoy.length-1]; iaHablar((u.t||"Aviso")+". "+(u.b||""), -1, false, vozEscalonDe(u.t)); } }catch(_){}
   /* 📈 v7.147 — y el botón para saltar al gráfico, con los pares que salieron hoy */
   try{ tarjetaGrafico(avHoy); }catch(_){}
   try{ const m=$("#iaMsgs"); if(m) m.scrollTop=m.scrollHeight; }catch(_){}
@@ -3672,6 +3674,12 @@ function apexEsperanza(ops){
        (Ejecutor v3.11 en adelante); mientras no lo traiga, esta puerta queda vacía y se
        dice, en vez de fingir un reparto que no se ha medido ([[apex-roberto-no-inventa]]). */
     ["parcial", /parcial/i,                     "✂️ parcial"],
+    /* ✋ v7.245 — LA PUERTA DE CERRARLA A MANO. Antes caía en «otras», que no dice nada.
+       Rey cierra a mano en MT5 muchas veces, y «la cerré yo por criterio» es un dato de
+       diagnóstico igual de bueno que un TP: si su dinero sale sobre todo por aquí, lo que
+       hay que medir es su criterio, no su TP. Va DETRÁS de las demás a propósito: si el
+       texto dice TP o stop, manda eso, no el gesto de cerrarla. */
+    ["manual", /a mano|manual|criterio/i,       "✋ la cerré a mano"],
   ];
   const porSalida = {};
   const anota=(k,val)=>{ (porSalida[k]=porSalida[k]||{n:0,suma:0,etiqueta:(PUERTAS.find(x=>x[0]===k)||[,,k])[2]||k}).n++; porSalida[k].suma+=val; };
@@ -4373,7 +4381,22 @@ function opsDelDiario(){
          cerró, así que si hay tsOut manda él y si no, la fecha del registro */
       const ts = t.tsOut ? +t.tsOut : (t.fecha ? new Date(t.fecha+"T12:00:00").getTime() : 0);
       const r = (t.r!=null && !isNaN(parseFloat(t.r))) ? parseFloat(t.r) : null;
-      return { ts, pl:null, r };
+      /* 🚪 v7.245 (09-10) — EL MOTIVO TAMBIÉN VIAJA DESDE EL DIARIO.
+         ═══════════════════════════════════════════════════════════════════════════════════
+         Rey, 09-10: «dice NINGUNA SALIÓ POR TP y eso está mal, TODAS mis ganadoras salieron
+         en TP gestionando los parciales».
+         Tenía razón, y había DOS agujeros, no uno. El primero: registrando a mano nunca se
+         guardaba por dónde salió. El segundo es éste, y es peor: aunque se guardara, ESTA
+         función lo tiraba. `opsDelEjecutor()`, dos líneas más arriba, sí manda el motivo;
+         ésta mandaba solo {ts, pl, r}. O sea que la tarjeta «por dónde salió cada una» no
+         podía decir otra cosa que «sin dato · 100%», hiciera él lo que hiciera.
+         Un traductor que se deja un campo no da un dato peor: da un dato falso con cara de
+         medido ([[apex-declarar-no-es-dar]]).
+         Van también los tres del parcial, porque el reparto ✂️ los necesita juntos: sin
+         ellos la operación cuenta entera por una sola puerta y vuelve a mentir sobre por
+         dónde sale su dinero de verdad. */
+      return { ts, pl:null, r, motivo:t.motivo||"",
+               parcialHecho:t.parcialHecho===true, parcialPct:t.parcialPct, parcialR:t.parcialR };
     })
     .filter(o=>o.ts && o.r!=null);
 }
@@ -8812,6 +8835,24 @@ function viewDiario(){
 
   <div class="fl">Resultado</div><div class="seg c3" id="sgRes"></div>
 
+  <!-- 🚪 v7.245 (09-10) — POR DÓNDE SALIÓ, Y EL PARCIAL.
+       Rey: «dice ninguna salió por TP y eso está mal, todas mis ganadoras salieron en TP
+       gestionando los parciales». No había dónde decirlo: este campo no existía en el
+       formulario y el único que rellenaba el campo «motivo» era el Ejecutor, que está apagado.
+       (Sin acentos graves en este comentario: va DENTRO de una plantilla de texto y un
+       acento grave aquí la cortaría en seco — ya pasó al escribirlo.)
+       Los dos del parcial van juntos porque uno sin el otro no sirve: para repartir el
+       beneficio entre la puerta ✂️ y la de la salida hacen falta el cuánto y el a-cuánto. -->
+  <div class="fld"><div class="fl">¿Por dónde salió?</div>
+    <select class="inp" id="fSalida">${SALIDAS_DIARIO.map(x=>`<option value="${x.v}">${x.t}</option>`).join("")}</select></div>
+  <div class="note" style="text-align:left;margin:-6px 0 12px">Esto es lo que hace que la tarjeta <b>«por dónde salió cada una»</b> diga la verdad. Si lo dejas en blanco, esa operación cuenta como <i>sin dato</i> y no se puede saber por dónde sale tu dinero.</div>
+
+  <div class="g2">
+    <div><div class="fl">Parcial cerrado (%)</div><input class="inp" id="fParcPct" inputmode="decimal" placeholder="50"></div>
+    <div><div class="fl">…a cuántos R</div><input class="inp" id="fParcR" inputmode="decimal" placeholder="1.5"></div>
+  </div>
+  <div class="note" style="text-align:left;margin:-6px 0 14px">Si cerraste una parte antes, ponlo aquí: qué <b>porcentaje</b> cerraste y a cuántos <b>R</b> lo cerraste. Con eso el reparto cuenta ese trozo en la puerta <b>✂️ parcial</b> y el resto por donde dijiste arriba — que es como operas de verdad. Los dos o ninguno.</div>
+
   <div class="g2">
     <div><div class="fl">R obtenido</div><input class="inp" id="fR" inputmode="decimal" placeholder="2.0"></div>
     <div><div class="fl">Confluencias (nº)</div><input class="inp" id="fNconf" inputmode="numeric" placeholder="5" readonly></div>
@@ -8963,7 +9004,10 @@ function setNuevosSegs(){
 }
 
 function limpiarForm(){
-  ["fEnt","fSl","fTp","fR","fMae","fMfe","fNota","fParOtro","fRRplan"].forEach(i=>{ const e=$("#"+i); if(e) e.value=""; });
+  /* 🚪 v7.245 — fParcPct y fParcR entran aquí: un parcial que se queda pegado del trade
+     anterior se guardaría en el siguiente sin que él lo escriba. */
+  ["fEnt","fSl","fTp","fR","fMae","fMfe","fNota","fParOtro","fRRplan","fParcPct","fParcR"].forEach(i=>{ const e=$("#"+i); if(e) e.value=""; });
+  if($("#fSalida")) $("#fSalida").value="";
   $("#fNconf").value="";
   setConfBtns([]);
   $("#fParOtro").style.display="none";
@@ -9020,8 +9064,25 @@ async function guardarTrade(){
     momento:FORM.momento, disp:($("#fDisp")?.value||FORM.disp), bias:FORM.bias, gtf:FORM.gtf, news:FORM.news,
     rrPlan: ($("#fRRplan")?.value||"").trim()===""?null:parseFloat($("#fRRplan").value),
     plan:FORM.plan, emo:FORM.emo, nota:$("#fNota").value.trim(),
-    cuenta: ($("#fCuenta")?.value||"")
+    cuenta: ($("#fCuenta")?.value||""),
+    /* 🚪 v7.245 — por dónde salió, tal cual lo eligió. Vacío = «sin dato», y eso se dice. */
+    motivo: ($("#fSalida")?.value||"")
   };
+
+  /* ✂️ v7.245 — EL PARCIAL VA COMPLETO O NO VA.
+     El reparto necesita los dos números juntos (cuánto cerró y a cuántos R). Con uno solo
+     no se puede repartir nada, así que en vez de guardar medio dato se le dice qué falta:
+     media medición guardada es una medición que miente más tarde ([[apex-roberto-no-inventa]]). */
+  {
+    const pTxt=($("#fParcPct")?.value||"").trim(), rTxt2=($("#fParcR")?.value||"").trim();
+    if(pTxt!=="" || rTxt2!==""){
+      if(pTxt==="" || rTxt2===""){ toast("El parcial necesita los dos: el % y a cuántos R"); ($("#fParcPct").value===""?$("#fParcPct"):$("#fParcR")).focus(); return; }
+      const pp=parseFloat(pTxt), pr=parseFloat(rTxt2);
+      if(isNaN(pp)||isNaN(pr)){ toast("El parcial tiene que ser en números"); return; }
+      if(!(pp>0 && pp<100)){ toast("El % del parcial va entre 0 y 100 (si cerraste el 100% no es un parcial)"); $("#fParcPct").focus(); return; }
+      datos.parcialHecho=true; datos.parcialPct=pp; datos.parcialR=pr;
+    } else { datos.parcialHecho=false; datos.parcialPct=null; datos.parcialR=null; }
+  }
 
   let nuevoTrade=null;
   if(EDIT_ID){
@@ -9067,6 +9128,22 @@ function editarTrade(id){
   $("#fVentana").value=t.ventana||VENTANAS_DIARIO[0];
   $("#fZona").value=t.zona||"Discount";
   $("#fPoi").value=t.poi||"FVG";
+  /* 🚪 v7.245 — al editar, vuelve a salir lo que dijo. Si el motivo venía del Ejecutor y no
+     es ninguna de las opciones, el `select` se queda en «no lo sé» y GUARDARÍA vacío: eso
+     borraría un dato bueno. Así que si no está en la lista, se añade como opción para que
+     se pueda ver y volver a guardar igual ([[apex-respaldo-primero-y-luego-se-toca]]). */
+  {
+    const s=$("#fSalida");
+    if(s){
+      const m=String(t.motivo||"");
+      if(m && ![...s.options].some(o=>o.value===m)){
+        const o=document.createElement("option"); o.value=m; o.textContent=m+"  (del Ejecutor)"; s.appendChild(o);
+      }
+      s.value=m;
+    }
+    if($("#fParcPct")) $("#fParcPct").value = (t.parcialHecho===true && t.parcialPct!=null) ? t.parcialPct : "";
+    if($("#fParcR"))   $("#fParcR").value   = (t.parcialHecho===true && t.parcialR!=null)   ? t.parcialR   : "";
+  }
   $("#fEnt").value=t.entrada||""; $("#fSl").value=t.sl||""; $("#fTp").value=t.tp||"";
   $("#fR").value=t.r; $("#fMae").value=t.mae==null?"":t.mae; $("#fMfe").value=t.mfe==null?"":t.mfe;
   $("#fNota").value=t.nota||"";
@@ -9159,6 +9236,11 @@ function renderDiario(){
             ${t.mae!=null?" · MAE "+r1(t.mae)+"R":""}${t.mfe!=null?" · MFE "+r1(t.mfe)+"R":""}</div>
           ${t.nota?`<div class="trade-n">${esc(t.nota)}</div>`:""}
           <div class="trade-act">
+            <!-- 🚪 v7.245 — LA PUERTA DE CIERRE, SOLO EN LAS ABIERTAS Y LA PRIMERA DE LA FILA.
+                 Rey: «en Apex solo Roberto puede cerrar las operaciones… no tengo cómo
+                 cerrarlas». Va en dorado y de primera porque cuando hay una operación
+                 abierta ES la acción que quiere, no «ver» ni «exportar». -->
+            ${t.abierta?'<button class="ta gold" data-a="cerrar">🚪 Cerrar</button>':""}
             <button class="ta" data-a="ver">Ver</button>
             <!-- 🔬 v7.160 — el cirujano también en SUS operaciones y su backtesting (Rey, 16-09) -->
             <button class="ta" data-a="forense">🔬 Forense</button>
@@ -9169,7 +9251,8 @@ function renderDiario(){
         d.querySelectorAll(".ta").forEach(btn=>{
           btn.onclick=async(e)=>{ e.stopPropagation();
             const a=btn.dataset.a;
-            if(a==="ver") verTrade(t.id);
+            if(a==="cerrar") cerrarEnApex(t.id);
+            else if(a==="ver") verTrade(t.id);
             else if(a==="forense") miForense(t.id);
             else if(a==="edit") editarTrade(t.id);
             else if(a==="exp") exportarUno(t.id);
@@ -9192,6 +9275,182 @@ function renderDiario(){
      `plegarTarjetas` decide sola: lo que no llega a 1,5 pantallas NO se pliega, así que los
      trades sueltos siguen a la vista y solo se recogen los bloques gordos. */
   try{ plegarTarjetas("diario", $("#v-diario")); }catch(_){}
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════════════════
+   🚪 v7.245 (09-10) — LA PUERTA DE CIERRE EN APEX
+   ══════════════════════════════════════════════════════════════════════════════════════════
+   Rey, 09-10: «en Apex solo Roberto puede cerrar las operaciones, en el sistema dependo de
+   él para que las cierre, no tengo cómo cerrarlas en Apex».
+   Y era literal. Cuando el Puente detecta su entrada en el gráfico, Apex la apunta con
+   `abierta:true` (app.js, `posPendPinta`) — y ahí se quedaba para siempre. El único camino
+   que la cerraba era la sincronización del Ejecutor, que está APAGADO porque Rey opera a
+   mano en MT5 desde el teléfono. Resultado: operaciones abiertas eternas en el Diario, que
+   además no cuentan en ninguna estadística hasta cerrarse.
+   Esto le da la puerta: por dónde salió, el precio, el parcial si lo hubo…
+
+   Y LA CUENTA LA HAGO YO. Rey, el mismo día: «hay que hacer una revisión en esos y que los
+   datos sean bien calculados». Pedirle el R a mano es pedirle que calcule a las once de la
+   noche con el precio moviéndose. Aquí pone PRECIOS —que es lo que ve en MT5— y el R sale
+   solo, con la cuenta a la vista para que la pueda comprobar. El parcial entra en la cuenta
+   como entra de verdad: un trozo al R del parcial y el resto al R de la salida.
+   ⚠️ Si no se puede calcular (falta el SL, o el SL está pegado a la entrada), NO se inventa
+   un número: se le dice y se le deja ponerlo a mano ([[apex-roberto-no-inventa]]). */
+function cerrarEnApex(id){
+  const t=TRADES.find(x=>x.id===id);
+  if(!t){ toast("No encuentro esa operación"); return; }
+  if(!t.abierta){ toast("Esa operación ya está cerrada"); return; }
+
+  const ent=Number(t.entrada), sl=Number(t.sl), tp=Number(t.tp);
+  const esCompra = String(t.dir||"").toLowerCase().indexOf("compra")>=0;
+  const dist = (isFinite(ent)&&isFinite(sl)) ? Math.abs(ent-sl) : NaN;
+  /* (v7.245b: aquí vivía un `dec` que contaba decimales con String(numero). Se fue entero:
+     un número no guarda sus ceros finales y ese contador mentía — String(1.16000) es "1.16".
+     Los precios de Rey se ponen TAL CUAL, sin reformatear.) */
+
+  const opc = SALIDAS_DIARIO.map(x=>'<option value="'+esc(x.v)+'">'+esc(x.t)+'</option>').join("");
+  abrirModal(
+    '<div class="modal-t">🚪 Cerrar '+esc(t.par||"")+' · '+esc(t.dir||"")+'</div>'+
+    '<div class="desc" style="text-align:left;line-height:1.5">'+
+      'Entrada <b>'+esc(String(t.entrada))+'</b>'+
+      (isFinite(sl)?' · SL <b>'+esc(String(t.sl))+'</b>':' · <b>sin SL apuntado</b>')+
+      (isFinite(tp)?' · TP <b>'+esc(String(t.tp))+'</b>':'')+
+      '<br>Pon los precios que ves en MT5. El R lo calculo yo y te enseño la cuenta.'+
+    '</div>'+
+    '<div class="fld" style="margin-top:10px"><div class="fl">¿Por dónde salió?</div>'+
+      '<select class="inp" id="czSalida">'+opc+'</select></div>'+
+    '<div class="g2">'+
+      '<div><div class="fl">Precio de salida</div><input class="inp" id="czPrecio" inputmode="decimal" placeholder="'+(isFinite(tp)?String(tp):"")+'"></div>'+
+      '<div><div class="fl">R (si lo pones tú)</div><input class="inp" id="czR" inputmode="decimal" placeholder="auto"></div>'+
+    '</div>'+
+    '<div class="g2">'+
+      '<div><div class="fl">Parcial cerrado (%)</div><input class="inp" id="czPct" inputmode="decimal" placeholder="50"></div>'+
+      '<div><div class="fl">…a cuántos R</div><input class="inp" id="czPr" inputmode="decimal" placeholder="1.5"></div>'+
+    '</div>'+
+    '<div class="fld"><div class="fl">Nota del cierre (opcional)</div>'+
+      '<textarea class="inp" id="czNota" placeholder="Qué pasó al final…"></textarea></div>'+
+    '<div id="czCuenta" class="note" style="text-align:left;margin-top:4px"></div>',
+    [{t:"Cancelar", fn:cerrarModal},
+     {t:"Cerrar la operación", cls:"gold", fn:()=>czGuardar(id)}]);
+
+  /* al elegir la puerta, el precio se rellena solo con el que corresponde: él ya lo tiene
+     apuntado y volver a teclearlo es una ocasión más de equivocarse */
+  const sSal=$("#czSalida"), iPre=$("#czPrecio");
+  if(sSal) sSal.onchange=()=>{
+    const v=sSal.value;
+    if(iPre && iPre.value.trim()===""){
+      /* 💸 v7.245b (10-10) — EL PRECIO SE PONE TAL CUAL, SIN REDONDEAR. ERA UN FALLO DE DINERO.
+         ═════════════════════════════════════════════════════════════════════════════════════
+         Lo cazó la primera prueba PULSANDO el botón en el navegador — ningún banco de
+         funciones podía verlo ([[apex-pulsar-no-basta]]).
+         `dec` salía de `String(t.entrada)`, y un número NO guarda sus ceros finales:
+             String(1.16000)  →  "1.16"   →  dec = 2
+         Así que al elegir TP se rellenaba `(1.16400).toFixed(2)` = **"1.16"**, que es
+         justo su precio de ENTRADA. Resultado: una operación que llegó al objetivo se
+         guardaba como BREAK-EVEN 0R en vez de +2R.
+         No hay nada que redondear aquí: el precio ya está en su caja y se pone como está.
+         Redondear un dato suyo para que «se vea bonito» es cambiárselo. */
+      if(/\bTP\b/.test(v) && isFinite(tp)) iPre.value=String(tp);
+      else if(/\bSL\b/.test(v) && isFinite(sl)) iPre.value=String(sl);
+      else if(/break.?even/i.test(v) && isFinite(ent)) iPre.value=String(ent);
+    }
+    czPintarCuenta(t, esCompra, dist);
+  };
+  ["czPrecio","czR","czPct","czPr"].forEach(k=>{ const e=$("#"+k); if(e) e.oninput=()=>czPintarCuenta(t, esCompra, dist); });
+  czPintarCuenta(t, esCompra, dist);
+}
+
+/* ── la cuenta del R, a la vista ────────────────────────────────────────────────────────
+   Devuelve {r, explica, problema}. Se usa para PINTAR y para GUARDAR, con lo que lo que ve
+   en pantalla es exactamente lo que se guarda: si fueran dos cuentas distintas, un día
+   dirían cosas distintas y no habría forma de saber cuál creer. */
+function czCalcular(t, esCompra, dist){
+  const pre=parseFloat(($("#czPrecio")?.value||"").trim());
+  const rMano=parseFloat(($("#czR")?.value||"").trim());
+  const pctTxt=($("#czPct")?.value||"").trim(), prTxt=($("#czPr")?.value||"").trim();
+  const pct=parseFloat(pctTxt), pr=parseFloat(prTxt);
+  const hayParcial = pctTxt!=="" || prTxt!=="";
+  if(hayParcial && (pctTxt==="" || prTxt==="")) return { r:null, problema:"El parcial necesita los dos: el % y a cuántos R." };
+  if(hayParcial && (isNaN(pct)||isNaN(pr))) return { r:null, problema:"El parcial tiene que ser en números." };
+  if(hayParcial && !(pct>0 && pct<100)) return { r:null, problema:"El % del parcial va entre 0 y 100: si cerraste el 100% no es un parcial, es el cierre." };
+
+  let rResto=null, deDonde="";
+  if(!isNaN(rMano)){ rResto=rMano; deDonde="el R que pusiste tú"; }
+  else if(!isNaN(pre)){
+    if(!isFinite(dist) || dist<=0) return { r:null, problema:"Sin SL apuntado (o con el SL pegado a la entrada) no puedo calcular el R. Ponlo tú en la casilla del R." };
+    rResto = (esCompra ? (pre-Number(t.entrada)) : (Number(t.entrada)-pre)) / dist;
+    deDonde = "precio de salida contra tu riesgo de "+dist.toFixed(5).replace(/0+$/,"")+" de distancia";
+  }
+  else return { r:null, problema:"Pon el precio de salida, o el R si lo prefieres a mano." };
+
+  /* 🔢 v7.245 — DOS DECIMALES, NO UNO. Con parciales salen numeros como 1,75R, y r1()
+     redondeaba a 1,8R: le cambiaria el dato delante de los ojos y encima la pantalla diria
+     una cosa y el Diario guardaria otra. */
+  const cz2 = (x)=>String(Math.round(x*100)/100);
+  if(!hayParcial) return { r:rResto, explica:"R = "+cz2(rResto)+"R  ("+deDonde+")" };
+  const fr=pct/100;
+  const total = fr*pr + (1-fr)*rResto;
+  return { r:total,
+    explica:"Parcial: "+pct+"% a "+cz2(pr)+"R  →  "+cz2(fr*pr)+"R"+
+            "<br>Resto: "+cz2(100-pct)+"% a "+cz2(rResto)+"R  →  "+cz2((1-fr)*rResto)+"R"+
+            "<br><b>Total = "+cz2(total)+"R</b>  ("+deDonde+")" };
+}
+function czPintarCuenta(t, esCompra, dist){
+  const c=$("#czCuenta"); if(!c) return;
+  const r=czCalcular(t, esCompra, dist);
+  if(r.problema){ c.innerHTML='<span style="opacity:.9">⚠️ '+esc(r.problema)+'</span>'; return; }
+  const col = r.r>0 ? "#5fd38d" : r.r<0 ? "#e87b7b" : "";
+  c.innerHTML='<div style="line-height:1.5">'+r.explica+'</div>'+
+    '<div style="margin-top:4px;font-weight:700'+(col?';color:'+col:'')+'">Se guardará como '+
+    /* 🔢 v7.245b — DOS decimales, los mismos que la cuenta de arriba y los mismos que se
+       guardan. Con r1() un total de 0,75R se anunciaba como «+0.8R» y en el Diario quedaba
+       0,75: la pantalla decía una cosa y el libro otra. Lo cazó la prueba pulsando. */
+    (r.r>0.05?"GANADORA":r.r<-0.05?"PERDEDORA":"BREAK-EVEN")+' '+(r.r>0?"+":"")+(Math.round(r.r*100)/100)+'R</div>';
+}
+async function czGuardar(id){
+  const t=TRADES.find(x=>x.id===id);
+  if(!t){ toast("No encuentro esa operación"); return; }
+  const esCompra = String(t.dir||"").toLowerCase().indexOf("compra")>=0;
+  const ent=Number(t.entrada), sl=Number(t.sl);
+  const dist = (isFinite(ent)&&isFinite(sl)) ? Math.abs(ent-sl) : NaN;
+
+  const motivo=($("#czSalida")?.value||"");
+  if(!motivo){ toast("Dime por dónde salió: sin eso no se puede saber por dónde sale tu dinero"); return; }
+  const c=czCalcular(t, esCompra, dist);
+  if(c.problema){ toast(c.problema); return; }
+
+  const pre=parseFloat(($("#czPrecio")?.value||"").trim());
+  const pctTxt=($("#czPct")?.value||"").trim();
+  const nota=($("#czNota")?.value||"").trim();
+  const R=c.r;
+
+  t.r=Math.round(R*100)/100;   /* lo mismo que enseña la ventana: ni un decimal menos */
+  t.res = R>0.05 ? "Win" : R<-0.05 ? "Loss" : "BE";
+  t.motivo=motivo;
+  if(!isNaN(pre)) t.salida=pre;
+  t.tsOut=Date.now();
+  if(pctTxt!==""){ t.parcialHecho=true; t.parcialPct=parseFloat(pctTxt); t.parcialR=parseFloat(($("#czPr")?.value||"").trim()); }
+  else { t.parcialHecho=false; t.parcialPct=null; t.parcialR=null; }
+  if(nota) t.nota = (t.nota?(t.nota+"\n"):"")+"Cierre: "+nota;
+  /* la marca de abierta se QUITA, no se pone a false: medio sistema pregunta `!t.abierta`
+     y un `false` ahí funciona igual, pero el respaldo (app.js, el export de trades) solo se
+     lleva `abierta` cuando es true — dejarla puesta a false la arrastraría para siempre. */
+  delete t.abierta;
+  save(K.trades,TRADES);
+
+  try{ veredActualizar(t); }catch(_){}
+  cerrarModal();
+  toast("Cerrada: "+(R>0?"+":"")+(Math.round(R*100)/100)+"R ✓");
+  try{ refrescarDiarioCtx(); }catch(_){}
+  try{ renderDiario(); }catch(_){}
+  try{ notifChequearCuentasDD(); }catch(_){}
+  /* 📣 Roberto se entera por el camino de siempre, con el dato dentro: así no tiene que
+     preguntarle nada que él ya apuntó ([[apex-declarar-no-es-dar]]) */
+  try{ robertoVigila("Rey CERRÓ en Apex su "+(t.dir||"")+" de "+(t.par||"")+": "+motivo+
+        ", resultado "+(R>0?"+":"")+r1(R)+"R"+
+        (t.parcialHecho?(" (parcial del "+t.parcialPct+"% a "+r1(t.parcialR)+"R)"):"")+
+        (nota?(". Dijo: "+nota):"")+"."); }catch(_){}
+  try{ if(typeof antiTiltCheck==="function") antiTiltCheck(t); }catch(_){}
 }
 
 /* 🔬 v7.160 — EL FORENSE DE UNA OPERACIÓN SUYA (real o de backtesting).
@@ -9508,9 +9767,13 @@ function bajar(nombre,contenido,tipo){
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
   setTimeout(()=>URL.revokeObjectURL(u),1500);
 }
+/* 🚪 v7.245 — el CSV se lleva también por dónde salió y el parcial. Si no, su respaldo en
+   hoja de cálculo pierde justo el dato que hace falta para saber por dónde sale su dinero,
+   y un respaldo incompleto se descubre el día que se usa ([[apex-nada-en-un-solo-aparato]]). */
 const CSV_CAB=["Modo","Estrategia","Fecha","Dia","Hora","Par","Direccion","Setup","Confluencias","Lista confluencias",
      "Ventana","Zona","POI","Entrada","SL","TP","Resultado","R","MAE","MFE","Siguio plan","Emocion","Nota",
-     "Momento","Disparador","TF gatillo","Bias","Noticias","RR plan"];
+     "Momento","Disparador","TF gatillo","Bias","Noticias","RR plan",
+     "Por donde salio","Precio de salida","Parcial %","Parcial R"];
 const CSV_NOM={c1:"Sweep",c2:"MSS",c3:"Displacement",c4:"Reaccion",c5:"Momentum"};
 const csvQ=s=>'"'+String(s==null?"":s).replace(/"/g,'""')+'"';
 function tradeToRow(t){
@@ -9518,7 +9781,10 @@ function tradeToRow(t){
     (t.confs||[]).map(c=>CSV_NOM[c]||c).join(" / "),t.ventana,t.zona||"",t.poi||"",
     t.entrada||"",t.sl||"",t.tp||"",t.res,t.r,t.mae==null?"":t.mae,t.mfe==null?"":t.mfe,
     t.plan,t.emo,t.nota||"",
-    t.momento||"",t.disp||"",t.gtf||"",t.bias||"",t.news||"",t.rrPlan==null?"":t.rrPlan].map(csvQ).join(",");
+    t.momento||"",t.disp||"",t.gtf||"",t.bias||"",t.news||"",t.rrPlan==null?"":t.rrPlan,
+    t.motivo||"", t.salida==null?"":t.salida,
+    (t.parcialHecho===true&&t.parcialPct!=null)?t.parcialPct:"",
+    (t.parcialHecho===true&&t.parcialR!=null)?t.parcialR:""].map(csvQ).join(",");
 }
 function exportCSV(){
   const list=tradesFiltrados();
@@ -11163,7 +11429,18 @@ function riesgoResumen(){
 function syncRiesgo(){
   try{
     const r=riesgoResumen();
-    if(typeof nubeUrl==="function") fetch(nubeUrl()+"/riesgo",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({cuentas:r})}).catch(()=>{});
+    /* 🔇 v7.246 (10-10) — SU INTERRUPTOR VIAJA CON LAS CUENTAS.
+       ═══════════════════════════════════════════════════════════════════════════════════
+       Rey, 09-10: «en la configuración está el botón para desactivarlas y no funciona».
+       Tenía razón y el motivo era este: 🔔 Cuentas en peligro solo cerraba la puerta de
+       AQUÍ DENTRO (notifChequearCuentasDD), y los avisos que él oye los manda la NUBE con
+       Apex cerrada (checkRiesgo del worker). El worker lee lo que sube esta línea… y su
+       interruptor no subía. Así que apagaba lo único que ya no sonaba y seguía oyendo lo
+       mismo ([[apex-mostrar-no-puede-apagar-un-filtro]]).
+       Va `avisar`, no `!avisar`: en el worker, AUSENTE = ENCENDIDO, para que una app vieja
+       no pueda dejarle sin avisos de riesgo por un campo que no existe. */
+    const cuerpo = { cuentas:r, avisar: !!(typeof NOTIF!=="undefined" && NOTIF && NOTIF.cuentaDD) };
+    if(typeof nubeUrl==="function") fetch(nubeUrl()+"/riesgo",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(cuerpo)}).catch(()=>{});
   }catch(_){}
 }
 /* 🚑 MODO RECUPERACIÓN + 🛑 FRENO DEL DÍA — se calculan de las cuentas REALES y los trades de hoy.
@@ -11654,7 +11931,7 @@ const PUENTE_DOSSIER =
 "👁️ TU VISTA EN VIVO DEL GRÁFICO (PUENTE APEX): Ya tienes OJOS sobre el gráfico real de Rey en TradingView. Cuando su PC está encendida con el 'Puente Apex' corriendo, en CADA mensaje recibes un bloque [👁️ GRÁFICO EN VIVO ...] con el símbolo, timeframe, precio, el dashboard COMPLETO del indicador CRT Elite (killzone, sesgo, estado del día, zona premium/discount, alineación de temporalidades, SMT, secuencia F3…), los niveles clave y las herramientas de posición (Long/Short) que Rey haya puesto con entrada/SL/TP/RR/riesgo. ESO ES REAL Y ACTUAL — úsalo como tu fuente de verdad del gráfico; no inventes ni contradigas esos números. "+
 "Si el bloque dice que la PC NO está conectada (no hay lectura fresca), NO afirmes que ves el gráfico: dile con cariño que encienda la PC y abra el 'Puente Apex' (doble clic en 'Arrancar Puente Apex') para que puedas verlo en vivo. "+
 "Cuando SÍ estés conectado y estén operando juntos, ve CANTÁNDOLE las confluencias que se cumplen según ese bloque (barrido de liquidez, MSS de 15m, zona tocada, Secuencia F3, killzone activa) y recuérdale SIEMPRE esperar la vela de confirmación cerrada, nunca entrar en el toque.\n"+
-"✍️ CAPTURA DE ENTRADAS: cuando en el gráfico en vivo veas una herramienta de posición (Long/Short) que Rey acaba de poner y que NO aparezca en la lista de '[📒 ENTRADAS ABIERTAS ya registradas]', OFRÉCELE registrarla tú con la mano registrar_entrada (rellenas par, dirección, entrada, SL, TP, RR y riesgo leídos del gráfico + setup/ventana/momento/bias/zona según tu análisis), SIEMPRE con tu tarjeta de confirmación. Antes de registrar, valida/rectifica la entrada según sus reglas (¿hubo sweep? ¿zona correcta premium/discount? ¿killzone? ¿a favor del sesgo? ¿RR sano?) y adviértele si algo no cuadra. CIERRE: el gráfico NO te dice cómo cerró de verdad (puede ser BE, ganancia, pérdida o salida antes). Si una entrada que estaba como ABIERTA en el Diario YA NO aparece como posición en el gráfico en vivo, probablemente Rey la cerró: pregúntale a qué PRECIO cerró (o si tocó TP/SL/BE o salió antes) y ciérrala con cerrar_entrada pasando precio_cierre — el sistema calcula el R exacto con su entrada y SL. Nunca inventes el resultado. MAE/MFE: mientras la posición está en el gráfico, el puente calcula solo el MAE (máximo en contra) y MFE (máximo a favor) en R y aparecen en el bloque en vivo junto a la posición; al cerrar, PÁSALOS a cerrar_entrada (mae y mfe) para guardarlos y luego analizar juntos si el SL estuvo bien puesto y si cerraste muy pronto/tarde. Los ÚNICOS datos que SOLO Rey sabe son: (1) si la operación es 💵 REAL o 🎬 BACKTEST/entrenamiento (campo modo de registrar_entrada — pregúntaselo SIEMPRE, es su única confirmación necesaria) y (2) el 'momento' (si entró en confirmación, en el toque o se anticipó). TODO lo demás lo rellenas TÚ del gráfico y el panel — REGLA DE REY (v6.33): CERO datos sueltos; cada operación queda registrada COMPLETA para que todos los análisis del futuro sean confiables (el bloque [📋 DATOS SUELTOS] te avisa si algún trade quedó con huecos — ofrécele completarlos con editar_trade). 📸 CAPTURAS: al registrar y al cerrar una entrada, la app pide sola una foto del gráfico (se guardan con el trade en el Diario); si Rey te dice 'saca captura' o quieres guardar una imagen para analizar, usa capturar_grafico con el par. Detección en CUALQUIER par que tenga abierto, nada fijo.";
+"✍️ CAPTURA DE ENTRADAS: cuando en el gráfico en vivo veas una herramienta de posición (Long/Short) que Rey acaba de poner y que NO aparezca en la lista de '[📒 ENTRADAS ABIERTAS ya registradas]', OFRÉCELE registrarla tú con la mano registrar_entrada (rellenas par, dirección, entrada, SL, TP, RR y riesgo leídos del gráfico + setup/ventana/momento/bias/zona según tu análisis), SIEMPRE con tu tarjeta de confirmación. Antes de registrar, valida/rectifica la entrada según sus reglas (¿hubo sweep? ¿zona correcta premium/discount? ¿killzone? ¿a favor del sesgo? ¿RR sano?) y adviértele si algo no cuadra. CIERRE: el gráfico NO te dice cómo cerró de verdad (puede ser BE, ganancia, pérdida o salida antes). Si una entrada que estaba como ABIERTA en el Diario YA NO aparece como posición en el gráfico en vivo, probablemente Rey la cerró. AQUÍ NO SE PREGUNTA, SE DEDUCE Y SE PROPONE (Rey, 09-10: «al decirle que cierre me pide datos que YA él tiene»): mira dónde quedó el precio respecto a su TP y su SL, mira lo que TÚ mismo le avisaste de esa operación paso a paso, y el MAE/MFE que venías calculando. Con su entrada y su SL ya tienes el riesgo, así que el R sale solo de cualquier precio. Propón UNA frase con tu conclusión y que él diga sí — «lo que vi es que tocó tu TP en X, serían +2R, ¿la cierro así?» — y ciérrala con cerrar_entrada pasando precio_cierre. Solo si de verdad no hay rastro, UNA sola pregunta concreta: a qué precio la cerró. Nunca tres preguntas, nunca pedirle el R ni si fue ganancia o pérdida: eso lo calculas tú. Nunca inventes el resultado. MAE/MFE: mientras la posición está en el gráfico, el puente calcula solo el MAE (máximo en contra) y MFE (máximo a favor) en R y aparecen en el bloque en vivo junto a la posición; al cerrar, PÁSALOS a cerrar_entrada (mae y mfe) para guardarlos y luego analizar juntos si el SL estuvo bien puesto y si cerraste muy pronto/tarde. Los ÚNICOS datos que SOLO Rey sabe son: (1) si la operación es 💵 REAL o 🎬 BACKTEST/entrenamiento (campo modo de registrar_entrada — pregúntaselo SIEMPRE, es su única confirmación necesaria) y (2) el 'momento' (si entró en confirmación, en el toque o se anticipó). TODO lo demás lo rellenas TÚ del gráfico y el panel — REGLA DE REY (v6.33): CERO datos sueltos; cada operación queda registrada COMPLETA para que todos los análisis del futuro sean confiables (el bloque [📋 DATOS SUELTOS] te avisa si algún trade quedó con huecos — ofrécele completarlos con editar_trade). 📸 CAPTURAS: al registrar y al cerrar una entrada, la app pide sola una foto del gráfico (se guardan con el trade en el Diario); si Rey te dice 'saca captura' o quieres guardar una imagen para analizar, usa capturar_grafico con el par. Detección en CUALQUIER par que tenga abierto, nada fijo.";
 
 /* Frameworks de los DOS análisis de Rey (semanal + diario), adaptados para que
    Roberto los ejecute con el gráfico EN VIVO (su indicador CRT Elite ya calculó
@@ -12702,7 +12979,13 @@ function iaInit(){
       else { const ok=await notifActivar(true); if(ok) toast("Notificaciones activadas 🔔"); } notifRefrescarUI(); };
   }
   const nkz=$("#iaNotifKz"); if(nkz) nkz.onchange=()=>{ NOTIF.killzone=nkz.checked; guardarNotif(); if(NOTIF.on) notifProgramarKillzones(); };
-  const ndd=$("#iaNotifDD"); if(ndd) ndd.onchange=()=>{ NOTIF.cuentaDD=ndd.checked; guardarNotif(); if(NOTIF.on) notifChequearCuentasDD(); };
+  const ndd=$("#iaNotifDD"); if(ndd) ndd.onchange=()=>{ NOTIF.cuentaDD=ndd.checked; guardarNotif(); if(NOTIF.on) notifChequearCuentasDD();
+    /* 🔇 v7.246 — Y SE LO DICE A LA NUBE YA, no en la próxima ronda. Sin esto el botón
+       tardaría hasta media hora en hacer efecto, y Rey lo leería como que no funciona —
+       otra vez. Un interruptor que tarda es un interruptor roto ([[apex-pulsar-no-basta]]). */
+    try{ syncRiesgo(); }catch(_){}
+    try{ toast(ndd.checked ? "🔔 Avisos de cuentas en peligro: ENCENDIDOS" : "🔇 Avisos de cuentas en peligro: APAGADOS, también con Apex cerrada"); }catch(_){}
+  };
   const ps=$("#iaParesSave"); if(ps) ps.onclick=()=>{ const v=($("#iaPares").value||"").split(",").map(x=>x.trim()).filter(Boolean); if(!v.length){ toast("Escribe al menos un par"); return; } PARES=v; guardarPares(); pushConfigPares(); toast("Pares guardados ✓"); robertoVigila("Cambió sus pares seguidos a: "+v.join(", ")+"."); };
   const nn=$("#iaNotifNews"); if(nn) nn.onclick=iaNoticiasHoy;
   const pt=$("#iaPushTest");
@@ -13434,6 +13717,8 @@ function iaVozParar(){
   try{ const PV = vozNativa(); if(PV && PV.vozCallar) PV.vozCallar(); }catch(_){}
   try{ if(TTS) TTS.cancel(); }catch(_){}
   try{ _vozCola = []; }catch(_){}
+  /* 🎚️ v7.246 — parar es parar: también se va lo que esperaba turno en la web */
+  try{ _vozWebCola = []; _vozWebSuena = false; }catch(_){}
   /* ⏹ PARAR es distinto de PAUSAR: aquí se tira lo que quedaba por decir. Si no se
      limpiara, el botón seguiría ofreciendo "▶️ Seguir" sobre un discurso descartado. */
   try{ VOZ = { trozos: [], i: 0, pausada: false, idx: null }; }catch(_){}
@@ -14496,8 +14781,56 @@ function motoUI(){
    dentro de 3 segundos, que es un rebote de dos caminos, nunca él tocando 🔊 Escuchar.
    Un plazo largo le habría roto el botón, que es peor que el fallo. */
 let _vozYaLeido = "", _vozYaLeidoTs = 0;
-function iaHablar(texto, idx, yaLimpio){
-  try{
+
+/* 🎚️ v7.246 (10-10) — LA ESCALERA DE REY, Y QUIÉN ES CADA COSA.
+   ══════════════════════════════════════════════════════════════════════════════════════
+   Rey, 09-10: «ningún aviso debe pisar una alarma del indicador, deben esperar a que se
+   termine y solo después hablar. Y menos las frases de Roberto: ésas por ningún motivo
+   deben pisar alarmas ni avisos».
+   La puerta de verdad vive en Java (`VozTurno`), porque el problema era que hay DOS motores
+   de voz —el de Apex y el del vigía— y ninguna cola de Android puede ordenar dos motores.
+   Aquí solo se dice DE QUÉ ES cada frase, que es lo que la app sabe y Java no.
+     0 alarma · 1 charla (Rey preguntando) · 2 aviso · 3 frase de Roberto. */
+const VOZ_ALARMA = 0, VOZ_CHARLA = 1, VOZ_AVISO = 2, VOZ_FRASE = 3;
+
+/* Un aviso que ES una alarma del indicador sube al escalón de arriba. Se decide POR LAS
+   PALABRAS del título, nunca por el color del emoji: Rey usa el 🔴 para todo lo rojo, y
+   clasificar por color hacía que el aviso más grave se disfrazara del más común (ley del
+   03-09). Es la misma regla que `robEsAlarma` en situaciones.js: se LLAMA, no se copia. */
+function vozEscalonDe(titulo){
+  try{ if(typeof robEsAlarma==="function" && robEsAlarma(titulo)) return VOZ_ALARMA; }catch(_){}
+  return VOZ_AVISO;
+}
+
+/* 🎚️ v7.246 — Y EN LA WEB TAMBIÉN, aunque allí solo haya un motor.
+   En el navegador no existe el vigía, así que dos voces a la vez son imposibles — pero sí lo
+   era que una frase CORTARA a la anterior, porque este camino empieza con `TTS.cancel()`.
+   La ley de Rey es WEB primero y perfecta ([[apex-metodo-sin-retrocesos]]), así que la misma
+   escalera se cumple aquí: nada corta a nada, se espera el turno. */
+let _vozWebSuena = false, _vozWebCola = [];
+function vozWebTurnoLibre(){
+  try{ if(TTS && (TTS.speaking || TTS.pending)) return false; }catch(_){}
+  return !_vozWebSuena;
+}
+function vozWebSiguiente(){
+  _vozWebSuena = false;
+  if(!_vozWebCola.length) return;
+  _vozWebCola.sort((a,b)=> (a.prio-b.prio) || (a.ts-b.ts));
+  const x = _vozWebCola.shift();
+  /* `true` = ESTO VIENE DE LA COLA. Sin esa marca, el guardia anti-rebote de abajo mata la
+     frase por ser "la misma de hace 2 segundos" —que es justo lo que es, porque la encolé yo
+     hace 2 segundos— y la cola se vacía EN SILENCIO. Medido en el navegador el 10-10: de tres
+     frases sonaba la primera y las otras dos desaparecían sin dejar rastro. */
+  try{ iaHablar(x.texto, x.idx, x.yaLimpio, x.prio, true); }catch(_){}
+}
+
+function iaHablar(texto, idx, yaLimpio, prio, deLaCola){
+  const _prio = (typeof prio === "number") ? prio : VOZ_CHARLA;
+  /* 🔂 el guardia del rebote NO se aplica a lo que SALE de la cola: esa frase es la misma que
+     se encoló hace un instante, así que el guardia la mataría siempre. Esto no era teoría —
+     se midió en el navegador y las frases en cola desaparecían sin sonar ni avisar
+     ([[apex-lo-que-corre-solo-falla-callado]]). */
+  if(!deLaCola) try{
     const _huella = String(texto || "").slice(0, 140);
     if(_huella && _huella === _vozYaLeido && (Date.now() - _vozYaLeidoTs) < 3000) return;
     _vozYaLeido = _huella; _vozYaLeidoTs = Date.now();
@@ -14535,15 +14868,27 @@ function iaHablar(texto, idx, yaLimpio){
       VOZ.trozos.forEach((tr, k)=>{
         PV.vozHablar({ texto: tr, tono: tono, ritmo: ritmo,
           voz: IA.voz.nativa || "", motor: IA.voz.motor || "",
-          marca: "apex-"+k, anadir: k>0 });
+          marca: "apex-"+k, anadir: k>0,
+          /* 🎚️ v7.246 — el escalón solo va en el PRIMER trozo: los demás son la continuación
+             de la frase que ya tiene el turno, y pedir uno por trozo trocearía la respuesta
+             con lo de otros por medio (ver el comentario de `anadir` en ApexPlugin). */
+          prioridad: _prio });
       });
     }catch(_){ toast("No pude hablar ahora mismo"); }
     return;
   }
   if(!TTS){ toast("Tu teléfono no permite voz"); return; }
+  /* 🎚️ v7.246 — AQUÍ ESTABA EL `TTS.cancel()` QUE CORTABA LO ANTERIOR.
+     Ahora, si algo está sonando, esto se pone en la cola y entra cuando le toque. La cola se
+     ordena por escalón y, a igual escalón, por orden de llegada — igual que en Java. */
+  if(!vozWebTurnoLibre()){
+    if(_vozWebCola.length < 10) _vozWebCola.push({ texto:texto, idx:idx, yaLimpio:yaLimpio, prio:_prio, ts:Date.now() });
+    return;
+  }
+  _vozWebSuena = true;
   try{ TTS.cancel(); }catch(_){}
   const limpio=iaTextoParaVoz(texto);
-  if(!limpio){ return; }
+  if(!limpio){ _vozWebSuena=false; vozWebSiguiente(); return; }
   const u=new SpeechSynthesisUtterance(limpio);
   const v=iaVozEspanol();
   if(v){ u.voice=v; u.lang=v.lang; } else { u.lang="es-ES"; }
@@ -14553,8 +14898,8 @@ function iaHablar(texto, idx, yaLimpio){
      roberto.js solo anima la boca; así no se oye dos veces) */
   u.onstart=()=>{ IA.hablandoIdx=(idx==null?-1:idx); pintarIAChat();
     try{ if(ROB_LISTO) Roberto.hablar(limpio,{mudo:true}); }catch(_){} };
-  u.onend  =()=>{ IA.hablandoIdx=null; try{ if(ROB_LISTO) Roberto.callar(); }catch(_){} pintarIAChat(); };
-  u.onerror=()=>{ IA.hablandoIdx=null; try{ if(ROB_LISTO) Roberto.callar(); }catch(_){} pintarIAChat(); };
+  u.onend  =()=>{ IA.hablandoIdx=null; try{ if(ROB_LISTO) Roberto.callar(); }catch(_){} pintarIAChat(); vozWebSiguiente(); };
+  u.onerror=()=>{ IA.hablandoIdx=null; try{ if(ROB_LISTO) Roberto.callar(); }catch(_){} pintarIAChat(); vozWebSiguiente(); };
   /* 🔊 v6.69 — POR TROZOS, O CHROME NO ARRANCA (Rey, 01-09: "el botón del chat sigue sin
      funcionar, los demás sí"). Ahí estaba la clave: los demás botones dicen frases CORTAS
      ("Hola Rey, soy Roberto…") y ese lee la respuesta ENTERA de Roberto, que son miles de
@@ -15775,7 +16120,10 @@ function fcRelojTick(){
     if(!r || !r.frase) return;
     robMarcaGuardar(r.marca);
     robDecir("Roberto", r.frase, {gesto:"carino"});
-    try{ if(IA.voz && IA.voz.on) iaHablar(r.frase, -1); }catch(_){}
+    /* 🎚️ v7.246 — LAS 228 FRASES DE CADA 30 MINUTOS SON LAS ÚLTIMAS DE LA COLA.
+       Rey, 09-10: «las frases de Roberto por ningún motivo deben pisar alarmas ni avisos,
+       deben esperar y solo después hablar». Éste es el sitio exacto donde se marca. */
+    try{ if(IA.voz && IA.voz.on) iaHablar(r.frase, -1, false, VOZ_FRASE); }catch(_){}
   }catch(_){}
 }
 function fcReloj(){
@@ -17070,11 +17418,47 @@ function iaPlanSemanal(){
 function iaEntradasAbiertas(){
   const ab=(Array.isArray(TRADES)?TRADES:[]).filter(t=>t && t.abierta && t.estrategia===CTX.estrategia);
   if(!ab.length) return "[📒 ENTRADAS ABIERTAS ya registradas en el Diario (los DOS libros): ninguna. Si ves una posición en el gráfico en vivo, aún no la has registrado → ofrécele a Rey registrarla con registrar_entrada. Y para juzgar cómo va operando, la mano es mirar_mis_entradas.]";
-  const fila=(t)=>"  "+(t.modo==="backtest"?"🎬":"💵")+" "+t.par+" "+t.dir+" ent "+(t.entrada!=null?t.entrada:"?")+(t.sl!=null?" SL "+t.sl:"")+(t.tp!=null?" TP "+t.tp:"")+(t.rr?" RR 1:"+t.rr:"")+(t.momento?" · '"+t.momento+"'":"")+(t.fecha?" · "+t.fecha:"");
+  /* 🚪 v7.245 — LA FILA LLEVA LA CUENTA YA HECHA.
+     Rey, 09-10: «al decirle que cierre me pide datos que YA él tiene: me pregunta cómo cerró,
+     si en pérdida o ganancia y con cuánto, cuando él ya tiene todos los datos de la operación
+     porque él me la canta y me dice cada paso».
+     Y tenía razón a medias, que es lo peor: Roberto SÍ tiene la entrada, el SL y el TP — lo
+     que no tiene es el precio al que Rey cerró en MT5 a mano. Pero de los datos que tiene
+     salen YA el R del TP, el R del SL y la distancia del riesgo. Con eso no hace falta
+     preguntarle tres cosas: basta PROPONERLE la más probable y que él diga sí.
+     Así que la cuenta se la doy hecha aquí, en vez de dejar que la pida. */
+  const fila=(t)=>{
+    const ent=Number(t.entrada), sl=Number(t.sl), tp=Number(t.tp);
+    const dist=(isFinite(ent)&&isFinite(sl))?Math.abs(ent-sl):NaN;
+    const rTP=(isFinite(dist)&&dist>0&&isFinite(tp))?Math.round(Math.abs(tp-ent)/dist*10)/10:null;
+    return "  "+(t.modo==="backtest"?"🎬":"💵")+" "+t.par+" "+t.dir+" ent "+(t.entrada!=null?t.entrada:"?")
+      +(t.sl!=null?" SL "+t.sl:"")+(t.tp!=null?" TP "+t.tp:"")+(t.rr?" RR 1:"+t.rr:"")
+      +(t.momento?" · '"+t.momento+"'":"")+(t.fecha?" · "+t.fecha:"")
+      +(rTP!=null?("\n       ↳ CUENTA YA HECHA: si salió por el TP son +"+rTP+"R · por el SL son −1R · por break-even 0R."
+                  +" Riesgo = "+dist.toFixed(5).replace(/0+$/,"")+" de distancia, así que cualquier precio de cierre te da el R solo.")
+                 :"\n       ↳ sin SL apuntado: de ésta NO puedes calcular el R; ése sí es un dato que te falta de verdad.");
+  };
   const filas=ab.map(fila).join("\n");
   const otras=ab.filter(t=>t.modo!==CTX.modo).length;
   return "[📒 ENTRADAS ABIERTAS ya registradas en el Diario — LOS DOS LIBROS (💵 real · 🎬 backtest). NO las vuelvas a registrar; si el gráfico muestra una posición que NO está en esta lista, ESA sí ofrécele registrarla:\n"+filas
     + (otras?("\n⚠️ "+otras+" de ellas NO son del libro que Rey tiene abierto ahora ("+(CTX.modo==="backtest"?"🎬 backtest":"💵 real")+"): existen igual, pero no mezcles sus cuentas."):"")
+    + "\n\n🚪 SI REY TE DICE QUE CIERRE UNA — CÓMO SE HACE Y CÓMO NO:"
+    + "\n  ❌ NO le preguntes «¿cómo cerró, en pérdida o ganancia, y con cuánto?». Eso es pedirle"
+    + "\n     tres cosas y encima dos de ellas las puedes deducir. Él te lo ha dicho ya mil veces:"
+    + "\n     tú le cantaste cada paso de esa operación, y la cuenta la tienes ahí arriba hecha."
+    + "\n  ✅ MIRA PRIMERO lo que ya tienes, en este orden: (1) el gráfico en vivo — si la caja de"
+    + "\n     posición ya NO está y el precio está en el TP o pasado, salió por el TP; si está en el"
+    + "\n     SL o pasado, salió por el stop; (2) lo que tú mismo le avisaste de esa operación;"
+    + "\n     (3) el MAE/MFE que el Puente venía calculando."
+    + "\n  ✅ LUEGO PROPÓN, no preguntes. Una sola frase y un sí: «lo que vi es que tocó tu TP en"
+    + "\n     1.16400, serían +2R — ¿la cierro así?». Y ciérrala con cerrar_entrada pasando"
+    + "\n     precio_cierre (el sistema calcula el R exacto solo)."
+    + "\n  ✅ SI DE VERDAD NO PUEDES SABERLO (no viste el gráfico, no hay rastro): una sola pregunta"
+    + "\n     concreta — «¿a qué precio la cerraste?» — y nada más. El resto lo calculas tú."
+    + "\n  ℹ️ Y DILE QUE YA NO DEPENDE DE TI: desde la v7.245 cada operación abierta del Diario"
+    + "\n     tiene su botón 🚪 Cerrar en Apex, donde elige por dónde salió, pone el precio y el"
+    + "\n     parcial, y el R se calcula solo con la cuenta a la vista. Tú sigues pudiendo cerrarla"
+    + "\n     por él, pero es suya la puerta, no tuya."
     + "\nPara JUZGAR su forma de operar (historial, aciertos, R, y si entra en el toque o en confirmación) usa la mano mirar_mis_entradas.]";
 }
 
@@ -17217,7 +17601,7 @@ const IA_TOOLS = [
      Rey estaba en 💵 REAL sus operaciones de 🎬 BACKTEST no existían para él —y al revés—.
      Para juzgar hace falta el historial, y el historial no llegaba ([[apex-declarar-no-es-dar]]).
      Solo LEE: no cambia nada, no cuesta nada y no le saca a Rey ninguna tarjeta. */
-  { name:"mirar_mis_entradas", description:"LEE las operaciones del 📒 Diario de Rey —las SUYAS, no las del Ejecutor— para poder JUZGARLAS de verdad: abiertas y cerradas, del libro 💵 REAL y del 🎬 BACKTEST. Devuelve cada una con todo lo que hace falta para opinar (par, dirección, entrada/SL/TP/RR, setup, ventana, momento de entrada, bias, zona, confluencias, resultado en R, MAE y MFE) más las cuentas ya hechas del conjunto (cuántas, aciertos, R total, R medio, y cómo entró: en confirmación / en el toque / anticipando).\n\nÚSALO SIEMPRE que Rey te pida evaluar, juzgar, repasar o comparar sus entradas ('¿cómo voy?', '¿qué tal mis entradas?', 'evalúa la de hoy', '¿estoy mejorando?', '¿cómo van mis backtest?'), y ÚSALO ANTES de opinar sobre su forma de operar: sin los números delante estarías opinando de memoria, y eso es justo lo que él no quiere.\n\n⚠️ REAL y BACKTEST son libros DISTINTOS y no se mezclan nunca en una misma cuenta: el backtest es entrenamiento, el real es su dinero. Si le das un número, di de qué libro es. Por defecto trae el libro en el que está ahora mismo; pon modo:'ambos' cuando él compare o cuando no esté claro.\n\nY JUZGA, no recites: su fuga conocida es el TIMING (entrar en el toque en vez de esperar confirmación). Si ves ese patrón en los datos, díselo con el número en la mano.",
+  { name:"mirar_mis_entradas", description:"LEE las operaciones del 📒 Diario de Rey —las SUYAS, no las del Ejecutor— para poder JUZGARLAS de verdad: abiertas y cerradas, del libro 💵 REAL y del 🎬 BACKTEST. Devuelve cada una con todo lo que hace falta para opinar (par, dirección, entrada/SL/TP/RR, setup, ventana, momento de entrada, bias, zona, confluencias, resultado en R, MAE y MFE, POR DÓNDE SALIÓ cada una —campo salioPor: TP, SL, break-even, a mano o por tiempo— el precio de salida, y el parcial si lo hizo) más las cuentas ya hechas del conjunto (cuántas, aciertos, R total, R medio, cómo entró —en confirmación / en el toque / anticipando— y el reparto porSalida, que es el que contesta POR DÓNDE SE LE VA EL DINERO: cuántas salieron por cada puerta y cuántos R dejó cada una. Las que no tengan el dato salen como sin anotar: si son muchas, díselo y ofrécele completarlas, no des un reparto a medias por bueno.\n\nÚSALO SIEMPRE que Rey te pida evaluar, juzgar, repasar o comparar sus entradas ('¿cómo voy?', '¿qué tal mis entradas?', 'evalúa la de hoy', '¿estoy mejorando?', '¿cómo van mis backtest?'), y ÚSALO ANTES de opinar sobre su forma de operar: sin los números delante estarías opinando de memoria, y eso es justo lo que él no quiere.\n\n⚠️ REAL y BACKTEST son libros DISTINTOS y no se mezclan nunca en una misma cuenta: el backtest es entrenamiento, el real es su dinero. Si le das un número, di de qué libro es. Por defecto trae el libro en el que está ahora mismo; pon modo:'ambos' cuando él compare o cuando no esté claro.\n\nY JUZGA, no recites: su fuga conocida es el TIMING (entrar en el toque en vez de esperar confirmación). Si ves ese patrón en los datos, díselo con el número en la mano.",
     input_schema:{ type:"object", properties:{
       modo:{type:"string",enum:["real","backtest","ambos"],description:"Qué libro mirar. Por defecto, el que Rey tenga abierto."},
       estado:{type:"string",enum:["abiertas","cerradas","todas"],description:"Por defecto 'todas'."},
@@ -17859,10 +18243,21 @@ async function ejecutarTool(name, i){
         const mom={};
         lista.forEach(t=>{ const k=t.momento||"sin anotar"; if(!mom[k]) mom[k]={n:0,r:0,g:0};
           mom[k].n++; mom[k].r+=(t.r||0); if((t.r||0)>0) mom[k].g++; });
+        /* 🚪 v7.245 — y el reparto POR DÓNDE SALIÓ, con el R que dejó cada puerta.
+           Es la cuenta que contesta «¿por dónde se me va el dinero?». Las que no lo tengan
+           apuntado caen en «sin anotar» y se ve cuántas son: así Roberto puede decirle que
+           le falta el dato en vez de dar un reparto a medias por bueno
+           ([[apex-roberto-no-inventa]]). */
+        const sal={};
+        lista.forEach(t=>{ const k=t.motivo||"sin anotar"; if(!sal[k]) sal[k]={n:0,r:0,g:0};
+          sal[k].n++; sal[k].r+=(t.r||0); if((t.r||0)>0) sal[k].g++; });
         return { n:lista.length, ganadas:gan, aciertoPct:Math.round(gan/lista.length*100),
           rTotal:Math.round(rTot*100)/100, rMedio:Math.round(rTot/lista.length*100)/100,
           porMomento:Object.keys(mom).map(k=>({ momento:k, n:mom[k].n, ganadas:mom[k].g,
-            aciertoPct:Math.round(mom[k].g/mom[k].n*100), r:Math.round(mom[k].r*100)/100 })) };
+            aciertoPct:Math.round(mom[k].g/mom[k].n*100), r:Math.round(mom[k].r*100)/100 })),
+          porSalida:Object.keys(sal).map(k=>({ salioPor:k, n:sal[k].n, ganadas:sal[k].g,
+            r:Math.round(sal[k].r*100)/100 })).sort((a,b)=>b.n-a.n),
+          conParcial:lista.filter(t=>t.parcialHecho===true).length };
       };
       const resumen=libro
         ? { libro, cerradas:cuentas(cerradas) }
@@ -17876,7 +18271,20 @@ async function ejecutarTool(name, i){
         entrada:t.entrada!=null?t.entrada:null, sl:t.sl!=null?t.sl:null, tp:t.tp!=null?t.tp:null,
         rr:t.rr!=null?t.rr:null, riesgoPct:t.riesgoPct||"", setup:t.setup||"", ventana:t.ventana||"",
         momento:t.momento||"", bias:t.bias||"", zona:t.zona||"", nconf:t.nconf||0, poi:t.poi||"",
-        mae:t.mae!=null?t.mae:null, mfe:t.mfe!=null?t.mfe:null, cuenta:t.cuenta||"", nota:t.nota||""
+        mae:t.mae!=null?t.mae:null, mfe:t.mfe!=null?t.mfe:null, cuenta:t.cuenta||"", nota:t.nota||"",
+        /* 🚪 v7.245 (09-10) — Y POR DÓNDE SALIÓ, QUE ES LO QUE FALTABA PARA JUZGARLA.
+           Rey, 09-10: «¿probaste las secciones que registran y evalúan todos los datos de mis
+           operaciones, y Roberto sabe de todo eso?». Buena pregunta: hoy le di a Apex dónde
+           guardar POR DÓNDE salió cada operación y el parcial… y esta mano, que es con la que
+           Roberto las JUZGA, seguía devolviendo los mismos campos de ayer.
+           O sea: el dato existía y él no tenía ojos para verlo. Es exactamente la ley que ya
+           me costó una vez ([[apex-mano-y-vision-en-todo-lo-nuevo]], [[apex-declarar-no-es-dar]]):
+           cada cosa nueva le llega a Roberto como MANO y como VISIÓN, o no le llega.
+           Sin esto no podría contestar «¿por dónde se me va el dinero?», que es media
+           evaluación de su forma de operar. */
+        salioPor:t.motivo||"", precioSalida:t.salida!=null?t.salida:null,
+        parcial:(t.parcialHecho===true && t.parcialPct!=null && t.parcialR!=null)
+          ? { pct:t.parcialPct, aR:t.parcialR } : null
       }));
       return {ok:true, libro:(libro||"ambos"), total:ops.length, abiertas:ops.filter(t=>t.abierta).length,
         devueltas:entradas.length,
