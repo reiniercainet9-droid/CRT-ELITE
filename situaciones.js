@@ -359,9 +359,19 @@ const ROB_AVISOS = [
      reglas del mercado — "Quedó grabado, sábado 5:30 PM…" salía como "cerramos en ganancia"
      y una auditoría como "se abre tu ventana de Londres". Lo que dijo Roberto se enseña
      TAL CUAL (sus primeras palabras), nunca se reinterpreta. */
-  { id:"cambio",       gesto:"idea",    re:/^💬 Roberto te respondió/,
-    lee:(b)=>/^Roberto quiere hacer un cambio/.test(String(b||"").trim()) ? { frase:"Rey, quiero hacer un cambio: ábreme y me lo confirmas." } : null },
-  { id:"respuesta",    gesto:"presenta", re:/^💬 Roberto te respondió/,
+  /* 🗣️ v7.248 (10-10) — EL TÍTULO PASA A PRIMERA PERSONA, Y AQUÍ VALEN LOS DOS.
+     Rey: «me habla en tercera persona… debe ser más real, como si estuviera hablando con una
+     persona real conmigo». El título del worker pasa de «💬 Roberto te respondió» a
+     «💬 Te respondí».
+     ⚠️ POR QUÉ SE ACEPTAN LOS DOS Y NO SOLO EL NUEVO: esta tabla clasifica POR EL TÍTULO, y
+     el título lo escribe el WORKER, que sube Rey cuando puede. Entre que yo publico la web y
+     que él sube el worker hay horas o días —ahora mismo tiene uno sin subir—, y en ese hueco
+     un reconocedor pegado solo al título nuevo dejaría sus respuestas SIN gesto y SIN
+     nubecita, que es justo quedarse mudo ([[apex-nada-le-deja-mudo]], [[apex-el-camino-que-rey-usa]]).
+     El viejo se queda hasta que no quede ni un worker antiguo en pie. */
+  { id:"cambio",       gesto:"idea",    re:/^💬 (Te respondí|Roberto te respondió)/,
+    lee:(b)=>/^(Quiero|Roberto quiere) hacer un cambio/.test(String(b||"").trim()) ? { frase:"Rey, quiero hacer un cambio: ábreme y me lo confirmas." } : null },
+  { id:"respuesta",    gesto:"presenta", re:/^💬 (Te respondí|Roberto te respondió)/,
     lee:(b)=>{
       const txt = String(b||"").replace(/\*\*|__|^#+\s*/gm, "").replace(/\s+/g, " ").trim();
       if (!txt) return null;
