@@ -8792,7 +8792,7 @@ function viewDiario(){
   <div class="fld" id="wrapCuenta">
     <div class="fl">Cuenta de fondeo (opcional)</div>
     <select class="inp" id="fCuenta"></select>
-    <div class="note" style="text-align:left;margin-top:4px">Elige de qué cuenta es este trade y sumará en la pestaña 🏦 Cuentas.</div>
+    <div class="note" style="text-align:left;margin-top:4px">Elige de qué cuenta es este trade y sumará en la pestaña 🏦 Cuentas. <b>Solo los REALES</b> mueven su progreso: los de backtest quedan marcados para el 🎓 simulacro de examen, pero no tocan el dinero.</div>
   </div>
 
   <div class="fl">Par</div>
@@ -9816,7 +9816,25 @@ function importJSON(e){
       if(!Array.isArray(d.trades)) throw 0;
       if(!await preguntar("Se importarán "+d.trades.length+" trades. ¿Reemplazar TODOS los datos actuales ("+TRADES.length+" trades)?")) return;
       // migrar por si el respaldo es viejo
-      d.trades.forEach(t=>{ if(!t.modo)t.modo="real"; if(!t.estrategia)t.estrategia="CRT Elite"; });
+      /* 🧮 v7.247 (10-10) — Y QUE LOS NÚMEROS ENTREN COMO NÚMEROS.
+         Esta puerta metía el fichero TAL CUAL. Un R guardado como texto —un respaldo viejo,
+         uno editado a mano, uno de otra versión— entraba sin que nadie lo mirara, y luego
+         `metricas()` pegaba textos en vez de sumar: su pantalla de estadísticas entera dejaba
+         de significar nada SIN dar ni un error. `metricas()` ya se defiende sola, pero el dato
+         malo se queda dentro para siempre y lo arrastra todo lo demás, así que se limpia
+         AQUÍ, que es donde entra ([[apex-un-hecho-se-apunta-antes-de-pensar]]).
+         ⚠️ Solo lo que de verdad es número. `entrada`, `sl` y `tp` se guardan como TEXTO a
+         propósito desde el formulario, porque un precio como 1.16000 pierde los ceros si se
+         vuelve número — y eso ya fue un fallo de dinero el 10-10 en la puerta de cierre. */
+      const _nImp=(v)=>{ if(v==null||v==="") return null; const x=parseFloat(v); return isFinite(x)?x:null; };
+      let _arreglados=0;
+      d.trades.forEach(t=>{
+        if(!t.modo)t.modo="real"; if(!t.estrategia)t.estrategia="CRT Elite";
+        ["r","mae","mfe","rrPlan","parcialPct","parcialR","nconf"].forEach(k=>{
+          if(t[k]!=null && t[k]!=="" && typeof t[k]!=="number"){ const x=_nImp(t[k]); if(x!==null){ t[k]=x; _arreglados++; } }
+        });
+      });
+      if(_arreglados) console.log("[apex] respaldo: "+_arreglados+" número(s) venían como texto y se han leído como números");
       TRADES=d.trades; save(K.trades,TRADES);
       if(Array.isArray(d.estrategias)&&d.estrategias.length){ ESTRATEGIAS=d.estrategias; guardarEstrategias(); }
       else { // reconstruir lista desde los trades
@@ -9915,7 +9933,34 @@ function tradesPeriodo(){
 
 /* ---- Núcleo estadístico. Recibe array de trades, devuelve métricas ---- */
 function metricas(list){
-  list=(list||[]).filter(t=>!t.abierta); // las ENTRADAS abiertas no cuentan en estadísticas hasta cerrarse
+  /* 🧮 v7.247 (10-10) — AQUÍ LOS NÚMEROS SE LEEN COMO NÚMEROS, Y ANTES NO.
+     ═══════════════════════════════════════════════════════════════════════════════════════
+     Rey, 10-10: «¿revisaste mis métricas y que estén bien calculadas en las diferentes
+     secciones?». Al auditarlo ejecutando salió esto, y es de dinero.
+     Esta función sumaba el R EN CRUDO: `list.reduce((a,t)=>a+t.r,0)`. Si un solo trade trae
+     el R como TEXTO —y hay una puerta por la que entra, `importJSON`, que mete el fichero de
+     respaldo tal cual sin comprobar ni un número— JavaScript deja de sumar y empieza a PEGAR
+     textos: el R neto de 1.5 y -1 sale «01.5-1». Y de ahí abajo se descuadra TODO: la
+     esperanza, el profit factor, el drawdown, el dinero… y el `progresoPct` de sus cuentas,
+     que es el porcentaje con el que decide si sigue operando o para.
+     Lo peor no es el número: es que NO FALLA. No hay error, no hay aviso; solo una pantalla
+     de estadísticas que parece medida y no significa nada
+     ([[apex-lo-que-corre-solo-falla-callado]], [[apex-roberto-no-inventa]]).
+     El resto del fichero ya había aprendido esto (18 sitios usan `parseFloat(t.r)`); esta
+     función, que es la que las alimenta casi todas, se quedó sin aprenderlo.
+     ⚠️ UN R ILEGIBLE SE DEJA FUERA, no se cuenta como 0: un 0 sería un break-even inventado
+     y le bajaría el acierto. Es la misma regla que ya usa `opsDelDiario()`. */
+  const num=(v)=>{ const x=(typeof v==="number")?v:parseFloat(v); return isFinite(x)?x:null; };
+  list=(list||[])
+    .filter(t=>t && !t.abierta)      // las ENTRADAS abiertas no cuentan en estadísticas hasta cerrarse
+    .map(t=>{
+      const r=num(t.r);
+      if(r===null) return null;
+      const mae=num(t.mae), mfe=num(t.mfe);
+      if(t.r===r && t.mae===mae && t.mfe===mfe) return t;   /* ya era numérico: no se copia */
+      return Object.assign({}, t, { r:r, mae:(t.mae==null?null:mae), mfe:(t.mfe==null?null:mfe) });
+    })
+    .filter(Boolean);
   const n=list.length;
   if(!n) return null;
   const wins  = list.filter(t=>t.r>0);
@@ -10957,7 +11002,21 @@ function faseBadge(f){ const col=faseColor(f); return `<span class="cta-badge" s
 
 /* Rendimiento de una cuenta a partir de sus trades ligados + sus datos */
 function statsCuenta(c){
-  const list=TRADES.filter(t=>t.cuenta===c.id);
+  /* 🏦 v7.247 (10-10) — UN BACKTEST NO PUEDE MOVER EL PROGRESO DE UNA CUENTA DE VERDAD.
+     ═══════════════════════════════════════════════════════════════════════════════════════
+     Salió auditando las métricas, y es de dinero. Esto cogía TODOS los trades con esa cuenta
+     puesta, sin mirar si eran reales o de backtest. Y el selector «Cuenta de fondeo» NO está
+     oculto en modo backtest (su casilla, `#wrapCuenta`, no tiene el `display:none` que sí
+     tiene la de la fecha), así que marcar la cuenta en una prueba es lo más natural del mundo
+     — y el texto de debajo encima lo invita: «elige de qué cuenta es este trade».
+     Lo que movía: `rNeto` → `plTrades` → `balance` → `pl` → `progresoPct`. Y `progresoPct` es
+     lo que alimenta la pantalla 🏦 Cuentas, el aviso «cuenta en peligro», el margen que sube
+     a la nube (`riesgoResumen`) y el bloque de riesgo que lee Roberto.
+     O sea: una operación de PRUEBA podía decirle que su cuenta de examen va bien cuando está
+     al borde del DD, o al revés ([[apex-la-pared-tiene-que-ser-de-esta-cuenta]]).
+     Los trades de backtest NO se borran ni se desmarcan: siguen ahí para el simulacro de
+     examen, que los usa a propósito. Lo que no pueden es contar como dinero real. */
+  const list=TRADES.filter(t=>t.cuenta===c.id && t.modo!=="backtest");
   const m=list.length?metricas(list):null;
   const cap=+c.capital||0;
   const riesgo=(+c.riesgoPct||0.5)/100;

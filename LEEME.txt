@@ -1,51 +1,56 @@
-APEX v7.246 — TRADING DESK
+APEX v7.247 — TRADING DESK
 =========================
 
-🔊 NADA PISA A NADA — y el botón de los avisos de margen ya apaga de verdad
+🧮 AUDITÉ TUS NÚMEROS — y salieron tres cosas, dos de ellas de dinero
 
-Rey, esto es el encargo que me diste anoche, entero. Lo medí antes de tocar nada y las tres
-cosas tenían una causa distinta de la que parecía.
+Rey, me pediste revisar si tus métricas están bien calculadas en las distintas secciones. No
+lo leí: lo EJECUTÉ, con una lista de operaciones inventada a propósito para poder hacer todas
+las cuentas a mano y comparar. 45 comprobaciones.
 
-── 1) LOS AVISOS SE PISABAN ENTRE SÍ ─────────────────────────────────────────────────────
-No era una cola mal ordenada: era que NO HABÍA COLA. Roberto habla por dos motores de voz
-distintos dentro del mismo teléfono (uno cuando Apex está abierta, otro cuando tienes el
-cuerpo flotante puesto o Apex cerrada), y la cola de Android ordena DENTRO de un motor. Dos
-motores no se oyen el uno al otro: suenan los dos encima. Y encima los dos hablaban con
-«cállate, hablo yo», así que una frase suelta de Roberto podía cortar una alarma del
-indicador por la mitad.
+── LA BUENA NOTICIA ─────────────────────────────────────────────────────────────────────
+Las cuentas en sí están bien. Las 33 cifras de la sección 📊 (esperanza, profit factor,
+acierto, R:R real, acierto de empate, el colchón, la mediana, la desviación, el drawdown en R,
+el recovery, las rachas, la eficiencia de captura, el dinero) cuadran EXACTAS con la
+aritmética hecha a mano.
+Y lo que más te preocupaba: la sección 📊 y la tarjeta 📐 son DOS funciones distintas midiendo
+lo mismo, y dan exactamente el mismo número. No se contradicen.
+También comprobado: una operación ABIERTA no cuenta hasta cerrarse, un backtest no se cuela en
+tus números reales, el reparto del parcial no inventa ni pierde R (una de +2R con el 50% a 1,5R
+sigue siendo 2R, no 3,5R), y las rachas se cuentan en el orden en que PASARON, no en el orden
+de la lista.
 
-Ahora hay UNA puerta por la que piden turno los dos, con tu escalera:
-   1º 🔔 las alarmas del indicador — mandan siempre
-   2º 🗣️ tú preguntando y Roberto contestándote
-   3º 📢 los avisos del sistema
-   4º 💬 las 228 frases de cada media hora — las últimas, siempre
+── 1) UN BACKTEST PODÍA MOVER EL PROGRESO DE TU CUENTA DE EXAMEN ───────────────────────
+Esto es lo gordo. El selector «Cuenta de fondeo» del formulario NO está oculto en modo
+backtest, y el texto de debajo encima te invita a usarlo. Pero el cálculo del progreso de la
+cuenta cogía TODAS las operaciones con esa cuenta marcada, reales o de prueba.
+Medido con números: cuenta de 6.000 $, tres operaciones reales (+2R, −1R, −1R) = 0%. Si marcas
+una prueba de +10R con esa misma cuenta, te decía **+5% y balance 6.300 $**. En una cuenta con
+DD del 6%, cinco por ciento de mentira no es un detalle — y ese mismo porcentaje es el que
+alimenta el aviso «cuenta en peligro», el margen que sube a la nube y lo que Roberto lee antes
+de respaldarte una entrada.
+Arreglado: solo las REALES mueven el dinero. Las de backtest siguen marcadas y siguen sirviendo
+para el 🎓 simulacro de examen, que las usa a propósito. Y el texto del formulario ya lo dice,
+en vez de prometerte algo falso.
 
-Y nadie interrumpe a nadie, tampoco hacia arriba: una alarma que llega mientras suena una
-frase NO la corta, se pone PRIMERA en la cola y entra en cuanto la otra acaba. Cortar por la
-mitad era justo lo que oías.
+── 2) UN NÚMERO EN TEXTO CONVERTÍA TODA LA PANTALLA EN BASURA, SIN AVISAR ──────────────
+La función que calcula las métricas sumaba el R en crudo. Si una sola operación trae el R como
+TEXTO, JavaScript deja de sumar y empieza a PEGAR: tu R neto de 1,5 y −1 salía «01.5-1». Y de
+ahí abajo se descuadraba todo.
+¿Por dónde entra un número en texto? Por restaurar un respaldo: esa puerta metía el fichero
+TAL CUAL, sin mirar ni un número. Un respaldo viejo, de otra versión o editado a mano, y tu
+pantalla de estadísticas dejaba de significar nada — sin error, sin aviso, con cara de medida.
+Arreglado por los dos lados: la puerta del respaldo lee los números como números al entrar, y
+las métricas se defienden solas aunque algo se cuele. Y un R ilegible se deja FUERA, no se
+cuenta como 0 — un 0 sería un break-even inventado y te bajaría el acierto.
+Ojo: los precios (entrada, SL, TP) siguen guardándose como texto a propósito, porque 1.16000
+pierde los ceros si se vuelve número. Eso ya fue un fallo de dinero esta semana.
 
-── 2) LOS AVISOS DEL MARGEN DE LAS CUENTAS ───────────────────────────────────────────────
-Ésos no salían de Apex: los manda la nube al abrir cada sesión (Londres, Pre-NY, NY), y
-mandaba UNO POR CUENTA, todos en el mismo segundo. Con tus tres cuentas registradas eran
-tres avisos a la vez. Ahora van en uno solo, con las tres dentro y su margen; si alguna está
-AL LÍMITE, el aviso entero sale en rojo y se marca cuál es.
+── 3) Y UNA COSA QUE NO ES UN FALLO, PERO TIENES QUE SABERLA ───────────────────────────
+Las dos tarjetas de esperanza van SEPARADAS a propósito: una es tu libro y la otra la del
+robot. No se suman, así que nada se cuenta dos veces. Eso está bien y lo dejé como estaba.
 
-── 3) EL BOTÓN DE DESACTIVARLOS NO FUNCIONABA ────────────────────────────────────────────
-Tenías razón, y era verdad de verdad. El interruptor «🔔 Cuentas en peligro» solo cerraba la
-puerta de DENTRO del teléfono. Lo que tú oyes con Apex cerrada lo manda la nube… y a la nube
-nunca subía tu interruptor. Estabas apagando lo único que ya no sonaba.
-Ahora tu interruptor viaja, y en el acto: lo tocas y te lo confirmo en pantalla.
-
-── Y DE PASO ─────────────────────────────────────────────────────────────────────────────
-· El Ejecutor se presentaba con dos versiones distintas según dónde se mirara (v3.14 arriba,
-  v3.13 al arrancar). Ya dice la misma en los dos sitios — eso es justo lo que te hizo creer
-  dos veces que corría código que no corría.
-· Una copia de respaldo del Puente llevaba el código viejo: si se perdiera el Escritorio, se
-  habría restaurado una versión sin los arreglos de ayer. Sincronizada.
-
-Lo que falta y lo sabes: instalar MT5 y añadir la cuenta de examen de FundedNext. En cuanto
-esté, el lotaje saldrá de esa cuenta viva y te avisaré a gritos si el MT5 de la PC está
-conectado a una cuenta distinta de la que estás operando desde el teléfono.
+Lo que falta y es tuyo: subir el worker 5.269. Los avisos de margen y su botón de apagado viven
+ahí y no harán efecto hasta que lo subas.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
