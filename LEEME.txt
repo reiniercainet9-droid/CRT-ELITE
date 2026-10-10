@@ -1,79 +1,51 @@
-APEX v7.248 — TRADING DESK
+APEX v7.249 — TRADING DESK
 =========================
 
-✂️ EL 75% ES DONDE TÚ DECIDES · Y Roberto ya no habla de sí mismo en tercera persona
+🔇 AL DESLIZAR EL AVISO, SE CALLA · Y UN BOTÓN PARA CALLARLO SIN PERDERLO
 
-Rey, pediste tres cosas y están las tres. Y al hacer la primera salió un cuarto fallo, de
-dinero, que no estaba en tu lista.
+Rey, pediste dos cosas y están las dos. Son distintas a propósito:
 
-── 1) FUERA EL 80% DEL CAMINO. EL 75% AHORA VA EN COLOR ────────────────────────────────
-Tenías razón en las dos cosas: estaba pegado al 75% y no servía para decidir nada. Caía al
-5% del recorrido, o sea a un par de píxeles en tu teléfono, justo encima del sitio donde sí
-tienes que decidir.
-Ahora tu gráfico te marca TRES niveles: 25, 50 y 75%. Y el 75% va en ÁMBAR, más gruesa que
-las otras, porque es tu nivel de decisión.
-El color se elige MIRANDO tu fondo, no suponiéndolo: si tienes el gráfico en negro sale un
-ámbar claro y si lo tienes en blanco un ámbar tostado. El morado de antes, sobre fondo negro,
-quedaba casi apagado — que es lo contrario de distinguirse.
-Y el color no está pegado al número 75: está pegado a «el más alto de tus porcentajes». Si
-mañana los cambias a 30/60/90, el color se va con el 90 él solo. Eso es justo lo que le faltó
-al 80%.
+  · DESLIZARLO  → se lleva el aviso Y lo calla.
+  · 🔇 Callar   → lo calla y el aviso SE QUEDA en tu bandeja para leerlo después.
 
-── 2) EL EJECUTOR: EN EL 75% CIERRA EL 80%. ES LEY ─────────────────────────────────────
-Aquí hay algo que tienes que saber, porque tu regla estaba BIEN pero por casualidad.
-Tenías puesto: cerrar el 80% al llegar a 1,5R. Y como operas a 1:2, 1,5R ES el 75% del
-camino. Coincidían.
-Pero coinciden SOLO con un 1:2. En un 1:3 ese mismo 1,5R es el 50% del camino: te cerraría el
-80% de la posición a mitad de trayecto. En un 1:5, al 30%.
-Así que el disparo ya no se mide en R: se mide en % DEL CAMINO de la entrada al TP. Al 75%,
-cerrando el 80%. Y eso se adapta solo a cada operación: 1:2 → 1,5R · 1:3 → 2,25R · 1:5 →
-3,75R. Está medido con las cuentas hechas a mano, operación por operación.
-⚠️ Para que no se mezclen, que son el mismo número: el 75% es DÓNDE (cuánto camino llevas) y
-el 80% es CUÁNTO (qué parte de los lotes se cierra).
-El modo de antes (por múltiplos de R) sigue estando, en tu sección 🤖, por si lo quieres. Y
-los dos números son tuyos: cámbialos cuando quieras.
-Y si una operación no trae TP, no hay camino que partir: NO hace el parcial y te lo dice. No
-se inventa un nivel.
+── POR QUÉ SEGUÍA HABLANDO, QUE NO ERA LO QUE PARECÍA ──────────────────────────────────
+Deslizarlo SÍ hacía algo: frenaba la repetición durante 6 minutos para que la alarma no te
+volviera a sonar. Pero la frase que estaba sonando EN ESE MOMENTO no la paraba nadie.
+Frenar el futuro no es callar el presente — y lo que tú oías era el presente.
 
-── 3) CUANDO OPERAS TÚ, DECIDES TÚ ────────────────────────────────────────────────────
-Esto no ha cambiado y se ha reforzado, porque las dos mitades de tu frase viven en sitios
-distintos del sistema:
-  · al 🤖 EJECUTOR eso le salta SOLO. Automático. Es ley.
-  · a TI nadie te cierra nada. Te marco el 75% en el gráfico y te aviso al teléfono cuando
-    llegues, y decides tú: cierras ese trozo o la dejas correr.
-El aviso de tu teléfono ahora te lo dice con esas palabras, para que no suene a una orden.
+Y había una segunda mitad, que es la que lo hacía difícil de ver: dentro de Apex viven DOS
+motores de voz distintos. Uno habla cuando Apex está abierta y otro cuando está cerrada o
+tienes el cuerpo flotante puesto. Callar uno deja al otro hablando — y para ti eso no es
+haberse callado. Ahora se callan LOS DOS por la misma puerta, y se vacía también la cola:
+si no, se callaba la frase que sonaba y entraba la siguiente detrás.
 
-── 4) 🩹 Y ESTO NO ESTABA EN TU LISTA: EL LOTE QUE TE CANTABA ERA EL EQUIVOCADO ────────
-Salió mirando el código de al lado. En el aviso del teléfono, el lote que te proponía cerrar
-se calculaba con el % DEL CAMINO. O sea que en la marca del 75% te decía «cierra 0,75 de tu
-lote»… cuando tu regla dice el 80%. Y en el 25% y el 50% te proponía un lote para un parcial
-que tú no tienes configurado: una regla inventada, con un número de MT5 al lado para que lo
-teclees.
-Eran dos cosas distintas compartiendo la misma letra en el código. Ahora el lote sale de TU
-regla (tu 80%) y solo aparece en el nivel donde decides.
+── EL BOTÓN 🔇 CALLAR ──────────────────────────────────────────────────────────────────
+Sale en TODOS los avisos que hablan, no solo en los que insisten: una sola frase a
+destiempo ya es el problema que describiste.
+Va EL PRIMERO de los botones, porque Android solo enseña tres y ése es el urgente: estás en
+una llamada y el teléfono te está hablando, no es momento de buscar.
+Y está también en la cabecera del grupo, porque con el grupo plegado es lo único que ves.
 
-── 5) 🗣️ ROBERTO YA NO HABLA DE SÍ MISMO EN TERCERA PERSONA ────────────────────────────
-Tenías razón y era raro de leer. «Roberto te respondió» era el sistema anunciando a un
-personaje, no alguien hablándote.
-Arreglado por los dos lados:
-  · Los avisos: «💬 Te respondí» · «Quiero hacer un cambio» · «Me quedé sin créditos» ·
-    «Dejé de ver tu gráfico» · «Vuelvo a ver tu gráfico» · «Tienes un aviso mío».
-  · Y lo más importante, una LEY en su cabeza: jamás se nombra a sí mismo en tercera persona,
-    ni en el chat, ni en su nubecita, ni cuando te cuenta lo que hizo. Los títulos fijos son
-    solo una parte; lo demás lo escribe él en cada frase, y ninguna lista de textos lo cubre.
-⚠️ Lo que SÍ sigue en tercera persona, porque no es él: el 🤖 Ejecutor, el 👁️ Puente y Apex
-son partes de tu sistema, y de esas habla como lo que son («el Ejecutor entró en compra»).
-Él no se confunde con ellos.
+Lo que hace: calla la voz y frena esa alarma 6 minutos (si la callaste es porque en ese rato
+no puedes oírla). Lo que NO hace: quitarte el aviso. Se queda entero, con su texto, en la
+bandeja.
 
-── LO QUE TE TOCA A TI ────────────────────────────────────────────────────────────────
-Subir el worker. Ahora es el 5.270 — lleva dentro el 5.269 que tenías pendiente, así que es
-UNA sola subida para las dos cosas.
-Hasta que lo subas: los avisos de margen agrupados y su botón de apagado no hacen efecto, el
-aviso de tu parcial seguirá hablando en R, y tu respuesta del chat seguirá llegando como
-«Roberto te respondió». Apex ya entiende los dos títulos a propósito, para que durante ese
-hueco Roberto no se quede sin gesto ni sin nubecita.
-Y el Ejecutor: no hay que reiniciar nada. Lo tienes APAGADO desde el 2 de octubre, así que
-cogerá el v3.15 solo, la próxima vez que lo arranques.
+── LO QUE NO SE TOCÓ, A PROPÓSITO ──────────────────────────────────────────────────────
+TOCAR el aviso sigue SIN callar. Eso lo pediste tú el 16 de septiembre: «al tocarla que abra
+directamente el gráfico; Roberto sigue hablando, pero yo al tocarla ya estoy en el gráfico».
+La lectura va por la voz mientras miras las velas. Sigue igual.
+
+── Y TAMBIÉN EN LA WEB ─────────────────────────────────────────────────────────────────
+El mismo arreglo en la web, que es tu respaldo: deslizar calla, y la notificación trae su
+botón de callar. Arreglar solo la APK sería dejarte dos Robertos, uno arreglado y otro no.
+
+── LO QUE TE TOCA A TI ─────────────────────────────────────────────────────────────────
+⚠️ La APK 7.249 está compilada y comprobada por dentro, pero NO está probada en tu moto g54:
+se te desconectó el cable mientras la compilaba. Tu ley es que nada se instala sin probarlo
+por cable, así que NO la instales todavía. Conecta el teléfono y dímelo: la instalo, la
+pruebo y entonces sí.
+
+La web 7.249 sí está publicada: ésa no necesita cable.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

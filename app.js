@@ -20768,6 +20768,10 @@ function init(){
     if(!ev.data) return;
     if(ev.data.type==="apex-ir" && ev.data.ir) irDestino(ev.data.ir);
     if(ev.data.type==="apex-ir" && ev.data.graf) setTimeout(()=>abrirGrafDeAviso(ev.data.graf), 2200);
+    /* 🔇 v7.249 — Rey deslizó el aviso o pulsó «Callar»: se calla. `iaVozParar()` calla por
+       los DOS caminos (el del navegador y el nativo del plugin), que es justo lo que hacía
+       falta: callar uno dejaba el otro hablando ([[apex-dos-motores-de-voz-no-se-oyen]]). */
+    if(ev.data.type==="apex-callar"){ try{ iaVozParar(); }catch(_){} }
   }); } }catch(_){}
   /* 💬 v6.23 (Rey): respuesta de Roberto con Apex ABIERTA — sin notificación: si el chat
      está abierto, el mensaje aterriza AHÍ al instante; si estás en otra sección, sale el

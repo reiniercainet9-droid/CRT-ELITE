@@ -1,4 +1,4 @@
-const CACHE = "crt-elite-v7-248";
+const CACHE = "crt-elite-v7-249";
 const FILES = ["./","./index.html","./data.js","./app.js","./roberto.js","./situaciones.js","./frases-celebres.js","./manifest.json","./icon-192.png","./icon-512.png"];
 const WORKER = "https://elitepro-worker.reiniercainet9.workers.dev";
 /* Web Push: al llegar un aviso (con la app CERRADA), muestra la notificación.
@@ -53,6 +53,9 @@ async function pintarAviso(msg){
     body: msg.body, tag: msg.repe ? "apex-insist" : (msg.id ? "apex-" + msg.id : (msg.tag || "apex") + "-" + Date.now()), renotify: true,
     icon: caraDe(msg), badge: "./icon-192.png",   /* ✏️ v6.46: su carita con el gesto del aviso */
     vibrate: vibra, silent: false,
+    /* 🔇 v7.249 — el botón de callar, el primero porque es el urgente: Rey puede estar en
+       una llamada mientras el teléfono le habla. Callar NO se lleva el aviso. */
+    actions: [{ action: "callar", title: "🔇 Callar" }],
     requireInteraction: true,
     timestamp: msg.ts || Date.now(), data: { url: "./index.html", jobId: msg.jobId || "", kind: msg.kind || "", sym: msg.sym || "", tvint: msg.tvint || "", seed: msg.seed || "", ir: msg.ir || "", texto: (msg.texto || "").slice(0, 4000) }
   });
@@ -164,9 +167,28 @@ function insistVisto(){
     .catch(()=>new Promise(r=>setTimeout(r,4000)).then(post))
     .catch(()=>{});
 }
-self.addEventListener("notificationclose", e => { e.waitUntil((async()=>{ try{ if((e.notification&&e.notification.tag)==="apex-insist") await silencioPoner(firmaDe(e.notification.body)); }catch(_){} await marcarRepeViva(null); await insistVisto(); })()); });
+/* 🔇 v7.249 (10-10) — DESLIZARLO TIENE QUE CALLARLO, TAMBIÉN AQUÍ.
+   Rey: «la deslizo para un lado para quitarla pero siguen hablando aunque ya la haya
+   cancelado». Lo arreglamos en el vigía nativo de la APK, que es por donde le habla casi
+   siempre; esto es el MISMO arreglo en la web, que es su respaldo y por donde le hablaría
+   el día que la APK falle. Dejar una mitad sin arreglar es tener dos Robertos
+   ([[apex-tres-voces-de-roberto]], [[apex-metodo-sin-retrocesos]]).
+   El service worker no habla —habla la página— así que lo que hace es pedirle a la página
+   que calle, y `iaVozParar()` calla por los dos caminos: el del navegador y el nativo. */
+async function mandarCallar(){
+  try{
+    const cs = await clients.matchAll({ type:"window", includeUncontrolled:true });
+    cs.forEach(c => { try{ c.postMessage({ type:"apex-callar" }); }catch(_){} });
+  }catch(_){}
+}
+self.addEventListener("notificationclose", e => { e.waitUntil((async()=>{ await mandarCallar(); try{ if((e.notification&&e.notification.tag)==="apex-insist") await silencioPoner(firmaDe(e.notification.body)); }catch(_){} await marcarRepeViva(null); await insistVisto(); })()); });
 /* Al tocar una notificación de Roberto, abre/enfoca la app */
 self.addEventListener("notificationclick", e => {
+  /* 🔇 v7.249 — EL BOTÓN DE CALLAR, y lo que lo hace distinto de descartar: NO se cierra la
+     notificación. Rey: «tampoco quiero quitar la notificación, para que siga en la caja de
+     notificaciones y revisarlas después». Por eso este `return` va ANTES del close() de
+     abajo: si cayera después, callar le borraría el aviso. */
+  if (e.action === "callar") { e.waitUntil(mandarCallar()); return; }
   e.notification.close();
   e.waitUntil((async()=>{ try{ if((e.notification&&e.notification.tag)==="apex-insist") await silencioPoner(firmaDe(e.notification.body)); }catch(_){} await marcarRepeViva(null); await insistVisto(); })());
   const tag=(e.notification.tag||"");
