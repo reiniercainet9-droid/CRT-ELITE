@@ -2222,7 +2222,7 @@ async function iaEnviarBloques(bloques, resumenChat){
     + (function(){var a=_inv2.filter(x=>!_ll2(x[1])&&x[2]==="tuyo").map(x=>x[0]);
         return a.length? ("💭 TODAVÍA NO HAY (sale de lo que Rey registre): "+a.join(" · ")+"." + _NL2):"";})()
     + "⛔ Lo de la primera lista LO TIENES: úsalo. ❌ NUNCA digas que NO PUEDES consultarlo." + _NL2;
-  const inj=_cab2+iaDondeEstoy()+"\n"+iaReloj()+"\n"+calTxt+iaContexto()+"\n"+iaEstrategiaDef()+"\n"+iaPlan()+"\n"+iaAciertos()+"\n"+iaFugas()+"\n"+iaRacha()+iaTemplo()+iaLeyes(resumenChat||"")+iaEjecutorCfgTxt()+iaNovedadesTxt()+"\n=== FIN DEL CONTEXTO ===";
+  const inj=_cab2+iaDondeEstoy()+"\n"+iaReloj()+"\n"+calTxt+iaContexto()+"\n"+iaEstrategiaDef()+"\n"+iaPlan()+"\n"+iaAciertos()+"\n"+iaFugas()+"\n"+iaRacha()+iaTemplo()+iaLeyes(resumenChat||"")+iaEjecutorCfgTxt()+pcTxtVivo()+iaNovedadesTxt()+"\n=== FIN DEL CONTEXTO ===";
   const last=msgs[msgs.length-1];
   last.content=[{type:"text",text:c.msgs[c.msgs.length-1].content, cache_control:{type:"ephemeral",ttl:"1h"}}].concat(bloques).concat([{type:"text",text:inj}]);
   /* estudiar capturas / material adjunto = trabajo profundo: pregunta qué motor usar */
@@ -3108,6 +3108,30 @@ async function revisionCadena(){
     else mal("EL GRÁFICO NO LLEGA: el indicador no está mandando, así que no puede haber alarmas.");
     if(s.apkViva && s.apkViva.vivo) bien("La app está mirando la cola de avisos (hace "+(s.apkViva.haceSeg||0)+" s).");
     else ojo("La nube no ve a la app mirando la cola. Si acabas de instalar, dale un minuto; si no, el vigía está dormido.");
+  }
+
+  /* 💻 E1 v7.260 (11-10) — SU PC, QUE ES DONDE VIVE LA MITAD DE SU SISTEMA.
+     Encargo de Rey: «Apex en la PC… con Roberto viendo SU PC». Va ANTES del teléfono a
+     propósito: en su PC corren el Puente y el Ejecutor, así que si está ahogada da igual lo
+     bien que esté el teléfono — se queda sin gráfico y sin robot
+     ([[apex-roberto-vive-en-toda-la-pc]], [[apex-mis-trabajos-dejan-ciego-al-puente]]). */
+  L.push("\n💻 TU PC");
+  {
+    let pc = null; try { pc = await pcEstado(); } catch (_) {}
+    if (!pc) ojo("No tengo parte de tu PC. O el Puente no está corriendo, o todavía no ha mandado el primero.");
+    else if (pc.viejo) mal("EL PARTE DE TU PC ES DE HACE " + pc.haceMin + " MIN: probablemente el Puente esté parado, y sin él no veo tu gráfico.");
+    else {
+      if (pc.ramLibrePct != null && pc.ramLibrePct < 15)
+        mal("TU PC VA AHOGADA: solo " + pc.ramLibrePct + "% de memoria libre. Con eso el Puente pierde el latido y te quedas sin ver el gráfico. Cierra lo que no uses.");
+      else if (pc.ramLibrePct != null) bien("Memoria de tu PC: " + pc.ramLibrePct + "% libre.");
+      if (pc.disco && pc.disco.librePct != null && pc.disco.librePct < 10)
+        mal("EL DISCO CASI LLENO: " + pc.disco.librePct + "% (" + pc.disco.libreGB + " GB). Los registros y las capturas dejan de guardarse.");
+      else if (pc.disco && pc.disco.librePct != null) bien("Disco: " + pc.disco.librePct + "% libre (" + pc.disco.libreGB + " GB).");
+      if (pc.bateriaPct != null && pc.bateriaCargando === false && pc.bateriaPct < 20)
+        mal("BATERÍA AL " + pc.bateriaPct + "% Y SIN ENCHUFAR: si se apaga, se caen el Puente y el Ejecutor.");
+      else if (pc.bateriaPct != null) bien("Batería de la PC: " + pc.bateriaPct + "%" + (pc.bateriaCargando ? " (enchufada)" : "") + ".");
+      if (pc.encendidaHaceMin != null && pc.encendidaHaceMin > 4320) ojo("Tu PC lleva más de 3 días encendida sin reiniciar.");
+    }
   }
 
   /* ── 2) EL TELÉFONO: lo que solo se sabe desde aquí ──────────────────────── */
@@ -12943,6 +12967,59 @@ let _iaConoc = null;
 /* ⚙️ v7.227 — las reglas del Ejecutor de Rey, AHORA EN EL CONTEXTO VIVO.
    Vivían dentro del dossier cacheado y lo invalidaban cada vez que él tocaba una regla.
    Mismo texto, mismo sitio en la lectura de Roberto, otro sobre. */
+
+/* 💻 E1 v7.260 (11-10) — ROBERTO VE SU PC, IGUAL QUE VE SU TELÉFONO.
+   ═══════════════════════════════════════════════════════════════════════════════════════
+   Encargo de Rey (E1): «Apex en la PC: como la web, pero con Roberto viendo SU PC —
+   galería, datos, gráficas, operaciones, batería y lo básico, con sus manos y su visión.
+   DENTRO de Apex solamente».
+   Desde el 12-09 Roberto conoce su TELÉFONO al detalle. De su PC no sabía nada: solo si el
+   Puente estaba vivo. Preguntarle «¿cómo está mi PC?» no tenía respuesta, y su PC es donde
+   corren el Puente y el Ejecutor — o sea, donde vive la mitad de su sistema
+   ([[apex-roberto-conoce-su-telefono]], [[apex-roberto-vive-en-toda-la-pc]]).
+   El dato lo arma el Puente (0,9 ms, todo por Node) y viaja en el empuje del gráfico que ya
+   se hacía. Aquí solo se lee.
+   ⚠️ Si el parte es viejo o no hay, se DICE. Un dato de hace una hora presentado como de
+   ahora es peor que no tenerlo ([[apex-informe-rancio-agitador]]). */
+let _pcCache = { ts: 0, d: null };
+async function pcEstado(){
+  try{
+    if(Date.now() - _pcCache.ts < 60000) return _pcCache.d;
+    const r = await fetch(nubeUrl()+"/salud", {cache:"no-store"});
+    const j = await r.json();
+    _pcCache = { ts: Date.now(), d: (j && j.pc) || null };
+    return _pcCache.d;
+  }catch(_){ return null; }
+}
+function pcTxt(p){
+  if(!p) return "[💻 SU PC: no tengo parte. O el Puente no está corriendo, o esta versión del Puente todavía no lo manda. No des por hecho nada de su PC: dile que no lo sabes.]\n";
+  if(p.viejo) return "[💻 SU PC: el último parte es de hace "+p.haceMin+" min, así que NO describe cómo está ahora. Probablemente el Puente esté parado.]\n";
+  const L = [];
+  L.push("[💻 SU PC AHORA MISMO (lo manda el Puente, es de hace "+(p.haceMin||0)+" min):");
+  if(p.equipo) L.push("· equipo: "+p.equipo+(p.nucleos?(" · "+p.nucleos+" núcleos"):""));
+  if(p.ramLibrePct!=null) L.push("· memoria libre: "+p.ramLibrePct+"% ("+Math.round((p.ramLibreMB||0)/1024*10)/10+" GB de "+Math.round((p.ramTotalMB||0)/1024*10)/10+" GB)");
+  if(p.disco && p.disco.librePct!=null) L.push("· disco: "+p.disco.librePct+"% libre ("+p.disco.libreGB+" GB de "+p.disco.totalGB+" GB)");
+  if(p.bateriaPct!=null) L.push("· batería: "+p.bateriaPct+"%"+(p.bateriaCargando?" (enchufada)":" (tirando de batería)"));
+  if(p.encendidaHaceMin!=null){
+    const h = Math.floor(p.encendidaHaceMin/60), m = p.encendidaHaceMin%60;
+    L.push("· encendida desde hace "+(h?h+" h ":"")+m+" min");
+  }
+  if(p.puente) L.push("· Puente "+p.puente);
+  /* y lo que hay que MIRAR, no solo lo que hay: su PC es un Celeron con 8 GB */
+  const ojo = [];
+  if(p.ramLibrePct!=null && p.ramLibrePct < 15) ojo.push("le queda MUY POCA memoria ("+p.ramLibrePct+"%): con eso el Puente pierde el latido y te quedas sin ver su gráfico");
+  if(p.disco && p.disco.librePct!=null && p.disco.librePct < 10) ojo.push("el disco está casi lleno ("+p.disco.librePct+"%)");
+  if(p.bateriaPct!=null && p.bateriaCargando===false && p.bateriaPct < 20) ojo.push("la batería está al "+p.bateriaPct+"% y NO está enchufada: si se apaga, se cae el Puente y el Ejecutor");
+  if(p.encendidaHaceMin!=null && p.encendidaHaceMin > 4320) ojo.push("lleva más de 3 días encendida sin reiniciar");
+  if(ojo.length) L.push("⚠️ MÍRALE ESTO: "+ojo.join(" · "));
+  else L.push("(nada que mirar: su PC está bien)");
+  L.push("Úsalo cuando te pregunte por su PC, y DILO TÚ si ves algo de lo de arriba sin que te lo pida.]");
+  return L.join("\n")+"\n";
+}
+let _pcUlt = null;
+try{ pcEstado().then(d=>{ _pcUlt = d; }); }catch(_){}
+function pcTxtVivo(){ try{ pcEstado().then(d=>{ _pcUlt = d; }); }catch(_){} return pcTxt(_pcUlt); }
+
 function iaEjecutorCfgTxt(){
   try{
     const e=load(K.ejeccfg,null); if(!e || !e.cfg) return "";
@@ -21198,7 +21275,7 @@ async function iaEnviar(textoForzado, promptExtra){
     + "Si está en la tercera, di que TODAVÍA NO HAY porque aún no lo ha registrado — no que falló." + NL
     + "❌ NUNCA digas que NO PUEDES consultar algo de estas listas ni que tienes esa limitación: SÍ puedes." + NL
     + "Decir «no puedo» sobre algo que sí tienes le hace dudar de ti, y con razón." + NL;
-  const inj=_cabecera+entTxt+dondeTxt+"\n"+climaTxt+iaReloj()+"\n"+grafTxt+calTxt+iaContexto()+"\n"+iaEstrategiaDef()+"\n"+guardianRiesgo()+"\n"+iaPlan()+"\n"+iaAciertos()+"\n"+(estadoRecuperacionFreno().block||"")+iaFugas()+"\n"+iaRacha()+"\n"+iaPatrones()+"\n"+iaDatosSueltos()+"\n"+iaHitos()+"\n"+iaChats()+"\n"+iaPendientes()+"\n"+iaPlanSemanal()+"\n"+iaAvisos()+"\n"+iaPosicionesVivas()+iaEntradasAbiertas()+iaEjecutorArchivo()+iaEjecutorHoy()+iaTemplo()+iaLeyes(texto)+marco+iaEjecutorCfgTxt()+iaNovedadesTxt()+"\n=== FIN DEL CONTEXTO — responde al mensaje de Rey del bloque anterior ===";
+  const inj=_cabecera+entTxt+dondeTxt+"\n"+climaTxt+iaReloj()+"\n"+grafTxt+calTxt+iaContexto()+"\n"+iaEstrategiaDef()+"\n"+guardianRiesgo()+"\n"+iaPlan()+"\n"+iaAciertos()+"\n"+(estadoRecuperacionFreno().block||"")+iaFugas()+"\n"+iaRacha()+"\n"+iaPatrones()+"\n"+iaDatosSueltos()+"\n"+iaHitos()+"\n"+iaChats()+"\n"+iaPendientes()+"\n"+iaPlanSemanal()+"\n"+iaAvisos()+"\n"+iaPosicionesVivas()+iaEntradasAbiertas()+iaEjecutorArchivo()+iaEjecutorHoy()+iaTemplo()+iaLeyes(texto)+marco+iaEjecutorCfgTxt()+pcTxtVivo()+iaNovedadesTxt()+"\n=== FIN DEL CONTEXTO — responde al mensaje de Rey del bloque anterior ===";
   const last=msgs[msgs.length-1];
   const textoMsg=c.msgs[c.msgs.length-1].content;   /* EXACTAMENTE lo guardado (texto + nota del doc) */
   let bloquesMsg = Array.isArray(last.content) ? last.content.filter(b=>b.type==="image") : [];   /* la foto va delante */
