@@ -1,51 +1,66 @@
-APEX v7.260 — TRADING DESK
+APEX v7.262 — TRADING DESK
 =========================
 
-🧮 F1 COMPLETA — LA CALCULADORA DE NEGOCIOS, Y ROBERTO SABE USARLA
+🏦 EL BALANCE DE TUS CUENTAS SE ACTUALIZA SOLO
 
-Llevaba en tu lista desde el 09-10. Está entera: la pantalla y la mitad que faltaba, que
-es que Roberto la use sin que se lo pidas.
+Me lo pediste así, con la captura de los tres avisos delante: «el balance de las cuentas se
+debería actualizar solo con el balance real de Mt5, no tener que actualizarlas yo manual al
+terminar cada operación».
 
-── DÓNDE ESTÁ ────────────────────────────────────────────────────────────────────────
-En 🛡️ Riesgo, plegada: «🧮 ¿Me renta este negocio?». Pones lo que sepas — no hace falta
-rellenarlo todo — y lo que no pongas sale como «no lo sé», nunca como cero.
+Y el dato lo tenías delante sin saberlo: el Puente se engancha a tu MT5 cada 5 minutos para
+cantarte el lote — de ahí salió el 5.665,61 de esa misma notificación. Pero ese número moría
+en el aviso. En 🏦 Cuentas seguía saliendo lo que tú hubieras escrito, o una ESTIMACIÓN hecha
+de tus R.
 
-── LO QUE HACE DISTINTO A CUALQUIER CALCULADORA ──────────────────────────────────────
-1. EL SUELO MANDA. No se compara contra cero: se compara contra lo que TU dinero rentaría
-   quieto donde vives. Probado en tu teléfono con un caso real: un negocio que te deja un
-   1% al mes, con el suelo al 1,2%, sale 🟥 «No invertir — rinde MENOS que dejar el dinero
-   quieto. Estarías trabajando para perder». Da beneficio y te hace perder.
-   Si no pones el suelo, te digo que el número es NOMINAL en vez de fingir.
-2. EL COMPUESTO BIEN HECHO. 12 meses al 5% son 79,59%, no 60%. Y te enseño las dos cifras
-   juntas para que veas la diferencia que hace componer.
-3. TU HORA CONTRA TU HORA. Si lo que te deja cada hora es menos de lo que vale tu hora hoy,
-   te lo digo con estas palabras: eso no es un negocio, es un empleo con otro uniforme y
-   encima poniendo tú el capital.
-4. LO QUE PUEDES PERDER, que no es lo mismo que lo que inviertes. Si puedes perder más de
-   lo que metes, eso no es una inversión con riesgo: es una deuda con premio, y se mira
-   ANTES que la rentabilidad.
-5. PROYECCIÓN A 1, 3 Y 5 AÑOS CON REINVERSIÓN PARCIAL. Nadie reinvierte el 100%: lo que
-   sacas deja de componer y la curva se aplana. Lo ves en los tres plazos.
-6. ¿TE RENTA MÁS QUE TU PROPIA CUENTA? Esto no lo tiene ninguna calculadora: tu trading ES
-   un negocio más y aquí ya están tus números. Sale de tu esperanza, tu riesgo por
-   operación y tu ritmo real. Si son menos de 30 operaciones te lo digo: indicio, no
-   conclusión — tu Ley 37.
+AHORA: tu MT5 → el Puente → la nube → la ficha. Solo, cada 5 minutos, sin que toques nada.
 
-── TU LEY DEL 09-10, CUMPLIDA ────────────────────────────────────────────────────────
-«Toda la tabla debe ser diversificada como lo es mi sistema, nada fijo, ni a un país ni a
-un negocio: es general, que funcione en todo.»
-No hay ninguna moneda, ningún país ni ningún índice escrito en ningún sitio. Todo va en
-porcentajes y múltiplos; la moneda es una etiqueta tuya que ningún cálculo toca. Tú pones
-tu suelo y tu inflación. Y se configuran: los cuatro cortes del semáforo, uno a uno, y la
-unidad de tiempo — día, semana, mes, trimestre, temporada o año, porque hay negocios por
-zafra y por proyecto.
+· Entra en LA FICHA QUE ES, por número de cuenta. Si tienes tres registradas, el balance de
+  FundedNext no se mete en la de Pepperstone — de ahí sale tu progreso, tu margen al DD y tu
+  lote, y meter el de una en otra sería darte números falsos donde hay dinero.
+· La tarjeta te DICE de dónde salió el número: «🔗 Real de MT5 · hace 3 min», «lo pusiste tú»
+  o «estimado de tus R». Antes había un «(est.)» que no explicaba nada.
+· Si el Puente lleva más de 3 horas sin leer tu MT5, deja de usar ese balance y vuelve al
+  tuyo. Un número de ayer no se te presenta como de ahora.
+· Roberto también lo sabe: donde el balance sea el real de MT5 no te va a pedir nunca que lo
+  actualices al cerrar.
 
-── Y LA MITAD QUE FALTABA: ROBERTO ───────────────────────────────────────────────────
-Tiene la mano para echar estas cuentas —la misma, no una segunda cuenta por otro lado— y
-el tema entero en la cabeza. En cuanto le menciones un negocio lo mide, y te exige lo que
-falte en vez de rellenarlo de memoria: qué puedes perder, cuántas horas le metes, cuánto
-vale tu hora, cuánto reinviertes de verdad. Y te hará la pregunta que solo él puede
-hacerte: ¿te renta más eso o tu propia cuenta?
+Y al abrir la ficha, si es la cuenta que tienes abierta en MT5, te lo dice en verde: ese campo
+ya lo lleno yo.
+
+── LO DEMÁS DE ESTA ENTREGA ─────────────────────────────────────────────────────────────
+
+📱 LOS AVISOS YA NO SE PISAN. Los tres caían encima y se cortaban entre sí. Dos cosas:
+   · Los parciales con su precio van AHORA ANTES del nombre de la ficha y del aviso de cuenta.
+     Android corta la notificación por lo largo, y los parciales estaban justo donde cae el
+     corte: por eso veías «✂️ Parciales: 25% 1.32262 (0.5R) ·» y se acababa ahí. Lo que
+     teclas en MT5 va primero; el contexto, detrás.
+   · Un aviso del mismo tema REEMPLAZA al anterior en vez de apilarse. Antes se amontonaban
+     tres y se solapaban las voces.
+
+🏦 «CUENTA NO REGISTRADA» ERA MENTIRA, Y YA NO PASA. Tus cuentas se borraban solas de la nube
+   a los 7 días y solo se resubían si tocabas algo. El Puente dejaba de encontrar la tuya, te
+   cantaba el lote con el riesgo general en vez del de ESA cuenta, y encima te acusaba a ti de
+   no haberla registrado. Ahora no caducan y se resuben solas al abrir y cada hora.
+
+💻 ROBERTO VE TU PC. Equipo, memoria, disco, batería y cuánto lleva encendida. Y si está
+   ahogada te dice la CONSECUENCIA: que se te cae el Puente y el Ejecutor. Medido antes de
+   elegir cómo: leerlo por Windows costaba 2,4 segundos; por Node, 0,9 milisegundos.
+
+📊 LA CALCULADORA DE NEGOCIOS. Comparar cualquier negocio con tu trading, en % y en múltiplos,
+   con interés compuesto de verdad y el semáforo medido contra el SUELO (lo que renta el
+   dinero quieto), no contra cero.
+
+🔎 EL RECUADRO DEL DIARIO, EXPLICADO Y SIN MENTIR. Los 11 números con su significado, abiertos
+   (antes la explicación existía y estaba plegada, que es igual que no estar). Y ya no dice
+   «ninguna cerró en TP» cuando tus números dicen lo contrario: si no escribiste por dónde
+   saliste, lo deduzco de tu R y te lo marco con 🔎 para que sepas que es deducido.
+
+🗣️ LA VOZ. El botón de probar no hablaba nada. Eran dos motores distintos sin atar, y
+   `speak()` devuelve error en silencio cuando el motor está suelto. Ahora se rehace solo, y
+   la voz del que narra es la MISMA que la de dentro de Apex, con la variante local automática
+   cuando no hay internet.
+
+💬 LO QUE TE DICE ROBERTO QUEDA ESCRITO en el hilo del día, no solo dicho.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

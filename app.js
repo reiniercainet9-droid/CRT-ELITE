@@ -7842,7 +7842,7 @@ function irA(id){
   if(id==="gatillo")  renderGatillo();
   if(id==="mentor")   refrescarMentorCtx();    /* la cabecera también */
   if(id==="almanaque")refrescarAlmCtx();       /* la cabecera también */
-  if(id==="cuentas")  renderCuentas();
+  if(id==="cuentas"){ renderCuentas(); try{ mt5Refrescar(); }catch(_){} }
   if(id==="noticias") renderNoticias();
   if(id==="avisos")   renderAvisos();
   if(id==="ejecutor") renderEjecutor();
@@ -11641,6 +11641,77 @@ function faseColor(f){ return /Demo/.test(f)?"var(--txt3)":/Fondeada/.test(f)?"v
 function faseBadge(f){ const col=faseColor(f); return `<span class="cta-badge" style="color:${col};border-color:${col}">${esc(f||"—")}</span>`; }
 
 /* Rendimiento de una cuenta a partir de sus trades ligados + sus datos */
+/* 🏦 A4 v7.262 (11-10) — EL BALANCE SE ACTUALIZA SOLO, CON EL DE SU MT5.
+   ═══════════════════════════════════════════════════════════════════════════════════════
+   Rey, mandándome la captura de los tres avisos pisándose: «el balance de las cuentas se
+   deberían actualizar solas con el balance real de Mt5, no tener que yo actualizarlas
+   manual al terminar cada operación, porque se supone que mi sistema me ayuda a automatizar
+   mis operaciones, mis registros y hacer lo más fácil posible para mí sin estrés extra
+   adicionado».
+
+   Y TENÍA EL DATO DELANTE. El Puente se engancha a su MT5 cada 5 minutos para cantarle el
+   lote — de ahí salió el 5.665,61 de esa misma notificación. Pero ese número moría en el
+   aviso: 🏦 Cuentas seguía mostrando lo que él hubiese tecleado, o una ESTIMACIÓN hecha de
+   sus R. Otra de declarar y no dar ([[apex-declarar-no-es-dar]]).
+
+   Ahora: Puente → worker (mt5:cuenta) → /salud → esta ficha. Y se casa por NÚMERO DE
+   CUENTA, no por la primera que haya: con tres cuentas registradas, el balance real entra
+   solo en la que lleva ese número ([[apex-la-pared-tiene-que-ser-de-esta-cuenta]]).
+
+   TRES CANDADOS, porque esto es dinero y de aquí salen su progreso, su margen al DD y el lote:
+   · Si la lectura pasa de 3 h se deja de usar y vuelve a mandar lo suyo: no se presenta como
+     «de ahora» algo de ayer ([[apex-informe-rancio-agitador]]).
+   · La edad ENVEJECE sola aquí: a la que trajo /salud se le suma lo que lleve en memoria, para
+     que una pestaña abierta toda la noche no crea que su balance es de hace un minuto.
+   · Se escribe en la ficha solo cuando CAMBIA de verdad (más de un céntimo), para no disparar
+     un guardado y una subida a la nube en cada repintado. */
+const MT5_EDAD_MAX_MIN = 180;
+let _mt5Vivo = null;        /* {cuenta, balance, moneda, demo, haceMin, leidoTs} */
+
+function mt5Lectura(){
+  if(!_mt5Vivo || !(Number(_mt5Vivo.balance) > 0)) return null;
+  const edad = (+_mt5Vivo.haceMin || 0) + Math.round((Date.now() - _mt5Vivo.leidoTs) / 60000);
+  if(edad > MT5_EDAD_MAX_MIN) return null;
+  return { cuenta:_mt5Vivo.cuenta, balance:+_mt5Vivo.balance, moneda:_mt5Vivo.moneda||"USD",
+           demo:!!_mt5Vivo.demo, haceMin:edad };
+}
+/* ¿es ESTA ficha la cuenta que tiene abierta en MT5? Por número, o no es */
+function mt5DeEstaFicha(c){
+  const m = mt5Lectura(); if(!m) return null;
+  const num = String(m.cuenta || "").replace(/\D/g, "");
+  if(!num) return null;
+  return String((c && c.mt5) || "").replace(/\D/g, "") === num ? m : null;
+}
+/* escribe el balance real en la ficha que toca, para que viaje a la nube y lo lea Roberto */
+function mt5CuadrarFichas(){
+  const m = mt5Lectura(); if(!m) return false;
+  const num = String(m.cuenta || "").replace(/\D/g, ""); if(!num) return false;
+  let cambio = false;
+  (Array.isArray(CUENTAS) ? CUENTAS : []).forEach(c => {
+    if(String(c.mt5 || "").replace(/\D/g, "") !== num) return;
+    if(Math.abs((+c.balance || 0) - m.balance) < 0.01 && c.balanceDe === "mt5") return;
+    c.balance   = m.balance;
+    c.balanceDe = "mt5";          /* de dónde salió: para que la tarjeta no se lo invente */
+    c.balanceTs = Date.now();
+    cambio = true;
+  });
+  if(cambio){ try{ guardarCuentas(); }catch(_){} }
+  return cambio;
+}
+async function mt5Refrescar(){
+  try{
+    const sal = await saludLeer();
+    const m = sal && sal.mt5;
+    if(!m || !(Number(m.balance) > 0)) return null;
+    _mt5Vivo = { cuenta:m.cuenta, balance:+m.balance, moneda:m.moneda||"USD",
+                 demo:!!m.demo, haceMin:+m.haceMin||0, leidoTs:Date.now() };
+    if(mt5CuadrarFichas()){
+      try{ if(typeof $ === "function" && $("#cuentasBody")) refrescarCuentas(); }catch(_){}
+    }
+    return mt5Lectura();
+  }catch(_){ return null; }
+}
+
 function statsCuenta(c){
   /* 🏦 v7.247 (10-10) — UN BACKTEST NO PUEDE MOVER EL PROGRESO DE UNA CUENTA DE VERDAD.
      ═══════════════════════════════════════════════════════════════════════════════════════
@@ -11661,12 +11732,19 @@ function statsCuenta(c){
   const cap=+c.capital||0;
   const riesgo=(+c.riesgoPct||0.5)/100;
   const plTrades = m ? m.rNeto*riesgo*cap : 0;         // P&L estimado en $ desde la R
+  /* 🏦 A4 (11-10) — EL ORDEN DE LA VERDAD: lo que hay en su MT5 → lo que escribió él → la
+     estimación. Lo de MT5 manda porque es la cuenta de verdad; su número tecleado es una foto
+     del día que lo escribiese; y la estimación son R convertidas a dinero. Y SIEMPRE se
+     devuelve de dónde salió, para que la tarjeta lo diga en vez de dar un número a secas
+     ([[apex-roberto-no-inventa]]). */
+  const real = (typeof mt5DeEstaFicha === "function") ? mt5DeEstaFicha(c) : null;
   const manual = (c.balance!==undefined && c.balance!==null && c.balance!=="");
-  const balance = manual ? (+c.balance||0) : cap+plTrades;
+  const balance = real ? real.balance : (manual ? (+c.balance||0) : cap+plTrades);
+  const fuente = real ? "mt5" : (manual ? "manual" : "est");
   const pl = balance-cap;
   const progresoPct = cap>0 ? pl/cap*100 : 0;
   const target = +c.targetPct||0;
-  return { list, m, cap, riesgo, plTrades, manual, balance, pl, progresoPct, target };
+  return { list, m, cap, riesgo, plTrades, manual, balance, pl, progresoPct, target, fuente, real };
 }
 
 /* ============================================================
@@ -12231,6 +12309,21 @@ function renderCuentas(){
   });
 }
 
+/* 🏦 A4 — el rótulo de debajo del balance: de dónde salió ese número.
+   Tres números distintos con la misma cara son tres mentiras posibles. Si es de su MT5 lleva
+   el 🔗 y su edad; si lo escribió él, lo dice; y si es estimado de sus R, lo dice también —
+   que es lo que hacía antes, con un «(est.)» que no explicaba nada. */
+function balanceDeDonde(st){
+  if(st && st.fuente === "mt5" && st.real){
+    const h = +st.real.haceMin || 0;
+    const cuando = h < 2 ? "ahora mismo" : h < 60 ? ("hace " + h + " min")
+                 : ("hace " + Math.round(h / 60) + " h");
+    return "🔗 Real de MT5 · " + cuando;
+  }
+  if(st && st.fuente === "manual") return "Balance (lo pusiste tú)";
+  return "Balance (estimado de tus R)";
+}
+
 function tarjetaCuenta(c){
   const st=statsCuenta(c);
   const card=el("div","card");
@@ -12285,7 +12378,7 @@ function tarjetaCuenta(c){
       ${faseBadge(c.fase)}
     </div>
     <div class="stats" style="margin-top:6px">
-      <div class="st"><div class="v n">$${r0(st.balance)}</div><div class="k">Balance ${st.manual?"":"(est.)"}</div></div>
+      <div class="st"><div class="v ${st.fuente==="mt5"?"g":"n"}">${r0(st.balance)}</div><div class="k">${balanceDeDonde(st)}</div></div>
       <div class="st"><div class="v ${plCls}">${st.pl>=0?"+":"-"}$${r0(Math.abs(st.pl))}</div><div class="k">P&amp;L</div></div>
       <div class="st"><div class="v b">$${r0(st.cap)}</div><div class="k">Capital</div></div>
     </div>
@@ -12371,6 +12464,12 @@ function cuentaModal(id){
     <div class="fl" style="color:var(--gold);margin-top:6px">Rendimiento</div>
     <div class="fld"><div class="fl">Balance actual ($) — vacío = se calcula con tus trades</div>
       <input class="inp" id="ac_balance" inputmode="decimal" placeholder="(automático)" value="${val("balance")}"></div>
+    ${(function(){ var _m = (typeof mt5DeEstaFicha==="function" && c) ? mt5DeEstaFicha(c) : null;
+       if(!_m) return "";
+       return '<div class="note" style="text-align:left;margin:-2px 0 8px;color:var(--green)">'
+         + "🔗 Esta es la cuenta que tienes abierta en MT5. El balance lo pongo yo solo ($"
+         + r0(_m.balance) + ") y lo refresco cada 5 min: no tienes que tocarlo. Si escribes un "
+         + "número aquí, la siguiente lectura de MT5 lo pisa.</div>"; })()}
     <div class="fl" style="color:var(--gold)">Interés compuesto / payouts</div>
     <div class="g2">
       <div><div class="fl">Retirado ($)</div><input class="inp" id="ac_retiros" inputmode="decimal" placeholder="0" value="${val("retiros")}"></div>
@@ -12435,10 +12534,10 @@ function guardarCuentaForm(id){
 /* Resumen de cuentas para Roberto (acceso total) */
 function iaCuentas(){
   if(!CUENTAS.length) return "\n[CUENTAS DE FONDEO de Rey: en este momento hay 0 cuentas guardadas en Apex. IMPORTANTE: NO digas 'no me llegó el bloque de cuentas' — el bloque SÍ te llegó, y dice que no hay ninguna registrada. Si Rey te habla de sus cuentas, dile con naturalidad que aún NO las ves registradas en Apex y ofrécete a registrarlas TÚ con tu mano crear_cuenta (pídele firma, capital, fase y el % o monto de pérdida actual de cada una, y créalas con tu tarjeta de confirmación). Nunca le pidas que 'busque el dato él'.]\n";
-  let s="\n[CUENTAS de Rey (pueden ser de FONDEO/examen, CAPITAL PROPIO/real, o DEMO de práctica) — tienes acceso total; trátalas por SEPARADO, cada una con las reglas de SU firma y su clasificación. Ayúdalo a gestionarlas, protegerlas y escalar]:\n";
+  let s="\n[CUENTAS de Rey (pueden ser de FONDEO/examen, CAPITAL PROPIO/real, o DEMO de práctica) — tienes acceso total; trátalas por SEPARADO, cada una con las reglas de SU firma y su clasificación. Ayúdalo a gestionarlas, protegerlas y escalar.\n  🏦 DESDE EL 11-10 EL BALANCE DE LA CUENTA QUE TIENE ABIERTA EN MT5 ENTRA SOLO, cada 5 min, por el Puente. Donde diga «REAL, leído de su MT5» ese número es el de verdad y no hay nada que actualizar: NO le pidas nunca que lo apunte ni que lo revise al cerrar una operación — se quejó expresamente de ese trabajo a mano. Donde diga «estimado de sus R» sí es un cálculo, y ahí se habla con cuidado]:\n";
   CUENTAS.forEach(c=>{
     const st=statsCuenta(c);
-    s+=`· ${c.alias||c.firma||"Cuenta"} (${c.firma||"?"}, ${c.fase}): capital $${r0(st.cap)}, balance ~$${r0(st.balance)} (P&L ${st.pl>=0?"+":""}$${r0(st.pl)}, ${r1(st.progresoPct)}% de ${c.targetPct||"?"}% objetivo). DD máx ${c.ddMaxPct||"?"}%${c.ddTipo?" "+c.ddTipo:""}, daily ${c.ddDailyPct||"?"}%, riesgo ${c.riesgoPct||"?"}%/trade.`;
+    s+=`· ${c.alias||c.firma||"Cuenta"} (${c.firma||"?"}, ${c.fase}): capital $${r0(st.cap)}, balance ${st.fuente==="mt5"?"":"~"}${r0(st.balance)}${st.fuente==="mt5"?" (REAL, leído de su MT5 hace "+(+st.real.haceMin||0)+" min — se actualiza solo, NO le pidas que lo actualice a mano)":st.fuente==="manual"?" (lo escribió él)":" (estimado de sus R)"} (P&L ${st.pl>=0?"+":""}$${r0(st.pl)}, ${r1(st.progresoPct)}% de ${c.targetPct||"?"}% objetivo). DD máx ${c.ddMaxPct||"?"}%${c.ddTipo?" "+c.ddTipo:""}, daily ${c.ddDailyPct||"?"}%, riesgo ${c.riesgoPct||"?"}%/trade.`;
     const ddMax=+c.ddMaxPct||0;
     if(st.progresoPct<0 && ddMax>0){ const margen=Math.max(0,ddMax-Math.abs(st.progresoPct)); s+=` [VA EN NEGATIVO ${r1(st.progresoPct)}%, le quedan ${r1(margen)}% hasta romper el DD${margen<=ddMax*0.3?" — PELIGRO, protégela":""}]`; }
     else if(st.target>0 && st.progresoPct>=st.target){ s+=` [OBJETIVO CUMPLIDO, cuida de no romper reglas]`; }
@@ -12981,15 +13080,18 @@ let _iaConoc = null;
    se hacía. Aquí solo se lee.
    ⚠️ Si el parte es viejo o no hay, se DICE. Un dato de hace una hora presentado como de
    ahora es peor que no tenerlo ([[apex-informe-rancio-agitador]]). */
-let _pcCache = { ts: 0, d: null };
+let _pcCache = { ts: 0, d: null, mt5: null };
+/* una sola lectura de /salud sirve para las dos cosas: el parte de su PC y el balance de su
+   MT5. Pedirlo dos veces seria gastar dos llamadas por el mismo sobre. */
+async function saludLeer(){
+  if(Date.now() - _pcCache.ts < 60000) return _pcCache;
+  const r = await fetch(nubeUrl()+"/salud", {cache:"no-store"});
+  const j = await r.json();
+  _pcCache = { ts: Date.now(), d: (j && j.pc) || null, mt5: (j && j.mt5) || null };
+  return _pcCache;
+}
 async function pcEstado(){
-  try{
-    if(Date.now() - _pcCache.ts < 60000) return _pcCache.d;
-    const r = await fetch(nubeUrl()+"/salud", {cache:"no-store"});
-    const j = await r.json();
-    _pcCache = { ts: Date.now(), d: (j && j.pc) || null };
-    return _pcCache.d;
-  }catch(_){ return null; }
+  try{ return (await saludLeer()).d; }catch(_){ return null; }
 }
 function pcTxt(p){
   if(!p) return "[💻 SU PC: no tengo parte. O el Puente no está corriendo, o esta versión del Puente todavía no lo manda. No des por hecho nada de su PC: dile que no lo sabes.]\n";
@@ -21534,6 +21636,27 @@ function init(){
   document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible") holaApp(); });
   document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible") insistVistoApp(); });
   try{ nubeRestaurar(true); }catch(_){}  /* ☁️ si la nube tiene datos más nuevos (otro teléfono), restaura solo */
+  /* 🏦 v7.261 (11-10) — SUS CUENTAS SE RESUBEN SOLAS AL ABRIR, Y CADA HORA.
+     ═════════════════════════════════════════════════════════════════════════════════════
+     Rey, con la captura del lote: «¿cómo me va a decir que no está registrada en cuentas si
+     eso ya había quedado claro y está registrada?».
+     MEDIDO: /riesgo devolvía `cuentas: []`. Había DOS agujeros y hacían falta los dos para
+     que se perdiera: en la nube caducaba a los 7 días (ya no caduca, worker 5.273), y aquí
+     solo se subía CUANDO ÉL TOCABA algo en 🏦 Cuentas. Si no tocaba nada en una semana, el
+     dato se borraba y nadie lo reponía: el Puente dejaba de encontrar su cuenta, le cantaba
+     el lote con el riesgo general en vez del de ESA cuenta —que es dinero— y encima le
+     acusaba a él de no haberla registrado.
+     Arreglar solo el TTL habría dejado el mismo agujero para cualquier otra pérdida: lo que
+     el Puente necesita para cantar bien el lote tiene que reponerse SOLO
+     ([[apex-nada-que-rey-tenga-que-recordar]], [[apex-declarar-no-es-dar]]). */
+  try{ syncRiesgo(); }catch(_){}
+  try{ setInterval(()=>{ try{ syncRiesgo(); }catch(_){} }, 3600000); }catch(_){}
+  /* 🏦 A4 (11-10) — el balance real de su MT5, solo. Al arrancar, al volver a la app y cada
+     5 min: el Puente lo relee cada 5, así que pedirlo más seguido seria pedir lo mismo. Y no
+     es una llamada nueva — comparte el sobre de /salud con el parte de su PC. */
+  setTimeout(()=>{ try{ mt5Refrescar(); }catch(_){} }, 2000);
+  setInterval(()=>{ try{ mt5Refrescar(); }catch(_){} }, 5*60000);
+  document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible"){ try{ mt5Refrescar(); }catch(_){} } });
   /* Al volver a la app (no cerrarla del todo), recupera lo que haya terminado */
   document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible") iaResumePend(); });
   /* 🧮 v7.38 — la cuenta de frases que llevó el cuerpo flotante mientras Rey estaba fuera */
