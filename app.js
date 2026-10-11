@@ -3723,12 +3723,43 @@ function apexEsperanza(ops){
        hay que medir es su criterio, no su TP. Va DETRÁS de las demás a propósito: si el
        texto dice TP o stop, manda eso, no el gesto de cerrarla. */
     ["manual", /a mano|manual|criterio/i,       "✋ la cerré a mano"],
+    /* 🔎 v7.256 — las dos puertas DEDUCIDAS de sus números. Llevan su propia etiqueta a
+       propósito: Rey tiene que poder distinguir de un vistazo lo que él escribió de lo que
+       yo deduje. Mezclarlas sería darle por dato algo que es una lectura mía
+       ([[apex-roberto-no-inventa]]). No llevan patrón porque no salen del texto: las pone
+       `dedujeLaSalida()` mirando el R. */
+    ["TPdeducido", /(?!)/,                      "🎯 llegó al objetivo 🔎"],
+    ["SLdeducido", /(?!)/,                      "🛑 saltó el stop 🔎"],
   ];
+  /* (el deductor vive fuera, en dedujeLaSalida, para poder ejecutarlo desde un banco) */
+  /* 🔎 v7.256 — el objetivo con el que comparar sale de SUS reglas, no de un 1:2 supuesto.
+     Si no lo tiene puesto, no se deduce nada por el objetivo: solo por el stop, que es −1R
+     en cualquier configuración ([[apex-la-pared-tiene-que-ser-de-esta-cuenta]]). */
+  let objetivoRR = null;
+  try{ const _e = load(K.ejeccfg, null); if(_e && _e.cfg && _e.cfg.objetivoRR!=null) objetivoRR = Number(_e.cfg.objetivoRR); }catch(_){}
+  if(!isFinite(objetivoRR) || objetivoRR<=0) objetivoRR = null;
+
   const porSalida = {};
   const anota=(k,val)=>{ (porSalida[k]=porSalida[k]||{n:0,suma:0,etiqueta:(PUERTAS.find(x=>x[0]===k)||[,,k])[2]||k}).n++; porSalida[k].suma+=val; };
   l.forEach(o=>{
     const m = String(o.motivo||"");
-    let k = m ? "otras" : "sin dato";
+    /* 🔎 v7.256 (11-10) — SI NO ESCRIBIÓ EL MOTIVO, SE DEDUCE DE SUS PROPIOS NÚMEROS.
+       ═══════════════════════════════════════════════════════════════════════════════════
+       Rey, con sus capturas: «todas las ganadoras lo fueron [por TP] y está en las
+       capturas, entonces sigue con datos erróneos».
+       Y tenía razón, aunque el aviso de más arriba ya no mintiera. MEDIDO en su teléfono,
+       sus 7 operaciones en R son:  −1 · 1.8 · −0.23 · −1 · 2.01 · 2.03 · 2.20
+       y su objetivo configurado es 2R. O sea: el dato ESTABA DELANTE. Un −1 clavado es el
+       stop; un 2.01 con objetivo 2 es el objetivo. El sistema decía «sin dato» teniendo los
+       números en la mano, y a él le daba igual que el aviso fuera honesto: la tabla seguía
+       sin decirle nada de sus salidas.
+       ⚠️ Esto DEDUCE, no inventa, y la diferencia se mantiene visible: lo deducido se marca
+       como tal («🔎 deducido»), nunca se mezcla con lo que él escribió, y solo se deduce
+       cuando el número lo dice sin lugar a dudas — dentro del margen. Lo que queda fuera de
+       margen sigue siendo «sin dato», porque no se sabe ([[apex-roberto-no-inventa]]).
+       El margen es configurable: es un dato, y los datos son suyos
+       ([[apex-reglas-en-manos-de-rey]]). */
+    let k = m ? "otras" : (dedujeLaSalida(o, objetivoRR) || "sin dato");
     for(const [id,re] of PUERTAS) if(re.test(m)){ k=id; break; }
     /* ✂️ v7.216 (22-09) — UNA OPERACION CON PARCIAL SALIO POR DOS PUERTAS, NO POR UNA.
        Rey: «ahora esta 1:2 R y con gestion de parciales en el transcurso de la operacion».
@@ -3779,7 +3810,7 @@ function apexEsperanza(ops){
     ganHoy: conReglasDeHoy.filter(o=>v(o)>0).length,
   };
 
-  return { n:l.length, hayR, gan:gan.length, per:per.length, emp:emp.length, regimen,
+  return { n:l.length, hayR, objetivoRR, gan:gan.length, per:per.length, emp:emp.length, regimen,
            wr, rGan, rPer, wrEmpate, esperanza, pf, rachaG, rachaP, porSalida,
            /* ¿hay ventaja? = acierta más de lo que necesita para empatar */
            ventaja: (wr!=null && wrEmpate!=null) ? (wr - wrEmpate) : null };
@@ -3894,6 +3925,18 @@ function espPanelHTML(e, titulo, subtitulo){
         var conDato = 0, sinDato = (e.porSalida["sin dato"] ? e.porSalida["sin dato"].n : 0);
         for (var k in e.porSalida) if (k !== "sin dato" && k !== "otras") conDato += e.porSalida[k].n;
         if (e.n < 3) return "";
+        /* 🔎 v7.256 — las deducidas de sus números SÍ son dato, y hay que decirle de dónde
+           salen. Rey: «todas las ganadoras lo fueron y está en las capturas». */
+        var ded = (e.porSalida["TPdeducido"] ? e.porSalida["TPdeducido"].n : 0)
+                + (e.porSalida["SLdeducido"] ? e.porSalida["SLdeducido"].n : 0);
+        if (ded > 0)
+          return '<div style="font-size:11.5px;color:#7a8699;margin-top:6px">🔎 <b>De ' + ded + ' de estas ' + e.n
+            + ' no escribiste por dónde salieron, pero lo deduje de tus números</b>: un −1R clavado es tu stop, '
+            + 'y llegar a tu objetivo (' + (e.objetivoRR || "?") + 'R) es tu TP. Van marcadas con 🔎 en la tabla.<br>'
+            + '<span style="opacity:.85">Si alguna no fue así, ciérralas desde el botón 🚪 <b>Cerrar</b> del Diario y mandará lo que tú digas, no lo que yo deduzca.</span></div>'
+            + ((e.porSalida["sin dato"] && e.porSalida["sin dato"].n)
+                ? '<div style="font-size:11.5px;color:#e2b341;margin-top:4px">⚠️ De las otras ' + e.porSalida["sin dato"].n
+                  + ' no puedo deducir nada: ni se acercan a tu stop ni a tu objetivo.</div>' : "");
         /* la mayoría sin dato: no se concluye NADA sobre el TP */
         if (sinDato > 0 && conDato === 0)
           return '<div style="font-size:11.5px;color:#e2b341;margin-top:6px">⚠️ <b>No tengo registrado por dónde salieron '
@@ -3922,7 +3965,13 @@ function espPanelHTML(e, titulo, subtitulo){
     '</div>'+
 
     /* QUÉ SIGNIFICA */
-    '<details style="margin-top:10px"><summary style="cursor:pointer;font-size:12px;opacity:.85">¿Qué significa cada número?</summary>'+
+    /* 📖 v7.256 — ABIERTA DE ENTRADA. Rey: «no me has dado ninguna explicación para
+       entenderlo, y si no entiendo cada cosa en mi sistema, por pequeña que sea, no me
+       sirve». La explicación existía desde ayer… PLEGADA, detrás de un triángulo que no
+       invita a nada. Escrita e invisible es lo mismo que no escrita
+       ([[apex-declarar-no-es-dar]]). Se abre sola; si le estorba, la cierra él y Apex lo
+       recuerda. */
+    '<details style="margin-top:10px" open><summary style="cursor:pointer;font-size:12.5px;opacity:.95;font-weight:700">📖 Qué significa cada número (léelo una vez)</summary>'+
     '<div style="font-size:11.8px;line-height:1.55;margin-top:6px;opacity:.92">'+
       /* 📖 v7.252 (11-10) — EXPLICADOS TODOS, NO CUATRO.
          Rey: «no le explicaste para qué sirve cada número y dato dentro de él, su
@@ -7767,6 +7816,7 @@ function irA(id){
   if(id==="noticias") renderNoticias();
   if(id==="avisos")   renderAvisos();
   if(id==="ejecutor") renderEjecutor();
+  if(id==="riesgo")   { try{ negEnchufar(); }catch(_){} }   /* 🧮 v7.256: la calculadora de negocios */
   if(id==="templo")   renderTemplo();
   /* 🗂️ v7.178 — Y LOS PLIEGUES, EN TODAS LAS SECCIONES, DESDE UN SOLO SITIO.
      ─────────────────────────────────────────────────────────────────────────────────
@@ -8399,6 +8449,393 @@ function refreshReglas(){
   const br=$("#bar-reglas"); if(br) br.style.width=(n/15*100)+"%";
 }
 
+/* ══════════════════════════════════════════════════════════════════════════════════════
+   🧮 F1 — ¿ME RENTA ESTE NEGOCIO?  (v7.256, 11-10-2026)
+   ══════════════════════════════════════════════════════════════════════════════════════
+   Encargo de Rey: una tabla + calculadora en 🛡️ Riesgo que funcione sola poniendo los
+   datos, que diga PARA QUÉ SIRVE cada cosa, con porcentajes buenos y malos, e incluyendo
+   gestión de capital e interés compuesto.
+
+   ⚠️ SU CORRECCIÓN DEL 09-10, QUE MANDA SOBRE TODO LO DEMÁS:
+   «toda la tabla debe ser diversificada como lo es mi sistema, nada fijo, ni a un país ni
+   a un negocio: es general, que funcione en todo».
+   Por eso aquí NO hay ninguna moneda, ningún país, ningún tipo de negocio ni ningún número
+   de fábrica que no se pueda cambiar. Todo sale en % y en múltiplos; la moneda es una
+   etiqueta que pone él y que ningún cálculo toca
+   ([[apex-nada-atado-a-un-par-ni-a-un-broker]]).
+
+   LO QUE NO SE HACE, Y POR QUÉ:
+   · El ROI del periodo NO se multiplica por los periodos. Eso es interés simple y se queda
+     corto: el de verdad compone, (1+p)^n − 1, y el anual (1+p)^12 − 1, no ×12. Es la ley
+     23 de su propio Roberto.
+   · El semáforo NO se mide contra cero: se mide contra EL SUELO que él ponga —lo que renta
+     su dinero quieto donde vive— y descontando inflación. Un negocio al 1% por periodo
+     PIERDE contra no hacer nada si el suelo está por encima.
+   · Si no pone suelo ni inflación, se mide en NOMINAL y SE DICE que es nominal, en vez de
+     fingir un real que no se ha medido ([[apex-roberto-no-inventa]]).
+   ════════════════════════════════════════════════════════════════════════════════════ */
+
+/* Los cortes del semáforo: de fábrica, pero EDITABLES uno a uno. Su ley es que los datos
+   se configuran y nada es fijo ([[apex-reglas-en-manos-de-rey]]).
+   Se miden sobre lo que el negocio gana POR ENCIMA DEL SUELO en cada periodo, en puntos
+   porcentuales. Son un punto de partida, no una verdad. */
+const NEG_CORTES_DEF = { naranja: 0, amarillo: 0.5, verde: 1.5, fuego: 5 };
+const NEG_KEY = "crtelite_negocio_v1";
+/* el periodo también se configura: hay negocios por mes, por temporada, por zafra o por
+   proyecto. Todo se recalcula sobre la unidad que él elija. */
+const NEG_PERIODOS = [
+  { id:"dia",      n:"día",      porAno:365 },
+  { id:"semana",   n:"semana",   porAno:52 },
+  { id:"mes",      n:"mes",      porAno:12 },
+  { id:"trimestre",n:"trimestre",porAno:4 },
+  { id:"temporada",n:"temporada",porAno:2 },
+  { id:"ano",      n:"año",      porAno:1 },
+];
+function negPeriodo(id){ return NEG_PERIODOS.find(x=>x.id===id) || NEG_PERIODOS[2]; }
+
+function negLeer(){
+  let g = {};
+  try{ g = JSON.parse(localStorage.getItem(NEG_KEY) || "{}") || {}; }catch(_){ g = {}; }
+  const d = Object.assign({
+    nombre:"", moneda:"", periodo:"mes", periodos:12,
+    capital:null, puedePerder:null, factura:null, gastos:null, neta:null,
+    horas:null, valorHora:null, suelo:null, inflacion:null, reinvierte:100
+  }, g);
+  d.cortes = Object.assign({}, NEG_CORTES_DEF, g.cortes||{});
+  return d;
+}
+function negGuardar(d){ try{ localStorage.setItem(NEG_KEY, JSON.stringify(d||{})); }catch(_){} }
+
+/* ── EL MOTOR ──────────────────────────────────────────────────────────────────────────
+   Función PURA: entra lo que él puso, sale todo lo calculado. No toca pantalla ni lee nada
+   de fuera, así que el banco la ejecuta con casos de verdad en vez de leer el código
+   ([[apex-auditar-es-ejecutar]]).
+   Lo que no se puede calcular sale en null — NUNCA en 0, que se leería como «cero» y no
+   como «no lo sé» ([[apex-roberto-no-inventa]]). */
+function negCalcular(d){
+  d = d || {};
+  const n = (x)=>{ const v = Number(x); return (x===null || x===undefined || x==="" || !isFinite(v)) ? null : v; };
+  const capital = n(d.capital), factura = n(d.factura), gastos = n(d.gastos);
+  let neta = n(d.neta);
+  const horas = n(d.horas), valorHora = n(d.valorHora);
+  const periodos = Math.max(1, Math.round(n(d.periodos) || 1));
+  const suelo = n(d.suelo), inflacion = n(d.inflacion);
+  const reinvierte = (n(d.reinvierte)===null) ? 100 : Math.max(0, Math.min(100, n(d.reinvierte)));
+  const per = negPeriodo(d.periodo);
+
+  /* la ganancia neta se deduce si no la puso: facturación menos gastos */
+  let netaDeducida = false;
+  if(neta===null && factura!==null && gastos!==null){ neta = factura - gastos; netaDeducida = true; }
+
+  const r = { periodos, reinvierte, netaDeducida, neta, periodoN: per.n, avisos:[] };
+
+  /* ROI del periodo: lo que deja CADA periodo sobre el capital metido */
+  r.roiPeriodo = (neta!==null && capital!==null && capital>0) ? (neta/capital*100) : null;
+
+  /* 📈 EL COMPUESTO BIEN HECHO. Cada periodo crece sobre lo anterior. */
+  if(r.roiPeriodo!==null){
+    const p = r.roiPeriodo/100;
+    r.roiTotal = (Math.pow(1+p, periodos) - 1) * 100;
+    r.roiAnual = (Math.pow(1+p, per.porAno) - 1) * 100;
+    r.roiSimpleTotal = r.roiPeriodo * periodos;   /* para enseñarle la diferencia */
+  } else { r.roiTotal = null; r.roiAnual = null; r.roiSimpleTotal = null; }
+
+  /* margen neto: de cada 100 que factura, cuánto le queda */
+  r.margen = (neta!==null && factura!==null && factura>0) ? (neta/factura*100) : null;
+
+  /* payback: cuántos periodos tarda en recuperar lo que metió */
+  r.payback = (neta!==null && neta>0 && capital!==null && capital>0) ? (capital/neta) : null;
+
+  /* lo que le deja cada hora suya, y si eso es un negocio o un empleo con otro uniforme */
+  r.porHora = (neta!==null && horas!==null && horas>0) ? (neta/horas) : null;
+  r.vecesSuHora = (r.porHora!==null && valorHora!==null && valorHora>0) ? (r.porHora/valorHora) : null;
+
+  /* ── EL SUELO: contra qué se compara de verdad ───────────────────────────────────── */
+  r.hayReal = (suelo!==null || inflacion!==null);
+  const sueloP = suelo===null ? 0 : suelo;
+  const inflP  = inflacion===null ? 0 : inflacion;
+  r.suelo = suelo; r.inflacion = inflacion;
+  r.sobreSuelo = (r.roiPeriodo!==null) ? (r.roiPeriodo - sueloP - inflP) : null;
+  if(!r.hayReal) r.avisos.push("No pusiste el suelo ni la inflación, así que esto es NOMINAL: no está descontado lo que renta tu dinero quieto ni lo que sube la vida. Ponlos y los números cambian.");
+
+  /* ── EL SEMÁFORO, sobre lo que gana POR ENCIMA del suelo ─────────────────────────── */
+  const c = Object.assign({}, NEG_CORTES_DEF, d.cortes||{});
+  r.cortes = c;
+  if(r.sobreSuelo===null) r.semaforo = null;
+  else if(r.sobreSuelo >= c.fuego)      r.semaforo = { ic:"🔥", t:"Excepcional", d:"Muy por encima del suelo. Comprueba los números dos veces y busca qué riesgo esconde: lo que renta así suele cobrarlo por otro lado." };
+  else if(r.sobreSuelo >= c.verde)      r.semaforo = { ic:"🟢", t:"Buena", d:"Renta claramente por encima de tener el dinero parado." };
+  else if(r.sobreSuelo >= c.amarillo)   r.semaforo = { ic:"🟡", t:"Aceptable", d:"Gana algo por encima del suelo, pero poco para el trabajo y el riesgo que lleva." };
+  else if(r.sobreSuelo >= c.naranja)    r.semaforo = { ic:"🟠", t:"Estudiar", d:"Apenas empata con no hacer nada. No compensa el riesgo ni tus horas." };
+  else                                  r.semaforo = { ic:"🟥", t:"No invertir", d:"Rinde MENOS que dejar el dinero quieto. Estarías trabajando para perder." };
+
+  /* ── RIESGO DE VERDAD, NO UNA CASILLA ────────────────────────────────────────────── */
+  const puedePerder = n(d.puedePerder);
+  r.puedePerder = puedePerder;
+  r.riesgoPctDelCapital = (puedePerder!==null && capital!==null && capital>0) ? (puedePerder/capital*100) : null;
+  if(puedePerder!==null && capital!==null && puedePerder > capital)
+    r.avisos.push("Puedes perder MÁS de lo que inviertes. Eso no es una inversión con riesgo: es una deuda con premio. Mira a qué te obliga si sale mal, antes que la rentabilidad.");
+  if(r.payback!==null && r.payback > periodos)
+    r.avisos.push("No recuperas lo invertido dentro del plazo que estás mirando: tardarías " + (Math.round(r.payback*10)/10) + " " + per.n + "(s) y tú estás mirando " + periodos + ".");
+  if(r.vecesSuHora!==null && r.vecesSuHora < 1)
+    r.avisos.push("Tu hora en este negocio vale MENOS que lo que vale tu hora hoy. Eso no es un negocio: es un empleo con otro uniforme, y encima poniendo tú el capital.");
+  if(r.margen!==null && r.margen < 0)
+    r.avisos.push("El margen es negativo: facturas más de lo que te queda. Cuanto más vendas, más pierdes.");
+
+  /* ── PROYECCIÓN con REINVERSIÓN PARCIAL ──────────────────────────────────────────
+     Nadie reinvierte el 100%. Lo que saca deja de componer, y eso cambia la curva. */
+  r.proyeccion = null;
+  if(r.roiPeriodo!==null && capital!==null && capital>0){
+    const p = r.roiPeriodo/100, re = reinvierte/100;
+    const hacer = (cuantos)=>{
+      let cap = capital, sacado = 0;
+      for(let i=0;i<cuantos;i++){ const g = cap*p; sacado += g*(1-re); cap += g*re; }
+      return { capital:cap, sacado:sacado, total:cap+sacado, veces:(cap+sacado)/capital };
+    };
+    r.proyeccion = { porAno: per.porAno, a1:hacer(per.porAno), a3:hacer(per.porAno*3), a5:hacer(per.porAno*5) };
+  }
+
+  return r;
+}
+
+/* ── COMPARARLO CON SU PROPIO TRADING ──────────────────────────────────────────────────
+   Esto es lo que ninguna calculadora de negocios tiene: su trading ES un negocio más, y
+   aquí dentro ya están sus números. La pregunta que importa no es «¿esto renta?», es
+   «¿esto renta MÁS que mi propia cuenta?» — el coste de oportunidad, que es la ley 28 de
+   su Roberto ([[apex-su-tesis-del-rr]]).
+   Devuelve null si no hay con qué comparar, y se DICE: comparar contra un número inventado
+   sería peor que no comparar ([[apex-roberto-no-inventa]]). */
+function negVsTrading(roiPeriodoNegocio, periodoId){
+  try{
+    if(roiPeriodoNegocio===null || roiPeriodoNegocio===undefined) return null;
+    const ops = (typeof opsDelDiario==="function") ? opsDelDiario() : null;
+    if(!ops || !ops.length) return { hay:false, porQue:"todavía no tienes operaciones cerradas en tu Diario" };
+    const m = (typeof metricas==="function") ? metricas(ops) : null;
+    if(!m || m.esperanza===null || m.esperanza===undefined) return { hay:false, porQue:"no puedo medir tu esperanza con lo que hay registrado" };
+    /* cuánto arriesga por operación, de sus propias reglas del Ejecutor */
+    let riesgoPct = null;
+    try{ const e = load(K.ejeccfg, null); if(e && e.cfg && e.cfg.riesgoPct!=null) riesgoPct = Number(e.cfg.riesgoPct); }catch(_){}
+    if(riesgoPct===null || !isFinite(riesgoPct) || riesgoPct<=0)
+      return { hay:false, porQue:"no sé cuánto arriesgas por operación (está en tu sección 🤖 Ejecutor)" };
+    /* operaciones por periodo, medidas de SUS fechas, no supuestas */
+    const ts = ops.map(o=>o.ts||o.fecha||0).filter(Boolean).sort((a,b)=>a-b);
+    if(ts.length < 2) return { hay:false, porQue:"necesito al menos dos operaciones con fecha para saber tu ritmo" };
+    const dias = Math.max(1, (ts[ts.length-1]-ts[0]) / 86400000);
+    const opsPorDia = ops.length / dias;
+    const per = negPeriodo(periodoId);
+    const diasDelPeriodo = 365 / per.porAno;
+    const opsPeriodo = opsPorDia * diasDelPeriodo;
+    /* cada operación deja (esperanza en R) × (lo que arriesga por operación, en % de cuenta) */
+    const roiTrading = m.esperanza * riesgoPct * opsPeriodo;
+    return { hay:true, roiTrading, opsPeriodo, esperanza:m.esperanza, riesgoPct, n:ops.length,
+             gana: (roiTrading>roiPeriodoNegocio ? "trading" : "negocio"),
+             pocas: ops.length < 30 };
+  }catch(_){ return null; }
+}
+
+/* ── LA PANTALLA ───────────────────────────────────────────────────────────────────────
+   Rey pidió que «diga para qué sirve cada cosa»: cada número lleva debajo, con letra
+   pequeña, qué significa y cómo se lee. No es decoración — sin eso la tabla es un panel de
+   cifras, y un panel que no se entiende no se mira ([[apex-nube-solo-lo-que-importa]]).
+   Y va PLEGADA de entrada: la sección de Riesgo ya es larga y esto no es de uso diario
+   ([[apex-las-secciones-se-pliegan]]). */
+function negNum(v, dec){
+  if(v===null || v===undefined || !isFinite(v)) return '<span style="opacity:.45">—</span>';
+  const d = dec==null ? 2 : dec;
+  return (Math.round(v*Math.pow(10,d))/Math.pow(10,d)).toLocaleString("es",{minimumFractionDigits:d, maximumFractionDigits:d});
+}
+function negPct(v, dec){
+  if(v===null || v===undefined || !isFinite(v)) return '<span style="opacity:.45">—</span>';
+  const col = v>0 ? "#26a269" : (v<0 ? "#e0483d" : "inherit");
+  return '<b style="color:'+col+'">'+(v>0?"+":"")+negNum(v, dec==null?2:dec)+'%</b>';
+}
+function negFila(etiq, valor, explica){
+  return '<tr style="border-bottom:1px solid rgba(128,140,170,.14)">'+
+    '<td style="padding:7px 5px;vertical-align:top"><div>'+etiq+'</div>'+
+      (explica?'<div style="font-size:11px;opacity:.62;line-height:1.4;margin-top:2px">'+explica+'</div>':'')+
+    '</td>'+
+    '<td style="padding:7px 5px;text-align:right;vertical-align:top;white-space:nowrap;font-variant-numeric:tabular-nums">'+valor+'</td></tr>';
+}
+
+function negRender(){
+  const caja = document.getElementById("negSalida");
+  if(!caja) return;
+  const d = negLeer();
+  const r = negCalcular(d);
+  const mon = String(d.moneda||"").trim();
+  const dinero = (v)=> (v===null||v===undefined||!isFinite(v)) ? '<span style="opacity:.45">—</span>'
+                     : (negNum(v,2) + (mon?(" "+esc(mon)):""));
+  const per = negPeriodo(d.periodo);
+
+  let h = "";
+
+  /* ── EL SEMÁFORO, lo primero: es la respuesta a su pregunta ──────────────────────── */
+  if(r.semaforo){
+    const col = r.semaforo.ic==="🟥" ? "#e0483d" : r.semaforo.ic==="🟠" ? "#e2843b"
+              : r.semaforo.ic==="🟡" ? "#e2b341" : r.semaforo.ic==="🔥" ? "#e2843b" : "#26a269";
+    h += '<div style="border:2px solid '+col+';border-radius:10px;padding:10px 12px;background:'+col+'14;margin-bottom:10px">'+
+      '<div style="font-size:1.05em;font-weight:700;color:'+col+'">'+r.semaforo.ic+' '+esc(r.semaforo.t)+'</div>'+
+      '<div style="font-size:12px;opacity:.9;margin-top:4px">'+esc(r.semaforo.d)+'</div>'+
+      '<div style="font-size:12px;margin-top:6px">Gana '+negPct(r.sobreSuelo)+' por '+esc(per.n)+
+        ' <b>por encima del suelo</b>'+(r.hayReal?"":" <span style=\"opacity:.7\">(nominal: no pusiste suelo ni inflación)</span>")+'.</div>'+
+    '</div>';
+  }
+
+  /* ── LOS AVISOS: lo que hay que mirar antes que la rentabilidad ──────────────────── */
+  if(r.avisos && r.avisos.length){
+    h += r.avisos.map(a=>'<div style="font-size:11.8px;color:#e2b341;margin-bottom:6px">⚠️ '+esc(a)+'</div>').join("");
+  }
+
+  /* ── LA TABLA, con qué significa cada cosa ───────────────────────────────────────── */
+  h += '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:.93em">';
+  h += negFila("Rentabilidad por "+esc(per.n), negPct(r.roiPeriodo),
+       "Lo que te deja cada "+esc(per.n)+" sobre el dinero que metiste. Es el número del que sale todo lo demás.");
+  h += negFila("Por encima del suelo", negPct(r.sobreSuelo),
+       r.hayReal ? ("Lo mismo, pero descontando lo que renta tu dinero quieto"+(r.inflacion!==null?" y lo que sube la vida":"")+". <b>Esto es lo que de verdad ganas.</b>")
+                 : "Sin suelo ni inflación esto es igual que la línea de arriba. Ponlos abajo y verás la diferencia.");
+  h += negFila("Total en "+r.periodos+" "+esc(per.n)+"(s) <span style='opacity:.6'>(compuesto)</span>", negPct(r.roiTotal),
+       "Lo que crece si cada "+esc(per.n)+" lo que ganas vuelve a trabajar."+
+       (r.roiSimpleTotal!==null ? (" Multiplicando sin más saldría "+negNum(r.roiSimpleTotal,2)+"%: <b>esa es la diferencia</b> que hace el compuesto.") : ""));
+  h += negFila("Equivalente a un año", negPct(r.roiAnual),
+       "Para poder compararlo con cualquier otra cosa que se mida en años.");
+  h += negFila("Margen neto", negPct(r.margen),
+       "De cada 100 que facturas, cuánto te queda. Un margen fino aguanta mal cualquier imprevisto.");
+  h += negFila("Recuperas lo invertido en", (r.payback===null?'<span style="opacity:.45">—</span>':('<b>'+negNum(r.payback,1)+'</b> '+esc(per.n)+'(s)')),
+       "Cuánto tardas en tener de vuelta lo que metiste. Hasta ese día, todo lo demás es papel.");
+  h += negFila("Te deja cada hora", dinero(r.porHora),
+       (r.vecesSuHora!==null
+         ? ("Eso es <b>"+negNum(r.vecesSuHora,2)+" veces</b> lo que vale tu hora hoy. Por debajo de 1 no es un negocio: es un empleo poniendo tú el capital.")
+         : "Pon tus horas y lo que vale tu hora, y te digo si es un negocio o un empleo con otro uniforme."));
+  if(r.riesgoPctDelCapital!==null)
+    h += negFila("Lo que puedes perder", '<b>'+negNum(r.riesgoPctDelCapital,0)+'%</b> de lo que metes',
+         "No es lo mismo lo que inviertes que lo que puedes perder. Esto es lo segundo.");
+  h += '</table></div>';
+
+  /* ── LA PROYECCIÓN ───────────────────────────────────────────────────────────────── */
+  if(r.proyeccion){
+    const f = (x)=> '<td style="padding:6px 5px;text-align:right;font-variant-numeric:tabular-nums">'+dinero(x.total)+
+                    '<div style="font-size:10.5px;opacity:.6">×'+negNum(x.veces,2)+'</div></td>';
+    h += '<div style="margin-top:12px;font-size:11px;opacity:.7;text-transform:uppercase;letter-spacing:.05em;font-weight:700">si sigue igual</div>'+
+      '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:.93em;margin-top:4px">'+
+      '<tr style="border-bottom:1px solid rgba(128,140,170,.3)"><th style="text-align:left;padding:5px;font-size:.72em;opacity:.65">AÑOS</th>'+
+      '<th style="text-align:right;padding:5px;font-size:.72em;opacity:.65">1</th>'+
+      '<th style="text-align:right;padding:5px;font-size:.72em;opacity:.65">3</th>'+
+      '<th style="text-align:right;padding:5px;font-size:.72em;opacity:.65">5</th></tr>'+
+      '<tr><td style="padding:6px 5px">Capital + lo sacado</td>'+f(r.proyeccion.a1)+f(r.proyeccion.a3)+f(r.proyeccion.a5)+'</tr>'+
+      '</table></div>'+
+      '<div style="font-size:11px;opacity:.62;line-height:1.4;margin-top:4px">Reinvirtiendo el <b>'+r.reinvierte+'%</b> de lo que ganas. '+
+      (r.reinvierte>=100 ? "Reinvirtiendo todo es como crece más rápido, pero no sacas nada por el camino."
+                         : "Lo que sacas deja de trabajar: por eso la curva se aplana cuanto menos reinviertes.")+
+      ' Esto es una proyección, no una promesa: supone que todo sigue exactamente igual.</div>';
+  }
+
+  /* ── ¿RENTA MÁS QUE SU PROPIA CUENTA? ────────────────────────────────────────────── */
+  const vs = negVsTrading(r.roiPeriodo, d.periodo);
+  if(vs){
+    if(vs.hay){
+      const ganaTrading = vs.roiTrading > (r.roiPeriodo||0);
+      h += '<div style="margin-top:12px;padding:9px 11px;border-radius:9px;background:rgba(41,98,255,.08);border:1px solid rgba(41,98,255,.3)">'+
+        '<div style="font-size:12px;font-weight:700;color:#2962ff">📐 ¿Y comparado con tu propia cuenta?</div>'+
+        '<div style="font-size:12px;margin-top:4px">Tu trading te deja <b>'+negNum(vs.roiTrading,2)+'%</b> por '+esc(per.n)+
+          ' · este negocio <b>'+negNum(r.roiPeriodo,2)+'%</b>. '+
+          '<b style="color:'+(ganaTrading?"#2962ff":"#26a269")+'">Gana '+(ganaTrading?"tu cuenta":"el negocio")+'.</b></div>'+
+        '<div style="font-size:11px;opacity:.65;line-height:1.4;margin-top:4px">Sale de lo tuyo: '+negNum(vs.esperanza,2)+'R de esperanza × '+
+          negNum(vs.riesgoPct,2)+'% de riesgo × '+negNum(vs.opsPeriodo,1)+' operaciones por '+esc(per.n)+', medido de tus '+vs.n+' operaciones.'+
+          (vs.pocas ? ' <b>⚠️ Con menos de 30 esto es un indicio, no una conclusión — tu Ley 37.</b>' : '')+'</div>'+
+        '</div>';
+    } else if(vs.porQue){
+      h += '<div style="margin-top:12px;font-size:11.5px;opacity:.7">📐 No puedo compararlo con tu propia cuenta: '+esc(vs.porQue)+'.</div>';
+    }
+  }
+
+  caja.innerHTML = h;
+}
+
+/* lee los campos y guarda; se llama en cada tecla */
+function negDesdeForm(){
+  const g = (id)=>{ const e=document.getElementById(id); if(!e) return null; const v=String(e.value||"").trim(); return v===""?null:v; };
+  const d = negLeer();
+  d.nombre = g("negNombre")||""; d.moneda = g("negMoneda")||"";
+  d.periodo = (document.getElementById("negPeriodo")||{}).value || "mes";
+  d.periodos = g("negPeriodos"); d.capital = g("negCapital"); d.puedePerder = g("negPerder");
+  d.factura = g("negFactura"); d.gastos = g("negGastos"); d.neta = g("negNeta");
+  d.horas = g("negHoras"); d.valorHora = g("negValorHora");
+  d.suelo = g("negSuelo"); d.inflacion = g("negInfl");
+  d.reinvierte = g("negReinv")===null ? 100 : Number(g("negReinv"));
+  d.cortes = {
+    naranja: Number(g("negC1")===null?NEG_CORTES_DEF.naranja:g("negC1")),
+    amarillo:Number(g("negC2")===null?NEG_CORTES_DEF.amarillo:g("negC2")),
+    verde:   Number(g("negC3")===null?NEG_CORTES_DEF.verde:g("negC3")),
+    fuego:   Number(g("negC4")===null?NEG_CORTES_DEF.fuego:g("negC4"))
+  };
+  negGuardar(d);
+  negRender();
+}
+
+function negTarjeta(){
+  const d = negLeer();
+  const c = el("div","card");
+  const campo = (id,et,ph,val,ancho)=> '<label style="font-size:.85em;display:block;margin-bottom:6px'+(ancho?";flex:1 1 "+ancho:"")+'">'+et+
+    '<input class="inp" id="'+id+'" type="'+(id==="negNombre"||id==="negMoneda"?"text":"number")+'" step="any" placeholder="'+ph+'" value="'+esc(val==null?"":String(val))+'"></label>';
+  c.innerHTML =
+    '<div class="card-h"><span class="ic">🧮</span><h2>¿Me renta este negocio?</h2></div>'+
+    '<details id="negDet"><summary style="cursor:pointer;font-size:13px;opacity:.9;margin-bottom:8px">Abrir la calculadora</summary>'+
+    '<div class="desc" style="font-size:11.8px;line-height:1.5;margin-bottom:10px">'+
+      'Pon lo que sepas y te digo si renta de verdad. <b>No hace falta rellenarlo todo</b>: lo que no pongas sale como «no lo sé», nunca como cero.<br>'+
+      'Todo va en <b>porcentajes y múltiplos</b>, así que funciona con cualquier moneda, cualquier país y cualquier tipo de negocio. La moneda es solo una etiqueta tuya.'+
+    '</div>'+
+    '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
+      campo("negNombre","Qué negocio es","un nombre para acordarte",d.nombre,"60%")+
+      campo("negMoneda","Moneda (etiqueta)","R$, $, €…",d.moneda,"30%")+
+    '</div>'+
+    '<label style="font-size:.85em;display:block;margin-bottom:6px">Mi unidad de tiempo'+
+      '<select class="inp" id="negPeriodo">'+NEG_PERIODOS.map(p=>'<option value="'+p.id+'"'+(d.periodo===p.id?" selected":"")+'>Por '+p.n+'</option>').join("")+'</select></label>'+
+    '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
+      campo("negPeriodos","Cuántos voy a mirar","12",d.periodos,"45%")+
+      campo("negCapital","Capital que meto","lo que inviertes",d.capital,"45%")+
+    '</div>'+
+    '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
+      campo("negFactura","Facturación por periodo","lo que entra",d.factura,"45%")+
+      campo("negGastos","Gastos por periodo","lo que sale",d.gastos,"45%")+
+    '</div>'+
+    campo("negNeta","Ganancia neta por periodo (si la sabes)","si no, la saco de los dos de arriba",d.neta)+
+    '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
+      campo("negHoras","Horas que le meto por periodo","tus horas",d.horas,"45%")+
+      campo("negValorHora","Lo que vale tu hora hoy","para comparar",d.valorHora,"45%")+
+    '</div>'+
+    campo("negPerder","Lo que puedo perder como máximo","no siempre es lo que inviertes",d.puedePerder)+
+    '<div class="desc" style="font-size:11.5px;line-height:1.5;margin:10px 0 6px"><b>El suelo que hay que batir.</b> '+
+      'Tu dinero quieto ya renta algo donde vives (una cuenta remunerada, letras del tesoro, lo que sea). '+
+      'Un negocio que rinde menos que eso <b>te está haciendo perder</b> aunque dé beneficio. Si no lo pones, los números salen en nominal y te lo digo.</div>'+
+    '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
+      campo("negSuelo","Suelo: % por periodo del dinero quieto","0 si no hay nada",d.suelo,"45%")+
+      campo("negInfl","Inflación por periodo (%)","si la sabes",d.inflacion,"45%")+
+    '</div>'+
+    campo("negReinv","Cuánto reinvierto de lo que gano (%)","100 = todo",d.reinvierte)+
+    '<details style="margin-top:8px"><summary style="cursor:pointer;font-size:12px;opacity:.8">Los cortes del semáforo (cámbialos si quieres)</summary>'+
+      '<div class="desc" style="font-size:11.5px;margin:6px 0">Se miden sobre lo que ganas <b>por encima del suelo</b>, en puntos por periodo. Vienen de fábrica; son tuyos.</div>'+
+      '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
+        campo("negC1","🟠 Estudiar desde","0",d.cortes.naranja,"45%")+
+        campo("negC2","🟡 Aceptable desde","0.5",d.cortes.amarillo,"45%")+
+        campo("negC3","🟢 Buena desde","1.5",d.cortes.verde,"45%")+
+        campo("negC4","🔥 Excepcional desde","5",d.cortes.fuego,"45%")+
+      '</div></details>'+
+    '<div id="negSalida" style="margin-top:12px"></div>'+
+    '</details>';
+  return c;
+}
+
+function negEnchufar(){
+  ["negNombre","negMoneda","negPeriodos","negCapital","negPerder","negFactura","negGastos",
+   "negNeta","negHoras","negValorHora","negSuelo","negInfl","negReinv",
+   "negC1","negC2","negC3","negC4"].forEach(id=>{
+    const e = document.getElementById(id);
+    if(e) e.oninput = negDesdeForm;
+  });
+  const p = document.getElementById("negPeriodo");
+  if(p) p.onchange = negDesdeForm;
+  try{ negRender(); }catch(_){}
+}
+
 /* ============================================================
    VISTA 5 — RIESGO
    ============================================================ */
@@ -8462,6 +8899,8 @@ function viewRiesgo(){
   ven.appendChild(el("div","note","Brasil no tiene horario de verano. El offset con NY cambia cuando EE.UU. ajusta su reloj (1er domingo de noviembre). Reajusta tus alarmas Toki entonces."));
   v.appendChild(ven);
 
+  /* 🧮 v7.256 — F1: la calculadora de negocios, antes de los mantras */
+  try{ v.appendChild(negTarjeta()); }catch(_){}
   const man=el("div","card");
   man.innerHTML=`<div class="card-h"><span class="ic">🔥</span><h2>Mantras</h2></div>`+
     MANTRAS.map(m=>`<div class="quote">"${m}"</div>`).join("");
@@ -10066,6 +10505,43 @@ function tradesPeriodo(){
 }
 
 /* ---- Núcleo estadístico. Recibe array de trades, devuelve métricas ---- */
+
+/* 🔎 DEDUCIR POR DÓNDE SALIÓ, CUANDO ÉL NO LO ESCRIBIÓ — v7.256 (11-10-2026)
+   ═══════════════════════════════════════════════════════════════════════════════════════
+   Rey, con sus capturas delante: «todas las ganadoras lo fueron [por TP]… entonces sigue
+   con datos erróneos». Y el dato ESTABA: sus 7 operaciones eran −1 · 1.8 · −0.23 · −1 ·
+   2.01 · 2.03 · 2.20 con objetivo 2R. Un −1 clavado es el stop. Un 2.01 con objetivo 2 es
+   el objetivo. La tabla decía «sin dato» teniendo los números en la mano.
+   ⚠️ DEDUCE, NO INVENTA, y la diferencia se mantiene a la vista: lo deducido lleva su
+   propia etiqueta y jamás se mezcla con lo que él escribió. Lo que no cae dentro del margen
+   sigue siendo «sin dato», porque entonces de verdad no se sabe
+   ([[apex-roberto-no-inventa]]).
+   El margen es configurable, porque es un dato y los datos son suyos
+   ([[apex-reglas-en-manos-de-rey]]). */
+const DEDUCE_MARGEN_KEY = "crtelite_deducemargen_v1";
+const DEDUCE_MARGEN_DEF = 0.12;   /* 12% — un 2.20 con objetivo 2 entra; un 1.5 no */
+function deduceMargen(){
+  try{ const v = Number(localStorage.getItem(DEDUCE_MARGEN_KEY));
+       if(isFinite(v) && v>0 && v<1) return v; }catch(_){}
+  return DEDUCE_MARGEN_DEF;
+}
+function dedujeLaSalida(o, objetivoRR){
+  try{
+    const r = Number(o && o.r);
+    if(!isFinite(r)) return null;
+    const m = deduceMargen();
+    /* el STOP no depende de su objetivo: perder exactamente el riesgo es −1R siempre */
+    if(Math.abs(r + 1) <= m) return "SLdeducido";
+    /* el OBJETIVO sí: sin saber cuál es el suyo, no se deduce nada */
+    if(objetivoRR!==null && isFinite(objetivoRR) && objetivoRR>0){
+      /* a partir del objetivo también cuenta: dejar correr más allá del TP sigue siendo
+         haber llegado al objetivo, no otra puerta */
+      if(r >= objetivoRR*(1-m)) return "TPdeducido";
+    }
+    return null;
+  }catch(_){ return null; }
+}
+
 function metricas(list){
   /* 🧮 v7.247 (10-10) — AQUÍ LOS NÚMEROS SE LEEN COMO NÚMEROS, Y ANTES NO.
      ═══════════════════════════════════════════════════════════════════════════════════════
