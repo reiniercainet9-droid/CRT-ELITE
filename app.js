@@ -12979,6 +12979,8 @@ function iaInit(){
         <button class="btn" id="iaVozToggle" style="margin-bottom:8px">🔇 Que Roberto me hable: apagado</button>
         <select class="inp" id="iaMotorSel" style="margin-bottom:8px;display:none"></select>
         <select class="inp" id="iaVozSel" style="margin-bottom:8px"></select>
+        <!-- 🗣️ v7.253 — qué significa cada tipo de voz, con sus palabras y no con su código -->
+        <div id="iaVozTipos" class="desc" style="font-size:11.5px;line-height:1.5;margin:-4px 0 8px"></div>
         <div id="iaVozNota" class="aviso-rojo" style="display:none"></div>
         <div class="fl">Tono (más grave = más masculino)</div>
         <div class="seg c4" id="iaVozTono" style="margin-bottom:6px">
@@ -13246,7 +13248,17 @@ function iaInit(){
                   try{
                     const res = (PV && PV.vozIdioma) ? await PV.vozIdioma({ id: vs.value }) : null;
                     toast(res && res.ok ? "🗣️ Voz cambiada" : "Ese idioma no está instalado");
-                    if(res && res.ok) try{ PV.vozHablar({ texto:"Así sueno ahora, Rey.", trozo:"prueba" }); }catch(_){}
+                    /* 🔊 v7.253 — EL PROBADOR TIENE QUE SONAR COMO SONARÁ DE VERDAD.
+                       Esto mandaba la frase SIN voz, SIN tono y SIN ritmo, así que el motor
+                       usaba sus valores por defecto —la voz del sistema, ritmo 1.0— y Rey
+                       oía algo que NO era lo que iba a oír luego. De ahí su «la de Apex es
+                       más natural, la del narrador es robótica»: estaba comparando dos voces
+                       distintas sin saberlo. Es la misma lección de ayer: una prueba que no
+                       prueba lo que dice probar manda a buscar la avería donde no está. */
+                    if(res && res.ok) try{ PV.vozHablar({ texto:"Así sueno ahora, Rey.", trozo:"prueba",
+                      voz: IA.voz.nativa || "", motor: IA.voz.motor || "",
+                      tono: (typeof IA.voz.pitch==="number")?IA.voz.pitch:0.8,
+                      ritmo: (typeof IA.voz.ritmo==="number")?IA.voz.ritmo:0.85 }); }catch(_){}
                   }catch(_){ toast("No pude cambiarla"); }
                 };
                 const nota0 = $("#iaVozNota");
@@ -13277,11 +13289,39 @@ function iaInit(){
 
             vs.style.display = "";
             vv.sort((a,b)=> (b.buena?1:0)-(a.buena?1:0));
+            /* 🗣️ v7.253 (11-10) — LAS VOCES, POR CÓMO SUENAN. NO POR SU CÓDIGO.
+               ═══════════════════════════════════════════════════════════════════════════
+               Rey: «la voz del que narra y la de Apex no son iguales; la de Apex es más
+               natural, la del narrador es pausada y medio robótica».
+               Y no eran dos configuraciones distintas: era LA MISMA VOZ en sus dos
+               versiones. Su teléfono tiene `es-us-x-esf-local` Y `es-us-x-esf-network` — la
+               misma garganta, una comprimida para funcionar sin internet (apagada, metálica)
+               y otra sintetizada en los servidores de Google (natural). Él tenía elegida la
+               «-local», y el botón de probar sonaba con la del sistema, que era de red: por
+               eso una sonaba bien y la otra no.
+               La lista le enseñaba «us-x-esf-local (US)». Con eso no hay forma humana de
+               saber cuál es cuál. Ahora dice lo que importa —natural o sin internet— y las
+               naturales van PRIMERO, porque es lo que quiere oír
+               ([[apex-no-elegir-por-rey]]: se le enseña la diferencia, elige él). */
+            const esNatural = (v)=> !!(v.necesitaRed || /-network\b/i.test(String(v.id||"")));
+            const nombreVoz = (v)=>{
+              const id = String(v.id||"");
+              /* la letra que distingue una garganta de otra dentro del mismo país */
+              const m = id.match(/-x-([a-z]+)-(local|network)/i);
+              const quien = m ? m[1].toUpperCase() : id.replace(/^es-/,"").replace(/-language$/,"");
+              const pais = v.pais ? (" "+String(v.pais).toUpperCase()) : "";
+              return (esNatural(v) ? "🌐 natural" : "📴 sin internet") + " · voz " + quien + pais;
+            };
+            const ordenadas = vv.slice().sort((a,b)=> (esNatural(b)?1:0) - (esNatural(a)?1:0));
             vs.innerHTML = '<option value="">La que trae el motor</option>' +
-              vv.map(v=>'<option value="'+esc(v.id)+'">' + (v.buena?"⭐ ":"") +
-                esc(String(v.id).replace(/^es-/,"").replace(/-language$/,"")) +
-                (v.pais?" ("+esc(v.pais)+")":"") +
-                (v.necesitaRed?" · con internet":"") + '</option>').join("");
+              ordenadas.map(v=>'<option value="'+esc(v.id)+'">' + (v.buena?"⭐ ":"") +
+                esc(nombreVoz(v)) + '</option>').join("") +
+              /* y se dice en una línea qué significa cada una, que es lo que faltaba */
+              '';
+            { const nt = $("#iaVozTipos");
+              if (nt) nt.innerHTML = '🌐 <b>natural</b>: suena a persona, la sintetiza Google y necesita internet. '
+                + '📴 <b>sin internet</b>: va siempre, también en la calle sin datos, pero suena más apagada.'
+                + '<br>Si eliges una natural y te quedas sin internet, Roberto pasa solo a la de sin internet: nunca se calla.'; }
             vs.value = IA.voz.nativa || "";
             vs.onchange = function(){
               IA.voz.nativa = this.value || null; iaGuardarVoz();

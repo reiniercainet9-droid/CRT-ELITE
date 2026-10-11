@@ -1,62 +1,42 @@
-APEX v7.252 — TRADING DESK
+APEX v7.253 — TRADING DESK
 =========================
 
-🔌 ROBERTO SE QUEDÓ MUDO Y YA NO PUEDE VOLVER A PASAR · Y EL RECUADRO, EXPLICADO ENTERO
+🗣️ LAS DOS VOCES ERAN LA MISMA VOZ EN SUS DOS VERSIONES
 
-── 1) POR QUÉ NO HABLABA, QUE NO ERA EL BOTÓN ─────────────────────────────────────────
-No era el botón ni el aviso por separado: el MOTOR DE VOZ DE ANDROID se había desvinculado
-de Apex. Medido en tu teléfono, con tu interruptor encendido y el motor de Google vivo:
+Rey: «la voz del que narra y la de Apex no son iguales; la de Apex es más natural, la del
+narrador es pausada y medio robótica».
 
-    W TextToSpeech: speak failed: not bound to TTS engine
+── LO QUE PASABA, QUE NO ERA LO QUE PARECÍA ───────────────────────────────────────────
+No eran dos configuraciones distintas. Medido en tu teléfono: tienes instaladas LAS DOS
+versiones de la misma voz —
 
-Y había TRES agujeros encadenados, los tres en los dos motores de voz:
+    es-us-x-esf-local     ← la que tenías elegida: comprimida, va sin internet, suena apagada
+    es-us-x-esf-network   ← la MISMA garganta, sintetizada por Google: suena a persona
 
-  · NO RECONECTABA NUNCA. El código comprobaba `if (voz != null) return` — que el objeto
-    EXISTIERA, no que FUNCIONARA. Desvinculado sigue sin ser nulo, así que se salía por ahí.
-    Mudo hasta reinstalar.
-  · FALLABA EN SILENCIO. `speak()` no lanza error con el motor caído: DEVUELVE un error que
-    nadie miraba. Por eso no saltó nada en ningún sitio.
-  · Y «MOTOR FRÍO» NO TENÍA PLAZO. Si el motor no arrancaba, la frase se quedaba esperando
-    un aviso que no iba a llegar jamás — con un mensaje que sonaba a que todo iba bien.
+Y el botón de probar la voz mandaba la frase SIN voz, SIN tono y SIN ritmo, así que sonaba
+con la del sistema (una natural). Estabas comparando dos voces distintas sin saberlo.
 
-AHORA: se mira lo que devuelve speak(); si falla, se tira el motor roto, se construye uno
-nuevo y se repite la frase. Y el rescate NO va por reloj: lo suelta el motor nuevo cuando
-arranca, tarde lo que tarde. Si lleva más de 6 segundos sin arrancar, no está frío: está
-muerto, y se rehace.
+── LO ARREGLADO ───────────────────────────────────────────────────────────────────────
+1. LA LISTA DICE CÓMO SUENA CADA UNA, no su código. Antes ponía «us-x-esf-local (US)», que
+   no le dice nada a nadie. Ahora:
+        🌐 natural · voz ESF US
+        📴 sin internet · voz ESF US
+   Y las naturales salen primero, con una línea debajo explicando qué significa cada tipo.
 
-PROBADO EN TU TELÉFONO, matando el motor de Android a propósito:
-    REHACIENDO el motor de voz de Apex (estaba desvinculado)
-    RESCATADA la frase que se perdio con el motor caido
-    isSpeakerPlaying = 1          ← y sonó
-Lo mismo con el motor que dice tus avisos.
+2. EL PROBADOR SUENA COMO SONARÁ DE VERDAD. Ahora manda tu voz, tu tono y tu ritmo. Un
+   probador que suena distinto a lo real te manda a buscar la avería donde no está — es la
+   segunda vez en dos días que me pasa con un probador.
 
-Y un cuarto, pequeño pero decisivo: la frase rescatada se descartaba por «rebote» (la misma
-frase en menos de 4 segundos). Una frase que NO sonó no es un rebote.
+3. 🛟 Y SI ELIGES UNA NATURAL Y TE QUEDAS SIN INTERNET, NO SE CALLA. Las naturales las hace
+   Google en sus servidores: sin datos no pueden. Cada una tiene su gemela de sin internet,
+   y ahora se usa esa automáticamente. Oirás la versión apagada, que es infinitamente mejor
+   que el silencio en mitad de una alarma. En LOS DOS motores, con la misma regla: dos
+   caminos con reglas distintas son dos Robertos.
 
-── 2) 📖 EL RECUADRO: AHORA SE EXPLICAN LOS 11, NO 4 ──────────────────────────────────
-Tenías razón: el desplegable «¿Qué significa cada número?» explicaba cuatro cosas. Faltaban
-«Aciertas», la balanza (ganas/pierdes de media), «Operaciones», «Racha» y las tres columnas
-de la tabla (nº · % · media). Ahora están los once, en el mismo orden en que los ves, y cada
-uno dice PARA QUÉ sirve — no solo qué es.
-
-── 3) 🩹 Y EL AVISO QUE TE MENTÍA, QUE ERA DE DINERO ──────────────────────────────────
-Decía «Ninguna salió por el objetivo (TP) → el TP está puesto donde no toca», y tus 7
-operaciones están TODAS en «sin dato»: el sistema no sabe por dónde salieron. Te estaba
-recomendando MOVER TU TP por un dato que no tiene.
-
-Ahora son dos avisos distintos:
-  · sin datos → «No tengo registrado por dónde salieron estas 7: de aquí no se puede
-    concluir nada», y te dice cómo se arregla (el botón 🚪 Cerrar del Diario lo pregunta).
-  · con datos de verdad y ninguna por TP → ahí sí sale el aviso del TP, acotado a las que
-    tienen dato.
-
-⚠️ Tus 7 son ANTERIORES a ese botón: nacieron sin el dato. No es que esté roto; es que
-empieza a guardarse desde que cierras con el botón.
-
-── LO QUE QUEDA DEL PLAN (y no se me olvida) ──────────────────────────────────────────
-C1 la voz que repite · C2 lo que dice y no escribe · C3 el botón de juzgar · F1 la
-calculadora de negocios · E1 Apex en la PC · y un worker con A6 + A7 + B2.
-A4 sigue esperando a que instales MT5.
+── LO QUE TE TOCA ─────────────────────────────────────────────────────────────────────
+Te hice sonar las dos seguidas para que compares. Abre ⚙️ en el chat de Roberto → la lista
+de voces y elige la que quieras: ahora se entiende cuál es cuál. Si eliges una 🌐 natural,
+sonará mejor siempre que tengas datos, y bajará sola a la 📴 cuando no los tengas.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
