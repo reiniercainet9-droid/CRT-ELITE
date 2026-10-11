@@ -5197,7 +5197,7 @@ if(!ESTRATEGIAS.includes(CTX.estrategia)) CTX.estrategia = ESTRATEGIAS[0];
 
 /* Cuentas de fondeo/reales/propias registradas (v4.6) */
 let CUENTAS = load(K.cuentas, []);
-function guardarCuentas(){ save(K.cuentas, CUENTAS); if(typeof syncRiesgo==="function") syncRiesgo(); }
+function guardarCuentas(){ save(K.cuentas, CUENTAS); if(typeof syncRiesgo==="function") syncRiesgo(true); }
 
 /* Pares que sigue Rey (configurables; con el puente vendrán de TradingView) */
 let PARES = load(K.pares, ["EUR/USD","GBP/USD"]);
@@ -12203,9 +12203,21 @@ function riesgoResumen(){
   return out;
 }
 /* Sincroniza a la nube el estado de riesgo (para el aviso proactivo con la app cerrada). */
-function syncRiesgo(){
+function syncRiesgo(porEl){
   try{
     const r=riesgoResumen();
+    /* 🛟 A5 v7.263 (11-10) — UNA LISTA VACÍA NO SE SUBE SOLA. NUNCA.
+       ═══════════════════════════════════════════════════════════════════════════════════
+       Medido en vivo: con el TTL ya quitado y el worker 5.274 arriba, /riesgo seguía
+       devolviendo 0 cuentas. El culpable era la propia resubida que puse para protegerlas:
+       `nubeRestaurar(true)` es asíncrono y no se espera, así que al arrancar `syncRiesgo()`
+       corría con CUENTAS todavía vacío y subía [] encima de la lista buena. El Puente dejaba
+       de encontrar su cuenta, le cantaba el lote con el riesgo general —que es dinero— y le
+       acusaba a él de no haberla registrado.
+       Una lista vacía automática no es información: es «todavía no sé». Y lo que no sé no
+       puede pisar lo que sí hay ([[apex-roberto-no-inventa]], [[apex-declarar-no-es-dar]]).
+       ⚠️ Si es ÉL quien borra su última cuenta (porEl), sí se sube: eso sí es un dato. */
+    if(!porEl && (!Array.isArray(r) || r.length === 0)) return;
     /* 🔇 v7.246 (10-10) — SU INTERRUPTOR VIAJA CON LAS CUENTAS.
        ═══════════════════════════════════════════════════════════════════════════════════
        Rey, 09-10: «en la configuración está el botón para desactivarlas y no funciona».
@@ -21635,7 +21647,15 @@ function init(){
   setTimeout(holaApp, 1200);
   document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible") holaApp(); });
   document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible") insistVistoApp(); });
-  try{ nubeRestaurar(true); }catch(_){}  /* ☁️ si la nube tiene datos más nuevos (otro teléfono), restaura solo */
+  /* ☁️ si la nube tiene datos más nuevos (otro teléfono), restaura solo.
+     ⚠️ ES ASÍNCRONO: lo que dependa de sus datos va DENTRO del .then(), no detrás. Ponerlo
+     detrás es lo que hacía que la resubida de 🏦 Cuentas subiera la lista vacía (A5). */
+  try{
+    const _rest = nubeRestaurar(true);
+    if(_rest && typeof _rest.then === "function"){
+      _rest.then(()=>{ try{ syncRiesgo(); }catch(_){} }).catch(()=>{ try{ syncRiesgo(); }catch(_){} });
+    } else { try{ syncRiesgo(); }catch(_){} }
+  }catch(_){ try{ syncRiesgo(); }catch(__){} }
   /* 🏦 v7.261 (11-10) — SUS CUENTAS SE RESUBEN SOLAS AL ABRIR, Y CADA HORA.
      ═════════════════════════════════════════════════════════════════════════════════════
      Rey, con la captura del lote: «¿cómo me va a decir que no está registrada en cuentas si
@@ -21649,7 +21669,7 @@ function init(){
      Arreglar solo el TTL habría dejado el mismo agujero para cualquier otra pérdida: lo que
      el Puente necesita para cantar bien el lote tiene que reponerse SOLO
      ([[apex-nada-que-rey-tenga-que-recordar]], [[apex-declarar-no-es-dar]]). */
-  try{ syncRiesgo(); }catch(_){}
+  /* (la del arranque va arriba, dentro del .then() del respaldo) */
   try{ setInterval(()=>{ try{ syncRiesgo(); }catch(_){} }, 3600000); }catch(_){}
   /* 🏦 A4 (11-10) — el balance real de su MT5, solo. Al arrancar, al volver a la app y cada
      5 min: el Puente lo relee cada 5, así que pedirlo más seguido seria pedir lo mismo. Y no

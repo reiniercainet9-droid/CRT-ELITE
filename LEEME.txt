@@ -1,4 +1,4 @@
-APEX v7.262 — TRADING DESK
+APEX v7.263 — TRADING DESK
 =========================
 
 🏦 EL BALANCE DE TUS CUENTAS SE ACTUALIZA SOLO
@@ -61,6 +61,23 @@ ya lo lleno yo.
    cuando no hay internet.
 
 💬 LO QUE TE DICE ROBERTO QUEDA ESCRITO en el hilo del día, no solo dicho.
+
+── 🛟 Y EL AGUJERO QUE ENCONTRÉ AL PROBARLO (A5) ────────────────────────────────────────
+
+Subiste el worker, fui a comprobar la cadena entera con tus datos de verdad… y la nube tenía
+CERO cuentas. Con la caducidad ya quitada.
+
+El tercer agujero era mi propio arreglo. El que repone tus cuentas al abrir corría ANTES de
+que tu respaldo las hubiera traído, así que subía una lista VACÍA encima de la buena. O sea:
+lo que puse para que no se perdieran era justo lo que las borraba.
+
+Ahora: una lista vacía NUNCA se sube sola — lo que todavía no sé no puede pisar lo que sí
+hay. Si eres TÚ quien borra tu última cuenta, eso sí viaja, porque eso sí es un dato tuyo.
+Y la resubida del arranque espera a que tus datos vuelvan.
+
+👉 ABRE APEX EN EL TELÉFONO una vez con esta versión y tus cuentas vuelven solas a la nube.
+   A partir de ahí el Puente encuentra la tuya, te canta el lote con SU pared (no con el
+   riesgo general) y el balance real de MT5 entra solo en su ficha.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
