@@ -1,46 +1,40 @@
-APEX v7.254 — TRADING DESK
+APEX v7.255 — TRADING DESK
 =========================
 
-🗣️ C1 RESUELTO — LA RESPUESTA LARGA YA NO SE CORTA A LA MITAD
+📝 C2 Y C3 — LO QUE TE DIGO QUEDA ESCRITO, Y EL JUICIO SALE LIMPIO
 
-Rey: «la voz repite: habla hasta la mitad, vuelve al principio y la segunda vez termina».
-Y cuando te enseñé una prueba con frases cortas me corregiste: «no son frases, son
-RESPUESTAS LARGAS de preguntas o conversaciones». Esa corrección fue la que lo resolvió —
-con frases cortas no pasa nunca.
+── C2: «DICE COSAS QUE NO SALEN ESCRITAS EN EL CHAT» ──────────────────────────────────
+Tenías razón y era de raíz. Todo lo que yo te digo por mi nubecita pasa por un solo sitio,
+y ese sitio pintaba el globo —que se va solo a los segundos— y no lo guardaba en ninguna
+parte. Mis 228 frases de cada 30 minutos, lo que te cuento al volver, lo que te aviso
+estando dentro de Apex: lo oías y, si no lo pillabas al vuelo, se perdía para siempre.
+Lo único que se guardaba era QUÉ frase se había dicho, para no repetirla. Nunca el texto.
 
-── LO QUE PASABA ──────────────────────────────────────────────────────────────────────
-Una respuesta larga se parte en trozos y se mandan TODOS en el mismo milisegundo, para que
-el motor los encadene sin silencios. Pero el reloj que protege el turno medía cada trozo
-«desde ahora», así que los cinco pedían el mismo plazo: el turno quedaba reservado la
-duración de UN trozo (~15 s) para una respuesta de 40 segundos o más.
+Ahora queda escrito, y sale en **📥 El hilo del día** junto a tus avisos, EN SU HORA, que
+es como lo viviste. Marcado con 💬 para que se distinga de un aviso del sistema de un
+vistazo: una frase mía y una alarma de tu indicador no son lo mismo y no pueden parecerlo.
+Solo lo de hoy y con tope de 60: esto es para releer la jornada, no un archivo que crezca.
 
-Pasados esos 15 segundos, el turno caducaba. Y lo siguiente que llegara —un aviso, o la
-misma respuesta por el otro camino del chat— entraba cortando y BORRABA los trozos que
-faltaban.
+── C3: EL DEFECTO DEL BOTÓN «QUE LO JUZGUE ROBERTO» ───────────────────────────────────
+Medido contra tu worker en vivo. Mi respuesta llega así:
 
-MEDIDO en tu teléfono con una respuesta de 581 caracteres, ANTES del arreglo:
-    +13967ms INICIO trozo 3 de 5
-    +20080ms llega otra cosa y corta
-    +20718ms empieza de cero
-El trozo 3 no llegó a terminar, y los trozos 4 y 5 no sonaron jamás.
+    {"text":"...\n[[gesto:aprueba]]"}
 
-── LO ARREGLADO ───────────────────────────────────────────────────────────────────────
-Ahora cada trozo SUMA su duración a lo que ya quedaba, que es como se comporta de verdad la
-cola del motor. Medido ejecutando la puerta de la voz: la misma respuesta pasa de reservar
-13.950 ms a reservar 69.750 ms. Con un techo de 4 minutos, para que un fallo no deje la voz
-bloqueada.
+Esa marca final le dice a Apex qué cara tengo que poner. El chat normal se la quita y la
+usa. El botón de juzgar la pintaba TAL CUAL, así que te salía «[[gesto:aprueba]]» escrito
+al final de tu juicio — y encima se guardaba así, de modo que volvía a aparecer cada vez
+que la sección se repintaba.
 
-PROBADO en tu teléfono, DESPUÉS:
-    trozo 1: 720 → 5179 ms
-    trozo 2: 5453 → 13759
-    trozo 3: 13862 → 23181     ← el aviso llegó a los 20 s y NO la pisó
-    trozo 4: 23223 → 32203
-    trozo 5: 32260 → 37308     ← la respuesta termina ENTERA
-    aviso:   38090 → 41317     ← y suena DESPUÉS, en su turno
+Arreglado, y además:
+  · el gesto ya no se tira: ahora pongo la cara que corresponde al juicio;
+  · los juicios que YA tenías guardados con la marca dentro se limpian solos al abrirlos;
+  · y si no puedo traer el juicio, te digo POR QUÉ. Antes decía «no pude» a secas, y
+    quedarse sin créditos, sin internet o tener el puente mal daban el mismo mensaje — y se
+    arreglan de formas distintas. Ahora cada una te dice qué hacer.
 
 ── LO QUE QUEDA DEL PLAN ──────────────────────────────────────────────────────────────
-C2 lo que dice y no escribe · C3 el botón de juzgar · F1 la calculadora de negocios ·
-E1 Apex en la PC · y un worker con A6 + A7 + B2. A4 espera a que instales MT5.
+F1 la calculadora de negocios · E1 Apex en la PC · y un worker con A6 + A7 + B2.
+A4 sigue esperando a que instales MT5.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

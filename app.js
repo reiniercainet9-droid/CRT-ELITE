@@ -2035,7 +2035,7 @@ async function abrirHiloDia(){
   if(typeof abrirIA==="function") abrirIA();
   const diaDe=(ts)=>new Intl.DateTimeFormat("es",{timeZone:"America/Sao_Paulo",day:"2-digit",month:"2-digit"}).format(new Date(ts||Date.now()));
   const hoyKey=diaDe(Date.now());
-  iaTemaChat("📥 Avisos de hoy · "+hoyKey);
+  iaTemaChat("📥 El hilo de hoy · "+hoyKey);   /* v7.255: ya no son solo avisos: también lo que te dije */
   const c=iaConvAct();
   let avHoy=[];
   try{
@@ -2043,13 +2043,26 @@ async function abrirHiloDia(){
     const d=await r.json();
     avHoy=(((d&&d.avisos)||[]).filter(a=>diaDe(a.ts)===hoyKey)).reverse();   /* ascendente: la mañana arriba */
   }catch(_){}
-  const nuevos=avHoy.filter(a=>(a.ts||0)>(c.hiloUltTs||0));
+  /* 📝 v7.255 — C2: Y LO QUE ROBERTO DIJO EN VOZ ALTA, EN SU HORA.
+     Rey: «dice cosas que no salen escritas en el chat». Sus frases y lo que le cuenta por la
+     nubecita no eran avisos del worker, así que no aparecían en ningún sitio: se oían y se
+     perdían. Ahora se mezclan con los avisos ORDENADAS POR HORA, que es como las vivió.
+     Van marcadas con 💬 para que se distingan de un aviso del sistema de un vistazo: una
+     frase suya y una alarma del indicador no son lo mismo y no pueden parecerlo
+     ([[apex-la-alarma-va-tal-cual]]). */
+  let dichoHoy = [];
+  try{ dichoHoy = robLoDichoHoy().map(e=>({ ts:e.ts, t:"💬 Te dije", b:e.x, _mio:true })); }catch(_){}
+  const juntos = avHoy.concat(dichoHoy).sort((x,y)=>(x.ts||0)-(y.ts||0));
+  const nuevos=juntos.filter(a=>(a.ts||0)>(c.hiloUltTs||0));
   nuevos.forEach(a=>{
     const hBR=new Intl.DateTimeFormat("es",{timeZone:"America/Sao_Paulo",hour:"2-digit",minute:"2-digit",hour12:false}).format(new Date(a.ts||Date.now()));
     c.msgs.push({role:"assistant",content:"**"+(a.t||"Aviso")+"** · 🕐 "+hBR+"\n\n"+(a.b||"")});
   });
-  if(avHoy.length) c.hiloUltTs=avHoy[avHoy.length-1].ts||Date.now();
-  if(!c.msgs.length) c.msgs.push({role:"assistant",content:"## 📥 Avisos de hoy\n\nTodavía no ha llegado ningún aviso hoy. Cuando llegue uno, tócalo en el teléfono y aterrizas AQUÍ, con el día completo en orden — y si mi voz está encendida (⚙️), te lo leo."});
+  /* ⚠️ la marca va sobre JUNTOS, no sobre los avisos: si se quedara con la hora del último
+     aviso, todo lo que Roberto dijera DESPUÉS volvería a aparecer cada vez que Rey abre el
+     hilo, repetido ([[apex-una-casilla-compartida-pierde-avisos]]). */
+  if(juntos.length) c.hiloUltTs=juntos[juntos.length-1].ts||Date.now();
+  if(!c.msgs.length) c.msgs.push({role:"assistant",content:"## 📥 El hilo de hoy\n\nTodavía no ha pasado nada hoy: ni avisos ni nada que te haya dicho. Cuando llegue un aviso, tócalo en el teléfono y aterrizas AQUÍ, con el día completo en orden — y aquí queda también todo lo que yo te diga en voz alta, para que puedas releerlo."});
   iaGuardarConvs(); pintarIAChat();
   /* 🔊 leer el último aviso del día al aterrizar (voz opcional de Roberto) */
   /* 🎚️ v7.246 — el escalón sale de SU TÍTULO: si el aviso es una alarma del indicador,
@@ -4335,15 +4348,47 @@ async function resJuicioRoberto(id, ops, dinero, per){
   try{
     const r = await fetch(IA.url,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({system:sys,messages:[{role:"user",content:msg}]})});
     const d = await r.json();
-    const txt = String((d && d.text) || "").trim();
-    if(!txt) throw new Error("sin respuesta");
+    /* 🎓 v7.255 (11-10) — C3: EL JUICIO SALÍA CON LA MARCA DEL GESTO ESCRITA.
+       ═══════════════════════════════════════════════════════════════════════════════════
+       Rey: «defecto en el botón de que Roberto juzgue mis operaciones».
+       Medido contra el worker en vivo: la respuesta viene así —
+           {"text":"...\n[[gesto:aprueba]]"}
+       El chat normal le quita esa marca con `robLeerGesto()` y la usa para la cara de
+       Roberto. Este camino la pintaba TAL CUAL con `esc(txt)`, así que a Rey le salía
+       «[[gesto:aprueba]]» escrito al final de su juicio — y encima se GUARDABA así, de modo
+       que volvía a aparecer cada vez que se recuperaba.
+       Ahora pasa por la misma puerta que el chat: se limpia, y el gesto se aprovecha para
+       que Roberto ponga la cara que corresponde ([[apex-tres-voces-de-roberto]]: un camino
+       arreglado y el de al lado no son dos Robertos). */
+    const bruto = String((d && d.text) || "").trim();
+    const _g = (typeof robLeerGesto === "function") ? robLeerGesto(bruto) : { texto: bruto, gesto: "" };
+    const txt = String(_g.texto || "").trim();
+    /* 🗃️ y si no hay texto, se dice POR QUÉ. Antes esto lanzaba «sin respuesta» y el catch
+       pintaba «no pude traer el juicio», tirando la causa de verdad —sin créditos, el puente
+       mal, el worker caído— que es justo lo que no se puede hacer
+       ([[apex-la-caja-negra-tiraba-la-causa]], [[apex-roberto-no-inventa]]). */
+    if(!txt){
+      const porQue = (d && (d.error || d.mensaje || d.msg)) ? String(d.error || d.mensaje || d.msg)
+                   : (!r.ok ? ("el puente respondió " + r.status) : "respondió vacío");
+      throw new Error(porQue);
+    }
+    try{ if(_g.gesto) robReacciona(txt, _g.gesto); }catch(_){}
     /* v7.96 — se GUARDA, para que un repintado no se lo lleve. Un juicio que costó una
        llamada a Roberto no puede desaparecer porque la sección se refresque sola. */
     try{ localStorage.setItem("apex.juicio."+id, JSON.stringify({per, txt, ts:Date.now()})); }catch(_){}
     salida.innerHTML = resJuicioHTML(txt, per, Date.now());
     try{ robertoVigila("Rey pidió a Roberto que juzgara sus resultados por "+RES_ETIQ[per]+" ("+(id==="ejec"?"Ejecutor":"su Diario")+")."); }catch(_){}
   }catch(e){
-    salida.innerHTML = '<div class="desc" style="font-size:12px">No pude traer el juicio de Roberto ahora mismo. Vuelve a intentarlo, o pregúntaselo directamente en el chat.</div>';
+    /* 🗃️ v7.255 — Y SE DICE QUÉ FALLÓ, no solo que falló. «No pude» sin causa obliga a
+       adivinar: ¿se quedó sin créditos? ¿no hay internet? ¿está mal el puente? Cada una se
+       arregla de una forma distinta ([[apex-la-caja-negra-tiraba-la-causa]]). */
+    const causa = String((e && e.message) || "").slice(0, 120);
+    const pista = /credit|saldo|402|429/i.test(causa) ? "Parece que te quedaste sin créditos: recarga y vuelve a darle."
+                : /Failed to fetch|NetworkError|network/i.test(causa) ? "No hay conexión ahora mismo. Inténtalo cuando vuelva."
+                : /respondió 4\d\d|respondió 5\d\d/i.test(causa) ? "El puente contestó con un error. Si sigue, míralo en ⚙️."
+                : "Vuelve a intentarlo, o pregúntamelo directamente en el chat.";
+    salida.innerHTML = '<div class="desc" style="font-size:12px">No pude traer el juicio ahora mismo'
+      + (causa ? (' — <b>' + esc(causa) + '</b>') : '') + '.<br>' + esc(pista) + '</div>';
   }finally{
     window.__resJuzgando=false;        /* pase lo que pase, se suelta: si no, nunca refrescaría */
     if(btn){ btn.disabled=false; btn.textContent="🎓 Que lo juzgue Roberto"; }
@@ -4438,6 +4483,14 @@ function resJuicioRecupera(id){
   try{
     const g=JSON.parse(localStorage.getItem("apex.juicio."+id)||"null");
     if(!g||!g.txt) return;
+    /* 🎓 v7.255 — los juicios que YA estaban guardados llevan dentro la marca del gesto
+       («[[gesto:aprueba]]»), porque se guardaron antes del arreglo. Se limpian al leerlos y
+       se vuelven a guardar limpios: arreglar de aquí en adelante y dejarle la basura vieja
+       en pantalla no es arreglarlo ([[apex-metodo-sin-retrocesos]]). */
+    if(/\[\[\s*gesto\s*:/.test(g.txt)){
+      try{ g.txt = (typeof robLeerGesto==="function" ? robLeerGesto(g.txt).texto : g.txt).trim();
+           localStorage.setItem("apex.juicio."+id, JSON.stringify(g)); }catch(_){}
+    }
     const caja=document.getElementById("res-"+id); if(!caja) return;
     const sal=caja.querySelector(".res-juicio");
     if(sal && !sal.innerHTML.trim()) sal.innerHTML=resJuicioHTML(g.txt,g.per,g.ts);
@@ -5873,7 +5926,7 @@ const IR_DESTINOS = [
   { v:"rob:q:compuesto", t:"📈 Roberto · Interés compuesto" },
   { v:"rob:q:mejoras",   t:"💡 Roberto · Mejoras del sistema" },
   { v:"rob:avisos",    t:"📥 Roberto · Avisos recibidos" },
-  { v:"rob:hilo",      t:"📥 Roberto · El hilo del día (avisos de hoy)" },
+  { v:"rob:hilo",      t:"📥 Roberto · El hilo del día (avisos y lo que te dije)" },
   { v:"rob:chat",      t:"💬 Roberto · Abrir el chat" },
 ];
 function irDestinoLabel(v){ const d=IR_DESTINOS.find(x=>x.v===v); return d?d.t:""; }
@@ -16382,8 +16435,52 @@ function robBocaRato(texto){
 }
 let _robAvisoUrge = false;   /* 🔴 v7.78 — ¿la nubecita de AHORA es urgente? Mientras lo sea,
                                 el rojo no se lo puede llevar un gesto espontáneo. */
+/* 📝 v7.255 (11-10) — C2: LO QUE ROBERTO DICE TIENE QUE QUEDAR ESCRITO.
+   ═══════════════════════════════════════════════════════════════════════════════════════
+   Rey: «dice cosas que no salen escritas en el chat».
+   Y era verdad: `robDecir` pinta la nubecita —que se va sola a los segundos— y la manda al
+   cuerpo flotante, pero NO lo guarda en ninguna parte. Sus 228 frases de cada 30 minutos,
+   lo que le cuenta al volver, lo que le avisa estando dentro… lo oía y, si no lo pillaba al
+   vuelo, se perdía para siempre. `robDichas` solo guarda QUÉ frase se dijo —su marca, para
+   no repetirla— nunca el texto.
+   Y eso es grave para lo que Rey usa esto: si Roberto le dice algo de su operativa mientras
+   él está mirando el gráfico, no puede volver a leerlo ([[apex-nada-le-deja-mudo]] tiene
+   hermano: lo que se dice y no se escribe también desaparece).
+   Se apunta aquí, en el sitio por donde pasa TODO lo que dice —igual que la voz pasa por
+   una sola puerta— y sale en «📥 El hilo del día» junto a los avisos, en su hora.
+   Solo lo de HOY y con tope: esto no es un archivo, es poder releer lo de la jornada. */
+const ROB_DICHO_KEY = "crtelite_robdicho_v1";
+const ROB_DICHO_TOPE = 60;
+function robApuntarLoDicho(texto, op){
+  try{
+    const t = String(texto||"").trim();
+    if(!t) return;
+    let l = [];
+    try{ l = JSON.parse(localStorage.getItem(ROB_DICHO_KEY) || "[]") || []; }catch(_){ l = []; }
+    /* el mismo texto repetido en menos de un minuto es un rebote de dos caminos (el cuerpo
+       de dentro y el de fuera), no dos cosas distintas que decir */
+    const ahora = Date.now();
+    if(l.length && l[l.length-1].x === t && (ahora - (l[l.length-1].ts||0)) < 60000) return;
+    l.push({ ts: ahora, x: t.slice(0,400), g: String((op&&op.gesto)||""), ir: String((op&&op.ir)||"") });
+    /* solo lo de hoy, y con tope */
+    const hoy = new Date().toDateString();
+    l = l.filter(e=>{ try{ return new Date(e.ts).toDateString() === hoy; }catch(_){ return false; } });
+    if(l.length > ROB_DICHO_TOPE) l = l.slice(-ROB_DICHO_TOPE);
+    localStorage.setItem(ROB_DICHO_KEY, JSON.stringify(l));
+  }catch(_){}
+}
+/** Lo que Roberto ha dicho hoy, para el hilo del día. */
+function robLoDichoHoy(){
+  try{
+    const l = JSON.parse(localStorage.getItem(ROB_DICHO_KEY) || "[]") || [];
+    const hoy = new Date().toDateString();
+    return l.filter(e=>{ try{ return new Date(e.ts).toDateString() === hoy; }catch(_){ return false; } });
+  }catch(_){ return []; }
+}
+
 function robDecir(titulo,texto,op){
   op=op||{};
+  try{ robApuntarLoDicho(texto, op); }catch(_){}
   try{
     /* 🔴 v7.78 — se marca la urgencia del AVISO (no la del gesto que venga después) */
     try{ _robAvisoUrge = !!op.urge || !!((Roberto.emociones[op.gesto]||{}).urgente); }catch(_){ _robAvisoUrge = false; }
