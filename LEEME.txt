@@ -1,42 +1,46 @@
-APEX v7.253 — TRADING DESK
+APEX v7.254 — TRADING DESK
 =========================
 
-🗣️ LAS DOS VOCES ERAN LA MISMA VOZ EN SUS DOS VERSIONES
+🗣️ C1 RESUELTO — LA RESPUESTA LARGA YA NO SE CORTA A LA MITAD
 
-Rey: «la voz del que narra y la de Apex no son iguales; la de Apex es más natural, la del
-narrador es pausada y medio robótica».
+Rey: «la voz repite: habla hasta la mitad, vuelve al principio y la segunda vez termina».
+Y cuando te enseñé una prueba con frases cortas me corregiste: «no son frases, son
+RESPUESTAS LARGAS de preguntas o conversaciones». Esa corrección fue la que lo resolvió —
+con frases cortas no pasa nunca.
 
-── LO QUE PASABA, QUE NO ERA LO QUE PARECÍA ───────────────────────────────────────────
-No eran dos configuraciones distintas. Medido en tu teléfono: tienes instaladas LAS DOS
-versiones de la misma voz —
+── LO QUE PASABA ──────────────────────────────────────────────────────────────────────
+Una respuesta larga se parte en trozos y se mandan TODOS en el mismo milisegundo, para que
+el motor los encadene sin silencios. Pero el reloj que protege el turno medía cada trozo
+«desde ahora», así que los cinco pedían el mismo plazo: el turno quedaba reservado la
+duración de UN trozo (~15 s) para una respuesta de 40 segundos o más.
 
-    es-us-x-esf-local     ← la que tenías elegida: comprimida, va sin internet, suena apagada
-    es-us-x-esf-network   ← la MISMA garganta, sintetizada por Google: suena a persona
+Pasados esos 15 segundos, el turno caducaba. Y lo siguiente que llegara —un aviso, o la
+misma respuesta por el otro camino del chat— entraba cortando y BORRABA los trozos que
+faltaban.
 
-Y el botón de probar la voz mandaba la frase SIN voz, SIN tono y SIN ritmo, así que sonaba
-con la del sistema (una natural). Estabas comparando dos voces distintas sin saberlo.
+MEDIDO en tu teléfono con una respuesta de 581 caracteres, ANTES del arreglo:
+    +13967ms INICIO trozo 3 de 5
+    +20080ms llega otra cosa y corta
+    +20718ms empieza de cero
+El trozo 3 no llegó a terminar, y los trozos 4 y 5 no sonaron jamás.
 
 ── LO ARREGLADO ───────────────────────────────────────────────────────────────────────
-1. LA LISTA DICE CÓMO SUENA CADA UNA, no su código. Antes ponía «us-x-esf-local (US)», que
-   no le dice nada a nadie. Ahora:
-        🌐 natural · voz ESF US
-        📴 sin internet · voz ESF US
-   Y las naturales salen primero, con una línea debajo explicando qué significa cada tipo.
+Ahora cada trozo SUMA su duración a lo que ya quedaba, que es como se comporta de verdad la
+cola del motor. Medido ejecutando la puerta de la voz: la misma respuesta pasa de reservar
+13.950 ms a reservar 69.750 ms. Con un techo de 4 minutos, para que un fallo no deje la voz
+bloqueada.
 
-2. EL PROBADOR SUENA COMO SONARÁ DE VERDAD. Ahora manda tu voz, tu tono y tu ritmo. Un
-   probador que suena distinto a lo real te manda a buscar la avería donde no está — es la
-   segunda vez en dos días que me pasa con un probador.
+PROBADO en tu teléfono, DESPUÉS:
+    trozo 1: 720 → 5179 ms
+    trozo 2: 5453 → 13759
+    trozo 3: 13862 → 23181     ← el aviso llegó a los 20 s y NO la pisó
+    trozo 4: 23223 → 32203
+    trozo 5: 32260 → 37308     ← la respuesta termina ENTERA
+    aviso:   38090 → 41317     ← y suena DESPUÉS, en su turno
 
-3. 🛟 Y SI ELIGES UNA NATURAL Y TE QUEDAS SIN INTERNET, NO SE CALLA. Las naturales las hace
-   Google en sus servidores: sin datos no pueden. Cada una tiene su gemela de sin internet,
-   y ahora se usa esa automáticamente. Oirás la versión apagada, que es infinitamente mejor
-   que el silencio en mitad de una alarma. En LOS DOS motores, con la misma regla: dos
-   caminos con reglas distintas son dos Robertos.
-
-── LO QUE TE TOCA ─────────────────────────────────────────────────────────────────────
-Te hice sonar las dos seguidas para que compares. Abre ⚙️ en el chat de Roberto → la lista
-de voces y elige la que quieras: ahora se entiende cuál es cuál. Si eliges una 🌐 natural,
-sonará mejor siempre que tengas datos, y bajará sola a la 📴 cuando no los tengas.
+── LO QUE QUEDA DEL PLAN ──────────────────────────────────────────────────────────────
+C2 lo que dice y no escribe · C3 el botón de juzgar · F1 la calculadora de negocios ·
+E1 Apex en la PC · y un worker con A6 + A7 + B2. A4 espera a que instales MT5.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
