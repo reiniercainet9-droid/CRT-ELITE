@@ -99,6 +99,7 @@ const NUBE_KEYS = ["crtelite_negocio_v1","crtelite_trades_v2","crtelite_cuentas_
    leyó "crtelite_conf_v2, crtelite_reglas_v2, crtelite_estrategias_v3, crtelite_estrdefs_v1"
    y eso no le dice nada a nadie. Están LOS 26: si mañana falta cualquiera, se entiende. */
 const NUBE_NOMBRES = {
+  "crtelite_negocio_v1":"los datos de tu negocio (la calculadora 🧮)",
   "crtelite_trades_v2":"tu diario de operaciones",
   "crtelite_cuentas_v3":"tus cuentas de fondeo",
   "crtelite_reminders_v3":"tus avisos programados",
