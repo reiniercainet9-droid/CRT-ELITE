@@ -12609,6 +12609,7 @@ const APEX_MAPA =
    correr». Roberto tiene que tener las dos mitades a la vez, porque si solo tiene la primera
    le dirá a Rey «cierra el 80%» como una orden, y eso ya no es asistirle. */
 "39. ✂️ EL PARCIAL: AL 75% DEL CAMINO, Y QUIÉN DECIDE EN CADA CASO (ley de Rey, 10-10). Su regla de parcial ya NO se mide en múltiplos de R, se mide en **% DEL CAMINO de la entrada al TP**, y de fábrica está en el **75%** cerrando el **80% de la posición**. ⚠️ NO MEZCLES LOS DOS 80: el 75% es DÓNDE (cuánto camino lleva andado) y el 80% es CUÁNTO (qué parte de los lotes se cierra). Y POR QUÉ CAMBIÓ, que te lo puede preguntar: él tenía 1,5R, y en un 1:2 eso ES el 75% del camino — coincidían. Pero coincidían solo con ese R:R: en un 1:3 ese mismo 1,5R es el 50% del camino y le cerraría el 80% a mitad de trayecto. Un número en R está atado al R:R de cada operación; el % del camino no. Así que cuando le digas a cuántos R cae su parcial, SÁCALO del R:R de ESA operación (0,75 × su R:R) y no de memoria. ⚠️ Si una operación no trae TP no hay camino que partir: no hay nivel, y se dice, no se inventa. 👑 Y LA PARTE QUE MÁS IMPORTA, porque son dos cosas distintas y suenan igual: al 🤖 EJECUTOR eso le salta SOLO, es automático y es ley — tú informas de que pasó. Cuando opera REY, NADIE le cierra nada: se le marca el 75% en el gráfico (en color, es el nivel de decisión) y se le avisa al teléfono, y DECIDE ÉL si cierra ese trozo o la deja correr. Jamás le digas «cierra» como una orden ni des por hecho que cerró: pregúntale o míralo en sus posiciones ([[apex-la-regla-80-20-y-quien-opera]], [[apex-el-indicador-marca-no-opera]], [[apex-rey-es-el-principal]]). Y las marcas de su gráfico son ya TRES, no cuatro: 25, 50 y 75% — el 80% se quitó porque caía pegado al 75% y le ensuciaba justo el sitio donde decide.\n"+
+"40. 🧮 LOS NEGOCIOS DE REY: EL SUELO MANDA, Y TÚ LOS EVALÚAS SIN QUE TE LO PIDA (11-10). Rey no vive solo del trading: le llegan negocios, oportunidades, locales, socios, reventas, alquileres. Tienes la mano **evaluar_negocio**, que echa las mismas cuentas que su calculadora 🧮 de 🛡️ Riesgo. ÚSALA EN CUANTO ÉL MENCIONE UN NEGOCIO, aunque no te pida los números: si te cuenta que le ofrecen algo, lo primero es medirlo, no opinar de memoria.\n⚠️ LO QUE CASI TODO EL MUNDO SE EQUIVOCA Y TÚ NO PUEDES: **un negocio no se compara contra cero, se compara contra lo que su dinero rentaría QUIETO**. Donde él vive, el dinero parado ya renta algo. Un negocio al 1% por mes PIERDE si ese suelo está al 1,2% — da beneficio y le hace perder. Por eso el semáforo se mide sobre lo que gana POR ENCIMA DEL SUELO, descontando inflación. Si no sabes su suelo, PREGÚNTASELO; si no lo pone, el número es NOMINAL y se lo dices, nunca finges un real que no mediste.\n📈 Y EL COMPUESTO BIEN HECHO: el total NO es la rentabilidad por el número de periodos. Doce meses al 5% son 79,59%, no 60%. El anual es (1+p)^12 − 1, no ×12. Es tu propia ley 23: la consistencia mediocre sostenida vence al desempeño brillante intermitente, y el tiempo pesa más que la tasa.\n🧠 LO QUE TIENES QUE EXIGIRLE, con estas palabras si hace falta: (1) **qué puede perder**, que no es lo mismo que lo que invierte — si puede perder más, eso no es una inversión con riesgo, es una deuda con premio, y se mira ANTES que la rentabilidad; (2) **cuántas horas le mete y cuánto vale su hora**: si su hora en ese negocio vale menos que su hora hoy, no es un negocio, es un empleo con otro uniforme y encima poniendo él el capital; (3) **cuánto reinvierte de verdad**, porque nadie reinvierte el 100% y lo que saca deja de componer; (4) **en cuántos periodos recupera lo que metió** — hasta ese día, todo lo demás es papel.\n📐 Y LA PREGUNTA QUE SOLO TÚ PUEDES HACERLE, porque solo tú tienes los dos lados: **¿le renta más ese negocio o su propia cuenta?** Su trading ES un negocio más, y tienes su esperanza, su riesgo por operación y su ritmo. Es el coste de oportunidad, tu ley 28: el coste real de algo es lo mejor que dejas de hacer por hacerlo. Si son menos de 30 operaciones, dilo: indicio, no conclusión (Ley 37).\n🌍 NADA DE ESTO ESTÁ ATADO A UN PAÍS, UNA MONEDA NI UN TIPO DE NEGOCIO — es ley suya del 09-10: «toda la tabla debe ser diversificada como lo es mi sistema, nada fijo, ni a un país ni a un negocio: es general, que funcione en todo». Trabajas en porcentajes y múltiplos; la moneda es una etiqueta suya y ningún cálculo la toca. Jamás le menciones un índice ni un país concreto como si fuera el suyo: pregúntale cuál es su suelo y usa el que te diga ([[apex-nada-atado-a-un-par-ni-a-un-broker]], [[apex-roberto-no-inventa]]).\n"+
 "TUS MANOS ya tocan: avisos, pares, trades y cuentas (SIEMPRE con confirmación de Rey y registro en el 🗒️ Historial).\n"+
 "🖐️ TUS MANOS DE SISTEMA (v6.31 — Rey te quiere SIN LÍMITES para tareas, con su tarjeta como única llave): también ENCIENDES/DETIENES su 🤖 Ejecutor de MT5 (ejecutor_switch — si te dice 'enciende el ejecutor', esa es la mano; y propónlo TÚ si es domingo por la tarde y sigue apagado del finde), lo REINICIAS cuando se queda corriendo código viejo (ejecutor_reiniciar, v7.188 — el Ejecutor avisa él solo: «me actualizaron pero sigo con el código viejo en memoria»; en cuanto veas ese aviso, PROPÓNSELO TÚ, que para eso lo ves antes que él. ⚠️ CON POSICIONES ABIERTAS NO se lo propongas: al reiniciarse deja de vigilarlas unos segundos y pierde lo que sabe de cada una —el parcial, el break-even—; dile que espere a que cierren y POR QUÉ. Si lo pides igual, el Ejecutor te dirá que no y cuántas hay), CAMBIAS sus reglas (ejecutor_config — solo los campos pedidos, el resto intacto; desde la v7.92 llegas a TODAS: el veto de ruedas de prensa y sus dos minutajes, el margen de deslizamiento, el capital inicial, el DD máximo TOTAL de la firma, el nombre de la EMPRESA y el candado de cuentas. Dos avisos: maxPerdidaDiaPct es el tope de UN DÍA y ddMaxPct el de TODA la cuenta —no los confundas, Rey preguntó por esto el 10-09—, y operarCualquiera=true quita el aviso antes de operar una cuenta real nueva: eso no se propone por iniciativa propia. Si Rey te dice que cambió de firma, TRAE TÚ sus topes reales y propónselos en vez de esperar a que te los dicte) y AJUSTAS las horas de tus rituales 🌅/🌙 del mentor de vida (mentor_horas). Todo pasa por su tarjeta de confirmación — nada se aplica sin su ✓. Si una tarea que te pida aún no tiene mano, dilo honesto y sugiérele pedírsela a Claude en la próxima tanda.\n"+
 "TU SISTEMA COMPLETO: no vives solo en Apex; estás integrado a TODO el sistema de trading de Rey — su TradingView, su indicador CRT Elite, sus ALARMAS (te llegan por webhook y tú las interpretas) y Apex. Estás pendiente de lo que pasa en el conjunto para darle un servicio sin límites, apoyándote además en tu conexión a internet.\n"+
@@ -18398,6 +18399,27 @@ const IA_TOOLS = [
      Rey estaba en 💵 REAL sus operaciones de 🎬 BACKTEST no existían para él —y al revés—.
      Para juzgar hace falta el historial, y el historial no llegaba ([[apex-declarar-no-es-dar]]).
      Solo LEE: no cambia nada, no cuesta nada y no le saca a Rey ninguna tarjeta. */
+  /* 🧮 v7.256 (11-10) — LA MANO PARA EVALUAR UN NEGOCIO.
+     Ley de Rey: cada cosa nueva le llega a Roberto como MANO y como VISIÓN, o no está
+     terminada ([[apex-mano-y-vision-en-todo-lo-nuevo]]). La calculadora sin esto sería una
+     pantalla que Rey tiene que abrir él; con esto, Roberto la usa cuando hace falta aunque
+     no se lo pidan ([[apex-roberto-no-obedece-deduce]]). */
+  { name:"evaluar_negocio", description:"CALCULA si un negocio renta de verdad, con las mismas cuentas que la calculadora 🧮 de la sección 🛡️ Riesgo de Apex. Devuelve: rentabilidad por periodo, lo que gana POR ENCIMA DEL SUELO (lo que renta su dinero quieto) descontando inflación, el total compuesto bien hecho —(1+p)^n, no multiplicando—, el equivalente anual, margen neto, en cuántos periodos recupera lo invertido, lo que le deja cada hora y cuántas veces es eso lo que vale su hora, el semáforo (🟥 no invertir / 🟠 estudiar / 🟡 aceptable / 🟢 buena / 🔥 excepcional), los avisos que haya, la proyección a 1, 3 y 5 años con la reinversión que él haga, y la comparación con SU PROPIO TRADING si hay datos.\n\nÚSALO SIEMPRE que Rey te hable de un negocio, una inversión, una oportunidad, un local, una franquicia, un socio que le propone algo, un delivery, una reventa, un alquiler o cualquier cosa en la que meta dinero esperando que le devuelva más. También si te pregunta '¿esto me conviene?', '¿me renta?', '¿invierto o no?'.\n\n⚠️ NO LE PIDAS TODOS LOS DATOS DE GOLPE: calcula con lo que tengas y dile EXACTAMENTE qué falta para afinar. Lo que no sepas, déjalo fuera — nunca te lo inventes ni pongas 0 por no saber.\n\n⚠️ Y LO MÁS IMPORTANTE, que es donde casi todo el mundo se equivoca: un negocio NO se compara contra cero, se compara contra lo que su dinero rentaría quieto. Si él no sabe cuál es ese suelo donde vive, PREGÚNTASELO — sin eso el número es nominal y hay que decirlo. Un negocio al 1% por mes PIERDE si su dinero quieto renta 1,2%.\n\nNada de esto está atado a un país, una moneda ni un tipo de negocio: todo sale en porcentajes y múltiplos.",
+    input_schema:{ type:"object", properties:{
+      nombre:{type:"string",description:"Qué negocio es, para que Rey lo reconozca."},
+      periodo:{type:"string",enum:["dia","semana","mes","trimestre","temporada","ano"],description:"La unidad de tiempo del negocio. Por defecto 'mes', pero hay negocios por temporada, por zafra o por proyecto."},
+      periodos:{type:"number",description:"Cuántos periodos quiere mirar (por defecto 12)."},
+      capital:{type:"number",description:"El dinero que mete."},
+      puedePerder:{type:"number",description:"Lo MÁXIMO que puede perder. No siempre es lo que invierte: puede ser más (deudas, avales) o menos."},
+      factura:{type:"number",description:"Lo que entra por periodo."},
+      gastos:{type:"number",description:"Lo que sale por periodo."},
+      neta:{type:"number",description:"Ganancia neta por periodo. Si no la sabes, no la pongas: se deduce de factura − gastos."},
+      horas:{type:"number",description:"Horas que le dedica por periodo."},
+      valorHora:{type:"number",description:"Lo que vale la hora de Rey hoy, para saber si es un negocio o un empleo."},
+      suelo:{type:"number",description:"EL SUELO: % por periodo que renta su dinero quieto donde vive (cuenta remunerada, letras, lo que sea). Si no lo sabes, PREGÚNTASELO."},
+      inflacion:{type:"number",description:"Inflación por periodo en %, si la sabe."},
+      reinvierte:{type:"number",description:"Qué % de lo que gana vuelve a meter (0 a 100). Por defecto 100."}
+    }, required:[] } },
   { name:"mirar_mis_entradas", description:"LEE las operaciones del 📒 Diario de Rey —las SUYAS, no las del Ejecutor— para poder JUZGARLAS de verdad: abiertas y cerradas, del libro 💵 REAL y del 🎬 BACKTEST. Devuelve cada una con todo lo que hace falta para opinar (par, dirección, entrada/SL/TP/RR, setup, ventana, momento de entrada, bias, zona, confluencias, resultado en R, MAE y MFE, POR DÓNDE SALIÓ cada una —campo salioPor: TP, SL, break-even, a mano o por tiempo— el precio de salida, y el parcial si lo hizo) más las cuentas ya hechas del conjunto (cuántas, aciertos, R total, R medio, cómo entró —en confirmación / en el toque / anticipando— y el reparto porSalida, que es el que contesta POR DÓNDE SE LE VA EL DINERO: cuántas salieron por cada puerta y cuántos R dejó cada una. Las que no tengan el dato salen como sin anotar: si son muchas, díselo y ofrécele completarlas, no des un reparto a medias por bueno.\n\nÚSALO SIEMPRE que Rey te pida evaluar, juzgar, repasar o comparar sus entradas ('¿cómo voy?', '¿qué tal mis entradas?', 'evalúa la de hoy', '¿estoy mejorando?', '¿cómo van mis backtest?'), y ÚSALO ANTES de opinar sobre su forma de operar: sin los números delante estarías opinando de memoria, y eso es justo lo que él no quiere.\n\n⚠️ REAL y BACKTEST son libros DISTINTOS y no se mezclan nunca en una misma cuenta: el backtest es entrenamiento, el real es su dinero. Si le das un número, di de qué libro es. Por defecto trae el libro en el que está ahora mismo; pon modo:'ambos' cuando él compare o cuando no esté claro.\n\nY JUZGA, no recites: su fuga conocida es el TIMING (entrar en el toque en vez de esperar confirmación). Si ves ese patrón en los datos, díselo con el número en la mano.",
     input_schema:{ type:"object", properties:{
       modo:{type:"string",enum:["real","backtest","ambos"],description:"Qué libro mirar. Por defecto, el que Rey tenga abierto."},
@@ -18681,6 +18703,10 @@ function describeTool(name, i){
   if(name==="revisar_indicador") return "🔍 Leer y auditar los ajustes actuales del indicador CRT"+(i.target?(" ("+i.target+")"):"");
   if(name==="registrar_retiro") return "💰 Registrar RETIRO de $"+(i.monto!=null?i.monto:"?")+(i.cuenta?(" de "+i.cuenta):"")+(i.nota?("\nNota: "+i.nota):"");
   if(name==="buscar_memoria") return "🧠 Buscar en toda su memoria: “"+(i.consulta||"?")+"”";
+  /* 🧮 v7.256 — la mano de los negocios: solo CALCULA, no toca nada de Rey */
+  if(name==="evaluar_negocio") return "🧮 Echar las cuentas de "+(i.nombre||"ese negocio")
+    +(i.capital!=null?(" · mete "+i.capital):"")+(i.neta!=null?(" · deja "+i.neta+" por "+(i.periodo||"mes")):"")
+    +(i.suelo!=null?(" · contra un suelo del "+i.suelo+"%"):" · ⚠️ sin suelo: saldrá en nominal");
   if(name==="mirar_mis_entradas") return "📒 Leer tus entradas del Diario ["+(i.modo==="ambos"?"💵 REAL + 🎬 BACKTEST":i.modo==="backtest"?"🎬 BACKTEST":i.modo==="real"?"💵 REAL":"libro actual")+"]"+(i.par?(" · "+i.par):"")+(i.dias?(" · últimos "+i.dias+" días"):"");
   if(name==="guardar_memoria"){ const et={perfil:"🧍 Perfil",aprendizaje:"💡 Aprendizaje",preferencia:"⭐ Preferencia",patron:"📊 Patrón",resultado:"📓 Resultado"}; return "🧠 Roberto quiere RECORDAR esto en su memoria:\n"+(et[i.tipo]||"💡 Aprendizaje")+"\n“"+(i.texto||"")+"”"; }
   if(name==="borrar_memoria") return "🗑️ Roberto quiere BORRAR de su memoria el dato "+(i.id||"?");
@@ -19011,6 +19037,53 @@ async function ejecutarTool(name, i){
        ni cuesta. Las cuentas se hacen con TODAS las que pasan el filtro; la lista se recorta
        para no reventar el contexto, y se dice cuántas se dejaron fuera — un número calculado
        sobre media muestra sin avisar es un número que miente ([[apex-roberto-no-inventa]]). */
+    /* 🧮 v7.256 — EVALUAR UN NEGOCIO. Usa EL MISMO motor que la pantalla de 🛡️ Riesgo:
+       una segunda cuenta en otro sitio es un segundo sitio donde desincronizarse, y Rey
+       vería dos números distintos para lo mismo ([[apex-el-75-es-donde-decide-rey]]).
+       No toca nada suyo: solo calcula y devuelve. */
+    if(name==="evaluar_negocio"){
+      const d = {
+        nombre:i.nombre||"", periodo:i.periodo||"mes", periodos:i.periodos!=null?i.periodos:12,
+        capital:i.capital, puedePerder:i.puedePerder, factura:i.factura, gastos:i.gastos,
+        neta:i.neta, horas:i.horas, valorHora:i.valorHora,
+        suelo:i.suelo, inflacion:i.inflacion, reinvierte:i.reinvierte!=null?i.reinvierte:100
+      };
+      const r = negCalcular(d);
+      const per = negPeriodo(d.periodo);
+      const red = (v,dec)=> (v===null||v===undefined||!isFinite(v)) ? null : Math.round(v*Math.pow(10,dec==null?2:dec))/Math.pow(10,dec==null?2:dec);
+      const vs = negVsTrading(r.roiPeriodo, d.periodo);
+      /* lo que FALTA se dice con nombre y apellido, para que Roberto se lo pida a Rey en
+         vez de rellenarlo él ([[apex-roberto-no-inventa]]) */
+      const falta = [];
+      if(i.capital==null) falta.push("el capital que mete");
+      if(i.neta==null && (i.factura==null || i.gastos==null)) falta.push("la ganancia neta (o facturación y gastos)");
+      if(i.suelo==null) falta.push("EL SUELO: cuánto le renta su dinero quieto donde vive (sin esto el número es nominal)");
+      if(i.inflacion==null) falta.push("la inflación de su país");
+      if(i.horas==null) falta.push("las horas que le dedica");
+      if(i.valorHora==null) falta.push("lo que vale su hora hoy");
+      if(i.puedePerder==null) falta.push("cuánto puede perder como máximo (que no siempre es lo que invierte)");
+      return { ok:true, negocio:d.nombre||"(sin nombre)", unidad:per.n,
+        rentabilidadPorPeriodo: red(r.roiPeriodo),
+        porEncimaDelSuelo: red(r.sobreSuelo),
+        esNominal: !r.hayReal,
+        totalCompuesto: red(r.roiTotal), siSoloSumaras: red(r.roiSimpleTotal),
+        equivalenteAnual: red(r.roiAnual),
+        margenNeto: red(r.margen),
+        recuperaEnPeriodos: red(r.payback,1),
+        dejaPorHora: red(r.porHora), vecesLoQueValeSuHora: red(r.vecesSuHora),
+        semaforo: r.semaforo ? (r.semaforo.ic+" "+r.semaforo.t+" — "+r.semaforo.d) : null,
+        avisos: r.avisos,
+        proyeccion: r.proyeccion ? {
+          a1: red(r.proyeccion.a1.total), a3: red(r.proyeccion.a3.total), a5: red(r.proyeccion.a5.total),
+          reinvirtiendo: r.reinvierte+"%"
+        } : null,
+        contraSuTrading: (vs && vs.hay)
+          ? { suTradingPorPeriodo: red(vs.roiTrading), gana: vs.gana, operaciones: vs.n, pocasOperaciones: vs.pocas }
+          : (vs ? { noPuedo: vs.porQue } : null),
+        loQueFalta: falta,
+        comoLeerlo: "Lo que importa es «porEncimaDelSuelo», no la rentabilidad a secas: un negocio que rinde menos que su dinero quieto le hace PERDER aunque dé beneficio. Y si esNominal es true, díselo: todavía no está descontado ni el suelo ni la inflación."
+      };
+    }
     if(name==="mirar_mis_entradas"){
       const modo=String(i.modo||"").trim();
       const libro=(modo==="real"||modo==="backtest")?modo:(modo==="ambos"?null:CTX.modo);
@@ -19377,7 +19450,11 @@ function confirmarTool(tu){
   /* v7.219: `mirar_mis_entradas` entra aquí porque SOLO LEE lo que ya es de Rey. Pedirle una
      tarjeta para leer su propio Diario sería burocracia, y una tarjeta de más en mitad de un
      análisis es una tarjeta que acaba aprobando sin mirar — que es peor que no tenerla. */
-  if(tu.name==="organizar_chat" || tu.name==="buscar_memoria" || tu.name==="mirar_mis_entradas" || tu.name==="marcar_paso_plan" || tu.name==="registrar_veredicto" || tu.name==="tema_apex" || tu.name==="guardar_saber" || tu.name==="idea_estado"){
+  /* 🧮 v7.256 — `evaluar_negocio` va aquí porque SOLO CALCULA: no toca ni un dato de Rey,
+     no guarda nada y no cambia nada suyo. Pedirle una tarjeta de confirmación para echar
+     unas cuentas sería un paso de más entre su pregunta y su respuesta
+     ([[apex-nada-que-rey-tenga-que-recordar]]). */
+  if(tu.name==="organizar_chat" || tu.name==="buscar_memoria" || tu.name==="mirar_mis_entradas" || tu.name==="marcar_paso_plan" || tu.name==="registrar_veredicto" || tu.name==="tema_apex" || tu.name==="guardar_saber" || tu.name==="idea_estado" || tu.name==="evaluar_negocio"){
     return (async()=>{ let res; try{ res=await ejecutarTool(tu.name, tu.input); }catch(e){ res={ok:false,msg:"Error: "+e}; } if(res&&res.ok&&(tu.name==="organizar_chat"||tu.name==="marcar_paso_plan")) toast(res.msg); return {confirmed:true, res}; })();
   }
   return new Promise(resolve=>{

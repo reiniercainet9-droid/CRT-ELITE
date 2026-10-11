@@ -1,62 +1,51 @@
-APEX v7.256 — TRADING DESK
+APEX v7.257 — TRADING DESK
 =========================
 
-🔎 TUS GANADORAS SÍ FUERON POR TP — EL DATO ESTABA Y NO LO MIRABA
+🧮 F1 COMPLETA — LA CALCULADORA DE NEGOCIOS, Y ROBERTO SABE USARLA
 
-Rey: «todavía no veo el arreglo, el recuadro sigue igual y no me has dado ninguna
-explicación para entenderlo… y todas las ganadoras lo fueron [por TP] y está en las
-capturas, entonces sigue con datos erróneos».
+Llevaba en tu lista desde el 09-10. Está entera: la pantalla y la mitad que faltaba, que
+es que Roberto la use sin que se lo pidas.
 
-Tenías razón en las tres cosas. Y la tercera era la de fondo.
+── DÓNDE ESTÁ ────────────────────────────────────────────────────────────────────────
+En 🛡️ Riesgo, plegada: «🧮 ¿Me renta este negocio?». Pones lo que sepas — no hace falta
+rellenarlo todo — y lo que no pongas sale como «no lo sé», nunca como cero.
 
-── 1) 🔎 EL DATO ESTABA DELANTE ───────────────────────────────────────────────────────
-Medidas en tu teléfono, tus 7 operaciones en R son:
+── LO QUE HACE DISTINTO A CUALQUIER CALCULADORA ──────────────────────────────────────
+1. EL SUELO MANDA. No se compara contra cero: se compara contra lo que TU dinero rentaría
+   quieto donde vives. Probado en tu teléfono con un caso real: un negocio que te deja un
+   1% al mes, con el suelo al 1,2%, sale 🟥 «No invertir — rinde MENOS que dejar el dinero
+   quieto. Estarías trabajando para perder». Da beneficio y te hace perder.
+   Si no pones el suelo, te digo que el número es NOMINAL en vez de fingir.
+2. EL COMPUESTO BIEN HECHO. 12 meses al 5% son 79,59%, no 60%. Y te enseño las dos cifras
+   juntas para que veas la diferencia que hace componer.
+3. TU HORA CONTRA TU HORA. Si lo que te deja cada hora es menos de lo que vale tu hora hoy,
+   te lo digo con estas palabras: eso no es un negocio, es un empleo con otro uniforme y
+   encima poniendo tú el capital.
+4. LO QUE PUEDES PERDER, que no es lo mismo que lo que inviertes. Si puedes perder más de
+   lo que metes, eso no es una inversión con riesgo: es una deuda con premio, y se mira
+   ANTES que la rentabilidad.
+5. PROYECCIÓN A 1, 3 Y 5 AÑOS CON REINVERSIÓN PARCIAL. Nadie reinvierte el 100%: lo que
+   sacas deja de componer y la curva se aplana. Lo ves en los tres plazos.
+6. ¿TE RENTA MÁS QUE TU PROPIA CUENTA? Esto no lo tiene ninguna calculadora: tu trading ES
+   un negocio más y aquí ya están tus números. Sale de tu esperanza, tu riesgo por
+   operación y tu ritmo real. Si son menos de 30 operaciones te lo digo: indicio, no
+   conclusión — tu Ley 37.
 
-    −1  ·  1.80  ·  −0.23  ·  −1  ·  2.01  ·  2.03  ·  2.20     (tu objetivo: 2R)
+── TU LEY DEL 09-10, CUMPLIDA ────────────────────────────────────────────────────────
+«Toda la tabla debe ser diversificada como lo es mi sistema, nada fijo, ni a un país ni a
+un negocio: es general, que funcione en todo.»
+No hay ninguna moneda, ningún país ni ningún índice escrito en ningún sitio. Todo va en
+porcentajes y múltiplos; la moneda es una etiqueta tuya que ningún cálculo toca. Tú pones
+tu suelo y tu inflación. Y se configuran: los cuatro cortes del semáforo, uno a uno, y la
+unidad de tiempo — día, semana, mes, trimestre, temporada o año, porque hay negocios por
+zafra y por proyecto.
 
-Un −1 clavado ES tu stop. Un 2.01 con objetivo 2 ES tu objetivo. El sistema decía «sin
-dato» teniendo los números en la mano. Ayer arreglé que el aviso no mintiera, pero eso no
-te servía de nada: la tabla seguía sin decirte por dónde sale tu dinero.
-
-AHORA tu tabla dice:
-
-    🛑 saltó el stop 🔎        2 op · media −1R
-    🎯 llegó al objetivo 🔎    4 op · media 2.01R
-    sin dato                   1 op · media −0.23R
-
-Las 4 ganadoras por el objetivo, como tú decías. Y la de −0,23R honestamente sin dato:
-ésa no se acerca ni a tu stop ni a tu objetivo, la cerraste tú.
-
-⚠️ Esto DEDUCE, no inventa, y se nota: lo deducido lleva la lupa 🔎 y nunca se mezcla con
-lo que tú escribas. Si alguna no fue así, ciérrala desde el botón 🚪 Cerrar del Diario y
-manda lo tuyo, no mi lectura. El margen de la deducción es configurable, como todo.
-Y el objetivo con el que comparo sale de TUS reglas (2R), no de un 1:2 supuesto: si no lo
-tuvieras puesto, no deduciría ningún TP — solo el stop, que es −1R en cualquier caso.
-
-── 2) 📖 LA EXPLICACIÓN ESTABA ESCRITA… Y PLEGADA ────────────────────────────────────
-Ayer escribí la explicación de los 11 números. Y la dejé detrás de un triángulo cerrado.
-Escrita e invisible es lo mismo que no escrita — por eso decías que no te había dado
-ninguna explicación: era verdad para ti, que eres quien tiene que leerla.
-Ahora se abre sola. Si te estorba, la cierras y Apex lo recuerda.
-
-── 3) Y EL AVISO QUE SOBRABA ──────────────────────────────────────────────────────────
-Ya no aparece «ninguna salió por el objetivo». En su lugar te dice qué deduje, de dónde, y
-cómo corregirme si me equivoco.
-
-── TAMBIÉN EN ESTA ENTREGA: 🧮 LA CALCULADORA DE NEGOCIOS (F1) ───────────────────────
-En 🛡️ Riesgo, plegada. Pones lo que sepas y te dice si renta de verdad:
-  · el interés compuesto BIEN hecho (12 meses al 5% son 79,59%, no 60%);
-  · el semáforo medido contra EL SUELO que tú pongas —lo que renta tu dinero quieto— y
-    descontando inflación: un negocio al 1% PIERDE si tu suelo está al 1,2%;
-  · sin suelo ni inflación te dice que el número es NOMINAL, en vez de fingir;
-  · tu hora comparada con lo que vale tu hora: si está por debajo, es un empleo con otro
-    uniforme y encima poniendo tú el capital;
-  · lo que puedes perder, que no es lo mismo que lo que inviertes;
-  · proyección a 1, 3 y 5 años con reinversión PARCIAL (nadie reinvierte el 100%);
-  · y la comparación que ninguna otra calculadora tiene: ¿renta más que TU PROPIA CUENTA?
-Sin país, sin moneda y sin tipo de negocio: todo en % y múltiplos, como exigiste el 09-10.
-Los cortes del semáforo y la unidad de tiempo (día, semana, mes, trimestre, temporada, año)
-los cambias tú.
+── Y LA MITAD QUE FALTABA: ROBERTO ───────────────────────────────────────────────────
+Tiene la mano para echar estas cuentas —la misma, no una segunda cuenta por otro lado— y
+el tema entero en la cabeza. En cuanto le menciones un negocio lo mide, y te exige lo que
+falte en vez de rellenarlo de memoria: qué puedes perder, cuántas horas le metes, cuánto
+vale tu hora, cuánto reinviertes de verdad. Y te hará la pregunta que solo él puede
+hacerte: ¿te renta más eso o tu propia cuenta?
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
