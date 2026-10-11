@@ -55,7 +55,7 @@ const save = (k,v)=>{ try{ localStorage.setItem(k,JSON.stringify(v)); nubeMarcar
    En otro móvil, con el mismo código, restaura todo intacto (nada se pierde).
    No usa claves del sistema (el repo es público): el código ES la llave.
    ============================================================ */
-const NUBE_KEYS = ["crtelite_trades_v2","crtelite_cuentas_v3","crtelite_reminders_v3","crtelite_chk_v2","crtelite_conf_v2","crtelite_reglas_v2","crtelite_balance_v2","crtelite_ctx_v3","crtelite_estrategias_v3","crtelite_estrdefs_v1","crtelite_pares_v3","crtelite_calpares_v3","crtelite_notif_v3","crtelite_vigila_v3","crtelite_fabpos_v3","crtelite_iavoz_v3","crtelite_shots_v1","crtelite_shots_borradas","crtelite_ventanas_v1","crtelite_plansem_v1","crtelite_iaconvs_v3","crtelite_iaact_v3","crtelite_ejectrades_v1","crtelite_llamamodo",
+const NUBE_KEYS = ["crtelite_negocio_v1","crtelite_trades_v2","crtelite_cuentas_v3","crtelite_reminders_v3","crtelite_chk_v2","crtelite_conf_v2","crtelite_reglas_v2","crtelite_balance_v2","crtelite_ctx_v3","crtelite_estrategias_v3","crtelite_estrdefs_v1","crtelite_pares_v3","crtelite_calpares_v3","crtelite_notif_v3","crtelite_vigila_v3","crtelite_fabpos_v3","crtelite_iavoz_v3","crtelite_shots_v1","crtelite_shots_borradas","crtelite_ventanas_v1","crtelite_plansem_v1","crtelite_iaconvs_v3","crtelite_iaact_v3","crtelite_ejectrades_v1","crtelite_llamamodo",
   /* 🧭 v6.96 — LO QUE FALTABA, y lo descubrió Rey: "en la APK no me deja pasar a la fase 3
      cuando en la web ya estoy en ella". Su PLAN no viajaba, así que su progreso vivía en
      un solo aparato… y si perdía el teléfono, en ninguno. Con él van los VEREDICTOS de
@@ -3759,7 +3759,12 @@ function apexEsperanza(ops){
        margen sigue siendo «sin dato», porque no se sabe ([[apex-roberto-no-inventa]]).
        El margen es configurable: es un dato, y los datos son suyos
        ([[apex-reglas-en-manos-de-rey]]). */
-    let k = m ? "otras" : (dedujeLaSalida(o, objetivoRR) || "sin dato");
+    /* ⚠️ con `typeof` y no a pelo: su banco test-por-donde-salio-cada-una EJECUTA este
+       clasificador aislado, sin el resto del fichero, y llamar a una función que no esté
+       ahí lo reventaría entero. Y en la app vale igual: si un día el deductor no estuviera,
+       la clasificación sigue funcionando como antes en vez de caerse
+       ([[apex-length-no-garantiza-metricas]], [[apex-el-fs-que-no-existia]]). */
+    let k = m ? "otras" : ((typeof dedujeLaSalida==="function" ? dedujeLaSalida(o, objetivoRR) : null) || "sin dato");
     for(const [id,re] of PUERTAS) if(re.test(m)){ k=id; break; }
     /* ✂️ v7.216 (22-09) — UNA OPERACION CON PARCIAL SALIO POR DOS PUERTAS, NO POR UNA.
        Rey: «ahora esta 1:2 R y con gestion de parciales en el transcurso de la operacion».
@@ -8729,21 +8734,21 @@ function negRender(){
   }
 
   /* ── ¿RENTA MÁS QUE SU PROPIA CUENTA? ────────────────────────────────────────────── */
-  const vs = negVsTrading(r.roiPeriodo, d.periodo);
-  if(vs){
-    if(vs.hay){
-      const ganaTrading = vs.roiTrading > (r.roiPeriodo||0);
+  const vsTrading = negVsTrading(r.roiPeriodo, d.periodo);
+  if(vsTrading){
+    if(vsTrading.hay){
+      const ganaTrading = vsTrading.roiTrading > (r.roiPeriodo||0);
       h += '<div style="margin-top:12px;padding:9px 11px;border-radius:9px;background:rgba(41,98,255,.08);border:1px solid rgba(41,98,255,.3)">'+
         '<div style="font-size:12px;font-weight:700;color:#2962ff">📐 ¿Y comparado con tu propia cuenta?</div>'+
-        '<div style="font-size:12px;margin-top:4px">Tu trading te deja <b>'+negNum(vs.roiTrading,2)+'%</b> por '+esc(per.n)+
+        '<div style="font-size:12px;margin-top:4px">Tu trading te deja <b>'+negNum(vsTrading.roiTrading,2)+'%</b> por '+esc(per.n)+
           ' · este negocio <b>'+negNum(r.roiPeriodo,2)+'%</b>. '+
           '<b style="color:'+(ganaTrading?"#2962ff":"#26a269")+'">Gana '+(ganaTrading?"tu cuenta":"el negocio")+'.</b></div>'+
-        '<div style="font-size:11px;opacity:.65;line-height:1.4;margin-top:4px">Sale de lo tuyo: '+negNum(vs.esperanza,2)+'R de esperanza × '+
-          negNum(vs.riesgoPct,2)+'% de riesgo × '+negNum(vs.opsPeriodo,1)+' operaciones por '+esc(per.n)+', medido de tus '+vs.n+' operaciones.'+
-          (vs.pocas ? ' <b>⚠️ Con menos de 30 esto es un indicio, no una conclusión — tu Ley 37.</b>' : '')+'</div>'+
+        '<div style="font-size:11px;opacity:.65;line-height:1.4;margin-top:4px">Sale de lo tuyo: '+negNum(vsTrading.esperanza,2)+'R de esperanza × '+
+          negNum(vsTrading.riesgoPct,2)+'% de riesgo × '+negNum(vsTrading.opsPeriodo,1)+' operaciones por '+esc(per.n)+', medido de tus '+vsTrading.n+' operaciones.'+
+          (vsTrading.pocas ? ' <b>⚠️ Con menos de 30 esto es un indicio, no una conclusión — tu Ley 37.</b>' : '')+'</div>'+
         '</div>';
-    } else if(vs.porQue){
-      h += '<div style="margin-top:12px;font-size:11.5px;opacity:.7">📐 No puedo compararlo con tu propia cuenta: '+esc(vs.porQue)+'.</div>';
+    } else if(vsTrading.porQue){
+      h += '<div style="margin-top:12px;font-size:11.5px;opacity:.7">📐 No puedo compararlo con tu propia cuenta: '+esc(vsTrading.porQue)+'.</div>';
     }
   }
 
