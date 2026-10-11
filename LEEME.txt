@@ -1,51 +1,62 @@
-APEX v7.250 — TRADING DESK
+APEX v7.252 — TRADING DESK
 =========================
 
-🔇 AL DESLIZAR EL AVISO SE CALLA · BOTÓN PARA CALLAR SIN PERDERLO · Y LA PRUEBA YA HABLA
+🔌 ROBERTO SE QUEDÓ MUDO Y YA NO PUEDE VOLVER A PASAR · Y EL RECUADRO, EXPLICADO ENTERO
 
-── 1) LAS DOS COSAS QUE PEDISTE ────────────────────────────────────────────────────────
-  · DESLIZARLO  → se lleva el aviso Y lo calla.
-  · 🔇 Callar   → lo calla y el aviso SE QUEDA en tu bandeja para leerlo después.
+── 1) POR QUÉ NO HABLABA, QUE NO ERA EL BOTÓN ─────────────────────────────────────────
+No era el botón ni el aviso por separado: el MOTOR DE VOZ DE ANDROID se había desvinculado
+de Apex. Medido en tu teléfono, con tu interruptor encendido y el motor de Google vivo:
 
-POR QUÉ SEGUÍA HABLANDO: deslizarlo sí hacía algo —frenaba la repetición 6 minutos— pero la
-frase que sonaba EN ESE MOMENTO no la paraba nadie. Frenar el futuro no es callar el
-presente. Y hay DOS motores de voz en la app (uno con Apex abierta, otro con Apex cerrada o
-el cuerpo flotante puesto): callar uno dejaba al otro hablando. Ahora se callan los dos y se
-vacía la cola.
+    W TextToSpeech: speak failed: not bound to TTS engine
 
-PROBADO EN TU TELÉFONO, POR CABLE, con los tiempos delante:
-   20:46:41  HABLANDO (aviso): Prueba de Roberto. Aquí estoy, en tu pan...
-   20:46:43  CALLANDO (deslizó el aviso): habla vigia (aviso), en cola 0
-Estaba hablando, deslicé, y se cortó a los 2,6 segundos.
+Y había TRES agujeros encadenados, los tres en los dos motores de voz:
 
-El botón 🔇 Callar sale EL PRIMERO (Android solo enseña tres y ése es el urgente si estás en
-una llamada), en TODAS las que hablan, y también en la cabecera del grupo.
+  · NO RECONECTABA NUNCA. El código comprobaba `if (voz != null) return` — que el objeto
+    EXISTIERA, no que FUNCIONARA. Desvinculado sigue sin ser nulo, así que se salía por ahí.
+    Mudo hasta reinstalar.
+  · FALLABA EN SILENCIO. `speak()` no lanza error con el motor caído: DEVUELVE un error que
+    nadie miraba. Por eso no saltó nada en ningún sitio.
+  · Y «MOTOR FRÍO» NO TENÍA PLAZO. Si el motor no arrancaba, la frase se quedaba esperando
+    un aviso que no iba a llegar jamás — con un mensaje que sonaba a que todo iba bien.
 
-⚠️ TOCAR el aviso sigue SIN callar, como pediste el 16 de septiembre: abre el gráfico
-directamente y Roberto te lo sigue leyendo mientras miras las velas.
+AHORA: se mira lo que devuelve speak(); si falla, se tira el motor roto, se construye uno
+nuevo y se repite la frase. Y el rescate NO va por reloj: lo suelta el motor nuevo cuando
+arranca, tarde lo que tarde. Si lleva más de 6 segundos sin arrancar, no está frío: está
+muerto, y se rehace.
 
-── 2) 🩹 Y DE PASO: TU BOTÓN DE PROBAR AVISOS NO HABLABA ───────────────────────────────
-Esto lo encontraste tú diciéndome «salieron pero no habló nada». Y tenías razón, pero no era
-el arreglo de arriba: tu botón «📲 Probar un aviso AHORA» solo hablaba si tenías el CUERPO
-FLOTANTE puesto. Medido en tu teléfono en ese momento: tu voz encendida y el cuerpo apagado.
-Tus avisos DE VERDAD sí te hablaban siempre — eso está comprobado y no cambió. El que estaba
-roto era el probador. Ya habla sin el cuerpo puesto.
+PROBADO EN TU TELÉFONO, matando el motor de Android a propósito:
+    REHACIENDO el motor de voz de Apex (estaba desvinculado)
+    RESCATADA la frase que se perdio con el motor caido
+    isSpeakerPlaying = 1          ← y sonó
+Lo mismo con el motor que dice tus avisos.
 
-── 3) 📮 Y CALLAR AHORA DEJA RASTRO ────────────────────────────────────────────────────
-Cada vez que algo calla la voz queda apuntado con el motivo («deslizó el aviso», «pulsó el
-botón», «deslizó la cabecera»). Hoy me hizo falta: sin eso no podía saber si deslizar había
-cortado la voz o si la frase había terminado sola. Y a ti te sirve el día que digas «se calló
-solo» o «no se calla».
+Y un cuarto, pequeño pero decisivo: la frase rescatada se descartaba por «rebote» (la misma
+frase en menos de 4 segundos). Una frase que NO sonó no es un rebote.
 
-── LO QUE TE TOCA A TI ─────────────────────────────────────────────────────────────────
-Dar un toque al botón 🔇 Callar en el próximo aviso y decirme si se calla y se queda el
-aviso. Es lo único que no pude probar yo: pulsarlo necesita manejar tu bandeja a ciegas y
-preferí no seguir haciéndolo (ver abajo).
+── 2) 📖 EL RECUADRO: AHORA SE EXPLICAN LOS 11, NO 4 ──────────────────────────────────
+Tenías razón: el desplegable «¿Qué significa cada número?» explicaba cuatro cosas. Faltaban
+«Aciertas», la balanza (ganas/pierdes de media), «Operaciones», «Racha» y las tres columnas
+de la tabla (nº · % · media). Ahora están los once, en el mismo orden en que los ves, y cada
+uno dice PARA QUÉ sirve — no solo qué es.
 
-⚠️ Y revisa tu bandeja: mientras probaba, deslicé a ciegas varias veces para descartar MIS
-avisos de prueba, y en esa zona también tenías notificaciones tuyas (Instagram, Gmail,
-YouTube…). Puede que descartara alguna sin querer. No se borra nada de las apps, solo el
-aviso de la bandeja, pero mírala por si echas algo en falta.
+── 3) 🩹 Y EL AVISO QUE TE MENTÍA, QUE ERA DE DINERO ──────────────────────────────────
+Decía «Ninguna salió por el objetivo (TP) → el TP está puesto donde no toca», y tus 7
+operaciones están TODAS en «sin dato»: el sistema no sabe por dónde salieron. Te estaba
+recomendando MOVER TU TP por un dato que no tiene.
+
+Ahora son dos avisos distintos:
+  · sin datos → «No tengo registrado por dónde salieron estas 7: de aquí no se puede
+    concluir nada», y te dice cómo se arregla (el botón 🚪 Cerrar del Diario lo pregunta).
+  · con datos de verdad y ninguna por TP → ahí sí sale el aviso del TP, acotado a las que
+    tienen dato.
+
+⚠️ Tus 7 son ANTERIORES a ese botón: nacieron sin el dato. No es que esté roto; es que
+empieza a guardarse desde que cierras con el botón.
+
+── LO QUE QUEDA DEL PLAN (y no se me olvida) ──────────────────────────────────────────
+C1 la voz que repite · C2 lo que dice y no escribe · C3 el botón de juzgar · F1 la
+calculadora de negocios · E1 Apex en la PC · y un worker con A6 + A7 + B2.
+A4 sigue esperando a que instales MT5.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

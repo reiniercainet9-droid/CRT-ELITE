@@ -3861,7 +3861,41 @@ function espPanelHTML(e, titulo, subtitulo){
       '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:.92em;font-variant-numeric:tabular-nums;margin-top:4px">'+
       '<thead><tr style="border-bottom:1px solid rgba(128,140,170,.3)"><th style="text-align:left;padding:5px;font-size:.72em;opacity:.65;text-transform:uppercase">salida</th><th style="text-align:right;padding:5px;font-size:.72em;opacity:.65">nº</th><th style="text-align:right;padding:5px;font-size:.72em;opacity:.65">%</th><th style="text-align:right;padding:5px;font-size:.72em;opacity:.65">media</th></tr></thead>'+
       '<tbody>'+filasP+'</tbody></table></div>'+
-      ((e.porSalida.TP?0:1) && e.n>=3 ? '<div style="font-size:11.5px;color:#e2b341;margin-top:6px">⚠️ <b>Ninguna salió por el objetivo (TP).</b> Si el precio nunca llega ahí, el TP está puesto donde no toca y tu objetivo real es otro: hay que medirlo como tal.</div>' : "")+
+      /* 🚫 v7.252 (11-10) — ESTE AVISO AFIRMABA LO QUE NO SABÍA, Y ERA DE DINERO.
+         ═══════════════════════════════════════════════════════════════════════════════════
+         Rey, con la foto delante: «todavía están las letras de que ninguna operación cerró
+         en TP». Y mirando SU tabla, las 7 estaban en «sin dato»: el sistema no sabe por
+         dónde salieron. El aviso decía «Ninguna salió por el objetivo (TP) → el TP está
+         puesto donde no toca y tu objetivo real es otro», o sea, **le recomendaba mover su
+         TP basándose en un dato que no tiene**. Eso es inventarse la causa, y encima en algo
+         que le cuesta dinero ([[apex-roberto-no-inventa]]).
+         Disparaba con `(e.porSalida.TP?0:1) && e.n>=3`, sin distinguir «sé que no salió por
+         TP» de «no tengo ni idea de por dónde salió».
+         Ahora son DOS avisos distintos y nunca se mezclan:
+           · si no hay dato de salida en la mayoría → se dice ESO, y por qué, y cómo se
+             arregla (el botón Cerrar del Diario guarda el motivo desde la v7.245);
+           · solo cuando SÍ hay datos de verdad y ninguno es TP, se dice lo del TP.
+         Y sus 7 operaciones son ANTERIORES a ese botón: nacieron sin el dato. No es que A1
+         falle — A1 arregla de aquí en adelante. */
+      (function(){
+        var conDato = 0, sinDato = (e.porSalida["sin dato"] ? e.porSalida["sin dato"].n : 0);
+        for (var k in e.porSalida) if (k !== "sin dato" && k !== "otras") conDato += e.porSalida[k].n;
+        if (e.n < 3) return "";
+        /* la mayoría sin dato: no se concluye NADA sobre el TP */
+        if (sinDato > 0 && conDato === 0)
+          return '<div style="font-size:11.5px;color:#e2b341;margin-top:6px">⚠️ <b>No tengo registrado por dónde salieron '
+            + (sinDato === e.n ? 'estas ' + e.n : sinDato + ' de estas ' + e.n) + ' operación(es)</b>, así que de aquí '
+            + '<b>no se puede concluir nada</b> sobre tu TP ni sobre tus salidas — ni para bien ni para mal.<br>'
+            + '<span style="opacity:.9">Desde ahora sí se guarda: al cerrar una operación con el botón 🚪 <b>Cerrar</b> '
+            + 'del Diario te pregunta por dónde salió. Con unas pocas ya se ve la forma.</span></div>';
+        /* hay datos de verdad y ninguno es TP: AHORA sí se puede decir */
+        if (conDato > 0 && !e.porSalida.TP)
+          return '<div style="font-size:11.5px;color:#e2b341;margin-top:6px">⚠️ <b>Ninguna de las que tienen dato salió por el objetivo (TP).</b> '
+            + 'Si el precio nunca llega ahí, el TP está puesto donde no toca y tu objetivo real es otro: hay que medirlo como tal.'
+            + (sinDato ? ' <span style="opacity:.8">(' + sinDato + ' más sin dato, ésas no cuentan para esto.)</span>' : '')
+            + '</div>';
+        return "";
+      })()+
       /* 🧭 v7.213 — EL AVISO DE LOS DOS REGÍMENES, justo debajo de la tabla que lo provoca */
       ((e.regimen && e.regimen.huboTiempo && e.regimen.nHoy < e.n) ? (
         '<div style="font-size:11.8px;margin-top:8px;padding:8px;border-radius:8px;background:rgba(226,179,65,.10);border:1px solid rgba(226,179,65,.35)">'+
@@ -3877,10 +3911,27 @@ function espPanelHTML(e, titulo, subtitulo){
     /* QUÉ SIGNIFICA */
     '<details style="margin-top:10px"><summary style="cursor:pointer;font-size:12px;opacity:.85">¿Qué significa cada número?</summary>'+
     '<div style="font-size:11.8px;line-height:1.55;margin-top:6px;opacity:.92">'+
-      '<b>Necesitas para empatar</b> — si ganas G y pierdes P, el acierto de empate es P÷(G+P). Es <b>el número que destapa el bucle</b>: puedes acertar la mitad de las veces y aun así perder, si pierdes más de lo que ganas.<br><br>'+
+      /* 📖 v7.252 (11-10) — EXPLICADOS TODOS, NO CUATRO.
+         Rey: «no le explicaste para qué sirve cada número y dato dentro de él, su
+         significado». Tenía razón: esto explicaba 4 de los 11 que se ven arriba. Faltaban
+         «Aciertas», la balanza, «Operaciones», «Racha» y las tres columnas de la tabla.
+         Van en el MISMO orden en que aparecen en pantalla, para poder leerlo mirando. */
+      '<b style="opacity:.75;font-size:.9em">EL VEREDICTO DE ARRIBA</b><br>'+
+      '<b>Aciertas</b> — de cada 100 operaciones, cuántas cierras en ganancia. Por sí solo <b>no dice si ganas</b>: se lee siempre contra el número de al lado.<br><br>'+
+      '<b>Necesitas para empatar</b> — si ganas G y pierdes P, el acierto de empate es P÷(G+P). Es <b>el número que destapa el bucle</b>: puedes acertar la mitad de las veces y aun así perder, si pierdes más de lo que ganas. Si «aciertas» está por encima de éste, hay ventaja; si está por debajo, no la hay aunque ganes muchas.<br><br>'+
+      '<b style="opacity:.75;font-size:.9em">LA BALANZA</b><br>'+
+      '<b>Ganas de media / pierdes de media</b> — el tamaño medio de una ganadora y de una perdedora, en R. Es lo que mueve el número de empate: cuanto más larga la ganadora frente a la perdedora, menos veces necesitas acertar.<br><br>'+
+      '<b style="opacity:.75;font-size:.9em">LOS NÚMEROS</b><br>'+
       '<b>Esperanza</b> — lo que deja cada operación de media, contando las perdedoras. Si es negativa, más operaciones = más pérdida. Es lo único que hace que escalar tenga sentido: escalar una esperanza negativa solo pierde más rápido.<br><br>'+
       '<b>Profit factor</b> — cuánto ganas por cada unidad perdida. Por debajo de 1 se pierde; 1 es empate.<br><br>'+
-      '<b>Por dónde salió</b> — el diagnóstico. Si las ganadoras se cortan siempre por tiempo y ninguna llega al TP, la ganancia media queda topada mientras las pérdidas siguen enteras. Esa asimetría es lo que crea el break-even.'+
+      '<b>Operaciones</b> — cuántas hay en cuenta, y entre paréntesis cuántas ganadas ✓, perdidas ✗ y en empate =. Es el <b>tamaño de la muestra</b>: con pocas, todo lo de arriba es un indicio.<br><br>'+
+      '<b>Racha ganadora / perdedora</b> — la mejor y la peor seguidas. No mide la ventaja: mide <b>lo que tu cabeza va a tener que aguantar</b>. Saber que tu peor racha fue de N te evita tomarla por una avería cuando vuelva a pasar.<br><br>'+
+      '<b style="opacity:.75;font-size:.9em">POR DÓNDE SALIÓ CADA UNA</b><br>'+
+      '<b>Por dónde salió</b> — el diagnóstico. Si las ganadoras se cortan siempre por tiempo y ninguna llega al TP, la ganancia media queda topada mientras las pérdidas siguen enteras. Esa asimetría es lo que crea el break-even.<br><br>'+
+      '<b>nº</b> — cuántas salieron por esa puerta. &nbsp;<b>%</b> — qué parte del total es. &nbsp;<b>media</b> — cuánto dejó de media cada una de ésas, en R. Una puerta con pocas operaciones pero media muy negativa es la que te está costando el dinero.<br><br>'+
+      '<b>sin dato</b> — no se registró por dónde salió. No significa que saliera mal: significa que <b>no se sabe</b>, y de ahí no se puede concluir nada. Se arregla cerrando desde el botón 🚪 Cerrar del Diario, que lo pregunta.<br><br>'+
+      '<b style="opacity:.75;font-size:.9em">Y LA UNIDAD DE TODO</b><br>'+
+      '<b>R</b> — lo que arriesgas en una operación. 1R es tu riesgo; +2R es ganar el doble de lo que arriesgabas. Todo va en R y no en dinero a propósito: así se pueden comparar operaciones de tamaños distintos.'+
     '</div></details>'+
   '</div>';
 }
