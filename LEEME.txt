@@ -1,83 +1,32 @@
-APEX v7.263 — TRADING DESK
+APEX v7.264 — TRADING DESK
 =========================
 
-🏦 EL BALANCE DE TUS CUENTAS SE ACTUALIZA SOLO
+🔔 UNA ALARMA YA NO BORRA A OTRA
 
-Me lo pediste así, con la captura de los tres avisos delante: «el balance de las cuentas se
-debería actualizar solo con el balance real de Mt5, no tener que actualizarlas yo manual al
-terminar cada operación».
+Esta mañana recibiste UNA alarma en toda la sesión de Londres. El worker mandó 33 y
+Firebase las entregó todas: se borraban entre ellas dentro del teléfono, porque las 33
+caían en la misma casilla. Era un fallo mío del 11-10.
 
-Y el dato lo tenías delante sin saberlo: el Puente se engancha a tu MT5 cada 5 minutos para
-cantarte el lote — de ahí salió el 5.665,61 de esa misma notificación. Pero ese número moría
-en el aviso. En 🏦 Cuentas seguía saliendo lo que tú hubieras escrito, o una ESTIMACIÓN hecha
-de tus R.
+Ahora cada alarma tiene su sitio, por par y temporalidad:
+· GBPUSD 4H tiene su tarjeta y se actualiza sola — ves su último estado, no seis encimados
+· EURUSD 5m tiene otra, y no se tocan
+· Una señal de ENTRADA conserva casilla propia siempre: cada una es una oportunidad
+  distinta y perderla es dinero
+· Las repeticiones siguen cayendo en una sola, como ya estaba
 
-AHORA: tu MT5 → el Puente → la nube → la ficha. Solo, cada 5 minutos, sin que toques nada.
+🏷️ Y LA CABECERA VUELVE A DECIRTE QUÉ HAY DENTRO
 
-· Entra en LA FICHA QUE ES, por número de cuenta. Si tienes tres registradas, el balance de
-  FundedNext no se mete en la de Pepperstone — de ahí sale tu progreso, tu margen al DD y tu
-  lote, y meter el de una en otra sería darte números falsos donde hay dinero.
-· La tarjeta te DICE de dónde salió el número: «🔗 Real de MT5 · hace 3 min», «lo pusiste tú»
-  o «estimado de tus R». Antes había un «(est.)» que no explicaba nada.
-· Si el Puente lleva más de 3 horas sin leer tu MT5, deja de usar ese balance y vuelve al
-  tuyo. Un número de ayer no se te presenta como de ahora.
-· Roberto también lo sabe: donde el balance sea el real de MT5 no te va a pedir nunca que lo
-  actualices al cerrar.
+Cuando Android te pliega los avisos de Apex, la cabecera es lo único que ves con el
+teléfono en el bolsillo. Comparaba la etiqueta con igualdad exacta, así que al cambiar las
+etiquetas se quedaba en «Apex · N avisos» en vez de nombrarte la señal. Ahora va por
+prefijo, igual que lo hace el worker desde el 22-09.
 
-Y al abrir la ficha, si es la cuenta que tienes abierta en MT5, te lo dice en verde: ese campo
-ya lo lleno yo.
+De paso se tapó un agujero más viejo del mismo tipo: el PARCIAL y el RECHAZO del Ejecutor
+nunca estuvieron marcados ahí. Son dinero moviéndose y ya cuentan como lo que son.
 
-── LO DEMÁS DE ESTA ENTREGA ─────────────────────────────────────────────────────────────
-
-📱 LOS AVISOS YA NO SE PISAN. Los tres caían encima y se cortaban entre sí. Dos cosas:
-   · Los parciales con su precio van AHORA ANTES del nombre de la ficha y del aviso de cuenta.
-     Android corta la notificación por lo largo, y los parciales estaban justo donde cae el
-     corte: por eso veías «✂️ Parciales: 25% 1.32262 (0.5R) ·» y se acababa ahí. Lo que
-     teclas en MT5 va primero; el contexto, detrás.
-   · Un aviso del mismo tema REEMPLAZA al anterior en vez de apilarse. Antes se amontonaban
-     tres y se solapaban las voces.
-
-🏦 «CUENTA NO REGISTRADA» ERA MENTIRA, Y YA NO PASA. Tus cuentas se borraban solas de la nube
-   a los 7 días y solo se resubían si tocabas algo. El Puente dejaba de encontrar la tuya, te
-   cantaba el lote con el riesgo general en vez del de ESA cuenta, y encima te acusaba a ti de
-   no haberla registrado. Ahora no caducan y se resuben solas al abrir y cada hora.
-
-💻 ROBERTO VE TU PC. Equipo, memoria, disco, batería y cuánto lleva encendida. Y si está
-   ahogada te dice la CONSECUENCIA: que se te cae el Puente y el Ejecutor. Medido antes de
-   elegir cómo: leerlo por Windows costaba 2,4 segundos; por Node, 0,9 milisegundos.
-
-📊 LA CALCULADORA DE NEGOCIOS. Comparar cualquier negocio con tu trading, en % y en múltiplos,
-   con interés compuesto de verdad y el semáforo medido contra el SUELO (lo que renta el
-   dinero quieto), no contra cero.
-
-🔎 EL RECUADRO DEL DIARIO, EXPLICADO Y SIN MENTIR. Los 11 números con su significado, abiertos
-   (antes la explicación existía y estaba plegada, que es igual que no estar). Y ya no dice
-   «ninguna cerró en TP» cuando tus números dicen lo contrario: si no escribiste por dónde
-   saliste, lo deduzco de tu R y te lo marco con 🔎 para que sepas que es deducido.
-
-🗣️ LA VOZ. El botón de probar no hablaba nada. Eran dos motores distintos sin atar, y
-   `speak()` devuelve error en silencio cuando el motor está suelto. Ahora se rehace solo, y
-   la voz del que narra es la MISMA que la de dentro de Apex, con la variante local automática
-   cuando no hay internet.
-
-💬 LO QUE TE DICE ROBERTO QUEDA ESCRITO en el hilo del día, no solo dicho.
-
-── 🛟 Y EL AGUJERO QUE ENCONTRÉ AL PROBARLO (A5) ────────────────────────────────────────
-
-Subiste el worker, fui a comprobar la cadena entera con tus datos de verdad… y la nube tenía
-CERO cuentas. Con la caducidad ya quitada.
-
-El tercer agujero era mi propio arreglo. El que repone tus cuentas al abrir corría ANTES de
-que tu respaldo las hubiera traído, así que subía una lista VACÍA encima de la buena. O sea:
-lo que puse para que no se perdieran era justo lo que las borraba.
-
-Ahora: una lista vacía NUNCA se sube sola — lo que todavía no sé no puede pisar lo que sí
-hay. Si eres TÚ quien borra tu última cuenta, eso sí viaja, porque eso sí es un dato tuyo.
-Y la resubida del arranque espera a que tus datos vuelvan.
-
-👉 ABRE APEX EN EL TELÉFONO una vez con esta versión y tus cuentas vuelven solas a la nube.
-   A partir de ahí el Puente encuentra la tuya, te canta el lote con SU pared (no con el
-   riesgo general) y el balance real de MT5 entra solo en su ficha.
+Comprobado ejecutando la línea real de tu teléfono con las 6 alarmas de esta mañana, y
+probado de punta a punta por cable: dos alarmas a la vez, dos casillas, ninguna borró a
+la otra.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
