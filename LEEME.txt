@@ -1,32 +1,50 @@
-APEX v7.264 — TRADING DESK
+APEX v7.265 — TRADING DESK
 =========================
 
-🔔 UNA ALARMA YA NO BORRA A OTRA
+🎯 CADA CUENTA TE DICE AHORA CÓMO VAS, Y CUÁNTO TE QUEDA
 
-Esta mañana recibiste UNA alarma en toda la sesión de Londres. El worker mandó 33 y
-Firebase las entregó todas: se borraban entre ellas dentro del teléfono, porque las 33
-caían en la misma casilla. Era un fallo mío del 11-10.
+Tu hoja de cálculo hacía más que tu app. Ya no.
 
-Ahora cada alarma tiene su sitio, por par y temporalidad:
-· GBPUSD 4H tiene su tarjeta y se actualiza sola — ves su último estado, no seis encimados
-· EURUSD 5m tiene otra, y no se tocan
-· Una señal de ENTRADA conserva casilla propia siempre: cada una es una oportunidad
-  distinta y perderla es dinero
-· Las repeticiones siguen cayendo en una sola, como ya estaba
+Dentro de cada ficha de 🏦 Cuentas, calculado solo y con TUS operaciones de esa cuenta:
 
-🏷️ Y LA CABECERA VUELVE A DECIRTE QUÉ HAY DENTRO
+   🎯 El plan de esta cuenta
+   Objetivo            8% de $6.000              $480
+   Te falta            llevas 0% del camino      $814
+   Para llegar en 20 días operativos
+                       $204 por semana           $41/día
+   Tu ritmo real       5 días operados ·
+                       llegas el 19-10           $48/día
 
-Cuando Android te pliega los avisos de Apex, la cabecera es lo único que ves con el
-teléfono en el bolsillo. Comparaba la etiqueta con igualdad exacta, así que al cambiar las
-etiquetas se quedaba en «Apex · N avisos» en vez de nombrarte la señal. Ahora va por
-prefijo, igual que lo hace el worker desde el 22-09.
+   🛡️ Lo que te puede quemar la cuenta
+   Pérdida de HOY      tu límite es 5% = $300    te quedan $300
+   Pérdida TOTAL       tu límite es 10% = $600   −$334 · te quedan $266
 
-De paso se tapó un agujero más viejo del mismo tipo: el PARCIAL y el RECHAZO del Ejecutor
-nunca estuvieron marcados ahí. Son dinero moviéndose y ya cuentan como lo que son.
+Todo sale de los campos de ESA ficha. Cambias de empresa y cambia solo: con una cuenta de
+25k y reglas 6%/4%/6% da 1.500/1.000/1.500 sin tocar nada. Y una cuenta de backtesting sin
+reglas puestas no revienta ni se inventa límites.
 
-Comprobado ejecutando la línea real de tu teléfono con las 6 alarmas de esta mañana, y
-probado de punta a punta por cable: dos alarmas a la vez, dos casillas, ninguna borró a
-la otra.
+Campo nuevo: «Días operativos para el objetivo». Vacío = 20, pero es tuyo.
+
+
+🤖 ROBERTO YA CONOCE TU PLAN
+
+Antes solo veía el porcentaje y el margen de drawdown: podía decirte «vas al 40%» pero no
+lo único que te sirve para decidir hoy. Ahora, en cada chat, lee de cada cuenta cuánto
+dinero te falta, cuánto necesitas al día, si tu ritmo real llega a tiempo, y cuánto te
+queda antes de quemarla.
+
+Y con una orden expresa: si no tienes el objetivo configurado, TE LO PIDE. No se inventa
+el de tu firma.
+
+
+⏱️ Y LO DE ESTA MAÑANA, QUE ERA MÍO
+
+Tus alarmas volvían a caer todas en la misma casilla del teléfono y se borraban entre
+ellas. Arreglado: cada par y temporalidad tiene la suya, y una señal de entrada conserva
+casilla propia siempre.
+
+El registro de TradingView también dejó de pintarse de rojo: el worker se paraba 4 segundos
+esperando la opinión de Roberto antes de contestarle, y TradingView aguanta 3.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

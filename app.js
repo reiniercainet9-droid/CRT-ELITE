@@ -11592,7 +11592,7 @@ function aplicarPresetFirma(){
   if(p){
     const target = /F2/.test(fase)?p.targetF2 : /F1/.test(fase)?p.targetF1 : "";
     fill("ac_ddmax",p.ddMaxPct); fill("ac_dddaily",p.ddDailyPct); fill("ac_target",target);
-    fill("ac_diasmin",p.diasMin); fill("ac_split",p.splitPct); fill("ac_nota",p.nota);
+    fill("ac_diasmin",p.diasMin); fill("ac_diasobj",p.diasObjetivo); fill("ac_split",p.splitPct); fill("ac_nota",p.nota);
     const dt=$("#ac_ddtipo"); if(dt && p.ddTipo && dt.dataset.tocado!=="1"){ dt.value=p.ddTipo; }
   }
   /* Precio del reto SEGÚN EL CAPITAL (si el usuario no lo tocó a mano) */
@@ -11625,7 +11625,7 @@ async function rellenarReglasIA(){
     const num=v=>String(v==null?"":v).replace(/[^\d.]/g,"");
     const setN=(id,v)=>{ const e=$("#"+id); const n=num(v); if(e && n!=="") e.value=n; };
     setN("ac_ddmax",o.ddMaxPct); setN("ac_dddaily",o.ddDailyPct); setN("ac_target",o.targetPct);
-    setN("ac_diasmin",o.diasMin); setN("ac_split",o.splitPct); setN("ac_precio",o.precio);
+    setN("ac_diasmin",o.diasMin); setN("ac_diasobj",o.diasObjetivo); setN("ac_split",o.splitPct); setN("ac_precio",o.precio);
     const dt=$("#ac_ddtipo"); if(dt && /trailing/i.test(o.ddTipo||"")) dt.value="Trailing"; else if(dt && /est/i.test(o.ddTipo||"")) dt.value="Estático";
     const nt=$("#ac_nota"); if(nt && o.nota && !nt.value.trim()) nt.value=String(o.nota);
     if(st) st.textContent="✅ Reglas traídas por Roberto. Revisa y ajusta lo que haga falta antes de guardar.";
@@ -12195,10 +12195,36 @@ function riesgoResumen(){
        Con el numero de MT5 aqui dentro, el Puente mira que cuenta tiene Rey abierta y coge
        SU riesgo y SU pared. Cambiar de empresa deja de pasar por mi
        ([[apex-la-pared-tiene-que-ser-de-esta-cuenta]], [[apex-rey-es-el-principal]]). */
+    /* 🎯 v7.265 (12-10) — Y SU OBJETIVO VIAJA CON LA FICHA, NO SOLO SU PELIGRO.
+       Rey: «darme el parte de cómo voy con mis objetivos, al igual como lo hace con el DD».
+       Hasta hoy a la nube solo subía el MARGEN que le queda — con eso el worker sabe
+       avisarle de que va a quemar la cuenta, pero no sabe decirle si va a tiempo de pasarla.
+       Las dos mitades del mismo parte: lo que le puede quemar y lo que le hace falta
+       ([[apex-nube-solo-lo-que-importa]], [[apex-roberto-juzga-no-informa]]).
+       ⚠️ Sin objetivo configurado viaja `null`, NO un número supuesto: el worker tiene que
+       poder distinguir «no lo sé» de «va al 0%» ([[apex-roberto-no-inventa]]). */
+    let plan = null;
+    try{
+      const pc = (typeof planCuenta==="function") ? planCuenta(c, st) : null;
+      if(pc) plan = {
+        target: pc.target || null,
+        objUSD: pc.target>0 ? +r0(pc.objetivoUSD) : null,
+        faltaUSD: pc.target>0 ? +r0(pc.faltaUSD) : null,
+        hechoPct: pc.target>0 ? +r0(pc.hechoPct) : null,
+        logrado: pc.target>0 ? !!pc.logrado : null,
+        porDia: pc.target>0 ? +r0(pc.porDia) : null,
+        ritmo: pc.ritmoReal===null ? null : +r0(pc.ritmoReal),
+        dias: pc.diasOperados,
+        llega: pc.fechaLlegada || null,
+        quedaHoyUSD: pc.limDiaUSD>0 ? +r0(pc.quedaHoy) : null,
+        quedaTotUSD: pc.limTotUSD>0 ? +r0(pc.quedaTot) : null
+      };
+    }catch(_){}
     out.push({ alias:(c.alias||c.firma||"Cuenta"), peor,
       mDia:margenDia!=null?+r1(margenDia):null, mTot:margenTot!=null?+r1(margenTot):null,
       mt5:String(c.mt5||"").replace(/\D/g,""), riesgoPct, fase:String(c.fase||""),
-      capital:+c.capital||null, ddMaxPct:ddMax||null, ddDailyPct:ddDaily||null });
+      capital:+c.capital||null, ddMaxPct:ddMax||null, ddDailyPct:ddDaily||null,
+      firma:String(c.firma||""), plan });
   });
   return out;
 }
@@ -12325,6 +12351,137 @@ function renderCuentas(){
    Tres números distintos con la misma cara son tres mentiras posibles. Si es de su MT5 lleva
    el 🔗 y su edad; si lo escribió él, lo dice; y si es estimado de sus R, lo dice también —
    que es lo que hacía antes, con un «(est.)» que no explicaba nada. */
+/* ═══════════════════════════════════════════════════════════════════════════════════════
+   🎯 EL PLAN DE CADA CUENTA — v7.265 (12-10)
+   ───────────────────────────────────────────────────────────────────────────────────────
+   Rey, con la foto de su hoja de cálculo: «¿por qué yo no tengo en Apex una calculadora
+   automática… que poniendo el balance de la cuenta, el objetivo a alcanzar, el riesgo por
+   operación, trades por día… me vaya marcando objetivos diario, semanal, mensual, ya sea en
+   ganancias o límites en pérdidas, automáticamente, por cuenta?».
+   Lo comprobé y tenía razón: la ficha enseñaba balance, P&L y una barra de progreso, y nada
+   más. Su hoja de cálculo hacía más que su app.
+
+   LO QUE ESTO CALCULA, por cuenta y con SUS operaciones reales (las de backtest no cuentan,
+   que para eso está el filtro de statsCuenta):
+     · cuánto dinero le falta para el objetivo, y qué % lleva
+     · a qué ritmo tiene que ir — al día y a la semana — para llegar en sus días operativos
+     · a qué ritmo va DE VERDAD, y en qué fecha llega a ese ritmo
+     · cuánto le queda HOY antes de tocar su pérdida diaria
+     · cuánto le queda EN TOTAL antes de quemar la cuenta
+
+   ⚠️ NADA SE INVENTA. Si falta el objetivo (`targetPct`), se dice y se le pide — no se pone
+   un 8% «porque FundedNext suele ser 8». Sus reglas son suyas y se configuran en la ficha
+   ([[apex-reglas-en-manos-de-rey]], [[apex-roberto-no-inventa]], [[apex-no-elegir-por-rey]]).
+   ⚠️ Y el ritmo real solo se da con días suficientes: con 1 ó 2 días operados, una fecha de
+   llegada es una adivinanza con pinta de dato ([[apex-roberto-no-inventa]]).
+   ═══════════════════════════════════════════════════════════════════════════════════════ */
+const PLAN_DIAS_POR_DEFECTO = 20;   /* días operativos al mes, como en su hoja */
+const PLAN_DIAS_MIN_RITMO   = 3;    /* por debajo de esto no se da fecha de llegada */
+
+function planCuenta(c, st){
+  st = st || statsCuenta(c);
+  const cap = st.cap;
+  if(!(cap > 0)) return null;
+
+  const target     = +c.targetPct || 0;
+  const ddDiaPct   = +c.ddDailyPct || 0;
+  const ddTotPct   = +c.ddMaxPct || 0;
+  const diasObj    = Math.max(1, parseInt(c.diasObjetivo, 10) || PLAN_DIAS_POR_DEFECTO);
+
+  /* ── el objetivo ── */
+  const objetivoUSD = target > 0 ? cap * target / 100 : 0;
+  const faltaUSD    = target > 0 ? Math.max(0, objetivoUSD - st.pl) : 0;
+  const hechoPct    = objetivoUSD > 0 ? Math.max(0, Math.min(100, st.pl / objetivoUSD * 100)) : 0;
+  const logrado     = target > 0 && st.pl >= objetivoUSD;
+
+  /* ── lo que haría falta para llegar en sus días operativos ── */
+  const porDia    = (target > 0 && !logrado) ? faltaUSD / diasObj : 0;
+  const porSemana = porDia * 5;
+
+  /* ── su ritmo DE VERDAD, con sus operaciones de esta cuenta ── */
+  const dias = new Set();
+  let hoyUSD = 0;
+  const hoy = (typeof hoyISO === "function") ? hoyISO() : "";
+  (st.list || []).forEach(t => {
+    if(t.fecha) dias.add(t.fecha);
+    const r = parseFloat(t.r);
+    if(!isNaN(r) && t.fecha === hoy) hoyUSD += r * st.riesgo * cap;
+  });
+  const diasOperados = dias.size;
+  const ritmoReal    = diasOperados >= PLAN_DIAS_MIN_RITMO ? st.pl / diasOperados : null;
+  let diasQueFaltan = null, fechaLlegada = null;
+  if(ritmoReal !== null && ritmoReal > 0 && faltaUSD > 0){
+    diasQueFaltan = Math.ceil(faltaUSD / ritmoReal);
+    const f = new Date();
+    /* días OPERATIVOS: se saltan sábados y domingos, que es cuando él no opera
+       ([[apex-reloj-mercado-vs-reloj-rey]]) */
+    let quedan = diasQueFaltan;
+    while(quedan > 0){ f.setDate(f.getDate() + 1); const d = f.getDay(); if(d !== 0 && d !== 6) quedan--; }
+    fechaLlegada = f.getFullYear() + "-" + String(f.getMonth() + 1).padStart(2, "0") + "-" + String(f.getDate()).padStart(2, "0");
+  }
+
+  /* ── los dos límites que le queman la cuenta ── */
+  const limDiaUSD = ddDiaPct > 0 ? cap * ddDiaPct / 100 : 0;
+  const perdidaHoy = Math.max(0, -hoyUSD);
+  const quedaHoy   = limDiaUSD > 0 ? Math.max(0, limDiaUSD - perdidaHoy) : 0;
+
+  const limTotUSD  = ddTotPct > 0 ? cap * ddTotPct / 100 : 0;
+  const perdidaTot = Math.max(0, -st.pl);
+  const quedaTot   = limTotUSD > 0 ? Math.max(0, limTotUSD - perdidaTot) : 0;
+  const gastadoTotPct = limTotUSD > 0 ? Math.min(100, perdidaTot / limTotUSD * 100) : 0;
+
+  return { target, objetivoUSD, faltaUSD, hechoPct, logrado, diasObj, porDia, porSemana,
+           diasOperados, ritmoReal, diasQueFaltan, fechaLlegada,
+           ddDiaPct, limDiaUSD, perdidaHoy, quedaHoy, hoyUSD,
+           ddTotPct, limTotUSD, perdidaTot, quedaTot, gastadoTotPct };
+}
+
+/* 🎯 el plan, en la ficha. Dos bloques: a dónde va, y qué le puede quemar la cuenta. */
+function planHTML(c, st){
+  const p = planCuenta(c, st);
+  if(!p) return "";
+  const L = [];
+
+  /* ── 1) A DÓNDE VA ── */
+  if(!(p.target > 0)){
+    /* sin objetivo no hay plan, y no se inventa uno ([[apex-no-elegir-por-rey]]) */
+    L.push(`<div class="note" style="text-align:left;margin:8px 0 2px">🎯 <b>Falta tu objetivo</b> para esta cuenta.
+      Tócalo en ✏️ Editar → «Objetivo %» y te marco solo cuánto te falta, cuánto al día y cuándo llegas.</div>`);
+  } else if(p.logrado){
+    L.push(`<div class="diag ok" style="padding:11px 13px;margin:8px 0 2px"><div class="dd" style="color:var(--green)">
+      🎉 <b>Objetivo alcanzado</b> — ${r1(p.target)}% ($${r0(p.objetivoUSD)}). Lo que entre de más ya es colchón.</div></div>`);
+  } else {
+    const ritmo = p.ritmoReal === null
+      ? `<div class="row"><div class="l">Tu ritmo real<small>con ${p.diasOperados} día(s) operado(s) todavía no me fío de dar una fecha</small></div><div class="r">—</div></div>`
+      : (p.ritmoReal > 0
+        ? `<div class="row"><div class="l">Tu ritmo real<small>${p.diasOperados} días operados${p.fechaLlegada?" · llegas el "+fechaCorta(p.fechaLlegada):""}</small></div>
+           <div class="r ${p.ritmoReal>=p.porDia?"":"red"}">$${r0(p.ritmoReal)}/día</div></div>`
+        : `<div class="row"><div class="l">Tu ritmo real<small>${p.diasOperados} días operados · en negativo, así no se llega</small></div><div class="r red">$${r0(p.ritmoReal)}/día</div></div>`);
+    L.push(`<div class="note" style="text-align:left;margin:10px 0 2px"><b>🎯 El plan de esta cuenta</b></div>
+      <div class="row"><div class="l">Objetivo<small>${r1(p.target)}% de $${r0(st.cap)}</small></div><div class="r">$${r0(p.objetivoUSD)}</div></div>
+      <div class="row"><div class="l">Te falta<small>llevas ${r0(p.hechoPct)}% del camino</small></div><div class="r">$${r0(p.faltaUSD)}</div></div>
+      <div class="row"><div class="l">Para llegar en ${p.diasObj} días operativos<small>$${r0(p.porSemana)} por semana</small></div><div class="r">$${r0(p.porDia)}/día</div></div>
+      ${ritmo}`);
+  }
+
+  /* ── 2) QUÉ LE PUEDE QUEMAR LA CUENTA ── */
+  const lim = [];
+  if(p.limDiaUSD > 0){
+    const apuradoDia = p.quedaHoy <= p.limDiaUSD * 0.3;
+    lim.push(`<div class="row"><div class="l">Pérdida de HOY<small>tu límite es ${r1(p.ddDiaPct)}% = $${r0(p.limDiaUSD)}</small></div>
+      <div class="r ${apuradoDia?"red":""}">${p.perdidaHoy>0?"−$"+r0(p.perdidaHoy)+" · ":""}te quedan $${r0(p.quedaHoy)}</div></div>`);
+  }
+  if(p.limTotUSD > 0){
+    const apuradoTot = p.quedaTot <= p.limTotUSD * 0.3;
+    lim.push(`<div class="row"><div class="l">Pérdida TOTAL<small>tu límite es ${r1(p.ddTotPct)}% = $${r0(p.limTotUSD)}${p.gastadoTotPct>0?" · llevas gastado el "+r0(p.gastadoTotPct)+"%":""}</small></div>
+      <div class="r ${apuradoTot?"red":""}">${p.perdidaTot>0?"−$"+r0(p.perdidaTot)+" · ":""}te quedan $${r0(p.quedaTot)}</div></div>`);
+  }
+  if(lim.length) L.push(`<div class="note" style="text-align:left;margin:10px 0 2px"><b>🛡️ Lo que te puede quemar la cuenta</b></div>` + lim.join(""));
+  else L.push(`<div class="note" style="text-align:left;margin:8px 0 2px">🛡️ <b>Faltan tus límites de pérdida</b> (diaria y total). Tócalos en ✏️ Editar: son los que te avisan antes de quemar la cuenta.</div>`);
+
+  return L.join("");
+}
+
 function balanceDeDonde(st){
   if(st && st.fuente === "mt5" && st.real){
     const h = +st.real.haceMin || 0;
@@ -12396,6 +12553,7 @@ function tarjetaCuenta(c){
     </div>
     ${barra}
     ${estado}
+    ${planHTML(c,st)}
     ${reglas.length?`<div class="note" style="text-align:left;margin:10px 0 4px">📋 ${reglas.join(" · ")}</div>`:""}
     ${ligados}
     ${comp.length?`<div class="note" style="text-align:left">💰 ${comp.join(" · ")}</div>`:""}
@@ -12473,6 +12631,11 @@ function cuentaModal(id){
       <div><div class="fl">Precio reto ($)</div><input class="inp" id="ac_precio" inputmode="decimal" placeholder="540" value="${val("precio")}"></div>
       <div><div class="fl">Split (%)</div><input class="inp" id="ac_split" inputmode="decimal" placeholder="80" value="${val("splitPct")}"></div>
     </div>
+    <div class="g3">
+      <div style="grid-column:1/4"><div class="fl">Días operativos para el objetivo</div>
+        <input class="inp" id="ac_diasobj" inputmode="numeric" placeholder="${PLAN_DIAS_POR_DEFECTO}" value="${val("diasObjetivo")}">
+        <div class="desc" style="font-size:11.5px;line-height:1.4;margin-top:3px">En cuántos días de operativa quieres llegar al objetivo. Con esto te marco cuánto necesitas al día y a la semana. Si lo dejas vacío uso ${PLAN_DIAS_POR_DEFECTO}.</div></div>
+    </div>
     <div class="fl" style="color:var(--gold);margin-top:6px">Rendimiento</div>
     <div class="fld"><div class="fl">Balance actual ($) — vacío = se calcula con tus trades</div>
       <input class="inp" id="ac_balance" inputmode="decimal" placeholder="(automático)" value="${val("balance")}"></div>
@@ -12526,7 +12689,7 @@ function guardarCuentaForm(id){
     alias, firma, fase:g("ac_fase")||"Examen F1",
     capital:g("ac_capital"), riesgoPct:g("ac_riesgo")||"0.5", mt5:g("ac_mt5"),
     ddMaxPct:g("ac_ddmax"), ddTipo:g("ac_ddtipo"), ddDailyPct:g("ac_dddaily"),
-    targetPct:g("ac_target"), diasMin:g("ac_diasmin"), precio:g("ac_precio"), splitPct:g("ac_split"),
+    targetPct:g("ac_target"), diasMin:g("ac_diasmin"), diasObjetivo:g("ac_diasobj"), precio:g("ac_precio"), splitPct:g("ac_split"),
     balance:g("ac_balance"), retiros:g("ac_retiros"), reinvertido:g("ac_reinv"),
     proxPayout:g("ac_payout"), metaEscalado:g("ac_meta"),
     perfil:g("ac_perfil"), nota:g("ac_nota")
@@ -12554,6 +12717,35 @@ function iaCuentas(){
     if(st.progresoPct<0 && ddMax>0){ const margen=Math.max(0,ddMax-Math.abs(st.progresoPct)); s+=` [VA EN NEGATIVO ${r1(st.progresoPct)}%, le quedan ${r1(margen)}% hasta romper el DD${margen<=ddMax*0.3?" — PELIGRO, protégela":""}]`; }
     else if(st.target>0 && st.progresoPct>=st.target){ s+=` [OBJETIVO CUMPLIDO, cuida de no romper reglas]`; }
     else if(st.target>0){ s+=` [va +${r1(st.progresoPct)}%, falta ${r1(Math.max(0,st.target-st.progresoPct))}% al objetivo]`; }
+    /* 🎯 v7.265 (12-10) — ROBERTO TIENE QUE CONOCER EL PLAN, NO SOLO EL PORCENTAJE.
+       Rey: «Roberto debe conocer eso y al igual traer las reglas automáticamente de la
+       empresa que ponga y decirme y darme el parte de cómo voy con mis objetivos, al igual
+       como lo hace con el DD de las cuentas».
+       Hasta aquí solo veía el % y el margen de DD. Con eso puede decir «vas al 40%», pero no
+       puede decirle lo único que le sirve para decidir hoy: cuánto DINERO le falta, a cuánto
+       tiene que ir al día, si su ritmo de verdad llega a tiempo y cuánto le queda antes de
+       quemarla. Un dato que no le hace decidir nada es ruido
+       ([[apex-roberto-juzga-no-informa]], [[apex-mano-y-vision-en-todo-lo-nuevo]]). */
+    try{
+      const p = (typeof planCuenta==="function") ? planCuenta(c, st) : null;
+      if(p){
+        const tr=[];
+        if(p.target>0 && !p.logrado){
+          tr.push(`objetivo $${r0(p.objetivoUSD)}, le faltan $${r0(p.faltaUSD)} (lleva el ${r0(p.hechoPct)}% del camino)`);
+          tr.push(`para llegar en ${p.diasObj} días operativos necesita $${r0(p.porDia)}/día ($${r0(p.porSemana)}/semana)`);
+          if(p.ritmoReal===null) tr.push(`su ritmo real NO se puede calcular todavía: solo ${p.diasOperados} día(s) operado(s) — NO te inventes una fecha de llegada`);
+          else if(p.ritmoReal>0) tr.push(`su ritmo real son $${r0(p.ritmoReal)}/día en ${p.diasOperados} días${p.fechaLlegada?`, a ese ritmo llega el ${p.fechaLlegada}`:""}${p.ritmoReal<p.porDia?" — VA MÁS LENTO DE LO QUE NECESITA":" — va a tiempo"}`);
+          else tr.push(`su ritmo real es NEGATIVO ($${r0(p.ritmoReal)}/día en ${p.diasOperados} días): así no llega, se aleja`);
+        } else if(p.target>0 && p.logrado){
+          tr.push(`OBJETIVO YA ALCANZADO ($${r0(p.objetivoUSD)}): lo que importa ahora es no romper reglas`);
+        } else {
+          tr.push(`SIN OBJETIVO configurado: si te pregunta cómo va, dile que ponga el «Objetivo %» en la ficha; NO te inventes uno ni supongas el de su firma`);
+        }
+        if(p.limDiaUSD>0) tr.push(`hoy ha perdido $${r0(p.perdidaHoy)} de los $${r0(p.limDiaUSD)} que puede perder: le quedan $${r0(p.quedaHoy)}`);
+        if(p.limTotUSD>0) tr.push(`en total le quedan $${r0(p.quedaTot)} de los $${r0(p.limTotUSD)} antes de quemar la cuenta`);
+        if(tr.length) s+=`\n   PLAN: ${tr.join(" · ")}.`;
+      }
+    }catch(_){}
     if(st.m) s+=` Trades ligados: ${st.m.n}, WR ${pct(st.m.wr*100)}, net ${r1(st.m.rNeto)}R, exp ${r2(st.m.exp)}R.`;
     if(c.retiros) s+=` Retirado $${r0(+c.retiros)}.`;
     if(c.metaEscalado) s+=` Meta: ${c.metaEscalado}.`;
@@ -18657,13 +18849,13 @@ const IA_TOOLS = [
       alias:{type:"string"}, firma:{type:"string"}, capital:{type:"string"},
       fase:{type:"string",enum:["Examen F1","Examen F2","Fondeada","Real","Propia"]},
       riesgoPct:{type:"string"}, ddMaxPct:{type:"string"}, ddTipo:{type:"string",enum:["Estático","Trailing"]},
-      ddDailyPct:{type:"string"}, targetPct:{type:"string"}, diasMin:{type:"string"}, precio:{type:"string"}, splitPct:{type:"string"}, nota:{type:"string"}
+      ddDailyPct:{type:"string"}, targetPct:{type:"string"}, diasMin:{type:"string"}, diasObjetivo:{type:"string"}, precio:{type:"string"}, splitPct:{type:"string"}, nota:{type:"string"}
     }, required:["firma"] } },
   { name:"editar_cuenta", description:"Edita una cuenta existente, identificándola por su alias o firma.",
     input_schema:{ type:"object", properties:{
       alias:{type:"string",description:"Alias o firma para identificar la cuenta a editar"}, firma:{type:"string"},
       capital:{type:"string"}, fase:{type:"string",enum:["Examen F1","Examen F2","Fondeada","Real","Propia"]}, riesgoPct:{type:"string"},
-      ddMaxPct:{type:"string"}, ddTipo:{type:"string",enum:["Estático","Trailing"]}, ddDailyPct:{type:"string"}, targetPct:{type:"string"}, diasMin:{type:"string"}, precio:{type:"string"}, splitPct:{type:"string"}, balance:{type:"string"}, nota:{type:"string"}
+      ddMaxPct:{type:"string"}, ddTipo:{type:"string",enum:["Estático","Trailing"]}, ddDailyPct:{type:"string"}, targetPct:{type:"string"}, diasMin:{type:"string"}, diasObjetivo:{type:"string"}, precio:{type:"string"}, splitPct:{type:"string"}, balance:{type:"string"}, nota:{type:"string"}
     }, required:["alias"] } },
   { name:"avanzar_fase", description:"Avanza una cuenta a la siguiente fase (Examen F1→F2→Fondeada→Real→Propia).",
     input_schema:{ type:"object", properties:{ alias:{type:"string",description:"Alias o firma de la cuenta"} }, required:["alias"] } },
