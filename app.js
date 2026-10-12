@@ -8929,6 +8929,8 @@ function viewRiesgo(){
   ven.appendChild(el("div","note","Brasil no tiene horario de verano. El offset con NY cambia cuando EE.UU. ajusta su reloj (1er domingo de noviembre). Reajusta tus alarmas Toki entonces."));
   v.appendChild(ven);
 
+  /* 🎯 v7.266 — B: la calculadora de objetivos, su hoja de cálculo pero viva */
+  try{ v.appendChild(objTarjeta()); }catch(_){}
   /* 🧮 v7.256 — F1: la calculadora de negocios, antes de los mantras */
   try{ v.appendChild(negTarjeta()); }catch(_){}
   const man=el("div","card");
@@ -8937,6 +8939,138 @@ function viewRiesgo(){
   v.appendChild(man);
   return v;
 }
+/* ═══════════════════════════════════════════════════════════════════════════════════════
+   🎯 CALCULADORA DE OBJETIVOS (B) — v7.266 (12-10)
+   ───────────────────────────────────────────────────────────────────────────────────────
+   Rey, con la foto de su hoja de cálculo: «también para calcular yo individualmente,
+   poniendo ejemplos, en qué plazo alcanzaría tal objetivo según mi profit factor de mi
+   estrategia».
+   Esto es esa hoja, pero viva y con SUS números: pone lo que quiera probar y le dice en qué
+   plazo llega. Y un botón que trae su acierto y su RR REALES del Diario, para que vea la
+   diferencia entre lo que planea y lo que de verdad hace.
+   ⚠️ No decide nada ni toca ninguna cuenta: es papel y lápiz. Lo que mueve dinero es el plan
+   de cada ficha, que sale de sus reglas ([[apex-reglas-en-manos-de-rey]]).
+   ⚠️ Y si no hay operaciones suficientes para un acierto fiable, se dice — no se le da un
+   número redondo que parezca un dato ([[apex-roberto-no-inventa]]).
+   ═══════════════════════════════════════════════════════════════════════════════════════ */
+const OBJ_K = "apex_calc_objetivo";
+const OBJ_MIN_TRADES = 20;   /* por debajo de esto, su acierto real no es representativo */
+function objLeer(){
+  try{ return Object.assign({}, load(OBJ_K, {})); }catch(_){ return {}; }
+}
+function objGuardar(d){ try{ save(OBJ_K, d); }catch(_){} }
+
+/* sus números REALES, del Diario: acierto y cuánto gana una ganadora por cada perdedora */
+function objMisNumeros(){
+  try{
+    const reales = (Array.isArray(TRADES)?TRADES:[]).filter(t=>t.modo!=="backtest" && !t.abierta && t.r!==undefined && t.r!=="" && !isNaN(parseFloat(t.r)));
+    if(reales.length < OBJ_MIN_TRADES) return { pocas:true, n:reales.length };
+    const g = reales.filter(t=>parseFloat(t.r)>0);
+    const p = reales.filter(t=>parseFloat(t.r)<0);
+    const mediaG = g.length ? g.reduce((a,t)=>a+parseFloat(t.r),0)/g.length : 0;
+    const mediaP = p.length ? Math.abs(p.reduce((a,t)=>a+parseFloat(t.r),0)/p.length) : 1;
+    return { pocas:false, n:reales.length, wr:(g.length/reales.length*100), rr:(mediaP>0?mediaG/mediaP:mediaG) };
+  }catch(_){ return { pocas:true, n:0 }; }
+}
+
+function objCalcular(d){
+  const cap    = parseFloat(d.capital)||0;
+  const objPct = parseFloat(d.objetivoPct)||0;
+  const riesgo = parseFloat(d.riesgoPct)||0;
+  const porDia = parseFloat(d.tradesDia)||0;
+  const dias   = parseFloat(d.diasMes)||0;
+  const wr     = parseFloat(d.wr)||0;
+  const rr     = parseFloat(d.rr)||0;
+  if(!(cap>0 && objPct>0 && riesgo>0 && porDia>0 && dias>0 && wr>0 && rr>0)) return null;
+
+  const objetivoUSD = cap*objPct/100;
+  const riesgoUSD   = cap*riesgo/100;
+  const oportunidades = porDia*dias;
+  const ganadoras = oportunidades*wr/100;
+  const perdedoras = oportunidades-ganadoras;
+  /* la R esperada por operación, que es de donde sale todo lo demás */
+  const rPorOp = (wr/100)*rr - (1-wr/100);
+  const porMesUSD = rPorOp*riesgoUSD*oportunidades;
+  const meses = porMesUSD>0 ? objetivoUSD/porMesUSD : null;
+  return { objetivoUSD, riesgoUSD, oportunidades, ganadoras, perdedoras, rPorOp,
+           porMesUSD, meses, pierdeDinero: porMesUSD<=0 };
+}
+
+function objTarjeta(){
+  const d = objLeer();
+  const c = el("div","card");
+  const campo = (id,et,ph,val,ancho)=>
+    '<label style="font-size:.85em;display:block;margin-bottom:6px'+(ancho?";flex:1 1 "+ancho:"")+'">'+et+
+    '<input class="inp" id="'+id+'" type="number" step="any" inputmode="decimal" placeholder="'+ph+'" value="'+esc(val==null?"":String(val))+'"></label>';
+  c.innerHTML =
+    '<div class="card-h"><span class="ic">🎯</span><h2>¿En cuánto llego a mi objetivo?</h2></div>'+
+    '<details id="objDet"><summary style="cursor:pointer;font-size:13px;opacity:.9;margin-bottom:8px">Abrir la calculadora</summary>'+
+    '<div class="desc" style="font-size:11.8px;line-height:1.5;margin-bottom:10px">'+
+      'Papel y lápiz: prueba números y te digo en qué plazo llegas. <b>No toca ninguna cuenta.</b> '+
+      'El plan de verdad, con tus reglas, está en cada ficha de 🏦 Cuentas.'+
+    '</div>'+
+    '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
+      campo("objCapital","Capital","6000",d.capital,"45%")+
+      campo("objObjetivo","Objetivo (%)","8",d.objetivoPct,"45%")+
+    '</div>'+
+    '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
+      campo("objRiesgo","Riesgo por operación (%)","0.5",d.riesgoPct,"45%")+
+      campo("objTrades","Operaciones por día","3",d.tradesDia,"45%")+
+    '</div>'+
+    '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
+      campo("objDias","Días operativos al mes","20",d.diasMes,"45%")+
+      campo("objWr","Acierto (%)","20",d.wr,"45%")+
+    '</div>'+
+    campo("objRr","RR medio (cuánto gana una ganadora por cada perdedora)","2",d.rr)+
+    '<button type="button" class="btn" id="objMios" style="width:100%;margin:2px 0 8px">📒 Usa mis números reales del Diario</button>'+
+    '<div id="objSalida"></div>'+
+    '</details>';
+  setTimeout(()=>{ try{ objEnchufar(); objPintar(); }catch(_){} },0);
+  return c;
+}
+
+function objEnchufar(){
+  ["objCapital","objObjetivo","objRiesgo","objTrades","objDias","objWr","objRr"].forEach(id=>{
+    const e=document.getElementById(id); if(e) e.oninput=objDesdeForm;
+  });
+  const b=document.getElementById("objMios");
+  if(b) b.onclick=()=>{
+    const m=objMisNumeros();
+    if(m.pocas){ toast("Solo tienes "+m.n+" operación(es) cerrada(s): con menos de "+OBJ_MIN_TRADES+" tu acierto todavía no es representativo"); return; }
+    const d=objLeer(); d.wr=r1(m.wr); d.rr=r2(m.rr); objGuardar(d);
+    const w=document.getElementById("objWr"), r=document.getElementById("objRr");
+    if(w) w.value=d.wr; if(r) r.value=d.rr;
+    toast("Tus números reales: "+r1(m.wr)+"% de acierto y RR "+r2(m.rr)+" ("+m.n+" operaciones)");
+    objPintar();
+  };
+}
+function objDesdeForm(){
+  const g=id=>{ const e=document.getElementById(id); return e?e.value:""; };
+  objGuardar({ capital:g("objCapital"), objetivoPct:g("objObjetivo"), riesgoPct:g("objRiesgo"),
+               tradesDia:g("objTrades"), diasMes:g("objDias"), wr:g("objWr"), rr:g("objRr") });
+  objPintar();
+}
+function objPintar(){
+  const caja=document.getElementById("objSalida"); if(!caja) return;
+  const d=objLeer(); const x=objCalcular(d);
+  if(!x){ caja.innerHTML='<div class="note" style="text-align:left">Rellena los siete campos y te digo el plazo. Lo que falte lo digo, no lo invento.</div>'; return; }
+  const filas=[];
+  filas.push('<div class="row"><div class="l">Objetivo<small>'+r1(parseFloat(d.objetivoPct))+'% de $'+r0(parseFloat(d.capital))+'</small></div><div class="r">$'+r0(x.objetivoUSD)+'</div></div>');
+  filas.push('<div class="row"><div class="l">Oportunidades al mes<small>'+d.tradesDia+'/día × '+d.diasMes+' días</small></div><div class="r">'+r0(x.oportunidades)+'</div></div>');
+  filas.push('<div class="row"><div class="l">De esas, ganadoras<small>con '+r1(parseFloat(d.wr))+'% de acierto</small></div><div class="r">'+r0(x.ganadoras)+'</div></div>');
+  filas.push('<div class="row"><div class="l">Esperanza por operación<small>en R, con tu acierto y tu RR</small></div><div class="r '+(x.rPorOp>0?"":"red")+'">'+r2(x.rPorOp)+'R</div></div>');
+  filas.push('<div class="row"><div class="l">Ganancia al mes<small>arriesgando $'+r0(x.riesgoUSD)+' por operación</small></div><div class="r '+(x.porMesUSD>0?"":"red")+'">'+(x.porMesUSD>=0?"":"−")+'$'+r0(Math.abs(x.porMesUSD))+'</div></div>');
+  /* ⚠️ con esperanza negativa no hay plazo: por mucho que opere, se aleja */
+  if(x.pierdeDinero){
+    filas.push('<div class="diag bad" style="padding:11px 13px;margin:8px 0 2px"><div class="dd" style="color:var(--red)">🔴 <b>Con estos números pierdes dinero.</b> Tu esperanza por operación es '+r2(x.rPorOp)+'R: no hay plazo que valga, operar más solo te aleja. Sube el acierto o el RR.</div></div>');
+  } else {
+    const meses=x.meses;
+    const texto = meses<1 ? "menos de un mes" : (meses<2 ? "poco más de un mes" : r1(meses)+" meses");
+    filas.push('<div class="diag ok" style="padding:11px 13px;margin:8px 0 2px"><div class="dd" style="color:var(--green)">🎯 A este ritmo llegas al objetivo en <b>'+texto+'</b> ('+r0(x.oportunidades*meses)+' operaciones).</div></div>');
+  }
+  caja.innerHTML=filas.join("");
+}
+
 function calcLotaje(){
   const par=$("#cPar")?.value||"EUR/USD";
   const b=parseFloat($("#cBal")?.value)||0;
@@ -12407,8 +12541,31 @@ function planCuenta(c, st){
     const r = parseFloat(t.r);
     if(!isNaN(r) && t.fecha === hoy) hoyUSD += r * st.riesgo * cap;
   });
+  /* ⚖️ v7.266 (12-10) — EL RITMO TIENE QUE DIVIDIR DOS COSAS DEL MISMO SITIO.
+     ═══════════════════════════════════════════════════════════════════════════════════════
+     Rey, con la captura: «¿por qué ese dato dice 4 operaciones negativas en letras rojas si
+     tuve ganadoras? Asegúrate de que todos los datos que se calculan sean reales y bien
+     calculados».
+     Tenía razón, y era de los fallos que más daño hacen porque el número PARECE correcto:
+     esto hacía `st.pl / diasOperados`, y esas dos cifras no son del mismo universo —
+         · `st.pl`         sale del BALANCE REAL DE MT5: todo lo que ha pasado en esa cuenta,
+                           lo haya registrado él o no.
+         · `diasOperados`  sale de las operaciones que SÍ registró en el Diario.
+     Dividir una entre otra no da su ritmo: da un número sin significado. Y encima lo pintaba
+     en rojo con «en negativo, así no se llega», acusando a sus 4 días de un resultado que no
+     era suyo.
+     AHORA el ritmo sale solo de lo que él registró (`plTrades`: sus R convertidas a dinero
+     con SU riesgo), dividido entre los días de esas MISMAS operaciones.
+     Y como el balance de verdad sigue siendo el de MT5, se mide la DIFERENCIA entre lo que
+     dice su Diario y lo que dice su cuenta: si no cuadran, no se esconde — significa que
+     tiene operaciones sin registrar, y es él quien tiene que saberlo
+     ([[apex-roberto-no-inventa]], [[apex-la-pared-tiene-que-ser-de-esta-cuenta]]). */
   const diasOperados = dias.size;
-  const ritmoReal    = diasOperados >= PLAN_DIAS_MIN_RITMO ? st.pl / diasOperados : null;
+  const plRegistrado = st.plTrades || 0;
+  const ritmoReal    = diasOperados >= PLAN_DIAS_MIN_RITMO ? plRegistrado / diasOperados : null;
+  /* el descuadre solo tiene sentido si el balance viene de MT5: si ya sale de sus R,
+     comparar sus R contra sus R siempre daría cero */
+  const descuadre    = (st.fuente === "mt5") ? (st.pl - plRegistrado) : null;
   let diasQueFaltan = null, fechaLlegada = null;
   if(ritmoReal !== null && ritmoReal > 0 && faltaUSD > 0){
     diasQueFaltan = Math.ceil(faltaUSD / ritmoReal);
@@ -12431,7 +12588,7 @@ function planCuenta(c, st){
   const gastadoTotPct = limTotUSD > 0 ? Math.min(100, perdidaTot / limTotUSD * 100) : 0;
 
   return { target, objetivoUSD, faltaUSD, hechoPct, logrado, diasObj, porDia, porSemana,
-           diasOperados, ritmoReal, diasQueFaltan, fechaLlegada,
+           diasOperados, ritmoReal, plRegistrado, descuadre, diasQueFaltan, fechaLlegada,
            ddDiaPct, limDiaUSD, perdidaHoy, quedaHoy, hoyUSD,
            ddTotPct, limTotUSD, perdidaTot, quedaTot, gastadoTotPct };
 }
@@ -12451,17 +12608,27 @@ function planHTML(c, st){
     L.push(`<div class="diag ok" style="padding:11px 13px;margin:8px 0 2px"><div class="dd" style="color:var(--green)">
       🎉 <b>Objetivo alcanzado</b> — ${r1(p.target)}% ($${r0(p.objetivoUSD)}). Lo que entre de más ya es colchón.</div></div>`);
   } else {
+    /* ⚖️ el ritmo sale de lo que ÉL registró, y la etiqueta lo dice: un número sin decir de
+       dónde sale es justo el que le hizo desconfiar, con razón, el 12-10 */
+    const deDonde = `${p.diasOperados} días con operaciones registradas`;
     const ritmo = p.ritmoReal === null
-      ? `<div class="row"><div class="l">Tu ritmo real<small>con ${p.diasOperados} día(s) operado(s) todavía no me fío de dar una fecha</small></div><div class="r">—</div></div>`
+      ? `<div class="row"><div class="l">Tu ritmo<small>con ${p.diasOperados} día(s) registrado(s) todavía no me fío de dar una fecha</small></div><div class="r">—</div></div>`
       : (p.ritmoReal > 0
-        ? `<div class="row"><div class="l">Tu ritmo real<small>${p.diasOperados} días operados${p.fechaLlegada?" · llegas el "+fechaCorta(p.fechaLlegada):""}</small></div>
+        ? `<div class="row"><div class="l">Tu ritmo<small>${deDonde}${p.fechaLlegada?" · llegas el "+fechaCorta(p.fechaLlegada):""}</small></div>
            <div class="r ${p.ritmoReal>=p.porDia?"":"red"}">$${r0(p.ritmoReal)}/día</div></div>`
-        : `<div class="row"><div class="l">Tu ritmo real<small>${p.diasOperados} días operados · en negativo, así no se llega</small></div><div class="r red">$${r0(p.ritmoReal)}/día</div></div>`);
+        : `<div class="row"><div class="l">Tu ritmo<small>${deDonde} · en negativo, así no se llega</small></div><div class="r red">$${r0(p.ritmoReal)}/día</div></div>`);
+    /* 🔎 si su Diario no cuadra con su cuenta, eso NO se esconde: le faltan operaciones por
+       registrar, y sin ellas el ritmo mide solo una parte */
+    const umbral = Math.max(20, st.cap * 0.005);
+    const aviso = (p.descuadre !== null && p.descuadre !== undefined && Math.abs(p.descuadre) > umbral)
+      ? `<div class="note" style="text-align:left;margin:4px 0 2px">🔎 Tu Diario dice <b>${p.plRegistrado>=0?"+":"−"}$${r0(Math.abs(p.plRegistrado))}</b> y tu cuenta de MT5 dice <b>${st.pl>=0?"+":"−"}$${r0(Math.abs(st.pl))}</b>: hay <b>$${r0(Math.abs(p.descuadre))}</b> de diferencia. Te faltan operaciones por registrar — el ritmo de arriba solo mide lo que está en el Diario.</div>`
+      : "";
     L.push(`<div class="note" style="text-align:left;margin:10px 0 2px"><b>🎯 El plan de esta cuenta</b></div>
       <div class="row"><div class="l">Objetivo<small>${r1(p.target)}% de $${r0(st.cap)}</small></div><div class="r">$${r0(p.objetivoUSD)}</div></div>
       <div class="row"><div class="l">Te falta<small>llevas ${r0(p.hechoPct)}% del camino</small></div><div class="r">$${r0(p.faltaUSD)}</div></div>
       <div class="row"><div class="l">Para llegar en ${p.diasObj} días operativos<small>$${r0(p.porSemana)} por semana</small></div><div class="r">$${r0(p.porDia)}/día</div></div>
-      ${ritmo}`);
+      ${ritmo}
+      ${aviso}`);
   }
 
   /* ── 2) QUÉ LE PUEDE QUEMAR LA CUENTA ── */
@@ -12733,9 +12900,13 @@ function iaCuentas(){
         if(p.target>0 && !p.logrado){
           tr.push(`objetivo $${r0(p.objetivoUSD)}, le faltan $${r0(p.faltaUSD)} (lleva el ${r0(p.hechoPct)}% del camino)`);
           tr.push(`para llegar en ${p.diasObj} días operativos necesita $${r0(p.porDia)}/día ($${r0(p.porSemana)}/semana)`);
-          if(p.ritmoReal===null) tr.push(`su ritmo real NO se puede calcular todavía: solo ${p.diasOperados} día(s) operado(s) — NO te inventes una fecha de llegada`);
-          else if(p.ritmoReal>0) tr.push(`su ritmo real son $${r0(p.ritmoReal)}/día en ${p.diasOperados} días${p.fechaLlegada?`, a ese ritmo llega el ${p.fechaLlegada}`:""}${p.ritmoReal<p.porDia?" — VA MÁS LENTO DE LO QUE NECESITA":" — va a tiempo"}`);
-          else tr.push(`su ritmo real es NEGATIVO ($${r0(p.ritmoReal)}/día en ${p.diasOperados} días): así no llega, se aleja`);
+          if(p.ritmoReal===null) tr.push(`su ritmo NO se puede calcular todavía: solo ${p.diasOperados} día(s) con operaciones registradas — NO te inventes una fecha de llegada`);
+          else if(p.ritmoReal>0) tr.push(`su ritmo (SOLO con lo que tiene registrado en el Diario) son $${r0(p.ritmoReal)}/día en ${p.diasOperados} días${p.fechaLlegada?`, a ese ritmo llega el ${p.fechaLlegada}`:""}${p.ritmoReal<p.porDia?" — VA MÁS LENTO DE LO QUE NECESITA":" — va a tiempo"}`);
+          else tr.push(`su ritmo con lo registrado es NEGATIVO ($${r0(p.ritmoReal)}/día en ${p.diasOperados} días): así no llega, se aleja`);
+          /* ⚖️ 12-10 — si el Diario y la cuenta no cuadran, Roberto lo DICE y no trata el
+             ritmo como si fuera toda la verdad ([[apex-roberto-no-inventa]]) */
+          if(p.descuadre!==null && p.descuadre!==undefined && Math.abs(p.descuadre) > Math.max(20, st.cap*0.005))
+            tr.push(`⚠️ OJO: su Diario suma ${p.plRegistrado>=0?"+":"−"}$${r0(Math.abs(p.plRegistrado))} pero su cuenta real de MT5 va ${st.pl>=0?"+":"−"}$${r0(Math.abs(st.pl))} — hay $${r0(Math.abs(p.descuadre))} sin registrar. Díselo: el ritmo de arriba solo mide lo que está en el Diario, no su cuenta entera`);
         } else if(p.target>0 && p.logrado){
           tr.push(`OBJETIVO YA ALCANZADO ($${r0(p.objetivoUSD)}): lo que importa ahora es no romper reglas`);
         } else {

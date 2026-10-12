@@ -1,50 +1,36 @@
-APEX v7.265 — TRADING DESK
+APEX v7.266 — TRADING DESK
 =========================
 
-🎯 CADA CUENTA TE DICE AHORA CÓMO VAS, Y CUÁNTO TE QUEDA
+⚖️ EL RITMO DE TUS CUENTAS ESTABA MAL CALCULADO. ERA MÍO.
 
-Tu hoja de cálculo hacía más que tu app. Ya no.
+Me enseñaste la ficha: «¿por qué dice 4 operaciones negativas en rojo si tuve ganadoras?».
+Tenías razón. Yo dividía el P&L REAL de MT5 (−$334, todo lo que ha pasado en esa cuenta)
+entre los días de las operaciones que TÚ registraste en el Diario. Dos universos distintos.
+El resultado no significaba nada, y encima lo pintaba en rojo acusando a esos 4 días de un
+resultado que no era suyo.
 
-Dentro de cada ficha de 🏦 Cuentas, calculado solo y con TUS operaciones de esa cuenta:
+Ahora el ritmo sale solo de lo que registraste, dividido entre los días de esas mismas
+operaciones. Y la etiqueta lo dice: «4 días con operaciones registradas».
 
-   🎯 El plan de esta cuenta
-   Objetivo            8% de $6.000              $480
-   Te falta            llevas 0% del camino      $814
-   Para llegar en 20 días operativos
-                       $204 por semana           $41/día
-   Tu ritmo real       5 días operados ·
-                       llegas el 19-10           $48/día
+Y lo que antes se escondía, ahora lo ves:
 
-   🛡️ Lo que te puede quemar la cuenta
-   Pérdida de HOY      tu límite es 5% = $300    te quedan $300
-   Pérdida TOTAL       tu límite es 10% = $600   −$334 · te quedan $266
+   🔎 Tu Diario dice +$90 y tu cuenta de MT5 dice −$334: hay $424 de diferencia.
+      Te faltan operaciones por registrar — el ritmo solo mide lo que está en el Diario.
 
-Todo sale de los campos de ESA ficha. Cambias de empresa y cambia solo: con una cuenta de
-25k y reglas 6%/4%/6% da 1.500/1.000/1.500 sin tocar nada. Y una cuenta de backtesting sin
-reglas puestas no revienta ni se inventa límites.
-
-Campo nuevo: «Días operativos para el objetivo». Vacío = 20, pero es tuyo.
+Roberto también te lo dirá en el chat. Lo que te falta para el objetivo sigue saliendo de
+tu cuenta real: para el objetivo manda MT5.
 
 
-🤖 ROBERTO YA CONOCE TU PLAN
+🎯 Y LA CALCULADORA DE «¿EN CUÁNTO LLEGO?», EN 🛡️ RIESGO
 
-Antes solo veía el porcentaje y el margen de drawdown: podía decirte «vas al 40%» pero no
-lo único que te sirve para decidir hoy. Ahora, en cada chat, lee de cada cuenta cuánto
-dinero te falta, cuánto necesitas al día, si tu ritmo real llega a tiempo, y cuánto te
-queda antes de quemarla.
+Tu hoja de cálculo, viva. Pones capital, objetivo, riesgo, operaciones por día, días,
+acierto y RR, y te dice el plazo. Con tus números da tus mismos $360.
 
-Y con una orden expresa: si no tienes el objetivo configurado, TE LO PIDE. No se inventa
-el de tu firma.
-
-
-⏱️ Y LO DE ESTA MAÑANA, QUE ERA MÍO
-
-Tus alarmas volvían a caer todas en la misma casilla del teléfono y se borraban entre
-ellas. Arreglado: cada par y temporalidad tiene la suya, y una señal de entrada conserva
-casilla propia siempre.
-
-El registro de TradingView también dejó de pintarse de rojo: el worker se paraba 4 segundos
-esperando la opinión de Roberto antes de contestarle, y TradingView aguanta 3.
+· Con esperanza negativa NO te da plazo: te dice que con esos números pierdes dinero y que
+  operar más solo te aleja. Un plazo imposible es peor que ninguno.
+· Botón «📒 Usa mis números reales»: trae tu acierto y tu RR del Diario. Con menos de 20
+  operaciones cerradas se niega — un 66% sacado de tres trades no es un dato.
+· No toca ninguna cuenta. Es papel y lápiz; el plan que mueve dinero está en 🏦 Cuentas.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
