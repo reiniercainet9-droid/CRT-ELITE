@@ -1,36 +1,48 @@
-APEX v7.266 — TRADING DESK
+APEX v7.267 — TRADING DESK
 =========================
 
-⚖️ EL RITMO DE TUS CUENTAS ESTABA MAL CALCULADO. ERA MÍO.
+🧮 APEX Y MT5 YA CUENTAN LO MISMO
 
-Me enseñaste la ficha: «¿por qué dice 4 operaciones negativas en rojo si tuve ganadoras?».
-Tenías razón. Yo dividía el P&L REAL de MT5 (−$334, todo lo que ha pasado en esa cuenta)
-entre los días de las operaciones que TÚ registraste en el Diario. Dos universos distintos.
-El resultado no significaba nada, y encima lo pintaba en rojo acusando a esos 4 días de un
-resultado que no era suyo.
+Me dijiste: «el balance de la cuenta es 6000 y aunque recuperé una parte de la pérdida con
+las ganadoras de la semana pasada, continúa en negativo hasta los 6000 para estar en
+breakeven, y de ahí hasta llegar al objetivo… está claro pero mal contado».
 
-Ahora el ritmo sale solo de lo que registraste, dividido entre los días de esas mismas
-operaciones. Y la etiqueta lo dice: «4 días con operaciones registradas».
+Tenías razón en lo de mal contado. La cuenta estaba bien hecha, pero te la decía en otro
+idioma: tú miras MT5 y ves 5.665,61, y Apex te decía «Objetivo $480», que es un incremento,
+sin decirte dónde está el breakeven.
 
-Y lo que antes se escondía, ahora lo ves:
+Ahora la ficha habla como tu terminal:
 
-   🔎 Tu Diario dice +$90 y tu cuenta de MT5 dice −$334: hay $424 de diferencia.
-      Te faltan operaciones por registrar — el ritmo solo mide lo que está en el Diario.
+   Tu balance ahora          todavía en negativo              $5,666
+   1º · Volver a tu capital  breakeven                        +$334 → $6,000
+   2º · Y de ahí, el objetivo  8% sobre tu capital            $6,480
+   Te falta en total         recuperar lo perdido y el objetivo  $814
 
-Roberto también te lo dirá en el chat. Lo que te falta para el objetivo sigue saliendo de
-tu cuenta real: para el objetivo manda MT5.
+Cuando pases de 6.000 deja de hablarte de recuperar: solo el objetivo.
 
 
-🎯 Y LA CALCULADORA DE «¿EN CUÁNTO LLEGO?», EN 🛡️ RIESGO
+📈 Y TU TRABAJO SE MIDE DESDE QUE EMPEZASTE, NO DESDE HACE MESES
 
-Tu hoja de cálculo, viva. Pones capital, objetivo, riesgo, operaciones por día, días,
-acierto y RR, y te dice el plazo. Con tus números da tus mismos $360.
+Me dijiste que esa cuenta arrastra errores de hace meses, de antes de que construyéramos
+tu sistema, y que mezclarlos taparía tu mejora.
 
-· Con esperanza negativa NO te da plazo: te dice que con esos números pierdes dinero y que
-  operar más solo te aleja. Un plazo imposible es peor que ninguno.
-· Botón «📒 Usa mis números reales»: trae tu acierto y tu RR del Diario. Con menos de 20
-  operaciones cerradas se niega — un 66% sacado de tres trades no es un dato.
-· No toca ninguna cuenta. Es papel y lápiz; el plan que mueve dinero está en 🏦 Cuentas.
+Mi aviso anterior estaba mal planteado: te decía «te faltan operaciones por registrar»,
+como si fuera un descuido tuyo, y te empujaba a meter justo lo que no quieres.
+
+Ahora son dos cosas separadas, cada una con su nombre:
+
+   📈 Tu trabajo desde que lo mides aquí
+   Desde tu 1ª operación (06-10)   4 días · solo lo registrado      +$90
+   Venía de antes                  lo que la cuenta arrastraba      −$424
+                                   antes de que empezaras a medir —
+                                   no es tu trabajo de ahora
+
+La cuenta manda para pasar o quemar: balance, breakeven y objetivo salen de MT5, igual que
+en tu terminal. Tu mejora se mide solo con lo que has registrado, desde tu primera
+operación. Ninguno contamina al otro.
+
+Y Roberto lo entiende igual: tiene prohibido echarte en cara lo de antes o pedirte que
+registres operaciones viejas.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

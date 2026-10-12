@@ -12525,6 +12525,16 @@ function planCuenta(c, st){
   /* ── el objetivo ── */
   const objetivoUSD = target > 0 ? cap * target / 100 : 0;
   const faltaUSD    = target > 0 ? Math.max(0, objetivoUSD - st.pl) : 0;
+  /* 🧮 v7.267 (12-10) — EL CAMINO TIENE DOS TRAMOS, Y SE DICEN EN BALANCES.
+     Rey mira su MT5 y ve 5.665,61. Apex le decía «Objetivo $480», que es un incremento, y no
+     le decía dónde está el breakeven. La cuenta estaba bien hecha y mal contada.
+       · objetivoBalance = a qué número de SU TERMINAL tiene que llegar (6.480)
+       · faltaBreakeven  = lo que le falta solo para volver a su capital (334,39)
+       · bajoAgua        = si todavía está por debajo de su capital
+     Así Apex y MT5 dicen lo mismo, que es lo que él pidió. */
+  const objetivoBalance = target > 0 ? cap * (1 + target / 100) : 0;
+  const bajoAgua        = st.balance < cap;
+  const faltaBreakeven  = Math.max(0, cap - st.balance);
   const hechoPct    = objetivoUSD > 0 ? Math.max(0, Math.min(100, st.pl / objetivoUSD * 100)) : 0;
   const logrado     = target > 0 && st.pl >= objetivoUSD;
 
@@ -12565,7 +12575,14 @@ function planCuenta(c, st){
   const ritmoReal    = diasOperados >= PLAN_DIAS_MIN_RITMO ? plRegistrado / diasOperados : null;
   /* el descuadre solo tiene sentido si el balance viene de MT5: si ya sale de sus R,
      comparar sus R contra sus R siempre daría cero */
-  const descuadre    = (st.fuente === "mt5") ? (st.pl - plRegistrado) : null;
+  /* 📈 v7.267 (12-10) — LO DE ANTES SE LLAMA ARRASTRE, NO «TE FALTAN OPERACIONES».
+     Rey no quiere los meses viejos de esa cuenta: taparían la mejora que lleva construyendo.
+     Así que la diferencia NO se le presenta como un descuido suyo, sino como lo que la
+     cuenta traía de antes de que empezara a medir aquí. */
+  const arrastre     = (st.fuente === "mt5") ? (st.pl - plRegistrado) : null;
+  const descuadre    = arrastre;   /* el nombre viejo, para no romper a quien ya lo leía */
+  let desdeFecha = null;
+  (st.list || []).forEach(t => { if(t.fecha && (!desdeFecha || t.fecha < desdeFecha)) desdeFecha = t.fecha; });
   let diasQueFaltan = null, fechaLlegada = null;
   if(ritmoReal !== null && ritmoReal > 0 && faltaUSD > 0){
     diasQueFaltan = Math.ceil(faltaUSD / ritmoReal);
@@ -12587,8 +12604,10 @@ function planCuenta(c, st){
   const quedaTot   = limTotUSD > 0 ? Math.max(0, limTotUSD - perdidaTot) : 0;
   const gastadoTotPct = limTotUSD > 0 ? Math.min(100, perdidaTot / limTotUSD * 100) : 0;
 
-  return { target, objetivoUSD, faltaUSD, hechoPct, logrado, diasObj, porDia, porSemana,
-           diasOperados, ritmoReal, plRegistrado, descuadre, diasQueFaltan, fechaLlegada,
+  return { target, objetivoUSD, objetivoBalance, bajoAgua, faltaBreakeven,
+           faltaUSD, hechoPct, logrado, diasObj, porDia, porSemana,
+           diasOperados, ritmoReal, plRegistrado, descuadre, arrastre, desdeFecha,
+           diasQueFaltan, fechaLlegada,
            ddDiaPct, limDiaUSD, perdidaHoy, quedaHoy, hoyUSD,
            ddTotPct, limTotUSD, perdidaTot, quedaTot, gastadoTotPct };
 }
@@ -12619,13 +12638,33 @@ function planHTML(c, st){
         : `<div class="row"><div class="l">Tu ritmo<small>${deDonde} · en negativo, así no se llega</small></div><div class="r red">$${r0(p.ritmoReal)}/día</div></div>`);
     /* 🔎 si su Diario no cuadra con su cuenta, eso NO se esconde: le faltan operaciones por
        registrar, y sin ellas el ritmo mide solo una parte */
+    /* 📈 SU TRABAJO, SEPARADO DE LO QUE LA CUENTA TRAÍA DE ANTES.
+       Rey: «no poner registros viejos… debe verse la mejora desde la primera operación de ahí
+       hacia delante». Así que esto NO le pide nada: le enseña lo suyo y nombra lo de antes. */
     const umbral = Math.max(20, st.cap * 0.005);
-    const aviso = (p.descuadre !== null && p.descuadre !== undefined && Math.abs(p.descuadre) > umbral)
-      ? `<div class="note" style="text-align:left;margin:4px 0 2px">🔎 Tu Diario dice <b>${p.plRegistrado>=0?"+":"−"}$${r0(Math.abs(p.plRegistrado))}</b> y tu cuenta de MT5 dice <b>${st.pl>=0?"+":"−"}$${r0(Math.abs(st.pl))}</b>: hay <b>$${r0(Math.abs(p.descuadre))}</b> de diferencia. Te faltan operaciones por registrar — el ritmo de arriba solo mide lo que está en el Diario.</div>`
+    const hayArrastre = (p.arrastre !== null && p.arrastre !== undefined && Math.abs(p.arrastre) > umbral);
+    const aviso = p.diasOperados
+      ? `<div class="note" style="text-align:left;margin:8px 0 2px"><b>📈 Tu trabajo desde que lo mides aquí</b></div>
+         <div class="row"><div class="l">Desde tu 1ª operación${p.desdeFecha?" ("+fechaCorta(p.desdeFecha)+")":""}<small>${p.diasOperados} día(s) · solo lo que has registrado</small></div>
+           <div class="r ${p.plRegistrado>=0?"":"red"}">${p.plRegistrado>=0?"+":"−"}$${r0(Math.abs(p.plRegistrado))}</div></div>`
+        + (hayArrastre
+          ? `<div class="row"><div class="l">Venía de antes<small>lo que la cuenta arrastraba antes de que empezaras a medir aquí — no es tu trabajo de ahora</small></div>
+               <div class="r ${p.arrastre>=0?"":"red"}">${p.arrastre>=0?"+":"−"}$${r0(Math.abs(p.arrastre))}</div></div>`
+          : "")
       : "";
+    /* 🧮 el camino en el idioma de MT5: dónde está, dónde es breakeven, y dónde el objetivo */
+    const tramos = p.bajoAgua
+      ? `<div class="row"><div class="l">1º · Volver a tu capital<small>breakeven: el balance que tenías al empezar</small></div>
+           <div class="r">+$${r0(p.faltaBreakeven)} → $${r0(st.cap)}</div></div>
+         <div class="row"><div class="l">2º · Y de ahí, el objetivo<small>${r1(p.target)}% sobre tu capital</small></div>
+           <div class="r">$${r0(p.objetivoBalance)}</div></div>`
+      : `<div class="row"><div class="l">Objetivo<small>${r1(p.target)}% sobre tu capital de $${r0(st.cap)}</small></div>
+           <div class="r">$${r0(p.objetivoBalance)}</div></div>`;
     L.push(`<div class="note" style="text-align:left;margin:10px 0 2px"><b>🎯 El plan de esta cuenta</b></div>
-      <div class="row"><div class="l">Objetivo<small>${r1(p.target)}% de $${r0(st.cap)}</small></div><div class="r">$${r0(p.objetivoUSD)}</div></div>
-      <div class="row"><div class="l">Te falta<small>llevas ${r0(p.hechoPct)}% del camino</small></div><div class="r">$${r0(p.faltaUSD)}</div></div>
+      <div class="row"><div class="l">Tu balance ahora<small>${p.bajoAgua?"por debajo de tu capital: todavía en negativo":"por encima de tu capital"}</small></div>
+        <div class="r ${p.bajoAgua?"red":""}">$${r0(st.balance)}</div></div>
+      ${tramos}
+      <div class="row"><div class="l">Te falta en total<small>${p.bajoAgua?"recuperar lo perdido y además el objetivo":"llevas "+r0(p.hechoPct)+"% del camino"}</small></div><div class="r">$${r0(p.faltaUSD)}</div></div>
       <div class="row"><div class="l">Para llegar en ${p.diasObj} días operativos<small>$${r0(p.porSemana)} por semana</small></div><div class="r">$${r0(p.porDia)}/día</div></div>
       ${ritmo}
       ${aviso}`);
@@ -12898,15 +12937,19 @@ function iaCuentas(){
       if(p){
         const tr=[];
         if(p.target>0 && !p.logrado){
-          tr.push(`objetivo $${r0(p.objetivoUSD)}, le faltan $${r0(p.faltaUSD)} (lleva el ${r0(p.hechoPct)}% del camino)`);
+          /* 🧮 12-10 — en balances, como su MT5: «está en X, breakeven en Y, objetivo en Z» */
+          if(p.bajoAgua) tr.push(`su balance es $${r0(st.balance)} y su capital $${r0(st.cap)}: TODAVÍA ESTÁ EN NEGATIVO. Primero tiene que recuperar $${r0(p.faltaBreakeven)} para volver a breakeven ($${r0(st.cap)}), y solo después empieza a contar para el objetivo, que está en $${r0(p.objetivoBalance)}. En total le faltan $${r0(p.faltaUSD)}`);
+          else tr.push(`su balance es $${r0(st.balance)} y el objetivo está en $${r0(p.objetivoBalance)}: le faltan $${r0(p.faltaUSD)} (lleva el ${r0(p.hechoPct)}% del camino)`);
           tr.push(`para llegar en ${p.diasObj} días operativos necesita $${r0(p.porDia)}/día ($${r0(p.porSemana)}/semana)`);
           if(p.ritmoReal===null) tr.push(`su ritmo NO se puede calcular todavía: solo ${p.diasOperados} día(s) con operaciones registradas — NO te inventes una fecha de llegada`);
           else if(p.ritmoReal>0) tr.push(`su ritmo (SOLO con lo que tiene registrado en el Diario) son $${r0(p.ritmoReal)}/día en ${p.diasOperados} días${p.fechaLlegada?`, a ese ritmo llega el ${p.fechaLlegada}`:""}${p.ritmoReal<p.porDia?" — VA MÁS LENTO DE LO QUE NECESITA":" — va a tiempo"}`);
           else tr.push(`su ritmo con lo registrado es NEGATIVO ($${r0(p.ritmoReal)}/día en ${p.diasOperados} días): así no llega, se aleja`);
           /* ⚖️ 12-10 — si el Diario y la cuenta no cuadran, Roberto lo DICE y no trata el
              ritmo como si fuera toda la verdad ([[apex-roberto-no-inventa]]) */
-          if(p.descuadre!==null && p.descuadre!==undefined && Math.abs(p.descuadre) > Math.max(20, st.cap*0.005))
-            tr.push(`⚠️ OJO: su Diario suma ${p.plRegistrado>=0?"+":"−"}$${r0(Math.abs(p.plRegistrado))} pero su cuenta real de MT5 va ${st.pl>=0?"+":"−"}$${r0(Math.abs(st.pl))} — hay $${r0(Math.abs(p.descuadre))} sin registrar. Díselo: el ritmo de arriba solo mide lo que está en el Diario, no su cuenta entera`);
+          /* 📈 12-10 — Rey NO quiere los meses viejos de esa cuenta: taparían su mejora. Lo
+             de antes se llama ARRASTRE y no se le pide que lo registre. */
+          if(p.arrastre!==null && p.arrastre!==undefined && Math.abs(p.arrastre) > Math.max(20, st.cap*0.005))
+            tr.push(`📈 SEPARA LAS DOS COSAS: desde su 1ª operación registrada${p.desdeFecha?" ("+p.desdeFecha+")":""} lleva ${p.plRegistrado>=0?"+":"−"}$${r0(Math.abs(p.plRegistrado))} en ${p.diasOperados} día(s) — ESO es su trabajo de ahora y es lo que hay que juzgar. Los otros ${p.arrastre>=0?"+":"−"}$${r0(Math.abs(p.arrastre))} los arrastraba la cuenta de ANTES de que empezara a medir aquí: NO se los eches en cara ni le pidas que registre operaciones viejas, él decidió no meterlas a propósito para poder ver su mejora`);
         } else if(p.target>0 && p.logrado){
           tr.push(`OBJETIVO YA ALCANZADO ($${r0(p.objetivoUSD)}): lo que importa ahora es no romper reglas`);
         } else {
