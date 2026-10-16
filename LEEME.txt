@@ -1,41 +1,37 @@
-APEX v7.268 — TRADING DESK
+APEX v7.269 — TRADING DESK
 =========================
 
-🚪 EL BOTÓN DE CERRAR NUNCA ESTUVO ROTO. EL AVISO SALÍA DETRÁS.
+🚪 LA TARJETA DE CIERRE SE ABRE YA RELLENA
 
-Me dijiste: «el botón de cerrar no funciona, dependiendo totalmente de Roberto para cerrar;
-se abre, me pone la tarjeta para poner causa del cierre, pero al darle al botón no pasa nada».
+Me dijiste: «Roberto me dio muchos problemas cuando le decía para cerrar: comenzaba a
+pedirme datos, en cuánto cerró, en pérdida o ganancias…».
 
-Lo que pasaba: cuando el formulario está incompleto, Apex SÍ te dice qué falta — pero ese
-mensaje salía por debajo de la propia ventana de cierre. Nunca lo viste.
+Sus instrucciones ya decían «deduce y propone, NO le preguntes tres cosas». El problema no
+era la instrucción: era que NO TENÍA CON QUÉ deducir.
 
-   .toast      z-index:  99
-   .modal-ov   z-index: 260
+Porque cuando tu precio toca el TP o el SL, el sistema lo detecta EXACTO — la puerta, el
+precio, la hora, lo mejor que fue a favor y lo peor en contra. Te mandaba el aviso… y
+descartaba todo eso. Un minuto después nadie sabía qué había pasado, y te tocaba contarlo
+a ti. Y si el Puente estaba ciego, Roberto ni siquiera tenía el gráfico para mirar.
 
-Y saltaba con lo más normal del mundo: el desplegable arranca en «— no lo sé / no lo digo —»,
-que vale vacío, y sin eso se niega a guardar.
+Ahora ese hecho se apunta en el momento (antes de mandar el aviso, por si el envío falla),
+y se usa en los dos sitios:
 
-Arreglado, y con lo que le faltaba además: ahora el aviso se ve por encima de todo, Y el
-campo que falta se te marca en rojo con el foco puesto. Un mensaje abajo no te dice cuál de
-las seis cajas es.
+   🔎 Lo vi yo: tu precio tocó el TP en 1.16400 a las 09:42.
+      Te lo dejo puesto — cámbialo si saliste a otro precio.
 
-⚠️ Esto no era solo del cierre: CUALQUIER aviso lanzado desde dentro de una ventana era
-invisible en toda la app.
+La tarjeta se abre con la puerta elegida, el precio puesto y la cuenta del R hecha. Tú solo
+confirmas. NO se guarda sola: la última palabra es tuya, que es tu dinero.
 
+Y a Roberto le llega el mismo dato, con la orden expresa: «ya se sabe por dónde salieron,
+no se lo preguntes a Rey — PROPÓN y pide un sí».
 
-🎯 Y EL AVISO DEL TP / SL YA TE ABRE LA TARJETA DE CIERRE
+Cuando cierras, el apunte se retira: mañana no te rellena otra operación con un precio viejo.
 
-Me dijiste: «al avisarme de que el precio llegó al objetivo o al SL solo me lleva al gráfico,
-no a Apex a poner la tarjeta para cerrar y ya está, sin tener que pedírselo cada vez».
+Junto con lo de antes queda así: tocas el aviso del TP → se abre Apex → la tarjeta ya está
+rellena → confirmas. Sin pedirle nada a nadie.
 
-En el vigía de tu teléfono, si un aviso trae el par (`sym`), al tocarlo se abre TradingView
-y el destino ni se mira. Eso lo pediste tú el 16-09 para las ALARMAS del indicador, y ahí
-sigue bien. Pero tu aviso de «🎯 Tu objetivo» y «🛑 Tu stop» se comía la misma regla.
-
-Ahora esos dos avisos te abren Apex con la tarjeta de cierre de ESA operación, ya rellena y
-lista. Si ya la cerraste, te lo dice en vez de quedarse mudo.
-
-Va con el worker 5.278 — hasta que lo subas, seguirán llevándote al gráfico.
+Va con el worker 5.279.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

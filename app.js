@@ -10050,6 +10050,24 @@ function renderDiario(){
    como entra de verdad: un trozo al R del parcial y el resto al R de la salida.
    ⚠️ Si no se puede calcular (falta el SL, o el SL está pegado a la entrada), NO se inventa
    un número: se le dice y se le deja ponerlo a mano ([[apex-roberto-no-inventa]]). */
+/* 🚪 v7.269 — LO QUE EL SISTEMA YA SABE DE CADA CIERRE.
+   El worker detecta el momento exacto en que el precio toca el TP o el SL y lo apunta. Esto
+   lo trae para no preguntarle a Rey algo que ya está sabido. Caché de 60 s: la tarjeta se
+   abre al instante y no se pide la nube en cada toque ([[apex-nada-te-deja-mirando-una-rueda]]). */
+let _czSabido = { ts: 0, map: {} };
+async function czRefrescarSabido(){
+  if(Date.now() - _czSabido.ts < 60000) return _czSabido.map;
+  try{
+    const r = await fetch(nubeUrl()+"/cierre/pend", {cache:"no-store"});
+    const j = await r.json();
+    const m = {};
+    ((j && j.cierres) || []).forEach(c => { if(c && c.id) m[String(c.id)] = c; });
+    _czSabido = { ts: Date.now(), map: m };
+  }catch(_){ _czSabido.ts = Date.now(); }
+  return _czSabido.map;
+}
+function czSabidoDe(id){ try{ return _czSabido.map[String(id)] || null; }catch(_){ return null; } }
+
 function cerrarEnApex(id){
   const t=TRADES.find(x=>x.id===id);
   if(!t){ toast("No encuentro esa operación"); return; }
@@ -10112,6 +10130,32 @@ function cerrarEnApex(id){
   };
   ["czPrecio","czR","czPct","czPr"].forEach(k=>{ const e=$("#"+k); if(e) e.oninput=()=>czPintarCuenta(t, esCompra, dist); });
   czPintarCuenta(t, esCompra, dist);
+
+  /* 🚪 v7.269 — SI YA SE SABE POR DÓNDE SALIÓ, LA TARJETA SE ABRE RELLENA.
+     Rey: «que me ponga la tarjeta para cerrar y ya está, sin necesidad de tener que
+     pedírselo cada vez». El worker lo detectó en el momento: puerta, precio y hora.
+     ⚠️ Se rellena pero NO se guarda solo: la última palabra sigue siendo suya, y si el
+     precio real fue otro lo cambia ([[apex-no-elegir-por-rey]], [[apex-rey-es-el-principal]]). */
+  (async ()=>{
+    try{
+      await czRefrescarSabido();
+      const sab = czSabidoDe(id);
+      if(!sab || !sSal) return;
+      const buscado = sab.puerta === "TP" ? /\bTP\b/ : sab.puerta === "SL" ? /\bSL\b/ : null;
+      if(!buscado) return;
+      const op = [...sSal.options].find(o => buscado.test(o.value));
+      if(!op) return;
+      sSal.value = op.value;
+      if(iPre && iPre.value.trim()==="" && isFinite(Number(sab.precio))) iPre.value = String(sab.precio);
+      czPintarCuenta(t, esCompra, dist);
+      const cuando = sab.ts ? new Date(sab.ts).toLocaleTimeString("es",{hour:"2-digit",minute:"2-digit"}) : "";
+      const c=$("#czCuenta");
+      if(c) c.insertAdjacentHTML("afterbegin",
+        '<div class="note" style="text-align:left;margin:0 0 6px">🔎 Lo vi yo: tu precio tocó el <b>'+
+        esc(sab.puerta)+'</b> en <b>'+esc(String(sab.precio))+'</b>'+(cuando?(' a las '+esc(cuando)):'')+
+        '. Te lo dejo puesto — cámbialo si saliste a otro precio.</div>');
+    }catch(_){}
+  })();
 }
 
 /* ── la cuenta del R, a la vista ────────────────────────────────────────────────────────
@@ -10211,6 +10255,12 @@ async function czGuardar(id){
   delete t.abierta;
   save(K.trades,TRADES);
 
+  /* 🚪 v7.269 — ya está cerrada: el apunte de la nube sobra, y dejarlo haría que mañana la
+     tarjeta de OTRA operación se abriera con un dato viejo ([[apex-la-prueba-se-guarda-cuando-pasa]]) */
+  try{
+    delete _czSabido.map[String(id)];
+    fetch(nubeUrl()+"/cierre/pend?quitar="+encodeURIComponent(id)).catch(()=>{});
+  }catch(_){}
   try{ veredActualizar(t); }catch(_){}
   cerrarModal();
   toast("Cerrada: "+(R>0?"+":"")+(Math.round(R*100)/100)+"R ✓");
@@ -18879,6 +18929,22 @@ function iaEntradasAbiertas(){
   const otras=ab.filter(t=>t.modo!==CTX.modo).length;
   return "[📒 ENTRADAS ABIERTAS ya registradas en el Diario — LOS DOS LIBROS (💵 real · 🎬 backtest). NO las vuelvas a registrar; si el gráfico muestra una posición que NO está en esta lista, ESA sí ofrécele registrarla:\n"+filas
     + (otras?("\n⚠️ "+otras+" de ellas NO son del libro que Rey tiene abierto ahora ("+(CTX.modo==="backtest"?"🎬 backtest":"💵 real")+"): existen igual, pero no mezcles sus cuentas."):"")
+    + (()=>{
+        /* 🚪 v7.269 — LO QUE YA SE SABE, DELANTE DE SUS OJOS.
+           Sus instrucciones ya decían «deduce y propone, no preguntes». El problema no era la
+           instrucción: era que no tenía CON QUÉ deducir si el Puente no veía el gráfico.
+           Ahora el momento exacto en que el precio tocó el TP o el SL viene apuntado. */
+        try{
+          const sab = ab.map(t=>czSabidoDe(t.id)).filter(Boolean);
+          if(!sab.length) return "";
+          return "\n\n🔎 YA SE SABE POR DÓNDE SALIERON ESTAS (lo detectó el sistema en el momento,"
+            + " no se lo preguntes a Rey — PROPÓN y pide un sí):\n"
+            + sab.map(c=>"  · "+c.sym+" "+(c.dir||"")+": tocó su "+c.puerta+" en "+c.precio
+                + (c.ts?(" a las "+new Date(c.ts).toLocaleTimeString("es",{hour:"2-digit",minute:"2-digit"})):"")
+                + (c.mfe?(" · lo mejor a favor "+r1(c.mfe)+"R"):"")
+                + (c.mae?(" · en contra llegó a "+r1(c.mae)+"R"):"")).join("\n");
+        }catch(_){ return ""; }
+      })()
     + "\n\n🚪 SI REY TE DICE QUE CIERRE UNA — CÓMO SE HACE Y CÓMO NO:"
     + "\n  ❌ NO le preguntes «¿cómo cerró, en pérdida o ganancia, y con cuánto?». Eso es pedirle"
     + "\n     tres cosas y encima dos de ellas las puedes deducir. Él te lo ha dicho ya mil veces:"
