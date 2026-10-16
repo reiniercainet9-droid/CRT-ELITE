@@ -11960,11 +11960,24 @@ function statsCuenta(c){
   const real = (typeof mt5DeEstaFicha === "function") ? mt5DeEstaFicha(c) : null;
   const manual = (c.balance!==undefined && c.balance!==null && c.balance!=="");
   const balance = real ? real.balance : (manual ? (+c.balance||0) : cap+plTrades);
-  const fuente = real ? "mt5" : (manual ? "manual" : "est");
+  /* 🏷️ 16-10 — «LO PUSISTE TÚ» CUANDO EL NÚMERO LO PUSE YO.
+     ═══════════════════════════════════════════════════════════════════════════════════
+     Rey lo vio: la ficha decía «Balance (lo pusiste tú)» sobre un balance que él no había
+     tecleado nunca. Y era verdad lo que veía: `mt5CuadrarFichas()` escribe el balance leído
+     de su MT5 en la ficha (`c.balance`) y deja dicho de dónde salió (`c.balanceDe`,
+     `c.balanceTs`) — pero esto solo miraba si el campo TENÍA algo. En cuanto la lectura viva
+     se caía (MT5 cerrado, su PC apagada, el Puente ciego) el mismo número que yo había
+     puesto le salía con la cara de ser suyo, y a Roberto le llegaba como «lo escribió él».
+     Mentirle sobre de dónde sale un número de su dinero es justo lo que le hizo desconfiar
+     ([[apex-roberto-no-inventa]]). El dato estaba escrito; faltaba LEERLO
+     ([[apex-declarar-no-es-dar]]). */
+  const mio = manual && c.balanceDe === "mt5";
+  const fuente = real ? "mt5" : (mio ? "mt5viejo" : (manual ? "manual" : "est"));
+  const balanceTs = +c.balanceTs || 0;
   const pl = balance-cap;
   const progresoPct = cap>0 ? pl/cap*100 : 0;
   const target = +c.targetPct||0;
-  return { list, m, cap, riesgo, plTrades, manual, balance, pl, progresoPct, target, fuente, real };
+  return { list, m, cap, riesgo, plTrades, manual, balance, pl, progresoPct, target, fuente, real, mio, balanceTs };
 }
 
 /* ============================================================
@@ -12781,6 +12794,18 @@ function balanceDeDonde(st){
                  : ("hace " + Math.round(h / 60) + " h");
     return "🔗 Real de MT5 · " + cuando;
   }
+  /* 🏷️ el número que leí yo de su MT5, cuando la lectura viva ya no está. Sigue siendo
+     MÍO, no suyo — y se dice su edad, porque un balance viejo puede estar muy lejos. */
+  if(st && st.fuente === "mt5viejo"){
+    const t = +st.balanceTs || 0;
+    const min = t ? Math.round((Date.now() - t) / 60000) : 0;
+    const cuando = !t ? "no sé cuándo"
+                 : min < 2 ? "ahora mismo"
+                 : min < 60 ? ("hace " + min + " min")
+                 : min < 1440 ? ("hace " + Math.round(min / 60) + " h")
+                 : ("hace " + Math.round(min / 1440) + " días");
+    return "🔗 Lo leí de tu MT5 · " + cuando;
+  }
   if(st && st.fuente === "manual") return "Balance (lo pusiste tú)";
   return "Balance (estimado de tus R)";
 }
@@ -12988,7 +13013,14 @@ function guardarCuentaForm(id){
   };
   if(id){
     const c=CUENTAS.find(x=>x.id===id);
-    if(c) Object.assign(c,datos);
+    if(c){
+      /* 🏷️ si CAMBIA el balance a mano, deja de ser el que leí yo de su MT5: se borra la
+         marca o el rótulo le diría «lo leí de tu MT5» sobre un número que tecleó él. */
+      const nuevo = String(datos.balance == null ? "" : datos.balance).trim();
+      const viejo = String(c.balance == null ? "" : c.balance).trim();
+      if(c.balanceDe === "mt5" && nuevo !== viejo){ delete c.balanceDe; delete c.balanceTs; }
+      Object.assign(c,datos);
+    }
     toast("Cuenta actualizada ✓");
   }else{
     CUENTAS.push(Object.assign({ id:"cta"+Date.now()+Math.floor(Math.random()*1000), creada:Date.now() }, datos));
@@ -13004,7 +13036,7 @@ function iaCuentas(){
   let s="\n[CUENTAS de Rey (pueden ser de FONDEO/examen, CAPITAL PROPIO/real, o DEMO de práctica) — tienes acceso total; trátalas por SEPARADO, cada una con las reglas de SU firma y su clasificación. Ayúdalo a gestionarlas, protegerlas y escalar.\n  🏦 DESDE EL 11-10 EL BALANCE DE LA CUENTA QUE TIENE ABIERTA EN MT5 ENTRA SOLO, cada 5 min, por el Puente. Donde diga «REAL, leído de su MT5» ese número es el de verdad y no hay nada que actualizar: NO le pidas nunca que lo apunte ni que lo revise al cerrar una operación — se quejó expresamente de ese trabajo a mano. Donde diga «estimado de sus R» sí es un cálculo, y ahí se habla con cuidado]:\n";
   CUENTAS.forEach(c=>{
     const st=statsCuenta(c);
-    s+=`· ${c.alias||c.firma||"Cuenta"} (${c.firma||"?"}, ${c.fase}): capital $${r0(st.cap)}, balance ${st.fuente==="mt5"?"":"~"}${r0(st.balance)}${st.fuente==="mt5"?" (REAL, leído de su MT5 hace "+(+st.real.haceMin||0)+" min — se actualiza solo, NO le pidas que lo actualice a mano)":st.fuente==="manual"?" (lo escribió él)":" (estimado de sus R)"} (P&L ${st.pl>=0?"+":""}$${r0(st.pl)}, ${r1(st.progresoPct)}% de ${c.targetPct||"?"}% objetivo). DD máx ${c.ddMaxPct||"?"}%${c.ddTipo?" "+c.ddTipo:""}, daily ${c.ddDailyPct||"?"}%, riesgo ${c.riesgoPct||"?"}%/trade.`;
+    s+=`· ${c.alias||c.firma||"Cuenta"} (${c.firma||"?"}, ${c.fase}): capital $${r0(st.cap)}, balance ${st.fuente==="mt5"?"":"~"}${r0(st.balance)}${st.fuente==="mt5"?" (REAL, leído de su MT5 hace "+(+st.real.haceMin||0)+" min — se actualiza solo, NO le pidas que lo actualice a mano)":st.fuente==="mt5viejo"?" (ese número lo leí YO de su MT5, NO lo escribió él — es la última lectura que pude hacer, de hace "+(st.balanceTs?Math.round((Date.now()-st.balanceTs)/60000):0)+" min, así que puede estar vieja si su MT5 lleva rato cerrado. NO le pidas que lo actualice a mano)":st.fuente==="manual"?" (lo escribió él)":" (estimado de sus R)"} (P&L ${st.pl>=0?"+":""}$${r0(st.pl)}, ${r1(st.progresoPct)}% de ${c.targetPct||"?"}% objetivo). DD máx ${c.ddMaxPct||"?"}%${c.ddTipo?" "+c.ddTipo:""}, daily ${c.ddDailyPct||"?"}%, riesgo ${c.riesgoPct||"?"}%/trade.`;
     const ddMax=+c.ddMaxPct||0;
     if(st.progresoPct<0 && ddMax>0){ const margen=Math.max(0,ddMax-Math.abs(st.progresoPct)); s+=` [VA EN NEGATIVO ${r1(st.progresoPct)}%, le quedan ${r1(margen)}% hasta romper el DD${margen<=ddMax*0.3?" — PELIGRO, protégela":""}]`; }
     else if(st.target>0 && st.progresoPct>=st.target){ s+=` [OBJETIVO CUMPLIDO, cuida de no romper reglas]`; }

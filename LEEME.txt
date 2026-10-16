@@ -1,37 +1,46 @@
-APEX v7.269 — TRADING DESK
+APEX v7.270 — TRADING DESK
 =========================
 
-🚪 LA TARJETA DE CIERRE SE ABRE YA RELLENA
+🏷️ ESE BALANCE LO PUSE YO, NO TÚ
 
-Me dijiste: «Roberto me dio muchos problemas cuando le decía para cerrar: comenzaba a
-pedirme datos, en cuánto cerró, en pérdida o ganancias…».
+En la ficha de 🏦 Cuentas, debajo del balance, ponía:
 
-Sus instrucciones ya decían «deduce y propone, NO le preguntes tres cosas». El problema no
-era la instrucción: era que NO TENÍA CON QUÉ deducir.
+      Balance (lo pusiste tú)
 
-Porque cuando tu precio toca el TP o el SL, el sistema lo detecta EXACTO — la puerta, el
-precio, la hora, lo mejor que fue a favor y lo peor en contra. Te mandaba el aviso… y
-descartaba todo eso. Un minuto después nadie sabía qué había pasado, y te tocaba contarlo
-a ti. Y si el Puente estaba ciego, Roberto ni siquiera tenía el gráfico para mirar.
+Y tú no habías tecleado ese número en tu vida. Lo puse yo, leyéndolo de tu MT5.
 
-Ahora ese hecho se apunta en el momento (antes de mandar el aviso, por si el envío falla),
-y se usa en los dos sitios:
+Lo peor no es el rótulo: es que el sistema YA SABÍA de dónde salía. Cuando leo tu MT5 y
+cuadro la ficha, dejo escrito que el número es mío y a qué hora lo leí. Lo escribía…
+y nadie lo leía nunca. Así que en cuanto tu MT5 se cerraba o tu PC se apagaba, mi número
+se quedaba ahí con la cara de ser tuyo.
 
-   🔎 Lo vi yo: tu precio tocó el TP en 1.16400 a las 09:42.
-      Te lo dejo puesto — cámbialo si saliste a otro precio.
+Y no era solo cosmético, por dos razones de dinero:
 
-La tarjeta se abre con la puerta elegida, el precio puesto y la cuenta del R hecha. Tú solo
-confirmas. NO se guarda sola: la última palabra es tuya, que es tu dinero.
+  · Si te cuadra mal, buscas el error en tu memoria («¿yo puse eso?») en vez de en mi
+    lectura, que es donde está.
+  · A Roberto le llegaba como «lo escribió él». O sea que te habría pedido corregirlo a
+    mano, cuando lo que pasa en realidad es que tu MT5 lleva rato cerrado — y aunque lo
+    corrigieras, mi siguiente lectura lo pisaría.
 
-Y a Roberto le llega el mismo dato, con la orden expresa: «ya se sabe por dónde salieron,
-no se lo preguntes a Rey — PROPÓN y pide un sí».
+Ahora dice la verdad y la fecha:
 
-Cuando cierras, el apunte se retira: mañana no te rellena otra operación con un precio viejo.
+      🔗 Lo leí de tu MT5 · hace 2 h
 
-Junto con lo de antes queda así: tocas el aviso del TP → se abre Apex → la tarjeta ya está
-rellena → confirmas. Sin pedirle nada a nadie.
+Y queda el orden claro de dónde sale cada número:
 
-Va con el worker 5.279.
+      lectura viva de tu MT5   →  🔗 Real de MT5 · ahora mismo
+      mi última lectura        →  🔗 Lo leí de tu MT5 · hace X
+      lo que escribiste tú     →  Balance (lo pusiste tú)
+      ni una cosa ni otra      →  Balance (estimado de tus R)
+
+Si cambias el balance a mano, la marca se borra: vuelve a ser tuyo. Y si guardas la ficha
+por otra cosa (el objetivo, el riesgo), mi número sigue siendo mío — no te lo atribuyo
+por haber tocado la ficha.
+
+Roberto recibe lo mismo, con el aviso de que puede estar vieja y la orden de NO pedirte
+que la actualices a mano.
+
+Banco nuevo: bancos/test-ese-balance-lo-puse-yo.cjs (19 comprobaciones).
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
