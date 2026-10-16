@@ -6120,6 +6120,23 @@ function irDestino(v){
     if(TABS.some(t=>t.id===id)) irA(id);
     return;
   }
+  /* 🚪 v7.268 (16-10) — «cerrar:<id>»: el aviso de que su TP o su SL se tocó abre LA
+     TARJETA DE CIERRE de esa operación, no el gráfico.
+     Rey: «al avisarme de que el precio llegó al objetivo o al SL solo me lleva al gráfico,
+     no a Apex a poner la tarjeta para cerrar y ya está, sin tener que pedírselo cada vez».
+     Si no se encuentra esa operación (o ya la cerró), se le deja en el Diario y se le dice
+     por qué — nunca una pantalla muda ([[apex-roberto-no-inventa]]). */
+  if(s.indexOf("cerrar:")===0){
+    const idT=s.slice(7);
+    try{ irA("diario"); }catch(_){}
+    setTimeout(()=>{
+      const t=(Array.isArray(TRADES)?TRADES:[]).find(x=>x.id===idT);
+      if(!t){ toast("Esa operación ya no está en tu Diario"); return; }
+      if(!t.abierta){ toast("Esa operación ya estaba cerrada"); return; }
+      try{ cerrarEnApex(idT); }catch(_){}
+    }, 420);
+    return;
+  }
   if(s.indexOf("rob:")!==0) return;
   const acc=s.slice(4);
   if(typeof abrirIA==="function") abrirIA();
@@ -10151,10 +10168,29 @@ async function czGuardar(id){
   const ent=Number(t.entrada), sl=Number(t.sl);
   const dist = (isFinite(ent)&&isFinite(sl)) ? Math.abs(ent-sl) : NaN;
 
+  /* 🚪 v7.268 (16-10) — SI FALTA ALGO, SE DICE Y SE SEÑALA DÓNDE.
+     Rey: «al darle al botón para cerrar no funciona». El botón funcionaba: se negaba con un
+     toast que salía DETRÁS de la ventana (z-index 99 contra 260) y él no lo veía nunca.
+     Arreglado el aviso, se añade lo otro que faltaba: un mensaje abajo no dice QUÉ campo
+     está vacío. Ahora el campo se marca en rojo y se le lleva el foco. */
+  const czMarcar = (sel) => {
+    try{
+      const e = $(sel); if(!e) return;
+      e.style.borderColor = "var(--red)";
+      e.focus();
+      setTimeout(()=>{ try{ e.style.borderColor = ""; }catch(_){} }, 2600);
+    }catch(_){}
+  };
   const motivo=($("#czSalida")?.value||"");
-  if(!motivo){ toast("Dime por dónde salió: sin eso no se puede saber por dónde sale tu dinero"); return; }
+  if(!motivo){
+    toast("Elige por dónde salió: TP, SL, break-even, a mano o por tiempo");
+    czMarcar("#czSalida"); return;
+  }
   const c=czCalcular(t, esCompra, dist);
-  if(c.problema){ toast(c.problema); return; }
+  if(c.problema){
+    toast(c.problema);
+    czMarcar($("#czPrecio")?.value.trim()==="" ? "#czPrecio" : "#czR"); return;
+  }
 
   const pre=parseFloat(($("#czPrecio")?.value||"").trim());
   const pctTxt=($("#czPct")?.value||"").trim();

@@ -1,48 +1,41 @@
-APEX v7.267 — TRADING DESK
+APEX v7.268 — TRADING DESK
 =========================
 
-🧮 APEX Y MT5 YA CUENTAN LO MISMO
+🚪 EL BOTÓN DE CERRAR NUNCA ESTUVO ROTO. EL AVISO SALÍA DETRÁS.
 
-Me dijiste: «el balance de la cuenta es 6000 y aunque recuperé una parte de la pérdida con
-las ganadoras de la semana pasada, continúa en negativo hasta los 6000 para estar en
-breakeven, y de ahí hasta llegar al objetivo… está claro pero mal contado».
+Me dijiste: «el botón de cerrar no funciona, dependiendo totalmente de Roberto para cerrar;
+se abre, me pone la tarjeta para poner causa del cierre, pero al darle al botón no pasa nada».
 
-Tenías razón en lo de mal contado. La cuenta estaba bien hecha, pero te la decía en otro
-idioma: tú miras MT5 y ves 5.665,61, y Apex te decía «Objetivo $480», que es un incremento,
-sin decirte dónde está el breakeven.
+Lo que pasaba: cuando el formulario está incompleto, Apex SÍ te dice qué falta — pero ese
+mensaje salía por debajo de la propia ventana de cierre. Nunca lo viste.
 
-Ahora la ficha habla como tu terminal:
+   .toast      z-index:  99
+   .modal-ov   z-index: 260
 
-   Tu balance ahora          todavía en negativo              $5,666
-   1º · Volver a tu capital  breakeven                        +$334 → $6,000
-   2º · Y de ahí, el objetivo  8% sobre tu capital            $6,480
-   Te falta en total         recuperar lo perdido y el objetivo  $814
+Y saltaba con lo más normal del mundo: el desplegable arranca en «— no lo sé / no lo digo —»,
+que vale vacío, y sin eso se niega a guardar.
 
-Cuando pases de 6.000 deja de hablarte de recuperar: solo el objetivo.
+Arreglado, y con lo que le faltaba además: ahora el aviso se ve por encima de todo, Y el
+campo que falta se te marca en rojo con el foco puesto. Un mensaje abajo no te dice cuál de
+las seis cajas es.
+
+⚠️ Esto no era solo del cierre: CUALQUIER aviso lanzado desde dentro de una ventana era
+invisible en toda la app.
 
 
-📈 Y TU TRABAJO SE MIDE DESDE QUE EMPEZASTE, NO DESDE HACE MESES
+🎯 Y EL AVISO DEL TP / SL YA TE ABRE LA TARJETA DE CIERRE
 
-Me dijiste que esa cuenta arrastra errores de hace meses, de antes de que construyéramos
-tu sistema, y que mezclarlos taparía tu mejora.
+Me dijiste: «al avisarme de que el precio llegó al objetivo o al SL solo me lleva al gráfico,
+no a Apex a poner la tarjeta para cerrar y ya está, sin tener que pedírselo cada vez».
 
-Mi aviso anterior estaba mal planteado: te decía «te faltan operaciones por registrar»,
-como si fuera un descuido tuyo, y te empujaba a meter justo lo que no quieres.
+En el vigía de tu teléfono, si un aviso trae el par (`sym`), al tocarlo se abre TradingView
+y el destino ni se mira. Eso lo pediste tú el 16-09 para las ALARMAS del indicador, y ahí
+sigue bien. Pero tu aviso de «🎯 Tu objetivo» y «🛑 Tu stop» se comía la misma regla.
 
-Ahora son dos cosas separadas, cada una con su nombre:
+Ahora esos dos avisos te abren Apex con la tarjeta de cierre de ESA operación, ya rellena y
+lista. Si ya la cerraste, te lo dice en vez de quedarse mudo.
 
-   📈 Tu trabajo desde que lo mides aquí
-   Desde tu 1ª operación (06-10)   4 días · solo lo registrado      +$90
-   Venía de antes                  lo que la cuenta arrastraba      −$424
-                                   antes de que empezaras a medir —
-                                   no es tu trabajo de ahora
-
-La cuenta manda para pasar o quemar: balance, breakeven y objetivo salen de MT5, igual que
-en tu terminal. Tu mejora se mide solo con lo que has registrado, desde tu primera
-operación. Ninguno contamina al otro.
-
-Y Roberto lo entiende igual: tiene prohibido echarte en cara lo de antes o pedirte que
-registres operaciones viejas.
+Va con el worker 5.278 — hasta que lo subas, seguirán llevándote al gráfico.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
