@@ -1,4 +1,4 @@
-APEX v7.271 — TRADING DESK
+APEX v7.272 — TRADING DESK
 =========================
 
 ✂️ LOS PARCIALES Y LA COMISIÓN YA LOS PONE MT5, NO TU MEMORIA
@@ -56,6 +56,26 @@ mejora que llevas construyendo.
 
 Bancos nuevos: test-los-parciales-salen-de-mt5.cjs (23) · test-apex-cuadra-con-mt5.cjs (20).
 Necesita el worker 5.280, que te lo dejo para subir cuando la regresión esté entera verde.
+
+
+═══════════════════════════════════════════════════════════════════════════════════════
+📅 Y TU SISTEMA EMPIEZA DONDE TÚ DIJISTE
+
+Tu regla: «debe comenzar desde que comencé a operar con mi sistema, la primera operación
+registrada en mi diario». Queda fijada en el 29-09-2026.
+
+  · Lo anterior a esa fecha NO EXISTE: ni entra, ni se te pregunta, ni se te enseña.
+    (en esa cuenta hay 3 de JUNIO, −79,74 USD, de tres meses y medio antes de retomar)
+  · Lo posterior que falte en tu Diario, ENTRA SOLO. Como la del 06-10 (−6,82 USD), que
+    no estaba: tus números decían que habías ganado algo que no ganaste.
+
+La fecha se calcula UNA VEZ y se guarda. Si se recalculara siempre, el día que editaras
+esa primera operación la frontera se movería sola y te entrarían las de junio.
+Y viaja contigo a la nube: si cambias de teléfono, no se pierde.
+
+Lo único que queda en blanco de las que entran solas es TU criterio (setup, ventana) y el
+R, porque MT5 no sabe con qué riesgo entraste. Sin R no cuenta en las métricas hasta que
+lo pongas — prefiero eso a inventarte un número.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

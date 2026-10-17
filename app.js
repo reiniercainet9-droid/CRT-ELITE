@@ -5,6 +5,8 @@
 /* ---------- STORAGE ---------- */
 const K = {
   trades : "crtelite_trades_v2",
+  /* 📅 v7.272 — desde cuándo cuenta su sistema. Ver mt5DesdeCuando() */
+  desde  : "crtelite_desde_v1",
   chk    : "crtelite_chk_v2",
   conf   : "crtelite_conf_v2",
   reglas : "crtelite_reglas_v2",
@@ -55,7 +57,8 @@ const save = (k,v)=>{ try{ localStorage.setItem(k,JSON.stringify(v)); nubeMarcar
    En otro móvil, con el mismo código, restaura todo intacto (nada se pierde).
    No usa claves del sistema (el repo es público): el código ES la llave.
    ============================================================ */
-const NUBE_KEYS = ["crtelite_negocio_v1","crtelite_trades_v2","crtelite_cuentas_v3","crtelite_reminders_v3","crtelite_chk_v2","crtelite_conf_v2","crtelite_reglas_v2","crtelite_balance_v2","crtelite_ctx_v3","crtelite_estrategias_v3","crtelite_estrdefs_v1","crtelite_pares_v3","crtelite_calpares_v3","crtelite_notif_v3","crtelite_vigila_v3","crtelite_fabpos_v3","crtelite_iavoz_v3","crtelite_shots_v1","crtelite_shots_borradas","crtelite_ventanas_v1","crtelite_plansem_v1","crtelite_iaconvs_v3","crtelite_iaact_v3","crtelite_ejectrades_v1","crtelite_llamamodo",
+const NUBE_KEYS = ["crtelite_negocio_v1","crtelite_trades_v2",/* 📅 v7.272 — su fecha de inicio: si viviera solo en el teléfono, al cambiar de aparato
+     se recalcularía y le entrarían las operaciones de junio ([[apex-nada-en-un-solo-aparato]]) */"crtelite_desde_v1","crtelite_cuentas_v3","crtelite_reminders_v3","crtelite_chk_v2","crtelite_conf_v2","crtelite_reglas_v2","crtelite_balance_v2","crtelite_ctx_v3","crtelite_estrategias_v3","crtelite_estrdefs_v1","crtelite_pares_v3","crtelite_calpares_v3","crtelite_notif_v3","crtelite_vigila_v3","crtelite_fabpos_v3","crtelite_iavoz_v3","crtelite_shots_v1","crtelite_shots_borradas","crtelite_ventanas_v1","crtelite_plansem_v1","crtelite_iaconvs_v3","crtelite_iaact_v3","crtelite_ejectrades_v1","crtelite_llamamodo",
   /* 🧭 v6.96 — LO QUE FALTABA, y lo descubrió Rey: "en la APK no me deja pasar a la fase 3
      cuando en la web ya estoy en ella". Su PLAN no viajaba, así que su progreso vivía en
      un solo aparato… y si perdía el teléfono, en ninguno. Con él van los VEREDICTOS de
@@ -100,7 +103,7 @@ const NUBE_KEYS = ["crtelite_negocio_v1","crtelite_trades_v2","crtelite_cuentas_
    y eso no le dice nada a nadie. Están LOS 26: si mañana falta cualquiera, se entiende. */
 const NUBE_NOMBRES = {
   "crtelite_negocio_v1":"los datos de tu negocio (la calculadora 🧮)",
-  "crtelite_trades_v2":"tu diario de operaciones",
+  "crtelite_trades_v2":"tu diario de operaciones","crtelite_desde_v1":"desde cuándo cuenta tu sistema",
   "crtelite_cuentas_v3":"tus cuentas de fondeo",
   "crtelite_reminders_v3":"tus avisos programados",
   "crtelite_chk_v2":"tus listas de comprobación",
@@ -11955,6 +11958,40 @@ function mt5MismoPar(a, b){
       === String(b || "").toUpperCase().replace(/[^A-Z]/g, "");
 }
 
+/* 📅 v7.272 (17-10) — SU SISTEMA EMPIEZA EN SU PRIMERA OPERACIÓN, Y ESA FECHA NO SE MUEVE
+   ═══════════════════════════════════════════════════════════════════════════════════════
+   Rey, 17-10: «no quiero tantas complicaciones, el objetivo del sistema es ayudarme y
+   hacerme los registros más fácil y automática, no estresarme... pero debe comenzar desde
+   que comencé a operar con mi sistema, la primera operación registrada en mi diario».
+
+   Tenía razón en las dos cosas, y la segunda arregla la primera. Yo le estaba pasando a ÉL
+   la decisión de qué hacer con 4 operaciones sueltas, que es justo lo contrario de lo que
+   el sistema debe hacer por él. Con su regla no hay nada que decidir, ni hoy ni nunca:
+     · lo anterior a esa fecha NO EXISTE — ni entra, ni se le pregunta, ni se le enseña.
+     · lo posterior que no esté en su Diario, entra solo.
+
+   SU CASO, medido: en esa cuenta hay 3 operaciones de JUNIO (−79,74 USD) y luego tres meses
+   y medio sin tocarla. Su Diario arranca el 29-09. Meter junio no le taparía la mejora: se
+   comería el 44% de lo que lleva ganado (+181,04 → +101,30) describiendo una mezcla de dos
+   épocas, que es el mismo error que ya corregimos el 22-09.
+
+   ⚠️ LA FECHA SE CALCULA UNA VEZ Y SE GUARDA. Si se recalculara siempre «la más antigua del
+   Diario», el día que borrara o editara esa operación la frontera SE MOVERÍA SOLA y le
+   entrarían las de junio sin que nadie hiciera nada. Se fija, y si un día quiere moverla,
+   la mueve él ([[apex-reglas-en-manos-de-rey]], [[apex-nada-que-rey-tenga-que-recordar]]). */
+function mt5DesdeCuando(){
+  try{
+    let d = load(K.desde, null);
+    if(d && /^\d{4}-\d{2}-\d{2}$/.test(d)) return d;
+    /* la primera vez: la más antigua que tenga registrada */
+    let min = null;
+    (TRADES || []).forEach(t => { const f = String(t && t.fecha || ""); if(/^\d{4}-\d{2}-\d{2}$/.test(f) && (!min || f < min)) min = f; });
+    if(!min) return null;              /* sin Diario todavía: no hay frontera que fijar */
+    try{ save(K.desde, min); }catch(_){}
+    return min;
+  }catch(_){ return null; }
+}
+
 async function opsMT5Refrescar(){
   try{
     const r = await fetch(nubeUrl() + "/pc/operaciones");
@@ -11991,24 +12028,52 @@ function mt5ParejaEnElDiario(op, lista){
 
 /* 🔄 LO QUE SE ACTUALIZA SOLO. Devuelve el parte de lo que hizo y de lo que NO pudo hacer. */
 function mt5CuadrarDiario(){
-  const parte = { tocadas: 0, campos: 0, sinPareja: [], rNoCuadra: [], parcialInventado: 0 };
+  const parte = { tocadas: 0, campos: 0, metidas: 0, antesDeEmpezar: 0, sinPareja: [], rNoCuadra: [], parcialInventado: 0 };
   try{
     const o = _opsMT5;
     if(!o || !Array.isArray(o.operaciones) || !o.operaciones.length) return null;
+    const desde = mt5DesdeCuando();   /* 📅 su sistema empieza aquí */
     let cambio = false;
 
     for(const op of o.operaciones){
+      /* 📅 lo anterior a su primera operación no existe: ni entra, ni se le pregunta */
+      if(desde && String(op.fecha || "") < desde){ parte.antesDeEmpezar++; continue; }
+
       const t = mt5ParejaEnElDiario(op, TRADES);
       if(!t){
-        /* ⚠️ las que NO están en su Diario NO se meten solas. Rey no quiere los meses
-           viejos de esa cuenta tapando la mejora que lleva construyendo: se le enseñan y
-           decide él ([[apex-no-elegir-por-rey]]). */
-        parte.sinPareja.push({ fecha: op.fecha, par: op.par, dir: op.dir, neto: op.neto });
+        /* ✅ v7.272 — y la que SÍ es de su sistema y no está, ENTRA SOLA. Es lo que pidió:
+           «hacerme los registros más fácil y automática». Su caso: la del 06-10 (−6,82 USD)
+           no estaba, así que sus números decían que había ganado algo que no ganó.
+           ⚠️ Entra con los HECHOS y nada más. El R NO se inventa: MT5 no sabe con qué
+           riesgo entró, y un R a ojo le ensuciaría la esperanza y el progreso de sus
+           cuentas ([[apex-roberto-no-inventa]]). Sin R no cuenta en las métricas hasta que
+           él lo ponga, que es mejor que contar con un número falso. */
+        TRADES.push({
+          id: op.tsEntrada || Date.now(),
+          fecha: op.fecha, hora: String(op.hora || "").slice(0,5),
+          modo: "real", par: op.par, dir: op.dir,
+          r: null, res: null,
+          parcialHecho: op.huboParcial === true,
+          parcialPct: op.huboParcial ? op.pctPrimerTrozo : null,
+          nParciales: op.nParciales || 0,
+          comision: op.comision, netoMT5: op.neto,
+          precioEntrada: op.precioEntrada, precioSalida: op.precioSalida,
+          volumen: op.volumen, posicionMT5: op.posicion,
+          datosDe: "mt5", datosTs: o.ts || Date.now(),
+          nota: "Traída de tu MT5: faltaba en el Diario. Falta tu R y tu setup.",
+        });
+        parte.metidas++;
+        cambio = true;
         continue;
       }
       let n = 0;
+      /* ⚠️ `undefined` = MT5 no trae ese dato, así que no se toca lo que hubiera.
+         `null` = MT5 dice que ESO NO EXISTE, y entonces hay que BORRARLO.
+         Confundir los dos dejaba el «parcialPct: 50» fantasma en la del 14-10 con
+         `parcialHecho` ya en false: medio dato limpiado es peor que ninguno, porque la
+         pantalla sigue enseñando un 50% que no ocurrió. */
       const pon = (campo, valor) => {
-        if(valor === undefined || valor === null) return;
+        if(valor === undefined) return;
         if(t[campo] === valor) return;
         t[campo] = valor; n++;
       };
