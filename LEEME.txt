@@ -1,46 +1,61 @@
-APEX v7.270 — TRADING DESK
+APEX v7.271 — TRADING DESK
 =========================
 
-🏷️ ESE BALANCE LO PUSE YO, NO TÚ
+✂️ LOS PARCIALES Y LA COMISIÓN YA LOS PONE MT5, NO TU MEMORIA
 
-En la ficha de 🏦 Cuentas, debajo del balance, ponía:
+Lo que tú pediste: «una cosa es mis reglas y otra distinta es la gestión en el mercado real
+y el contexto que presenta en real, así que la gestión de parciales podría variar: debe ser
+autosuficiente extraída de MT5 si la plataforma lo registra como cierre parcial».
 
-      Balance (lo pusiste tú)
+Tenías razón, y al medirlo salió peor de lo que parecía. Comparando tu MT5 con tu Diario:
 
-Y tú no habías tecleado ese número en tu vida. Lo puse yo, leyéndolo de tu MT5.
+  · de 9 operaciones, 5 tuvieron parcial — y Apex solo sabía de 3
+  · donde tu Diario decía 50%, MT5 decía 88/12 y 69,7/30,3
+  · faltaba una operación entera: 06-10 EURUSD, −6,82 USD
+  · y la del 14-10 tenía guardado «parcial 50% a 1R» que EN MT5 NO EXISTE
 
-Lo peor no es el rótulo: es que el sistema YA SABÍA de dónde salía. Cuando leo tu MT5 y
-cuadro la ficha, dejo escrito que el número es mío y a qué hora lo leí. Lo escribía…
-y nadie lo leía nunca. Así que en cuanto tu MT5 se cerraba o tu PC se apagaba, mi número
-se quedaba ahí con la cara de ser tuyo.
+Ese último es el que te hizo preguntar. El «🛡️ break-even −0,50R» que viste salía de que
+Apex le restaba al total (0) un parcial que nunca ocurrió. Tu registro estaba bien: no
+tenías nada que editar, y perdiste el tiempo buscándolo.
 
-Y no era solo cosmético, por dos razones de dinero:
+Y lo que dijiste de la comisión era literal. MT5 dice de esa operación:
 
-  · Si te cuadra mal, buscas el error en tu memoria («¿yo puse eso?») en vez de en mi
-    lectura, que es donde está.
-  · A Roberto le llegaba como «lo escribió él». O sea que te habría pedido corregirlo a
-    mano, cuando lo que pasa en realidad es que tu MT5 lleva rato cerrado — y aunque lo
-    corrigieras, mi siguiente lectura lo pisaría.
+      14-10 GBPUSD Venta · UNA sola salida · profit +0,00 · comisión −1,55
 
-Ahora dice la verdad y la fecha:
+Cerró clavada en tu precio de entrada. Lo único que perdiste fue la comisión.
 
-      🔗 Lo leí de tu MT5 · hace 2 h
 
-Y queda el orden claro de dónde sale cada número:
+LO QUE PASA AHORA, SIN QUE TOQUES NADA
 
-      lectura viva de tu MT5   →  🔗 Real de MT5 · ahora mismo
-      mi última lectura        →  🔗 Lo leí de tu MT5 · hace X
-      lo que escribiste tú     →  Balance (lo pusiste tú)
-      ni una cosa ni otra      →  Balance (estimado de tus R)
+Tu MT5 registra cada cierre parcial como un movimiento propio. Apex ya los lee y cuadra tu
+Diario solo:
 
-Si cambias el balance a mano, la marca se borra: vuelve a ser tuyo. Y si guardas la ficha
-por otra cosa (el objetivo, el riesgo), mi número sigue siendo mío — no te lo atribuyo
-por haber tocado la ficha.
+      05-10   sin parcial   →   3 trozos: 31,2% + 37,5% + 31,2%
+      08-10   sin parcial   →   88,2% + 11,8%   (las dos)
+      13-10   parcial 50%   →   69,7% + 30,3%
+      14-10   parcial 50%   →   sin parcial     (el que no existía)
+      16-10   parcial 50%   →   88,2% + 11,8%
 
-Roberto recibe lo mismo, con el aviso de que puede estar vieja y la orden de NO pedirte
-que la actualices a mano.
+Más la comisión de cada una, que hasta hoy no aparecía en ningún número tuyo.
 
-Banco nuevo: bancos/test-ese-balance-lo-puse-yo.cjs (19 comprobaciones).
+
+DÓNDE ESTÁ LA RAYA
+
+  MT5 pone los HECHOS      → cuántos parciales, de qué %, a qué precio, cuánta comisión.
+  TÚ pones el CRITERIO     → tu setup, tu ventana, tu bias, tus notas. Eso no se toca.
+
+Y el R NO se cambia solo. Pasar dinero a R necesita el riesgo exacto de ESA operación (su
+lote y su SL), no el porcentaje que tengas configurado hoy. Calcularlo a ojo sería repetir
+el problema que estamos arreglando, con mejor letra. Lo que sí se hace es marcarte las que
+no cuadran con lo que dice tu cuenta, para que las mires tú.
+
+Las operaciones que MT5 tiene y tu Diario no (hay 3 de junio y la del 06-10) NO entran
+solas: se te enseñan y decides tú. No quiero que los meses viejos de esa cuenta tapen la
+mejora que llevas construyendo.
+
+
+Bancos nuevos: test-los-parciales-salen-de-mt5.cjs (23) · test-apex-cuadra-con-mt5.cjs (20).
+Necesita el worker 5.280, que te lo dejo para subir cuando la regresión esté entera verde.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

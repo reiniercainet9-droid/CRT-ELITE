@@ -11918,6 +11918,134 @@ function mt5CuadrarFichas(){
   if(cambio){ try{ guardarCuentas(); }catch(_){} }
   return cambio;
 }
+/* ═══════════════════════════════════════════════════════════════════════════════════════
+   ✂️ v7.271 (17-10) — LOS PARCIALES Y LA COMISIÓN LOS PONE MT5, NO LA MEMORIA
+   ═══════════════════════════════════════════════════════════════════════════════════════
+   Rey, 17-10: «una cosa es mis reglas y otra distinta es la gestión en el mercado real y el
+   contexto que presenta en real, así que la gestión de parciales podría variar: debe ser
+   autosuficiente extraída de MT5 si la plataforma lo registra como cierre parcial».
+
+   LO QUE SALIÓ AL COMPARAR su Diario con su MT5 ese mismo día:
+     · de 9 operaciones, 5 tuvieron parcial y Apex solo sabía de 3
+     · donde su Diario decía 50%, MT5 decía 88/12 y 70/30
+     · faltaba una operación entera (06-10 EURUSD, −6,82 USD)
+     · la del 14-10 tenía guardado «parcial 50% a 1R» que EN MT5 NO EXISTE: se cerró de una
+       vez, a su precio de entrada, profit +0,00 y −1,55 de comisión
+   De ese parcial inventado salía el «🛡️ break-even −0,50R» que él vio en sus estadísticas
+   y no se explicaba — porque Apex le restaba al total un parcial que nunca ocurrió. Y él ya
+   lo había intuido: «si ese día no fue pérdida habría perdido si acaso la comisión».
+
+   QUIÉN MANDA EN QUÉ (la línea que no se cruza):
+     · MT5 manda en los HECHOS: cuántos parciales, de qué %, a qué precio, cuánta comisión,
+       cuánto movió la cuenta. Eso no se recuerda a mano y la plataforma lo sabe exacto.
+     · REY manda en el CRITERIO: su setup, su ventana, su bias, sus notas. Eso NO se toca
+       jamás ([[apex-rey-es-el-principal]], [[apex-la-caja-del-robot-no-es-de-rey]]).
+
+   ⚠️ Y EL R NO SE TOCA SOLO. Pasar dinero a R necesita el riesgo exacto de ESA operación
+   (su lote y su SL), no el % configurado hoy. Inventarlo sería repetir el problema que
+   estamos arreglando, con mejor letra ([[apex-roberto-no-inventa]]). Cuando el R registrado
+   no cuadra con lo que dice MT5, se MARCA para que él lo mire — no se cambia.
+   ═══════════════════════════════════════════════════════════════════════════════════════ */
+var _opsMT5 = null;       /* lo último que dijo MT5 */
+var _cuadreMT5 = null;    /* lo que no cuadra, para enseñárselo */
+
+/* GBP/USD y GBPUSD son el mismo par: él los escribe de las dos formas */
+function mt5MismoPar(a, b){
+  return String(a || "").toUpperCase().replace(/[^A-Z]/g, "")
+      === String(b || "").toUpperCase().replace(/[^A-Z]/g, "");
+}
+
+async function opsMT5Refrescar(){
+  try{
+    const r = await fetch(nubeUrl() + "/pc/operaciones");
+    if(!r || !r.ok) return null;
+    const o = await r.json();
+    if(!o || o.ok !== true || !Array.isArray(o.operaciones)) return null;
+    _opsMT5 = o;
+    return o;
+  }catch(_){ return null; }
+}
+
+/* empareja una operación de MT5 con una del Diario: mismo par, misma dirección y mismo día.
+   Si hay varias del mismo par ese día, gana la más cercana en hora — y si ni así se puede
+   decidir, NO se empareja: tocar la que no es sería peor que no tocar nada. */
+function mt5ParejaEnElDiario(op, lista){
+  const cand = (lista || []).filter(t => t && !t.abierta
+    && mt5MismoPar(t.par, op.par)
+    && String(t.fecha || "") === String(op.fecha || "")
+    && (!t.dir || !op.dir || String(t.dir).toLowerCase() === String(op.dir).toLowerCase()));
+  if(cand.length === 1) return cand[0];
+  if(!cand.length) return null;
+  const hhmm = (s) => { const m = String(s || "").match(/(\d{1,2}):(\d{2})/); return m ? (+m[1] * 60 + +m[2]) : null; };
+  const hOp = hhmm(op.hora);
+  if(hOp === null) return null;
+  let mejor = null, mejorD = 1e9;
+  for(const t of cand){
+    const h = hhmm(t.hora); if(h === null) continue;
+    const d = Math.abs(h - hOp);
+    if(d < mejorD){ mejorD = d; mejor = t; }
+  }
+  /* más de media hora de diferencia ya no es "la misma": mejor dejarla sin emparejar */
+  return (mejor && mejorD <= 30) ? mejor : null;
+}
+
+/* 🔄 LO QUE SE ACTUALIZA SOLO. Devuelve el parte de lo que hizo y de lo que NO pudo hacer. */
+function mt5CuadrarDiario(){
+  const parte = { tocadas: 0, campos: 0, sinPareja: [], rNoCuadra: [], parcialInventado: 0 };
+  try{
+    const o = _opsMT5;
+    if(!o || !Array.isArray(o.operaciones) || !o.operaciones.length) return null;
+    let cambio = false;
+
+    for(const op of o.operaciones){
+      const t = mt5ParejaEnElDiario(op, TRADES);
+      if(!t){
+        /* ⚠️ las que NO están en su Diario NO se meten solas. Rey no quiere los meses
+           viejos de esa cuenta tapando la mejora que lleva construyendo: se le enseñan y
+           decide él ([[apex-no-elegir-por-rey]]). */
+        parte.sinPareja.push({ fecha: op.fecha, par: op.par, dir: op.dir, neto: op.neto });
+        continue;
+      }
+      let n = 0;
+      const pon = (campo, valor) => {
+        if(valor === undefined || valor === null) return;
+        if(t[campo] === valor) return;
+        t[campo] = valor; n++;
+      };
+      /* los HECHOS, tal y como los registró la plataforma */
+      pon("parcialHecho", op.huboParcial === true);
+      pon("parcialPct",  op.huboParcial ? op.pctPrimerTrozo : null);
+      pon("nParciales",  op.nParciales || 0);
+      pon("comision",    op.comision);
+      pon("netoMT5",     op.neto);
+      pon("precioEntrada", op.precioEntrada);
+      pon("precioSalida",  op.precioSalida);
+      pon("volumen",     op.volumen);
+      pon("posicionMT5", op.posicion);
+      /* 🧾 de dónde salió esto, para que nunca parezca que lo escribió él
+         ([[apex-roberto-no-inventa]], y el mismo fallo del balance del 16-10) */
+      pon("datosDe", "mt5");
+      pon("datosTs", o.ts || Date.now());
+
+      /* ⚠️ el parcial que estaba guardado y en MT5 no existe: se quita, pero se cuenta
+         para poder decírselo. Es lo que le daba el «break-even −0.50R». */
+      if(!op.huboParcial && t.parcialR != null){ t.parcialR = null; parte.parcialInventado++; n++; }
+
+      /* el R NO se toca: solo se mira si cuadra con lo que dice la cuenta */
+      const rGuardado = parseFloat(t.r);
+      if(isFinite(rGuardado) && isFinite(op.neto)){
+        const mismoSigno = (rGuardado === 0 && Math.abs(op.neto) < 2) || (rGuardado > 0 && op.neto > 0) || (rGuardado < 0 && op.neto < 0);
+        if(!mismoSigno) parte.rNoCuadra.push({ fecha: op.fecha, par: op.par, r: rGuardado, neto: op.neto });
+      }
+      if(n){ parte.tocadas++; parte.campos += n; cambio = true; }
+    }
+
+    if(cambio){ try{ save(K.trades, TRADES); }catch(_){} }
+    _cuadreMT5 = parte;
+    return parte;
+  }catch(_){ return null; }
+}
+
 async function mt5Refrescar(){
   try{
     const sal = await saludLeer();
@@ -11928,6 +12056,9 @@ async function mt5Refrescar(){
     if(mt5CuadrarFichas()){
       try{ if(typeof $ === "function" && $("#cuentasBody")) refrescarCuentas(); }catch(_){}
     }
+    /* ✂️ v7.271 — y de paso se cuadran los parciales y la comisión del Diario.
+       Va DETRÁS del balance a propósito: si esto fallara, el balance ya está puesto. */
+    try{ await opsMT5Refrescar(); mt5CuadrarDiario(); }catch(_){}
     return mt5Lectura();
   }catch(_){ return null; }
 }
