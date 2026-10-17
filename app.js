@@ -1481,14 +1481,16 @@ function iaPendientes(){
    chat» — así que Apex seguía llenándose ([[apex-pulsar-no-basta]], [[apex-declarar-no-es-dar]]).
    ⚠️ La limpieza se aplica AHORA A LOS DOS LADOS: lo que se quita de la pregunta se quita
    también del título. Comparar dos cosas medidas con varas distintas no compara nada. */
-const IA_REF_VACIAS=/\b(el|la|lo|de|del|este|esta|más|mas|semana|mes|pasada|pasado|viejo|vieja|antiguo|antigua|anterior|reciente|nuevo|nueva|ultimo|ultima|último|última|hoy)\b/g;
-function iaRefNorm(s){
-  return String(s||"").toLowerCase()
+function iaConvPorRef(ref){
+  /* 🧩 la normalización vive DENTRO a propósito: los bancos de este proyecto sacan esta
+     función con eval para probarla aislada, y una que necesite a otra para arrancar los
+     revienta («ReferenceError: iaRefNorm is not defined»). Autocontenida se puede probar
+     sola, que es como se audita aquí ([[apex-auditar-es-ejecutar]]). */
+  const VACIAS=/\b(el|la|lo|de|del|este|esta|más|mas|semana|mes|pasada|pasado|viejo|vieja|antiguo|antigua|anterior|reciente|nuevo|nueva|ultimo|ultima|último|última|hoy)\b/g;
+  const norm=(s)=>String(s||"").toLowerCase()
     .normalize("NFD").replace(/[\u0300-\u036f]/g,"")   /* análisis = analisis */
     .replace(/(\d{1,2})[\/\-.](\d{1,2})/g," ")        /* la fecha se mira aparte */
-    .replace(IA_REF_VACIAS," ").replace(/[()«»]/g," ").replace(/\s+/g," ").trim();
-}
-function iaConvPorRef(ref){
+    .replace(VACIAS," ").replace(/[()«»]/g," ").replace(/\s+/g," ").trim();
   const cs=(IA.convs||[]).filter(c=>c.msgs&&c.msgs.length);
   if(!ref) return { c:iaConvAct() };
   let q=String(ref).trim().toLowerCase();
@@ -1497,8 +1499,8 @@ function iaConvPorRef(ref){
   if(md){ dd=parseInt(md[1],10); mes=parseInt(md[2],10); q=q.replace(md[0]," ").trim(); }
   const pideViejo=/(viej|antig|pasad|anterior)/.test(q);
   const pideNuevo=/(recien|nuev|ultim|últim)/.test(q);
-  q=iaRefNorm(q);
-  let hits=q?cs.filter(c=>iaRefNorm(iaTit(c)).includes(q)):cs.slice();
+  q=norm(q);
+  let hits=q?cs.filter(c=>norm(iaTit(c)).includes(q)):cs.slice();
   /* 📅 la fecha vale si está en el TÍTULO o si es la de creación: el título manda, porque
      es lo que Roberto ve en su mapa y lo que Rey lee en su pantalla */
   if(dd!=null) hits=hits.filter(c=>{
@@ -1509,7 +1511,7 @@ function iaConvPorRef(ref){
   if(!hits.length) return { err:"No encuentro ningún chat que cuadre con «"+ref+"». Mira tu [🗂️ MAPA DE CHATS] y usa el título tal como sale ahí; puedes añadir la fecha (dd-mm) o decir 'el más viejo' / 'el más reciente'." };
   if(hits.length>1 && (pideViejo||pideNuevo)) return { c:hits.slice().sort((a,b)=>pideViejo?(a.ts-b.ts):(b.ts-a.ts))[0] };
   if(hits.length>1){
-    const ex=hits.filter(c=>iaRefNorm(iaTit(c))===q);
+    const ex=hits.filter(c=>norm(iaTit(c))===q);
     if(ex.length===1) return { c:ex[0] };
     return { err:"Hay "+hits.length+" chats que coinciden con «"+ref+"»: "+hits.slice(0,5).map(c=>"«"+iaTit(c)+"» ("+new Date(c.ts).toLocaleDateString("es",{day:"2-digit",month:"2-digit"})+")").join(" · ")+". RESUÉLVELO TÚ con tu mapa, sin preguntarle a Rey: repite la mano añadiendo la fecha (ej. '"+(hits[0]?new Date(hits[hits.length-1].ts).toLocaleDateString("es",{day:"2-digit",month:"2-digit"}):"23-08")+"') o di 'el más viejo' / 'el más reciente'." };
   }
@@ -1845,7 +1847,21 @@ function reyTradesSync(forzar){
       .map(t=>({ id:t.id, fecha:t.fecha, hora:t.hora, modo:t.modo, par:t.par, dir:t.dir,
                  abierta:t.abierta===true?true:undefined, res:t.res, r:t.r,
                  setup:t.setup, ventana:t.ventana, momento:t.momento, bias:t.bias,
-                 zona:t.zona, nconf:t.nconf, mae:t.mae, mfe:t.mfe, nota:t.nota }));
+                 zona:t.zona, nconf:t.nconf, mae:t.mae, mfe:t.mfe, nota:t.nota,
+                 /* ✂️ v7.274 (17-10) — LO QUE PONE MT5 TAMBIÉN SUBE.
+                    Medido en vivo: arreglé el filtro del worker (5.281) y los parciales
+                    SEGUÍAN sin llegar a la nube. Había DOS coladores en fila y yo había
+                    destapado uno: este también recorta los campos al subir, y los nuevos
+                    no estaban en su lista.
+                    Sin esto, Roberto —que lee de la nube— no ve por dónde sale el dinero
+                    de Rey, que era el objetivo de todo el trabajo de hoy; y al cambiar de
+                    teléfono se perderían ([[apex-nada-en-un-solo-aparato]],
+                    [[apex-declarar-no-es-dar]]). */
+                 parcialHecho:t.parcialHecho, parcialPct:t.parcialPct, parcialR:t.parcialR,
+                 nParciales:t.nParciales, comision:t.comision, netoMT5:t.netoMT5,
+                 precioEntrada:t.precioEntrada, precioSalida:t.precioSalida,
+                 volumen:t.volumen, posicionMT5:t.posicionMT5,
+                 datosDe:t.datosDe, datosTs:t.datosTs }));
     if(!trades.length) return;
     fetch(nubeUrl()+"/rey/trades",{method:"POST",headers:{"content-type":"application/json"},
       body:JSON.stringify({trades})})

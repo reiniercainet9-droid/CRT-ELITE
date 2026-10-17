@@ -1,4 +1,4 @@
-APEX v7.273 — TRADING DESK
+APEX v7.274 — TRADING DESK
 =========================
 
 🗂️ LOS CHATS QUE TE PROPONÍA BORRAR, AHORA SÍ LOS BORRA
@@ -48,6 +48,18 @@ para cuando Chrome se traga la orden de verdad: quedarte sin voz sería peor que
 
 Bancos nuevos: test-los-chats-que-propone-los-alcanza.cjs (13) ·
                test-la-voz-no-repite-el-trozo.cjs (10)
+
+
+☁️ Y LOS PARCIALES YA LLEGAN A ROBERTO
+
+Esto lo cacé verificando, no lo sabía antes: los parciales y la comisión estaban PERFECTOS
+en tu teléfono y VACÍOS en la nube. Arreglé el filtro del worker… y seguían sin llegar.
+
+Había DOS coladores en fila y yo había destapado uno: la app también recortaba los campos
+al subir, y los nuevos no estaban en su lista.
+
+Importa porque Roberto lee de la NUBE. Sin esto no veía por dónde sale tu dinero —que era
+el objetivo de todo el trabajo de hoy— y al cambiar de teléfono se habrían perdido.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
