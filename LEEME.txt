@@ -1,81 +1,53 @@
-APEX v7.272 — TRADING DESK
+APEX v7.273 — TRADING DESK
 =========================
 
-✂️ LOS PARCIALES Y LA COMISIÓN YA LOS PONE MT5, NO TU MEMORIA
+🗂️ LOS CHATS QUE TE PROPONÍA BORRAR, AHORA SÍ LOS BORRA
 
-Lo que tú pediste: «una cosa es mis reglas y otra distinta es la gestión en el mercado real
-y el contexto que presenta en real, así que la gestión de parciales podría variar: debe ser
-autosuficiente extraída de MT5 si la plataforma lo registra como cierre parcial».
+Tú: «cuando me sugiere borrar los chats viejos no lo hace ni lo ejecuta, así poniendo las
+tarjetas y yo confirmando no lo hace».
 
-Tenías razón, y al medirlo salió peor de lo que parecía. Comparando tu MT5 con tu Diario:
+Era verdad, y eran DOS fallos viviendo en la misma línea de código. Lo probé ejecutándolo:
+de 6 formas naturales de nombrar un chat, FALLABAN 4.
 
-  · de 9 operaciones, 5 tuvieron parcial — y Apex solo sabía de 3
-  · donde tu Diario decía 50%, MT5 decía 88/12 y 69,7/30,3
-  · faltaba una operación entera: 06-10 EURUSD, −6,82 USD
-  · y la del 14-10 tenía guardado «parcial 50% a 1R» que EN MT5 NO EXISTE
+  1) La fecha se comparaba con CUÁNDO SE ESCRIBIÓ el chat, no con la de su título.
+     Tu «Análisis semanal 11-10» escrito el día 12 era literalmente inalcanzable. Y no es
+     un caso raro: el análisis de la semana se titula con el lunes y se escribe cuando
+     toca — justo los que hay que limpiar el domingo.
 
-Ese último es el que te hizo preguntar. El «🛡️ break-even −0,50R» que viste salía de que
-Apex le restaba al total (0) un parcial que nunca ocurrió. Tu registro estaba bien: no
-tenías nada que editar, y perdiste el tiempo buscándolo.
+  2) Las palabras vacías (el, la, de, hoy…) se quitaban de lo que pedía Roberto pero NO
+     del título. «Dudas sobre el lotaje» se buscaba como «dudas sobre lotaje» y no casaba
+     nunca. Cualquier chat con un «el» o un «de» en el nombre era inalcanzable.
 
-Y lo que dijiste de la comisión era literal. MT5 dice de esa operación:
+Por eso veías la tarjeta, confirmabas, y Apex seguía llenándose: la mano respondía «no
+encuentro ningún chat» y ese mensaje se perdía.
 
-      14-10 GBPUSD Venta · UNA sola salida · profit +0,00 · comisión −1,55
-
-Cerró clavada en tu precio de entrada. Lo único que perdiste fue la comisión.
-
-
-LO QUE PASA AHORA, SIN QUE TOQUES NADA
-
-Tu MT5 registra cada cierre parcial como un movimiento propio. Apex ya los lee y cuadra tu
-Diario solo:
-
-      05-10   sin parcial   →   3 trozos: 31,2% + 37,5% + 31,2%
-      08-10   sin parcial   →   88,2% + 11,8%   (las dos)
-      13-10   parcial 50%   →   69,7% + 30,3%
-      14-10   parcial 50%   →   sin parcial     (el que no existía)
-      16-10   parcial 50%   →   88,2% + 11,8%
-
-Más la comisión de cada una, que hasta hoy no aparecía en ningún número tuyo.
+Ahora busca por la fecha DEL TÍTULO y mide tu petición y el nombre con la misma vara.
+Lo que ya funcionaba sigue igual: «el más viejo», pedirte que desambigües cuando hay dos
+candidatos, y no borrar nunca el chat donde estáis hablando.
 
 
-DÓNDE ESTÁ LA RAYA
+🔁 Y YA NO TE REPITE EL PRINCIPIO AL HABLAR
 
-  MT5 pone los HECHOS      → cuántos parciales, de qué %, a qué precio, cuánta comisión.
-  TÚ pones el CRITERIO     → tu setup, tu ventana, tu bias, tus notas. Eso no se toca.
+Tú: «repite una parte y de ahí comienza nuevamente hasta el final».
 
-Y el R NO se cambia solo. Pasar dinero a R necesita el riesgo exacto de ESA operación (su
-lote y su SL), no el porcentaje que tengas configurado hoy. Calcularlo a ojo sería repetir
-el problema que estamos arreglando, con mejor letra. Lo que sí se hace es marcarte las que
-no cuadran con lo que dice tu cuenta, para que las mires tú.
+Roberto lee sus respuestas POR TROZOS, porque Chrome no arranca con textos largos. Y hay
+un vigilante que comprueba a los 0,9 segundos si la voz arrancó, por si Chrome se tragó la
+orden en silencio (que lo hace, sin avisar).
 
-Las operaciones que MT5 tiene y tu Diario no (hay 3 de junio y la del 06-10) NO entran
-solas: se te enseñan y decides tú. No quiero que los meses viejos de esa cuenta tapen la
-mejora que llevas construyendo.
+El problema: entre un trozo y el siguiente hay un HUECO donde no suena nada. Con una
+primera frase corta —«Hola Rey.» dura unos 0,7 segundos— ese hueco cae justo en los 900
+milisegundos. El vigilante daba por muerta una voz que iba perfectamente, CORTABA el trozo
+que empezaba y volvía al principio:
+
+      ANTES:  Hola Rey. [corta] Hola Rey. El mercado abre en dos horas. Y tu plan…
+      AHORA:  Hola Rey. El mercado abre en dos horas. Y tu plan…
+
+Ahora se distingue «no arrancó nunca» de «ahora mismo no suena». El reintento sigue ahí
+para cuando Chrome se traga la orden de verdad: quedarte sin voz sería peor que repetir.
 
 
-Bancos nuevos: test-los-parciales-salen-de-mt5.cjs (23) · test-apex-cuadra-con-mt5.cjs (20).
-Necesita el worker 5.280, que te lo dejo para subir cuando la regresión esté entera verde.
-
-
-═══════════════════════════════════════════════════════════════════════════════════════
-📅 Y TU SISTEMA EMPIEZA DONDE TÚ DIJISTE
-
-Tu regla: «debe comenzar desde que comencé a operar con mi sistema, la primera operación
-registrada en mi diario». Queda fijada en el 29-09-2026.
-
-  · Lo anterior a esa fecha NO EXISTE: ni entra, ni se te pregunta, ni se te enseña.
-    (en esa cuenta hay 3 de JUNIO, −79,74 USD, de tres meses y medio antes de retomar)
-  · Lo posterior que falte en tu Diario, ENTRA SOLO. Como la del 06-10 (−6,82 USD), que
-    no estaba: tus números decían que habías ganado algo que no ganaste.
-
-La fecha se calcula UNA VEZ y se guarda. Si se recalculara siempre, el día que editaras
-esa primera operación la frontera se movería sola y te entrarían las de junio.
-Y viaja contigo a la nube: si cambias de teléfono, no se pierde.
-
-Lo único que queda en blanco de las que entran solas es TU criterio (setup, ventana) y el
-R, porque MT5 no sabe con qué riesgo entraste. Sin R no cuenta en las métricas hasta que
-lo pongas — prefiero eso a inventarte un número.
+Bancos nuevos: test-los-chats-que-propone-los-alcanza.cjs (13) ·
+               test-la-voz-no-repite-el-trozo.cjs (10)
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

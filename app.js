@@ -1459,6 +1459,35 @@ function iaPendientes(){
    ahora el resolvedor entiende FECHAS ('23/8', '23-08') y las palabras 'viejo/antiguo/pasada'
    (el más antiguo de los que coinciden) o 'reciente/nuevo/último' (el más nuevo) — Roberto
    desambigua SOLO con lo que ya ve en su mapa, sin preguntarle a Rey. */
+/* 🗂️ v7.273 (17-10) — ROBERTO PROPONÍA BORRAR CHATS QUE LUEGO NO PODÍA ALCANZAR
+   ═══════════════════════════════════════════════════════════════════════════════════════
+   Rey, 17-10: «cuando me sugiere borrar los chats viejos no lo hace ni lo ejecuta, así
+   poniendo las tarjetas y yo confirmando no lo hace».
+   Ejecutado con su escenario real, de 6 formas naturales de nombrar un chat fallaban 4.
+   Eran DOS fallos distintos viviendo en la misma línea:
+
+   1) LA FECHA SE COMPARABA CONTRA CUÁNDO SE CREÓ EL CHAT, NO CONTRA SU TÍTULO.
+      Su «Análisis semanal 11-10» creado el día 12 era INALCANZABLE: se le pedía por el
+      nombre que sale en el mapa y el filtro buscaba un chat creado el día 11.
+      Y es lo normal, no un caso raro: el análisis de la semana se titula con el lunes y se
+      escribe cuando toca.
+
+   2) LAS PALABRAS VACÍAS SE QUITABAN DE LA PETICIÓN PERO NO DEL TÍTULO.
+      «Dudas sobre el lotaje» se buscaba como «dudas sobre lotaje» y el includes() contra el
+      título —que SÍ lleva el «el»— no casaba nunca. Cualquier chat con un «el», «la», «de»
+      o «hoy» en el nombre era inalcanzable, sin fecha de por medio ni nada.
+
+   Lo que Rey veía: la tarjeta salía, él confirmaba, y la mano respondía «no encuentro ningún
+   chat» — así que Apex seguía llenándose ([[apex-pulsar-no-basta]], [[apex-declarar-no-es-dar]]).
+   ⚠️ La limpieza se aplica AHORA A LOS DOS LADOS: lo que se quita de la pregunta se quita
+   también del título. Comparar dos cosas medidas con varas distintas no compara nada. */
+const IA_REF_VACIAS=/\b(el|la|lo|de|del|este|esta|más|mas|semana|mes|pasada|pasado|viejo|vieja|antiguo|antigua|anterior|reciente|nuevo|nueva|ultimo|ultima|último|última|hoy)\b/g;
+function iaRefNorm(s){
+  return String(s||"").toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g,"")   /* análisis = analisis */
+    .replace(/(\d{1,2})[\/\-.](\d{1,2})/g," ")        /* la fecha se mira aparte */
+    .replace(IA_REF_VACIAS," ").replace(/[()«»]/g," ").replace(/\s+/g," ").trim();
+}
 function iaConvPorRef(ref){
   const cs=(IA.convs||[]).filter(c=>c.msgs&&c.msgs.length);
   if(!ref) return { c:iaConvAct() };
@@ -1468,13 +1497,19 @@ function iaConvPorRef(ref){
   if(md){ dd=parseInt(md[1],10); mes=parseInt(md[2],10); q=q.replace(md[0]," ").trim(); }
   const pideViejo=/(viej|antig|pasad|anterior)/.test(q);
   const pideNuevo=/(recien|nuev|ultim|últim)/.test(q);
-  q=q.replace(/\b(el|la|lo|de|del|este|esta|más|mas|semana|mes|pasada|pasado|viejo|vieja|antiguo|antigua|anterior|reciente|nuevo|nueva|ultimo|ultima|último|última|hoy)\b/g," ").replace(/[()«»]/g," ").replace(/\s+/g," ").trim();
-  let hits=q?cs.filter(c=>iaTit(c).toLowerCase().includes(q)):cs.slice();
-  if(dd!=null) hits=hits.filter(c=>{ const d=new Date(c.ts); return d.getDate()===dd && (mes==null||d.getMonth()+1===mes); });
+  q=iaRefNorm(q);
+  let hits=q?cs.filter(c=>iaRefNorm(iaTit(c)).includes(q)):cs.slice();
+  /* 📅 la fecha vale si está en el TÍTULO o si es la de creación: el título manda, porque
+     es lo que Roberto ve en su mapa y lo que Rey lee en su pantalla */
+  if(dd!=null) hits=hits.filter(c=>{
+    const t=String(iaTit(c)).match(/(\d{1,2})[\/\-.](\d{1,2})/);
+    if(t && parseInt(t[1],10)===dd && (mes==null||parseInt(t[2],10)===mes)) return true;
+    const d=new Date(c.ts); return d.getDate()===dd && (mes==null||d.getMonth()+1===mes);
+  });
   if(!hits.length) return { err:"No encuentro ningún chat que cuadre con «"+ref+"». Mira tu [🗂️ MAPA DE CHATS] y usa el título tal como sale ahí; puedes añadir la fecha (dd-mm) o decir 'el más viejo' / 'el más reciente'." };
   if(hits.length>1 && (pideViejo||pideNuevo)) return { c:hits.slice().sort((a,b)=>pideViejo?(a.ts-b.ts):(b.ts-a.ts))[0] };
   if(hits.length>1){
-    const ex=hits.filter(c=>iaTit(c).toLowerCase()===q);
+    const ex=hits.filter(c=>iaRefNorm(iaTit(c))===q);
     if(ex.length===1) return { c:ex[0] };
     return { err:"Hay "+hits.length+" chats que coinciden con «"+ref+"»: "+hits.slice(0,5).map(c=>"«"+iaTit(c)+"» ("+new Date(c.ts).toLocaleDateString("es",{day:"2-digit",month:"2-digit"})+")").join(" · ")+". RESUÉLVELO TÚ con tu mapa, sin preguntarle a Rey: repite la mano añadiendo la fecha (ej. '"+(hits[0]?new Date(hits[hits.length-1].ts).toLocaleDateString("es",{day:"2-digit",month:"2-digit"}):"23-08")+"') o di 'el más viejo' / 'el más reciente'." };
   }
@@ -16551,7 +16586,17 @@ function iaHablar(texto, idx, yaLimpio, prio, deLaCola){
   u.pitch=(typeof IA.voz.pitch==="number")?IA.voz.pitch:0.6;  /* grave = más masculino */
   /* ✏️ v6.46 — la boca se mueve al ritmo de SU voz (mudo:true = la voz la pone Apex,
      roberto.js solo anima la boca; así no se oye dos veces) */
-  u.onstart=()=>{ IA.hablandoIdx=(idx==null?-1:idx); pintarIAChat();
+  /* 🔁 v7.273 (17-10) — «ARRANCÓ ALGUNA VEZ», QUE NO ES LO MISMO QUE «SUENA AHORA».
+     Rey: «repite una parte y de ahí comienza nuevamente hasta el final».
+     El vigilante de abajo comprueba a los 0,9 s si la voz arrancó, y si cree que no,
+     REPITE desde el primer trozo. Pero entre un trozo y el siguiente hay un hueco en el
+     que `TTS.speaking` es false y `hablandoIdx` ya se ha puesto a null (lo hace `onend`,
+     aquí abajo). Con una primera frase corta —«Hola Rey.» dura 0,7 s— a los 900 ms ese
+     hueco está justo abierto: el vigilante da por muerta una voz que iba perfectamente,
+     CORTA el trozo que estaba empezando y vuelve al trozo 0. De ahí la repetición.
+     Esta marca dice si llegó a sonar ALGO, y no se borra al acabar cada trozo. */
+  let _vozArranco = false;
+  u.onstart=()=>{ _vozArranco = true; IA.hablandoIdx=(idx==null?-1:idx); pintarIAChat();
     try{ if(ROB_LISTO) Roberto.hablar(limpio,{mudo:true}); }catch(_){} };
   u.onend  =()=>{ IA.hablandoIdx=null; try{ if(ROB_LISTO) Roberto.callar(); }catch(_){} pintarIAChat(); vozWebSiguiente(); };
   u.onerror=()=>{ IA.hablandoIdx=null; try{ if(ROB_LISTO) Roberto.callar(); }catch(_){} pintarIAChat(); vozWebSiguiente(); };
@@ -16599,7 +16644,10 @@ function iaHablar(texto, idx, yaLimpio, prio, deLaCola){
      mudo se le dice a Rey con palabras en vez de dejarlo tocando un botón muerto. */
   setTimeout(()=>{
     let sonando=false; try{ sonando = !!(TTS.speaking || TTS.pending); }catch(_){}
-    if(sonando || IA.hablandoIdx!=null) return;
+    /* 🔁 si ya sonó algo, esto NO es un arranque fallido: es el hueco entre dos trozos.
+       Reintentar aquí era lo que le repetía la frase ([[apex-nada-le-deja-mudo]] sigue
+       cubierto: el reintento sigue vivo para cuando de verdad no arranca). */
+    if(_vozArranco || sonando || IA.hablandoIdx!=null) return;
     /* ⚠️ NO se vacía la lista: hacerlo dejaba a Roberto sin voz y hablaba una mujer */
     try{ iaCargarVoces(); }catch(_){}
     /* el reintento también va POR TROZOS: repetir el texto entero volvería a atascarlo */
@@ -16612,7 +16660,7 @@ function iaHablar(texto, idx, yaLimpio, prio, deLaCola){
     try{ TTS.cancel(); TTS.resume(); TTS.speak(u2); }catch(_){}
     setTimeout(()=>{
       let s2=false; try{ s2 = !!(TTS.speaking || TTS.pending); }catch(_){}
-      if(s2 || IA.hablandoIdx!=null) return;
+      if(_vozArranco || s2 || IA.hablandoIdx!=null) return;
       toast("🔇 Tu navegador no arrancó la voz. Prueba a cerrar y abrir Apex, o mira que el teléfono no esté en silencio.");
     }, 1200);
   }, 900);
