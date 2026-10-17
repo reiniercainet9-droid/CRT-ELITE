@@ -12157,6 +12157,18 @@ function mt5CuadrarDiario(){
     }
 
     if(cambio){ try{ save(K.trades, TRADES); }catch(_){} }
+    /* ☁️ v7.275 (17-10) — Y SI NO CAMBIÓ NADA, TAMBIÉN HAY QUE MANDARLO.
+       ═══════════════════════════════════════════════════════════════════════════════
+       Medido en vivo tres veces seguidas: los parciales estaban PERFECTOS en su teléfono
+       y VACÍOS en la nube. Destapé el filtro del worker, luego el de la app… y seguían
+       sin llegar. La causa era otra y más tonta: la subida solo se dispara desde
+       `save(K.trades)`, y aquí arriba solo se guarda SI ALGO CAMBIÓ. Una vez cuadrado el
+       Diario, ya no cambia nada — así que no se guardaba, y por tanto no se subía NUNCA.
+       Un dato correcto que no viaja es un dato que Roberto no tiene: él lee de la nube,
+       y sin esto no ve por dónde sale el dinero de Rey ([[apex-declarar-no-es-dar]]).
+       `reyTradesSync()` lleva su propio freno de 10 minutos, así que llamarlo aquí no
+       añade tráfico: solo garantiza que lo bueno acabe arriba. */
+    try{ if(typeof reyTradesSync==="function") reyTradesSync(); }catch(_){}
     _cuadreMT5 = parte;
     return parte;
   }catch(_){ return null; }

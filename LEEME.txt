@@ -1,4 +1,4 @@
-APEX v7.274 — TRADING DESK
+APEX v7.275 — TRADING DESK
 =========================
 
 🗂️ LOS CHATS QUE TE PROPONÍA BORRAR, AHORA SÍ LOS BORRA
@@ -60,6 +60,16 @@ al subir, y los nuevos no estaban en su lista.
 
 Importa porque Roberto lee de la NUBE. Sin esto no veía por dónde sale tu dinero —que era
 el objetivo de todo el trabajo de hoy— y al cambiar de teléfono se habrían perdido.
+
+
+…y faltaba un TERCER eslabón, que era el que lo tenía parado de verdad:
+
+La subida a la nube solo se dispara cuando se GUARDAN las operaciones, y el cuadre con MT5
+solo guardaba SI ALGO CAMBIABA. Como tu Diario ya estaba cuadrado, no cambiaba nada → no
+se guardaba → no se subía NUNCA.
+
+Tus datos estaban perfectos en el teléfono y vacíos en la nube, tres veces seguidas. Un
+dato correcto que no viaja es un dato que Roberto no tiene.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
