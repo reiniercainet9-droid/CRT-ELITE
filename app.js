@@ -36,6 +36,8 @@ const K = {
      puede detectar lo que no existe: el análisis del día se hablaba en el chat y se iba
      con él. El semanal sí se guardaba desde la v6.33; el del día, nunca. */
   plandia:"crtelite_plandia_v1",
+  /* 📋 v7.279 — de qué semanas fijó plan y de cuáles no (punto 5 de Rey) */
+  plansemlog:"crtelite_plansemlog_v1",
   guardia:"crtelite_guardia_v1",   /* 🛡️ v7.160 — el guardián de la disciplina */
   ejecvisto:"crtelite_ejecvisto_v1", /* 🔕 v7.161 — lo último que se supo del Ejecutor */
   ejeccfg:"crtelite_ejeccfg_v1",   /* ⚙️ v7.174 — sus reglas VIVAS del Ejecutor, para que Roberto no opine a ciegas */
@@ -90,7 +92,7 @@ function planesSync(cual){
 const NUBE_KEYS = ["crtelite_negocio_v1","crtelite_trades_v2",/* 📅 v7.272 — su fecha de inicio: si viviera solo en el teléfono, al cambiar de aparato
      se recalcularía y le entrarían las operaciones de junio ([[apex-nada-en-un-solo-aparato]]) */"crtelite_desde_v1","crtelite_cuentas_v3","crtelite_reminders_v3","crtelite_chk_v2","crtelite_conf_v2","crtelite_reglas_v2","crtelite_balance_v2","crtelite_ctx_v3","crtelite_estrategias_v3","crtelite_estrdefs_v1","crtelite_pares_v3","crtelite_calpares_v3","crtelite_notif_v3","crtelite_vigila_v3","crtelite_fabpos_v3","crtelite_iavoz_v3","crtelite_shots_v1","crtelite_shots_borradas","crtelite_ventanas_v1","crtelite_plansem_v1",
   /* 📆 v7.277 — si el plan del día viviera solo en el teléfono, al cambiar de aparato
-     Roberto perdería el análisis de hoy ([[apex-nada-en-un-solo-aparato]]) */"crtelite_plandia_v1","crtelite_iaconvs_v3","crtelite_iaact_v3","crtelite_ejectrades_v1","crtelite_llamamodo",
+     Roberto perdería el análisis de hoy ([[apex-nada-en-un-solo-aparato]]) */"crtelite_plandia_v1","crtelite_plansemlog_v1","crtelite_iaconvs_v3","crtelite_iaact_v3","crtelite_ejectrades_v1","crtelite_llamamodo",
   /* 🧭 v6.96 — LO QUE FALTABA, y lo descubrió Rey: "en la APK no me deja pasar a la fase 3
      cuando en la web ya estoy en ella". Su PLAN no viajaba, así que su progreso vivía en
      un solo aparato… y si perdía el teléfono, en ninguno. Con él van los VEREDICTOS de
@@ -156,6 +158,7 @@ const NUBE_NOMBRES = {
   "crtelite_ventanas_v1":"tus ventanas y killzones",
   "crtelite_plansem_v1":"tu plan de la semana",
   "crtelite_plandia_v1":"tu plan del día",
+  "crtelite_plansemlog_v1":"las semanas en que fijaste tu plan",
   /* 🛡️ v7.160 — en el respaldo se ve con su nombre, no en crudo: cuando Rey abra la
      lista tiene que entender QUÉ es cada cosa suya ([[apex-nube-solo-lo-que-importa]]). */
   "crtelite_guardia_v1":"lo que Roberto te exige (y lo que le dijiste que no)",
@@ -720,6 +723,7 @@ try {
 } catch (_) {}
 let PLANSEM = load(K.plansem, null);  // plan de la semana (bias/zonas/invalidación) persistente
 let PLANDIA = load(K.plandia, null);  // 📆 v7.277 — plan DEL DÍA, por par, con su invalidación
+let PLANSEMLOG = load(K.plansemlog, []); // 📋 v7.279 — qué semanas fijó plan (punto 5)
 
 /* 🗓️ v7.136 — EL PLAN GUARDA LOS DOS PARES, NO UNO.
    Rey opera EUR/USD y GBP/USD. El 13-09 Roberto le escribió «Guardo el plan de los DOS pares»
@@ -740,6 +744,72 @@ function planSemLista(){
   }catch(_){ return []; }
 }
 
+/* ═════════════════════════════════════════════════════════════════════════════════════════
+   🗓️ v7.279 (18-10) — PUNTO 5 DE REY: QUE CUMPLA CON FIJAR EL PLAN SEMANAL
+   ═════════════════════════════════════════════════════════════════════════════════════════
+   Rey: «revisar el cumplimiento de fijar el plan semanal, que lo cumpla, que ahí tiene
+   dificultad».
+   EL AGUJERO, medido con su plan real: nadie comprobaba de QUÉ SEMANA era el plan. Lo único
+   que había era «si tiene más de 6 días, dilo». Su plan es del miércoles 14-10; el domingo 18
+   tenía 4 días, así que no saltaba NADA — y pertenecía a la semana ya acabada. El lunes
+   tendría 5 y seguiría callado: operaría la semana nueva entera con el plan de la vieja.
+   **Los días no son semanas.** Un plan semanal se mide en semanas, y la cuenta la hace el
+   código, no la vista de nadie.
+
+   ⚠️ SU SEMANA EMPIEZA EL DOMINGO POR LA TARDE, no el lunes: el mercado FX abre a las 17:00
+   de Nueva York del domingo y su rutina es hacer el análisis semanal a las 16:40, justo
+   antes. Así que un domingo ya cuenta como la semana que viene — si no, el plan que escribe
+   el domingo saldría «de la semana pasada» el mismo día de escribirlo
+   ([[apex-reloj-mercado-vs-reloj-rey]], [[apex-dos-numeraciones-dias]]). */
+function semanaOperativa(d){
+  try{
+    const f = (d instanceof Date) ? new Date(d.getTime()) : new Date(String(d) + "T12:00:00");
+    if(isNaN(f.getTime())) return "";
+    /* domingo = la semana que arranca esa tarde, o sea el lunes siguiente */
+    const dow = f.getDay();                       /* 0 domingo … 6 sábado */
+    const aLunes = (dow === 0) ? 1 : (1 - dow);   /* domingo → +1; lunes → 0; martes → −1 … */
+    f.setDate(f.getDate() + aLunes);
+    const z = (n) => (n < 10 ? "0" + n : "" + n);
+    return f.getFullYear() + "-" + z(f.getMonth() + 1) + "-" + z(f.getDate());
+  }catch(_){ return ""; }
+}
+
+/* el lunes de la semana operativa de HOY: con esto se compara el plan */
+function semanaDeHoy(){ return semanaOperativa(new Date()); }
+
+/* «12 oct – 16 oct», para decírselo en cristiano y no con una clave */
+function semanaEnLetra(lunesISO){
+  try{
+    const l = new Date(String(lunesISO) + "T12:00:00");
+    if(isNaN(l.getTime())) return String(lunesISO || "?");
+    const v = new Date(l.getTime()); v.setDate(v.getDate() + 4);
+    const f = (x) => new Intl.DateTimeFormat("es", { day:"numeric", month:"short" }).format(x);
+    return f(l) + " – " + f(v);
+  }catch(_){ return String(lunesISO || "?"); }
+}
+
+/* 📋 el CUMPLIMIENTO: de qué semanas hay plan guardado y de cuáles no. Sin historial esto no
+   se puede contestar, porque PLANSEM solo guarda el ÚLTIMO plan: la semana anterior se pisa
+   y no queda rastro de si la cumplió o no. */
+function planSemCumplimiento(semanas){
+  try{
+    const n = Math.max(2, Math.min(12, parseInt(semanas, 10) || 5));
+    const log = Array.isArray(PLANSEMLOG) ? PLANSEMLOG : [];
+    const hechas = new Set(log.map(x => x && x.semana).filter(Boolean));
+    /* el plan VIVO cuenta aunque el historial naciera después que él */
+    const viva = (PLANSEM && PLANSEM.fecha) ? semanaOperativa(PLANSEM.fecha) : "";
+    if(viva) hechas.add(viva);
+    const out = [];
+    const hoyL = new Date(semanaDeHoy() + "T12:00:00");
+    for(let k = 0; k < n; k++){
+      const d = new Date(hoyL.getTime()); d.setDate(d.getDate() - 7 * k);
+      const clave = semanaOperativa(d);
+      out.push({ semana: clave, letra: semanaEnLetra(clave), hecho: hechas.has(clave), esEsta: k === 0 });
+    }
+    return out;
+  }catch(_){ return []; }
+}
+
 /* Guarda/actualiza el plan DE UN PAR sin tocar el del otro. */
 function planSemGuardar(uno){
   try{
@@ -751,6 +821,19 @@ function planSemGuardar(uno){
     for(const k of Object.keys(previos)){ const c = Object.assign({}, previos[k]); delete c.par; pares[k] = c; }
     PLANSEM = { pares, fecha: hoyISO() };
     save(K.plansem, PLANSEM);
+    /* 📋 v7.279 — y queda apuntado que ESTA semana la cumplió. Sin esto no se puede
+       contestar «¿cumplí?», porque PLANSEM solo guarda el último plan: al escribir el de
+       esta semana se pisa el de la anterior y no queda rastro de si la hizo o no. */
+    try{
+      const sem = semanaDeHoy();
+      PLANSEMLOG = Array.isArray(PLANSEMLOG) ? PLANSEMLOG : [];
+      const ya = PLANSEMLOG.find(x => x && x.semana === sem);
+      const pars = Object.keys(pares);
+      if(ya){ ya.fecha = PLANSEM.fecha; ya.pares = pars; ya.ts = Date.now(); }
+      else PLANSEMLOG.unshift({ semana: sem, fecha: PLANSEM.fecha, pares: pars, ts: Date.now() });
+      PLANSEMLOG = PLANSEMLOG.slice(0, 14);
+      save(K.plansemlog, PLANSEMLOG);
+    }catch(_){}
     return planSemLista();
   }catch(_){ return planSemLista(); }
 }
@@ -1044,11 +1127,27 @@ function guardiaHuecos(){
     }
 
     /* 4) EL PLAN DE LA SEMANA */
+    /* 🗓️ v7.279 — PUNTO 5 DE REY: «revisar el cumplimiento de fijar el plan semanal».
+       Esta tarjeta solo miraba si EXISTÍA algún plan, de cualquier fecha. Con su plan del
+       14-10 guardado, el lunes 19 habría salido TODO EN VERDE mientras él operaba la semana
+       nueva con el plan de la vieja. Ahora pregunta por LA SEMANA, que es la unidad del
+       plan semanal, y además dice cuántas lleva cumplidas para no insistir a ciegas. */
     if(!quitada("plansem")){
       const hayPlan = PLANSEM && (PLANSEM.pares || PLANSEM.texto || PLANSEM.bias);
+      const semHoy = (typeof semanaDeHoy==="function") ? semanaDeHoy() : "";
+      const semPlan = (hayPlan && PLANSEM.fecha && typeof semanaOperativa==="function") ? semanaOperativa(PLANSEM.fecha) : "";
+      const racha = (()=>{ try{
+        const h = planSemCumplimiento(5);
+        const n = h.filter(x=>x.hecho).length;
+        return h.length ? (" Llevas **"+n+" de las últimas "+h.length+" semanas** con plan fijado.") : "";
+      }catch(_){ return ""; } })();
       if(!hayPlan) out.push({ id:"plansem", urg:2, tit:"No tienes plan de la semana escrito",
         txt:"Operar sin plan escrito es decidir en caliente. Si no está escrito, no se puede comprobar después si lo cumpliste — y sin eso no hay disciplina que medir.",
         acc:"plansem", bot:"🗓️ Escribirlo" });
+      else if(semHoy && semPlan && semPlan !== semHoy) out.push({ id:"plansem", urg:3,
+        tit:"Tu plan es de la semana pasada",
+        txt:"El que tienes guardado es de la semana del **"+semanaEnLetra(semPlan)+"** y ya estamos en la del **"+semanaEnLetra(semHoy)+"**. Un plan vencido presentado como vigente es peor que no tener ninguno: te da una falsa seguridad para entrar."+racha,
+        acc:"plansem", bot:"🗓️ Rehacerlo" });
     }
   }catch(_){}
   out.sort((a,b)=>b.urg-a.urg);
@@ -19461,14 +19560,33 @@ function iaPlanSemanal(){
      Antes esto leía un plan Único. Rey opera EUR/USD y GBP/USD y el 13-09 Roberto le dijo que
      guardaba «el plan de los dos pares» teniendo sitio para uno solo. */
   const lista = planSemLista();
-  if(!lista.length) return "[🗓️ PLAN SEMANAL: aún no hay uno guardado. Cuando hagas el análisis semanal, guárdalo con guardar_plan_semanal (UNA VEZ POR PAR) para recordarlo toda la semana.]";
+  if(!lista.length) return "[🗓️ PLAN SEMANAL: aún no hay NINGUNO guardado"
+    + ((typeof semanaDeHoy==="function") ? (" (estamos en la semana del "+semanaEnLetra(semanaDeHoy())+")") : "")
+    + ". Ofrécele hacer el análisis semanal y guárdalo con guardar_plan_semanal (UNA VEZ POR PAR, siempre con su nivel de invalidación): sin eso nadie puede avisarle de que su plan murió.]";
   const fecha = (PLANSEM && PLANSEM.fecha) || lista[0].fecha || "?";
-  /* ⚠️ si el plan tiene más de 6 días, se dice: un plan rancio presentado como vigente es lo
-     que le hizo operar el 13-09 con una lectura de una semana antes. */
+  /* 🗓️ v7.279 — DE QUÉ SEMANA ES, QUE NO ES LO MISMO QUE CUÁNTOS DÍAS TIENE.
+     ══════════════════════════════════════════════════════════════════════════════════════
+     Aquí ponía: «si tiene más de 6 días, dilo». Y los días NO son semanas. Medido con su
+     plan real: es del miércoles 14-10; el domingo 18 tenía 4 días → ni un aviso, y ya
+     pertenecía a la semana acabada. El lunes 19 tendría 5 y seguiría callado, así que
+     habría operado la semana nueva ENTERA con el plan de la vieja creyéndolo vigente.
+     Esto es el punto 5 de Rey: «revisar el cumplimiento de fijar el plan semanal, que lo
+     cumpla, que ahí tiene dificultad» ([[apex-informe-rancio-agitador]]). */
+  const semPlan = (typeof semanaOperativa==="function") ? semanaOperativa(fecha) : "";
+  const semHoy  = (typeof semanaDeHoy==="function") ? semanaDeHoy() : "";
+  const deEstaSemana = !!(semPlan && semHoy && semPlan === semHoy);
   let viejo = "";
+  if(semPlan && semHoy && !deEstaSemana)
+    viejo = " ⛔ ESTE PLAN NO ES DE ESTA SEMANA: es de la del "+semanaEnLetra(semPlan)
+          + " y hoy estamos en la del "+semanaEnLetra(semHoy)+".";
+  /* ⏳ Y LA EDAD EN DÍAS SIGUE CONTANDO, además de la semana. No es redundante: un plan que
+     escribe un DOMINGO (su rutina, antes de abrir) cumple 6 días el sábado siguiente sin
+     salir de su semana operativa, así que la cuenta de semanas sola no lo avisaría nunca.
+     Las dos miden cosas distintas y las dos hacen falta: la semana dice si VENCIÓ, los días
+     dicen si está RANCIO ([[apex-informe-rancio-agitador]]). */
   try{
     const d = Math.round((Date.now() - new Date(fecha+"T12:00:00").getTime())/86400000);
-    if(d >= 6) viejo = " ⚠️ TIENE "+d+" DÍAS: díselo a Rey y ofrécele refrescarlo antes de usarlo.";
+    if(d >= 6) viejo += " ⚠️ Y TIENE "+d+" DÍAS sin refrescar: díselo a Rey y ofrécele rehacerlo antes de usarlo.";
   }catch(_){}
   /* ⛔ v7.277 — EL VEREDICTO, Y VA DELANTE DE TODO.
      Lo importante primero: si su plan está anulado, eso manda sobre cualquier otra línea
@@ -19487,7 +19605,28 @@ function iaPlanSemanal(){
       + "\n   ⚠️ DI SOLO ESTO Y NADA MÁS: que el precio está al otro lado de su nivel. Su nivel es por CIERRE de H4 con cuerpo y tú ves el precio del momento, NO el cierre, así que esa confirmación la pone él. Jamás afirmes que cerró una vela que no has visto cerrar.\n"
       + "   👉 Y no te quedes en el aviso: propónle rehacer el análisis de ese par y, cuando él te dé el bias nuevo, guárdalo con guardar_plan_semanal.\n";
   }
-  let s2 = "[🗓️ PLAN SEMANAL VIGENTE (guardado el "+fecha+"."+viejo+"):\n"+cabeza;
+  /* ⛔ y si no es de esta semana, eso va DELANTE incluso del precio: un nivel de la semana
+     pasada no se juzga, se jubila ([[apex-lo-importante-va-primero]]) */
+  if(!deEstaSemana && semPlan && semHoy)
+    cabeza = "⛔⛔ EL PLAN GUARDADO ES DE LA SEMANA PASADA ("+semanaEnLetra(semPlan)+"), NO DE ESTA ("+semanaEnLetra(semHoy)+").\n"
+      + "   DÍSELO A REY EN TU PRIMERA FRASE, SIN QUE TE LO PIDA: está a punto de operar —o ya está operando— con un plan que venció.\n"
+      + "   👉 Ofrécele hacer el análisis semanal AHORA y guárdalo con guardar_plan_semanal (una vez por par, con su nivel de invalidación).\n"
+      + "   ⚠️ Y mientras no lo rehaga, los niveles de abajo son de REFERENCIA, no su plan vigente: no los uses para darle un veredicto de entrada.\n"
+      + cabeza;
+  /* 📋 EL CUMPLIMIENTO, que es lo que pidió «revisar». Sin esto Roberto podría insistirle
+     sin saber si lleva una semana o un mes sin fijarlo, y la insistencia a ciegas es la que
+     Rey apaga ([[apex-roberto-exige-y-reconoce]]). */
+  let cumple = "";
+  try{
+    const h = (typeof planSemCumplimiento==="function") ? planSemCumplimiento(5) : [];
+    if(h.length){
+      const hechas = h.filter(x=>x.hecho).length;
+      cumple = "\n📋 CUMPLIMIENTO de fijar el plan (últimas "+h.length+" semanas): "+hechas+" de "+h.length+".\n"
+        + h.map(x=>"   "+(x.hecho?"✅":"❌")+" "+x.letra+(x.esEsta?" ← ESTA SEMANA":"")).join("\n")
+        + "\n   Úsalo para hablarle con el dato en la mano: si lleva varias seguidas, díselo con firmeza; si viene cumpliendo, RECONÓCELO antes de pedirle la siguiente.\n";
+    }
+  }catch(_){}
+  let s2 = "[🗓️ PLAN SEMANAL (guardado el "+fecha+" · semana del "+semanaEnLetra(semPlan)+")."+viejo+"\n"+cumple+cabeza;
   for(const p of lista){
     const v = (vers.find(x=>x.p===p)||{}).v || {};
     s2 += "\n─ "+(p.par||"(sin par)")+" ─\n";
@@ -19537,6 +19676,37 @@ function iaPlanDia(){
       if(x.p.notas) s += "Notas de hoy: "+x.p.notas+"\n";
     }
     return s+"]";
+  }catch(_){ return ""; }
+}
+
+/* 📌 v7.279 — «FIJAR EL PLAN SEMANAL» TAMBIÉN ES DEJARLO A MANO.
+   Rey dijo «revisar el cumplimiento de FIJAR el plan semanal, que lo cumpla, que ahí tiene
+   dificultad», y la palabra fijar le viene de un caso concreto: el 21-09 le pidió reemplazar
+   y FIJAR el chat del análisis semanal, Roberto llamó dos veces a guardar_plan_semanal —que
+   guarda los DATOS— y nunca tocó organizar_chat, que es la única mano que fija un chat. Y
+   luego escribió «los dos planes quedaron reemplazados y FIJADOS».
+   Guardar el plan y fijar su chat son DOS cosas y él las pidió juntas: con los datos
+   guardados pero el chat sin fijar, el análisis se le pierde entre cien conversaciones justo
+   la semana en que lo necesita a mano ([[apex-roberto-no-da-por-hecho-lo-que-no-hizo]],
+   [[apex-una-promesa-es-una-funcionalidad]]).
+   Esto NO fija nada por su cuenta: lo MIRA y se lo dice, porque la mano ya existe y es
+   automática — lo que faltaba era que alguien comprobara el resultado. */
+function iaPlanFijado(){
+  try{
+    const semHoy = (typeof semanaDeHoy==="function") ? semanaDeHoy() : "";
+    if(!semHoy) return "";
+    const cs = Array.isArray(IA.convs) ? IA.convs : [];
+    /* el chat del análisis semanal de ESTA semana: por su título y por su fecha de creación,
+       porque él lo titula con el lunes y lo escribe el domingo o el lunes */
+    const deAnalisis = cs.filter(c => c && /an[áa]lisis\s*semanal/i.test(String(c.t || "")));
+    if(!deAnalisis.length)
+      return "[📌 EL CHAT DEL ANÁLISIS SEMANAL: no hay ninguno. Cuando le hagas el análisis de la semana, además de guardar el plan con guardar_plan_semanal, FIJA su chat con organizar_chat(fijar:true) — son DOS cosas distintas y Rey las pide juntas.]";
+    const deEsta = deAnalisis.filter(c => (typeof semanaOperativa==="function") && semanaOperativa(new Date(c.ts || Date.now())) === semHoy);
+    if(!deEsta.length)
+      return "[📌 EL CHAT DEL ANÁLISIS SEMANAL: el último es «"+iaTit(deAnalisis[0])+"», y NO es de esta semana (la del "+semanaEnLetra(semHoy)+"). Ofrécele hacer el de esta semana.]";
+    const fijado = deEsta.find(c => c.fijado);
+    if(fijado) return "[📌 EL CHAT DEL ANÁLISIS SEMANAL de esta semana («"+iaTit(fijado)+"») está FIJADO. Correcto — no lo toques.]";
+    return "[📌 EL CHAT DEL ANÁLISIS SEMANAL de esta semana («"+iaTit(deEsta[0])+"») NO está fijado. Rey quiere su plan A MANO toda la semana: FÍJALO con organizar_chat(fijar:true, chat:\""+iaTit(deEsta[0])+"\") — es automática, sin tarjeta — y desfija el de la semana pasada si sigue puesto. ⚠️ Guardar el plan y fijar su chat son DOS cosas: no des por hecha la segunda por haber hecho la primera.]";
   }catch(_){ return ""; }
 }
 
@@ -22627,7 +22797,7 @@ async function iaEnviar(textoForzado, promptExtra){
     + "Si está en la tercera, di que TODAVÍA NO HAY porque aún no lo ha registrado — no que falló." + NL
     + "❌ NUNCA digas que NO PUEDES consultar algo de estas listas ni que tienes esa limitación: SÍ puedes." + NL
     + "Decir «no puedo» sobre algo que sí tienes le hace dudar de ti, y con razón." + NL;
-  const inj=_cabecera+entTxt+dondeTxt+"\n"+climaTxt+iaReloj()+"\n"+grafTxt+calTxt+iaContexto()+"\n"+iaEstrategiaDef()+"\n"+guardianRiesgo()+"\n"+iaPlan()+"\n"+iaAciertos()+"\n"+(estadoRecuperacionFreno().block||"")+iaFugas()+"\n"+iaRacha()+"\n"+iaPatrones()+"\n"+iaDatosSueltos()+"\n"+iaHitos()+"\n"+iaChats()+"\n"+iaPendientes()+"\n"+iaPlanSemanal()+"\n"+iaPlanDia()+"\n"+iaAvisos()+"\n"+iaPosicionesVivas()+iaEntradasAbiertas()+iaEjecutorArchivo()+iaEjecutorHoy()+iaTemplo()+iaLeyes(texto)+marco+iaEjecutorCfgTxt()+pcTxtVivo()+iaNovedadesTxt()+"\n=== FIN DEL CONTEXTO — responde al mensaje de Rey del bloque anterior ===";
+  const inj=_cabecera+entTxt+dondeTxt+"\n"+climaTxt+iaReloj()+"\n"+grafTxt+calTxt+iaContexto()+"\n"+iaEstrategiaDef()+"\n"+guardianRiesgo()+"\n"+iaPlan()+"\n"+iaAciertos()+"\n"+(estadoRecuperacionFreno().block||"")+iaFugas()+"\n"+iaRacha()+"\n"+iaPatrones()+"\n"+iaDatosSueltos()+"\n"+iaHitos()+"\n"+iaChats()+"\n"+iaPendientes()+"\n"+iaPlanSemanal()+"\n"+iaPlanDia()+"\n"+iaPlanFijado()+"\n"+iaAvisos()+"\n"+iaPosicionesVivas()+iaEntradasAbiertas()+iaEjecutorArchivo()+iaEjecutorHoy()+iaTemplo()+iaLeyes(texto)+marco+iaEjecutorCfgTxt()+pcTxtVivo()+iaNovedadesTxt()+"\n=== FIN DEL CONTEXTO — responde al mensaje de Rey del bloque anterior ===";
   const last=msgs[msgs.length-1];
   const textoMsg=c.msgs[c.msgs.length-1].content;   /* EXACTAMENTE lo guardado (texto + nota del doc) */
   let bloquesMsg = Array.isArray(last.content) ? last.content.filter(b=>b.type==="image") : [];   /* la foto va delante */

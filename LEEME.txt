@@ -1,160 +1,88 @@
-APEX v7.278 — TRADING DESK
+APEX v7.279 — TRADING DESK
 =========================
 
-APEX 7.278 + WORKER 5.284 — 18-10-2026
-PUNTOS 2, 3 Y 4: SI TU PLAN SE ANULA, TE LO CANTO SIN QUE ME LO PIDAS
+APEX 7.279 — 18-10-2026
+PUNTO 5: QUE CUMPLAS CON FIJAR EL PLAN SEMANAL
 
 Lo pediste así:
-  «quiero revisar los análisis semanal y diario antes de cada sesión, y más con
-   las fuertes noticias como esta semana que hubieron fuertes noticias que
-   movieron el mercado… si se anula un análisis semanal o diário él debe saberlo
-   y detectarlo y cantármelo rápido sin pedírselo, sugerirme hacer nuevo
-   análisis, y la notificación ir directo a su propuesta del análisis en el chat»
+  «revisar el cumplimiento de fijar el plan semanal, que lo cumpla, que ahí
+   tiene dificultad»
 
 ════════════════════════════════════════════════════════════════════════════
-⚠️  ANTES DE NADA: TU PLAN SEMANAL NO ESTABA EN LA NUBE
+EL AGUJERO, MEDIDO CON TU PLAN DE VERDAD
 
-Lo encontré al ir a construir el vigía, y lo verifiqué por los dos lados:
+    tu plan ....... miércoles 14-10  →  semana del 12 al 16 oct
+    hoy ........... domingo   18-10  →  semana del 19 al 23 oct
 
-  EN TU TELÉFONO:
-    EUR/USD  RANGO-ESPERAR · invalida "Cierre H4 con cuerpo sobre 1.11800"
-    GBP/USD  RANGO-ESPERAR · invalida "...sobre 1.32857 o bajo 1.32562"
-    (los dos del 14-10, escritos por ti)
+    días .......... 4          →  NO saltaba ningún aviso
+    semanas ....... distintas  →  tu plan venció y nadie te lo iba a decir
 
-  EN TU DOSSIER DE ESTA MAÑANA, servido por esa misma nube:
-    "🗓️ Plan semanal: no guardado — ¿lo busco?"
-
-LA CAUSA: desde la v7.136 tu plan se guarda POR PAR y viaja como {pares:{…}}.
-La puerta del worker solo copiaba los campos de primer nivel, que ya no
-existen ahí. Guardaba un plan VACÍO.
-
-LO QUE TE HA COSTADO, callado: el dossier del amanecer, el Pensadero y el parte
-de la mañana llevaban semanas trabajando SIN tu plan — y sin decir que les
-faltaba. Y es parte de tu punto 5: Roberto no podía vigilar que fijaras el plan
-semanal, porque desde la nube no había ninguno.
-
-Arreglado, y además:
-  · tu plan del 14-10 SUBE SOLO al arrancar Apex — no tienes que rehacerlo
-  · ahora se puede MIRAR lo que hay guardado (antes era imposible comprobarlo,
-    y así es como se nos pasaron semanas de planes vacíos)
-  · el envío va enganchado donde pasa TODO guardado, no en cada mano: el que
-    añada el sitio siguiente no puede olvidarse
+Lo único que había era «si tiene más de 6 días, dilo». LOS DÍAS NO SON SEMANAS.
+El lunes 19 tendría 5 días y seguiría callado: habrías operado la semana nueva
+ENTERA con el plan de la vieja, creyéndolo vigente.
 
 ════════════════════════════════════════════════════════════════════════════
-1) TU NIVEL DE INVALIDACIÓN YA NO LO MIRA NADIE: LO MIRA LA APP
+1) SE MIDE EN SEMANAS
 
-Lo escribías en cada plan y NADIE lo comparaba nunca con el precio. Solo se
-miraba cuando TÚ pedías el análisis del día — o sea, el sistema se enteraba de
-que tu plan estaba muerto justo cuando ya te habías puesto a trabajar con él.
+Y tu semana empieza el DOMINGO POR LA TARDE, no el lunes: el mercado abre a
+las 17:00 NY y tu rutina es el análisis a las 16:40, justo antes. Si contara
+desde el lunes, el plan que escribes el domingo nacería marcado como vencido
+el mismo día de escribirlo.
 
-Medido con tu plan y los precios vivos de hoy:
+Si el plan no es de esta semana, eso va DELANTE incluso del veredicto de
+precio: un nivel de la semana pasada no se juzga, SE JUBILA. Y Roberto tiene
+PROHIBIDO darte un veredicto de entrada con esos niveles — se los presentaría
+como tu plan y entrarías con ellos.
 
-    EUR/USD   invalida sobre 1.11800   ·   precio 1.12387   →  ⛔ ANULADO
-    GBP/USD   invalida sobre 1.32857   ·   precio 1.33286   →  ⛔ ANULADO
-
-Tus dos planes estaban anulados por precio y nadie te lo había dicho.
-
-Ahora la cuenta la hace la app en cada mensaje y Roberto recibe el VEREDICTO
-hecho, con el ⛔ DELANTE de todo — no escondido entre los detalles.
-
-════════════════════════════════════════════════════════════════════════════
-2) UN VIGÍA QUE LO MIRA CON APEX CERRADA  (worker 5.283)
-
-  · corre en el cron, cada minuto
-  · NO llama a la IA ni una vez: es aritmética. No te cuesta un céntimo
-  · avisa UNA vez por anulación, no una por minuto
-  · con el Puente caído NO juzga el precio (las noticias sí: no necesitan PC)
-  · el fin de semana se calla: sin mercado no hay precio que romper nada, y
-    avisaría con la lectura del viernes. Al abrir, vuelve a mirarlo
-  · y mira si tu plan es de ANTES de una noticia de ALTO impacto que ya salió
+⏳ Y la edad en días SIGUE contando, además de la semana. No es repetido: un
+plan que escribes un domingo cumple 6 días el sábado siguiente SIN salir de su
+semana operativa, así que la cuenta de semanas sola no lo avisaría nunca. La
+semana dice si VENCIÓ; los días, si está RANCIO.
 
 ════════════════════════════════════════════════════════════════════════════
-3) EL AVISO CAE EN SU PROPUESTA — TU PUNTO 4, LITERAL
+2) EL CUMPLIMIENTO — lo que pediste «revisar»
 
-Al tocarlo no se abre la portada ni el chat a secas: se abre su chat con la
-propuesta YA ESCRITA y un botón para arrancar el análisis nuevo (el de la
-semana o el de hoy, tú eliges).
+    📋 CUMPLIMIENTO de fijar el plan (últimas 5 semanas): 1 de 5
+       ❌ 19 oct – 23 oct  ← ESTA SEMANA
+       ✅ 12 oct – 16 oct
+       ❌ 5 oct – 9 oct
+       ...
 
-Y NO lanza el análisis solo, por dos razones tuyas: cuesta dinero y nada puede
-gastar sin que tú lo mandes, y la decisión de rehacer el plan es TUYA.
+No existía porque solo se guardaba el ÚLTIMO plan: al escribir el de esta
+semana se pisaba el de la anterior y no quedaba rastro de si la cumpliste.
+Ahora queda apuntado y viaja en tu respaldo.
 
-Al aterrizar rehace la cuenta con el precio de ESE momento: si el aviso salió
-hace diez minutos y el precio volvió, te lo dice. Y si no tiene precio fresco
-te lo dice también, en vez de darte el plan por bueno.
-
-════════════════════════════════════════════════════════════════════════════
-4) EL PLAN DEL DÍA YA EXISTE
-
-No se guardaba en ninguna parte: se hablaba en el chat y se iba con el chat.
-Sin eso no había NADA que vigilar del análisis diario, y tú dijiste "semanal
-o diário".
-
-Ahora el análisis del día termina guardándolo (un par por llamada, siempre con
-su nivel de invalidación y su lado), Roberto lo VE en cada mensaje con su
-veredicto, viaja en tu respaldo, y el de ayer nunca se presenta como el de hoy.
+Y Roberto tiene que RECONOCÉRTELO cuando vienes cumpliendo, no solo apretarte.
+Insistir sin reconocer es lo que acaba haciéndote apagar el aviso.
 
 ════════════════════════════════════════════════════════════════════════════
-DOS COSAS QUE LE DEJÉ PROHIBIDAS, PORQUE PODÍAN VOLVERSE MENTIRA
+3) «FIJAR» SON DOS COSAS, Y TÚ LAS PEDISTE JUNTAS
 
-  (a) ROBERTO VE EL PRECIO, NO EL CIERRE. Tu nivel lo mides por CIERRE DE H4
-      CON CUERPO. Desde la nube solo se ve el precio del momento, así que tiene
-      prohibido afirmar que cerró una vela que no ha visto cerrar: te dice que
-      el precio está al otro lado y la confirmación la pones tú.
+Guardar los datos del plan (guardar_plan_semanal) y dejar su chat A MANO
+(organizar_chat fijar:true) son DOS cosas. El 21-09 Roberto hizo la primera,
+no la segunda, y te escribió «los dos planes quedaron reemplazados y FIJADOS».
 
-  (b) CON BIAS DE RANGO Y UN SOLO NIVEL NO ADIVINA EL LADO. Un rango muere por
-      los dos lados; con un número no se sabe cuál. Se queda sin juzgar y lo
-      dice, en vez de darte un aviso falso.
+Ahora se comprueba si el chat del análisis de ESTA semana está fijado, y si no
+lo está se le da la llamada ya escrita para que no tenga que inventarla. El
+guardia que caza el «lo fijé» sin haberlo hecho sigue en pie.
 
 ════════════════════════════════════════════════════════════════════════════
-⚠️  TIENES QUE SUBIR TÚ EL WORKER 5.283
+4) TU TARJETA
 
-  Está en:  📤 PARA SUBIR HOY / worker-elitepro-v5.283.js
-  Lleva DENTRO el 5.282 de antes (la lección de la noche con tus parciales).
+Dejó de preguntar «¿hay plan?» y pregunta «¿hay plan DE ESTA SEMANA?».
+Con tu plan del 14-10 guardado, el lunes 19 te habría salido TODO EN VERDE.
 
-  La app 7.277 funciona sin él: la cuenta del plan la hace ella. Lo que espera
-  al worker es el vigía con Apex CERRADA y la lección de la noche.
+Y un plan VENCIDO pesa MÁS que no tener ninguno: no tener plan te deja sin
+guía, pero uno vencido te da FALSA SEGURIDAD para entrar.
 
 ════════════════════════════════════════════════════════════════════════════
 PROBADO
 
-  banco nuevo  test-el-plan-muerto-se-canta-solo.cjs ............... 39/39
-               (la cuenta EJECUTADA con tu plan del 14-10 y tus precios vivos)
-  regresión completa ............................................. 414 bancos
+  banco nuevo  test-el-plan-semanal-se-mide-en-semanas.cjs ...... 26/26
+               (la cuenta de semanas EJECUTADA con tus fechas reales)
+  regresión completa ............................................ 415 bancos
 
-════════════════════════════════════════════════════════════════════════════
-⚠️  AÑADIDO EL 18-10 — EL ARREGLO QUE FALTABA (7.278 / 5.284)
-
-Instalé la 7.277 en tu teléfono y la probé DENTRO. Decía esto:
-
-    EUR/USD  →  "no puedo juzgarlo: no tengo el precio vivo de EUR/USD"
-    GBP/USD  →  "no puedo juzgarlo: no tengo el precio vivo de GBP/USD"
-
-...teniendo los precios en memoria en ese mismo instante.
-
-CAUSA: tu gráfico manda "OANDA:EURUSD" y tu plan dice "EUR/USD". Al quitar lo
-que no es letra quedaba "OANDAEURUSD" contra "EURUSD" y no casaban NUNCA. El
-veredicto era SIEMPRE "no puedo juzgarlo": el fallo entero disfrazado de
-prudencia, que es la peor forma de fallar porque parece cautela.
-
-Y mi banco lo había dado VERDE porque probaba la cuenta dándole el precio a
-mano: nunca probó el emparejado. Ya está tapado.
-
-Arreglado en los DOS lados (app y worker) y comprobado con tus cadenas reales:
-    OANDA:EURUSD  vs  EUR/USD              →  casan
-    OANDA:GBPUSD  vs  GBP/USD              →  casan
-    FX:GBPUSD     vs  GBPUSD               →  casan
-    OANDA:EURUSD  vs  GBP/USD              →  no casan
-    OANDA:EURUSD  vs  "EUR/USD y GBP/USD"  →  no casan  (tu plan viejo del
-                                               27-09 sigue sin juzgarse, que
-                                               es lo correcto)
-
-⚠️  EL 5.283 QUE SUBISTE NO LLEVA ESTE ARREGLO. Sube el 5.284.
-    Lo bueno: el 5.283 YA metió tu plan en la nube (lo comprobé: está entero
-    con sus dos niveles). Lo que le falta es poder juzgarlo por precio.
-
-PROBADO
-  banco test-el-plan-muerto-se-canta-solo.cjs ....... 40/40
-  regresión completa ............................... 414/414
+Con esto quedan cerrados los CINCO puntos de tu lista del 17-10.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
