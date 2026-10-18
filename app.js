@@ -31,6 +31,11 @@ const K = {
   shots:"crtelite_shots_v1",
   vents:"crtelite_ventanas_v1",
   plansem:"crtelite_plansem_v1",
+  /* 📆 v7.277 — EL PLAN DEL DÍA, que hasta hoy no se guardaba en ninguna parte.
+     Rey: «si se anula un análisis semanal O DIÁRIO él debe saberlo y detectarlo». No se
+     puede detectar lo que no existe: el análisis del día se hablaba en el chat y se iba
+     con él. El semanal sí se guardaba desde la v6.33; el del día, nunca. */
+  plandia:"crtelite_plandia_v1",
   guardia:"crtelite_guardia_v1",   /* 🛡️ v7.160 — el guardián de la disciplina */
   ejecvisto:"crtelite_ejecvisto_v1", /* 🔕 v7.161 — lo último que se supo del Ejecutor */
   ejeccfg:"crtelite_ejeccfg_v1",   /* ⚙️ v7.174 — sus reglas VIVAS del Ejecutor, para que Roberto no opine a ciegas */
@@ -49,7 +54,32 @@ const save = (k,v)=>{ try{ localStorage.setItem(k,JSON.stringify(v)); nubeMarcar
      medio Diario sin que nadie lo note ([[apex-declarar-no-es-dar]]). Enganchado AQUÍ, en el
      único sitio por el que pasa TODO guardado, no hay forma de olvidarse. */
   if(k===K.trades && typeof reyTradesSync==="function") reyTradesSync();
+  /* 🗓️ v7.277 — Y SUS PLANES, POR EL MISMO SITIO Y POR EL MISMO MOTIVO.
+     Hoy se descubrió que su plan semanal NO estaba en la nube: la app lo mandaba desde la
+     mano `guardar_plan_semanal` y el worker lo recortaba por el camino, así que el dossier
+     del amanecer llevaba semanas diciendo «Plan semanal: no guardado» teniéndolo él escrito
+     en el teléfono. Arreglada la puerta del worker (5.283), el envío se engancha AQUÍ para
+     que no dependa de que alguien se acuerde de llamarlo desde el sitio 18
+     ([[apex-declarar-no-es-dar]], [[apex-nada-en-un-solo-aparato]]). */
+  if((k===K.plansem || k===K.plandia) && typeof planesSync==="function") planesSync(k);
 }catch(e){ toast("No se pudo guardar"); } };
+
+/* ☁️ el espejo de sus planes. Con freno, porque guardar un plan de dos pares llama a
+   `save` dos veces y no hace falta mandarlo dos veces seguidas. */
+let _planSyncTs = 0;
+function planesSync(cual){
+  try{
+    const ahora = Date.now();
+    if(ahora - _planSyncTs < 1500) return;
+    _planSyncTs = ahora;
+    const manda = (ruta, cuerpo) => {
+      if(!cuerpo) return;
+      try{ fetch(nubeUrl()+ruta,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(cuerpo)}).catch(()=>{}); }catch(_){}
+    };
+    if(!cual || cual===K.plansem) manda("/plansem", (typeof PLANSEM!=="undefined") ? PLANSEM : null);
+    if(!cual || cual===K.plandia) manda("/plandia", (typeof PLANDIA!=="undefined") ? PLANDIA : null);
+  }catch(_){}
+}
 
 /* ============================================================
    ☁️ RESPALDO EN LA NUBE — recupera Apex en CUALQUIER teléfono
@@ -58,7 +88,9 @@ const save = (k,v)=>{ try{ localStorage.setItem(k,JSON.stringify(v)); nubeMarcar
    No usa claves del sistema (el repo es público): el código ES la llave.
    ============================================================ */
 const NUBE_KEYS = ["crtelite_negocio_v1","crtelite_trades_v2",/* 📅 v7.272 — su fecha de inicio: si viviera solo en el teléfono, al cambiar de aparato
-     se recalcularía y le entrarían las operaciones de junio ([[apex-nada-en-un-solo-aparato]]) */"crtelite_desde_v1","crtelite_cuentas_v3","crtelite_reminders_v3","crtelite_chk_v2","crtelite_conf_v2","crtelite_reglas_v2","crtelite_balance_v2","crtelite_ctx_v3","crtelite_estrategias_v3","crtelite_estrdefs_v1","crtelite_pares_v3","crtelite_calpares_v3","crtelite_notif_v3","crtelite_vigila_v3","crtelite_fabpos_v3","crtelite_iavoz_v3","crtelite_shots_v1","crtelite_shots_borradas","crtelite_ventanas_v1","crtelite_plansem_v1","crtelite_iaconvs_v3","crtelite_iaact_v3","crtelite_ejectrades_v1","crtelite_llamamodo",
+     se recalcularía y le entrarían las operaciones de junio ([[apex-nada-en-un-solo-aparato]]) */"crtelite_desde_v1","crtelite_cuentas_v3","crtelite_reminders_v3","crtelite_chk_v2","crtelite_conf_v2","crtelite_reglas_v2","crtelite_balance_v2","crtelite_ctx_v3","crtelite_estrategias_v3","crtelite_estrdefs_v1","crtelite_pares_v3","crtelite_calpares_v3","crtelite_notif_v3","crtelite_vigila_v3","crtelite_fabpos_v3","crtelite_iavoz_v3","crtelite_shots_v1","crtelite_shots_borradas","crtelite_ventanas_v1","crtelite_plansem_v1",
+  /* 📆 v7.277 — si el plan del día viviera solo en el teléfono, al cambiar de aparato
+     Roberto perdería el análisis de hoy ([[apex-nada-en-un-solo-aparato]]) */"crtelite_plandia_v1","crtelite_iaconvs_v3","crtelite_iaact_v3","crtelite_ejectrades_v1","crtelite_llamamodo",
   /* 🧭 v6.96 — LO QUE FALTABA, y lo descubrió Rey: "en la APK no me deja pasar a la fase 3
      cuando en la web ya estoy en ella". Su PLAN no viajaba, así que su progreso vivía en
      un solo aparato… y si perdía el teléfono, en ninguno. Con él van los VEREDICTOS de
@@ -123,6 +155,7 @@ const NUBE_NOMBRES = {
   "crtelite_shots_borradas":"las capturas que borraste (para que no vuelvan)",
   "crtelite_ventanas_v1":"tus ventanas y killzones",
   "crtelite_plansem_v1":"tu plan de la semana",
+  "crtelite_plandia_v1":"tu plan del día",
   /* 🛡️ v7.160 — en el respaldo se ve con su nombre, no en crudo: cuando Rey abra la
      lista tiene que entender QUÉ es cada cosa suya ([[apex-nube-solo-lo-que-importa]]). */
   "crtelite_guardia_v1":"lo que Roberto te exige (y lo que le dijiste que no)",
@@ -686,6 +719,7 @@ try {
   if (tocadas) { save(K.shots, SHOTS); console.log("[galeria] " + tocadas + " captura(s) renombradas a lo que de verdad son"); }
 } catch (_) {}
 let PLANSEM = load(K.plansem, null);  // plan de la semana (bias/zonas/invalidación) persistente
+let PLANDIA = load(K.plandia, null);  // 📆 v7.277 — plan DEL DÍA, por par, con su invalidación
 
 /* 🗓️ v7.136 — EL PLAN GUARDA LOS DOS PARES, NO UNO.
    Rey opera EUR/USD y GBP/USD. El 13-09 Roberto le escribió «Guardo el plan de los DOS pares»
@@ -2201,6 +2235,121 @@ async function abrirEnTradingView(par, tf){
     toast("📈 " + ((r&&r.motivo) || "no pude abrir TradingView"));
   }catch(_){ toast("📈 no pude abrir TradingView"); }
 }
+/* ═════════════════════════════════════════════════════════════════════════════════════════
+   ⚠️ v7.277 (17-10) — EL AVISO DEL PLAN ANULADO ATERRIZA EN LA PROPUESTA, NO EN LA PORTADA
+   ═════════════════════════════════════════════════════════════════════════════════════════
+   Rey lo pidió con estas palabras: «la notificación ir directo a su propuesta del análisis
+   en el chat». Así que no vale abrir Apex, ni abrir el chat a secas: al tocarlo tiene que
+   encontrarse la propuesta YA ESCRITA, con el botón para arrancar el análisis nuevo.
+   ⚠️ Y NO SE LANZA EL ANÁLISIS SOLO. Dos razones, las dos suyas: un análisis cuesta dinero y
+   nada puede gastar sin que él lo mande ([[apex-nada-obligatorio-nada-gasta-solo]]), y la
+   decisión de rehacer el plan es de él — aquí se PROPONE
+   ([[apex-la-regla-80-20-y-quien-opera]], [[apex-no-elegir-por-rey]]).
+   ⚠️ Y la cuenta se rehace AQUÍ con el precio del momento: el aviso pudo salir hace diez
+   minutos y para cuando él lo toca el precio puede haber vuelto. Si volvió, se le dice —
+   enseñarle un plan muerto que ya resucitó es un informe rancio
+   ([[apex-informe-rancio-agitador]]). */
+async function preciosVivosRefrescar(){
+  try{
+    const r = await traerConTiempo(iaBase()+"/chart/state", {cache:"no-store"}, 6000);
+    if(!r.ok) return false;
+    const d = await r.json();
+    const pares = Array.isArray(d.pares) ? d.pares : (d.estado ? [d.estado] : []);
+    if(!d || !d.viva || !pares.length) return false;
+    const px = {};
+    pares.forEach(e=>{ const k = parClaveApex(e.symbol); const v = Number(e.price); if(k && isFinite(v)) px[k] = v; });
+    if(!Object.keys(px).length) return false;
+    _preciosVivos = px; _preciosVivosTs = Date.now();
+    return true;
+  }catch(_){ return false; }
+}
+
+async function planAnulado(){
+  if(typeof abrirIA === "function") abrirIA();
+  iaTemaChat("⚠️ Tu plan se anuló");
+  const c = iaConvAct();
+  const hayPrecio = await preciosVivosRefrescar();
+
+  /* los planes que vigilamos: el semanal (por par) y el de hoy */
+  const planes = [];
+  try{ for(const p of planSemLista()) planes.push(Object.assign({_tipo:"semanal"}, p)); }catch(_){}
+  try{
+    if(PLANDIA && PLANDIA.fecha === hoyISO() && PLANDIA.pares)
+      for(const k of Object.keys(PLANDIA.pares)) planes.push(Object.assign({_tipo:"de hoy", par:k}, PLANDIA.pares[k]));
+  }catch(_){}
+
+  const rotos = [], resucitados = [], ciegos = [];
+  for(const p of planes){
+    const v = planVeredicto(p);
+    if(v && v.roto) rotos.push({p, v});
+    else if(v && v.juzgable) resucitados.push({p, v});
+    else ciegos.push({p, v});
+  }
+
+  /* 📰 y lo que encontró el vigía de la nube, que ve cosas que la app no: las noticias
+     fuertes que ya salieron DESPUÉS de guardarse el plan */
+  let noticias = [];
+  try{
+    const r = await traerConTiempo(iaBase()+"/plan/anulado", {cache:"no-store"}, 6000);
+    if(r.ok){ const d = await r.json();
+      noticias = (((d&&d.anulado&&d.anulado.motivos)||[]).filter(m=>m.tipo==="noticia")); }
+  }catch(_){}
+
+  let txt = "## ⚠️ Tu plan ya no vale\n\n";
+  if(rotos.length){
+    txt += rotos.map(x =>
+      "**"+(x.p.par||"?")+"** — tu plan "+x.p._tipo+" se anulaba "
+      + (x.v.lado==="arriba" ? "**por encima de "+x.v.nivel+"**" : "**por debajo de "+x.v.nivel+"**")
+      + " y el precio está ahora en **"+x.v.precio+"**.").join("\n\n")
+      + "\n\n⚠️ Ojo con lo que esto es y lo que no: yo veo el **precio de este momento**, no el cierre. "
+      + "Tu nivel lo pusiste por **cierre de H4 con cuerpo**, así que esa confirmación la pones tú mirando la vela.\n\n";
+  }
+  if(noticias.length){
+    txt += noticias.map(m => "**"+(m.par||"?")+"** — tu plan "+(m.plan||"")+" es del "+(m.fecha||"?")
+      + " y desde entonces salieron noticias de alto impacto: "+((m.noticias||[]).join(" · "))+".").join("\n\n")+"\n\n";
+  }
+  if(!rotos.length && !noticias.length){
+    if(resucitados.length){
+      txt += "Te avisé de que se había anulado, pero **ahora mismo ya no lo está**: el precio volvió a su sitio.\n\n"
+        + resucitados.map(x => "· **"+(x.p.par||"?")+"** — precio "+x.v.precio+", su nivel sin romper.").join("\n")
+        + "\n\nAun así, si el precio se fue y volvió, mereces mirarlo: un nivel que se pincha y se recupera suele cambiar el plan igual.\n\n";
+    } else if(!hayPrecio){
+      txt += "No puedo confirmártelo ahora mismo: **no tengo precio fresco** (la PC o el Puente están apagados). "
+        + "No te voy a decir que tu plan está bien sin poder verlo — enciende la PC y el Puente Apex y te lo confirmo en un segundo.\n\n";
+    } else if(ciegos.length){
+      txt += "No puedo juzgarlo: "+(ciegos.map(x=>(x.p.par||"?")+" ("+((x.v&&x.v.porque)||"?")+")").join(" · "))+".\n\n"
+        + "Si quieres que pueda vigilarlo, el plan necesita un nivel con precio y con lado (\"sobre 1.1290\" o \"bajo 1.3250\").\n\n";
+    } else {
+      txt += "Lo mirado ahora dice que tus planes siguen vivos. Si te llegó el aviso, fue por algo que ya pasó.\n\n";
+    }
+  }
+  txt += "### 👉 Lo que te propongo\n\n"
+    + "Rehacer el análisis del par afectado con el gráfico en vivo, y que yo te guarde el plan nuevo. "
+    + "No tocamos nada hasta que tú lo digas — dale al botón de abajo y lo hacemos juntos.";
+
+  c.msgs.push({role:"assistant", content:txt});
+  iaGuardarConvs(); pintarIAChat();
+  try{ tarjetaPlanNuevo(); }catch(_){}
+  try{ const m=$("#iaMsgs"); if(m) m.scrollTop=m.scrollHeight; }catch(_){}
+}
+
+/* el botón de la propuesta: él decide cuál rehace */
+function tarjetaPlanNuevo(){
+  const cont = $("#iaMsgs"); if(!cont) return;
+  cont.querySelectorAll(".ia-plannuevo").forEach(n=>n.remove());
+  const card = el("div","ia-tool ia-plannuevo");
+  card.innerHTML =
+    '<div class="ia-tool-h">🔄 Rehacer el análisis</div>'+
+    '<div class="ia-tool-d">Con el <b>gráfico en vivo</b>. Al terminar te guardo el plan nuevo con su nivel de invalidación, para poder seguir vigilándolo.</div>'+
+    '<div class="ia-tool-bar">'+
+      '<button class="btn gold ia-plan-sem">🗓️ El de la semana</button>'+
+      '<button class="btn ia-plan-dia">📆 El de hoy</button>'+
+    '</div>';
+  cont.appendChild(card);
+  const s = card.querySelector(".ia-plan-sem"); if(s) s.onclick = ()=>{ card.remove(); analisisSemanal(); };
+  const d = card.querySelector(".ia-plan-dia"); if(d) d.onclick = ()=>{ card.remove(); analisisDiario(); };
+}
+
 function tarjetaGrafico(avisos){
   const cont=$("#iaMsgs"); if(!cont) return;
   cont.querySelectorAll(".ia-vergrafico").forEach(n=>n.remove());
@@ -6128,6 +6277,10 @@ const ACCIONES_ROBERTO = {
        vivo; el cierre de trades tiene sus destinos propios (cierredia / cierresemana). */
     diario:  ()=>analisisDiario(),
     semanal: ()=>analisisSemanal(),
+    /* ⚠️ v7.277 — donde cae el aviso del vigía del plan. Va en ESTA lista y no en un if
+       aparte: un destino que solo vive en una de las dos cadenas nace medio muerto, y ya
+       pasó con ocho chips ([[apex-el-camino-que-rey-usa]]). */
+    plananulado: ()=>planAnulado(),
     temploSemana: ()=>evalTemplo("semana"),
     temploPlan:   ()=>evalTemplo("plan"),
     temploComida: ()=>evalTemplo("comida"),
@@ -13629,6 +13782,7 @@ const ANALISIS_DIARIO_PROM =
 "🏦 POR CUENTA (OBLIGATORIO): cómo actuar HOY en CADA cuenta registrada por separado y en cuál operar — PROTEGE la fondeada crítica.\n"+
 "Regla: el semanal manda sobre el diario; si el setup va contra el bias semanal, NO operar. No dibujes en el gráfico todavía; dame análisis y plan en texto.\n"+
 "COMPARA con el [🗓️ PLAN SEMANAL VIGENTE] que ya tienes: EMPIEZA diciéndome si sigue VÁLIDO o si CAMBIÓ/SE INVALIDÓ (porque el precio en vivo rompió su nivel de invalidación o una noticia fuerte cambió el panorama). Si cambió, dímelo claro y ADÁPTALO con guardar_plan_semanal antes de darme el plan del día.\n"+
+"📆 AL TERMINAR, GUÁRDAME EL PLAN DE HOY con la mano guardar_plan_dia, UNA VEZ POR PAR, y SIEMPRE con el nivel que lo invalidaría y su lado ('sobre 1.1290' o 'bajo 1.3250'). Esto NO es burocracia: es lo único que permite avisarme a media sesión si mi plan del día ha muerto — Rey lo pidió así el 17-10 («si se anula un análisis semanal o diário él debe saberlo y detectarlo y cantármelo rápido sin pedírselo»). Sin ese nivel, el plan de hoy no se puede vigilar y hay que decírselo.\n"+
 "😈 CIERRA SIEMPRE con '❓ LA PREGUNTA QUE NO ME HICISTE' (v6.43): el ataque más fuerte al plan de HOY — qué lo invalidaría, qué estoy ignorando, dónde me confiaría de más. Una pregunta afilada con dato, no un sermón.";
 function analisisSemanal(){ iaTemaChat("🗓️ Análisis semanal"); iaEnviar("🗓️ Hazme mi análisis SEMANAL con el gráfico en vivo.", ANALISIS_SEMANAL_PROM); }
 function analisisDiario(){ iaTemaChat("📆 Análisis del día"); iaEnviar("📆 Hazme mi análisis DEL DÍA con el gráfico en vivo.", ANALISIS_DIARIO_PROM); }
@@ -19052,6 +19206,82 @@ function iaAvisos(){
   return "[⏰ AVISOS actuales de Rey en Apex (YA los tienes aquí — NO le pidas la lista ni capturas). Para tus manos: identifícalos por su HORA. Para APAGAR uno usa editar_aviso con on:false (NO hace falta borrarlo); para reactivar, on:true.\n"+filas+"\nNOTA: el GUARDIÁN del servidor ya cubre los killzones (Londres/Pre-NY/NY/NY-Lunch) en hora NY. Si ves aquí avisos MANUALES de killzone con hora fija, están DUPLICADOS: ofrécele apagarlos con tu tarjeta de confirmación.]";
 }
 
+/* ═════════════════════════════════════════════════════════════════════════════════════════
+   👁️ v7.277 (17-10) — SU NIVEL DE INVALIDACIÓN, MIRADO DE VERDAD
+   ═════════════════════════════════════════════════════════════════════════════════════════
+   Rey, 17-10: «si se anula un análisis semanal o diário él debe saberlo y detectarlo y
+   cantármelo rápido sin pedírselo, sugerirme hacer nuevo análisis».
+   Lo que había: el plan guardaba su nivel («Cierre H4 con cuerpo sobre 1.11800») y NADIE lo
+   comparaba con nada. El contexto se lo pasaba a Roberto como texto y le pedía que lo
+   mirara él — o sea, dependía de que a Roberto le apeteciera hacer la cuenta en cada
+   respuesta. Medido el 17-10 con su plan del 14-10 y el precio de ese momento: sus DOS
+   planes estaban anulados por precio (EUR/USD invalida sobre 1.11800 y estaba en 1.12387;
+   GBP/USD sobre 1.32857 y estaba en 1.33286) y nadie se lo había dicho.
+   Ahora la cuenta la hace la APP, que no se despista ni cuesta dinero, y Roberto recibe el
+   VEREDICTO ya hecho.
+   ⚠️ SE DICE SOLO LO QUE SE SABE. Su nivel es por CIERRE de H4 con cuerpo y desde aquí solo
+   se ve el precio del momento: así que se dice que el precio está al otro lado y que la
+   confirmación del cierre la pone él. Afirmar «cerró H4 por encima» sería inventarse el
+   porqué ([[apex-roberto-no-inventa]], [[apex-la-alarma-va-tal-cual]]).
+   ⚠️ Y VIVE AQUÍ, EN LA APP, aunque el vigía de la nube haga lo mismo: el chat tiene que
+   poder decirle la verdad con el worker viejo o sin subir nada — un dato que depende de una
+   subida suya no es un dato que tenga ([[apex-el-worker-lo-sube-rey]]).
+   ═════════════════════════════════════════════════════════════════════════════════════════ */
+let _preciosVivos = {}, _preciosVivosTs = 0;
+const parClaveApex = (s) => String(s || "").toUpperCase().replace(/[^A-Z]/g, "");
+
+/* saca los niveles de su texto libre. Sus dos formas reales, del 14-10:
+     «Cierre H4 con cuerpo sobre 1.11800»                -> arriba 1.118
+     «Cierre H4 con cuerpo sobre 1.32857 o bajo 1.32562» -> arriba 1.32857 + abajo 1.32562 */
+function nivelesInvalidacionApex(txt, bias){
+  const out = [];
+  try{
+    const t = String(txt || "");
+    if(!t) return out;
+    /* se parte por «o», «y», «,», «;» y «·» para que cada trozo lleve SU dirección: con un
+       solo trozo, «sobre X o bajo Y» daba los dos niveles al mismo lado */
+    for(const trozo of t.split(/\s+o\s+|\s+y\s+|[,;·]/i)){
+      const m = trozo.match(/\d+[.,]\d{2,6}/);
+      if(!m) continue;
+      const nivel = parseFloat(m[0].replace(",", "."));
+      if(!isFinite(nivel) || nivel <= 0) continue;
+      let lado = "";
+      if(/sobre|encima|arriba|supera|alcista|>/i.test(trozo)) lado = "arriba";
+      else if(/bajo|debajo|abajo|pierde|bajista|</i.test(trozo)) lado = "abajo";
+      if(!lado){
+        /* sin dirección escrita, la pone su BIAS: un plan de compras muere ABAJO y uno de
+           ventas ARRIBA. Si es de RANGO no se adivina — un rango muere por los dos lados y
+           con un solo nivel no se sabe cuál es, así que se deja sin juzgar y se DICE. */
+        const b = String(bias || "").toUpperCase();
+        if(/COMPRA|LONG|ALCIS/.test(b)) lado = "abajo";
+        else if(/VENTA|SHORT|BAJIS/.test(b)) lado = "arriba";
+        else lado = "sinlado";
+      }
+      out.push({ lado, nivel });
+    }
+  }catch(_){}
+  return out;
+}
+
+/* el veredicto de UN plan: null si no se puede juzgar (y por qué), o el motivo si está roto */
+function planVeredicto(p){
+  try{
+    const clave = parClaveApex(p && p.par);
+    const fresco = _preciosVivosTs && (Date.now() - _preciosVivosTs) < 10*60000;
+    if(!fresco) return { juzgable:false, porque:"sin precio fresco del Puente" };
+    const precio = _preciosVivos[clave];
+    if(!isFinite(precio)) return { juzgable:false, porque:"no tengo el precio vivo de "+(p.par||"ese par") };
+    const ns = nivelesInvalidacionApex(p.invalid, p.bias);
+    if(!ns.length) return { juzgable:false, porque:"su nivel de invalidación no trae un precio que comparar" };
+    for(const n of ns){
+      if(n.lado === "sinlado") continue;
+      const roto = (n.lado === "arriba" && precio > n.nivel) || (n.lado === "abajo" && precio < n.nivel);
+      if(roto) return { juzgable:true, roto:true, lado:n.lado, nivel:n.nivel, precio };
+    }
+    return { juzgable:true, roto:false, precio, niveles:ns.filter(n=>n.lado!=="sinlado").map(n=>n.lado+" "+n.nivel) };
+  }catch(_){ return { juzgable:false, porque:"no pude hacer la cuenta" }; }
+}
+
 /* PUENTE APEX — lee el estado del gráfico en vivo desde el Worker (/chart/state).
    Si la PC está conectada (viva), Roberto "ve" el gráfico: dashboard, posición,
    precio y niveles. Si no, se lo dice claro para que Rey encienda la PC. */
@@ -19071,6 +19301,13 @@ async function iaGrafico(){
     try{ if(d.marcas){ marcasTxt = "📐 MARCAS DE SUS %: "+(d.marcas.on?"ENCENDIDAS":"APAGADAS")
       +(d.marcas.on?(" · "+(d.marcas.cajas||0)+" caja(s) de posición marcada(s) ahora mismo"):"")
       +". Cuando Rey pone su herramienta de posiciones se le marcan solas el 25, 50 y 75% del camino de la entrada al TP, con el 75% EN COLOR porque es donde decide, y con su múltiplo R. Puedes encenderlas o apagarlas con marcas_posicion.\n"; } }catch(_){}
+    /* 💵 v7.277 — el precio ya se leía aquí y se tiraba. Ahora se guarda, porque es la mitad
+       de la cuenta que dice si su plan sigue vivo (la otra mitad es su nivel). */
+    try{
+      const px = {};
+      pares.forEach(e=>{ const k = parClaveApex(e.symbol); const v = Number(e.price); if(k && isFinite(v)) px[k] = v; });
+      if(Object.keys(px).length){ _preciosVivos = px; _preciosVivosTs = Date.now(); }
+    }catch(_){}
     let s="[👁️ GRÁFICOS EN VIVO ("+pares.length+" par(es), leído(s) hace "+(d.edad_seg||0)+"s por el Puente Apex — ES REAL, úsalo como verdad):\n";
     s+=marcasTxt;
     pares.forEach(e=>{
@@ -19229,9 +19466,30 @@ function iaPlanSemanal(){
     const d = Math.round((Date.now() - new Date(fecha+"T12:00:00").getTime())/86400000);
     if(d >= 6) viejo = " ⚠️ TIENE "+d+" DÍAS: díselo a Rey y ofrécele refrescarlo antes de usarlo.";
   }catch(_){}
-  let s2 = "[🗓️ PLAN SEMANAL VIGENTE (guardado el "+fecha+"."+viejo+" Compáralo con el gráfico en vivo y las noticias en CADA respuesta):\n";
+  /* ⛔ v7.277 — EL VEREDICTO, Y VA DELANTE DE TODO.
+     Lo importante primero: si su plan está anulado, eso manda sobre cualquier otra línea
+     del bloque ([[apex-lo-importante-va-primero]]). Antes se le pasaba el nivel en texto y
+     se le PEDÍA que lo comparara él; la cuenta ahora está hecha. */
+  const vers = lista.map(p => ({ p, v: planVeredicto(p) }));
+  const rotos = vers.filter(x => x.v && x.v.roto);
+  let cabeza = "";
+  if(rotos.length){
+    cabeza = "⛔⛔ ESTE PLAN ESTÁ ANULADO POR PRECIO — DÍSELO A REY EN TU PRIMERA FRASE, SIN QUE TE LO PIDA, Y OFRÉCELE EL ANÁLISIS NUEVO:\n"
+      + rotos.map(x => "   · "+(x.p.par||"?")+": su plan invalida "
+          + (x.v.lado==="arriba" ? "por encima de " : "por debajo de ") + x.v.nivel
+          + " y el precio está AHORA en " + x.v.precio).join("\n")
+      /* ⚠️ lo que se puede decir y lo que no: el precio está al otro lado, y el CIERRE de H4
+         con cuerpo —que es como él lo midió— no se ve desde aquí. Esa línea la pone él. */
+      + "\n   ⚠️ DI SOLO ESTO Y NADA MÁS: que el precio está al otro lado de su nivel. Su nivel es por CIERRE de H4 con cuerpo y tú ves el precio del momento, NO el cierre, así que esa confirmación la pone él. Jamás afirmes que cerró una vela que no has visto cerrar.\n"
+      + "   👉 Y no te quedes en el aviso: propónle rehacer el análisis de ese par y, cuando él te dé el bias nuevo, guárdalo con guardar_plan_semanal.\n";
+  }
+  let s2 = "[🗓️ PLAN SEMANAL VIGENTE (guardado el "+fecha+"."+viejo+"):\n"+cabeza;
   for(const p of lista){
+    const v = (vers.find(x=>x.p===p)||{}).v || {};
     s2 += "\n─ "+(p.par||"(sin par)")+" ─\n";
+    s2 += "ESTADO: "+(v.roto ? "⛔ ANULADO (precio al otro lado de su nivel)"
+              : v.juzgable ? ("✅ vivo · precio "+v.precio+" y su nivel sin romper ("+(v.niveles||[]).join(" / ")+")")
+              : ("❓ no puedo juzgarlo: "+(v.porque||"?")+" — dile que no puedes confirmarlo, no supongas que sigue vivo"))+"\n";
     s2 += "Bias: "+p.bias+"\n";
     if(p.zonaP) s2 += "Zona principal: "+p.zonaP+"\n";
     if(p.zonaS) s2 += "Zona secundaria: "+p.zonaS+"\n";
@@ -19242,6 +19500,40 @@ function iaPlanSemanal(){
   }
   s2 += "\nREGLA: el plan semanal MANDA sobre el diario, salvo que se invalide por ruptura de estructura mayor o noticia fuerte. Cada par tiene el SUYO: no mezcles el bias de uno con el otro.]";
   return s2;
+}
+
+/* 📆 v7.277 — EL PLAN DE HOY, CON SU VEREDICTO YA HECHO.
+   Rey quiere revisar el análisis «antes de cada sesión», y el del día es el que cambia
+   dentro de la propia jornada: una noticia de las 8:30 puede matar el plan de las 3:00.
+   Va con el mismo criterio que el semanal: el VEREDICTO delante, y lo que no se puede
+   saber se dice que no se sabe ([[apex-roberto-no-inventa]]). */
+function iaPlanDia(){
+  try{
+    const hoy = hoyISO();
+    if(!PLANDIA || !PLANDIA.pares || !Object.keys(PLANDIA.pares).length)
+      return "[📆 PLAN DEL DÍA: no hay ninguno guardado hoy. Cuando le hagas el análisis del día, GUÁRDALO con guardar_plan_dia (uno por par) y SIEMPRE con su nivel de invalidación: sin eso no hay forma de avisarle si su plan muere a media sesión, que es justo lo que te pidió.]";
+    if(PLANDIA.fecha !== hoy)
+      return "[📆 PLAN DEL DÍA: el que hay es del "+PLANDIA.fecha+", NO de hoy. No lo uses como el de hoy: dile que hay que hacer el análisis del día y ofrécetelo.]";
+    const pares = Object.keys(PLANDIA.pares);
+    const vers = pares.map(k => ({ k, p:Object.assign({par:k}, PLANDIA.pares[k]), v:planVeredicto(Object.assign({par:k}, PLANDIA.pares[k])) }));
+    const rotos = vers.filter(x => x.v && x.v.roto);
+    let s = "[📆 PLAN DEL DÍA (hoy "+hoy+"):\n";
+    if(rotos.length) s += "⛔⛔ EL PLAN DE HOY ESTÁ ANULADO POR PRECIO — DÍSELO EN TU PRIMERA FRASE SIN QUE TE LO PIDA Y OFRÉCELE REHACERLO:\n"
+      + rotos.map(x => "   · "+x.k+": se anulaba "+(x.v.lado==="arriba"?"por encima de ":"por debajo de ")+x.v.nivel+" y el precio está AHORA en "+x.v.precio).join("\n")
+      + "\n   ⚠️ Di solo que el precio está al otro lado de su nivel: la confirmación de cierre la pone él.\n";
+    for(const x of vers){
+      s += "\n─ "+x.k+" ─ (guardado a las "+(x.p.hora||"?")+")\n";
+      s += "ESTADO: "+(x.v.roto ? "⛔ ANULADO"
+            : x.v.juzgable ? ("✅ vivo · precio "+x.v.precio)
+            : ("❓ no puedo juzgarlo: "+(x.v.porque||"?")))+"\n";
+      s += "Bias de hoy: "+(x.p.bias||"?")+"\n";
+      if(x.p.zonaP) s += "Zona a esperar: "+x.p.zonaP+"\n";
+      if(x.p.invalid) s += "Se anula en: "+x.p.invalid+"\n";
+      else s += "⚠️ SIN nivel de invalidación: no se puede vigilar. Ofrécele ponerlo.\n";
+      if(x.p.notas) s += "Notas de hoy: "+x.p.notas+"\n";
+    }
+    return s+"]";
+  }catch(_){ return ""; }
 }
 
 /* Entradas ABIERTAS ya registradas en el Diario, para que Roberto NO las duplique
@@ -19490,6 +19782,17 @@ const IA_TOOLS = [
     input_schema:{ type:"object", properties:{ par:{type:"string"}, fecha:{type:"string",description:"YYYY-MM-DD"} }, required:[] } },
   { name:"limpiar_diario_ejecutor", description:"Borra del ARCHIVO del Ejecutor (el bot de MT5, pestaña 🤖) operaciones ANTIGUAS que Rey ya no quiera almacenadas. ÚSALO SOLO cuando Rey lo pida explícitamente: su archivo es de LARGO PLAZO (días/semanas/meses/años) y por defecto se conserva TODO. JAMÁS toca el Diario personal de Rey. Confírmalo siempre.",
     input_schema:{ type:"object", properties:{ antes_de:{type:"string",description:"Borra todo lo ANTERIOR a esta fecha (YYYY-MM-DD)"}, mes:{type:"string",description:"O borra un mes completo (YYYY-MM)"} }, required:[] } },
+  /* 📆 v7.277 — Rey: «si se anula un análisis semanal O DIÁRIO él debe saberlo y detectarlo».
+     El del día no se guardaba en ningún sitio, así que no había NADA que vigilar: se
+     hablaba en el chat y se iba con el chat. */
+  { name:"guardar_plan_dia", description:"Guarda el PLAN DEL DÍA de Rey (un par por llamada) para poder VIGILARLO durante la sesión. Úsalo SIEMPRE al terminar el análisis del día, con el nivel que lo invalidaría. ⚠️ El nivel de invalidación es lo más importante de esta mano: sin él, nadie puede detectar que el plan del día murió y Rey seguiría operando con un plan muerto. Dura hasta el día siguiente (el semanal es otra cosa y se guarda aparte con guardar_plan_semanal). SIEMPRE con tarjeta de confirmación.",
+    input_schema:{ type:"object", properties:{
+      par:{type:"string",description:"Par del plan de hoy, ej. EUR/USD"},
+      bias:{type:"string",description:"El sesgo de HOY para ese par (COMPRAS / VENTAS / RANGO-ESPERAR), con el matiz si lo tiene"},
+      zona:{type:"string",description:"Zona o zonas a esperar hoy, con precio"},
+      nivel_invalidacion:{type:"string",description:"Precio que MATA el plan de hoy si se rompe. Di el lado: «sobre 1.1290» o «bajo 1.3250». Si hay dos, «sobre X o bajo Y»"},
+      notas:{type:"string",description:"Lo que haya que recordar hoy: noticias, qué no hacer, qué esperar"}
+    }, required:["par","bias"] } },
   { name:"guardar_plan_semanal", description:"Guarda/actualiza el PLAN DE LA SEMANA de Rey para RECORDARLO toda la semana y detectar si se invalida. Úsalo al terminar el análisis semanal, o cuando el plan CAMBIE por una ruptura del nivel de invalidación o una noticia fuerte. Confírmalo siempre.",
     input_schema:{ type:"object", properties:{
       bias:{type:"string",description:"COMPRAS / VENTAS / RANGO-ESPERAR"},
@@ -19736,6 +20039,7 @@ function describeTool(name, i){
   if(name==="capturar_grafico") return "📸 Capturar el gráfico de "+(i.par||"(par actual)");
   if(name==="limpiar_capturas") return "🧹 Limpiar capturas sueltas"+(i.par?(" de "+i.par):"")+(i.fecha?(" del "+i.fecha):" (todas las sueltas)");
   if(name==="limpiar_diario_ejecutor") return "🗑️ Limpiar archivo del Ejecutor"+(i.mes?(" — mes "+i.mes):(i.antes_de?(" — todo lo anterior al "+i.antes_de):""));
+  if(name==="guardar_plan_dia") return "📆 Guardar PLAN DE HOY ("+(i.par||"?")+")\nBias: "+(i.bias||"?")+(i.zona?("\nZona: "+i.zona):"")+(i.nivel_invalidacion?("\n⚠️ Se anula en: "+i.nivel_invalidacion):"\n⚠️ SIN nivel de invalidación: así no podré avisarte si muere");
   if(name==="guardar_plan_semanal") return "🗓️ Guardar PLAN de la semana"+(i.par?(" ("+i.par+")"):"")+"\nBias: "+(i.bias||"?")+(i.zona_principal?("\nZona: "+i.zona_principal):"")+(i.nivel_invalidacion?("\n⚠️ Invalida en: "+i.nivel_invalidacion):"")+(i.mejor_dia?("\nMejor día: "+i.mejor_dia):"");
   if(name==="borrar_trade") return "🗑️ Borrar del Diario el trade de "+(i.par||"?")+(i.fecha?(" del "+i.fecha):" (el más reciente)");
   if(name==="editar_trade"){ const c=["r","res","setup","momento","bias","ventana","nconf","zona","entrada","sl","tp","nota"].filter(k=>i[k]!=null&&i[k]!=="").map(k=>k+"→"+i[k]).join(", "); return "✏️ Editar el trade de "+(i.par||"?")+(i.fecha?(" del "+i.fecha):" (el más reciente)")+"\n"+(c||"(sin cambios)"); }
@@ -20048,11 +20352,32 @@ async function ejecutarTool(name, i){
       nubeShotReq(par||(t&&t.par)||"", sid);
       return {ok:true,msg:"📸 Captura pedida"+(par?(" de "+par):"")+" — el Puente la sube en unos segundos; la verás en la 🖼️ Galería"+(t?" y en tu entrada abierta.":".")};
     }
+    if(name==="guardar_plan_dia"){
+      const par = String(i.par||"").trim();
+      if(!par) return {ok:false,msg:"Falta el par"};
+      const hoy = hoyISO();
+      /* se guarda POR PAR y sin pisar el otro, igual que el semanal. Y si el que había es
+         de AYER, se tira entero: un plan del día de ayer presentado como de hoy es el fallo
+         del informe rancio ([[apex-informe-rancio-agitador]]). */
+      const previo = (PLANDIA && PLANDIA.fecha === hoy && PLANDIA.pares) ? PLANDIA.pares : {};
+      previo[par] = { bias:String(i.bias||""), zonaP:String(i.zona||""),
+                      invalid:String(i.nivel_invalidacion||""), notas:String(i.notas||""),
+                      fecha:hoy, hora:(new Date()).toTimeString().slice(0,5) };
+      PLANDIA = { pares:previo, fecha:hoy };
+      try{ save(K.plandia, PLANDIA); }catch(_){}
+      /* ☁️ a la nube va desde `save()` (el único sitio por el que pasa todo guardado), que
+         es desde donde el vigía lo mira con la app cerrada */
+      return {ok:true, msg:"Plan de HOY guardado para "+par+": "+(i.bias||"")
+        +(i.nivel_invalidacion?(" · se anula en "+i.nivel_invalidacion):" ⚠️ SIN nivel de invalidación, así no puedo avisarte si muere")
+        +". Lo vigilo durante la sesión."};
+    }
     if(name==="guardar_plan_semanal"){
       /* 🗓️ v7.136 — se guarda POR PAR y sin pisar el otro (antes el segundo borraba al primero) */
       const lista = planSemGuardar({ bias:i.bias||"", par:i.par||"", zonaP:i.zona_principal||"", zonaS:i.zona_secundaria||"", invalid:i.nivel_invalidacion||"", mejorDia:i.mejor_dia||"", evitar:i.dias_evitar||"", notas:i.notas||"", fecha:hoyISO() });
-      /* 🌙 v6.39: el plan viaja a la nube para que el dossier nocturno lo conozca */
-      try{ fetch(nubeUrl()+"/plansem",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(PLANSEM)}).catch(()=>{}); }catch(_){}
+      /* 🌙 v6.39: el plan viaja a la nube para que el dossier nocturno lo conozca.
+         🗓️ v7.277 — y ya NO se manda desde aquí: lo manda `save()`, que es el único sitio
+         por el que pasa todo guardado. Dos caminos para lo mismo es como nació el fallo de
+         hoy: se arregla uno y el otro se queda viejo sin que nadie lo note. */
       const otros = lista.filter(x => x.par !== (i.par||"")).map(x => x.par).filter(Boolean);
       return {ok:true,msg:"Plan semanal guardado: "+(i.bias||"")+(i.par?(" en "+i.par):"")+(i.nivel_invalidacion?(" · invalida en "+i.nivel_invalidacion):"")+". Lo recordaré toda la semana."
         +(otros.length?(" (sigue guardado también el de "+otros.join(", ")+")"):"")};
@@ -22298,7 +22623,7 @@ async function iaEnviar(textoForzado, promptExtra){
     + "Si está en la tercera, di que TODAVÍA NO HAY porque aún no lo ha registrado — no que falló." + NL
     + "❌ NUNCA digas que NO PUEDES consultar algo de estas listas ni que tienes esa limitación: SÍ puedes." + NL
     + "Decir «no puedo» sobre algo que sí tienes le hace dudar de ti, y con razón." + NL;
-  const inj=_cabecera+entTxt+dondeTxt+"\n"+climaTxt+iaReloj()+"\n"+grafTxt+calTxt+iaContexto()+"\n"+iaEstrategiaDef()+"\n"+guardianRiesgo()+"\n"+iaPlan()+"\n"+iaAciertos()+"\n"+(estadoRecuperacionFreno().block||"")+iaFugas()+"\n"+iaRacha()+"\n"+iaPatrones()+"\n"+iaDatosSueltos()+"\n"+iaHitos()+"\n"+iaChats()+"\n"+iaPendientes()+"\n"+iaPlanSemanal()+"\n"+iaAvisos()+"\n"+iaPosicionesVivas()+iaEntradasAbiertas()+iaEjecutorArchivo()+iaEjecutorHoy()+iaTemplo()+iaLeyes(texto)+marco+iaEjecutorCfgTxt()+pcTxtVivo()+iaNovedadesTxt()+"\n=== FIN DEL CONTEXTO — responde al mensaje de Rey del bloque anterior ===";
+  const inj=_cabecera+entTxt+dondeTxt+"\n"+climaTxt+iaReloj()+"\n"+grafTxt+calTxt+iaContexto()+"\n"+iaEstrategiaDef()+"\n"+guardianRiesgo()+"\n"+iaPlan()+"\n"+iaAciertos()+"\n"+(estadoRecuperacionFreno().block||"")+iaFugas()+"\n"+iaRacha()+"\n"+iaPatrones()+"\n"+iaDatosSueltos()+"\n"+iaHitos()+"\n"+iaChats()+"\n"+iaPendientes()+"\n"+iaPlanSemanal()+"\n"+iaPlanDia()+"\n"+iaAvisos()+"\n"+iaPosicionesVivas()+iaEntradasAbiertas()+iaEjecutorArchivo()+iaEjecutorHoy()+iaTemplo()+iaLeyes(texto)+marco+iaEjecutorCfgTxt()+pcTxtVivo()+iaNovedadesTxt()+"\n=== FIN DEL CONTEXTO — responde al mensaje de Rey del bloque anterior ===";
   const last=msgs[msgs.length-1];
   const textoMsg=c.msgs[c.msgs.length-1].content;   /* EXACTAMENTE lo guardado (texto + nota del doc) */
   let bloquesMsg = Array.isArray(last.content) ? last.content.filter(b=>b.type==="image") : [];   /* la foto va delante */
@@ -22721,6 +23046,12 @@ setTimeout(()=>{ if(!oyeEscuchar()) setTimeout(()=>{ if(!oyeEscuchar()) setTimeo
     setTimeout(()=>{ notifProgramarKillzones(); notifChequearCuentasDD(); pushSubscribe(); }, 1500);
   } else if(NOTIF.on){ NOTIF.on=false; guardarNotif(); }
 }
+/* 🗓️ v7.277 — SU PLAN DE SIEMPRE SUBE AL ARRANCAR, UNA VEZ.
+   Sin esto, el arreglo de hoy solo serviría a partir del PRÓXIMO plan que escribiera: el
+   del 14-10 que tiene en el teléfono seguiría sin estar en la nube, y Roberto seguiría
+   diciéndole que no tiene plan. Arreglar la cañería no llena el depósito.
+   Va con retraso para no pelearse con el arranque, y `planesSync` lleva su propio freno. */
+document.addEventListener("DOMContentLoaded", ()=>{ setTimeout(()=>{ try{ planesSync(); }catch(_){} }, 6000); });
 document.addEventListener("DOMContentLoaded",init);
 
 /* 🗝️ v7.05 — AQUÍ, AL FINAL DEL TODO, Y NO ANTES.

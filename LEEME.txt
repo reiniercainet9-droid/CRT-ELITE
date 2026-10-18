@@ -1,101 +1,125 @@
-APEX v7.276 — TRADING DESK
+APEX v7.277 — TRADING DESK
 =========================
 
-APEX 7.276 + WORKER 5.282 — 17-10-2026
-PUNTO 1 DE TU LISTA: ROBERTO SABE DE DÓNDE SALE CADA DATO
+APEX 7.277 + WORKER 5.283 — 17-10-2026
+PUNTOS 2, 3 Y 4: SI TU PLAN SE ANULA, TE LO CANTO SIN QUE ME LO PIDAS
 
 Lo pediste así:
-  «Roberto debe saber todo los cambios que se hacen y de dónde viene cada dato
-   para que no tenga baches en el chat con él al analizar las operaciones.»
+  «quiero revisar los análisis semanal y diario antes de cada sesión, y más con
+   las fuertes noticias como esta semana que hubieron fuertes noticias que
+   movieron el mercado… si se anula un análisis semanal o diário él debe saberlo
+   y detectarlo y cantármelo rápido sin pedírselo, sugerirme hacer nuevo
+   análisis, y la notificación ir directo a su propuesta del análisis en el chat»
 
-────────────────────────────────────────────────────────────────────────────
-LO QUE ENCONTRÉ ANTES DE TOCAR NADA
+════════════════════════════════════════════════════════════════════════════
+⚠️  ANTES DE NADA: TU PLAN SEMANAL NO ESTABA EN LA NUBE
 
-Tus 5 operaciones con parcial REAL de MT5 (88,2% · 88,2% · 88,2% · 69,7% ·
-31,2%) le llegaban a Roberto como «parcial: null». TODAS.
+Lo encontré al ir a construir el vigía, y lo verifiqué por los dos lados:
 
-El dato estaba bien en tu teléfono. Bien en la nube. Y se caía en la última
-curva: la mano con la que él JUZGA tus operaciones exigía el % Y el R a la vez,
-y MT5 no da R (no sabe con qué riesgo entraste).
+  EN TU TELÉFONO:
+    EUR/USD  RANGO-ESPERAR · invalida "Cierre H4 con cuerpo sobre 1.11800"
+    GBP/USD  RANGO-ESPERAR · invalida "...sobre 1.32857 o bajo 1.32562"
+    (los dos del 14-10, escritos por ti)
 
-O sea: el trabajo entero de ayer —traer tus parciales de verdad— no llegaba a
-Roberto. Y es también por lo que la fila «✂️ parcial» desapareció de tus
-métricas justo el día que el dato mejoró.
+  EN TU DOSSIER DE ESTA MAÑANA, servido por esa misma nube:
+    "🗓️ Plan semanal: no guardado — ¿lo busco?"
 
-────────────────────────────────────────────────────────────────────────────
-1) EL R DEL PARCIAL YA NO HACE FALTA PEDÍRTELO
+LA CAUSA: desde la v7.136 tu plan se guarda POR PAR y viaja como {pares:{…}}.
+La puerta del worker solo copiaba los campos de primer nivel, que ya no
+existen ahí. Guardaba un plan VACÍO.
 
-No había que inventarlo: cada mitad la tiene uno.
-  · el RIESGO es tu entrada menos tu SL  → eso lo pones TÚ (MT5 no guarda el SL)
-  · a qué precio sacaste el trozo        → eso lo dice MT5
+LO QUE TE HA COSTADO, callado: el dossier del amanecer, el Pensadero y el parte
+de la mañana llevaban semanas trabajando SIN tu plan — y sin decir que les
+faltaba. Y es parte de tu punto 5: Roberto no podía vigilar que fijaras el plan
+semanal, porque desde la nube no había ninguno.
 
-Medido con tus precios reales, da entre 0,53R y 1,62R, con el signo correcto en
-compras y en ventas.
+Arreglado, y además:
+  · tu plan del 14-10 SUBE SOLO al arrancar Apex — no tienes que rehacerlo
+  · ahora se puede MIRAR lo que hay guardado (antes era imposible comprobarlo,
+    y así es como se nos pasaron semanas de planes vacíos)
+  · el envío va enganchado donde pasa TODO guardado, no en cada mano: el que
+    añada el sitio siguiente no puede olvidarse
 
-Y si falta tu SL, NO sale ningún número: se dice que no se sabe. Jamás un R a
-ojo — un R inventado te ensucia la esperanza, el progreso y el reparto de golpe,
-y encima con cara de medido.
+════════════════════════════════════════════════════════════════════════════
+1) TU NIVEL DE INVALIDACIÓN YA NO LO MIRA NADIE: LO MIRA LA APP
 
-────────────────────────────────────────────────────────────────────────────
-2) ROBERTO RECIBE AHORA, CON CADA OPERACIÓN
+Lo escribías en cada plan y NADIE lo comparaba nunca con el precio. Solo se
+miraba cuando TÚ pedías el análisis del día — o sea, el sistema se enteraba de
+que tu plan estaba muerto justo cuando ya te habías puesto a trabajar con él.
 
-  ✂️ el parcial con su % EXACTO, el R al que lo sacaste, cuántas veces partiste
-     la posición y QUIÉN lo midió
-  💸 la comisión en USD  ← era dinero invisible: −16,30 USD en 9 operaciones
-  💰 el neto real que movió tu cuenta
-  📏 los lotes y los precios reales de entrada y salida
-  🧾 si esa operación la cuadró Apex con tu MT5, o si solo está lo que anotaste
+Medido con tu plan y los precios vivos de hoy:
 
-Y en el conjunto: la comisión TOTAL, el neto total, cuántas están cuadradas con
-MT5 y cuántos parciales se quedaron sin R (para que te pida el SL que falta en
-vez de darte un reparto a medias por bueno).
+    EUR/USD   invalida sobre 1.11800   ·   precio 1.12387   →  ⛔ ANULADO
+    GBP/USD   invalida sobre 1.32857   ·   precio 1.33286   →  ⛔ ANULADO
 
-────────────────────────────────────────────────────────────────────────────
-3) Y SABE LEERLO — LAS TRES CLASES DE DATO
+Tus dos planes estaban anulados por precio y nadie te lo había dicho.
 
-Punto 41 nuevo en su cabeza:
+Ahora la cuenta la hace la app en cada mensaje y Roberto recibe el VEREDICTO
+hecho, con el ⛔ DELANTE de todo — no escondido entre los detalles.
 
-  LO QUE MIDIÓ MT5 (hechos, no se discuten): parcial y su %, comisión, neto,
-      precios reales, lotes. De estos habla como «lo leí de tu MT5» —
-      PROHIBIDO decir «según lo que apuntaste».
-  LO QUE PUSISTE TÚ (tu criterio): R, resultado, setup, ventana, momento, bias,
-      zona, confluencias, SL/TP planeados, nota, y si es REAL o BACKTEST.
-  LO CALCULADO: el R del parcial, de los dos lados.
+════════════════════════════════════════════════════════════════════════════
+2) UN VIGÍA QUE LO MIRA CON APEX CERRADA  (worker 5.283)
 
-Y dos cosas que cambian cómo te juzga:
+  · corre en el cron, cada minuto
+  · NO llama a la IA ni una vez: es aritmética. No te cuesta un céntimo
+  · avisa UNA vez por anulación, no una por minuto
+  · con el Puente caído NO juzga el precio (las noticias sí: no necesitan PC)
+  · el fin de semana se calla: sin mercado no hay precio que romper nada, y
+    avisaría con la lectura del viernes. Al abrir, vuelve a mirarlo
+  · y mira si tu plan es de ANTES de una noticia de ALTO impacto que ya salió
 
-  (a) TU GESTIÓN REAL PUEDE NO SEGUIR TU REGLA DEL 75/80, Y ESO NO ES UN FALLO
-      TUYO: ES EL MERCADO. Lo dijiste tú: «una cosa son mis reglas y otra
-      distinta la gestión en el mercado real». Ahora te juzga por el % que midió
-      MT5, con respeto por lo que decidiste en caliente. Antes te habría reñido
-      por «incumplir» un 88,2% que estuvo bien decidido.
-  (b) SI EL NETO EN USD NO CUADRA CON EL R, LA COMISIÓN ES LO PRIMERO QUE MIRA,
-      antes de decir una palabra. Un R puede decir break-even y tu cuenta haber
-      bajado.
+════════════════════════════════════════════════════════════════════════════
+3) EL AVISO CAE EN SU PROPUESTA — TU PUNTO 4, LITERAL
 
-────────────────────────────────────────────────────────────────────────────
-4) Y LA LECCIÓN DE CADA NOCHE TAMBIÉN LO VE  (worker 5.282)
+Al tocarlo no se abre la portada ni el chat a secas: se abre su chat con la
+propuesta YA ESCRITA y un botón para arrancar el análisis nuevo (el de la
+semana o el de hoy, tú eliges).
 
-La lección que Roberto destila cada noche de tus operaciones se armaba con los
-campos de ayer: sin parcial, sin comisión, sin neto, sin origen. Teniéndolo
-delante en la nube, no podía aprender NADA sobre por dónde se te va el dinero.
+Y NO lanza el análisis solo, por dos razones tuyas: cuesta dinero y nada puede
+gastar sin que tú lo mandes, y la decisión de rehacer el plan es TUYA.
 
-────────────────────────────────────────────────────────────────────────────
-⚠️  TIENES QUE SUBIR TÚ EL WORKER 5.282
+Al aterrizar rehace la cuenta con el precio de ESE momento: si el aviso salió
+hace diez minutos y el precio volvió, te lo dice. Y si no tiene precio fresco
+te lo dice también, en vez de darte el plan por bueno.
 
-Está en:  sistema-apex/worker/worker-elitepro-v5.282.js
-(mismo sitio de donde cogiste el 5.281)
+════════════════════════════════════════════════════════════════════════════
+4) EL PLAN DEL DÍA YA EXISTE
 
-La app 7.276 funciona sin él — el chat ya está sin baches. Lo que espera al
-worker es solo la lección de la noche.
+No se guardaba en ninguna parte: se hablaba en el chat y se iba con el chat.
+Sin eso no había NADA que vigilar del análisis diario, y tú dijiste "semanal
+o diário".
 
-────────────────────────────────────────────────────────────────────────────
+Ahora el análisis del día termina guardándolo (un par por llamada, siempre con
+su nivel de invalidación y su lado), Roberto lo VE en cada mensaje con su
+veredicto, viaja en tu respaldo, y el de ayer nunca se presenta como el de hoy.
+
+════════════════════════════════════════════════════════════════════════════
+DOS COSAS QUE LE DEJÉ PROHIBIDAS, PORQUE PODÍAN VOLVERSE MENTIRA
+
+  (a) ROBERTO VE EL PRECIO, NO EL CIERRE. Tu nivel lo mides por CIERRE DE H4
+      CON CUERPO. Desde la nube solo se ve el precio del momento, así que tiene
+      prohibido afirmar que cerró una vela que no ha visto cerrar: te dice que
+      el precio está al otro lado y la confirmación la pones tú.
+
+  (b) CON BIAS DE RANGO Y UN SOLO NIVEL NO ADIVINA EL LADO. Un rango muere por
+      los dos lados; con un número no se sabe cuál. Se queda sin juzgar y lo
+      dice, en vez de darte un aviso falso.
+
+════════════════════════════════════════════════════════════════════════════
+⚠️  TIENES QUE SUBIR TÚ EL WORKER 5.283
+
+  Está en:  📤 PARA SUBIR HOY / worker-elitepro-v5.283.js
+  Lleva DENTRO el 5.282 de antes (la lección de la noche con tus parciales).
+
+  La app 7.277 funciona sin él: la cuenta del plan la hace ella. Lo que espera
+  al worker es el vigía con Apex CERRADA y la lección de la noche.
+
+════════════════════════════════════════════════════════════════════════════
 PROBADO
 
-  banco nuevo  test-roberto-sabe-de-donde-sale-cada-dato.cjs .... 25/25
-               (la mano EJECUTADA con tu Diario, no leída)
-  tus 5 parciales reales .................................... dan R correcto
-  sin SL / riesgo cero / sin parcial ........................ no inventa nada
+  banco nuevo  test-el-plan-muerto-se-canta-solo.cjs ............... 39/39
+               (la cuenta EJECUTADA con tu plan del 14-10 y tus precios vivos)
+  regresión completa ............................................. 414 bancos
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
