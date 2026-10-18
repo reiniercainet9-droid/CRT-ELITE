@@ -19228,7 +19228,11 @@ function iaAvisos(){
    subida suya no es un dato que tenga ([[apex-el-worker-lo-sube-rey]]).
    ═════════════════════════════════════════════════════════════════════════════════════════ */
 let _preciosVivos = {}, _preciosVivosTs = 0;
-const parClaveApex = (s) => String(s || "").toUpperCase().replace(/[^A-Z]/g, "");
+/* ⚠️ el símbolo del gráfico viene con su broker delante ("OANDA:EURUSD", "FX:GBPUSD") y
+   su plan lo escribe a su manera ("EUR/USD"). Lo primero que hay que tirar es el prefijo
+   del broker, o no casan jamás — y entonces el veredicto es «no tengo el precio» teniendo
+   el precio delante, que es justo lo que pasó al probarlo en su teléfono. */
+const parClaveApex = (s) => { const t = String(s || "").toUpperCase(); const i = t.lastIndexOf(":"); return (i >= 0 ? t.slice(i + 1) : t).replace(/[^A-Z]/g, ""); };
 
 /* saca los niveles de su texto libre. Sus dos formas reales, del 14-10:
      «Cierre H4 con cuerpo sobre 1.11800»                -> arriba 1.118

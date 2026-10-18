@@ -1,7 +1,7 @@
-APEX v7.277 — TRADING DESK
+APEX v7.278 — TRADING DESK
 =========================
 
-APEX 7.277 + WORKER 5.283 — 17-10-2026
+APEX 7.278 + WORKER 5.284 — 18-10-2026
 PUNTOS 2, 3 Y 4: SI TU PLAN SE ANULA, TE LO CANTO SIN QUE ME LO PIDAS
 
 Lo pediste así:
@@ -120,6 +120,41 @@ PROBADO
   banco nuevo  test-el-plan-muerto-se-canta-solo.cjs ............... 39/39
                (la cuenta EJECUTADA con tu plan del 14-10 y tus precios vivos)
   regresión completa ............................................. 414 bancos
+
+════════════════════════════════════════════════════════════════════════════
+⚠️  AÑADIDO EL 18-10 — EL ARREGLO QUE FALTABA (7.278 / 5.284)
+
+Instalé la 7.277 en tu teléfono y la probé DENTRO. Decía esto:
+
+    EUR/USD  →  "no puedo juzgarlo: no tengo el precio vivo de EUR/USD"
+    GBP/USD  →  "no puedo juzgarlo: no tengo el precio vivo de GBP/USD"
+
+...teniendo los precios en memoria en ese mismo instante.
+
+CAUSA: tu gráfico manda "OANDA:EURUSD" y tu plan dice "EUR/USD". Al quitar lo
+que no es letra quedaba "OANDAEURUSD" contra "EURUSD" y no casaban NUNCA. El
+veredicto era SIEMPRE "no puedo juzgarlo": el fallo entero disfrazado de
+prudencia, que es la peor forma de fallar porque parece cautela.
+
+Y mi banco lo había dado VERDE porque probaba la cuenta dándole el precio a
+mano: nunca probó el emparejado. Ya está tapado.
+
+Arreglado en los DOS lados (app y worker) y comprobado con tus cadenas reales:
+    OANDA:EURUSD  vs  EUR/USD              →  casan
+    OANDA:GBPUSD  vs  GBP/USD              →  casan
+    FX:GBPUSD     vs  GBPUSD               →  casan
+    OANDA:EURUSD  vs  GBP/USD              →  no casan
+    OANDA:EURUSD  vs  "EUR/USD y GBP/USD"  →  no casan  (tu plan viejo del
+                                               27-09 sigue sin juzgarse, que
+                                               es lo correcto)
+
+⚠️  EL 5.283 QUE SUBISTE NO LLEVA ESTE ARREGLO. Sube el 5.284.
+    Lo bueno: el 5.283 YA metió tu plan en la nube (lo comprobé: está entero
+    con sus dos niveles). Lo que le falta es poder juzgarlo por precio.
+
+PROBADO
+  banco test-el-plan-muerto-se-canta-solo.cjs ....... 40/40
+  regresión completa ............................... 414/414
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
