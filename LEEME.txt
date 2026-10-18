@@ -1,88 +1,103 @@
-APEX v7.279 — TRADING DESK
+APEX v7.280 — TRADING DESK
 =========================
 
-APEX 7.279 — 18-10-2026
-PUNTO 5: QUE CUMPLAS CON FIJAR EL PLAN SEMANAL
+APEX 7.280 — 18-10-2026
+EL R SE MIDE · LO QUE BORRAS NO VUELVE · Y VES LO QUE TE CAMBIO
 
-Lo pediste así:
-  «revisar el cumplimiento de fijar el plan semanal, que lo cumpla, que ahí
-   tiene dificultad»
-
-════════════════════════════════════════════════════════════════════════════
-EL AGUJERO, MEDIDO CON TU PLAN DE VERDAD
-
-    tu plan ....... miércoles 14-10  →  semana del 12 al 16 oct
-    hoy ........... domingo   18-10  →  semana del 19 al 23 oct
-
-    días .......... 4          →  NO saltaba ningún aviso
-    semanas ....... distintas  →  tu plan venció y nadie te lo iba a decir
-
-Lo único que había era «si tiene más de 6 días, dilo». LOS DÍAS NO SON SEMANAS.
-El lunes 19 tendría 5 días y seguiría callado: habrías operado la semana nueva
-ENTERA con el plan de la vieja, creyéndolo vigente.
+Todo esto salió de una pregunta tuya: «no recuerdo esa operación y hasta la
+había borrado».
 
 ════════════════════════════════════════════════════════════════════════════
-1) SE MIDE EN SEMANAS
+1) TU R ESTABA EN MT5 Y NADIE LO MIRABA
 
-Y tu semana empieza el DOMINGO POR LA TARDE, no el lunes: el mercado abre a
-las 17:00 NY y tu rutina es el análisis a las 16:40, justo antes. Si contara
-desde el lunes, el plan que escribes el domingo nacería marcado como vencido
-el mismo día de escribirlo.
+MT5 guarda el SL de CADA orden. Tus 16 posiciones lo tienen. Con tu SL, tu
+entrada y tu salida ponderada POR VOLUMEN, el R se MIDE — no hay que pedírtelo.
 
-Si el plan no es de esta semana, eso va DELANTE incluso del veredicto de
-precio: un nivel de la semana pasada no se juzga, SE JUBILA. Y Roberto tiene
-PROHIBIDO darte un veredicto de entrada con esos niveles — se los presentaría
-como tu plan y entrarías con ellos.
+Y al medirlo salió lo importante:
 
-⏳ Y la edad en días SIGUE contando, además de la semana. No es repetido: un
-plan que escribes un domingo cumple 6 días el sábado siguiente SIN salir de su
-semana operativa, así que la cuenta de semanas sola no lo avisaría nunca. La
-semana dice si VENCIÓ; los días, si está RANCIO.
+   fecha   par       tu R escrito   R MEDIDO    neto real
+   05-10   GBP/USD      1,8          +0,73R     +24,50 USD
+   08-10   GBP/USD      2,01         +1,43R     +38,76 USD
+   08-10   EUR/USD      2,03         +1,33R     +34,48 USD
+   13-10   GBP/USD      2,0          +1,20R     +39,53 USD
+   16-10   EUR/USD      1,0          +1,10R     +28,98 USD
 
-════════════════════════════════════════════════════════════════════════════
-2) EL CUMPLIMIENTO — lo que pediste «revisar»
+TU R ESCRITO ES OPTIMISTA, y la causa es tu propia gestión: apuntas el R del
+TP como si toda la posición hubiera llegado allí, cuando el 88% salió antes en
+el parcial.
 
-    📋 CUMPLIMIENTO de fijar el plan (últimas 5 semanas): 1 de 5
-       ❌ 19 oct – 23 oct  ← ESTA SEMANA
-       ✅ 12 oct – 16 oct
-       ❌ 5 oct – 9 oct
-       ...
+Comprobado con dinero: el 08-10 GBP/USD, SL a 8,3 pips con 0,34 lotes =
+~28 USD de riesgo. A 2,01R serían +56,7 USD. Cobraste +38,76. Eso es 1,37R.
+Cuadra con el 1,43 medido, no con el 2,01 escrito.
 
-No existía porque solo se guardaba el ÚLTIMO plan: al escribir el de esta
-semana se pisaba el de la anterior y no quedaba rastro de si la cumpliste.
-Ahora queda apuntado y viaja en tu respaldo.
+Ninguno es mentira: tu 2,01 es «el precio llegó a 2R»; el 1,43 es «esto rindió
+mi riesgo». Pero el segundo es el que te paga.
 
-Y Roberto tiene que RECONOCÉRTELO cuando vienes cumpliendo, no solo apretarte.
-Insistir sin reconocer es lo que acaba haciéndote apagar el aviso.
+LAS DOS COSAS, como pediste:
+  · tu R escrito se CONSERVA en rApuntado — tu criterio no se tira
+  · el MEDIDO manda en tus métricas
+  · y SI LO EDITAS A MANO, GANAS TÚ: guardo qué valor apliqué, así que si el
+    número ya no es el mío sé que lo cambiaste y NO te lo vuelvo a pisar
 
 ════════════════════════════════════════════════════════════════════════════
-3) «FIJAR» SON DOS COSAS, Y TÚ LAS PEDISTE JUNTAS
+2) LO QUE BORRAS, BORRADO SE QUEDA   ← avería tuya descubierta, mía de culpa
 
-Guardar los datos del plan (guardar_plan_semanal) y dejar su chat A MANO
-(organizar_chat fijar:true) son DOS cosas. El 21-09 Roberto hizo la primera,
-no la segunda, y te escribió «los dos planes quedaron reemplazados y FIJADOS».
+Borraste la operación del 06-10 y VOLVÍA SOLA. El cuadre con MT5 reinsertaba
+cualquier operación que no estuviera en tu Diario — cada 10 minutos, en
+silencio. Apex te deshacía un borrado tuyo y no tenías forma de saber por qué.
 
-Ahora se comprueba si el chat del análisis de ESTA semana está fijado, y si no
-lo está se le da la llamada ya escrita para que no tenga que inventarla. El
-guardia que caza el «lo fijé» sin haberlo hecho sigue en pie.
+Ahora un borrado tuyo se apunta por nº de posición y NO VUELVE. Por los DOS
+caminos: tu papelera del Diario y la mano borrar_trade de Roberto. Y viaja en
+tu respaldo: al cambiar de teléfono siguen borradas.
 
 ════════════════════════════════════════════════════════════════════════════
-4) TU TARJETA
+3) «ESTO TE CAMBIÉ»   ← el informe que no existía
 
-Dejó de preguntar «¿hay plan?» y pregunta «¿hay plan DE ESTA SEMANA?».
-Con tu plan del 14-10 guardado, el lunes 19 te habría salido TODO EN VERDE.
+El parte del cuadre vivía en una variable que NADIE leía: se declaraba, se
+asignaba y ahí moría. Apex te corregía el Diario a solas.
 
-Y un plan VENCIDO pesa MÁS que no tener ninguno: no tener plan te deja sin
-guía, pero uno vencido te da FALSA SEGURIDAD para entrar.
+Hoy mismo te sobrescribí dos parcialR que habías puesto a mano (1,5 → 0,83 y
+1,0 → 0,98) y te lo dije YO, hablando. Si lo hace sola mientras duermes, no te
+enteras.
+
+Ahora:
+  · 🧾 TARJETA en tu pantalla cuando haya algo que no has leído
+  · VENTANA con el detalle campo a campo: qué operación, qué dato, de qué a qué
+  · se ACUMULA lo no leído (un cambio de madrugada sigue ahí cuando despiertas)
+  · se marca como leído cuando lo ves, y no se repite
+  · y ROBERTO lo ve en el chat, para contártelo sin machacarte
+
+════════════════════════════════════════════════════════════════════════════
+4) Y TU REGLA DE LAS ÓRDENES CANCELADAS, BLINDADA
+
+Pediste: «no traer operaciones programadas canceladas». Ya se cumplía, pero
+por cómo está escrito, no porque nadie lo protegiera.
+
+El Puente lee SOLO deals ejecutados y exige entrada Y salida. Una orden
+cancelada es una INTENCIÓN: no deja deal, ni comisión, ni P&L. Y el SL se lee
+en una función APARTE que devuelve solo niveles y jamás crea operaciones.
+Banco test-una-orden-cancelada-no-es-una-operacion.cjs vigilándolo.
+
+⚠️ Y LA DEL 06-10 NO ERA CANCELADA. Le pregunté a tu MT5: del 5 al 7 de
+octubre hay ocho órdenes y las ocho FILLED, cero canceladas. La del 06-10 tiene
+su orden FILLED, su deal de entrada con comisión −0,95 y su deal de salida con
+−5,89. Se ejecutó, estuvo 6h 36min abierta en tu cuenta FundedNext, y la
+cerraste a mano desde el MT5 del móvil (razón «1» en las dos órdenes, y el
+precio final quedó entre tu SL y tu TP).
+
+Ya está rellena con todo lo medible. Te falta tu criterio: setup, ventana,
+momento, bias, zona y con qué alias la fichas.
 
 ════════════════════════════════════════════════════════════════════════════
 PROBADO
 
-  banco nuevo  test-el-plan-semanal-se-mide-en-semanas.cjs ...... 26/26
-               (la cuenta de semanas EJECUTADA con tus fechas reales)
-  regresión completa ............................................ 415 bancos
-
-Con esto quedan cerrados los CINCO puntos de tu lista del 17-10.
+  banco nuevo  test-el-r-se-mide-y-lo-que-cambio-se-ve.cjs ....... 27/27
+  banco nuevo  test-una-orden-cancelada-no-es-una-operacion ...... 12/12
+  banco viejo  test-apex-cuadra-con-mt5.cjs ..................... 31/31
+               (reescritos los dos sitios que decían «MT5 no sabe tu riesgo»:
+                la ley sigue siendo que el R no se INVENTE, pero el hecho
+                cambió — MT5 sí guarda tu SL)
+  regresión completa ............................................ 417 bancos
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

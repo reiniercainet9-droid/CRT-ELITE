@@ -38,6 +38,12 @@ const K = {
   plandia:"crtelite_plandia_v1",
   /* 📋 v7.279 — de qué semanas fijó plan y de cuáles no (punto 5 de Rey) */
   plansemlog:"crtelite_plansemlog_v1",
+  /* 🧾 v7.280 — lo que Apex le cambió sola en el Diario, hasta que él lo lea */
+  mt5cambios:"crtelite_mt5cambios_v1",
+  /* 🗑️ v7.280 — las operaciones que Rey borró A PROPÓSITO, para que el cuadre con MT5 no
+     se las resucite. Lo descubrió él: «no recuerdo esa operación y hasta la había borrado»
+     — y volvía sola cada 10 minutos. Misma idea que sus capturas borradas. */
+  trborrados:"crtelite_trborrados_v1",
   guardia:"crtelite_guardia_v1",   /* 🛡️ v7.160 — el guardián de la disciplina */
   ejecvisto:"crtelite_ejecvisto_v1", /* 🔕 v7.161 — lo último que se supo del Ejecutor */
   ejeccfg:"crtelite_ejeccfg_v1",   /* ⚙️ v7.174 — sus reglas VIVAS del Ejecutor, para que Roberto no opine a ciegas */
@@ -92,7 +98,7 @@ function planesSync(cual){
 const NUBE_KEYS = ["crtelite_negocio_v1","crtelite_trades_v2",/* 📅 v7.272 — su fecha de inicio: si viviera solo en el teléfono, al cambiar de aparato
      se recalcularía y le entrarían las operaciones de junio ([[apex-nada-en-un-solo-aparato]]) */"crtelite_desde_v1","crtelite_cuentas_v3","crtelite_reminders_v3","crtelite_chk_v2","crtelite_conf_v2","crtelite_reglas_v2","crtelite_balance_v2","crtelite_ctx_v3","crtelite_estrategias_v3","crtelite_estrdefs_v1","crtelite_pares_v3","crtelite_calpares_v3","crtelite_notif_v3","crtelite_vigila_v3","crtelite_fabpos_v3","crtelite_iavoz_v3","crtelite_shots_v1","crtelite_shots_borradas","crtelite_ventanas_v1","crtelite_plansem_v1",
   /* 📆 v7.277 — si el plan del día viviera solo en el teléfono, al cambiar de aparato
-     Roberto perdería el análisis de hoy ([[apex-nada-en-un-solo-aparato]]) */"crtelite_plandia_v1","crtelite_plansemlog_v1","crtelite_iaconvs_v3","crtelite_iaact_v3","crtelite_ejectrades_v1","crtelite_llamamodo",
+     Roberto perdería el análisis de hoy ([[apex-nada-en-un-solo-aparato]]) */"crtelite_plandia_v1","crtelite_plansemlog_v1","crtelite_mt5cambios_v1","crtelite_trborrados_v1","crtelite_iaconvs_v3","crtelite_iaact_v3","crtelite_ejectrades_v1","crtelite_llamamodo",
   /* 🧭 v6.96 — LO QUE FALTABA, y lo descubrió Rey: "en la APK no me deja pasar a la fase 3
      cuando en la web ya estoy en ella". Su PLAN no viajaba, así que su progreso vivía en
      un solo aparato… y si perdía el teléfono, en ninguno. Con él van los VEREDICTOS de
@@ -159,6 +165,8 @@ const NUBE_NOMBRES = {
   "crtelite_plansem_v1":"tu plan de la semana",
   "crtelite_plandia_v1":"tu plan del día",
   "crtelite_plansemlog_v1":"las semanas en que fijaste tu plan",
+  "crtelite_mt5cambios_v1":"lo que Apex te corrigió del Diario con tu MT5",
+  "crtelite_trborrados_v1":"las operaciones que borraste (para que no vuelvan)",
   /* 🛡️ v7.160 — en el respaldo se ve con su nombre, no en crudo: cuando Rey abra la
      lista tiene que entender QUÉ es cada cosa suya ([[apex-nube-solo-lo-que-importa]]). */
   "crtelite_guardia_v1":"lo que Roberto te exige (y lo que le dijiste que no)",
@@ -724,6 +732,8 @@ try {
 let PLANSEM = load(K.plansem, null);  // plan de la semana (bias/zonas/invalidación) persistente
 let PLANDIA = load(K.plandia, null);  // 📆 v7.277 — plan DEL DÍA, por par, con su invalidación
 let PLANSEMLOG = load(K.plansemlog, []); // 📋 v7.279 — qué semanas fijó plan (punto 5)
+let MT5CAMBIOS = load(K.mt5cambios, null); // 🧾 v7.280 — «esto te cambié», hasta que lo lea
+let TRBORRADOS = load(K.trborrados, []);   // 🗑️ v7.280 — las que borró a propósito, que no vuelvan
 
 /* 🗓️ v7.136 — EL PLAN GUARDA LOS DOS PARES, NO UNO.
    Rey opera EUR/USD y GBP/USD. El 13-09 Roberto le escribió «Guardo el plan de los DOS pares»
@@ -1127,6 +1137,16 @@ function guardiaHuecos(){
     }
 
     /* 4) EL PLAN DE LA SEMANA */
+    /* 🧾 v7.280 — Y LO QUE APEX LE CAMBIÓ SOLA, QUE ANTES NO SE VEÍA EN NINGUNA PARTE.
+       Va con urgencia 2: no es una emergencia, pero son SUS registros cambiados sin que él
+       lo tocara y tiene derecho a saberlo antes de analizar nada con ellos. */
+    if(!quitada("mt5cambios")){
+      const p = (typeof mt5CambiosPendientes==="function") ? mt5CambiosPendientes() : null;
+      if(p) out.push({ id:"mt5cambios", urg:2,
+        tit:"Apex te corrigió "+p.det.length+" dato(s) del Diario"+(p.nue.length?(" y metió "+p.nue.length+" operación(es)"):""),
+        txt:"Lo cuadré con tu MT5 y cambió cosas que tú habías escrito. **Míralo antes de analizar con esos números** — y si alguno no te cuadra, cámbialo: lo que tú edites manda y no se te vuelve a pisar.",
+        acc:"mt5cambios", bot:"🧾 Ver qué cambió" });
+    }
     /* 🗓️ v7.279 — PUNTO 5 DE REY: «revisar el cumplimiento de fijar el plan semanal».
        Esta tarjeta solo miraba si EXISTÍA algún plan, de cualquier fecha. Con su plan del
        14-10 guardado, el lunes 19 habría salido TODO EN VERDE mientras él operaba la semana
@@ -1532,6 +1552,7 @@ function guardiaIr(acc){
     else if(acc==="huecos"){ irDestino("tab:diario"); }
     else if(acc==="revisar"){ if(typeof abrirIA==="function") abrirIA(); }
     else if(acc==="plansem"){ irDestino("tab:analisis"); }
+    else if(acc==="mt5cambios"){ if(typeof verMT5Cambios==="function") verMT5Cambios(); }
     else if(acc==="ejecutor"){ irDestino("tab:ejecutor"); }
     else if(acc==="plan"){ irDestino("tab:arranque"); }
   }catch(_){}
@@ -10316,7 +10337,7 @@ function renderDiario(){
             else if(a==="forense") miForense(t.id);
             else if(a==="edit") editarTrade(t.id);
             else if(a==="exp") exportarUno(t.id);
-            else if(a==="del"){ if(await preguntar("Se borra del Diario y no se puede deshacer.",{titulo:"🗑️ ¿Borrar este trade?",si:"Borrar",peligro:true})){ TRADES=TRADES.filter(x=>x.id!==t.id); save(K.trades,TRADES); refrescarDiarioCtx(); toast("Trade borrado"); } }
+            else if(a==="del"){ if(await preguntar("Se borra del Diario y no se puede deshacer."+((t&&t.posicionMT5!=null)?"\n\nVino de tu MT5: la apunto como borrada para que el cuadre NO te la vuelva a meter.":""),{titulo:"🗑️ ¿Borrar este trade?",si:"Borrar",peligro:true})){ trMarcarBorrado(t); TRADES=TRADES.filter(x=>x.id!==t.id); save(K.trades,TRADES); refrescarDiarioCtx(); toast("Trade borrado"); } }
           };
         });
         d.onclick=()=>verTrade(t.id);
@@ -12361,9 +12382,121 @@ function mt5ParcialEnR(op, t){
   }catch(_){ return undefined; }
 }
 
+/* ═════════════════════════════════════════════════════════════════════════════════════════
+   🧾 v7.280 — «ESTO TE CAMBIÉ»: EL INFORME QUE APEX NO DABA
+   ═════════════════════════════════════════════════════════════════════════════════════════
+   Apex cuadra su Diario con MT5 cada 10 minutos. El parte de ese cuadre vivía SOLO en
+   `_cuadreMT5`, una variable que —comprobado leyendo el código— nadie leía en ninguna parte:
+   se declaraba, se asignaba y ahí moría. O sea que le corregía sus registros EN SILENCIO.
+   Y el 18-10 pasó lo que tenía que pasar: le sobrescribí dos `parcialR` que él había puesto
+   a mano (1,5 → 0,83 y 1,0 → 0,98) y se lo dije YO, hablando. Si lo hace sola mientras
+   duerme, no se entera ([[apex-no-elegir-por-rey]], [[apex-nube-solo-lo-que-importa]]).
+   Esto no pregunta ni pide permiso —él autorizó que se actualice solo— pero TIENE que
+   poder verlo, campo a campo y de qué a qué. */
+const MT5_CAMPO_NOMBRE = {
+  r: "el resultado en R", rApuntado: "el R que apuntaste", rMt5: "el R medido",
+  parcialHecho: "si hubo parcial", parcialPct: "el % del parcial", parcialR: "el R del parcial",
+  nParciales: "las veces que partiste la posición", comision: "la comisión",
+  netoMT5: "el neto en USD", precioEntrada: "el precio real de entrada",
+  precioSalida: "el precio real de salida", volumen: "los lotes",
+  sl: "tu stop loss", tp: "tu take profit", rr: "el RR planeado",
+  posicionMT5: "el nº de posición", datosDe: "de dónde salen los datos", datosTs: "cuándo se leyó",
+};
+const MT5_CAMPO_CALLADO = { datosDe:1, datosTs:1, posicionMT5:1 };   /* de fontanería, no se le cuentan */
+
+function mt5CambiosPendientes(){
+  try{
+    if(!MT5CAMBIOS || MT5CAMBIOS.visto !== false) return null;
+    const det = (MT5CAMBIOS.detalle || []).filter(x => x && !MT5_CAMPO_CALLADO[x.campo]);
+    const nue = MT5CAMBIOS.nuevas || [];
+    if(!det.length && !nue.length) return null;
+    return { det, nue, ts: MT5CAMBIOS.ts || 0 };
+  }catch(_){ return null; }
+}
+
+function mt5CambiosVisto(){
+  try{
+    if(!MT5CAMBIOS) return;
+    MT5CAMBIOS.visto = true;
+    save(K.mt5cambios, MT5CAMBIOS);
+    if(typeof guardiaPinta === "function") guardiaPinta();   /* para que su tarjeta desaparezca al leerlo */
+  }catch(_){}
+}
+
+function verMT5Cambios(){
+  const p = mt5CambiosPendientes();
+  if(!p){ toast("No hay nada que te haya cambiado"); return; }
+  const num = (v) => (v === null || v === undefined || v === "") ? "(vacío)" : String(v);
+  const porOp = {};
+  p.det.forEach(x => {
+    const k = (x.fecha || "?") + " · " + (x.par || "?");
+    (porOp[k] = porOp[k] || []).push(x);
+  });
+  let h = '<div class="desc" style="text-align:left">Apex cuadra tu Diario con tu MT5 sola. '
+    + 'Esto es <b>todo</b> lo que te cambió, campo a campo. Lo que MT5 mide manda; lo que apuntaste tú se guarda.</div>';
+  if(p.nue.length){
+    h += '<div class="card-h" style="margin-top:10px"><span class="ic">➕</span><h2>Operaciones que te faltaban</h2></div>';
+    h += p.nue.map(x => '<div class="row"><div class="l">'+esc(x.fecha||"?")+' · '+esc(x.par||"?")+' '+esc(x.dir||"")
+      + '<small>no estaba en tu Diario y sí en tu MT5</small></div><div class="r">'
+      + esc(num(x.neto))+' USD</div></div>').join("");
+  }
+  const claves = Object.keys(porOp);
+  if(claves.length){
+    h += '<div class="card-h" style="margin-top:10px"><span class="ic">✏️</span><h2>Datos que te corregí</h2></div>';
+    h += claves.map(k => '<div class="row"><div class="l">'+esc(k)+'<small>'
+      + porOp[k].map(x => esc(MT5_CAMPO_NOMBRE[x.campo] || x.campo) + ": " + esc(num(x.antes)) + " → " + esc(num(x.ahora))
+          + (x.porque ? (" (" + esc(x.porque) + ")") : "")).join("<br>")
+      + '</small></div><div class="r">'+porOp[k].length+'</div></div>').join("");
+  }
+  h += '<div class="note" style="text-align:left;margin-top:12px">Si alguno no te cuadra, cámbialo a mano en el Diario: '
+    + '<b>lo que tú edites manda y no se te vuelve a pisar</b>. Y si borras una operación, queda borrada: no te la devuelvo.</div>';
+  abrirModal('<div class="modal-t">🧾 Esto te cambié</div>'+h,
+    [{t:"Entendido", cls:"gold", fn:()=>{ mt5CambiosVisto(); cerrarModal(); }}]);
+}
+
+/* 🗣️ y que Roberto pueda contárselo en el chat, no solo la pantalla */
+function iaMT5Cambios(){
+  try{
+    const p = mt5CambiosPendientes();
+    if(!p) return "";
+    const num = (v) => (v === null || v === undefined || v === "") ? "(vacío)" : String(v);
+    let s = "[🧾 LO QUE APEX LE CORRIGIÓ SOLO DEL DIARIO Y ÉL TODAVÍA NO HA LEÍDO ("
+      + p.det.length + " dato(s)" + (p.nue.length ? (" y " + p.nue.length + " operación(es) que faltaban") : "") + "):\n";
+    p.nue.forEach(x => { s += "   ➕ " + (x.fecha||"?") + " " + (x.par||"?") + " " + (x.dir||"") + " · neto " + num(x.neto) + " USD — no estaba en su Diario\n"; });
+    p.det.slice(0, 14).forEach(x => {
+      s += "   ✏️ " + (x.fecha||"?") + " " + (x.par||"?") + " · " + (MT5_CAMPO_NOMBRE[x.campo] || x.campo)
+        + ": " + num(x.antes) + " → " + num(x.ahora) + (x.porque ? (" (" + x.porque + ")") : "") + "\n";
+    });
+    if(p.det.length > 14) s += "   …y " + (p.det.length - 14) + " más\n";
+    s += " 👉 DÍSELO cuando encaje, sin dramatizar: son correcciones con su MT5, no errores suyos. Lo importante es que SEPA que su Diario cambió sin que él lo tocara, y que PUEDE deshacer cualquiera a mano — lo que él edita manda. Si te dice que lo ha visto, no se lo repitas.]";
+    return s;
+  }catch(_){ return ""; }
+}
+
+/* 🗑️ v7.280 — APUNTAR QUE ÉL LA BORRÓ, PARA QUE EL CUADRE NO LA RESUCITE.
+   Lo descubrió Rey el 18-10: «no recuerdo esa operación y hasta la había borrado» — y el
+   cuadre con MT5 se la metía otra vez cada 10 minutos, en silencio.
+   Solo hace falta apuntar las que vinieron de MT5: una de backtest, o una que escribió a
+   mano, no la trae nadie de vuelta. Se guarda el nº de POSICIÓN, que es lo que MT5 no
+   repite nunca ([[apex-no-elegir-por-rey]]). */
+function trMarcarBorrado(t){
+  try{
+    const pos = t && t.posicionMT5;
+    if(pos == null) return;                       /* no vino de MT5: nadie la va a resucitar */
+    TRBORRADOS = Array.isArray(TRBORRADOS) ? TRBORRADOS : [];
+    const k = String(pos);
+    if(TRBORRADOS.indexOf(k) >= 0) return;
+    TRBORRADOS.push(k);
+    TRBORRADOS = TRBORRADOS.slice(-400);
+    save(K.trborrados, TRBORRADOS);
+  }catch(_){}
+}
+
 /* 🔄 LO QUE SE ACTUALIZA SOLO. Devuelve el parte de lo que hizo y de lo que NO pudo hacer. */
 function mt5CuadrarDiario(){
-  const parte = { tocadas: 0, campos: 0, metidas: 0, antesDeEmpezar: 0, sinPareja: [], rNoCuadra: [], parcialInventado: 0 };
+  /* 🧾 v7.280 — `detalle` es lo nuevo: QUÉ campo, DE QUÉ a QUÉ, en cuál operación. Sin esto
+     el parte solo sabía decir «6 campos tocados», que no es un informe: es un número. */
+  const parte = { tocadas: 0, campos: 0, metidas: 0, antesDeEmpezar: 0, sinPareja: [], rNoCuadra: [], parcialInventado: 0, detalle: [], nuevas: [] };
   try{
     const o = _opsMT5;
     if(!o || !Array.isArray(o.operaciones) || !o.operaciones.length) return null;
@@ -12375,6 +12508,19 @@ function mt5CuadrarDiario(){
       if(desde && String(op.fecha || "") < desde){ parte.antesDeEmpezar++; continue; }
 
       const t = mt5ParejaEnElDiario(op, TRADES);
+      /* 🗑️ v7.280 — SI ÉL LA BORRÓ, NO VUELVE. Y ESTO LO DESCUBRIÓ ÉL.
+         ═══════════════════════════════════════════════════════════════════════════════════
+         Rey, 18-10: «no recuerdo esa operación y hasta la había borrado». La había borrado,
+         y el cuadre se la REINSERTABA en la vuelta siguiente — cada 10 minutos, en silencio.
+         O sea que Apex le deshacía un borrado suyo y él no tenía forma de saber por qué
+         volvía. Un borrado es una decisión suya y manda sobre cualquier dato que yo traiga
+         ([[apex-no-elegir-por-rey]], [[apex-nada-que-rey-tenga-que-recordar]]).
+         Su sistema ya tenía esta idea para las capturas (`crtelite_shots_borradas`); los
+         trades no la tenían. */
+      if(!t && (Array.isArray(TRBORRADOS) ? TRBORRADOS : []).indexOf(String(op.posicion)) >= 0){
+        parte.borradaPorRey = (parte.borradaPorRey || 0) + 1;
+        continue;
+      }
       if(!t){
         /* ✅ v7.272 — y la que SÍ es de su sistema y no está, ENTRA SOLA. Es lo que pidió:
            «hacerme los registros más fácil y automática». Su caso: la del 06-10 (−6,82 USD)
@@ -12387,7 +12533,14 @@ function mt5CuadrarDiario(){
           id: op.tsEntrada || Date.now(),
           fecha: op.fecha, hora: String(op.hora || "").slice(0,5),
           modo: "real", par: op.par, dir: op.dir,
-          r: null, res: null,
+          /* 📐 v7.280 — ya NO entra sin R: MT5 guarda el SL, así que el R se MIDE.
+             Lo que sigue sin saberse es su criterio (setup, ventana, momento, bias, zona):
+             eso se le pide, y la nota lo dice. El R ya no. */
+          r: (op.rMedido != null && isFinite(Number(op.rMedido))) ? Math.round(Number(op.rMedido)*100)/100 : null,
+          rMt5: (op.rMedido != null && isFinite(Number(op.rMedido))) ? Math.round(Number(op.rMedido)*100)/100 : undefined,
+          res: (op.rMedido == null) ? null : (Number(op.rMedido) > 0.05 ? "Ganado" : (Number(op.rMedido) < -0.05 ? "Perdido" : "BE")),
+          sl: op.sl != null ? op.sl : undefined, tp: op.tp != null ? op.tp : undefined,
+          entrada: op.precioEntrada, salida: op.precioSalida,
           parcialHecho: op.huboParcial === true,
           parcialPct: op.huboParcial ? op.pctPrimerTrozo : null,
           nParciales: op.nParciales || 0,
@@ -12395,9 +12548,10 @@ function mt5CuadrarDiario(){
           precioEntrada: op.precioEntrada, precioSalida: op.precioSalida,
           volumen: op.volumen, posicionMT5: op.posicion,
           datosDe: "mt5", datosTs: o.ts || Date.now(),
-          nota: "Traída de tu MT5: faltaba en el Diario. Falta tu R y tu setup.",
+          nota: "Traída de tu MT5: faltaba en el Diario." + ((op.rMedido != null) ? (" El R está MEDIDO con el SL que guardó MT5 (" + op.rMedido + "R).") : " Falta tu R.") + " Falta tu setup, ventana, momento, bias y zona.",
         });
         parte.metidas++;
+        parte.nuevas.push({ fecha: op.fecha, par: op.par, dir: op.dir, neto: op.neto });
         cambio = true;
         continue;
       }
@@ -12410,6 +12564,11 @@ function mt5CuadrarDiario(){
       const pon = (campo, valor) => {
         if(valor === undefined) return;
         if(t[campo] === valor) return;
+        /* 🧾 v7.280 — se apunta el ANTES antes de pisarlo. Un informe que dice «cambié el
+           parcialR» sin decir de 1,5 a 0,83 no le sirve para nada: lo que él necesita saber
+           es si el número que él puso valía o no ([[apex-nube-solo-lo-que-importa]]). */
+        parte.detalle.push({ fecha: t.fecha || op.fecha, par: t.par || op.par,
+                             campo, antes: t[campo], ahora: valor });
         t[campo] = valor; n++;
       };
       /* los HECHOS, tal y como los registró la plataforma */
@@ -12431,9 +12590,56 @@ function mt5CuadrarDiario(){
 
       /* ⚠️ el parcial que estaba guardado y en MT5 no existe: se quita, pero se cuenta
          para poder decírselo. Es lo que le daba el «break-even −0.50R». */
-      if(!op.huboParcial && t.parcialR != null){ t.parcialR = null; parte.parcialInventado++; n++; }
+      if(!op.huboParcial && t.parcialR != null){
+        parte.detalle.push({ fecha: t.fecha || op.fecha, par: t.par || op.par,
+                             campo: "parcialR", antes: t.parcialR, ahora: null,
+                             porque: "MT5 dice que esa operación se cerró de una sola vez" });
+        t.parcialR = null; parte.parcialInventado++; n++;
+      }
 
-      /* el R NO se toca: solo se mira si cuadra con lo que dice la cuenta */
+      /* ═══════════════════════════════════════════════════════════════════════════════════
+         📐 v7.280 — EL R YA NO HAY QUE PEDÍRSELO: SE MIDE
+         ═══════════════════════════════════════════════════════════════════════════════════
+         Hallazgo del 18-10: MT5 guarda el SL de cada orden, y sus 16 posiciones lo tienen.
+         Con su SL, su entrada y su salida PONDERADA POR VOLUMEN, el R sale medido.
+         Y al medirlo apareció lo importante: su R escrito es OPTIMISTA. Apunta el R del TP
+         como si toda la posición hubiera llegado allí, cuando el 88% salió antes en el
+         parcial. El 08-10 escribió 2,01R; su cuenta cobró +38,76 USD sobre ~28 de riesgo,
+         o sea 1,37R, y el medido da 1,43R. Los dos números son ciertos en sentidos
+         distintos («el precio llegó a 2R» vs «esto rindió mi riesgo»), pero el que le paga
+         es el segundo, y es el que tienen que usar su esperanza y su progreso.
+
+         DECISIÓN DE REY (18-10): «realiza las dos cosas» — su R escrito se CONSERVA en
+         `rApuntado` y el medido manda en `r`, con el informe visible diciéndole la
+         diferencia. Así no se pierde su criterio y los números que mandan son los reales.
+
+         ⚠️ Y SI ÉL LO EDITA DESPUÉS, GANA ÉL. `rMt5` guarda el último medido que se aplicó:
+         si `t.r` ya no es ese valor, lo cambió a mano a propósito y NO se le vuelve a pisar
+         — se le dice una vez en el informe y se deja en paz. Sin esto, el cuadre le
+         desharía cada edición en la vuelta siguiente, que es el mismo fallo del borrado
+         ([[apex-no-elegir-por-rey]]). */
+      if(op.rMedido != null && isFinite(Number(op.rMedido))){
+        const medido = Math.round(Number(op.rMedido) * 100) / 100;
+        const yaAplicado = (t.rMt5 != null && Math.abs(Number(t.rMt5) - Number(t.r)) < 1e-9);
+        const nuncaAplicado = (t.rMt5 == null);
+        if(nuncaAplicado || yaAplicado){
+          /* lo que él apuntó se guarda UNA sola vez: la segunda vuelta ya no es el suyo */
+          if(t.rApuntado === undefined && t.r != null && Number(t.r) !== medido) t.rApuntado = t.r;
+          pon("r", medido);
+          t.rMt5 = medido;
+        }else{
+          parte.rSuyoRespetado = (parte.rSuyoRespetado || 0) + 1;
+        }
+      }
+      /* 📐 y su SL y su TP, que también los guardó MT5 y son los que ÉL puso */
+      pon("sl", op.sl != null ? op.sl : undefined);
+      pon("tp", op.tp != null ? op.tp : undefined);
+      if(op.sl != null && op.precioEntrada != null && op.tp != null){
+        const riesgo = Math.abs(Number(op.precioEntrada) - Number(op.sl));
+        if(riesgo > 0) pon("rr", Math.round((Math.abs(Number(op.tp) - Number(op.precioEntrada)) / riesgo) * 100) / 100);
+      }
+
+      /* el R NO se toca a ciegas: si no hay medido, solo se mira si cuadra con la cuenta */
       const rGuardado = parseFloat(t.r);
       if(isFinite(rGuardado) && isFinite(op.neto)){
         const mismoSigno = (rGuardado === 0 && Math.abs(op.neto) < 2) || (rGuardado > 0 && op.neto > 0) || (rGuardado < 0 && op.neto < 0);
@@ -12456,6 +12662,29 @@ function mt5CuadrarDiario(){
        añade tráfico: solo garantiza que lo bueno acabe arriba. */
     try{ if(typeof reyTradesSync==="function") reyTradesSync(); }catch(_){}
     _cuadreMT5 = parte;
+    /* 🧾 v7.280 — Y SE GUARDA PARA ENSEÑÁRSELO.
+       ═══════════════════════════════════════════════════════════════════════════════════
+       Hasta hoy el parte vivía SOLO en `_cuadreMT5`, una variable que —comprobado— nadie
+       leía en ninguna parte: se declaraba, se asignaba y ahí moría. O sea que Apex le
+       corregía el Diario cada 10 minutos EN SILENCIO.
+       Hoy mismo le sobrescribí dos parcialR que él había puesto a mano (1,5 → 0,83 y
+       1,0 → 0,98). Se lo dije YO. Si lo hace sola mientras duerme, no se entera — y su
+       regla es que nada que sea suyo cambia sin que él lo sepa
+       ([[apex-nube-solo-lo-que-importa]], [[apex-no-elegir-por-rey]]).
+       ⚠️ Se ACUMULA y NO se pisa: el cuadre corre cada 10 minutos, así que si cada vuelta
+       sobrescribiera el informe, un cambio hecho a las 3 de la mañana habría desaparecido
+       antes de que él despertara. Se junta todo lo no leído y se borra cuando lo lee. */
+    try{
+      if(parte.detalle.length || parte.nuevas.length){
+        const antes = (MT5CAMBIOS && MT5CAMBIOS.visto === false) ? MT5CAMBIOS : null;
+        MT5CAMBIOS = {
+          ts: Date.now(), visto: false,
+          detalle: ((antes && antes.detalle) || []).concat(parte.detalle).slice(-60),
+          nuevas:  ((antes && antes.nuevas)  || []).concat(parte.nuevas).slice(-20),
+        };
+        save(K.mt5cambios, MT5CAMBIOS);
+      }
+    }catch(_){}
     return parte;
   }catch(_){ return null; }
 }
@@ -20505,6 +20734,7 @@ async function ejecutarTool(name, i){
       const t=lst.slice(-1)[0];
       if(!t) return {ok:false,msg:"No encontré un trade de "+(i.par||"")+(i.fecha?(" del "+i.fecha):"")};
       if(name==="borrar_trade"){
+        trMarcarBorrado(t);   /* 🗑️ v7.280 — y que el cuadre con MT5 no la resucite */
         TRADES=TRADES.filter(x=>x.id!==t.id); save(K.trades,TRADES); if(typeof refrescarDiarioCtx==="function") refrescarDiarioCtx();
         return {ok:true,msg:"Trade borrado: "+t.par+" "+(t.fecha||"")+" "+(t.abierta?"(abierta)":(r1(t.r)+"R"))};
       }
@@ -22797,7 +23027,7 @@ async function iaEnviar(textoForzado, promptExtra){
     + "Si está en la tercera, di que TODAVÍA NO HAY porque aún no lo ha registrado — no que falló." + NL
     + "❌ NUNCA digas que NO PUEDES consultar algo de estas listas ni que tienes esa limitación: SÍ puedes." + NL
     + "Decir «no puedo» sobre algo que sí tienes le hace dudar de ti, y con razón." + NL;
-  const inj=_cabecera+entTxt+dondeTxt+"\n"+climaTxt+iaReloj()+"\n"+grafTxt+calTxt+iaContexto()+"\n"+iaEstrategiaDef()+"\n"+guardianRiesgo()+"\n"+iaPlan()+"\n"+iaAciertos()+"\n"+(estadoRecuperacionFreno().block||"")+iaFugas()+"\n"+iaRacha()+"\n"+iaPatrones()+"\n"+iaDatosSueltos()+"\n"+iaHitos()+"\n"+iaChats()+"\n"+iaPendientes()+"\n"+iaPlanSemanal()+"\n"+iaPlanDia()+"\n"+iaPlanFijado()+"\n"+iaAvisos()+"\n"+iaPosicionesVivas()+iaEntradasAbiertas()+iaEjecutorArchivo()+iaEjecutorHoy()+iaTemplo()+iaLeyes(texto)+marco+iaEjecutorCfgTxt()+pcTxtVivo()+iaNovedadesTxt()+"\n=== FIN DEL CONTEXTO — responde al mensaje de Rey del bloque anterior ===";
+  const inj=_cabecera+entTxt+dondeTxt+"\n"+climaTxt+iaReloj()+"\n"+grafTxt+calTxt+iaContexto()+"\n"+iaEstrategiaDef()+"\n"+guardianRiesgo()+"\n"+iaPlan()+"\n"+iaAciertos()+"\n"+(estadoRecuperacionFreno().block||"")+iaFugas()+"\n"+iaRacha()+"\n"+iaPatrones()+"\n"+iaDatosSueltos()+"\n"+iaHitos()+"\n"+iaChats()+"\n"+iaPendientes()+"\n"+iaPlanSemanal()+"\n"+iaPlanDia()+"\n"+iaPlanFijado()+"\n"+iaMT5Cambios()+"\n"+iaAvisos()+"\n"+iaPosicionesVivas()+iaEntradasAbiertas()+iaEjecutorArchivo()+iaEjecutorHoy()+iaTemplo()+iaLeyes(texto)+marco+iaEjecutorCfgTxt()+pcTxtVivo()+iaNovedadesTxt()+"\n=== FIN DEL CONTEXTO — responde al mensaje de Rey del bloque anterior ===";
   const last=msgs[msgs.length-1];
   const textoMsg=c.msgs[c.msgs.length-1].content;   /* EXACTAMENTE lo guardado (texto + nota del doc) */
   let bloquesMsg = Array.isArray(last.content) ? last.content.filter(b=>b.type==="image") : [];   /* la foto va delante */
