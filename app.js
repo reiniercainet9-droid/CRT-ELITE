@@ -44,6 +44,8 @@ const K = {
      se las resucite. Lo descubrió él: «no recuerdo esa operación y hasta la había borrado»
      — y volvía sola cada 10 minutos. Misma idea que sus capturas borradas. */
   trborrados:"crtelite_trborrados_v1",
+  /* 🧪 v7.281 — lo que su estrategia hace EN EL LABORATORIO, para poder compararse */
+  patron:"crtelite_patron_v1",
   guardia:"crtelite_guardia_v1",   /* 🛡️ v7.160 — el guardián de la disciplina */
   ejecvisto:"crtelite_ejecvisto_v1", /* 🔕 v7.161 — lo último que se supo del Ejecutor */
   ejeccfg:"crtelite_ejeccfg_v1",   /* ⚙️ v7.174 — sus reglas VIVAS del Ejecutor, para que Roberto no opine a ciegas */
@@ -98,7 +100,7 @@ function planesSync(cual){
 const NUBE_KEYS = ["crtelite_negocio_v1","crtelite_trades_v2",/* 📅 v7.272 — su fecha de inicio: si viviera solo en el teléfono, al cambiar de aparato
      se recalcularía y le entrarían las operaciones de junio ([[apex-nada-en-un-solo-aparato]]) */"crtelite_desde_v1","crtelite_cuentas_v3","crtelite_reminders_v3","crtelite_chk_v2","crtelite_conf_v2","crtelite_reglas_v2","crtelite_balance_v2","crtelite_ctx_v3","crtelite_estrategias_v3","crtelite_estrdefs_v1","crtelite_pares_v3","crtelite_calpares_v3","crtelite_notif_v3","crtelite_vigila_v3","crtelite_fabpos_v3","crtelite_iavoz_v3","crtelite_shots_v1","crtelite_shots_borradas","crtelite_ventanas_v1","crtelite_plansem_v1",
   /* 📆 v7.277 — si el plan del día viviera solo en el teléfono, al cambiar de aparato
-     Roberto perdería el análisis de hoy ([[apex-nada-en-un-solo-aparato]]) */"crtelite_plandia_v1","crtelite_plansemlog_v1","crtelite_mt5cambios_v1","crtelite_trborrados_v1","crtelite_iaconvs_v3","crtelite_iaact_v3","crtelite_ejectrades_v1","crtelite_llamamodo",
+     Roberto perdería el análisis de hoy ([[apex-nada-en-un-solo-aparato]]) */"crtelite_plandia_v1","crtelite_plansemlog_v1","crtelite_mt5cambios_v1","crtelite_trborrados_v1","crtelite_patron_v1","crtelite_iaconvs_v3","crtelite_iaact_v3","crtelite_ejectrades_v1","crtelite_llamamodo",
   /* 🧭 v6.96 — LO QUE FALTABA, y lo descubrió Rey: "en la APK no me deja pasar a la fase 3
      cuando en la web ya estoy en ella". Su PLAN no viajaba, así que su progreso vivía en
      un solo aparato… y si perdía el teléfono, en ninguno. Con él van los VEREDICTOS de
@@ -167,6 +169,7 @@ const NUBE_NOMBRES = {
   "crtelite_plansemlog_v1":"las semanas en que fijaste tu plan",
   "crtelite_mt5cambios_v1":"lo que Apex te corrigió del Diario con tu MT5",
   "crtelite_trborrados_v1":"las operaciones que borraste (para que no vuelvan)",
+  "crtelite_patron_v1":"lo que tu estrategia hace en el laboratorio",
   /* 🛡️ v7.160 — en el respaldo se ve con su nombre, no en crudo: cuando Rey abra la
      lista tiene que entender QUÉ es cada cosa suya ([[apex-nube-solo-lo-que-importa]]). */
   "crtelite_guardia_v1":"lo que Roberto te exige (y lo que le dijiste que no)",
@@ -734,6 +737,33 @@ let PLANDIA = load(K.plandia, null);  // 📆 v7.277 — plan DEL DÍA, por par,
 let PLANSEMLOG = load(K.plansemlog, []); // 📋 v7.279 — qué semanas fijó plan (punto 5)
 let MT5CAMBIOS = load(K.mt5cambios, null); // 🧾 v7.280 — «esto te cambié», hasta que lo lea
 let TRBORRADOS = load(K.trborrados, []);   // 🗑️ v7.280 — las que borró a propósito, que no vuelvan
+
+/* ═════════════════════════════════════════════════════════════════════════════════════════
+   🧪 v7.281 (18-10) — LO QUE SU ESTRATEGIA HACE EN EL LABORATORIO
+   ═════════════════════════════════════════════════════════════════════════════════════════
+   Rey, 18-10: «¿cuál es la tasa de aciertos de mi estrategia, cuál es su drawdown? Esos
+   datos deberían estar bien claros en las secciones de todas las métricas, en un recuadro
+   de comparación… si tengo una pérdida, saber que mi estrategia puede perder 3 de 5».
+   Y tenía toda la razón: esos números EXISTEN desde el 26-08 —85 operaciones de backtest con
+   el código real del indicador— pero vivían en ficheros .md de MI carpeta. Ni los veía él,
+   ni Roberto, ni viajaban en su respaldo. Cuando encadenaba dos pérdidas no tenía con qué
+   compararse, y la única referencia que le quedaba era el miedo.
+   ⚠️ SE PUEDE EDITAR, como todo lo suyo: estos son los del backtest del 26-08 con el
+   indicador v3.6, y él va por el v3.14. Se dice de dónde salen y cuándo, para que nadie los
+   confunda con los de hoy ([[apex-roberto-no-inventa]], [[apex-nada-atado-a-un-par-ni-a-un-broker]]).
+   La esperanza va en R, no en dólares: el laboratorio dio +$11,26 y +$12,53 por operación
+   con 1R ≈ $28 (riesgo 0,5% de $5.000), o sea ~+0,41R. En R se compara con cualquier
+   cuenta; en dólares, solo con una de 5.000. */
+const PATRON_DEF = {
+  nombre: "CRT Elite v3.6 — Backtest Fase 1",
+  fuente: "Backtest con el código REAL del indicador en TradingView (OANDA, 5 m)",
+  fecha: "2026-08-26", periodo: "5 jul → 26 ago 2026 (7,5 semanas)", version: "v3.6",
+  n: 85, ganadas: 53, perdidas: 30, be: 2,
+  wr: 62.4, pf: 2.5, expR: 0.41, ddPct: 1.5, peorPerdidaR: 1.0,
+  pares: "EUR/USD y GBP/USD",
+  nota: "EUR/USD 39 ops · 61,5% · PF 2,386 · DD 1,45% || GBP/USD 46 ops · 63,0% · PF 2,619 · DD 1,36%. Con los filtros del Ejecutor: grado A+/B, riesgo 0,5%, máx 2 al día.",
+};
+let PATRON = load(K.patron, null) || PATRON_DEF;
 
 /* 🗓️ v7.136 — EL PLAN GUARDA LOS DOS PARES, NO UNO.
    Rey opera EUR/USD y GBP/USD. El 13-09 Roberto le escribió «Guardo el plan de los DOS pares»
@@ -11307,6 +11337,72 @@ function renderAnalisis(){
   });
   body.appendChild(diag);
 
+  /* ---------- 1a. 🧪 TU ESTRATEGIA vs CÓMO LA ESTÁS OPERANDO (v7.281) ----------
+     Rey, 18-10: «esos datos deberían estar bien claros en las secciones de todas las
+     métricas, en un recuadro de comparación… si tengo una pérdida, saber que mi estrategia
+     puede perder 3 de 5».
+     Va aquí, pegado al Veredicto, porque operar fuera del patrón de tu propia estrategia
+     manda sobre cualquier desglose de más abajo ([[apex-lo-importante-va-primero]]). */
+  try{
+    const cmp = patronComparar(list);
+    if(cmp && cmp.P){
+      const P = cmp.P, S = cmp.suyo, R = cmp.racha, RA = cmp.rachas;
+      const c = el("div","card");
+      const fila = (que, lab, mio, juicio) =>
+        '<div class="row"><div class="l">'+esc(que)+'</div>'
+        + '<div class="r" style="min-width:150px;text-align:right">'
+        + '<span style="color:var(--txt2)">'+esc(lab)+'</span>'
+        + '<span style="opacity:.5"> · </span><b>'+esc(mio)+'</b>'
+        + (juicio ? ('<br><small style="font-weight:400">'+juicio+'</small>') : '')
+        + '</div></div>';
+      /* ⚠️ con menos de 10 operaciones no se juzga: su Ley 37 dice que nada se decide con
+         menos de 30 casos, y eso le incluye a él ([[apex-roberto-no-inventa]]) */
+      const pocas = !S || S.n < 30;   /* ⚠️ 30, que es SU Ley 37: el texto de abajo la cita y el código tiene que obedecerla, o Apex dice una cosa y hace otra */
+      const juzga = (mio, lab, masEsMejor) => {
+        if(pocas || mio == null || lab == null) return "";
+        const d = mio - lab;
+        const bien = masEsMejor ? (d >= 0) : (d <= 0);
+        if(Math.abs(d) < (Math.abs(lab) * 0.1)) return '<span style="color:var(--txt2)">igual que el laboratorio</span>';
+        return '<span style="color:'+(bien?"var(--ok)":"var(--bad)")+'">'+(bien?"mejor":"peor")+' que el laboratorio</span>';
+      };
+      let h = '<div class="card-h"><span class="ic">🧪</span><h2>Tu estrategia · y cómo la estás operando</h2></div>'
+        + '<div class="note" style="text-align:left;margin:-4px 0 10px">A la izquierda, lo que tu estrategia hizo en el <b>laboratorio</b> ('
+        + esc(String(P.n))+' operaciones con el código real). A la derecha, <b>tú</b>'
+        + (S ? (' ('+S.n+' operación'+(S.n!==1?"es":"")+')') : "")+'.</div>';
+      h += fila("Acierto", P.wr+"%", (S?S.wr+"%":"—"), juzga(S&&S.wr, P.wr, true));
+      h += fila("Esperanza por operación", "+"+P.expR+"R", (S?((S.expR>=0?"+":"")+S.expR+"R"):"—"), juzga(S&&S.expR, P.expR, true));
+      h += fila("Profit factor", P.pf, (S&&S.pf!=null?S.pf:"—"), juzga(S&&S.pf, P.pf, true));
+      h += fila("Peor pérdida", "≈"+P.peorPerdidaR+"R", (S?"—":"—"), "");
+      /* 📉 LO QUE PIDIÓ CON NOMBRE: qué es normal cuando pierde */
+      if(RA){
+        h += '<div class="card-h" style="margin-top:14px"><span class="ic">📉</span><h2>Lo NORMAL cuando pierdes</h2></div>'
+          + '<div class="note" style="text-align:left;margin:-4px 0 8px">Tu estrategia falla <b>'+RA.fallo+' de cada 100</b>. '
+          + 'Encadenar pérdidas no es que se haya roto: es parte de cómo gana.</div>';
+        RA.filas.forEach(f => {
+          h += '<div class="row"><div class="l">Perder '+f.n+' seguidas</div>'
+            + '<div class="r">1 de cada '+f.unaDeCada+' veces <small style="font-weight:400">('+f.pct+'%)</small></div></div>';
+        });
+        h += '<div class="row"><div class="l">En '+RA.muestra+' operaciones, lo ESPERABLE'
+          + '<small>la racha perdedora más larga que cabe esperar</small></div>'
+          + '<div class="r">'+RA.esperada+' seguidas</div></div>';
+        h += '<div class="row"><div class="l">Tu peor racha hasta hoy'
+          + '<small>y la que llevas ahora mismo</small></div>'
+          + '<div class="r">'+R.peor+' seguidas <small style="font-weight:400">(ahora '+R.ahora+')</small></div></div>';
+        h += '<div class="note" style="text-align:left;margin-top:10px">⚠️ Esto es un <b>modelo</b>, no una predicción: '
+          + 'supone que una operación no depende de la anterior, y el mercado no es así — las malas rachas se agrupan '
+          + 'cuando cambia el régimen. Sirve para que una racha normal no te parezca una avería.</div>';
+      }
+      if(pocas) h += '<div class="note" style="text-align:left;margin-top:10px">⚠️ Llevas <b>'
+        + (S?S.n:0)+' operación'+((S&&S.n!==1)?"es":"")+'</b> con este sistema. Tu <b>Ley 37</b> dice que nada se decide con menos de 30 casos, '
+        + 'y eso te incluye: por eso no juzgo todavía si vas mejor o peor. Los números están ahí para que los mires, no para concluir.</div>';
+      h += '<div class="note" style="text-align:left;margin-top:10px;opacity:.75">📋 El laboratorio: '+esc(P.fuente)
+        + ' · '+esc(P.periodo)+' · indicador '+esc(P.version)+' · '+esc(P.pares)
+        + '.<br>'+esc(P.nota)+'</div>';
+      c.innerHTML = h;
+      body.appendChild(c);
+    }
+  }catch(_){}
+
   /* ---------- 1b. FORTALEZAS Y DEBILIDADES ---------- */
   const fd=cardFortDeb(list); if(fd) body.appendChild(fd);
 
@@ -12471,6 +12567,88 @@ function iaMT5Cambios(){
     s += " 👉 DÍSELO cuando encaje, sin dramatizar: son correcciones con su MT5, no errores suyos. Lo importante es que SEPA que su Diario cambió sin que él lo tocara, y que PUEDE deshacer cualquiera a mano — lo que él edita manda. Si te dice que lo ha visto, no se lo repitas.]";
     return s;
   }catch(_){ return ""; }
+}
+
+/* 🧪 v7.281 — Y ROBERTO LO TIENE DELANTE, que es quien le habla justo cuando pierde.
+   Sin esto, Rey encadena dos pérdidas y Roberto no sabe si eso es normal en su estrategia o
+   una señal de alarma — así que o le asusta de más o le tranquiliza sin base. Las dos cosas
+   son malas y las dos pasaban ([[apex-roberto-no-inventa]], [[apex-roberto-exige-y-reconoce]]). */
+function iaPatron(){
+  try{
+    const cmp = patronComparar(tradesCtx());
+    if(!cmp || !cmp.P) return "";
+    const P = cmp.P, S = cmp.suyo, R = cmp.racha, RA = cmp.rachas;
+    let s = "[🧪 EL PATRÓN DE SU ESTRATEGIA (lo que hizo en el LABORATORIO) vs CÓMO LA ESTÁ OPERANDO:\n"
+      + "   laboratorio (" + P.n + " operaciones, " + P.fuente + ", " + P.periodo + ", indicador " + P.version + "):\n"
+      + "      acierto " + P.wr + "% · esperanza +" + P.expR + "R · profit factor " + P.pf + " · drawdown máx " + P.ddPct + "% · peor pérdida ≈" + P.peorPerdidaR + "R\n";
+    if(S) s += "   él, de verdad (" + S.n + " operación(es)): acierto " + S.wr + "% · esperanza "
+      + (S.expR>=0?"+":"") + S.expR + "R" + (S.pf!=null ? (" · profit factor " + S.pf) : "") + "\n";
+    else s += "   él: todavía sin operaciones cerradas en este libro\n";
+    if(RA) s += "   📉 LO NORMAL CUANDO PIERDE: su estrategia falla " + RA.fallo + " de cada 100. "
+      + "Perder 2 seguidas pasa 1 de cada " + RA.filas[0].unaDeCada + " veces; 3 seguidas, 1 de cada " + RA.filas[1].unaDeCada
+      + "; 4 seguidas, 1 de cada " + RA.filas[2].unaDeCada + ". En " + RA.muestra + " operaciones lo esperable es ver "
+      + RA.esperada + " seguidas. Su peor racha hasta hoy: " + R.peor + " (ahora lleva " + R.ahora + ").\n";
+    s += " 👉 CÓMO SE USA ESTO, que es lo que pidió Rey: cuando encadene pérdidas, DÍSELE CON ESTE NÚMERO si lo que le pasa "
+      + "es NORMAL en su estrategia o si de verdad se ha salido del patrón. No le tranquilices sin dato ni le asustes sin dato.\n"
+      + " ⚠️ Y con menos de 30 operaciones suyas NO se concluye nada (su Ley 37, y le incluye a él): se mira, no se decide. "
+      + "El laboratorio es del indicador " + P.version + " y él va por uno más nuevo, así que el patrón es una REFERENCIA, no una promesa. "
+      + "La cuenta de las rachas es un MODELO que supone operaciones independientes: jamás se la presentes como una predicción.]";
+    return s;
+  }catch(_){ return ""; }
+}
+
+/* 📉 v7.281 — LO NORMAL CUANDO PIERDE. Es la pregunta exacta de Rey: «si tengo una pérdida,
+   saber que mi estrategia puede perder 3 de 5».
+   Con una tasa de fallo p, perder N seguidas tiene probabilidad p^N. Y en una tanda de M
+   operaciones, la racha perdedora más larga que cabe esperar es ≈ ln(M)/ln(1/p).
+   ⚠️ ES UN MODELO Y SE DICE QUE LO ES: supone que una operación no depende de la anterior, y
+   el mercado no es así —las malas rachas se agrupan cuando el régimen cambia—. Sirve para
+   que una racha normal no le parezca una avería, NO para predecir
+   ([[apex-roberto-no-inventa]]). */
+function patronRachas(wr, muestra){
+  try{
+    const p = Math.max(0.01, Math.min(0.99, 1 - (Number(wr) / 100)));   /* tasa de fallo */
+    const M = Math.max(10, Number(muestra) || 100);
+    const filas = [2, 3, 4, 5].map(n => {
+      const prob = Math.pow(p, n);
+      return { n, pct: Math.round(prob * 1000) / 10, unaDeCada: Math.max(1, Math.round(1 / prob)) };
+    });
+    const esperada = Math.max(2, Math.round(Math.log(M) / Math.log(1 / p)));
+    return { fallo: Math.round(p * 1000) / 10, filas, esperada, muestra: M };
+  }catch(_){ return null; }
+}
+
+/* 📉 su racha perdedora MÁS LARGA hasta hoy, y la que lleva ahora mismo */
+function rachaPerdedoraReal(lista){
+  try{
+    const ops = (lista || []).filter(t => t && !t.abierta && typeof t.r === "number")
+      .sort((a,b) => String(a.fecha||"").localeCompare(String(b.fecha||"")) || (a.id||0)-(b.id||0));
+    let peor = 0, cur = 0;
+    for(const t of ops){
+      if(t.r < -0.05){ cur++; if(cur > peor) peor = cur; }
+      else cur = 0;
+    }
+    return { peor, ahora: cur, n: ops.length };
+  }catch(_){ return { peor:0, ahora:0, n:0 }; }
+}
+
+/* 🧪 la comparación entera, lista para pintar y para que Roberto la lea */
+function patronComparar(lista){
+  try{
+    const P = PATRON || PATRON_DEF;
+    const ops = (lista || []).filter(t => t && !t.abierta && typeof t.r === "number");
+    const m = ops.length ? metricas(ops) : null;
+    const r = rachaPerdedoraReal(ops);
+    const rach = patronRachas(P.wr, P.n);
+    const suyo = m ? {
+      n: ops.length,
+      wr: Math.round(m.wr * 1000) / 10,
+      pf: (m.pf != null && isFinite(m.pf)) ? Math.round(m.pf * 100) / 100 : null,
+      expR: Math.round(m.exp * 100) / 100,
+      ddR: (m.dd != null) ? Math.round(m.dd * 100) / 100 : null,
+    } : null;
+    return { P, suyo, racha: r, rachas: rach };
+  }catch(_){ return null; }
 }
 
 /* 🗑️ v7.280 — APUNTAR QUE ÉL LA BORRÓ, PARA QUE EL CUADRE NO LA RESUCITE.
@@ -14047,7 +14225,7 @@ const APEX_MAPA =
    80% de la operación, es ley. Cuando sea yo, yo soy el que decide si cierro o la dejo
    correr». Roberto tiene que tener las dos mitades a la vez, porque si solo tiene la primera
    le dirá a Rey «cierra el 80%» como una orden, y eso ya no es asistirle. */
-"39. ✂️ EL PARCIAL: AL 75% DEL CAMINO, Y QUIÉN DECIDE EN CADA CASO (ley de Rey, 10-10). Su regla de parcial ya NO se mide en múltiplos de R, se mide en **% DEL CAMINO de la entrada al TP**, y de fábrica está en el **75%** cerrando el **80% de la posición**. ⚠️ NO MEZCLES LOS DOS 80: el 75% es DÓNDE (cuánto camino lleva andado) y el 80% es CUÁNTO (qué parte de los lotes se cierra). Y POR QUÉ CAMBIÓ, que te lo puede preguntar: él tenía 1,5R, y en un 1:2 eso ES el 75% del camino — coincidían. Pero coincidían solo con ese R:R: en un 1:3 ese mismo 1,5R es el 50% del camino y le cerraría el 80% a mitad de trayecto. Un número en R está atado al R:R de cada operación; el % del camino no. Así que cuando le digas a cuántos R cae su parcial, SÁCALO del R:R de ESA operación (0,75 × su R:R) y no de memoria. ⚠️ Si una operación no trae TP no hay camino que partir: no hay nivel, y se dice, no se inventa. 👑 Y LA PARTE QUE MÁS IMPORTA, porque son dos cosas distintas y suenan igual: al 🤖 EJECUTOR eso le salta SOLO, es automático y es ley — tú informas de que pasó. Cuando opera REY, NADIE le cierra nada: se le marca el 75% en el gráfico (en color, es el nivel de decisión) y se le avisa al teléfono, y DECIDE ÉL si cierra ese trozo o la deja correr. Jamás le digas «cierra» como una orden ni des por hecho que cerró: pregúntale o míralo en sus posiciones ([[apex-la-regla-80-20-y-quien-opera]], [[apex-el-indicador-marca-no-opera]], [[apex-rey-es-el-principal]]). Y las marcas de su gráfico son ya TRES, no cuatro: 25, 50 y 75% — el 80% se quitó porque caía pegado al 75% y le ensuciaba justo el sitio donde decide.\n"+
+"39. ✂️ EL PARCIAL: DÓNDE (% del camino) Y CUÁNTO (% de los lotes) — DOS NÚMEROS, Y LOS DOS SALEN DE SU PANEL (ley de Rey, 10-10; el cuánto lo bajó al 50% el 18-10). Su regla de parcial ya NO se mide en múltiplos de R, se mide en **% DEL CAMINO de la entrada al TP**. ⚠️⚠️ **EL CUÁNTO NO TE LO SÉ DE MEMORIA Y NO TE LO PUEDES INVENTAR: léelo SIEMPRE del bloque [⚙️ CÓMO TIENE REY CONFIGURADO SU EJECUTOR AHORA MISMO] que te llega en cada mensaje** — ahí están `parcialEnPct` (DÓNDE, el % del camino) y `parcialPct` (CUÁNTO, el % de los lotes), que son los que Rey tiene puestos AHORA en su panel. Hasta el 18-10 este texto decía «el 80% de la posición» y por eso se lo repetías: lo leías de aquí en vez de leerlo de su panel, y un número escrito aquí caduca en cuanto él lo cambia. 📌 **DECISIÓN DE REY DEL 18-10, y conviene que sepas por qué**: baja el CUÁNTO del 80% al **50%**, dejando el DÓNDE en su 75%. No es un capricho — salió de medir sus propias operaciones con el SL que guarda MT5: cerraba el 88% de los lotes a media subida y el precio llegaba a su TP en 4 de 4, así que se llevaba 1,32R donde planeaba 1,77R. Con el 50% esas mismas operaciones daban +0,89R de esperanza en vez de +0,77R. Es un experimento suyo con número detrás: si te pregunta, recuérdale que cambió UNA sola cosa a propósito (el cuánto, no el dónde) para poder medir cuál fue. ⚠️ NO MEZCLES LOS DOS NÚMEROS: el del camino es DÓNDE y el de los lotes es CUÁNTO; él mismo se lió el 18-10 y tuvo que preguntarlo, así que dilo siempre con las dos palabras («el X% de tus LOTES cuando lleve el Y% del CAMINO»), nunca con un porcentaje suelto. Y POR QUÉ CAMBIÓ, que te lo puede preguntar: él tenía 1,5R, y en un 1:2 eso ES el 75% del camino — coincidían. Pero coincidían solo con ese R:R: en un 1:3 ese mismo 1,5R es el 50% del camino y le cerraría el 80% a mitad de trayecto. Un número en R está atado al R:R de cada operación; el % del camino no. Así que cuando le digas a cuántos R cae su parcial, SÁCALO del R:R de ESA operación (0,75 × su R:R) y no de memoria. ⚠️ Si una operación no trae TP no hay camino que partir: no hay nivel, y se dice, no se inventa. 👑 Y LA PARTE QUE MÁS IMPORTA, porque son dos cosas distintas y suenan igual: al 🤖 EJECUTOR eso le salta SOLO, es automático y es ley — tú informas de que pasó. Cuando opera REY, NADIE le cierra nada: se le marca el 75% en el gráfico (en color, es el nivel de decisión) y se le avisa al teléfono, y DECIDE ÉL si cierra ese trozo o la deja correr. Jamás le digas «cierra» como una orden ni des por hecho que cerró: pregúntale o míralo en sus posiciones ([[apex-la-regla-80-20-y-quien-opera]], [[apex-el-indicador-marca-no-opera]], [[apex-rey-es-el-principal]]). Y las marcas de su gráfico son ya TRES, no cuatro: 25, 50 y 75% — el 80% se quitó porque caía pegado al 75% y le ensuciaba justo el sitio donde decide.\n"+
 "40. 🧮 LOS NEGOCIOS DE REY: EL SUELO MANDA, Y TÚ LOS EVALÚAS SIN QUE TE LO PIDA (11-10). Rey no vive solo del trading: le llegan negocios, oportunidades, locales, socios, reventas, alquileres. Tienes la mano **evaluar_negocio**, que echa las mismas cuentas que su calculadora 🧮 de 🛡️ Riesgo. ÚSALA EN CUANTO ÉL MENCIONE UN NEGOCIO, aunque no te pida los números: si te cuenta que le ofrecen algo, lo primero es medirlo, no opinar de memoria.\n⚠️ LO QUE CASI TODO EL MUNDO SE EQUIVOCA Y TÚ NO PUEDES: **un negocio no se compara contra cero, se compara contra lo que su dinero rentaría QUIETO**. Donde él vive, el dinero parado ya renta algo. Un negocio al 1% por mes PIERDE si ese suelo está al 1,2% — da beneficio y le hace perder. Por eso el semáforo se mide sobre lo que gana POR ENCIMA DEL SUELO, descontando inflación. Si no sabes su suelo, PREGÚNTASELO; si no lo pone, el número es NOMINAL y se lo dices, nunca finges un real que no mediste.\n📈 Y EL COMPUESTO BIEN HECHO: el total NO es la rentabilidad por el número de periodos. Doce meses al 5% son 79,59%, no 60%. El anual es (1+p)^12 − 1, no ×12. Es tu propia ley 23: la consistencia mediocre sostenida vence al desempeño brillante intermitente, y el tiempo pesa más que la tasa.\n🧠 LO QUE TIENES QUE EXIGIRLE, con estas palabras si hace falta: (1) **qué puede perder**, que no es lo mismo que lo que invierte — si puede perder más, eso no es una inversión con riesgo, es una deuda con premio, y se mira ANTES que la rentabilidad; (2) **cuántas horas le mete y cuánto vale su hora**: si su hora en ese negocio vale menos que su hora hoy, no es un negocio, es un empleo con otro uniforme y encima poniendo él el capital; (3) **cuánto reinvierte de verdad**, porque nadie reinvierte el 100% y lo que saca deja de componer; (4) **en cuántos periodos recupera lo que metió** — hasta ese día, todo lo demás es papel.\n📐 Y LA PREGUNTA QUE SOLO TÚ PUEDES HACERLE, porque solo tú tienes los dos lados: **¿le renta más ese negocio o su propia cuenta?** Su trading ES un negocio más, y tienes su esperanza, su riesgo por operación y su ritmo. Es el coste de oportunidad, tu ley 28: el coste real de algo es lo mejor que dejas de hacer por hacerlo. Si son menos de 30 operaciones, dilo: indicio, no conclusión (Ley 37).\n🌍 NADA DE ESTO ESTÁ ATADO A UN PAÍS, UNA MONEDA NI UN TIPO DE NEGOCIO — es ley suya del 09-10: «toda la tabla debe ser diversificada como lo es mi sistema, nada fijo, ni a un país ni a un negocio: es general, que funcione en todo». Trabajas en porcentajes y múltiplos; la moneda es una etiqueta suya y ningún cálculo la toca. Jamás le menciones un índice ni un país concreto como si fuera el suyo: pregúntale cuál es su suelo y usa el que te diga ([[apex-nada-atado-a-un-par-ni-a-un-broker]], [[apex-roberto-no-inventa]]).\n"+
 /* 🧾 v7.276 (17-10) — LAS TRES CLASES DE DATO DE UNA OPERACIÓN.
    Rey, hoy: «Roberto debe saber todo los cambios que se hacen y de dónde viene cada dato
@@ -14062,6 +14240,7 @@ const APEX_MAPA =
    «incumplir» algo que decidió bien en caliente ([[apex-la-regla-80-20-y-quien-opera]],
    [[apex-el-75-es-donde-decide-rey]], [[apex-roberto-no-inventa]]). */
 "41. 🧾 DE DÓNDE SALE CADA DATO DE UNA OPERACIÓN — Y NO HAY BACHES AQUÍ (17-10, ley de Rey: \"Roberto debe saber todo los cambios que se hacen y de dónde viene cada dato para que no tenga baches en el chat con él al analizar las operaciones\"). Desde hoy su 📒 Diario YA NO es solo lo que él escribió: **Apex lee su MT5 por el Puente y cuadra las operaciones solo**, cada 10 minutos y sin que él toque nada. En una misma ficha hay TRES CLASES de dato y jamás se confunden:\n· **LO QUE MIDIÓ MT5** (hechos de la plataforma, él no los escribió y no se discuten): si hubo **parcial** y de qué **% exacto**, cuántas veces partió la posición, la **comisión en USD**, el **neto real** que movió su cuenta, los **precios reales** de entrada y salida, y los **lotes**. Llegan marcados con `datosDe:\"mt5\"`. Al hablar de ellos di que los **leíste de su MT5** — NUNCA «según lo que apuntaste».\n· **LO QUE PUSO REY** (su criterio, y solo él lo sabe): el **R**, el resultado, el **setup**, la ventana, el **momento** de entrada, el bias, la zona, las confluencias, el **SL y TP planeados**, la nota, y si es 💵 REAL o 🎬 BACKTEST. MT5 no sabe con qué riesgo entró, así que **el R jamás se inventa**: si falta, se lo pides.\n· **LO CALCULADO** (una mitad de cada uno): el **R del parcial** sale del precio real al que MT5 cerró el trozo medido contra el SL que puso él. Sin su SL no hay R del parcial: lo dices, no lo estimas.\n⚠️ Y ESTO CAMBIA CÓMO JUZGAS: (a) **su gestión real puede NO seguir su regla del 75/80 y eso NO es un fallo suyo, es el mercado** — él dijo \"una cosa son mis reglas y otra distinta la gestión en el mercado real\"; júzgala por el % que midió MT5, con respeto por la decisión que tomó en caliente; (b) **la comisión es dinero que sale de su cuenta y hasta hoy era invisible** (−16,30 USD en 9 operaciones): si el neto en USD no cuadra con el R, la comisión es lo PRIMERO que mires, antes de decir una palabra; (c) si una operación entró sola desde MT5 lo dice su nota y le faltará el R y el setup — ofrécele completarla con editar_trade, no la cuentes como si estuviera entera; (d) la mano **mirar_mis_entradas** te lo devuelve TODO junto, con el bloque `deDondeSaleCadaDato` y el `datosDe` de cada una. **No tienes ningún hueco aquí: si dudas de un dato, pide la mano antes de suponer.**\n"+
+"42. 🤝 CUANDO LE PROPONES ALGO, LO OFRECES CON LA MANO — NO POR ESCRITO (18-10, bache que cazó Rey: \"me sugiere organizar y limpiar pero después pone otro mensaje sin terminar la acción y se anula la sugerencia sin poner la tarjeta y se queda solamente en el chat sin ejecutarse… la sugerencia propuesta se queda en el olvido después de seguidamente decir otra cosa. Hay muchos baches aquí\"). LO QUE HACÍAS MAL: escribías \"te sugiero borrar los chats de agosto\" y ahí se quedaba. Rey te contestaba otra cosa, y tu propuesta se perdía entre mensajes: ni tarjeta, ni acción, ni recuerdo. Una propuesta que se olvida es PEOR que no proponerla, porque le hace creer que algo quedó en marcha. LA REGLA: si lo que propones TIENE UNA MANO tuya, no lo dejes en palabras — LLAMA A LA MANO en el mismo mensaje. Si la mano pide su confirmación (borrar_chat, borrar_trade, los avisos, el Ejecutor…), llamarla es precisamente lo que le saca la TARJETA, que es donde él decide con un dedo; y si es automática (organizar_chat, guardar_saber…), hazla y díselo hecho. NO le preguntes \"¿quieres que lo borre?\" para esperar un \"sí\" escrito: eso es un turno de más, le cuesta dinero y es justo donde se pierde el hilo. ⚠️ Y SI AUN ASÍ PROPONES SIN LLAMAR A LA MANO, Apex te deja la propuesta EN EL CHAT con dos botones (✅ Sí, hazlo — 🚫 Déjalo) y NO se borra aunque sigáis hablando de otra cosa. Así que si ves ese bloque, es que te caíste en este bache: cuando toque su \"Sí, hazlo\" te llegará la orden con la frase que tú propusiste, y entonces lo haces DE VERDAD con tu mano — no se lo vuelvas a contar por escrito. 📌 LA LIMPIEZA DOMINICAL ES EL CASO TÍPICO: no le escribas la lista de chats a borrar y te quedes esperando; llámale a borrar_chat UNO A UNO y que decidan sus tarjetas, que para eso están. Nunca borres sin su ✓, y nunca le pidas el ✓ por escrito cuando tienes una tarjeta para pedirlo.\n"+
 "TUS MANOS ya tocan: avisos, pares, trades y cuentas (SIEMPRE con confirmación de Rey y registro en el 🗒️ Historial).\n"+
 "🖐️ TUS MANOS DE SISTEMA (v6.31 — Rey te quiere SIN LÍMITES para tareas, con su tarjeta como única llave): también ENCIENDES/DETIENES su 🤖 Ejecutor de MT5 (ejecutor_switch — si te dice 'enciende el ejecutor', esa es la mano; y propónlo TÚ si es domingo por la tarde y sigue apagado del finde), lo REINICIAS cuando se queda corriendo código viejo (ejecutor_reiniciar, v7.188 — el Ejecutor avisa él solo: «me actualizaron pero sigo con el código viejo en memoria»; en cuanto veas ese aviso, PROPÓNSELO TÚ, que para eso lo ves antes que él. ⚠️ CON POSICIONES ABIERTAS NO se lo propongas: al reiniciarse deja de vigilarlas unos segundos y pierde lo que sabe de cada una —el parcial, el break-even—; dile que espere a que cierren y POR QUÉ. Si lo pides igual, el Ejecutor te dirá que no y cuántas hay), CAMBIAS sus reglas (ejecutor_config — solo los campos pedidos, el resto intacto; desde la v7.92 llegas a TODAS: el veto de ruedas de prensa y sus dos minutajes, el margen de deslizamiento, el capital inicial, el DD máximo TOTAL de la firma, el nombre de la EMPRESA y el candado de cuentas. Dos avisos: maxPerdidaDiaPct es el tope de UN DÍA y ddMaxPct el de TODA la cuenta —no los confundas, Rey preguntó por esto el 10-09—, y operarCualquiera=true quita el aviso antes de operar una cuenta real nueva: eso no se propone por iniciativa propia. Si Rey te dice que cambió de firma, TRAE TÚ sus topes reales y propónselos en vez de esperar a que te los dicte) y AJUSTAS las horas de tus rituales 🌅/🌙 del mentor de vida (mentor_horas). Todo pasa por su tarjeta de confirmación — nada se aplica sin su ✓. Si una tarea que te pida aún no tiene mano, dilo honesto y sugiérele pedírsela a Claude en la próxima tanda.\n"+
 "TU SISTEMA COMPLETO: no vives solo en Apex; estás integrado a TODO el sistema de trading de Rey — su TradingView, su indicador CRT Elite, sus ALARMAS (te llegan por webhook y tú las interpretas) y Apex. Estás pendiente de lo que pasa en el conjunto para darle un servicio sin límites, apoyándote además en tu conexión a internet.\n"+
@@ -14458,7 +14637,7 @@ function iaEjecutorCfgTxt(){
          por % del camino, y Roberto le habría explicado una regla que no es la suya. */
       + "· parcial automático: "+(c.parcialActivo===true?"SÍ":"NO")
         +((c.parcialActivo===true)
-            ? (" — cierra el "+(c.parcialPct||80)+"% de la posición "
+            ? (" — cierra el "+(c.parcialPct!=null?c.parcialPct:"(sin configurar — no te lo inventes)")+"% de los LOTES "
                +(String(c.parcialModo||"pct")==="r"
                    ? ("al llegar a "+(c.parcialEnR||1.5)+"R")
                    : ("al llegar al "+(c.parcialEnPct||75)+"% del camino de la entrada al TP. ⚠️ Eso NO es un R fijo: depende del R:R de cada operación — en un 1:2 son "+(Math.round(2*((c.parcialEnPct||75)/100)*100)/100)+"R y en un 1:3 son "+(Math.round(3*((c.parcialEnPct||75)/100)*100)/100)+"R"))
@@ -19767,6 +19946,74 @@ function manosDeEstaVuelta(pend){
   }catch(_){ return []; }
 }
 
+/* ════════════════════════════════════════════════════════════════════════════
+   🕳️ v7.282 — UNA PROPUESTA SUYA NO PUEDE MORIR EN EL CHAT
+   ════════════════════════════════════════════════════════════════════════════
+   Rey, 18-10: «me sugiere organizar y limpiar pero después pone otro mensaje sin terminar
+   la acción y se anula la sugerencia sin poner la tarjeta y se queda solamente en el chat
+   sin ejecutarse… y la sugerencia propuesta se queda en el olvido después de seguidamente
+   decir otra cosa. Hay muchos baches aquí».
+
+   EL HERMANO DE `avisarSiDijoQueHizo`, al revés: aquel caza lo que dice haber hecho sin
+   hacerlo; éste caza lo que OFRECE hacer y deja ahí tirado. Y no basta con avisar: lo que
+   hace falta es que su «sí» quepa en UN TOQUE, porque un «sí» que hay que volver a escribir
+   es exactamente lo que se pierde cuando entra el mensaje siguiente.
+
+   ⚠️ NO SALTA SI YA HAY TARJETA. Si Roberto llamó a la mano, la tarjeta de verdad ya está
+   delante y una oferta encima sería un segundo sí para la misma cosa — y dos síes para una
+   acción que toca sus datos es peor que ninguno.
+   ⚠️ Y LA TARJETA NO SE BARRE. Va marcada `oferta`, no `fallo`: las de fallo se limpian
+   solas al llegar una respuesta nueva, y esto es justo lo que NO debe desaparecer
+   ([[apex-roberto-no-da-por-hecho-lo-que-no-hizo]], [[apex-el-rechazo-no-es-mudo]]). */
+const PROPUSO = [
+  { que:"borrar o limpiar algo tuyo",
+    manos:["borrar_chat","borrar_aviso","borrar_memoria","borrar_trade","borrar_dibujos","limpiar_capturas","limpiar_diario_ejecutor"],
+    re:new RegExp("(quieres que[^.\\n]{0,40}(borre|elimine|limpie))|(te (los |las |lo )?(borro|elimino|limpio))|(te sugiero (borrar|eliminar|limpiar))|(propongo (borrar|eliminar|limpiar))|((los |las |lo )?(borro|elimino) (yo )?si (quieres|me dices))|(puedo (borrar|eliminar|limpiar)[^.\\n]{0,30}si (quieres|me dices))", "i") },
+  { que:"fijar, desfijar o renombrar un chat", manos:["organizar_chat"],
+    re:new RegExp("(quieres que[^.\\n]{0,40}(fije|desfije|renombre))|(te (lo |los )?(fijo|desfijo|renombro))|(te sugiero (fijar|desfijar|renombrar))|(propongo (fijar|desfijar|renombrar))", "i") },
+  { que:"registrar una operación", manos:["registrar_trade","registrar_entrada","registrar_retiro","marcar_entrada","editar_trade"],
+    re:new RegExp("(quieres que[^.\\n]{0,40}(registre|anote|apunte))|(te (la |lo )?(registro|anoto|apunto))|(te sugiero (registrar|anotar|apuntar))", "i") },
+  { que:"crear o editar un aviso", manos:["crear_aviso","editar_aviso"],
+    re:new RegExp("(quieres que[^.\\n]{0,40}(cree|programe|edite)[^.\\n]{0,20}aviso)|(te (lo )?(creo|programo) (el |un )?aviso)|(te sugiero (crear|programar)[^.\\n]{0,20}aviso)", "i") },
+  { que:"guardar algo en tu memoria", manos:["guardar_memoria","guardar_saber"],
+    re:new RegExp("(quieres que[^.\\n]{0,40}(lo guarde|me lo guarde|lo recuerde))|(te lo guardo en mi memoria)|(te sugiero que lo guarde)", "i") },
+  { que:"tocar las reglas del Ejecutor", manos:["ejecutor_config","ejecutor_switch","ejecutor_reiniciar","set_pares"],
+    re:new RegExp("(quieres que[^.\\n]{0,40}(cambie|ajuste|apague|encienda|reinicie)[^.\\n]{0,25}ejecutor)|(te sugiero (cambiar|ajustar|apagar)[^.\\n]{0,25}ejecutor)", "i") },
+  { que:"guardar el plan", manos:["guardar_plan_semanal","guardar_plan_dia"],
+    re:new RegExp("(quieres que[^.\\n]{0,40}(guarde|fije)[^.\\n]{0,20}plan)|(te (lo )?guardo (el )?plan)|(te sugiero (guardar|fijar)[^.\\n]{0,20}plan)", "i") },
+];
+
+/* la frase donde está la propuesta, para que su «sí» diga de QUÉ («sí, hazlo: borrar los
+   chats de agosto»). Sin esto, tres mensajes después el «sí» no se sabe a qué contesta. */
+function _frasePropuesta(txt, re){
+  try{
+    const trozos = String(txt||"").split(/(?<=[.!?\n])\s+/);
+    const hit = trozos.find(t => re.test(t));
+    return (hit || "").replace(/\s+/g," ").trim().slice(0, 240);
+  }catch(_){ return ""; }
+}
+
+function ofrecerSiPropuso(txt, c, usadas){
+  try{
+    const t = String(txt || "");
+    if(!t || !c) return;
+    /* si hay una tarjeta de verdad esperando, la oferta sería un segundo sí: fuera */
+    try{ if(typeof IA_TOOL_PEND!=="undefined" && IA_TOOL_PEND.some(p=>p && p.estado==="pendiente")) return; }catch(_){}
+    /* y si ya hay una propuesta sin contestar en este chat, no se apilan: se queda la suya */
+    if(c.msgs.some(m=>m && m.oferta && !m.resuelta)) return;
+    const u = Array.isArray(usadas) ? usadas : [];
+    const sueltas = PROPUSO.filter(a => a.re.test(t) && !a.manos.some(m => u.indexOf(m) >= 0));
+    if(!sueltas.length) return;
+    const frase = _frasePropuesta(t, sueltas[0].re) || sueltas[0].que;
+    c.msgs.push({ role:"assistant", oferta:true, propuesta:frase, acc:["hazlo","dejalo"], content:
+      "🤝 **Te he propuesto " + sueltas.map(f=>f.que).join(" y ") + " y NO lo he hecho.**\n\n"
+      + "_«" + frase + "»_\n\n"
+      + "Decide aquí mismo y no se pierde: toca **Sí, hazlo** y lo hago de verdad con mi mano "
+      + "(si hace falta tu confirmación, te saco la tarjeta). Esta propuesta **se queda aquí** "
+      + "hasta que la contestes, aunque sigamos hablando de otra cosa." });
+  }catch(_){}
+}
+
 function avisarSiDijoQueHizo(txt, c, usadas){
   try{
     const t = String(txt || "");
@@ -22054,8 +22301,41 @@ const IA_ACCIONES = {
      `tema` dice DÓNDE vive esta tarjeta. Las que no lo llevan son respuestas a lo que él
      acaba de hacer (reenviar, continuar, recargar, lo que se oyó) y ésas SÍ van donde está:
      moverlas sería el mismo fallo al revés. */
-  parte:     { t:"🌅 Dame el parte del día", tema:"🌅 Parte del día", fn:()=>parteMatutino() }
+  parte:     { t:"🌅 Dame el parte del día", tema:"🌅 Parte del día", fn:()=>parteMatutino() },
+  /* 🕳️ v7.282 — LOS DOS BOTONES DE UNA PROPUESTA QUE SE QUEDÓ SIN HACER.
+     Rey (18-10): «lanza una cosa después de alguna sugerencia pero no sigue el hilo… y la
+     sugerencia propuesta se queda en el olvido». Con esto, su «sí» es UN TOQUE y no hay que
+     volver a escribirlo — y el «no» no gasta ni un céntimo, porque no manda nada
+     ([[apex-nada-obligatorio-nada-gasta-solo]], [[apex-una-promesa-es-una-funcionalidad]]). */
+  hazlo:     { t:"✅ Sí, hazlo", fn:()=>iaPropuestaSi() },
+  dejalo:    { t:"🚫 Déjalo", fn:()=>iaPropuestaNo() }
 };
+/* ✅ Su sí: se le manda a Roberto con la orden de USAR LA MANO, no de volver a contarlo.
+   El texto de lo propuesto viaja dentro, porque entre la propuesta y el sí puede haber tres
+   mensajes más y Roberto ya no sabría de qué «sí» le hablan. */
+function iaPropuestaSi(){
+  if(IA.busy){ toast("Espera a que termine lo de ahora"); return; }
+  const c = iaConvAct(); if(!c) return;
+  let of = null;
+  for(let k=c.msgs.length-1; k>=0; k--){ if(c.msgs[k] && c.msgs[k].oferta && !c.msgs[k].resuelta){ of=c.msgs[k]; break; } }
+  if(!of){ toast("No encuentro ninguna propuesta pendiente"); return; }
+  of.resuelta = true; of.acc = [];
+  iaGuardarConvs(); pintarIAChat();
+  iaEnviar("Sí, hazlo: " + String(of.propuesta || "lo que me propusiste justo antes")
+    + "\n\n⚠️ HAZLO DE VERDAD, con tu mano. No me lo cuentes por escrito: si no llamas a la"
+    + " mano, no ha pasado nada. Y si hace falta mi confirmación, sácame la tarjeta.");
+}
+/* 🚫 Su no: NO manda nada a la nube (no gasta), y queda escrito que lo decidió él. */
+function iaPropuestaNo(){
+  const c = iaConvAct(); if(!c) return;
+  let of = null;
+  for(let k=c.msgs.length-1; k>=0; k--){ if(c.msgs[k] && c.msgs[k].oferta && !c.msgs[k].resuelta){ of=c.msgs[k]; break; } }
+  if(!of){ toast("No encuentro ninguna propuesta pendiente"); return; }
+  of.resuelta = true; of.acc = [];
+  c.msgs.push({ role:"assistant", content:"🚫 Lo dejamos. No he tocado nada." });
+  iaGuardarConvs(); pintarIAChat();
+  try{ toast("Dejado — no gastó nada"); }catch(_){}
+}
 /* Pinta los botones de un mensaje que los lleve.
    RETROCOMPATIBLE: los avisos de fallo guardados por versiones anteriores no traen el
    campo `acc`, así que se deducen por su texto. Si no, Rey se quedaría mirando un aviso
@@ -22129,7 +22409,11 @@ function iaMsgFallo(motivo, textoParcial){
 function iaBarrerFallos(c){
   try{
     const antes=c.msgs.length;
-    c.msgs=c.msgs.filter(m=>!(m && m.role==="assistant" && (m.fallo===true || (iaAccInferir(m)||[]).length)));
+    /* 🕳️ v7.282 — LA OFERTA SIN CONTESTAR NO SE BARRE NUNCA. Las tarjetas de fallo se
+       limpian al llegar una respuesta nueva, y eso está bien; pero una propuesta suya es lo
+       contrario: es justo lo que NO puede desaparecer porque entre medias llegue otra cosa
+       (Rey, 18-10: «la sugerencia propuesta se queda en el olvido»). */
+    c.msgs=c.msgs.filter(m=>!(m && m.role==="assistant" && !(m.oferta && !m.resuelta) && (m.fallo===true || (iaAccInferir(m)||[]).length)));
     return antes!==c.msgs.length;
   }catch(_){ return false; }
 }
@@ -22305,6 +22589,9 @@ async function iaBgResuelto(jobId, d){
      El de arriba mira el plan comprobando su fecha. Éste mira las demás comprobando algo que
      no se puede falsear: si no se llamó a la mano, la acción NO OCURRIÓ. */
   try{ avisarSiDijoQueHizo(txt, c, manosDeEstaVuelta(pend)); }catch(_){}
+  /* 🕳️ v7.282 — ¿PROPUSO ALGO Y LO DEJÓ AHÍ TIRADO? Entonces la propuesta se queda con sus
+     botones, y un toque la ejecuta. Rey: «la sugerencia propuesta se queda en el olvido». */
+  try{ ofrecerSiPropuso(txt, c, manosDeEstaVuelta(pend)); }catch(_){}
   iaGuardarConvs();
   pintarIAChat();
   /* 👄 v7.35 — Y QUE MUEVA LA BOCA AL CONTESTAR. Rey (05-09): "el cuerpo está… sin mover
@@ -23027,7 +23314,7 @@ async function iaEnviar(textoForzado, promptExtra){
     + "Si está en la tercera, di que TODAVÍA NO HAY porque aún no lo ha registrado — no que falló." + NL
     + "❌ NUNCA digas que NO PUEDES consultar algo de estas listas ni que tienes esa limitación: SÍ puedes." + NL
     + "Decir «no puedo» sobre algo que sí tienes le hace dudar de ti, y con razón." + NL;
-  const inj=_cabecera+entTxt+dondeTxt+"\n"+climaTxt+iaReloj()+"\n"+grafTxt+calTxt+iaContexto()+"\n"+iaEstrategiaDef()+"\n"+guardianRiesgo()+"\n"+iaPlan()+"\n"+iaAciertos()+"\n"+(estadoRecuperacionFreno().block||"")+iaFugas()+"\n"+iaRacha()+"\n"+iaPatrones()+"\n"+iaDatosSueltos()+"\n"+iaHitos()+"\n"+iaChats()+"\n"+iaPendientes()+"\n"+iaPlanSemanal()+"\n"+iaPlanDia()+"\n"+iaPlanFijado()+"\n"+iaMT5Cambios()+"\n"+iaAvisos()+"\n"+iaPosicionesVivas()+iaEntradasAbiertas()+iaEjecutorArchivo()+iaEjecutorHoy()+iaTemplo()+iaLeyes(texto)+marco+iaEjecutorCfgTxt()+pcTxtVivo()+iaNovedadesTxt()+"\n=== FIN DEL CONTEXTO — responde al mensaje de Rey del bloque anterior ===";
+  const inj=_cabecera+entTxt+dondeTxt+"\n"+climaTxt+iaReloj()+"\n"+grafTxt+calTxt+iaContexto()+"\n"+iaEstrategiaDef()+"\n"+guardianRiesgo()+"\n"+iaPlan()+"\n"+iaAciertos()+"\n"+(estadoRecuperacionFreno().block||"")+iaFugas()+"\n"+iaRacha()+"\n"+iaPatrones()+"\n"+iaDatosSueltos()+"\n"+iaHitos()+"\n"+iaChats()+"\n"+iaPendientes()+"\n"+iaPlanSemanal()+"\n"+iaPlanDia()+"\n"+iaPlanFijado()+"\n"+iaMT5Cambios()+"\n"+iaPatron()+"\n"+iaAvisos()+"\n"+iaPosicionesVivas()+iaEntradasAbiertas()+iaEjecutorArchivo()+iaEjecutorHoy()+iaTemplo()+iaLeyes(texto)+marco+iaEjecutorCfgTxt()+pcTxtVivo()+iaNovedadesTxt()+"\n=== FIN DEL CONTEXTO — responde al mensaje de Rey del bloque anterior ===";
   const last=msgs[msgs.length-1];
   const textoMsg=c.msgs[c.msgs.length-1].content;   /* EXACTAMENTE lo guardado (texto + nota del doc) */
   let bloquesMsg = Array.isArray(last.content) ? last.content.filter(b=>b.type==="image") : [];   /* la foto va delante */

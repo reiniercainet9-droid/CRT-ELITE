@@ -1,103 +1,146 @@
-APEX v7.280 — TRADING DESK
+APEX v7.282 — TRADING DESK
 =========================
 
-APEX 7.280 — 18-10-2026
-EL R SE MIDE · LO QUE BORRAS NO VUELVE · Y VES LO QUE TE CAMBIO
+📐 TU R LO MIDE EL DINERO, NO EL PAPEL
 
-Todo esto salió de una pregunta tuya: «no recuerdo esa operación y hasta la
-había borrado».
+Lo cacé midiendo tus 9 operaciones, no leyéndolas: el R que apuntas es más optimista que el
+que cobras.
 
-════════════════════════════════════════════════════════════════════════════
-1) TU R ESTABA EN MT5 Y NADIE LO MIRABA
+      Tu 08-10:  apuntado 2,01R   ·   medido 1,43R   ·   cobrado +38,76 USD = 1,37R
 
-MT5 guarda el SL de CADA orden. Tus 16 posiciones lo tienen. Con tu SL, tu
-entrada y tu salida ponderada POR VOLUMEN, el R se MIDE — no hay que pedírtelo.
+No te equivocas al apuntar: apuntas el R del TP, y el 88% de tus lotes sale en el parcial,
+mucho antes. El dinero da la razón al medido, siempre.
 
-Y al medirlo salió lo importante:
+Ahora las dos cosas viven juntas, como pediste: **tu número se queda escrito** (lo verás
+como «tu R: 2,01») y **el medido es el que manda en las métricas**. Si tú lo cambias a mano
+después, el tuyo gana y no te lo vuelvo a tocar.
 
-   fecha   par       tu R escrito   R MEDIDO    neto real
-   05-10   GBP/USD      1,8          +0,73R     +24,50 USD
-   08-10   GBP/USD      2,01         +1,43R     +38,76 USD
-   08-10   EUR/USD      2,03         +1,33R     +34,48 USD
-   13-10   GBP/USD      2,0          +1,20R     +39,53 USD
-   16-10   EUR/USD      1,0          +1,10R     +28,98 USD
 
-TU R ESCRITO ES OPTIMISTA, y la causa es tu propia gestión: apuntas el R del
-TP como si toda la posición hubiera llegado allí, cuando el 88% salió antes en
-el parcial.
+🧬 Y YA SABES LO QUE TU ESTRATEGIA PUEDE PERDER
 
-Comprobado con dinero: el 08-10 GBP/USD, SL a 8,3 pips con 0,34 lotes =
-~28 USD de riesgo. A 2,01R serían +56,7 USD. Cobraste +38,76. Eso es 1,37R.
-Cuadra con el 1,43 medido, no con el 2,01 escrito.
+Tú: «si tengo una pérdida, saber que mi estrategia puede perder 3 de 5».
 
-Ninguno es mentira: tu 2,01 es «el precio llegó a 2R»; el 1,43 es «esto rindió
-mi riesgo». Pero el segundo es el que te paga.
+Tenías razón en la queja: Apex te decía «no puedo sacar conclusiones de 4 operaciones» y se
+callaba lo que SÍ sabíamos — 85 operaciones de laboratorio que estaban muertas en un .md.
 
-LAS DOS COSAS, como pediste:
-  · tu R escrito se CONSERVA en rApuntado — tu criterio no se tira
-  · el MEDIDO manda en tus métricas
-  · y SI LO EDITAS A MANO, GANAS TÚ: guardo qué valor apliqué, así que si el
-    número ya no es el mío sé que lo cambiaste y NO te lo vuelvo a pisar
+Ahora hay un recuadro de comparación en todas las métricas:
 
-════════════════════════════════════════════════════════════════════════════
-2) LO QUE BORRAS, BORRADO SE QUEDA   ← avería tuya descubierta, mía de culpa
+      TU ESTRATEGIA (85 ops)          TÚ, AHORA MISMO
+      aciertos .... 62,4%             se compara sola
+      PF .......... 2,50
+      peor caída .. 1,5%
+      peor racha perdedora esperada: 5 seguidas
 
-Borraste la operación del 06-10 y VOLVÍA SOLA. El cuadre con MT5 reinsertaba
-cualquier operación que no estuviera en tu Diario — cada 10 minutos, en
-silencio. Apex te deshacía un borrado tuyo y no tenías forma de saber por qué.
+      perder 2 seguidas → pasa 1 de cada 7 veces
+      perder 3 seguidas → 1 de cada 19
+      perder 4 seguidas → 1 de cada 50
 
-Ahora un borrado tuyo se apunta por nº de posición y NO VUELVE. Por los DOS
-caminos: tu papelera del Diario y la mano borrar_trade de Roberto. Y viaja en
-tu respaldo: al cambiar de teléfono siguen borradas.
+Tu peor racha real hasta hoy: **2**. O sea que lo que te ha pasado es lo normal, y ese
+recuadro está ahí para el día que pase lo de 3 — para que no te parezca que se rompió algo.
 
-════════════════════════════════════════════════════════════════════════════
-3) «ESTO TE CAMBIÉ»   ← el informe que no existía
 
-El parte del cuadre vivía en una variable que NADIE leía: se declaraba, se
-asignaba y ahí moría. Apex te corregía el Diario a solas.
+✂️ EL PARCIAL: 50% DE LOTES EN EL 75% DEL CAMINO
 
-Hoy mismo te sobrescribí dos parcialR que habías puesto a mano (1,5 → 0,83 y
-1,0 → 0,98) y te lo dije YO, hablando. Si lo hace sola mientras duermes, no te
-enteras.
+Tu regla, dicha por ti y ya escrita en el sistema. Roberto la canta así y **no te volverá a
+decir el 80%**: el número lo lee de tu panel del Ejecutor, no de un renglón mío.
 
-Ahora:
-  · 🧾 TARJETA en tu pantalla cuando haya algo que no has leído
-  · VENTANA con el detalle campo a campo: qué operación, qué dato, de qué a qué
-  · se ACUMULA lo no leído (un cambio de madrugada sigue ahí cuando despiertas)
-  · se marca como leído cuando lo ves, y no se repite
-  · y ROBERTO lo ve en el chat, para contártelo sin machacarte
+Medido en lo que llevas hecho: tomas el parcial al **58,5% del camino** (tu regla dice 75) y
+con el **73,1% de los lotes** (tu regla decía 80, ahora 50). De 5 parciales, **ninguno** se
+dio la vuelta después. Cambia UNA cosa a la vez para saber a qué atribuir la mejora.
 
-════════════════════════════════════════════════════════════════════════════
-4) Y TU REGLA DE LAS ÓRDENES CANCELADAS, BLINDADA
 
-Pediste: «no traer operaciones programadas canceladas». Ya se cumplía, pero
-por cómo está escrito, no porque nadie lo protegiera.
+🏦 EL EJECUTOR YA NO TIENE NINGUNA CUENTA CLAVADA
 
-El Puente lee SOLO deals ejecutados y exige entrada Y salida. Una orden
-cancelada es una INTENCIÓN: no deja deal, ni comisión, ni P&L. Y el SL se lee
-en una función APARTE que devuelve solo niveles y jamás crea operaciones.
-Banco test-una-orden-cancelada-no-es-una-operacion.cjs vigilándolo.
+Tú: «no debe tener cuentas clavadas, debe ver la que hay en MT5 y adaptarse».
 
-⚠️ Y LA DEL 06-10 NO ERA CANCELADA. Le pregunté a tu MT5: del 5 al 7 de
-octubre hay ocho órdenes y las ocho FILLED, cero canceladas. La del 06-10 tiene
-su orden FILLED, su deal de entrada con comisión −0,95 y su deal de salida con
-−5,89. Se ejecutó, estuvo 6h 36min abierta en tu cuenta FundedNext, y la
-cerraste a mano desde el MT5 del móvil (razón «1» en las dos órdenes, y el
-precio final quedó entre tu SL y tu TP).
+Tu panel decía 50.000 (de una cuenta vieja) con una de 6.000 conectada. El guardián lo
+cazaba y se negaba a abrir — bien hecho — pero eso significa que al encenderlo mañana **no
+habría operado ni una señal** hasta que lo corrigieras a mano.
 
-Ya está rellena con todo lo medible. Te falta tu criterio: setup, ventana,
-momento, bias, zona y con qué alias la fichas.
+Ahora, al encenderlo, lo lee de la cuenta que hay:
 
-════════════════════════════════════════════════════════════════════════════
-PROBADO
+      2025-07-26 · +6.000,00 · "Initial+Deposit"   ← sacado de tu MT5
 
-  banco nuevo  test-el-r-se-mide-y-lo-que-cambio-se-ve.cjs ....... 27/27
-  banco nuevo  test-una-orden-cancelada-no-es-una-operacion ...... 12/12
-  banco viejo  test-apex-cuadra-con-mt5.cjs ..................... 31/31
-               (reescritos los dos sitios que decían «MT5 no sabe tu riesgo»:
-                la ley sigue siendo que el R no se INVENTE, pero el hecho
-                cambió — MT5 sí guarda tu SL)
-  regresión completa ............................................ 417 bancos
+Y lo probé EJECUTÁNDOLO contra tu cuenta: con 50.000 se niega a abrir, con 6.000 abre y la
+pared del drawdown queda a 302,34 USD. También está en setup **A+ solamente**, como pediste.
+
+
+🚨 UN ANÁLISIS QUE LA NOTICIA TUMBA TE LO DIGO YO
+
+Lo que llevábamos pendiente de tu lista. Roberto se queda con los niveles de invalidación
+de tu análisis, y cuando el precio los pasa **te lo canta sin que preguntes, encima de tu
+propia propuesta de análisis** — ahí, no en un aviso suelto que se pierde.
+
+Y de paso salió esto, que llevaba callado desde la v7.136: **tu plan semanal llegaba VACÍO a
+la nube**. Semanas. Decía «no hay plan» cuando lo que pasaba era «llegó vacío», que no es lo
+mismo y es peor.
+
+
+🧾 LO QUE APEX TE CORRIGIÓ, AHORA SE VE
+
+El cuadre con MT5 te arreglaba el Diario en silencio. Ahora hay una tarjeta y un bloque en
+el chat con **qué cambió, de qué día y qué valor tenía antes**, y se acumula hasta que lo
+miras. Y lo que tú borras a propósito ya no resucita cada 10 minutos.
+
+De paso: una orden programada que cancelaste **no puede volver a entrar como operación**.
+El lector lee las órdenes y las operaciones por caminos separados, a propósito.
+
+La del 06-10 la miré en tu MT5: estaba EJECUTADA, no cancelada (8 órdenes del 5 al 7 de
+octubre, todas llenadas, ninguna cancelada). Te la rellené con datos medidos: R −0,19 ·
+SL 1,12725 · TP 1,12278 · RR 1,79 · comisión −0,95.
+
+
+Bancos nuevos: test-roberto-sabe-de-donde-sale-cada-dato.cjs (25) ·
+               test-el-plan-muerto-se-canta-solo.cjs (40) ·
+               test-el-plan-semanal-se-mide-en-semanas.cjs (26) ·
+               test-una-orden-cancelada-no-es-una-operacion.cjs (12) ·
+               test-el-r-se-mide-y-lo-que-cambio-se-ve.cjs (27) ·
+               test-su-estrategia-tiene-patron.cjs (27) ·
+               test-el-cuanto-del-parcial-sale-de-su-panel.cjs (14)
+
+
+🕳️ Y LOS TRES BACHES QUE CAZASTE ESTA TARDE
+
+Tú: «se quedó pegado en te respondí ábreme para confirmar, lo dijo como 5 veces… me sugiere
+organizar y limpiar pero después pone otro mensaje sin terminar la acción y la sugerencia se
+queda en el olvido… continúa diciendo la anulación del plan después de ya haber hecho el
+análisis».
+
+Los tres tenían causa y los tres están cerrados.
+
+  1) EL AVISO QUE TE PEDÍA CONFIRMAR LO QUE NO SE CONFIRMA. Cuando uso una mano, la nube te
+     avisaba SIEMPRE con «ábreme para confirmar». Pero 16 de mis manos son automáticas y no
+     llevan tarjeta: abrías y no había nada que confirmar. Y como encadeno manos, cada una
+     te mandaba el mismo aviso otra vez. Ahora distingue los dos casos y lo dice como es.
+
+  2) LA ANULACIÓN QUE NO SE CALLABA. Tu plan guardado tenía TRES entradas, y una era un
+     fantasma:
+
+        EUR/USD ................. 18-10   ← tu análisis
+        GBP/USD ................. 14-10
+        "EUR/USD y GBP/USD" ..... 27-09   ← de cuando escribías los dos juntos
+
+     Esa tercera se vigilaba como plan VIVO, así que todas las noticias fuertes de tres
+     semanas la «anulaban» — y el aviso volvía por más análisis nuevos que hicieras. Ahora
+     solo se vigila el plan de ESTA semana. Uno de otra semana no está anulado: está
+     caducado, y de eso ya te aviso por otro lado. No te he borrado nada.
+
+  3) LA SUGERENCIA QUE MORÍA EN EL CHAT. Esta era la de fondo. Te escribía «te sugiero borrar
+     los chats de agosto» y ahí se quedaba: ni tarjeta, ni acción, y el mensaje siguiente se
+     la llevaba por delante.
+
+     Ahora, si propongo algo y no uso la mano, la propuesta se queda en el chat CON SUS DOS
+     BOTONES —✅ Sí, hazlo / 🚫 Déjalo— y NO se borra aunque sigamos hablando de otra cosa.
+     Tu sí es un toque y me llega con la frase que yo propuse, así que no hay que reescribir
+     nada. Tu no no manda nada a la nube: decir no te sale gratis.
+
+     Y lo de raíz: ahora lo sé. Si lo que te propongo tiene una mano mía, la llamo en el
+     mismo mensaje — y si esa mano pide tu ✓, llamarla es justo lo que te saca la tarjeta.
+     Preguntarte «¿quieres que lo borre?» para esperar un sí escrito era un turno de más,
+     te costaba dinero y era exactamente donde se perdía el hilo.
+
+
+Banco nuevo: test-los-baches-del-chat-de-rey.cjs (24, todas ejecutadas)
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
