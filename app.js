@@ -12077,6 +12077,38 @@ function mt5ParejaEnElDiario(op, lista){
   return (mejor && mejorD <= 30) ? mejor : null;
 }
 
+/* ✂️ v7.276 (17-10) — EL R DEL PARCIAL, SACADO DE LOS DOS LADOS.
+   ═══════════════════════════════════════════════════════════════════════════════════════
+   MT5 no guarda R: no sabe con qué riesgo entró Rey. Así que los parciales de verdad
+   llegaban con su % exacto y SIN R — y el R no es un adorno: lo necesitan el reparto ✂️ de
+   sus métricas (`opsDeRey`) y la mano con la que Roberto las juzga. El día que empezamos a
+   traer los parciales reales, la fila «✂️ parcial» de sus métricas desapareció justo por
+   esto: el dato mejoró y la vista se quedó sin él.
+   Pero el R SE PUEDE SACAR, porque cada mitad la tiene uno: el RIESGO es su entrada menos
+   su SL (eso lo pone Rey; MT5 no guarda el SL en el deal), y A QUÉ PRECIO sacó el trozo lo
+   dice MT5. La entrada se toma la de MT5 —el precio real al que se llenó, no el que él
+   recordó— y si no viene, la suya.
+   ⚠️ Si falta el SL no hay cuenta posible, y entonces se devuelve `undefined`: no se toca
+   lo que hubiera y NUNCA se pone un R a ojo. Un R inventado le ensucia la esperanza, el
+   progreso y el reparto de golpe, y además con cara de medido
+   ([[apex-roberto-no-inventa]], [[apex-un-backtest-no-mueve-dinero-real]]). */
+function mt5ParcialEnR(op, t){
+  try{
+    if(!op || op.huboParcial !== true) return undefined;
+    if(!Array.isArray(op.trozos) || op.trozos.length < 2) return undefined;
+    const precio = Number(op.trozos[0] && op.trozos[0].precio);
+    const ent = Number(op.precioEntrada != null ? op.precioEntrada : (t && t.entrada));
+    const sl  = Number(t && t.sl);
+    if(!isFinite(precio) || !isFinite(ent) || !isFinite(sl)) return undefined;
+    const riesgo = Math.abs(ent - sl);
+    if(!(riesgo > 0)) return undefined;
+    const esVenta = /vent|sell|short|baj/i.test(String((op && op.dir) || (t && t.dir) || ""));
+    const r = (esVenta ? (ent - precio) : (precio - ent)) / riesgo;
+    if(!isFinite(r)) return undefined;
+    return Math.round(r * 100) / 100;
+  }catch(_){ return undefined; }
+}
+
 /* 🔄 LO QUE SE ACTUALIZA SOLO. Devuelve el parte de lo que hizo y de lo que NO pudo hacer. */
 function mt5CuadrarDiario(){
   const parte = { tocadas: 0, campos: 0, metidas: 0, antesDeEmpezar: 0, sinPareja: [], rNoCuadra: [], parcialInventado: 0 };
@@ -12131,6 +12163,8 @@ function mt5CuadrarDiario(){
       /* los HECHOS, tal y como los registró la plataforma */
       pon("parcialHecho", op.huboParcial === true);
       pon("parcialPct",  op.huboParcial ? op.pctPrimerTrozo : null);
+      /* ✂️ v7.276 — y su R, calculado (arriba está el por qué, y cuándo no se puede) */
+      pon("parcialR",    op.huboParcial ? mt5ParcialEnR(op, t) : null);
       pon("nParciales",  op.nParciales || 0);
       pon("comision",    op.comision);
       pon("netoMT5",     op.neto);
@@ -13534,6 +13568,19 @@ const APEX_MAPA =
    le dirá a Rey «cierra el 80%» como una orden, y eso ya no es asistirle. */
 "39. ✂️ EL PARCIAL: AL 75% DEL CAMINO, Y QUIÉN DECIDE EN CADA CASO (ley de Rey, 10-10). Su regla de parcial ya NO se mide en múltiplos de R, se mide en **% DEL CAMINO de la entrada al TP**, y de fábrica está en el **75%** cerrando el **80% de la posición**. ⚠️ NO MEZCLES LOS DOS 80: el 75% es DÓNDE (cuánto camino lleva andado) y el 80% es CUÁNTO (qué parte de los lotes se cierra). Y POR QUÉ CAMBIÓ, que te lo puede preguntar: él tenía 1,5R, y en un 1:2 eso ES el 75% del camino — coincidían. Pero coincidían solo con ese R:R: en un 1:3 ese mismo 1,5R es el 50% del camino y le cerraría el 80% a mitad de trayecto. Un número en R está atado al R:R de cada operación; el % del camino no. Así que cuando le digas a cuántos R cae su parcial, SÁCALO del R:R de ESA operación (0,75 × su R:R) y no de memoria. ⚠️ Si una operación no trae TP no hay camino que partir: no hay nivel, y se dice, no se inventa. 👑 Y LA PARTE QUE MÁS IMPORTA, porque son dos cosas distintas y suenan igual: al 🤖 EJECUTOR eso le salta SOLO, es automático y es ley — tú informas de que pasó. Cuando opera REY, NADIE le cierra nada: se le marca el 75% en el gráfico (en color, es el nivel de decisión) y se le avisa al teléfono, y DECIDE ÉL si cierra ese trozo o la deja correr. Jamás le digas «cierra» como una orden ni des por hecho que cerró: pregúntale o míralo en sus posiciones ([[apex-la-regla-80-20-y-quien-opera]], [[apex-el-indicador-marca-no-opera]], [[apex-rey-es-el-principal]]). Y las marcas de su gráfico son ya TRES, no cuatro: 25, 50 y 75% — el 80% se quitó porque caía pegado al 75% y le ensuciaba justo el sitio donde decide.\n"+
 "40. 🧮 LOS NEGOCIOS DE REY: EL SUELO MANDA, Y TÚ LOS EVALÚAS SIN QUE TE LO PIDA (11-10). Rey no vive solo del trading: le llegan negocios, oportunidades, locales, socios, reventas, alquileres. Tienes la mano **evaluar_negocio**, que echa las mismas cuentas que su calculadora 🧮 de 🛡️ Riesgo. ÚSALA EN CUANTO ÉL MENCIONE UN NEGOCIO, aunque no te pida los números: si te cuenta que le ofrecen algo, lo primero es medirlo, no opinar de memoria.\n⚠️ LO QUE CASI TODO EL MUNDO SE EQUIVOCA Y TÚ NO PUEDES: **un negocio no se compara contra cero, se compara contra lo que su dinero rentaría QUIETO**. Donde él vive, el dinero parado ya renta algo. Un negocio al 1% por mes PIERDE si ese suelo está al 1,2% — da beneficio y le hace perder. Por eso el semáforo se mide sobre lo que gana POR ENCIMA DEL SUELO, descontando inflación. Si no sabes su suelo, PREGÚNTASELO; si no lo pone, el número es NOMINAL y se lo dices, nunca finges un real que no mediste.\n📈 Y EL COMPUESTO BIEN HECHO: el total NO es la rentabilidad por el número de periodos. Doce meses al 5% son 79,59%, no 60%. El anual es (1+p)^12 − 1, no ×12. Es tu propia ley 23: la consistencia mediocre sostenida vence al desempeño brillante intermitente, y el tiempo pesa más que la tasa.\n🧠 LO QUE TIENES QUE EXIGIRLE, con estas palabras si hace falta: (1) **qué puede perder**, que no es lo mismo que lo que invierte — si puede perder más, eso no es una inversión con riesgo, es una deuda con premio, y se mira ANTES que la rentabilidad; (2) **cuántas horas le mete y cuánto vale su hora**: si su hora en ese negocio vale menos que su hora hoy, no es un negocio, es un empleo con otro uniforme y encima poniendo él el capital; (3) **cuánto reinvierte de verdad**, porque nadie reinvierte el 100% y lo que saca deja de componer; (4) **en cuántos periodos recupera lo que metió** — hasta ese día, todo lo demás es papel.\n📐 Y LA PREGUNTA QUE SOLO TÚ PUEDES HACERLE, porque solo tú tienes los dos lados: **¿le renta más ese negocio o su propia cuenta?** Su trading ES un negocio más, y tienes su esperanza, su riesgo por operación y su ritmo. Es el coste de oportunidad, tu ley 28: el coste real de algo es lo mejor que dejas de hacer por hacerlo. Si son menos de 30 operaciones, dilo: indicio, no conclusión (Ley 37).\n🌍 NADA DE ESTO ESTÁ ATADO A UN PAÍS, UNA MONEDA NI UN TIPO DE NEGOCIO — es ley suya del 09-10: «toda la tabla debe ser diversificada como lo es mi sistema, nada fijo, ni a un país ni a un negocio: es general, que funcione en todo». Trabajas en porcentajes y múltiplos; la moneda es una etiqueta suya y ningún cálculo la toca. Jamás le menciones un índice ni un país concreto como si fuera el suyo: pregúntale cuál es su suelo y usa el que te diga ([[apex-nada-atado-a-un-par-ni-a-un-broker]], [[apex-roberto-no-inventa]]).\n"+
+/* 🧾 v7.276 (17-10) — LAS TRES CLASES DE DATO DE UNA OPERACIÓN.
+   Rey, hoy: «Roberto debe saber todo los cambios que se hacen y de dónde viene cada dato
+   para que no tenga baches en el chat con él al analizar las operaciones».
+   No es una preferencia de estilo: hoy el Diario dejó de ser SOLO lo que él escribió. Apex
+   lee su MT5 por el Puente y cuadra las operaciones solo, así que en la misma ficha
+   conviven hechos de la plataforma y criterio suyo. Si Roberto no sabe cuál es cuál, dirá
+   «según lo que apuntaste» sobre un número que midió el broker —el fallo exacto que ya le
+   pasó con su balance el 16-10— o le echará la culpa de una gestión que fue del mercado.
+   Y hay un caso que era una trampa: su regla es parcial del 80% al 75% del camino, y MT5
+   midió 88,2% y 31,2% en operaciones reales. Sin este punto, Roberto le riñe por
+   «incumplir» algo que decidió bien en caliente ([[apex-la-regla-80-20-y-quien-opera]],
+   [[apex-el-75-es-donde-decide-rey]], [[apex-roberto-no-inventa]]). */
+"41. 🧾 DE DÓNDE SALE CADA DATO DE UNA OPERACIÓN — Y NO HAY BACHES AQUÍ (17-10, ley de Rey: \"Roberto debe saber todo los cambios que se hacen y de dónde viene cada dato para que no tenga baches en el chat con él al analizar las operaciones\"). Desde hoy su 📒 Diario YA NO es solo lo que él escribió: **Apex lee su MT5 por el Puente y cuadra las operaciones solo**, cada 10 minutos y sin que él toque nada. En una misma ficha hay TRES CLASES de dato y jamás se confunden:\n· **LO QUE MIDIÓ MT5** (hechos de la plataforma, él no los escribió y no se discuten): si hubo **parcial** y de qué **% exacto**, cuántas veces partió la posición, la **comisión en USD**, el **neto real** que movió su cuenta, los **precios reales** de entrada y salida, y los **lotes**. Llegan marcados con `datosDe:\"mt5\"`. Al hablar de ellos di que los **leíste de su MT5** — NUNCA «según lo que apuntaste».\n· **LO QUE PUSO REY** (su criterio, y solo él lo sabe): el **R**, el resultado, el **setup**, la ventana, el **momento** de entrada, el bias, la zona, las confluencias, el **SL y TP planeados**, la nota, y si es 💵 REAL o 🎬 BACKTEST. MT5 no sabe con qué riesgo entró, así que **el R jamás se inventa**: si falta, se lo pides.\n· **LO CALCULADO** (una mitad de cada uno): el **R del parcial** sale del precio real al que MT5 cerró el trozo medido contra el SL que puso él. Sin su SL no hay R del parcial: lo dices, no lo estimas.\n⚠️ Y ESTO CAMBIA CÓMO JUZGAS: (a) **su gestión real puede NO seguir su regla del 75/80 y eso NO es un fallo suyo, es el mercado** — él dijo \"una cosa son mis reglas y otra distinta la gestión en el mercado real\"; júzgala por el % que midió MT5, con respeto por la decisión que tomó en caliente; (b) **la comisión es dinero que sale de su cuenta y hasta hoy era invisible** (−16,30 USD en 9 operaciones): si el neto en USD no cuadra con el R, la comisión es lo PRIMERO que mires, antes de decir una palabra; (c) si una operación entró sola desde MT5 lo dice su nota y le faltará el R y el setup — ofrécele completarla con editar_trade, no la cuentes como si estuviera entera; (d) la mano **mirar_mis_entradas** te lo devuelve TODO junto, con el bloque `deDondeSaleCadaDato` y el `datosDe` de cada una. **No tienes ningún hueco aquí: si dudas de un dato, pide la mano antes de suponer.**\n"+
 "TUS MANOS ya tocan: avisos, pares, trades y cuentas (SIEMPRE con confirmación de Rey y registro en el 🗒️ Historial).\n"+
 "🖐️ TUS MANOS DE SISTEMA (v6.31 — Rey te quiere SIN LÍMITES para tareas, con su tarjeta como única llave): también ENCIENDES/DETIENES su 🤖 Ejecutor de MT5 (ejecutor_switch — si te dice 'enciende el ejecutor', esa es la mano; y propónlo TÚ si es domingo por la tarde y sigue apagado del finde), lo REINICIAS cuando se queda corriendo código viejo (ejecutor_reiniciar, v7.188 — el Ejecutor avisa él solo: «me actualizaron pero sigo con el código viejo en memoria»; en cuanto veas ese aviso, PROPÓNSELO TÚ, que para eso lo ves antes que él. ⚠️ CON POSICIONES ABIERTAS NO se lo propongas: al reiniciarse deja de vigilarlas unos segundos y pierde lo que sabe de cada una —el parcial, el break-even—; dile que espere a que cierren y POR QUÉ. Si lo pides igual, el Ejecutor te dirá que no y cuántas hay), CAMBIAS sus reglas (ejecutor_config — solo los campos pedidos, el resto intacto; desde la v7.92 llegas a TODAS: el veto de ruedas de prensa y sus dos minutajes, el margen de deslizamiento, el capital inicial, el DD máximo TOTAL de la firma, el nombre de la EMPRESA y el candado de cuentas. Dos avisos: maxPerdidaDiaPct es el tope de UN DÍA y ddMaxPct el de TODA la cuenta —no los confundas, Rey preguntó por esto el 10-09—, y operarCualquiera=true quita el aviso antes de operar una cuenta real nueva: eso no se propone por iniciativa propia. Si Rey te dice que cambió de firma, TRAE TÚ sus topes reales y propónselos en vez de esperar a que te los dicte) y AJUSTAS las horas de tus rituales 🌅/🌙 del mentor de vida (mentor_horas). Todo pasa por su tarjeta de confirmación — nada se aplica sin su ✓. Si una tarea que te pida aún no tiene mano, dilo honesto y sugiérele pedírsela a Claude en la próxima tanda.\n"+
 "TU SISTEMA COMPLETO: no vives solo en Apex; estás integrado a TODO el sistema de trading de Rey — su TradingView, su indicador CRT Elite, sus ALARMAS (te llegan por webhook y tú las interpretas) y Apex. Estás pendiente de lo que pasa en el conjunto para darle un servicio sin límites, apoyándote además en tu conexión a internet.\n"+
@@ -19429,7 +19476,7 @@ const IA_TOOLS = [
       inflacion:{type:"number",description:"Inflación por periodo en %, si la sabe."},
       reinvierte:{type:"number",description:"Qué % de lo que gana vuelve a meter (0 a 100). Por defecto 100."}
     }, required:[] } },
-  { name:"mirar_mis_entradas", description:"LEE las operaciones del 📒 Diario de Rey —las SUYAS, no las del Ejecutor— para poder JUZGARLAS de verdad: abiertas y cerradas, del libro 💵 REAL y del 🎬 BACKTEST. Devuelve cada una con todo lo que hace falta para opinar (par, dirección, entrada/SL/TP/RR, setup, ventana, momento de entrada, bias, zona, confluencias, resultado en R, MAE y MFE, POR DÓNDE SALIÓ cada una —campo salioPor: TP, SL, break-even, a mano o por tiempo— el precio de salida, y el parcial si lo hizo) más las cuentas ya hechas del conjunto (cuántas, aciertos, R total, R medio, cómo entró —en confirmación / en el toque / anticipando— y el reparto porSalida, que es el que contesta POR DÓNDE SE LE VA EL DINERO: cuántas salieron por cada puerta y cuántos R dejó cada una. Las que no tengan el dato salen como sin anotar: si son muchas, díselo y ofrécele completarlas, no des un reparto a medias por bueno.\n\nÚSALO SIEMPRE que Rey te pida evaluar, juzgar, repasar o comparar sus entradas ('¿cómo voy?', '¿qué tal mis entradas?', 'evalúa la de hoy', '¿estoy mejorando?', '¿cómo van mis backtest?'), y ÚSALO ANTES de opinar sobre su forma de operar: sin los números delante estarías opinando de memoria, y eso es justo lo que él no quiere.\n\n⚠️ REAL y BACKTEST son libros DISTINTOS y no se mezclan nunca en una misma cuenta: el backtest es entrenamiento, el real es su dinero. Si le das un número, di de qué libro es. Por defecto trae el libro en el que está ahora mismo; pon modo:'ambos' cuando él compare o cuando no esté claro.\n\nY JUZGA, no recites: su fuga conocida es el TIMING (entrar en el toque en vez de esperar confirmación). Si ves ese patrón en los datos, díselo con el número en la mano.",
+  { name:"mirar_mis_entradas", description:"LEE las operaciones del 📒 Diario de Rey —las SUYAS, no las del Ejecutor— para poder JUZGARLAS de verdad: abiertas y cerradas, del libro 💵 REAL y del 🎬 BACKTEST. Devuelve cada una con todo lo que hace falta para opinar (par, dirección, entrada/SL/TP/RR, setup, ventana, momento de entrada, bias, zona, confluencias, resultado en R, MAE y MFE, POR DÓNDE SALIÓ cada una —campo salioPor: TP, SL, break-even, a mano o por tiempo— el precio de salida, el parcial REAL si lo hizo —con su % exacto medido por MT5, el R al que lo sacó, cuántas veces partió la posición y quién lo midió—, la COMISIÓN en USD, el NETO real que movió su cuenta, los lotes, los precios reales de entrada y salida, y el campo datosDe que dice si esa operación la cuadró Apex con su MT5 o solo está lo que él anotó) más las cuentas ya hechas del conjunto (cuántas, aciertos, R total, R medio, cómo entró —en confirmación / en el toque / anticipando— y el reparto porSalida, que es el que contesta POR DÓNDE SE LE VA EL DINERO: cuántas salieron por cada puerta y cuántos R dejó cada una. Las que no tengan el dato salen como sin anotar: si son muchas, díselo y ofrécele completarlas, no des un reparto a medias por bueno.\n\nÚSALO SIEMPRE que Rey te pida evaluar, juzgar, repasar o comparar sus entradas ('¿cómo voy?', '¿qué tal mis entradas?', 'evalúa la de hoy', '¿estoy mejorando?', '¿cómo van mis backtest?'), y ÚSALO ANTES de opinar sobre su forma de operar: sin los números delante estarías opinando de memoria, y eso es justo lo que él no quiere.\n\n⚠️ REAL y BACKTEST son libros DISTINTOS y no se mezclan nunca en una misma cuenta: el backtest es entrenamiento, el real es su dinero. Si le das un número, di de qué libro es. Por defecto trae el libro en el que está ahora mismo; pon modo:'ambos' cuando él compare o cuando no esté claro.\n\nY JUZGA, no recites: su fuga conocida es el TIMING (entrar en el toque en vez de esperar confirmación). Si ves ese patrón en los datos, díselo con el número en la mano.\n\n🧾 DE DÓNDE VIENE CADA DATO (17-10): la respuesta trae un bloque deDondeSaleCadaDato — LÉELO. Hay tres clases y no se confunden nunca: lo que MIDIÓ MT5 (parcial y su %, comisión, neto en USD, precios reales, lotes: hechos de la plataforma, Rey no los escribió), lo que PUSO REY (R, setup, ventana, momento, bias, zona, confluencias, SL/TP planeados: su criterio, y el R jamás se inventa) y lo CALCULADO (el R del parcial, del precio real del trozo contra su SL). Si una operación trae datosDe:'mt5', habla de esos números como «los leí de tu MT5» y NUNCA como «según lo que apuntaste». Y si el neto en USD no cuadra con el R, mira la comisión antes de opinar: era dinero invisible hasta hoy.",
     input_schema:{ type:"object", properties:{
       modo:{type:"string",enum:["real","backtest","ambos"],description:"Qué libro mirar. Por defecto, el que Rey tenga abierto."},
       estado:{type:"string",enum:["abiertas","cerradas","todas"],description:"Por defecto 'todas'."},
@@ -20130,13 +20177,25 @@ async function ejecutarTool(name, i){
         const sal={};
         lista.forEach(t=>{ const k=t.motivo||"sin anotar"; if(!sal[k]) sal[k]={n:0,r:0,g:0};
           sal[k].n++; sal[k].r+=(t.r||0); if((t.r||0)>0) sal[k].g++; });
+        /* 💸 v7.276 — LA COMISIÓN, QUE ERA DINERO INVISIBLE. Medido en su cuenta: −16,30 USD
+           repartidos en 9 operaciones, y no aparecían por ningún sitio. Un R puede decir
+           «break-even» y la cuenta haber bajado: sin este número Roberto no puede explicar
+           la diferencia, y lo que hace entonces es inventarse la causa
+           ([[apex-roberto-no-inventa]]). */
+        const conCom=lista.filter(t=>t.comision!=null);
+        const conNeto=lista.filter(t=>t.netoMT5!=null);
+        const suma=(l,k)=>Math.round(l.reduce((s,t)=>s+Number(t[k]||0),0)*100)/100;
         return { n:lista.length, ganadas:gan, aciertoPct:Math.round(gan/lista.length*100),
+          comisionTotalUSD: conCom.length?suma(conCom,"comision"):null,
+          netoTotalUSD: conNeto.length?suma(conNeto,"netoMT5"):null,
+          cuadradasConMT5: lista.filter(t=>t.datosDe==="mt5").length,
           rTotal:Math.round(rTot*100)/100, rMedio:Math.round(rTot/lista.length*100)/100,
           porMomento:Object.keys(mom).map(k=>({ momento:k, n:mom[k].n, ganadas:mom[k].g,
             aciertoPct:Math.round(mom[k].g/mom[k].n*100), r:Math.round(mom[k].r*100)/100 })),
           porSalida:Object.keys(sal).map(k=>({ salioPor:k, n:sal[k].n, ganadas:sal[k].g,
             r:Math.round(sal[k].r*100)/100 })).sort((a,b)=>b.n-a.n),
-          conParcial:lista.filter(t=>t.parcialHecho===true).length };
+          conParcial:lista.filter(t=>t.parcialHecho===true).length,
+          parcialSinR:lista.filter(t=>t.parcialHecho===true && t.parcialR==null).length };
       };
       const resumen=libro
         ? { libro, cerradas:cuentas(cerradas) }
@@ -20162,11 +20221,49 @@ async function ejecutarTool(name, i){
            Sin esto no podría contestar «¿por dónde se me va el dinero?», que es media
            evaluación de su forma de operar. */
         salioPor:t.motivo||"", precioSalida:t.salida!=null?t.salida:null,
-        parcial:(t.parcialHecho===true && t.parcialPct!=null && t.parcialR!=null)
-          ? { pct:t.parcialPct, aR:t.parcialR } : null
+        /* ✂️ v7.276 (17-10) — EL PARCIAL SE DA AUNQUE NO TENGA R, Y SE DICE QUIÉN LO MIDIÓ.
+           ═════════════════════════════════════════════════════════════════════════════════
+           Esto exigía el pct Y el R a la vez, y MT5 no da R. Medido en vivo el 17-10: sus 5
+           operaciones con parcial REAL (88,2% · 69,7% · 31,2%…) le llegaban a Roberto como
+           «parcial: null». El dato estaba bien en su teléfono, bien en la nube, y la mano
+           con la que él las JUZGA lo tiraba en la última curva.
+           Ése es el bache exacto que Rey mandó cerrar: «que no tenga baches en el chat con
+           él al analizar las operaciones» ([[apex-mano-y-vision-en-todo-lo-nuevo]],
+           [[apex-declarar-no-es-dar]]).
+           Y «no hubo parcial» se distingue de «no lo sé», que no es lo mismo: lo primero es
+           un hecho de la plataforma, lo segundo un hueco. Devueltos iguales, Roberto
+           afirmaría que no hubo parcial sobre una operación de la que nadie sabe nada. */
+        parcial: t.parcialHecho===true
+          ? { pct:t.parcialPct!=null?t.parcialPct:null,
+              aR:t.parcialR!=null?t.parcialR:null,
+              veces:t.nParciales!=null?t.nParciales:null,
+              medidoPor:t.datosDe==="mt5"?"MT5 (hecho real, no su regla)":"Rey (a mano)" }
+          : (t.parcialHecho===false
+              ? (t.datosDe==="mt5" ? "no hubo: MT5 la cerró de una sola vez" : "no hubo (lo anotó Rey)")
+              : "sin dato: nadie lo ha anotado todavía"),
+        /* 💸 los números REALES de su cuenta, que antes no salían de aquí */
+        comisionUSD:t.comision!=null?t.comision:null,
+        netoUSD:t.netoMT5!=null?t.netoMT5:null,
+        lotes:t.volumen!=null?t.volumen:null,
+        precioEntradaReal:t.precioEntrada!=null?t.precioEntrada:null,
+        precioSalidaReal:t.precioSalida!=null?t.precioSalida:null,
+        /* 🧾 de quién es el dato. Sin esto Roberto diría «según lo que apuntaste» sobre un
+           número que midió la plataforma — y eso ya le pasó con su balance el 16-10. */
+        datosDe:t.datosDe==="mt5"?"mt5":"rey"
       }));
+      /* 🧾 v7.276 (17-10) — DE DÓNDE SALE CADA DATO, DICHO AQUÍ Y NO SUPUESTO ALLÍ.
+         Rey: «Roberto debe saber todo los cambios que se hacen y de dónde viene cada dato».
+         Va UNA sola vez en la respuesta —no por operación, que serían 25 copias del mismo
+         párrafo gastando su dinero— y cada entrada lleva solo su `datosDe`. */
+      const deDonde = {
+        loMideMT5: "parcial (si hubo y de qué % exacto), nº de veces que partió la posición, comisión en USD, neto real que movió la cuenta, precios reales de entrada y salida, lotes. Son HECHOS de la plataforma: Rey no los escribió y no se discuten.",
+        loPoneRey: "el R, el resultado, el setup, la ventana, el momento de entrada, el bias, la zona, las confluencias, el SL y el TP planeados, la nota, y si es REAL o BACKTEST. MT5 no sabe con qué riesgo entró, así que el R NUNCA se inventa: si falta, pídeselo.",
+        seCalcula: "el R del parcial (aR) sale del precio real al que MT5 cerró el trozo, medido contra el SL que puso Rey. Si falta su SL no hay R del parcial y llega en null: dilo, no lo estimes.",
+        comoLeerlo: "mira el campo datosDe de cada operación: mt5 = Apex la cuadró sola con su cuenta, y hablas de ello como lo leí de tu MT5; rey = solo lo que él anotó a mano.",
+        ojo: "su gestión real puede NO seguir su regla del 75/80, y eso no es un fallo suyo: es el mercado. Júzgala por el % que midió MT5, no por su regla. Y si el neto en USD no cuadra con el R, mira la comisión ANTES de opinar."
+      };
       return {ok:true, libro:(libro||"ambos"), total:ops.length, abiertas:ops.filter(t=>t.abierta).length,
-        devueltas:entradas.length,
+        devueltas:entradas.length, deDondeSaleCadaDato:deDonde,
         aviso:cortada?("Se devuelven las "+entradas.length+" más recientes de "+ops.length+". Las cuentas del resumen SÍ están hechas con las "+ops.length+"."):"",
         resumen, entradas};
     }

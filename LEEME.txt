@@ -1,75 +1,101 @@
-APEX v7.275 — TRADING DESK
+APEX v7.276 — TRADING DESK
 =========================
 
-🗂️ LOS CHATS QUE TE PROPONÍA BORRAR, AHORA SÍ LOS BORRA
+APEX 7.276 + WORKER 5.282 — 17-10-2026
+PUNTO 1 DE TU LISTA: ROBERTO SABE DE DÓNDE SALE CADA DATO
 
-Tú: «cuando me sugiere borrar los chats viejos no lo hace ni lo ejecuta, así poniendo las
-tarjetas y yo confirmando no lo hace».
+Lo pediste así:
+  «Roberto debe saber todo los cambios que se hacen y de dónde viene cada dato
+   para que no tenga baches en el chat con él al analizar las operaciones.»
 
-Era verdad, y eran DOS fallos viviendo en la misma línea de código. Lo probé ejecutándolo:
-de 6 formas naturales de nombrar un chat, FALLABAN 4.
+────────────────────────────────────────────────────────────────────────────
+LO QUE ENCONTRÉ ANTES DE TOCAR NADA
 
-  1) La fecha se comparaba con CUÁNDO SE ESCRIBIÓ el chat, no con la de su título.
-     Tu «Análisis semanal 11-10» escrito el día 12 era literalmente inalcanzable. Y no es
-     un caso raro: el análisis de la semana se titula con el lunes y se escribe cuando
-     toca — justo los que hay que limpiar el domingo.
+Tus 5 operaciones con parcial REAL de MT5 (88,2% · 88,2% · 88,2% · 69,7% ·
+31,2%) le llegaban a Roberto como «parcial: null». TODAS.
 
-  2) Las palabras vacías (el, la, de, hoy…) se quitaban de lo que pedía Roberto pero NO
-     del título. «Dudas sobre el lotaje» se buscaba como «dudas sobre lotaje» y no casaba
-     nunca. Cualquier chat con un «el» o un «de» en el nombre era inalcanzable.
+El dato estaba bien en tu teléfono. Bien en la nube. Y se caía en la última
+curva: la mano con la que él JUZGA tus operaciones exigía el % Y el R a la vez,
+y MT5 no da R (no sabe con qué riesgo entraste).
 
-Por eso veías la tarjeta, confirmabas, y Apex seguía llenándose: la mano respondía «no
-encuentro ningún chat» y ese mensaje se perdía.
+O sea: el trabajo entero de ayer —traer tus parciales de verdad— no llegaba a
+Roberto. Y es también por lo que la fila «✂️ parcial» desapareció de tus
+métricas justo el día que el dato mejoró.
 
-Ahora busca por la fecha DEL TÍTULO y mide tu petición y el nombre con la misma vara.
-Lo que ya funcionaba sigue igual: «el más viejo», pedirte que desambigües cuando hay dos
-candidatos, y no borrar nunca el chat donde estáis hablando.
+────────────────────────────────────────────────────────────────────────────
+1) EL R DEL PARCIAL YA NO HACE FALTA PEDÍRTELO
 
+No había que inventarlo: cada mitad la tiene uno.
+  · el RIESGO es tu entrada menos tu SL  → eso lo pones TÚ (MT5 no guarda el SL)
+  · a qué precio sacaste el trozo        → eso lo dice MT5
 
-🔁 Y YA NO TE REPITE EL PRINCIPIO AL HABLAR
+Medido con tus precios reales, da entre 0,53R y 1,62R, con el signo correcto en
+compras y en ventas.
 
-Tú: «repite una parte y de ahí comienza nuevamente hasta el final».
+Y si falta tu SL, NO sale ningún número: se dice que no se sabe. Jamás un R a
+ojo — un R inventado te ensucia la esperanza, el progreso y el reparto de golpe,
+y encima con cara de medido.
 
-Roberto lee sus respuestas POR TROZOS, porque Chrome no arranca con textos largos. Y hay
-un vigilante que comprueba a los 0,9 segundos si la voz arrancó, por si Chrome se tragó la
-orden en silencio (que lo hace, sin avisar).
+────────────────────────────────────────────────────────────────────────────
+2) ROBERTO RECIBE AHORA, CON CADA OPERACIÓN
 
-El problema: entre un trozo y el siguiente hay un HUECO donde no suena nada. Con una
-primera frase corta —«Hola Rey.» dura unos 0,7 segundos— ese hueco cae justo en los 900
-milisegundos. El vigilante daba por muerta una voz que iba perfectamente, CORTABA el trozo
-que empezaba y volvía al principio:
+  ✂️ el parcial con su % EXACTO, el R al que lo sacaste, cuántas veces partiste
+     la posición y QUIÉN lo midió
+  💸 la comisión en USD  ← era dinero invisible: −16,30 USD en 9 operaciones
+  💰 el neto real que movió tu cuenta
+  📏 los lotes y los precios reales de entrada y salida
+  🧾 si esa operación la cuadró Apex con tu MT5, o si solo está lo que anotaste
 
-      ANTES:  Hola Rey. [corta] Hola Rey. El mercado abre en dos horas. Y tu plan…
-      AHORA:  Hola Rey. El mercado abre en dos horas. Y tu plan…
+Y en el conjunto: la comisión TOTAL, el neto total, cuántas están cuadradas con
+MT5 y cuántos parciales se quedaron sin R (para que te pida el SL que falta en
+vez de darte un reparto a medias por bueno).
 
-Ahora se distingue «no arrancó nunca» de «ahora mismo no suena». El reintento sigue ahí
-para cuando Chrome se traga la orden de verdad: quedarte sin voz sería peor que repetir.
+────────────────────────────────────────────────────────────────────────────
+3) Y SABE LEERLO — LAS TRES CLASES DE DATO
 
+Punto 41 nuevo en su cabeza:
 
-Bancos nuevos: test-los-chats-que-propone-los-alcanza.cjs (13) ·
-               test-la-voz-no-repite-el-trozo.cjs (10)
+  LO QUE MIDIÓ MT5 (hechos, no se discuten): parcial y su %, comisión, neto,
+      precios reales, lotes. De estos habla como «lo leí de tu MT5» —
+      PROHIBIDO decir «según lo que apuntaste».
+  LO QUE PUSISTE TÚ (tu criterio): R, resultado, setup, ventana, momento, bias,
+      zona, confluencias, SL/TP planeados, nota, y si es REAL o BACKTEST.
+  LO CALCULADO: el R del parcial, de los dos lados.
 
+Y dos cosas que cambian cómo te juzga:
 
-☁️ Y LOS PARCIALES YA LLEGAN A ROBERTO
+  (a) TU GESTIÓN REAL PUEDE NO SEGUIR TU REGLA DEL 75/80, Y ESO NO ES UN FALLO
+      TUYO: ES EL MERCADO. Lo dijiste tú: «una cosa son mis reglas y otra
+      distinta la gestión en el mercado real». Ahora te juzga por el % que midió
+      MT5, con respeto por lo que decidiste en caliente. Antes te habría reñido
+      por «incumplir» un 88,2% que estuvo bien decidido.
+  (b) SI EL NETO EN USD NO CUADRA CON EL R, LA COMISIÓN ES LO PRIMERO QUE MIRA,
+      antes de decir una palabra. Un R puede decir break-even y tu cuenta haber
+      bajado.
 
-Esto lo cacé verificando, no lo sabía antes: los parciales y la comisión estaban PERFECTOS
-en tu teléfono y VACÍOS en la nube. Arreglé el filtro del worker… y seguían sin llegar.
+────────────────────────────────────────────────────────────────────────────
+4) Y LA LECCIÓN DE CADA NOCHE TAMBIÉN LO VE  (worker 5.282)
 
-Había DOS coladores en fila y yo había destapado uno: la app también recortaba los campos
-al subir, y los nuevos no estaban en su lista.
+La lección que Roberto destila cada noche de tus operaciones se armaba con los
+campos de ayer: sin parcial, sin comisión, sin neto, sin origen. Teniéndolo
+delante en la nube, no podía aprender NADA sobre por dónde se te va el dinero.
 
-Importa porque Roberto lee de la NUBE. Sin esto no veía por dónde sale tu dinero —que era
-el objetivo de todo el trabajo de hoy— y al cambiar de teléfono se habrían perdido.
+────────────────────────────────────────────────────────────────────────────
+⚠️  TIENES QUE SUBIR TÚ EL WORKER 5.282
 
+Está en:  sistema-apex/worker/worker-elitepro-v5.282.js
+(mismo sitio de donde cogiste el 5.281)
 
-…y faltaba un TERCER eslabón, que era el que lo tenía parado de verdad:
+La app 7.276 funciona sin él — el chat ya está sin baches. Lo que espera al
+worker es solo la lección de la noche.
 
-La subida a la nube solo se dispara cuando se GUARDAN las operaciones, y el cuadre con MT5
-solo guardaba SI ALGO CAMBIABA. Como tu Diario ya estaba cuadrado, no cambiaba nada → no
-se guardaba → no se subía NUNCA.
+────────────────────────────────────────────────────────────────────────────
+PROBADO
 
-Tus datos estaban perfectos en el teléfono y vacíos en la nube, tres veces seguidas. Un
-dato correcto que no viaja es un dato que Roberto no tiene.
+  banco nuevo  test-roberto-sabe-de-donde-sale-cada-dato.cjs .... 25/25
+               (la mano EJECUTADA con tu Diario, no leída)
+  tus 5 parciales reales .................................... dan R correcto
+  sin SL / riesgo cero / sin parcial ........................ no inventa nada
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
