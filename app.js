@@ -1041,6 +1041,8 @@ function temaAlternar(){
 try{ temaAplicar(temaActual()); }catch(_){}
 try{ colorAplicar(colorActual()); }catch(_){}   /* 🎨 v7.284 — antes de pintar nada */
 document.addEventListener("DOMContentLoaded", ()=>{ try{ const b=document.getElementById("btnTema"); if(b) b.onclick=temaAlternar; }catch(_){} });
+/* 🎨 19-10 — el botón 🎨 se fue de la cabecera (no cabía en su teléfono) y vive en el pie
+   del menú. Esto se queda por si algún día vuelve: si el botón no está, no pasa nada. */
 document.addEventListener("DOMContentLoaded", ()=>{ try{ const b=document.getElementById("btnColor"); if(b) b.onclick=abrirColores; }catch(_){} });
 
 /* Lista de estrategias registradas (nombres). Siempre existe "CRT Elite". */
@@ -6393,6 +6395,9 @@ const IR_DESTINOS = [
   { v:"",              t:"— La app, sin más —" },
   /* Secciones de Apex */
   { v:"tab:hoy",       t:"🎯 Hoy" },
+  /* ⚙️ v7.286 — Ajustes también: si una sección no está aquí, ni Rey puede mandar
+     un aviso a ella ni Roberto puede llevarle. Lo cazó test-templo-calma-y-destinos. */
+  { v:"tab:ajustes",   t:"⚙️ Ajustes" },
   { v:"tab:arranque",  t:"🧭 Plan con Roberto" },
   { v:"tab:checklist", t:"✅ Checklist" },
   { v:"tab:gatillo",   t:"⚡ Gatillo" },
@@ -6796,6 +6801,259 @@ function temploSemanaAhora(){
   }catch(_){ return null; }
 }
 function temploHecha(i){ try{ return !!(TEMPLO_PLAN && TEMPLO_PLAN.hechas && TEMPLO_PLAN.hechas[TEMPLO_PLAN.lunes+":"+i]); }catch(_){ return false; } }
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   ⚙️ v7.286 — AJUSTES. Dos reglas al construirla:
+     · lo que se puede decidir de un toque se decide AQUÍ (interruptor en su fila)
+     · lo que tiene pantalla propia se ABRE desde aquí, pero se nombra aquí — así deja
+       de haber ajustes que solo existen si sabes dónde están escondidos
+   ═══════════════════════════════════════════════════════════════════════════════ */
+const AJ_IC = {
+  color:'<circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2a10 10 0 0 0 0 20c.6 0 1-.4 1-1 0-.3-.1-.5-.3-.7-.2-.2-.3-.4-.3-.7 0-.6.4-1 1-1H16a6 6 0 0 0 6-6c0-5.5-4.5-10-10-10z"/>',
+  tema:'<circle cx="12" cy="12" r="9"/><path d="M12 3v18" /><path d="M12 3a9 9 0 0 1 0 18" fill="currentColor" stroke="none" opacity=".35"/>',
+  cuerpo:'<circle cx="12" cy="7" r="4"/><path d="M5 21v-1a7 7 0 0 1 14 0v1"/>',
+  movil:'<rect x="6" y="2" width="12" height="20" rx="2"/><path d="M11 18h2"/>',
+  voz:'<path d="M11 5L6 9H2v6h4l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a9 9 0 0 1 0 14"/>',
+  campana:'<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/>',
+  reloj:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  escudo:'<path d="M12 2l8 4v6c0 5-3.4 8.9-8 10-4.6-1.1-8-5-8-10V6z"/>',
+  sol:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"/>',
+  nube:'<path d="M18 17a4 4 0 0 0 0-8 6 6 0 0 0-11.7 1.5A3.5 3.5 0 0 0 6.5 17z"/><path d="M12 12v7M9 16l3 3 3-3"/>',
+  robot:'<rect x="4" y="8" width="16" height="12" rx="2"/><path d="M12 8V4M9 4h6"/><circle cx="9" cy="14" r="1"/><circle cx="15" cy="14" r="1"/>',
+  banco:'<path d="M19 7V5a2 2 0 0 0-2-2H5a2 2 0 0 0 0 4h15a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5"/><circle cx="17" cy="13" r="1.2"/>',
+};
+const ajIc = (k) => '<span class="aj-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">' + (AJ_IC[k] || AJ_IC.ajustes || '') + '</svg></span>';
+const ajChev = '<span class="aj-chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span>';
+const ajSw = (on, id) => '<span class="aj-sw' + (on ? " on" : "") + '"' + (id ? ' id="' + id + '"' : '') + '><i></i></span>';
+/* una fila: icono · título y explicación · control. El control manda si se toca o no */
+function ajFila(ic, tit, desc, control, attrs){
+  return '<' + (attrs ? 'button' : 'div') + ' class="aj-row"' + (attrs || '') + '>'
+    + ajIc(ic)
+    + '<span class="aj-t"><b>' + tit + '</b>' + (desc ? '<small>' + desc + '</small>' : '') + '</span>'
+    + (control || '')
+    + '</' + (attrs ? 'button' : 'div') + '>';
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   🎨 v7.286 — DE EMOJI A ICONO DE LÍNEA, EN LAS 19 SECCIONES.
+   Se traduce al PINTAR y no en cada render: así una tarjeta nueva escrita mañana con
+   su emoji de siempre sale ya con icono, sin que nadie se acuerde de nada.
+   Lo que no tenga traducción se queda como emoji, pequeño — mejor eso que un hueco.
+   ═══════════════════════════════════════════════════════════════════════════════ */
+const ICO_TRAZO = {
+  "🎯":'<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>',
+  "📰":'<path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2zm0 0a2 2 0 0 1-2-2v-9h4"/><path d="M18 14h-8M15 18h-5M10 6h8v4h-8z"/>',
+  "📋":'<path d="M9 2h6v4H9z"/><rect x="4" y="4" width="16" height="18" rx="2"/><path d="M9 12h6M9 16h4"/>',
+  "📝":'<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>',
+  "📒":'<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>',
+  "📈":'<path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/>',
+  "📉":'<path d="M3 3v18h18"/><path d="M7 8l4 4 3-3 5 6"/>',
+  "📊":'<path d="M3 3v18h18"/><rect x="7" y="11" width="3" height="6"/><rect x="13" y="7" width="3" height="10"/>',
+  "📐":'<path d="M3 20h18L3 4z"/>',
+  "📏":'<path d="M3 15l12-12 6 6-12 12z"/><path d="M7 11l2 2M10 8l2 2M13 5l2 2"/>',
+  "🧮":'<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 12h8M8 17h4"/>',
+  "💰":'<circle cx="12" cy="14" r="7"/><path d="M12 11v6M10 13h3.5a1.5 1.5 0 0 1 0 3H10M8 5h8l-1 3H9z"/>',
+  "💵":'<rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="3"/>',
+  "🏦":'<path d="M19 7V5a2 2 0 0 0-2-2H5a2 2 0 0 0 0 4h15a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5"/><circle cx="17" cy="13" r="1.2"/>',
+  "🛡️":'<path d="M12 2l8 4v6c0 5-3.4 8.9-8 10-4.6-1.1-8-5-8-10V6z"/>',
+  "⚠️":'<path d="M12 9v4M12 17h.01M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/>',
+  "⛔":'<circle cx="12" cy="12" r="10"/><path d="M4.9 4.9l14.2 14.2"/>',
+  "✅":'<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>',
+  "⚡":'<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>',
+  "🚦":'<rect x="7" y="2" width="10" height="20" rx="4"/><circle cx="12" cy="7" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="17" r="1.6"/>',
+  "🧠":'<path d="M12 5a3 3 0 1 0-5.9.8A3 3 0 0 0 4 12a3 3 0 0 0 2 5.2A3 3 0 0 0 12 19z"/><path d="M12 5a3 3 0 1 1 5.9.8A3 3 0 0 1 20 12a3 3 0 0 1-2 5.2A3 3 0 0 1 12 19z"/>',
+  "🤖":'<rect x="4" y="8" width="16" height="12" rx="2"/><path d="M12 8V4M9 4h6"/><circle cx="9" cy="14" r="1"/><circle cx="15" cy="14" r="1"/>',
+  "🧭":'<circle cx="12" cy="12" r="10"/><polygon points="16 8 14 14 8 16 10 10 16 8"/>',
+  "🗺️":'<polygon points="1 6 8 3 16 6 23 3 23 18 16 21 8 18 1 21 1 6"/><path d="M8 3v15M16 6v15"/>',
+  "📅":'<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>',
+  "📆":'<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>',
+  "🗓️":'<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>',
+  "⏰":'<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M5 3L2 6M19 3l3 3"/>',
+  "🕐":'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  "🔍":'<circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/>',
+  "🔬":'<path d="M6 18h12M9 18V9a3 3 0 0 1 6 0v9M7 4h4M9 4v5"/>',
+  "🧪":'<path d="M9 2h6M10 2v6.5L5 19a2 2 0 0 0 1.8 3h10.4a2 2 0 0 0 1.8-3L14 8.5V2"/><path d="M7.5 15h9"/>',
+  "🖼️":'<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/>',
+  "🗂️":'<path d="M21 15a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4l2 3h8a2 2 0 0 1 2 2z"/>',
+  "🧰":'<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M2 13h20"/>',
+  "⚖️":'<path d="M12 3v18M7 21h10M3 8l4-5 4 5M13 8l4-5 4 5"/><path d="M3 8a4 4 0 0 0 8 0M13 8a4 4 0 0 0 8 0"/>',
+  "📍":'<path d="M12 22s8-6 8-12a8 8 0 1 0-16 0c0 6 8 12 8 12z"/><circle cx="12" cy="10" r="3"/>',
+  "📤":'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 9l5-5 5 5M12 4v12"/>',
+  "✏️":'<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>',
+  "✂️":'<circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4L8.1 15.9M14.5 14.5L20 20M8.1 8.1L12 12"/>',
+  "➕":'<path d="M12 5v14M5 12h14"/>',
+  "🔥":'<path d="M12 2s5 5 5 9a5 5 0 0 1-10 0c0-1.5.7-3 1.6-4.2.4 1 1.1 1.8 2 2.2C11 7 12 4.5 12 2z"/>',
+  "🎖️":'<circle cx="12" cy="9" r="6"/><path d="M8.5 14L7 22l5-3 5 3-1.5-8"/>',
+  "🏅":'<circle cx="12" cy="9" r="6"/><path d="M8.5 14L7 22l5-3 5 3-1.5-8"/>',
+  "🚶":'<circle cx="13" cy="4" r="2"/><path d="M11 21l1.5-6-2.5-2.5V8l3-1 2.5 3 2.5 1M10 13l-2 8"/>',
+  "🩹":'<rect x="2.5" y="8.5" width="19" height="7" rx="3.5" transform="rotate(-45 12 12)"/><path d="M9 12h.01M12 9h.01M12 15h.01M15 12h.01"/>',
+  /* los que abren BOTONES, que son otros (v7.286) */
+  "⏳":'<path d="M5 2h14M5 22h14M7 2v5a5 5 0 0 0 10 0V2M7 22v-5a5 5 0 0 1 10 0v5"/>',
+  "🔄":'<path d="M3 12a9 9 0 0 1 15-6.7L21 8M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16M3 21v-5h5"/>',
+  "🔎":'<circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/>',
+  "📚":'<path d="M4 4h5a2 2 0 0 1 2 2v14a2 2 0 0 0-2-2H4z"/><path d="M20 4h-5a2 2 0 0 0-2 2v14a2 2 0 0 1 2-2h5z"/>',
+  "💾":'<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/>',
+  "🎓":'<path d="M22 9L12 4 2 9l10 5 10-5z"/><path d="M6 11.5V16c0 1.7 2.7 3 6 3s6-1.3 6-3v-4.5"/>',
+  "☁️":'<path d="M18 17a4 4 0 0 0 0-8 6 6 0 0 0-11.7 1.5A3.5 3.5 0 0 0 6.5 17z"/>',
+  "🌅":'<path d="M17 18a5 5 0 0 0-10 0"/><path d="M12 2v4M4.2 10.2l2.9 2.9M1 18h3M20 18h3M19.8 10.2l-2.9 2.9M2 22h20"/>',
+  "☀️":'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"/>',
+  "📄":'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/>',
+  "📸":'<path d="M21 19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h3l2-3h4l2 3h3a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>',
+  "📲":'<rect x="6" y="2" width="12" height="20" rx="2"/><path d="M11 18h2"/>',
+  "🧬":'<path d="M5 2c0 6 14 8 14 14M19 2c0 6-14 8-14 14M5 22c0-2 14-4 14-6M19 22c0-2-14-4-14-6"/>',
+  "✖":'<path d="M18 6L6 18M6 6l12 12"/>',
+  "✓":'<path d="M20 6L9 17l-5-5"/>',
+  "▶️":'<polygon points="6 4 20 12 6 20 6 4"/>',
+  "🔕":'<path d="M8.7 3A6 6 0 0 1 18 8c0 7 3 9 3 9H6M13.7 21a2 2 0 0 1-3.4 0M2 2l20 20"/>',
+};
+/* 🎨 traduce los emojis de las cabeceras de tarjeta que haya pintadas ahora mismo */
+function iconizar(raiz){
+  const R = raiz || document;
+  try{
+    R.querySelectorAll(".card-h .ic").forEach(s=>{
+      if(s.dataset.ico) return;                 /* ya traducido: no se toca dos veces */
+      const e=(s.textContent||"").trim();
+      const d=ICO_TRAZO[e];
+      s.dataset.ico = d ? "1" : "emoji";
+      if(d) s.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">'+d+'</svg>';
+      else  s.classList.add("emoji");           /* sin traducción: pequeño, pero se ve */
+    });
+  }catch(_){}
+  /* 🖲️ v7.286 — Y LOS BOTONES. «📊 Parte del día» es lo que hace que Apex parezca una
+     app personal y no una herramienta. Solo se toca el emoji que ABRE el botón, solo si
+     hay icono para él, y se marca para no hacerlo dos veces. Si no hay traducción, se
+     queda como está: mejor un emoji que un hueco. */
+  try{
+    R.querySelectorAll(".btn").forEach(b=>{
+      if(b.dataset.ico) return;
+      const n=b.firstChild;
+      if(!n || n.nodeType!==3) { b.dataset.ico="no"; return; }
+      const m=String(n.nodeValue||"").match(/^\s*(\S+?)\s+(?=\S)/);
+      if(!m){ b.dataset.ico="no"; return; }
+      const d=ICO_TRAZO[m[1]];
+      if(!d){ b.dataset.ico="no"; return; }
+      n.nodeValue = String(n.nodeValue).slice(m[0].length);
+      const s=document.createElement("span");
+      s.className="btn-ic";
+      s.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">'+d+'</svg>';
+      b.insertBefore(s, b.firstChild);
+      b.dataset.ico="1";
+    });
+  }catch(_){}
+}
+
+function viewAjustes(){
+  const v=el("div","view"); v.id="v-ajustes";
+  v.innerHTML='<div id="ajBody"></div>';
+  return v;
+}
+
+function renderAjustes(){
+  const c=$("#ajBody"); if(!c) return;
+  const g=guardiaCfg(), rp=repasoCfg();
+  const colAct=colorActual(), temaAct=temaActual();
+  const vozOn = !!(IA && IA.voz && IA.voz.on);
+  const notifOn = !!(typeof NOTIF!=="undefined" && NOTIF.on);
+  const cuerpoOn = fabPuesto();
+  const H=[];
+
+  /* ── cómo se ve ───────────────────────────────────────────────── */
+  H.push('<div class="aj-g">Cómo se ve Apex</div>');
+  H.push('<div class="aj-card">');
+  H.push(ajFila("color","Color","El acento: botones, títulos y dónde estás",
+    '<span class="aj-cols">'+Object.keys(COLORES).map(k=>
+      '<button class="aj-col'+(k===colAct?" on":"")+'" data-col="'+k+'" aria-label="'+esc(COLORES[k].n)+'">'
+      +'<i style="background:linear-gradient(145deg,'+COLORES[k].m+','+COLORES[k].m2+')"></i></button>').join('')+'</span>'));
+  H.push(ajFila("tema","Claro u oscuro","Lo mismo, para el sol o para la noche",
+    '<span class="aj-seg" id="ajTema"><button data-t="oscuro" class="'+(temaAct!=="claro"?"on":"")+'">🌙 Oscuro</button>'
+    +'<button data-t="claro" class="'+(temaAct==="claro"?"on":"")+'">☀️ Claro</button></span>'));
+  H.push('</div>');
+
+  /* ── Roberto ──────────────────────────────────────────────────── */
+  H.push('<div class="aj-g">Roberto</div>');
+  H.push('<div class="aj-card">');
+  H.push(ajFila("cuerpo","Su cuerpo dentro de Apex","El muñeco que arrastras por la app. "
+    +(cuerpoOn?"Está puesto.":"<b>Retirado</b> — háblale desde el menú."), ajSw(cuerpoOn,"ajCuerpo")));
+  H.push(ajFila("movil","Su cuerpo en todo el teléfono","Encima de cualquier app. Se enciende en su panel.",
+    ajChev,' data-ir="burbuja"'));
+  H.push(ajFila("voz","Que te hable","Lee sus respuestas en voz alta. "+(vozOn?"Encendida.":"Apagada."),
+    ajChev,' data-ir="voz"'));
+  H.push('</div>');
+  H.push('<div class="aj-nota">Su voz, su tono y su ritmo se ajustan en su panel. Antes era el <b>único</b> sitio donde se tocaban estas cosas.</div>');
+
+  /* ── lo que te exige ──────────────────────────────────────────── */
+  H.push('<div class="aj-g">Lo que Roberto te puede exigir</div>');
+  H.push('<div class="aj-card">');
+  H.push(ajFila("escudo","Que te exija","Te señala lo que no has hecho, con tus propios registros. No gasta créditos.", ajSw(g.on,"ajGuardia")));
+  H.push(ajFila("reloj","A qué hora","Una vez al día, mientras siga pendiente",
+    '<input class="aj-hora" type="time" id="ajGuardiaHora" value="'+esc(g.hora||"20:00")+'">'));
+  const q=(g.quitadas||[]);
+  if(q.length){
+    H.push('</div><div class="aj-nota">Le quitaste '+q.length+' exigencia(s). Toca una para devolvérsela:</div>');
+    H.push('<div class="aj-card"><div class="aj-tags">'
+      + q.map(id=>'<button class="aj-tag" data-devolver="'+esc(id)+'">↩︎ '+esc(id)+'</button>').join('')
+      + '</div></div>');
+  } else { H.push('</div>'); }
+
+  /* ── tus repasos ──────────────────────────────────────────────── */
+  H.push('<div class="aj-g">Tus repasos con él</div>');
+  H.push('<div class="aj-card">');
+  H.push(ajFila("sol","Repasar contigo","Dos veces al día, mañana y tarde", ajSw(rp.on,"ajRepaso")));
+  H.push(ajFila("reloj","Por la mañana","", '<input class="aj-hora" type="time" id="ajRepM" value="'+esc(rp.manana||"09:00")+'">'));
+  H.push(ajFila("reloj","Por la tarde","", '<input class="aj-hora" type="time" id="ajRepT" value="'+esc(rp.tarde||"18:30")+'">'));
+  H.push('</div>');
+
+  /* ── avisos y horarios ────────────────────────────────────────── */
+  H.push('<div class="aj-g">Avisos y horarios</div>');
+  H.push('<div class="aj-card">');
+  H.push(ajFila("campana","Avisos en el teléfono","Killzones, noticias y tus rutinas. "+(notifOn?"Encendidos.":"Apagados."),
+    ajChev,' data-ir="avisos"'));
+  H.push(ajFila("reloj","Tus ventanas horarias","Cuándo puedes operar y cuándo no", ajChev,' data-ir="ventanas"'));
+  H.push('</div>');
+
+  /* ── tus datos ────────────────────────────────────────────────── */
+  H.push('<div class="aj-g">Tus datos</div>');
+  H.push('<div class="aj-card">');
+  H.push(ajFila("banco","Tus cuentas","Capital, reglas de la casa y tu riesgo", ajChev,' data-ir="cuentas"'));
+  H.push(ajFila("robot","El Ejecutor","El bot que ejecuta tus señales en MT5", ajChev,' data-ir="ejecutor"'));
+  H.push(ajFila("nube","Tu nube y tu respaldo","Lo tuyo viaja: al cambiar de teléfono vuelve solo", ajChev,' data-ir="nube"'));
+  H.push('</div>');
+  H.push('<div class="aj-nota">Apex <b>'+(typeof APP_VERSION!=="undefined"?APP_VERSION:"")+'</b> · tus datos viven en este aparato y en tu nube.</div>');
+
+  c.innerHTML=H.join("");
+
+  /* ── y que todo esto haga algo de verdad ──────────────────────── */
+  c.querySelectorAll(".aj-col").forEach(b=>b.onclick=()=>{
+    colorAplicar(b.dataset.col);
+    c.querySelectorAll(".aj-col").forEach(x=>x.classList.toggle("on",x===b));
+    toast("🎨 Apex en "+COLORES[b.dataset.col].n);
+  });
+  c.querySelectorAll("#ajTema button").forEach(b=>b.onclick=()=>{
+    temaAplicar(b.dataset.t);
+    c.querySelectorAll("#ajTema button").forEach(x=>x.classList.toggle("on",x===b));
+  });
+  const sw=(id,leer,poner)=>{ const e=$("#"+id); if(!e) return;
+    e.onclick=()=>{ const v=!leer(); poner(v); e.classList.toggle("on",v); renderAjustes(); }; };
+  sw("ajCuerpo", fabPuesto, ()=>fabAlternar());
+  sw("ajGuardia", ()=>guardiaCfg().on, (v)=>{ guardiaGuardar({on:v}); toast(v?"🛡️ Roberto volverá a exigirte":"🛡️ Roberto dejará de exigirte"); });
+  sw("ajRepaso", ()=>repasoCfg().on, (v)=>{ repasoGuardar({on:v}); toast(v?"🌅 Repasos encendidos":"🌅 Repasos apagados"); });
+  const hora=(id,guardar)=>{ const e=$("#"+id); if(e) e.onchange=()=>{ guardar(e.value); toast("Hora guardada ✓"); }; };
+  hora("ajGuardiaHora",(v)=>guardiaGuardar({hora:v}));
+  hora("ajRepM",(v)=>repasoGuardar({manana:v}));
+  hora("ajRepT",(v)=>repasoGuardar({tarde:v}));
+  c.querySelectorAll("[data-devolver]").forEach(b=>b.onclick=()=>{
+    const cfg=guardiaCfg(); const q=(cfg.quitadas||[]).filter(x=>x!==b.dataset.devolver);
+    guardiaGuardar({quitadas:q}); toast("↩︎ Devuelta"); renderAjustes();
+  });
+  c.querySelectorAll("[data-ir]").forEach(b=>b.onclick=()=>{
+    const d=b.dataset.ir;
+    if(d==="avisos"||d==="cuentas"||d==="ejecutor") { irA(d); return; }
+    if(d==="ventanas"){ try{ abrirVentanasCfg(); }catch(_){ toast("No pude abrir tus ventanas"); } return; }
+    if(d==="voz"||d==="burbuja"){ try{ abrirIA(); setTimeout(()=>{ const t=$("#iaCfgBtn")||$("#iaAjustes"); if(t) t.click(); }, 420); }
+      catch(_){ toast("Abre a Roberto y toca sus ajustes"); } return; }
+    if(d==="nube"){ try{ irA("hoy"); setTimeout(()=>{ const n=$("#btnNube")||$("#hoyNube"); if(n) n.click(); else toast("Tu nube está en Hoy, abajo del todo"); },300); }catch(_){} return; }
+  });
+}
 
 function viewTemplo(){
   const v=el("div","view"); v.id="v-templo";
@@ -8197,7 +8455,10 @@ const TABS=[
   {id:"conf",      ic:"🔗", n:"Confluencias",     g:"Consulta"},
   {id:"rutina",    ic:"🗺️", n:"Rutina",           g:"Consulta"},
   {id:"plan",      ic:"📋", n:"Plan",             g:"Consulta"},
-  {id:"mentor",    ic:"🧠", n:"Mentor",           g:"Consulta"}
+  {id:"mentor",    ic:"🧠", n:"Mentor",           g:"Consulta"},
+  /* ⚙️ v7.286 — TODO LO QUE SE CONFIGURA, EN UN SITIO. Antes estaba repartido en cinco,
+     y lo de Roberto solo se tocaba hablando con él ([[apex-la-piel-de-apex]]). */
+  {id:"ajustes",   ic:"⚙️", n:"Ajustes",          g:"Apex"}
 ];
 
 /* 🎨 v7.284 — LOS ICONOS DE LÍNEA del menú. Los emojis los pinta cada sistema a su
@@ -8225,6 +8486,7 @@ const ICONOS = {
   rutina:'<polygon points="1 6 8 3 16 6 23 3 23 18 16 21 8 18 1 21 1 6"/><path d="M8 3v15M16 6v15"/>',
   plan:'<path d="M9 2h6v4H9z"/><rect x="4" y="4" width="16" height="18" rx="2"/><path d="M9 12h6M9 16h4"/>',
   mentor:'<path d="M12 5a3 3 0 1 0-5.9.8A3 3 0 0 0 4 12a3 3 0 0 0 2 5.2A3 3 0 0 0 12 19z"/><path d="M12 5a3 3 0 1 1 5.9.8A3 3 0 0 1 20 12a3 3 0 0 1-2 5.2A3 3 0 0 1 12 19z"/>',
+  ajustes:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9L17 7M7 17l-2.1 2.1"/>',
 };
 const icono = (id) => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">'
   + (ICONOS[id] || '<circle cx="12" cy="12" r="9"/>') + '</svg>';
@@ -8344,6 +8606,7 @@ function irA(id){
   if(id==="ejecutor") renderEjecutor();
   if(id==="riesgo")   { try{ negEnchufar(); }catch(_){} }   /* 🧮 v7.256: la calculadora de negocios */
   if(id==="templo")   renderTemplo();
+  if(id==="ajustes")  renderAjustes();   /* ⚙️ v7.286 */
   /* 🗂️ v7.178 — Y LOS PLIEGUES, EN TODAS LAS SECCIONES, DESDE UN SOLO SITIO.
      ─────────────────────────────────────────────────────────────────────────────────
      Rey, 18-09: «eso debes aplicarlo en TODAS las secciones». Y tenía razón también en el
@@ -8355,7 +8618,9 @@ function irA(id){
      (el Ejecutor, las Noticias) esperan a la nube. Sin la segunda pasada, esas se quedaban
      a medio plegar — y `plegarTarjetas` mide alturas: lo que aún no está pintado mide cero.
      Repetir es gratis: cada tarjeta lleva su marca `data-pleg` y no se toca dos veces. */
-  const plegarAhora = ()=>{ try{ const v=$("#v-"+id); if(v) plegarTarjetas(id, v); }catch(_){} };
+  /* 🎨 v7.286 — los iconos, antes de plegar: se traduce lo que acaba de pintarse */
+  try{ iconizar($("#v-"+id)); }catch(_){}
+  const plegarAhora = ()=>{ try{ iconizar($("#v-"+id)); const v=$("#v-"+id); if(v) plegarTarjetas(id, v); }catch(_){} };
   setTimeout(plegarAhora, 350);
   setTimeout(plegarAhora, 1600);
 }
@@ -8384,10 +8649,12 @@ function abrirMenu(){
       </div>
       <div class="menu-grid" id="menuGrid"></div>
       <div class="menu-pie">
-        <div class="menu-yo">
+        <div class="menu-col" id="menuCol"></div>
+        <button class="menu-yo" id="menuYo" aria-label="Ajustes de Apex">
           <div class="menu-yo-av">RC</div>
           <div class="menu-yo-t"><b>Reinier Cainet</b><small id="menuVer">Apex</small></div>
-        </div>
+          <span class="aj-chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span>
+        </button>
       </div></div>`;
     document.body.appendChild(ov);
     ov.onclick=e=>{ if(e.target===ov) cerrarMenu(); };
@@ -8428,6 +8695,25 @@ function abrirMenu(){
   if(ojo) ojo.onclick=(e)=>{ e.stopPropagation(); fabAlternar(); menuPintarRoberto(); };
   menuPintarRoberto();
 
+  /* 🎨 las tres muestras: se ven los tres colores y se cambia de un toque */
+  try{
+    const c=$("#menuCol");
+    if(c){
+      const act=colorActual();
+      c.innerHTML='<span class="menu-col-k">Color de Apex</span>'
+        + Object.keys(COLORES).map(k=>'<button class="menu-col-b'+(k===act?" on":"")+'" data-col="'+k+'" aria-label="'+esc(COLORES[k].n)+'">'
+            + '<i style="background:linear-gradient(145deg,'+COLORES[k].m+','+COLORES[k].m2+')"></i></button>').join("");
+      c.querySelectorAll(".menu-col-b").forEach(b=>{ b.onclick=(e)=>{
+        e.stopPropagation();
+        colorAplicar(b.dataset.col);
+        c.querySelectorAll(".menu-col-b").forEach(x=>x.classList.toggle("on", x===b));
+        try{ toast("🎨 Apex en "+COLORES[b.dataset.col].n); }catch(_){}
+      }; });
+    }
+  }catch(_){}
+
+  /* ⚙️ v7.286 — su nombre ES la puerta de Ajustes, que es donde Rey la buscó */
+  try{ const y=$("#menuYo"); if(y) y.onclick=()=>{ irA("ajustes"); cerrarMenu(); }; }catch(_){}
   try{ const v=$("#menuVer"); if(v) v.textContent="Apex "+(typeof APP_VERSION!=="undefined"?APP_VERSION:""); }catch(_){}
   requestAnimationFrame(()=>ov.classList.add("show"));
 }
@@ -8704,14 +8990,39 @@ function renderHoy(){
   let h="";
   h+='<div id="guardiaCaja"></div>';
 
-  /* ── 1. RELOJ + VENTANA ── */
-  const estado = !abierto ? `<span class="hoy-pill bad">🔒 Forex cerrado</span>`
-    : vent ? `<span class="hoy-pill ok">🟢 ${esc(vent.n)} — ventana válida</span>`
-    : `<span class="hoy-pill warn">🟡 Fuera de ventana${prox?(" · próxima: "+esc(prox.n)+" a las "+esc(prox.h)):""}</span>`;
-  h+=`<div class="card hoy-top">
-    <div class="hoy-fecha">${esc(fBR.charAt(0).toUpperCase()+fBR.slice(1))}</div>
-    <div class="hoy-horas"><b>${esc(hBR)}</b> <span>Brasil</span> · <b>${esc(hNY)}</b> <span>Nueva York</span></div>
-    <div>${estado}</div>
+  /* ── 1. SUS NÚMEROS ──
+     v7.286 — aquí había una tarjeta con la fecha, las DOS horas otra vez (los relojes
+     están justo encima) y la ventana otra vez (la banda verde, también encima). Tres
+     bloques repitiendo y ni un dato suyo. Ahora manda lo que viene a mirar. */
+  const _hoyISO = hoyISO();
+  const _mias = (typeof tradesCtx==="function" ? tradesCtx() : TRADES).filter(t=>t && !t.abierta);
+  const _R = (t)=>parseFloat(t.r)||0;
+  const _opsHoy = _mias.filter(t=>t.fecha===_hoyISO);
+  const _rHoy = _opsHoy.reduce((a,t)=>a+_R(t),0);
+  /* la semana, desde el lunes: es como cuenta él sus semanas */
+  const _d=new Date(); const _dl=(_d.getDay()+6)%7;
+  const _lun=new Date(_d.getFullYear(),_d.getMonth(),_d.getDate()-_dl);
+  const _iso=(x)=>x.getFullYear()+"-"+String(x.getMonth()+1).padStart(2,"0")+"-"+String(x.getDate()).padStart(2,"0");
+  const _lunISO=_iso(_lun);
+  const _opsSem = _mias.filter(t=>String(t.fecha||"")>=_lunISO);
+  const _rSem = _opsSem.reduce((a,t)=>a+_R(t),0);
+  const _gan = _opsSem.filter(t=>_R(t)>0).length;
+  const _pct = _opsSem.length ? Math.round(_gan/_opsSem.length*100) : null;
+  /* el riesgo del día: lo que ya se ha gastado de su tope de 2 operaciones */
+  const _sl = _opsHoy.filter(t=>_R(t)<0).length;
+  const _signo=(x)=>(x>0?"+":"")+r1(x);
+  const _clase=(x)=>x>0?" up":(x<0?" dn":"");
+  h+=`<div class="hoy-fecha">${esc(fBR.charAt(0).toUpperCase()+fBR.slice(1))}</div>
+  <div class="datos">
+    <div class="dato"><span class="dato-k">Hoy</span>
+      <span class="dato-v${_opsHoy.length?_clase(_rHoy):""}">${_opsHoy.length?_signo(_rHoy)+"R":"—"}</span>
+      <span class="dato-s">${_opsHoy.length?(_opsHoy.length+" de 2"):"sin operar"}</span></div>
+    <div class="dato"><span class="dato-k">Semana</span>
+      <span class="dato-v${_opsSem.length?_clase(_rSem):""}">${_opsSem.length?_signo(_rSem)+"R":"—"}</span>
+      <span class="dato-s">${_pct!=null?(_gan+" de "+_opsSem.length+" · "+_pct+"%"):"sin operar"}</span></div>
+    <div class="dato"><span class="dato-k">Stops hoy</span>
+      <span class="dato-v${_sl>=2?" dn":""}">${_sl}<span style="font-size:15px;opacity:.5">/2</span></span>
+      <span class="dato-s">${_sl>=2?"para hasta mañana":"margen para "+(2-_sl)}</span></div>
   </div>`;
 
   /* ── 2. NOTICIAS DE HOY (aquí mismo: sin salir de esta pantalla sabes si puedes operar) ── */
@@ -23744,7 +24055,7 @@ function respChequear(){
    ============================================================ */
 function init(){
   const c=$("#views");
-  c.append(viewNoticias(),viewAvisos(),viewHoy(),viewArranque(),viewChecklist(),viewConf(),viewRutina(),viewReglas(),viewRiesgo(),viewGatillo(),viewDiario(),viewGaleria(),viewCuentas(),viewEjecutor(),viewAlmanaque(),viewAnalisis(),viewMentor(),viewPlan(),viewTemplo());
+  c.append(viewNoticias(),viewAvisos(),viewHoy(),viewArranque(),viewChecklist(),viewConf(),viewRutina(),viewReglas(),viewRiesgo(),viewGatillo(),viewDiario(),viewGaleria(),viewCuentas(),viewEjecutor(),viewAlmanaque(),viewAnalisis(),viewMentor(),viewPlan(),viewTemplo(),viewAjustes());
   /* 🤖 la pestaña Ejecutor se refresca sola mientras la miras (cada 25 s) */
   /* 🎓 v7.96 — NO REPINTAR MIENTRAS ROBERTO ESTÁ JUZGANDO.
      Rey (11-09): «le di al botón para que juzgara las operaciones y me puso "Roberto

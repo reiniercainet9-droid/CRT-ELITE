@@ -1,4 +1,4 @@
-APEX v7.284 — TRADING DESK
+APEX v7.286 — TRADING DESK
 =========================
 
 🎨 APEX CAMBIA DE CARA — Y EL COLOR LO ELIGES TÚ
@@ -73,6 +73,88 @@ que los tres colores pintan distinto y se recuerdan, que naranja en modo claro s
 blanco, que el menú trae las 19 secciones con sus 6 grupos y su «?», que navegar desde él
 funciona, que quitar su cuerpo lo esconde de verdad y que **con el cuerpo quitado la puerta
 del menú sigue abierta**.
+
+
+─────────────────────────────────────────────────────────────────────────────────
+
+🩹 Y UN ARREGLO QUE SALIÓ DE VER APEX EN TU TELÉFONO (7.285)
+
+Instalé la 7.284, miré tu pantalla de verdad y había dos cosas mal que en la PC no se
+veían:
+
+  · el botón 🎨 que había puesto en la cabecera NO CABÍA: empujó la fila y «APEX ·
+    TRADING DESK» quedó debajo de los botones
+  · el cuadrito del logo seguía siendo azul noche, de la paleta vieja
+
+El color se mudó al PIE DEL MENÚ, y ahí sale ganando: se ven los tres a la vez y cambias
+de UN TOQUE, sin abrir ninguna ventana. La cabecera vuelve a ser la de siempre.
+
+Y le puse un freno: si algún día vuelve a no caber algo, el título se recorta con puntos
+suspensivos en vez de esconderse en silencio. Un fallo que se ve es un fallo que se
+arregla.
+
+
+═════════════════════════════════════════════════════════════════════════════════
+⚙️ 7.286 — AHORA SÍ: APEX TRANSFORMADA, NO REPINTADA
+═════════════════════════════════════════════════════════════════════════════════
+
+Me dijiste la verdad: «visualmente está igual, solo mudó el menú». Tenías razón. Lo de
+antes fue cambiarle los colores; esto es cambiarle la cara.
+
+
+⚙️ TODOS TUS AJUSTES EN UN SITIO — y se entra por tu nombre
+
+Toca «Reinier Cainet» en el pie del menú. Ahí está TODO:
+
+   CÓMO SE VE          el color (los tres, de un toque) y claro/oscuro
+   ROBERTO             su cuerpo dentro de Apex · su cuerpo en todo el teléfono · su voz
+   LO QUE TE EXIGE     encenderlo, a qué hora, y devolverle lo que le quitaste
+   TUS REPASOS         encenderlos y sus dos horas
+   AVISOS Y HORARIOS   tus notificaciones y tus ventanas horarias
+   TUS DATOS           cuentas · Ejecutor · tu nube y tu respaldo
+
+Dos de esas no TENÍAN pantalla: lo que Roberto te exige y tus repasos solo se cambiaban
+hablando con él. Y tus ventanas horarias estaban escondidas en una ⚙️ diminuta dentro de
+una tarjeta de Hoy.
+
+
+🎨 FUERA LOS EMOJIS DE LOS TÍTULOS Y DE LOS BOTONES
+
+64 emojis traducidos a iconos de línea, en las 19 secciones. Y no los cambié uno a uno:
+se traducen AL PINTAR, desde un solo sitio — así una tarjeta que escriba mañana nace ya
+con su icono sin que nadie se acuerde.
+
+Las cabeceras llevaban un emoji de 22 px y un título dorado de 19 px que gritaban más que
+los datos. Ahora son una etiqueta pequeña en mayúsculas y manda el DATO.
+
+
+🔢 TUS NÚMEROS SE VEN, YA NO SE LEEN
+
+Cifras tabulares en toda Apex. Con las de antes, «+184» y «−92» bailaban de ancho y una
+columna de dinero había que deletrearla. Es lo más barato que se puede hacer por una app
+que maneja dinero.
+
+Y los botones: antes todos pesaban igual, o sea ninguno destacaba. Ahora uno manda por
+pantalla y los demás son el escape.
+
+
+🎯 LA PANTALLA DE HOY EMPIEZA POR LO TUYO
+
+Arriba había una tarjeta que REPETÍA dos cosas ya visibles: la hora (los relojes, justo
+encima) y la ventana (la banda verde, también encima). Tres bloques diciendo lo mismo y
+ni un número tuyo.
+
+Ahora ese sitio es tuyo, y en R porque es como piensa tu sistema:
+
+      HOY              SEMANA                STOPS HOY
+      +2,1R            +4,5R                 0/2
+      1 de 2           4 de 6 · 66%          margen para 2
+
+
+─────────────────────────────────────────────────────────────────────────────────
+
+Lo que la regresión me cazó y arreglé: Ajustes no se podía elegir como destino de un
+aviso, así que ni tú podías mandarte ahí ni Roberto llevarte. Ya se puede.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

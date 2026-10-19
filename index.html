@@ -133,9 +133,28 @@ body{
   color:var(--txt);
   font-family:"Roboto","Segoe UI",system-ui,-apple-system,sans-serif;
   font-size:16px;line-height:1.5;
+  /* 🔢 v7.286 — CIFRAS TABULARES EN TODA APEX. Con las proporcionales, «+184» y «−92»
+     bailan de ancho y una columna de dinero no se puede leer de un vistazo: hay que
+     deletrearla. Esto es lo más barato que se puede hacer por la legibilidad de una app
+     que maneja dinero, y vale para los 19 sitios a la vez. */
+  font-variant-numeric:tabular-nums;
+  font-feature-settings:"tnum" 1;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
   padding-bottom:calc(26px + var(--safe-b));
   overflow-x:hidden;
 }
+
+/* 🔢 v7.286 — LA CIFRA QUE MANDA. Para el dinero, el riesgo y los R: grande, apretada
+   y con su etiqueta pequeña encima. Donde se use, el dato se VE sin leer. */
+.dato{display:flex;flex-direction:column;gap:5px;min-width:0}
+.dato-k{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--txt3)}
+.dato-v{font-size:25px;font-weight:800;letter-spacing:-.035em;line-height:1;color:var(--txt)}
+.dato-v.up{color:var(--green)} .dato-v.dn{color:var(--red)} .dato-v.acc{color:var(--gold)}
+.dato-s{font-size:11.5px;color:var(--txt3);font-weight:500}
+.datos{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:9px;margin-bottom:12px}
+.datos > .dato{padding:13px 12px;border-radius:16px;border:1px solid var(--line);
+  background:linear-gradient(180deg,var(--card2),var(--card))}
 .wrap{max-width:640px;margin:0 auto;padding:12px 14px 20px}
 button,input,select,textarea{font-family:inherit;font-size:inherit;color:inherit}
 button{cursor:pointer;border:none;background:none}
@@ -148,12 +167,19 @@ button{cursor:pointer;border:none;background:none}
   position:relative;overflow:hidden;margin-bottom:12px;
   box-shadow:0 18px 44px -30px rgba(0,0,0,.85), inset 0 1px 0 rgba(255,255,255,.04);
 }
-.hdr-center{display:flex;align-items:center;gap:12px;min-width:0}
+.hdr-center{display:flex;align-items:center;gap:12px;min-width:0;flex:1}
+/* 🩹 19-10 — que el título se ENCOJA antes de meterse debajo de los botones. Con
+   `overflow:hidden` en .hdr, lo que no cabía se escondía en silencio y parecía un
+   fallo de pintado. Ahora se recorta con puntos suspensivos, que sí se ve. */
+.hdr-center > div:last-child{min-width:0}
+.hdr-t,.hdr-s{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .hdr::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;
   background:linear-gradient(90deg,transparent,var(--gold),transparent)}
 .hdr-logo{
   width:54px;height:54px;border-radius:15px;
-  background:radial-gradient(120% 120% at 30% 20%,#20264C,#0E1226 72%);
+  /* 🎨 19-10: era un azul noche (#20264C→#0E1226) que se quedó de la paleta vieja y
+     cantaba como un cuadro azul en mitad del grafito. */
+  background:radial-gradient(120% 120% at 30% 20%,var(--card3),var(--bg2) 72%);
   border:1px solid var(--line);
   display:flex;align-items:center;justify-content:center;flex-shrink:0;
   box-shadow:inset 0 1px 0 rgba(255,255,255,.05);
@@ -185,16 +211,32 @@ button{cursor:pointer;border:none;background:none}
 .vent.best{background:rgba(245,197,66,.10);border-color:rgba(245,197,66,.55);color:var(--gold)}
 
 /* ===== CARDS ===== */
+/* 🫁 v7.286 — más aire dentro y entre tarjetas. Apex iba apretada y todo pesaba igual;
+   el espacio en blanco es lo que separa «lista de cosas» de «pantalla con jerarquía». */
 .card{background:linear-gradient(180deg,var(--card2),var(--card));border:1px solid var(--line);
-  border-radius:18px;padding:16px;margin-bottom:14px;
+  border-radius:18px;padding:17px 16px;margin-bottom:12px;
   box-shadow:0 20px 44px -30px rgba(0,0,0,.95)}
+.card > .btn:first-of-type{margin-top:4px}
 .card.alert{border-color:rgba(242,109,109,.45);position:relative;overflow:hidden}
 .card.alert::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--red),var(--orange))}
-.card-h{display:flex;align-items:center;gap:10px;margin-bottom:6px;flex-wrap:wrap}
-.card-h .ic{font-size:22px;line-height:1}
-.card-h h2{margin:0;font-size:19px;font-weight:700;color:var(--gold)}
+/* ═══════════════════════════════════════════════════════════════════════════════
+   🎨 v7.286 — LA CABECERA DE TARJETA. Antes: emoji de 22 px + título de 19 px en
+   dorado. Eso gritaba más que los datos y hacía que Apex pareciera una app personal.
+   Ahora manda el DATO: la cabecera es una etiqueta pequeña en mayúsculas y el icono
+   va de línea, del color del texto. Es el mismo patrón del menú y de Ajustes.
+   ═══════════════════════════════════════════════════════════════════════════════ */
+.card-h{display:flex;align-items:center;gap:9px;margin-bottom:12px;flex-wrap:wrap}
+.card-h .ic{font-size:17px;line-height:0;color:var(--txt3);flex-shrink:0;
+  width:18px;height:18px;display:flex;align-items:center;justify-content:center}
+.card-h .ic svg{width:18px;height:18px;stroke-width:1.9;display:block}
+.card-h .ic.emoji{font-size:16px;line-height:1}
+.card-h h2{margin:0;font-size:11.5px;font-weight:700;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--txt2)}
 .card-h h2.red{color:var(--red)}
-.card-h .cnt{font-size:14px;color:var(--txt3);font-weight:600}
+.card-h h2.red{color:var(--red)}
+.card-h .cnt{font-size:11px;color:var(--txt3);font-weight:700;letter-spacing:.04em;
+  padding:3px 8px;border-radius:999px;background:rgba(255,255,255,.055);border:1px solid var(--line)}
+html[data-tema="claro"] .card-h .cnt{background:rgba(16,16,20,.05)}
 .card p.desc{font-size:14px;color:var(--txt2);margin:6px 0 12px}
 
 /* barra progreso */
@@ -244,16 +286,30 @@ button{cursor:pointer;border:none;background:none}
 .verd.no .t{color:var(--red)}
 
 /* ===== BOTONES ===== */
+/* ═══ 🖲️ v7.286 — LOS BOTONES. Antes: 16,5 px en negrita y todos iguales de fuertes,
+   así que ninguno destacaba. Ahora el secundario es discreto y el `gold` es EL botón
+   de la pantalla — con su sombra de color, para que se vea cuál es sin pensarlo.
+   El ancho completo se queda: es lo que Apex usa en los formularios y funciona. ═══ */
 .btn{
-  display:block;width:100%;padding:15px;border-radius:13px;
-  font-size:16.5px;font-weight:700;text-align:center;
-  background:var(--card2);border:1px solid var(--line);color:var(--txt);
+  display:block;width:100%;min-height:50px;padding:14px 16px;border-radius:13px;
+  font-size:15.5px;font-weight:650;text-align:center;letter-spacing:-.01em;
+  background:var(--card2);border:1px solid var(--line2);color:var(--txt);
+  transition:transform .09s,background .14s;
 }
-.btn:active{background:var(--card3)}
-.btn.gold{background:var(--gold);color:var(--on-acc);border-color:var(--gold)}
-.btn.green{background:linear-gradient(180deg,#3ACF77,#25A356);color:#04220F;border:none;font-size:18px;padding:17px}
-.btn.danger{background:rgba(242,109,109,.09);border-color:rgba(242,109,109,.4);color:var(--red)}
-.btn+.btn{margin-top:10px}
+.btn:active{background:var(--card3);transform:scale(.985)}
+.btn.gold{background:linear-gradient(145deg,var(--acc),var(--acc-2));color:var(--on-acc);
+  border-color:transparent;font-weight:750;box-shadow:0 12px 26px -16px var(--acc)}
+.btn.green{background:linear-gradient(145deg,var(--green),#4DF0B4);color:#00140C;border:none;
+  font-size:16.5px;font-weight:750;padding:16px;box-shadow:0 12px 26px -16px var(--green)}
+.btn.danger{background:rgb(255 59 92 / .08);border-color:rgb(255 59 92 / .35);color:var(--red);font-weight:700}
+.btn+.btn{margin-top:9px}
+/* el icono dentro de un boton: del color del texto, sin robarle protagonismo */
+.btn{display:flex;align-items:center;justify-content:center;gap:9px}
+.btn-ic{width:17px;height:17px;flex-shrink:0;line-height:0;opacity:.85}
+.btn-ic svg{width:17px;height:17px;stroke-width:2;display:block}
+/* dos botones a lo ancho, cuando uno es el principal y el otro el escape */
+.btn-par{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.btn-par .btn{margin-top:0}
 .note{font-size:12.5px;color:var(--txt3);text-align:center;margin-top:9px;line-height:1.45}
 
 /* ===== SEGMENTED ===== */
@@ -327,15 +383,19 @@ select.inp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns
 .st .k{font-size:10.5px;color:var(--txt3);letter-spacing:1px;margin-top:5px;text-transform:uppercase}
 
 /* ===== TABLA ANALISIS ===== */
-.tbl{width:100%;border-collapse:collapse;font-size:14px;margin-top:4px}
+/* ═══ 📊 v7.286 — LAS TABLAS. El borde de las filas era `rgba(42,62,102,.5)`, un azul
+   de la paleta vieja que sobre grafito se veía morado. Y la cabecera pesaba lo mismo que
+   los datos. Ahora la cabecera es una etiqueta y el dato manda. ═══ */
+.tbl{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:2px}
 .tbl th{
-  text-align:left;font-size:11px;letter-spacing:1px;text-transform:uppercase;
-  color:var(--txt3);padding:9px 8px;border-bottom:1px solid var(--line);font-weight:600;
+  text-align:left;font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--txt3);padding:0 8px 9px;border-bottom:1px solid var(--line);font-weight:700;
 }
-.tbl td{padding:11px 8px;border-bottom:1px solid rgba(42,62,102,.5);color:var(--txt2)}
-.tbl td:first-child{color:var(--txt);font-weight:600}
+.tbl td{padding:12px 8px;border-bottom:1px solid var(--line);color:var(--txt2)}
+.tbl td:first-child{color:var(--txt);font-weight:650}
 .tbl tr:last-child td{border-bottom:none}
-.tbl .num{text-align:right;font-variant-numeric:tabular-nums}
+.tbl .num{text-align:right;font-variant-numeric:tabular-nums;font-weight:700;letter-spacing:-.02em}
+.tbl .num.up{color:var(--green)} .tbl .num.dn{color:var(--red)}
 .pos{color:var(--green);font-weight:700}
 .neg{color:var(--red);font-weight:700}
 .warnrow{background:rgba(242,109,109,.07)}
@@ -362,7 +422,10 @@ select.inp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns
 .trade-r{font-weight:800;font-size:17px}
 .trade-m{font-size:12.5px;color:var(--txt3);margin-top:5px;line-height:1.5}
 .trade-n{font-size:13px;color:var(--txt2);margin-top:7px;padding-top:7px;border-top:1px solid var(--line);font-style:italic}
-.pill{display:inline-block;font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:5px;margin-right:5px}
+/* 🏷️ v7.286 — redondos y con aire: una etiqueta cuadrada de 2 px de alto parece un error
+   de pintado, no una etiqueta. */
+.pill{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:700;
+  padding:4px 9px;border-radius:999px;margin-right:5px;letter-spacing:.02em;line-height:1.3}
 .pill.a{background:rgba(49,196,106,.16);color:var(--green)}
 .pill.b{background:rgba(91,155,245,.16);color:var(--blue)}
 .pill.c{background:rgba(245,147,74,.16);color:var(--orange)}
@@ -847,6 +910,19 @@ html.rob-anim-min .fab.rob-cuerpo.alerta{animation:none!important}
   background:transparent;display:flex;align-items:center;justify-content:center;line-height:1}
 .mi-help:active{background:var(--card3);color:var(--acc);transform:scale(.9)}
 
+/* 🎨 v7.284 — EL COLOR, EN EL PIE DEL MENÚ. Estaba en la cabecera y no cabía (visto en
+   su teléfono: tapaba «APEX · TRADING DESK»). Aquí caben las tres muestras a la vez y se
+   cambia de UN TOQUE, sin ventana de por medio — mejor de lo que era. */
+.menu-col{display:flex;align-items:center;gap:8px;padding:9px 10px;margin-bottom:8px;
+  border-radius:12px;border:1px solid var(--line);background:var(--card)}
+.menu-col-k{flex:1;min-width:0;font-size:11px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.09em;color:var(--txt3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.menu-col-b{width:30px;height:30px;flex-shrink:0;border-radius:9px;border:2px solid transparent;
+  padding:0;position:relative}
+.menu-col-b i{position:absolute;inset:2px;border-radius:6px;display:block}
+.menu-col-b.on{border-color:var(--txt)}
+.menu-col-b:active{transform:scale(.9)}
+
 /* el pie: quién eres y qué versión llevas */
 .menu-pie{flex-shrink:0;padding:10px;border-top:1px solid var(--line)}
 .menu-yo{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:12px;
@@ -1093,7 +1169,10 @@ html.rob-anim-min .fab.rob-cuerpo.alerta{animation:none!important}
 
 /* ===== 🎯 VISTA HOY — todo el día en una pantalla ===== */
 .hoy-top{text-align:center}
-.hoy-fecha{font-size:13px;color:var(--txt3);letter-spacing:.3px}
+/* v7.286 — la fecha ya no vive dentro de una tarjeta: es la etiqueta de la fila de
+   numeros, asi que va pequena, en mayusculas y pegada a ellos. */
+.hoy-fecha{font-size:10.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--txt3);margin:2px 2px 9px}
 .hoy-horas{font-size:20px;font-weight:800;color:var(--txt);margin:5px 0 11px;line-height:1.35}
 .hoy-horas span{font-size:11.5px;font-weight:600;color:var(--txt3);letter-spacing:.4px;text-transform:uppercase}
 .hoy-pill{display:inline-block;padding:7px 14px;border-radius:999px;font-size:13px;font-weight:700;border:1px solid}
@@ -1166,6 +1245,71 @@ html.rob-anim-min .fab.rob-cuerpo.alerta{animation:none!important}
 .ia-acc-b:active{transform:scale(.97)}
 .ia-acc-b.gold{background:var(--gold);border-color:var(--gold);color:var(--on-acc)}
 
+/* ═══════════════════════════════════════════════════════════════════════════════
+   ⚙️ v7.286 — LOS COMPONENTES DE AJUSTES. Son los del rediseño: etiqueta pequeña,
+   dato grande, control a la derecha, icono de línea. Se usan aquí primero y luego
+   en el resto de Apex.
+   ═══════════════════════════════════════════════════════════════════════════════ */
+.aj-g{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;
+  color:var(--txt3);margin:22px 2px 9px}
+.aj-g:first-child{margin-top:4px}
+.aj-card{background:linear-gradient(180deg,var(--card2),var(--card));border:1px solid var(--line);
+  border-radius:18px;overflow:hidden;margin-bottom:12px;
+  box-shadow:0 20px 44px -30px rgba(0,0,0,.95)}
+.aj-row{display:flex;align-items:center;gap:13px;width:100%;padding:14px 15px;
+  border-bottom:1px solid var(--line);text-align:left;background:none;min-height:60px}
+.aj-card > .aj-row:last-child{border-bottom:0}
+.aj-row:active{background:rgba(255,255,255,.04)}
+.aj-ic{width:20px;height:20px;flex-shrink:0;color:var(--txt3);line-height:0}
+.aj-ic svg{width:20px;height:20px;stroke-width:1.8;display:block}
+.aj-t{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.aj-t b{font-size:14.5px;font-weight:600;color:var(--txt);letter-spacing:-.01em}
+.aj-t small{font-size:12px;line-height:1.45;color:var(--txt3)}
+.aj-t small b{font-size:12px;color:var(--txt2);font-weight:700}
+.aj-val{font-size:13.5px;font-weight:700;color:var(--gold);flex-shrink:0;letter-spacing:-.01em}
+.aj-chev{width:16px;height:16px;flex-shrink:0;color:var(--txt3);line-height:0}
+.aj-chev svg{width:16px;height:16px;stroke-width:2.2;display:block}
+
+/* el interruptor: grande de verdad, que se acierte con el pulgar */
+.aj-sw{width:50px;height:29px;flex-shrink:0;border-radius:999px;position:relative;
+  border:1px solid var(--line2);background:rgba(0,0,0,.3);transition:background .18s,border-color .18s}
+.aj-sw i{position:absolute;top:2px;left:2px;width:23px;height:23px;border-radius:50%;
+  background:var(--txt3);transition:transform .18s,background .18s;display:block}
+.aj-sw.on{background:rgb(var(--acc-rgb)/.18);border-color:rgb(var(--acc-rgb)/.5)}
+.aj-sw.on i{transform:translateX(21px);background:var(--gold)}
+html[data-tema="claro"] .aj-sw{background:rgba(16,16,20,.08)}
+
+/* el segmentado: claro / oscuro, y cualquier otro par */
+.aj-seg{display:flex;gap:5px;flex-shrink:0;padding:4px;border-radius:12px;
+  background:rgba(0,0,0,.3);border:1px solid var(--line)}
+html[data-tema="claro"] .aj-seg{background:rgba(16,16,20,.05)}
+.aj-seg button{font:inherit;font-size:12.5px;font-weight:650;padding:7px 12px;border-radius:9px;
+  color:var(--txt3);background:none;border:0;white-space:nowrap}
+.aj-seg button.on{background:var(--card3);color:var(--txt);box-shadow:inset 0 0 0 1px var(--line2)}
+
+/* las tres muestras de color */
+.aj-cols{display:flex;gap:9px;flex-shrink:0}
+.aj-col{width:34px;height:34px;border-radius:11px;border:2px solid transparent;padding:0;position:relative}
+.aj-col i{position:absolute;inset:2px;border-radius:7px;display:block}
+.aj-col.on{border-color:var(--txt)}
+.aj-col:active{transform:scale(.9)}
+
+/* la hora, editable en su sitio */
+.aj-hora{font:inherit;font-size:14px;font-weight:700;color:var(--gold);letter-spacing:-.01em;
+  background:var(--card3);border:1px solid var(--line2);border-radius:10px;
+  padding:8px 10px;flex-shrink:0;min-height:40px}
+.aj-hora:focus{outline:none;border-color:var(--gold)}
+
+/* la nota de un grupo: por qué existe, en una línea */
+.aj-nota{font-size:12.5px;line-height:1.6;color:var(--txt3);margin:-4px 2px 14px;padding:0 2px}
+.aj-nota b{color:var(--txt2)}
+
+/* las exigencias quitadas, para devolverlas */
+.aj-tags{display:flex;flex-wrap:wrap;gap:7px;padding:0 15px 14px}
+.aj-tag{font:inherit;font-size:12px;font-weight:650;padding:7px 12px;border-radius:999px;
+  border:1px dashed var(--line2);background:transparent;color:var(--txt3)}
+.aj-tag:active{border-style:solid;color:var(--gold);border-color:var(--gold)}
+
 /* ✕ Cancelar la espera cuando Roberto se queda pensando de más */
 .ia-cancel-w{display:flex;justify-content:flex-start;margin:-4px 0 8px}
 .ia-cancel{font:inherit;font-size:12.5px;font-weight:600;padding:7px 13px;border-radius:10px;
@@ -1237,7 +1381,6 @@ html.rob-anim-min .fab.rob-cuerpo.alerta{animation:none!important}
       </div>
     </div>
     <div style="display:flex;gap:6px;align-items:center">
-      <button class="hdr-ic" id="btnColor" aria-label="Cambiar el color de Apex">🎨</button>
       <button class="hdr-ic" id="btnTema" aria-label="Cambiar tema claro/oscuro">🌗</button>
       <button class="hdr-ic hdr-help" id="btnAyuda" aria-label="¿Para qué sirve esta pantalla?">?</button>
     </div>
