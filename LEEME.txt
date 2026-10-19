@@ -1,4 +1,4 @@
-APEX v7.282 — TRADING DESK
+APEX v7.283 — TRADING DESK
 =========================
 
 📐 TU R LO MIDE EL DINERO, NO EL PAPEL
@@ -141,6 +141,35 @@ Los tres tenían causa y los tres están cerrados.
 
 
 Banco nuevo: test-los-baches-del-chat-de-rey.cjs (24, todas ejecutadas)
+
+
+👁️ Y AHORA VEO TODOS TUS CHATS (lo de anoche, cazado por ti)
+
+Tú: «te sugiere borrar, le confirmas y no lo hace; después dice que no lo borró, que lo va a
+hacer, y no pone la tarjeta ni nada… tengo que decirle otra vez que borre y no hace nada».
+
+Lo leí de tu teléfono por cable, y esto es lo que había pasado:
+
+      ✅ borré 5 chats de verdad (de 21 quedaron 18)
+      ⚠️ 3 veces: «hay 3 chats que coinciden con…»   → tenías SIETE llamados igual
+      ⚠️ 2 veces: «no encuentro «🧭 Mi plan»»          → ese título no existía
+
+O sea: la mano funcionaba. Lo que fallaba era mi vista. Mi mapa de chats solo me enseña los
+fijados, los ⭐, los 6 más nuevos y los 6 más viejos — con 21 conversaciones, NUEVE no las
+veía. Así que adivinaba títulos y, con siete chats del mismo nombre, no sabía cuál era cuál.
+
+Ahora tengo una mano nueva, ver_chats: me devuelve LA LISTA COMPLETA con la fecha de cada una,
+cuántas preguntas tiene, sus marcas, cuál es la de ahora, y me avisa de los títulos repetidos
+diciéndome cuántos hay de cada uno. Es solo mirar, así que no te pide tarjeta.
+
+Y tengo escrito que la limpieza EMPIEZA MIRANDO: primero ver_chats, después borrar_chat uno a
+uno nombrando cada chat CON SU FECHA, y que tus tarjetas decidan.
+
+Una cosa más: cuando borro, ahora digo la fecha del chat que borré. Lo que tú viste como
+«repite las cosas dos veces» eran dos chats DISTINTOS con el mismo título.
+
+
+Banco: test-los-baches-del-chat-de-rey.cjs pasa de 24 a 36 comprobaciones, todas ejecutadas.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
