@@ -6942,6 +6942,28 @@ function iconizar(raiz){
   }catch(_){}
 }
 
+/* 👁️ v7.286 — EL VIGILANTE DE ICONOS. Traducir al entrar en la sección NO BASTA, y se vio
+   en su teléfono: sus secciones se repintan SOLAS cuando llegan los datos (las noticias, sus
+   cuentas, el contexto del gráfico), y esos repintados traen emojis nuevos mucho después de
+   los 1,6 s en que yo traducía. En la PC no se notaba porque sin datos casi no hay repintado
+   — el fallo solo existía con SUS datos dentro ([[apex-auditar-es-ejecutar]]).
+   Un observador lo arregla de raíz: se traduce lo que aparezca, cuando aparezca, para
+   siempre y sin que nadie tenga que acordarse. */
+let _iconObs=null;
+function iconVigilar(){
+  if(_iconObs) return;
+  try{
+    const raiz=document.getElementById("views"); if(!raiz) return;
+    _iconObs=new MutationObserver((lista)=>{
+      let hay=false;
+      for(const m of lista){ if(m.addedNodes && m.addedNodes.length){ hay=true; break; } }
+      if(hay) { try{ iconizar(raiz); }catch(_){} }
+    });
+    _iconObs.observe(raiz,{childList:true,subtree:true});
+    iconizar(raiz);
+  }catch(_){}
+}
+
 function viewAjustes(){
   const v=el("div","view"); v.id="v-ajustes";
   v.innerHTML='<div id="ajBody"></div>';
@@ -8620,6 +8642,7 @@ function irA(id){
      Repetir es gratis: cada tarjeta lleva su marca `data-pleg` y no se toca dos veces. */
   /* 🎨 v7.286 — los iconos, antes de plegar: se traduce lo que acaba de pintarse */
   try{ iconizar($("#v-"+id)); }catch(_){}
+  try{ iconVigilar(); }catch(_){}
   const plegarAhora = ()=>{ try{ iconizar($("#v-"+id)); const v=$("#v-"+id); if(v) plegarTarjetas(id, v); }catch(_){} };
   setTimeout(plegarAhora, 350);
   setTimeout(plegarAhora, 1600);
@@ -17739,6 +17762,32 @@ function vozWebSiguiente(){
   try{ iaHablar(x.texto, x.idx, x.yaLimpio, x.prio, true); }catch(_){}
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════════
+   🔂 v7.288 — UNA RESPUESTA SE LEE UNA SOLA VEZ.
+   Rey (19-10): «Roberto continúa repitiendo los chat, o sea cuando está hablando, pero
+   ahora la segunda vez se calla antes de terminar».
+
+   Medido en el código: hay TRES caminos que mandan leer la ÚLTIMA respuesta del chat —
+   el directo (la respuesta que llega en vivo), iaBgResuelto (cuando la vuelta trae manos)
+   y iaMostrarJob (el trabajo que terminó en segundo plano) — y los tres pueden tocar el
+   MISMO mensaje. El guardia que había mira el texto y dura 3 segundos: si el segundo
+   camino llega más tarde, pasa de largo. Y el segundo se oye cortado porque entra encima
+   del primero ([[apex-dos-motores-de-voz-no-se-oyen]]).
+
+   Se marca EL MENSAJE, que es lo único que no caduca. ⚠️ El botón de leer a mano NO pasa
+   por aquí a propósito: eso tiene que poder repetirse las veces que Rey quiera.
+   ═══════════════════════════════════════════════════════════════════════════════ */
+function iaLeerUnaVez(c, idx, prio){
+  try{
+    const m = c && c.msgs && c.msgs[idx];
+    if(!m || m.role!=="assistant" || !m.content) return;
+    if(/^⚠️|^💳|^🚫|^✅/.test(m.content)) return;
+    if(m.dicho) return;                 /* ya se leyó: ni se repite ni se pisa */
+    m.dicho = true;
+    iaHablar(m.content, idx, false, prio);
+  }catch(_){}
+}
+
 function iaHablar(texto, idx, yaLimpio, prio, deLaCola){
   const _prio = (typeof prio === "number") ? prio : VOZ_CHARLA;
   /* 🔂 el guardia del rebote NO se aplica a lo que SALE de la cola: esa frase es la misma que
@@ -22399,7 +22448,7 @@ async function iaLoop(msgs, c){
     IA.busy=false;
     c.msgs.push({role:"assistant",content: txt || "⚠️ No me llegó respuesta. Dame un momento y vuelve a intentar — si sigue, abre un chat nuevo con ✚."});
     iaGuardarConvs(); pintarIAChat();
-    if(IA.voz.on){ const ult=c.msgs[c.msgs.length-1]; if(ult && ult.role==="assistant" && ult.content && !/^⚠️|^💳|^🚫|^✅/.test(ult.content)) iaHablar(ult.content, c.msgs.length-1); }
+    if(IA.voz.on) iaLeerUnaVez(c, c.msgs.length-1);   /* 🔂 v7.288: una vez y no más */
     return;
   }
   IA.busy=false; pintarIAChat();
@@ -23146,7 +23195,7 @@ async function iaBgResuelto(jobId, d){
      boca cerrada no parece que conteste él. */
   try{ if(txt) robBocaRato(txt); }catch(_){}
   try{ robReacciona(txt, IA.gestoSuyo); }catch(_){}
-  if(IA.voz.on || IA.autoHablarUna){ const ult=c.msgs[c.msgs.length-1]; if(ult && ult.role==="assistant" && ult.content && !/^⚠️|^💳|^🚫|^✅/.test(ult.content)) iaHablar(ult.content, c.msgs.length-1); IA.autoHablarUna=false; }
+  if(IA.voz.on || IA.autoHablarUna){ iaLeerUnaVez(c, c.msgs.length-1); IA.autoHablarUna=false; }   /* 🔂 v7.288 */
   iaRespuestaFuera(txt);        /* 🎤 v7.24: si preguntó desde fuera, a su nubecita */
 }
 /* Muestra en el chat la respuesta de un job concreto (el de la notificación que
@@ -23166,7 +23215,7 @@ async function iaMostrarJob(jobId, intentos){
   const ya=c.msgs.some(m=>m.role==="assistant" && m.content===txt);
   if(!ya){ iaBarrerFallos(c); c.msgs.push({role:"assistant",content:txt}); }
   IA.busy=false; iaGuardarConvs(); pintarIAChat();
-  if((IA.voz.on || IA.autoHablarUna) && !ya && !/^⚠️|^💳|^🚫|^✅/.test(txt)){ iaHablar(txt, c.msgs.length-1); IA.autoHablarUna=false; }
+  if(IA.voz.on || IA.autoHablarUna){ iaLeerUnaVez(c, c.msgs.length-1); IA.autoHablarUna=false; }   /* 🔂 v7.288 */
   iaRespuestaFuera(txt);        /* 🎤 v7.24: si preguntó desde fuera, a su nubecita */
 }
 /* Al abrir la app, recupera respuestas que terminaron mientras estaba cerrada */
