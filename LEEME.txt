@@ -1,175 +1,78 @@
-APEX v7.283 — TRADING DESK
+APEX v7.284 — TRADING DESK
 =========================
 
-📐 TU R LO MIDE EL DINERO, NO EL PAPEL
+🎨 APEX CAMBIA DE CARA — Y EL COLOR LO ELIGES TÚ
 
-Lo cacé midiendo tus 9 operaciones, no leyéndolas: el R que apuntas es más optimista que el
-que cobras.
+Me enseñaste eTraders Hub y me dijiste lo que llevabas queriendo desde el principio: el menú
+en la orilla, colores vivos y definidos, nada de lo que tiene todo el mundo, y que se note
+que esto maneja dinero de verdad.
 
-      Tu 08-10:  apuntado 2,01R   ·   medido 1,43R   ·   cobrado +38,76 USD = 1,37R
-
-No te equivocas al apuntar: apuntas el R del TP, y el 88% de tus lotes sale en el parcial,
-mucho antes. El dinero da la razón al medido, siempre.
-
-Ahora las dos cosas viven juntas, como pediste: **tu número se queda escrito** (lo verás
-como «tu R: 2,01») y **el medido es el que manda en las métricas**. Si tú lo cambias a mano
-después, el tuyo gana y no te lo vuelvo a tocar.
+Apex no era genérica: estaba **apagada**. El dorado era pálido (#F0C868) sobre un azul
+lavado (#1A1F3D), y con tan poco contraste todo se veía plano. El fondo ahora es grafito
+sólido y el acento va al máximo de su color.
 
 
-🧬 Y YA SABES LO QUE TU ESTRATEGIA PUEDE PERDER
+🖌️ LOS TRES COLORES SE QUEDAN, Y LOS CAMBIAS CUANDO QUIERAS
 
-Tú: «si tengo una pérdida, saber que mi estrategia puede perder 3 de 5».
+Botón 🎨 nuevo, al lado del 🌗 de siempre. Se ven los tres a la vez y cambia al tocar
+**sin cerrar la ventana**, para que los compares de verdad:
 
-Tenías razón en la queja: Apex te decía «no puedo sacar conclusiones de 4 operaciones» y se
-callaba lo que SÍ sabíamos — 85 operaciones de laboratorio que estaban muertas en un .md.
+      ORO VIVO     el dorado de siempre, pero subido · es el que viene puesto
+      NARANJA      el más directo
+      ESMERALDA    verde-azulado, el más frío y técnico
 
-Ahora hay un recuadro de comparación en todas las métricas:
+Se recuerda, **y viaja contigo**: si cambias de teléfono o abres la web, tu color te sigue.
 
-      TU ESTRATEGIA (85 ops)          TÚ, AHORA MISMO
-      aciertos .... 62,4%             se compara sola
-      PF .......... 2,50
-      peor caída .. 1,5%
-      peor racha perdedora esperada: 5 seguidas
+Y es OTRA cosa que el ☀️/🌙 de siempre: se combinan. Puedes tener naranja de día y naranja
+de noche. En modo claro cada color se oscurece solo para que se lea sobre blanco.
 
-      perder 2 seguidas → pasa 1 de cada 7 veces
-      perder 3 seguidas → 1 de cada 19
-      perder 4 seguidas → 1 de cada 50
+También puedes pedírselo a Roberto hablando: **«ponme Apex en naranja»** y lo hace.
 
-Tu peor racha real hasta hoy: **2**. O sea que lo que te ha pasado es lo normal, y ese
-recuadro está ahí para el día que pase lo de 3 — para que no te parezca que se rompió algo.
+⚠️ El esmeralda es verde-AZULADO a propósito, no verde puro. Si el botón fuera del mismo
+verde que «+184 USD», no distinguirías de un vistazo «esto se toca» de «vas ganando». El
+verde y el rojo tienen que significar solo una cosa: dinero.
 
 
-✂️ EL PARCIAL: 50% DE LOTES EN EL 75% DEL CAMINO
+🗂️ EL MENÚ DE LA ORILLA
 
-Tu regla, dicha por ti y ya escrita en el sistema. Roberto la canta así y **no te volverá a
-decir el 80%**: el número lo lee de tu panel del Ejecutor, no de un renglón mío.
+Antes era una rejilla que caía desde arriba con las 19 secciones seguidas, sin jerarquía:
+para llegar a «Mentor» había que leérselas todas.
 
-Medido en lo que llevas hecho: tomas el parcial al **58,5% del camino** (tu regla dice 75) y
-con el **73,1% de los lotes** (tu regla decía 80, ahora 50). De 5 parciales, **ninguno** se
-dio la vuelta después. Cambia UNA cosa a la vez para saber a qué atribuir la mejora.
+Ahora se desliza desde la izquierda y va agrupado por cómo usas el día:
 
+      EL DÍA · ANTES DE ENTRAR · DESPUÉS DE OPERAR · MERCADO · CUERPO Y MENTE · CONSULTA
 
-🏦 EL EJECUTOR YA NO TIENE NINGUNA CUENTA CLAVADA
+      · Roberto arriba del todo, con su cara y su punto verde
+      · iconos de línea en vez de emojis
+      · la sección donde estás, con una rayita del color a la izquierda
+      · tu nombre y la versión abajo
+      · el «?» de cada sección sigue donde estaba
 
-Tú: «no debe tener cuentas clavadas, debe ver la que hay en MT5 y adaptarse».
-
-Tu panel decía 50.000 (de una cuenta vieja) con una de 6.000 conectada. El guardián lo
-cazaba y se negaba a abrir — bien hecho — pero eso significa que al encenderlo mañana **no
-habría operado ni una señal** hasta que lo corrigieras a mano.
-
-Ahora, al encenderlo, lo lee de la cuenta que hay:
-
-      2025-07-26 · +6.000,00 · "Initial+Deposit"   ← sacado de tu MT5
-
-Y lo probé EJECUTÁNDOLO contra tu cuenta: con 50.000 se niega a abrir, con 6.000 abre y la
-pared del drawdown queda a 302,34 USD. También está en setup **A+ solamente**, como pediste.
+En pantalla ancha (tu PC) el menú se queda fijo: con ratón no hay pulgar que alcance una
+orilla, y esconder la navegación detrás de un botón no tiene sentido ahí.
 
 
-🚨 UN ANÁLISIS QUE LA NOTICIA TUMBA TE LO DIGO YO
+🚪 Y AHORA PUEDES QUITAR A ROBERTO DE LA PANTALLA
 
-Lo que llevábamos pendiente de tu lista. Roberto se queda con los niveles de invalidación
-de tu análisis, y cuando el precio los pasa **te lo canta sin que preguntes, encima de tu
-propia propuesta de análisis** — ahí, no en un aviso suelto que se pierde.
+Tenías el interruptor del Roberto GRANDE (el que flota encima de cualquier app del
+teléfono). Ya tienes el gemelo para el PEQUEÑO, el que vive dentro de Apex:
 
-Y de paso salió esto, que llevaba callado desde la v7.136: **tu plan semanal llegaba VACÍO a
-la nube**. Semanas. Decía «no hay plan» cuando lo que pasaba era «llegó vacío», que no es lo
-mismo y es peor.
+      el ojo 👁 del menú, al lado de su nombre — un toque
 
+Su cuerpo se sigue arrastrando igual que siempre por toda la app: esto solo lo esconde.
 
-🧾 LO QUE APEX TE CORRIGIÓ, AHORA SE VE
-
-El cuadre con MT5 te arreglaba el Diario en silencio. Ahora hay una tarjeta y un bloque en
-el chat con **qué cambió, de qué día y qué valor tenía antes**, y se acumula hasta que lo
-miras. Y lo que tú borras a propósito ya no resucita cada 10 minutos.
-
-De paso: una orden programada que cancelaste **no puede volver a entrar como operación**.
-El lector lee las órdenes y las operaciones por caminos separados, a propósito.
-
-La del 06-10 la miré en tu MT5: estaba EJECUTADA, no cancelada (8 órdenes del 5 al 7 de
-octubre, todas llenadas, ninguna cancelada). Te la rellené con datos medidos: R −0,19 ·
-SL 1,12725 · TP 1,12278 · RR 1,79 · comisión −0,95.
+**Y quitarlo no te deja sin él.** La puerta del menú está siempre: tocas a Roberto arriba
+del todo y se abre su chat. Cuando lo retiras, el propio menú te lo recuerda, y él también
+te lo dice. También se lo puedes pedir hablando: «quítate de ahí» y «vuelve».
 
 
-Bancos nuevos: test-roberto-sabe-de-donde-sale-cada-dato.cjs (25) ·
-               test-el-plan-muerto-se-canta-solo.cjs (40) ·
-               test-el-plan-semanal-se-mide-en-semanas.cjs (26) ·
-               test-una-orden-cancelada-no-es-una-operacion.cjs (12) ·
-               test-el-r-se-mide-y-lo-que-cambio-se-ve.cjs (27) ·
-               test-su-estrategia-tiene-patron.cjs (27) ·
-               test-el-cuanto-del-parcial-sale-de-su-panel.cjs (14)
+─────────────────────────────────────────────────────────────────────────────────
 
-
-🕳️ Y LOS TRES BACHES QUE CAZASTE ESTA TARDE
-
-Tú: «se quedó pegado en te respondí ábreme para confirmar, lo dijo como 5 veces… me sugiere
-organizar y limpiar pero después pone otro mensaje sin terminar la acción y la sugerencia se
-queda en el olvido… continúa diciendo la anulación del plan después de ya haber hecho el
-análisis».
-
-Los tres tenían causa y los tres están cerrados.
-
-  1) EL AVISO QUE TE PEDÍA CONFIRMAR LO QUE NO SE CONFIRMA. Cuando uso una mano, la nube te
-     avisaba SIEMPRE con «ábreme para confirmar». Pero 16 de mis manos son automáticas y no
-     llevan tarjeta: abrías y no había nada que confirmar. Y como encadeno manos, cada una
-     te mandaba el mismo aviso otra vez. Ahora distingue los dos casos y lo dice como es.
-
-  2) LA ANULACIÓN QUE NO SE CALLABA. Tu plan guardado tenía TRES entradas, y una era un
-     fantasma:
-
-        EUR/USD ................. 18-10   ← tu análisis
-        GBP/USD ................. 14-10
-        "EUR/USD y GBP/USD" ..... 27-09   ← de cuando escribías los dos juntos
-
-     Esa tercera se vigilaba como plan VIVO, así que todas las noticias fuertes de tres
-     semanas la «anulaban» — y el aviso volvía por más análisis nuevos que hicieras. Ahora
-     solo se vigila el plan de ESTA semana. Uno de otra semana no está anulado: está
-     caducado, y de eso ya te aviso por otro lado. No te he borrado nada.
-
-  3) LA SUGERENCIA QUE MORÍA EN EL CHAT. Esta era la de fondo. Te escribía «te sugiero borrar
-     los chats de agosto» y ahí se quedaba: ni tarjeta, ni acción, y el mensaje siguiente se
-     la llevaba por delante.
-
-     Ahora, si propongo algo y no uso la mano, la propuesta se queda en el chat CON SUS DOS
-     BOTONES —✅ Sí, hazlo / 🚫 Déjalo— y NO se borra aunque sigamos hablando de otra cosa.
-     Tu sí es un toque y me llega con la frase que yo propuse, así que no hay que reescribir
-     nada. Tu no no manda nada a la nube: decir no te sale gratis.
-
-     Y lo de raíz: ahora lo sé. Si lo que te propongo tiene una mano mía, la llamo en el
-     mismo mensaje — y si esa mano pide tu ✓, llamarla es justo lo que te saca la tarjeta.
-     Preguntarte «¿quieres que lo borre?» para esperar un sí escrito era un turno de más,
-     te costaba dinero y era exactamente donde se perdía el hilo.
-
-
-Banco nuevo: test-los-baches-del-chat-de-rey.cjs (24, todas ejecutadas)
-
-
-👁️ Y AHORA VEO TODOS TUS CHATS (lo de anoche, cazado por ti)
-
-Tú: «te sugiere borrar, le confirmas y no lo hace; después dice que no lo borró, que lo va a
-hacer, y no pone la tarjeta ni nada… tengo que decirle otra vez que borre y no hace nada».
-
-Lo leí de tu teléfono por cable, y esto es lo que había pasado:
-
-      ✅ borré 5 chats de verdad (de 21 quedaron 18)
-      ⚠️ 3 veces: «hay 3 chats que coinciden con…»   → tenías SIETE llamados igual
-      ⚠️ 2 veces: «no encuentro «🧭 Mi plan»»          → ese título no existía
-
-O sea: la mano funcionaba. Lo que fallaba era mi vista. Mi mapa de chats solo me enseña los
-fijados, los ⭐, los 6 más nuevos y los 6 más viejos — con 21 conversaciones, NUEVE no las
-veía. Así que adivinaba títulos y, con siete chats del mismo nombre, no sabía cuál era cuál.
-
-Ahora tengo una mano nueva, ver_chats: me devuelve LA LISTA COMPLETA con la fecha de cada una,
-cuántas preguntas tiene, sus marcas, cuál es la de ahora, y me avisa de los títulos repetidos
-diciéndome cuántos hay de cada uno. Es solo mirar, así que no te pide tarjeta.
-
-Y tengo escrito que la limpieza EMPIEZA MIRANDO: primero ver_chats, después borrar_chat uno a
-uno nombrando cada chat CON SU FECHA, y que tus tarjetas decidan.
-
-Una cosa más: cuando borro, ahora digo la fecha del chat que borré. Lo que tú viste como
-«repite las cosas dos veces» eran dos chats DISTINTOS con el mismo título.
-
-
-Banco: test-los-baches-del-chat-de-rey.cjs pasa de 24 a 36 comprobaciones, todas ejecutadas.
+Lo comprobado ejecutándolo en Apex, no leyendo el código: **52 comprobaciones en verde** —
+que los tres colores pintan distinto y se recuerdan, que naranja en modo claro se lee sobre
+blanco, que el menú trae las 19 secciones con sus 6 grupos y su «?», que navegar desde él
+funciona, que quitar su cuerpo lo esconde de verdad y que **con el cuerpo quitado la puerta
+del menú sigue abierta**.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

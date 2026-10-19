@@ -116,6 +116,16 @@ const NUBE_KEYS = ["crtelite_negocio_v1","crtelite_trades_v2",/* 📅 v7.272 —
   /* 🧠 v7.161 — SUS dos horas de repaso y si lo quiere encendido: es una decision
      suya, y al cambiar de telefono tiene que seguir siendo la misma. */
   "crtelite_repaso_v1",
+  /* 🎨🚪 v7.284 — EL COLOR DE APEX Y SI SU CUERPO ESTÁ PUESTO. Lo cazó su propio banco
+     («hay 2 claves que ni suben ni están justificadas como locales»), y tenía razón: son
+     decisiones de GUSTO, no del aparato. Si no viajaran, al cambiar de teléfono o al abrir
+     la web tendría que volver a elegir color, y en la de la PC otra vez
+     ([[apex-nada-en-un-solo-aparato]], [[apex-cambiar-de-aparato]]).
+     ⚠️ `crtelite_tema` (claro/oscuro) se queda fuera A PROPÓSITO y no es incoherencia:
+     eso depende de DÓNDE está —sol en la calle, noche en casa—, no de lo que le gusta.
+     Y la POSICIÓN de su cuerpo (`crtelite_fabpos_v3`) ya viajaba: que viaje si está
+     puesto o no es la otra mitad de lo mismo. */
+  "crtelite_color", "crtelite_cuerpo",
   /* 🏛️ v7.85 — EL TEMPLO ENTERO, QUE SE HABÍA QUEDADO FUERA. Rey (09-09): "lo de la sección
      nueva del templo no está subiendo… intenté actualizar la web y la sección se quedó
      intacta". No era la actualización: la web y la APK tienen almacenes SEPARADOS, y como
@@ -174,6 +184,10 @@ const NUBE_NOMBRES = {
      lista tiene que entender QUÉ es cada cosa suya ([[apex-nube-solo-lo-que-importa]]). */
   "crtelite_guardia_v1":"lo que Roberto te exige (y lo que le dijiste que no)",
   "crtelite_repaso_v1":"tus dos repasos del día con Roberto (horas e interruptor)",
+  /* 🎨🚪 v7.284 — si salieran en crudo, el informe del respaldo diría «crtelite_color» y
+     Rey no sabría qué está recuperando ([[apex-roberto-no-inventa]]). */
+  "crtelite_color":"el color que elegiste para Apex (oro, naranja o esmeralda)",
+  "crtelite_cuerpo":"si el cuerpo pequeño de Roberto está puesto en Apex o retirado",
   "crtelite_iaconvs_v3":"vuestros chats",
   "crtelite_iaact_v3":"el chat abierto",
   "crtelite_ejectrades_v1":"las operaciones del Ejecutor",
@@ -889,12 +903,90 @@ let BAL    = load(K.bal, {bal:6000, pct:0.5, pips:10});
    (Apex + chat), se recuerda, y Roberto también puede cambiarlo (mano tema_apex).
    ============================================================ */
 function temaActual(){ try{ return localStorage.getItem("crtelite_tema")==="claro"?"claro":"oscuro"; }catch(_){ return "oscuro"; } }
+
+/* ============================================================
+   🎨 v7.284 — EL COLOR DE APEX (Rey, 19-10: «los tres me gustan, se quedan y los
+   personalizo cuando quiera… recuerda nada fijo»). Eje APARTE del claro/oscuro:
+   3 colores × 2 temas = 6 combinaciones, y las seis se leen bien porque el acento
+   del modo claro va oscurecido a mano en index.html.
+   El dorado de siempre no desaparece: «oro» ES ese dorado, subido de #F0C868 a
+   #FFB300. El problema nunca fue el color, era que estaba pálido sobre azul lavado.
+   ============================================================ */
+const COLORES = {
+  oro:       { n:"Oro vivo",  m:"#FFB300", m2:"#FFC94D", barra:"#0A0A0C", claro:"#8A6000" },
+  naranja:   { n:"Naranja",   m:"#FF6B00", m2:"#FF8A3D", barra:"#0A0A0C", claro:"#B03E00" },
+  esmeralda: { n:"Esmeralda", m:"#00D9C0", m2:"#4DE8D6", barra:"#0A0A0C", claro:"#00675C" },
+};
+function colorActual(){
+  try{ const c=localStorage.getItem("crtelite_color"); return COLORES[c] ? c : "oro"; }
+  catch(_){ return "oro"; }
+}
+function colorAplicar(c){
+  const v = COLORES[c] ? c : "oro";
+  try{ localStorage.setItem("crtelite_color", v); }catch(_){}
+  document.documentElement.setAttribute("data-color", v);
+  /* la barra del sistema la manda el TEMA, no el color: en claro es clara y en oscuro
+     grafito, da igual el acento. Se repinta aquí para que no se quede la de antes. */
+  try{ barraSistema(temaActual()); }catch(_){}
+  return v;
+}
+/* ============================================================
+   🚪 v7.284 — EL CUERPO PEQUEÑO DE ROBERTO, QUITABLE (Rey, 19-10).
+   Gemelo del interruptor del cuerpo grande. Tres mandos (el ojo del menú, la mano de
+   Roberto y lo que se ve en pantalla) y UN solo estado: no pueden contarse cosas
+   distintas. Por defecto PUESTO — quitarlo es la excepción, no la norma.
+   ============================================================ */
+function fabPuesto(){
+  try{ return localStorage.getItem("crtelite_cuerpo")!=="no"; }catch(_){ return true; }
+}
+function fabAplicar(){
+  const puesto=fabPuesto();
+  try{
+    const f=document.getElementById("fab"); if(f) f.classList.toggle("retirado", !puesto);
+    /* la nubecita no siempre es hermana del cuerpo en el DOM: se busca por su clase */
+    document.querySelectorAll(".rob-globo").forEach(g=>g.classList.toggle("retirado", !puesto));
+  }catch(_){}
+  try{ menuPintarRoberto(); }catch(_){}
+  return puesto;
+}
+function fabAlternar(){
+  const nuevo = !fabPuesto();
+  try{ localStorage.setItem("crtelite_cuerpo", nuevo?"si":"no"); }catch(_){}
+  fabAplicar();
+  /* y se le dice POR DÓNDE sigue entrando: sin esta frase, quitarlo parece perderlo */
+  try{ toast(nuevo ? "🫧 Roberto vuelve a la pantalla de Apex"
+                   : "🚪 Roberto retirado — háblale desde el menú ☰"); }catch(_){}
+  return nuevo;
+}
+
+function abrirColores(){
+  const act = colorActual();
+  const muestras = Object.keys(COLORES).map(k=>{
+    const c = COLORES[k];
+    return '<button class="col-b'+(k===act?" on":"")+'" data-col="'+k+'">'
+      + '<span class="col-m" style="background:linear-gradient(145deg,'+c.m+','+c.m2+')"></span>'
+      + esc(c.n) + '</button>';
+  }).join("");
+  abrirModal("🎨 El color de Apex",
+    '<div class="col-g">'+muestras+'</div>'
+    + '<p class="col-n">Cambia al instante y se recuerda. Funciona igual en '
+    + '<b>☀️ claro</b> y en <b>🌙 oscuro</b> — y también puedes pedírselo a Roberto de palabra '
+    + '(«ponme Apex en naranja»).</p>',
+    [{t:"Listo",cls:"gold",fn:cerrarModal}]);
+  /* se pinta al tocar, sin cerrar: así los compara de verdad en vez de a ciegas */
+  document.querySelectorAll("#modalOv .col-b").forEach(b=>{
+    b.onclick = ()=>{
+      colorAplicar(b.dataset.col);
+      document.querySelectorAll("#modalOv .col-b").forEach(x=>x.classList.toggle("on", x===b));
+    };
+  });
+}
 function temaAplicar(t){
   const v=(t==="claro")?"claro":"oscuro";
   try{ localStorage.setItem("crtelite_tema", v); }catch(_){}
   if(v==="claro") document.documentElement.setAttribute("data-tema","claro");
   else document.documentElement.removeAttribute("data-tema");
-  try{ const m=document.querySelector('meta[name="theme-color"]'); if(m) m.setAttribute("content", v==="claro"?"#EEF1F8":"#0C1024"); }catch(_){}
+  try{ const m=document.querySelector('meta[name="theme-color"]'); if(m) m.setAttribute("content", v==="claro"?"#F4F5F7":"#0A0A0C"); }catch(_){}
   barraSistema(v);
   return v;
 }
@@ -933,7 +1025,9 @@ function barraSistema(tema){
     if(!C || typeof C.isNativePlatform !== "function" || !C.isNativePlatform()) return;
     const SB = C.Plugins && C.Plugins.StatusBar; if(!SB) return;
     const claro = (tema||temaActual()) === "claro";
-    const fondo = claro ? "#EEF1F8" : "#0C1024";
+    /* 🎨 v7.284 — grafito, como el resto. Si la franja de Android se queda azul
+       marino, Apex arranca con una raya de otro color arriba y canta muchísimo. */
+    const fondo = claro ? "#F4F5F7" : "#0A0A0C";
     SB.setBackgroundColor({ color: fondo });
     SB.setNavigationBarColor && SB.setNavigationBarColor({ color: fondo });
     /* "Light" = fondo claro con iconos OSCUROS · "Dark" = fondo oscuro con iconos CLAROS */
@@ -945,7 +1039,9 @@ function temaAlternar(){
   try{ toast(v==="claro"?"☀️ Modo claro":"🌙 Modo oscuro"); }catch(_){}
 }
 try{ temaAplicar(temaActual()); }catch(_){}
+try{ colorAplicar(colorActual()); }catch(_){}   /* 🎨 v7.284 — antes de pintar nada */
 document.addEventListener("DOMContentLoaded", ()=>{ try{ const b=document.getElementById("btnTema"); if(b) b.onclick=temaAlternar; }catch(_){} });
+document.addEventListener("DOMContentLoaded", ()=>{ try{ const b=document.getElementById("btnColor"); if(b) b.onclick=abrirColores; }catch(_){} });
 
 /* Lista de estrategias registradas (nombres). Siempre existe "CRT Elite". */
 let ESTRATEGIAS = load(K.estr, ["CRT Elite"]);
@@ -8079,33 +8175,59 @@ function guardarAvisoForm(id){
 /* Orden por CÓMO SE USA EL DÍA, no por cuándo se construyó cada sección:
    1) planificar  →  2) el plan con Roberto  →  3) decidir  →  4) ejecutar
    →  5) registrar  →  6) revisar  →  7) datos  →  8) referencia de consulta. */
+/* 🗂️ v7.284 — los grupos dejan de ser comentarios y pasan a ser datos: el menú de la
+   orilla los pinta como cabeceras. El emoji (ic) se queda porque lo usan la ayuda y los
+   avisos; en el menú manda el icono de línea (ICONOS, más abajo). */
 const TABS=[
-  /* ── El día ── */
-  {id:"hoy",       ic:"🎯", n:"Hoy"},
-  {id:"arranque",  ic:"🧭", n:"Plan con Roberto"},
-  /* ── Antes de entrar ── */
-  {id:"checklist", ic:"✅", n:"Checklist"},
-  {id:"gatillo",   ic:"⚡", n:"Gatillo"},
-  {id:"riesgo",    ic:"💰", n:"Riesgo"},
-  /* ── Después de operar ── */
-  {id:"diario",    ic:"📒", n:"Diario"},
-  {id:"analisis",  ic:"📈", n:"Análisis"},
-  {id:"galeria",   ic:"🖼️", n:"Galería"},
-  {id:"cuentas",   ic:"🏦", n:"Cuentas"},
-  {id:"ejecutor",  ic:"🤖", n:"Ejecutor"},
-  /* ── Datos del mercado ── */
-  {id:"noticias",  ic:"📰", n:"Noticias"},
-  {id:"almanaque", ic:"📅", n:"Almanaque"},
-  {id:"avisos",    ic:"⏰", n:"Avisos"},
-  /* ── El templo: cuerpo y mente (no es trading, y a propósito) ── */
-  {id:"templo",    ic:"⛩️", n:"Mi templo"},
-  /* ── Consulta ── */
-  {id:"reglas",    ic:"⛔", n:"Reglas"},
-  {id:"conf",      ic:"🔗", n:"Confluencias"},
-  {id:"rutina",    ic:"🗺️", n:"Rutina"},
-  {id:"plan",      ic:"📋", n:"Plan"},
-  {id:"mentor",    ic:"🧠", n:"Mentor"}
+  {id:"hoy",       ic:"🎯", n:"Hoy",              g:"El día"},
+  {id:"arranque",  ic:"🧭", n:"Plan con Roberto", g:"El día"},
+  {id:"checklist", ic:"✅", n:"Checklist",        g:"Antes de entrar"},
+  {id:"gatillo",   ic:"⚡", n:"Gatillo",          g:"Antes de entrar"},
+  {id:"riesgo",    ic:"💰", n:"Riesgo",           g:"Antes de entrar"},
+  {id:"diario",    ic:"📒", n:"Diario",           g:"Después de operar"},
+  {id:"analisis",  ic:"📈", n:"Análisis",         g:"Después de operar"},
+  {id:"galeria",   ic:"🖼️", n:"Galería",          g:"Después de operar"},
+  {id:"cuentas",   ic:"🏦", n:"Cuentas",          g:"Después de operar"},
+  {id:"ejecutor",  ic:"🤖", n:"Ejecutor",         g:"Después de operar"},
+  {id:"noticias",  ic:"📰", n:"Noticias",         g:"Mercado"},
+  {id:"almanaque", ic:"📅", n:"Almanaque",        g:"Mercado"},
+  {id:"avisos",    ic:"⏰", n:"Avisos",           g:"Mercado"},
+  {id:"templo",    ic:"⛩️", n:"Mi templo",        g:"Cuerpo y mente"},
+  {id:"reglas",    ic:"⛔", n:"Reglas",           g:"Consulta"},
+  {id:"conf",      ic:"🔗", n:"Confluencias",     g:"Consulta"},
+  {id:"rutina",    ic:"🗺️", n:"Rutina",           g:"Consulta"},
+  {id:"plan",      ic:"📋", n:"Plan",             g:"Consulta"},
+  {id:"mentor",    ic:"🧠", n:"Mentor",           g:"Consulta"}
 ];
+
+/* 🎨 v7.284 — LOS ICONOS DE LÍNEA del menú. Los emojis los pinta cada sistema a su
+   manera (y en el teléfono de Rey salen de colores que pelean con el acento); un trazo
+   de 1,8 px hereda el color y se ve igual en todas partes. Sin relleno, a propósito. */
+const ICONOS = {
+  hoy:'<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>',
+  arranque:'<polygon points="3 11 22 2 13 21 11 13 3 11"/>',
+  checklist:'<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>',
+  gatillo:'<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>',
+  riesgo:'<path d="M12 1v22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>',
+  diario:'<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>',
+  analisis:'<path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/>',
+  galeria:'<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/>',
+  /* cartera, no edificio: el banco y el templo se dibujaban casi igual y en una lista de
+     19 filas dos iconos parecidos valen lo mismo que ninguno */
+  cuentas:'<path d="M19 7V5a2 2 0 0 0-2-2H5a2 2 0 0 0 0 4h15a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5"/><circle cx="17" cy="13" r="1.2"/>',
+  ejecutor:'<rect x="4" y="8" width="16" height="12" rx="2"/><path d="M12 8V4M9 4h6"/><circle cx="9" cy="14" r="1"/><circle cx="15" cy="14" r="1"/>',
+  noticias:'<path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2zm0 0a2 2 0 0 1-2-2v-9h4"/><path d="M18 14h-8M15 18h-5M10 6h8v4h-8z"/>',
+  almanaque:'<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>',
+  avisos:'<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M5 3L2 6M19 3l3 3"/>',
+  templo:'<path d="M3 21h18M5 21V9l7-5 7 5v12"/><path d="M9 21v-5a3 3 0 0 1 6 0v5"/>',
+  reglas:'<circle cx="12" cy="12" r="10"/><path d="M4.9 4.9l14.2 14.2"/>',
+  conf:'<circle cx="9" cy="12" r="6"/><circle cx="15" cy="12" r="6"/>',
+  rutina:'<polygon points="1 6 8 3 16 6 23 3 23 18 16 21 8 18 1 21 1 6"/><path d="M8 3v15M16 6v15"/>',
+  plan:'<path d="M9 2h6v4H9z"/><rect x="4" y="4" width="16" height="18" rx="2"/><path d="M9 12h6M9 16h4"/>',
+  mentor:'<path d="M12 5a3 3 0 1 0-5.9.8A3 3 0 0 0 4 12a3 3 0 0 0 2 5.2A3 3 0 0 0 12 19z"/><path d="M12 5a3 3 0 1 1 5.9.8A3 3 0 0 1 20 12a3 3 0 0 1-2 5.2A3 3 0 0 1 12 19z"/>',
+};
+const icono = (id) => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">'
+  + (ICONOS[id] || '<circle cx="12" cy="12" r="9"/>') + '</svg>';
 let TAB="hoy";
 
 
@@ -8245,25 +8367,78 @@ function buildNav(){
   });
 }
 
-/* Menú desplegable con todas las secciones (más claridad, menos espacio) */
+/* ═══════════════════════════════════════════════════════════════════════════════
+   🗂️ v7.284 — EL MENÚ DE LA ORILLA (Rey, 19-10: «el menú que siempre quise»).
+   Las 19 secciones agrupadas por cómo se usa el día, Roberto arriba del todo, y el
+   pie con quién eres y qué versión llevas. El `?` de cada sección sigue ahí.
+   ═══════════════════════════════════════════════════════════════════════════════ */
 function abrirMenu(){
   let ov=$("#menuOv");
   if(!ov){
     ov=el("div","menu-ov"); ov.id="menuOv";
     ov.innerHTML=`<div class="menu-sheet">
-      <div class="menu-h"><div class="t">Secciones</div><button class="x" id="menuX" aria-label="Cerrar">✕</button></div>
-      <div class="menu-grid" id="menuGrid"></div></div>`;
+      <div class="menu-h">
+        <div class="menu-mark">A</div>
+        <div class="t"><b>Apex</b><small>Trading desk</small></div>
+        <button class="x" id="menuX" aria-label="Cerrar">✕</button>
+      </div>
+      <div class="menu-grid" id="menuGrid"></div>
+      <div class="menu-pie">
+        <div class="menu-yo">
+          <div class="menu-yo-av">RC</div>
+          <div class="menu-yo-t"><b>Reinier Cainet</b><small id="menuVer">Apex</small></div>
+        </div>
+      </div></div>`;
     document.body.appendChild(ov);
     ov.onclick=e=>{ if(e.target===ov) cerrarMenu(); };
     $("#menuX").onclick=cerrarMenu;
   }
+
+  /* ── Roberto, el primero. Su cara es la misma que lleva en el chat. ── */
+  let rob='<button class="menu-rob" id="menuRob">'
+    + '<span class="menu-rob-av"><img src="caras/rob-analiza.png" alt=""><i></i></span>'
+    + '<span class="menu-rob-t"><b>Roberto</b><small id="menuRobEst">Háblale cuando quieras</small></span>'
+    + '</button>';
+  /* el ojo solo tiene sentido si su cuerpo existe en esta pantalla */
+  if(typeof fabPuesto==="function"){
+    rob = rob.replace('</button>',
+      '<span class="menu-ojo" id="menuOjo" role="button" tabindex="0" aria-label="Quitar o traer el cuerpo de Roberto">'
+      + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">'
+      + '<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></span></button>');
+  }
+
+  /* ── las secciones, por grupos ── */
+  let html=rob, grupo=null;
+  TABS.forEach(t=>{
+    if(t.g!==grupo){ grupo=t.g; html+='<div class="menu-g">'+esc(grupo)+'</div>'; }
+    html+='<div class="menu-item'+(t.id===TAB?" on":"")+'" data-go="'+t.id+'">'
+      + '<span class="mi-ic">'+icono(t.id)+'</span><span class="mi-t">'+esc(t.n)+'</span>'
+      + '<button class="mi-help" data-help="'+t.id+'" aria-label="¿Para qué sirve '+esc(t.n)+'?">?</button></div>';
+  });
   const g=$("#menuGrid");
-  g.innerHTML=TABS.map(t=>`<div class="menu-item${t.id===TAB?" on":""}" data-go="${t.id}">
-    <span class="mi-ic">${t.ic}</span><span class="mi-t">${esc(t.n)}</span>
-    <button class="mi-help" data-help="${t.id}" aria-label="¿Para qué sirve ${esc(t.n)}?">?</button></div>`).join("");
+  g.innerHTML=html;
   g.querySelectorAll(".menu-item").forEach(it=>{ it.onclick=()=>{ irA(it.dataset.go); cerrarMenu(); }; });
   g.querySelectorAll(".mi-help").forEach(b=>{ b.onclick=(e)=>{ e.stopPropagation(); cerrarMenu(); abrirAyuda(b.dataset.help); }; });
+
+  /* ── la puerta de Roberto que SIEMPRE está abierta: aunque quite su cuerpo, de
+     aquí entra igual. Apagar al muñeco no puede dejarle sin Roberto. ── */
+  const br=$("#menuRob");
+  if(br) br.onclick=()=>{ cerrarMenu(); try{ abrirIA(); }catch(_){ try{ $(".fab").click(); }catch(__){} } };
+  const ojo=$("#menuOjo");
+  if(ojo) ojo.onclick=(e)=>{ e.stopPropagation(); fabAlternar(); menuPintarRoberto(); };
+  menuPintarRoberto();
+
+  try{ const v=$("#menuVer"); if(v) v.textContent="Apex "+(typeof APP_VERSION!=="undefined"?APP_VERSION:""); }catch(_){}
   requestAnimationFrame(()=>ov.classList.add("show"));
+}
+/* el ojo y el texto de Roberto cuentan SIEMPRE lo mismo que se ve en pantalla */
+function menuPintarRoberto(){
+  try{
+    const puesto = (typeof fabPuesto==="function") ? fabPuesto() : true;
+    const ojo=$("#menuOjo"); if(ojo) ojo.classList.toggle("on", puesto);
+    const est=$("#menuRobEst");
+    if(est) est.textContent = puesto ? "Háblale cuando quieras" : "Retirado de tu pantalla · tócame AQUÍ";
+  }catch(_){}
 }
 function cerrarMenu(){ const o=$("#menuOv"); if(o) o.classList.remove("show"); }
 
@@ -14191,6 +14366,8 @@ const APEX_MAPA =
 "19. 🧬 Gemelo disciplinado (chip en 🧠, v6.35) — el espejo de su fuga de timing: su curva real vs la del Rey paralelo que solo entró 'En confirmación', con la diferencia en R y en DÓLARES y el desglose por momento de entrada. Números calculados por la app: tú interpretas y le das UNA acción para acercarse a su gemelo.\n"+
 "20. 🚨 Freno anti-tilt EN CALIENTE (v6.36, automático) — al registrarse la 2ª pérdida seguida del día, la app le pone un ALTO en pantalla con su propia estadística de revancha y 3 salidas: cerrar el día (apaga el Ejecutor), hablar contigo (llegas en modo emergencia emocional — protégelo), o seguir bajo su responsabilidad. Si te llega esa conversación 🚨, es EL momento más importante de tu trabajo.\n"+
 "21. 🌗 Tema claro/oscuro (v6.38) — Apex y tu chat se ven perfectos bajo el sol (☀️ claro) o de noche (🌙 oscuro, el clásico). Rey cambia con el botón 🌗 (encabezado de Apex o de tu chat) o TÚ con tu mano tema_apex si te lo pide de palabra ('ponme el modo claro') — es automática, sin tarjeta, instantánea y recordada.\n"+
+"21c. 🚪 TU CUERPO PEQUEÑO SE PUEDE QUITAR (v7.284) — el muñeco tuyo que flota DENTRO de Apex se retira con el ojo 👁 del menú ☰ (al lado de tu nombre) o con tu mano cuerpo_apex. Es el gemelo del interruptor del cuerpo GRANDE (el de encima del teléfono, en Ajustes): no los confundas. ⚠️ Quitarte el cuerpo NO te deja mudo — Rey sigue hablándote desde el menú, y tú tienes que DECÍRSELO cuando te quites, o creerá que te ha perdido.\n"+
+"21b. 🎨 EL COLOR DE APEX (v7.284) — APARTE del claro/oscuro, y los dos se combinan. Tres: ORO VIVO (el dorado de siempre, por defecto), NARANJA y ESMERALDA. Rey elige con el botón 🎨 del encabezado, o TÚ con tu mano color_apex ('ponme Apex en naranja'). Se recuerda. ⚠️ NO lo confundas con tema_apex: si te pide 'modo claro' es el TEMA; si te pide un COLOR, es éste. Y si te dice que Apex se ve apagada, el arreglo no es el tema: es que pruebe otro color.\n"+
 "22. 🌙 Dossier del amanecer (v6.39, automático) — cada madrugada (5:45 BR) TÚ preparas solo el informe del día (noche/Asia, plan semanal, noticias en hora de Brasil, cuentas, ventanas) y tu ritual 🌅 de las 6:30 lo presenta hecho. 📚 Repaso espaciado: tus lecciones vuelven solas a los 3/7/30 días con un aviso al mediodía (chip 📚 Repaso de lecciones). 📖 guardar_saber: al estudiar documentos de Rey, guardas lo valioso en tu biblioteca para siempre. 🎓 Y CADA DÍA a las 20:00 destilas solo las lecciones de las operaciones DE HOY del Ejecutor (v5.105 — tu veto de mañana ya las lleva).\n"+
 "23. 🗺️ HITOS DE REVISIÓN (v6.41, automático) — TÚ vigilas los datos y le dices a Rey CUÁNDO toca revisar cada chip: el bloque [🗺️ HITOS] de tu contexto te avisa cuando un chip acumuló registros nuevos suficientes (Simulacro/Gemelo cada 10 trades, Laboratorio/Progreso cada 15, Ejecutor cada 8 operaciones) — sugiéreselo con naturalidad y sin repetir; al abrirlo él, el hito se reinicia solo. Además, las secciones 📈 Análisis y 🧠 Mentor tienen botones directos a Simulacro/Gemelo/Laboratorio.\n"+
 "24. 🗂️ VISTA TOTAL Y LIMPIEZA DE CHATS (v6.42) — YA VES la estructura completa de conversaciones de Apex: en cada mensaje te llega el [🗂️ MAPA DE CHATS] (fijados 📌, importantes ⭐, últimos, cuál es el chat actual y cuánto pesa todo). Nunca más digas que no puedes ver los chats. Tus manos los alcanzan TODOS por título: organizar_chat (con el parámetro chat llegas a cualquiera; fijar/desfijar, ⭐, 🔍, y RENOMBRAR con titulo — automática, sin tarjeta) y borrar_chat (definitiva, SIEMPRE con la tarjeta de Rey). En la app, la lista de conversaciones ahora son CARPETAS PLEGABLES (📁 con contador — tocar abre/cierra). REGLA DE REY: Apex vive ordenada y LIMPIA — desfija tú lo vencido en cuanto lo veas, y cada DOMINGO en el análisis semanal revisa el mapa y sugiérele qué borrar porque ya no aporta (jamás borres sin su ✓). La caché vieja de la app se purga sola con cada actualización.\n"+
@@ -15168,6 +15345,7 @@ function iaInit(){
   document.body.appendChild(fab);
   hacerArrastrable(fab);
   setTimeout(robCuerpoMontar,60);
+  try{ fabAplicar(); }catch(_){}   /* 🚪 v7.284 — si Rey lo tenía retirado, no aparece */
 
   const ov=el("div","ia-ov"); ov.id="iaOv";
   ov.innerHTML=`
@@ -20610,6 +20788,10 @@ const IA_TOOLS = [
      terminada ([[apex-mano-y-vision-en-todo-lo-nuevo]]). Las marcas nacieron hoy sin las dos. */
   { name:"marcas_posicion", description:"ENCIENDE o APAGA las marcas automáticas de los % (25, 50 y 75% del camino de la entrada al TP) que se pintan solas dentro de la herramienta de posiciones de Rey cuando la pone en su gráfico. Úsalo cuando te diga «quítame las marcas», «me ensucian el gráfico», «vuelve a ponerlas». Necesita su PC con el Puente. El cambio se ve en el gráfico en menos de 20 segundos. Rey lo aprueba con tarjeta: es su gráfico.",
     input_schema:{ type:"object", properties:{ on:{type:"boolean",description:"true las enciende, false las apaga y quita las que haya"} }, required:["on"] } },
+  { name:"cuerpo_apex", description:"QUITA o TRAE tu propio cuerpo pequeño (el muñeco arrastrable dentro de Apex). 'quitar' lo retira de la pantalla; 'traer' lo devuelve. Úsalo si Rey te dice que le estorbas, que le tapas algo o que quiere la pantalla limpia — y también para volver. ⚠️ Esto NO es el cuerpo grande de encima del teléfono (ése es otro interruptor, el de Ajustes) y NO te deja mudo: aunque te quite el cuerpo, sigue hablándote desde el menú ☰. Díselo cuando lo quites. Cosmético y reversible: SIN tarjeta.",
+    input_schema:{ type:"object", properties:{ accion:{type:"string",enum:["quitar","traer"],description:"quitar = te retiras de la pantalla; traer = vuelves"} }, required:["accion"] } },
+  { name:"color_apex", description:"Cambia el COLOR de Apex (el acento: botones, títulos, dónde estás). Tres: 'oro' (el dorado de siempre, vivo), 'naranja' y 'esmeralda' (un verde-azulado). Es OTRA cosa que el tema claro/oscuro — se combinan, y Rey puede tener naranja de día y naranja de noche. Úsalo cuando te lo pida de palabra ('ponme Apex en naranja', 'quiero el verde'). Cosmético, instantáneo, recordado y reversible: SIN tarjeta.",
+    input_schema:{ type:"object", properties:{ color:{type:"string",enum:["oro","naranja","esmeralda"],description:"cuál de los tres"} }, required:["color"] } },
   { name:"tema_apex", description:"Cambia el TEMA VISUAL de Apex y del chat: 'claro' (☀️ para ver bien a plena luz del sol) u 'oscuro' (🌙 el clásico de la app). Úsalo cuando Rey te lo pida de palabra ('ponme el modo claro'). Es cosmético, instantáneo y reversible: se aplica SIN tarjeta.",
     input_schema:{ type:"object", properties:{ tema:{type:"string",enum:["claro","oscuro"]} }, required:["tema"] } },
   { name:"estrategia_vigente", description:"Marca una estrategia como ⭐ VIGENTE: la que MANDA en el 🤖 Ejecutor y en los análisis de señales (solo puede haber una). REGLA DURA: solo estrategias en estado ✅ Aprobada (pasaron el laboratorio con backtest y Rey las aprobó). OJO honestidad: hoy el Ejecutor solo sabe ejecutar señales de CRT Elite — si Rey pone vigente otra estrategia, adviértele que ejecutarla de verdad requiere que Claude le construya sus señales/reglas en una tanda de código. SIEMPRE con tarjeta.",
@@ -20741,6 +20923,8 @@ function describeTool(name, i){
   if(name==="marcas_posicion") return i.on
     ? "📐 ENCENDER las marcas de tus % (25 · 50 · 75% del camino al TP, el 75% en color) en tu herramienta de posiciones"
     : "📐 APAGAR las marcas de tus % y quitar las que estén puestas en el gráfico";
+  if(name==="cuerpo_apex") return (String(i.accion||"")==="traer"?"🫧 Volver a la pantalla de Apex":"🚪 Retirarse de la pantalla de Apex");
+  if(name==="color_apex") return "🎨 Poner Apex en color "+((COLORES[i.color]||COLORES.oro).n);
   if(name==="tema_apex") return "🌗 Cambiar el tema de Apex a modo "+(i.tema==="claro"?"☀️ CLARO":"🌙 OSCURO");
   if(name==="guardar_saber") return "📖 Guardar en su biblioteca: “"+String(i.texto||"").slice(0,140)+"”"+(i.fuente?(" (de: "+i.fuente+")"):"");
   return name+" "+JSON.stringify(i);
@@ -21356,6 +21540,19 @@ async function ejecutarTool(name, i){
       if(quedo !== quiere) return {ok:false, msg:"Le di a "+(quiere?"encender":"apagar")+" el modo moto y NO se aplicó. Míralo tú en el botón 🏍️."};
       return {ok:true, msg:quedo?"🏍️ Modo moto ENCENDIDO — te escucho por el casco.":"🏍️ Modo moto apagado."};
     }
+    if(name==="cuerpo_apex"){   /* 🚪 v7.284 — automática (cosmética y reversible) */
+      const quiere = String(i.accion||"").toLowerCase()!=="traer";
+      if(fabPuesto()===!quiere){ /* ya está como lo pide: no se toca ni se miente */ }
+      else fabAlternar();
+      return {ok:true,msg: quiere
+        ? "🚪 Me retiré de tu pantalla. Sigo aquí: tócame en el menú ☰, arriba del todo."
+        : "🫧 Ya he vuelto a tu pantalla. Arrástrame donde quieras."};
+    }
+    if(name==="color_apex"){   /* 🎨 v7.284 — automática (cosmética y reversible) */
+      const c = colorAplicar(i.color);
+      return {ok:true,msg:"🎨 Apex ya está en "+COLORES[c].n+"."
+        + (c!==String(i.color||"").toLowerCase() ? " (Me pediste «"+String(i.color)+"», que no es de los tres, así que la dejé en Oro vivo.)" : "")};
+    }
     if(name==="tema_apex"){   /* 🌗 v6.38 — automática (cosmética y reversible) */
       if(i.tema!=="claro" && i.tema!=="oscuro") return {ok:false,msg:"Tema inválido: usa 'claro' u 'oscuro'"};
       temaAplicar(i.tema);
@@ -21573,7 +21770,7 @@ function confirmarTool(tu){
      no guarda nada y no cambia nada suyo. Pedirle una tarjeta de confirmación para echar
      unas cuentas sería un paso de más entre su pregunta y su respuesta
      ([[apex-nada-que-rey-tenga-que-recordar]]). */
-  if(tu.name==="ver_chats" || tu.name==="organizar_chat" || tu.name==="buscar_memoria" || tu.name==="mirar_mis_entradas" || tu.name==="marcar_paso_plan" || tu.name==="registrar_veredicto" || tu.name==="tema_apex" || tu.name==="guardar_saber" || tu.name==="idea_estado" || tu.name==="evaluar_negocio"){
+  if(tu.name==="cuerpo_apex" || tu.name==="color_apex" || tu.name==="ver_chats" || tu.name==="organizar_chat" || tu.name==="buscar_memoria" || tu.name==="mirar_mis_entradas" || tu.name==="marcar_paso_plan" || tu.name==="registrar_veredicto" || tu.name==="tema_apex" || tu.name==="guardar_saber" || tu.name==="idea_estado" || tu.name==="evaluar_negocio"){
     return (async()=>{ let res; try{ res=await ejecutarTool(tu.name, tu.input); }catch(e){ res={ok:false,msg:"Error: "+e}; } if(res&&res.ok&&(tu.name==="organizar_chat"||tu.name==="marcar_paso_plan")) toast(res.msg); return {confirmed:true, res}; })();
   }
   return new Promise(resolve=>{
