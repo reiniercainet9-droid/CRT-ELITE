@@ -2235,7 +2235,7 @@ function antiTiltStats(){
   let n=0, g=0, r=0;
   Object.values(porDia).forEach(arr=>{
     for(let i=2;i<arr.length;i++){
-      if(parseFloat(arr[i-1].r)<0 && parseFloat(arr[i-2].r)<0){
+      if(esPerdida(arr[i-1]) && esPerdida(arr[i-2])){   /* 🛡️ 20-10 */
         const rv=parseFloat(arr[i].r); n++; r+=rv; if(rv>0.05) g++;
       }
     }
@@ -2244,13 +2244,13 @@ function antiTiltStats(){
 }
 function antiTiltCheck(t){
   try{
-    if(!t || t.abierta || !(parseFloat(t.r)<0)) return;
+    if(!t || t.abierta || !esPerdida(t)) return;   /* 🛡️ 20-10 */
     const hoy=t.fecha||hoyISO();
     const cron=(a,b)=>(((a.fecha||"")+(a.hora||""))<((b.fecha||"")+(b.hora||""))?-1:1);
     const deHoy=(Array.isArray(TRADES)?TRADES:[]).filter(x=>!x.abierta && x.fecha===hoy && x.modo===t.modo && !isNaN(parseFloat(x.r))).sort(cron);
     if(deHoy.length<2) return;
     const u=deHoy.slice(-2);
-    if(!(parseFloat(u[0].r)<0 && parseFloat(u[1].r)<0)) return;
+    if(!(esPerdida(u[0]) && esPerdida(u[1]))) return;   /* 🛡️ 20-10 */
     const key="crtelite_antitilt_"+hoy+"_"+(t.modo||"");
     try{ if(localStorage.getItem(key)) return; localStorage.setItem(key,"1"); }catch(_){}
     const st=antiTiltStats();
@@ -4141,12 +4141,49 @@ function apexResumen(ops, periodo){
    ⚠️ LO QUE ESTE PANEL NO HACE: decir si el sistema gana dinero. Eso son 30 casos y sale del
    laboratorio (Ley 37 de Rey). Esto mide la FORMA, no el resultado.
    ═══════════════════════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════════════════════════
+   🛡️ ¿QUÉ FUE ESTA OPERACIÓN? — 20-10, y es de dinero
+   ═══════════════════════════════════════════════════════════════════════════════════
+   Rey, con dos capturas: «se me registró un ST pero fue break-even… y en el registro
+   está solo UN break-even, no está contado el de hoy; las métricas cambiaron, ¿de dónde?».
+   MEDIDO en su teléfono, su operación del 20-10:   res:"BE"  ·  r:-0.01  ·  motivo:""
+   Cerrar en tu propia entrada te cuesta el spread, y vuelve en −0,01R. Hasta hoy, TODO
+   Apex decidía qué había sido una operación por el SIGNO del R, sin mirar jamás lo que la
+   propia operación dice que fue. Un break-even de −0,01R salía así:
+     · «STOPS HOY 1/2» — y a los 2 Apex le CIERRA la plataforma hasta mañana;
+     · perdedora en su acierto, en su profit factor y en su racha perdedora;
+     · en «por dónde salió cada una», en «sin dato», mientras res decía "BE".
+   Aquí no se deduce nada: se LEE lo que la operación trae escrito ([[apex-roberto-no-inventa]]).
+   ⚠️ Si un día un break-even llegara SIN etiqueta, seguiría contando por el signo: eso ya
+   sería un umbral, y los umbrales son de Rey ([[apex-reglas-en-manos-de-rey]]). */
+function esBE(t){
+  try{
+    if(!t) return false;
+    if(/^\s*be\s*$|break.?even|^empate/i.test(String(t.res||""))) return true;
+    /* ⚠️ el motivo es texto libre y «moví el stop a BE y luego saltó» es un STOP, no un
+       break-even: si el texto también nombra el stop o el objetivo, manda eso. */
+    const m = String(t.motivo||"");
+    if(/break.?even|\bBE\b/i.test(m) && !/\bSL\b|stop|\bTP\b|objetivo/i.test(m)) return true;
+    return false;
+  }catch(_){ return false; }
+}
+/* ❌ ¿fue una PÉRDIDA? — un break-even no lo es, aunque el spread lo deje en −0,01 */
+function esPerdida(t){
+  try{ if(esBE(t)) return false; const r=parseFloat(t&&t.r); return isFinite(r) && r<0; }catch(_){ return false; }
+}
+/* ✅ ¿fue una GANADORA? — simétrico, para que un BE no sume por ningún lado */
+function esGanada(t){
+  try{ if(esBE(t)) return false; const r=parseFloat(t&&t.r); return isFinite(r) && r>0; }catch(_){ return false; }
+}
+
 function apexEsperanza(ops){
   const l = (ops||[]).filter(o=>o && o.ts && (o.r!=null || o.pl!=null));
   const val = (o)=> (o.r!=null ? o.r : o.pl);
-  const gan = l.filter(o=>val(o) > 0.0001);
-  const per = l.filter(o=>val(o) < -0.0001);
-  const emp = l.filter(o=>Math.abs(val(o)) <= 0.0001);
+  /* 🛡️ 20-10 — lo que la operación DICE manda sobre el signo del R: ver esBE() */
+  const _be = (o)=> (typeof esBE==="function") ? esBE(o) : false;
+  const gan = l.filter(o=>!_be(o) && val(o) > 0.0001);
+  const per = l.filter(o=>!_be(o) && val(o) < -0.0001);
+  const emp = l.filter(o=>_be(o) || Math.abs(val(o)) <= 0.0001);
   const med = (arr, f)=> arr.length ? arr.reduce((s,o)=>s+f(o),0)/arr.length : null;
 
   /* en R si lo hay (comparable entre cuentas distintas); si no, en dinero */
@@ -4173,7 +4210,7 @@ function apexEsperanza(ops){
   let rachaG=0, rachaP=0, cg=0, cp=0;
   l.slice().sort((a,b)=>a.ts-b.ts).forEach(o=>{
     const x=val(o);
-    if(Math.abs(x)<=0.0001){ cg=0; cp=0; return; }
+    if(_be(o) || Math.abs(x)<=0.0001){ cg=0; cp=0; return; }   /* 🛡️ 20-10 */
     if(x>0){ cg++; cp=0; if(cg>rachaG) rachaG=cg; } else { cp++; cg=0; if(cp>rachaP) rachaP=cp; }
   });
 
@@ -5035,7 +5072,9 @@ function opsDelEjecutor(){
   return (ejecCerradas()||[]).filter(t=>t && t.tsOut)
     /* v7.96 — el MOTIVO viaja con la operación: sin él no se puede saber por dónde salió
        cada una, que es el diagnóstico que explica la forma de las ganancias. */
-    .map(t=>({ ts:t.tsOut, pl:(t.pl!=null?+t.pl:null), r:(t.r!=null?+t.r:null), motivo:t.motivo||"" }));
+    /* 🛡️ 20-10 — y el RES, que es lo que la operación dice que fue. Sin él, un break-even
+       cerrado en −0,01R llegaba al panel como una perdedora más ([[apex-un-be-no-es-un-stop]]). */
+    .map(t=>({ ts:t.tsOut, pl:(t.pl!=null?+t.pl:null), r:(t.r!=null?+t.r:null), motivo:t.motivo||"", res:t.res||"" }));
 }
 function opsDelDiario(){
   return (Array.isArray(TRADES)?TRADES:[])
@@ -5059,7 +5098,12 @@ function opsDelDiario(){
          Van también los tres del parcial, porque el reparto ✂️ los necesita juntos: sin
          ellos la operación cuenta entera por una sola puerta y vuelve a mentir sobre por
          dónde sale su dinero de verdad. */
-      return { ts, pl:null, r, motivo:t.motivo||"",
+      /* 🛡️ 20-10 — EL MISMO AGUJERO, OTRA VEZ, Y EN ESTA MISMA FUNCIÓN: el traductor se
+         dejaba `res` por el camino. Su break-even del 20-10 (res:"BE", r:-0.01, sin motivo
+         escrito) llegaba aquí sin nada que lo distinguiera de una pérdida, y la tarjeta lo
+         archivaba en «sin dato» mientras el dato estaba en el Diario
+         ([[apex-un-be-no-es-un-stop]], [[apex-declarar-no-es-dar]]). */
+      return { ts, pl:null, r, motivo:t.motivo||"", res:t.res||"",
                parcialHecho:t.parcialHecho===true, parcialPct:t.parcialPct, parcialR:t.parcialR };
     })
     .filter(o=>o.ts && o.r!=null);
@@ -9029,10 +9073,16 @@ function renderHoy(){
   const _lunISO=_iso(_lun);
   const _opsSem = _mias.filter(t=>String(t.fecha||"")>=_lunISO);
   const _rSem = _opsSem.reduce((a,t)=>a+_R(t),0);
-  const _gan = _opsSem.filter(t=>_R(t)>0).length;
-  const _pct = _opsSem.length ? Math.round(_gan/_opsSem.length*100) : null;
+  /* 🛡️ 20-10 — un break-even NO DECIDE nada, así que no puede bajarle el acierto.
+     Con su semana real (una sola operación, y break-even) esto le decía «0 de 1 · 0%»,
+     que se lee como «esta semana vas fallando» siendo que no ha perdido ni un céntimo.
+     El acierto se mide sobre las DECIDIDAS, igual que en el panel de estadísticas
+     ([[apex-un-be-no-es-un-stop]]). */
+  const _gan = _opsSem.filter(t=>esGanada(t)).length;
+  const _dec = _gan + _opsSem.filter(t=>esPerdida(t)).length;
+  const _pct = _dec ? Math.round(_gan/_dec*100) : null;
   /* el riesgo del día: lo que ya se ha gastado de su tope de 2 operaciones */
-  const _sl = _opsHoy.filter(t=>_R(t)<0).length;
+  const _sl = _opsHoy.filter(t=>esPerdida(t)).length;   /* 🛡️ 20-10: un BE no es un stop */
   const _signo=(x)=>(x>0?"+":"")+r1(x);
   const _clase=(x)=>x>0?" up":(x<0?" dn":"");
   h+=`<div class="hoy-fecha">${esc(fBR.charAt(0).toUpperCase()+fBR.slice(1))}</div>
@@ -9042,7 +9092,7 @@ function renderHoy(){
       <span class="dato-s">${_opsHoy.length?(_opsHoy.length+" de 2"):"sin operar"}</span></div>
     <div class="dato"><span class="dato-k">Semana</span>
       <span class="dato-v${_opsSem.length?_clase(_rSem):""}">${_opsSem.length?_signo(_rSem)+"R":"—"}</span>
-      <span class="dato-s">${_pct!=null?(_gan+" de "+_opsSem.length+" · "+_pct+"%"):"sin operar"}</span></div>
+      <span class="dato-s">${_pct!=null?(_gan+" de "+_dec+" · "+_pct+"%"):(_opsSem.length?"sin ganar ni perder":"sin operar")}</span></div>
     <div class="dato"><span class="dato-k">Stops hoy</span>
       <span class="dato-v${_sl>=2?" dn":""}">${_sl}<span style="font-size:15px;opacity:.5">/2</span></span>
       <span class="dato-s">${_sl>=2?"para hasta mañana":"margen para "+(2-_sl)}</span></div>
@@ -9075,7 +9125,7 @@ function renderHoy(){
     const riesgoPct=+c.riesgoPct||0.5;
     const hoyT=TRADES.filter(t=>t.cuenta===c.id && t.fecha===hoy && !t.abierta && t.modo==="real");
     const rHoy=hoyT.reduce((a,t)=>a+(parseFloat(t.r)||0),0);
-    const slHoy=hoyT.filter(t=>(parseFloat(t.r)||0)<0).length;
+    const slHoy=hoyT.filter(t=>esPerdida(t)).length;   /* 🛡️ 20-10 */
     const diaPct=rHoy*riesgoPct;
     const ddDaily=+c.ddDailyPct||0;
     const usadoDia=diaPct<0?Math.abs(diaPct):0;
@@ -9848,8 +9898,8 @@ function objMisNumeros(){
   try{
     const reales = (Array.isArray(TRADES)?TRADES:[]).filter(t=>t.modo!=="backtest" && !t.abierta && t.r!==undefined && t.r!=="" && !isNaN(parseFloat(t.r)));
     if(reales.length < OBJ_MIN_TRADES) return { pocas:true, n:reales.length };
-    const g = reales.filter(t=>parseFloat(t.r)>0);
-    const p = reales.filter(t=>parseFloat(t.r)<0);
+    const g = reales.filter(t=>esGanada(t));   /* 🛡️ 20-10 */
+    const p = reales.filter(t=>esPerdida(t));
     const mediaG = g.length ? g.reduce((a,t)=>a+parseFloat(t.r),0)/g.length : 0;
     const mediaP = p.length ? Math.abs(p.reduce((a,t)=>a+parseFloat(t.r),0)/p.length) : 1;
     return { pocas:false, n:reales.length, wr:(g.length/reales.length*100), rr:(mediaP>0?mediaG/mediaP:mediaG) };
@@ -11643,6 +11693,10 @@ function deduceMargen(){
 }
 function dedujeLaSalida(o, objetivoRR){
   try{
+    /* 🛡️ 20-10 — PRIMERO lo que la operación DICE que fue. Su BE del 20-10 traía
+       res:"BE" y caía en «sin dato» porque aquí solo se miraba el R. Esto NO es una
+       deducción (no lleva 🔎): es leer el dato que ya estaba escrito. */
+    if(typeof esBE==="function" && esBE(o)) return "BE";
     const r = Number(o && o.r);
     if(!isFinite(r)) return null;
     const m = deduceMargen();
@@ -11689,9 +11743,10 @@ function metricas(list){
     .filter(Boolean);
   const n=list.length;
   if(!n) return null;
-  const wins  = list.filter(t=>t.r>0);
-  const loss  = list.filter(t=>t.r<0);
-  const bes   = list.filter(t=>t.r===0);
+  /* 🛡️ 20-10 — lo que la operación DICE manda sobre el signo del R: ver esBE() */
+  const wins  = list.filter(t=>esGanada(t));
+  const loss  = list.filter(t=>esPerdida(t));
+  const bes   = list.filter(t=>esBE(t) || t.r===0);
   const decisivos = wins.length+loss.length;
 
   const rNeto = list.reduce((a,t)=>a+t.r,0);
@@ -11726,8 +11781,8 @@ function metricas(list){
   // Rachas (incluye la actual)
   let maxW=0,maxL=0,cw=0,cl=0,rachaActual=0,tipoRacha="";
   list.forEach(t=>{
-    if(t.r>0){ cw++; cl=0; if(cw>maxW)maxW=cw; rachaActual=cw; tipoRacha="W"; }
-    else if(t.r<0){ cl++; cw=0; if(cl>maxL)maxL=cl; rachaActual=cl; tipoRacha="L"; }
+    if(esGanada(t)){ cw++; cl=0; if(cw>maxW)maxW=cw; rachaActual=cw; tipoRacha="W"; }   /* 🛡️ 20-10 */
+    else if(esPerdida(t)){ cl++; cw=0; if(cl>maxL)maxL=cl; rachaActual=cl; tipoRacha="L"; }
     else { cw=0; cl=0; rachaActual=0; tipoRacha="BE"; }
   });
 
@@ -13482,7 +13537,7 @@ function planRachaDisciplina(){
   if(!lista.length) return { dias:0, trades:0, roto:null, gym:gym.length, diasGym };
   const porDia={};
   lista.forEach(t=>{ (porDia[t.fecha]=porDia[t.fecha]||[]).push(t); });
-  const malDia=f=>{ const d=porDia[f]||[]; return d.length>2 || d.filter(t=>(parseFloat(t.r)||0)<0).length>=2; };
+  const malDia=f=>{ const d=porDia[f]||[]; return d.length>2 || d.filter(t=>esPerdida(t)).length>=2; };   /* 🛡️ 20-10 */
   /* primer día con trades en vivo (para no contar racha desde el principio de los tiempos) */
   const fechas=Object.keys(porDia).sort();
   const desde=new Date(fechas[0]+"T12:00:00");
@@ -13506,7 +13561,7 @@ function planMesesReal(){
   const limpio=m=>{
     const porDia={};
     meses[m].forEach(t=>{ (porDia[t.fecha]=porDia[t.fecha]||[]).push(t); });
-    return Object.keys(porDia).every(f=>porDia[f].length<=2 && porDia[f].filter(t=>(parseFloat(t.r)||0)<0).length<2);
+    return Object.keys(porDia).every(f=>porDia[f].length<=2 && porDia[f].filter(t=>esPerdida(t)).length<2);   /* 🛡️ 20-10 */
   };
   return { meses:cerrados.filter(limpio).length, mes:mesHoy };
 }
@@ -13829,7 +13884,7 @@ function guardianRiesgo(){
     const riesgoPct=+c.riesgoPct||0.5;
     const hoyT=TRADES.filter(t=>t.cuenta===c.id && t.fecha===hoy && !t.abierta && t.modo==="real");
     const rHoy=hoyT.reduce((a,t)=>a+(parseFloat(t.r)||0),0);
-    const slHoy=hoyT.filter(t=>(parseFloat(t.r)||0)<0).length;
+    const slHoy=hoyT.filter(t=>esPerdida(t)).length;   /* 🛡️ 20-10 */
     const diaPct=rHoy*riesgoPct;                       // % del capital ganado/perdido hoy (aprox por R)
     const ddDaily=+c.ddDailyPct||0, ddMax=+c.ddMaxPct||0;
     const usadoDia=diaPct<0?Math.abs(diaPct):0;
@@ -13963,7 +14018,7 @@ function estadoRecuperacionFreno(){
     const st=statsCuenta(c);
     const riesgoPct=+c.riesgoPct||0.5;
     const hoyT=TRADES.filter(t=>t.cuenta===c.id && t.fecha===hoy && !t.abierta && t.modo==="real");
-    const slHoy=hoyT.filter(t=>(parseFloat(t.r)||0)<0).length;
+    const slHoy=hoyT.filter(t=>esPerdida(t)).length;   /* 🛡️ 20-10 */
     const rHoy=hoyT.reduce((a,t)=>a+(parseFloat(t.r)||0),0);
     const diaPct=rHoy*riesgoPct;
     const ddDaily=+c.ddDailyPct||0, ddMax=+c.ddMaxPct||0;

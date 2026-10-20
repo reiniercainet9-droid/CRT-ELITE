@@ -1,13 +1,50 @@
-APEX v7.289 — TRADING DESK
+APEX v7.292 — TRADING DESK
 =========================
 
-🩹 LA CABECERA CABE ENTERA
+🛡️ UN BREAK-EVEN YA NO TE CUENTA COMO UN STOP
 
-«TRADING DESK · REY» te salía cortado con puntos suspensivos.
+Me enseñaste dos cosas que parecían distintas y eran la misma.
 
-Lo medí en tu teléfono en vez de ajustarlo a ojo: tu pantalla son 387 px y al subtítulo le
-faltaban 6 px justos. Se los quité del espaciado entre letras —que es de donde menos se
-nota— y del cuadro del logo. Ahora sobran 15 px.
+Tu operación de hoy (GBPUSD, 08:19) estaba BIEN registrada: res "BE", break-even. Lo que
+pasa es que cerrar en tu propia entrada te cuesta el spread, y volvió en −0,01R. Y hasta
+hoy Apex decidía qué había sido cada operación mirando solo el SIGNO del R, sin leer nunca
+lo que la operación dice que fue.
+
+De ahí salían tus dos capturas:
+
+· «STOPS HOY 1/2» — un break-even de −0,01R te comía medio día. Y a los 2 stops Apex te
+  cierra la plataforma hasta mañana, así que no era cosmético: te quedaba un solo stop de
+  margen cuando te quedaban dos.
+
+· El break-even que faltaba — «por dónde salió cada una» clasifica por el texto del motivo.
+  La del 14-10 lo trae escrito; la de hoy venía con el motivo vacío, y el deductor solo
+  sabía mirar el R: no es −1, no es tu objetivo → «sin dato». Por eso las métricas SÍ
+  cambiaron (la de hoy está contada en las 11) pero el break-even no aparecía.
+
+Y había un tercer tramo, el que hacía que la tabla siguiera diciendo 1: quien le pasa tus
+operaciones al panel se dejaba por el camino justo ese campo. Daba igual que el Diario lo
+guardara bien; al panel llegaba sin él. Ya viaja entero, desde el Diario y desde el robot.
+
+AHORA la regla vive en un solo sitio y la leen los quince: lo que la operación DICE que fue
+manda sobre el signo del R. No se deduce nada, se lee lo que ya estaba escrito.
+
+Dónde se nota:
+· STOPS HOY y el freno de las 2 SL
+· tu acierto, tu profit factor, tu esperanza y tu racha perdedora
+· «por dónde salió cada una»: tus break-even son 2, no 1
+· tu racha de días limpios y tus meses limpios (fondeo)
+· el aviso anti-tilt, que ya no se dispara con un break-even
+· el dossier del Guardián: Roberto deja de verte un stop que no existe
+· y el recuadro SEMANA de Hoy: una semana con un solo break-even te decía «0 de 1 · 0%»,
+  que se lee como «vas fallando» sin haber perdido un céntimo. El acierto se mide ahora
+  sobre las DECIDIDAS, y si no hay ninguna dice «sin ganar ni perder».
+
+Lo que NO cambia, a propósito: una pérdida sigue siendo una pérdida. Tu −0,19R del 06-10
+cerrada a mano cuenta igual, y un «moví el stop a BE y luego saltó» cuenta como stop, no
+como break-even. No se te regala nada.
+
+⚠️ Si algún día un break-even llegara SIN su etiqueta, volvería a contar por el signo. Eso
+ya es un umbral, y los umbrales los pones tú: dímelo y lo hacemos ajustable.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
