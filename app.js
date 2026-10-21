@@ -9036,66 +9036,175 @@ function viewHoy(){
 }
 /* Último contexto del gráfico: primero el que dejó el Puente/indicador (📡 latido), si lo hay */
 let HOY_CTX=null;
-/* 📈 v7.293 (21-10) — EL PANEL DEL GRÁFICO, DENTRO DE APEX
+/* 📈 v7.294 (21-10) — EL PANEL, EXACTAMENTE EL RECUADRO DEL GRÁFICO
    ═══════════════════════════════════════════════════════════════════════════════════
-   Rey: «¿puedo tener el mismo panel del gráfico en Apex, al mismo tiempo que suceden las
-   cosas, para que al abrir Hoy ya vea todo el panorama sin abrir TradingView?».
-   MEDIDO: el panel ENTERO ya le llega. El Puente lo deja en /tvctx y trae sesgo, estado,
-   killzone, zona, setup, fase 3, CRT de H4 y D, estructura, invalidación, alineación de
-   temporalidades, SMT, liquidez, vela 4H y los PDH/PDL. Lo que fallaba no era el dato: la
-   app lo volcaba CRUDO en un bloque de texto, y casi al final de Hoy.
-   ⚠️ /tvctx sin `sym` devuelve SOLO el par más fresco, así que se pide uno por uno: con dos
-   pares vivos, enseñarle uno y callar el otro sería enseñarle medio panorama. */
-let HOY_CTX_P = {};          /* { EURUSD:{ctx,ts,sym}, GBPUSD:{…} } */
+   Rey, con la foto de su pantalla: «es la forma exacta de cómo está en el gráfico, el mismo
+   recuadro todo, no en letras corridas como llegan a Apex, y que funcione igual que el
+   gráfico y al mismo tiempo de actualización según pasa en el gráfico».
+   MEDIDO HOY, y resultó mucho más sencillo de lo que parecía: **el Puente YA empuja la tabla
+   ENTERA** —sus 16 filas, con los nombres y los emojis tal como los dibuja el indicador— en
+   cada vuelta de 20 s, dentro de `/chart/state`. Lleva meses viajando y nadie la leía: la
+   app se conformaba con el renglón del latido 📡, que es un RESUMEN de 15 min pensado para
+   que ROBERTO razone con la PC apagada, no para que Rey lo lea.
+   Comprobado en vivo al escribir esto: `edad_seg 2`, los dos pares, 16 filas cada uno.
+   Así que hay DOS fuentes y el panel dice de cuál está bebiendo:
+     · el GRÁFICO (`/chart/state`) — la tabla LITERAL, de hace segundos, con su PC viva;
+     · el INDICADOR (`/tvctx`) — el latido, hasta 15 min viejo, con su PC apagada.
+   La segunda se TRADUCE a las mismas filas y al mismo orden que la primera (el latido
+   abrevia: «KZ», «Inval», «Vela4H», y junta en una línea lo que el gráfico enseña en dos),
+   para que el recuadro sea SIEMPRE el mismo recuadro y él no aprenda dos formatos.
+   ⚠️ Se deshace la abreviatura del NOMBRE y nada más: el valor va tal cual llega, y lo que
+   el latido no trae no se inventa ([[apex-roberto-no-inventa]], [[apex-la-alarma-va-tal-cual]]). */
+let HOY_CTX_P = {};          /* { EURUSD:{par,tf,precio,titulo,filas,ts,via}, … } */
 let HOY_CTX_SEL = "";        /* el par que está mirando */
 const ctxClave = (p)=>String(p||"").toUpperCase().replace(/[^A-Z0-9]/g,"");
 let HOY_CTX_PIDE = 0;
-async function hoyCargarCtx(){
-  /* 🚦 v7.293 — un portero de 20 s. Ahora esto lo llama también renderHoy() (para que el
-     panel esté fresco al entrar) y renderHoy se vuelve a llamar cuando llegan los datos:
-     sin este freno se harían preguntas a la nube en bucle. */
-  if(Date.now() - HOY_CTX_PIDE < 20000) return;
-  HOY_CTX_PIDE = Date.now();
-  try{
-    const pares = (Array.isArray(PARES)&&PARES.length) ? PARES : ["EUR/USD","GBP/USD"];
-    const claves = [...new Set(pares.map(ctxClave).filter(Boolean))];
-    const res = await Promise.all(claves.map(async (k)=>{
-      try{
-        const r = await fetch(nubeUrl()+"/tvctx?sym="+encodeURIComponent(k), {cache:"no-store"});
-        if(!r.ok) return null;
-        const d = await r.json();
-        return (d && d.ok && d.ctx) ? {k, d} : null;
-      }catch(_){ return null; }
-    }));
-    let hubo=false;
-    res.forEach(x=>{ if(x){ HOY_CTX_P[x.k]=x.d; hubo=true; } });
-    if(hubo){
-      /* el más fresco manda mientras él no elija otro */
-      if(!HOY_CTX_SEL || !HOY_CTX_P[HOY_CTX_SEL])
-        HOY_CTX_SEL = Object.keys(HOY_CTX_P).sort((a,b)=>(HOY_CTX_P[b].ts||0)-(HOY_CTX_P[a].ts||0))[0] || "";
-      HOY_CTX = HOY_CTX_P[HOY_CTX_SEL] || null;
-      if(TAB==="hoy") renderHoy();
-    }
-  }catch(_){}
+/* la temporalidad como la escribe él, no como la numera TradingView («240» → «4H») */
+function ctxTf(res){
+  const s = String(res==null?"":res).trim().toUpperCase();
+  if(!s) return "";
+  if(s==="1D"||s==="D") return "D";
+  if(s==="1W"||s==="W") return "S";
+  const n = parseInt(s,10);
+  if(isFinite(n) && String(n)===s) return (n>=60 && n%60===0) ? (n/60)+"H" : n+"m";
+  return s;
 }
 
-/* 🔎 El renglón del indicador, leído como lo que es: una cabecera y una lista de datos.
-   Formato real: «📊 CONTEXTO v3.14 GBPUSD 5 @ 1.33754 | Sesgo: … | Estado: … | …»
-   Lo que no trae dos puntos (los PDH/PDL) va entero en su línea: partirlo a ojo sería
-   inventarle una etiqueta ([[apex-roberto-no-inventa]]). */
-function ctxLeer(raw){
+/* 📊 LA TABLA DEL GRÁFICO, LITERAL. Cada fila llega «Nombre | Valor», tal como la pinta el
+   indicador en su recuadro. Aquí no se traduce nada: se parte por la barra y ya.
+   La primera fila es el título del recuadro («CRT ELITE v3.14 | Lectura»). */
+function ctxDelGrafico(p, ts){
+  try{
+    const crudas = (p && p.tablas && p.tablas[0] && p.tablas[0].rows) || [];
+    if(!crudas.length) return null;
+    const par = ctxClave(String((p&&p.symbol)||"").replace(/^.*:/,""));
+    if(!par) return null;
+    let titulo = "";
+    const filas = [];
+    crudas.forEach((r,i)=>{
+      const s = String(r==null?"":r).replace(/\s+/g," ").trim();
+      if(!s) return;
+      if(i===0 && /CRT\s*ELITE/i.test(s)){ titulo = s.replace(/\s*\|\s*/g," · "); return; }
+      const j = s.indexOf("|");
+      if(j>0) filas.push({ k:s.slice(0,j).trim(), v:s.slice(j+1).trim() });
+      else filas.push({ k:"", v:s });
+    });
+    if(!filas.length) return null;
+    return { par, tf:ctxTf(p.resolution), precio:(p.price==null?"":String(p.price)),
+             titulo, filas, ts:(+ts||Date.now()), via:"grafico" };
+  }catch(_){ return null; }
+}
+
+/* 📡 EL LATIDO DEL INDICADOR, PUESTO EN LAS MISMAS FILAS QUE EL RECUADRO.
+   Formato real: «📡 📊 CONTEXTO v3.14 GBPUSD 5 @ 1.33754 | Sesgo: … | Estado: … | …»
+   El latido ABREVIA los nombres y mete en UNA línea lo que el gráfico enseña en dos
+   (AlinTF = confluencia + alineación). Se deshace esa abreviatura y nada más. */
+const CTX_NOMBRES = [
+  ["KZ",         "Killzone"],
+  ["Sesgo",      "Sesgo del día"],
+  ["Estado",     "Estado día"],
+  ["CRT H4",     "CRT H4"],
+  ["CRT D",      "CRT D (rango)"],
+  ["Inval",      "Nivel invalidación"],
+  ["Zona",       "Zona P/D"],
+  ["Setup",      "Setup"],
+  ["F3",         "Secuencia F3"],
+  ["AlinTF",     "Confluencia TF"],
+  ["Estructura", "Estructura"],
+  ["SMT",        "SMT"],
+  ["Vivo",       "Día en vivo"],
+  ["Vela4H",     "Vela activa"]
+];
+function ctxLeer(raw, ts){
   const t = String(raw||"").replace(/\s+/g," ").trim();
   if(!t) return null;
   const trozos = t.split("|").map(s=>s.trim()).filter(Boolean);
   const cab = trozos.shift() || "";
   const m = cab.match(/CONTEXTO\s+v?([\d.]+)?\s*([A-Z]{3,12})\s+(\S+)\s*@\s*([\d.]+)/i);
-  const filas = trozos.map(s=>{
+  /* lo que trae nombre se guarda por su nombre; lo que no (los PDH/PDL, sus avisos) entero:
+     partirlo a ojo sería inventarle una etiqueta */
+  const dicho = {}, sueltas = [];
+  trozos.forEach(s=>{
     const i = s.indexOf(":");
-    if(i < 1 || i > 22) return { k:"", v:s };
-    return { k:s.slice(0,i).trim(), v:s.slice(i+1).trim() };
+    if(i < 1 || i > 22){ sueltas.push(s); return; }
+    dicho[s.slice(0,i).trim()] = s.slice(i+1).trim();
   });
-  return { ver:(m&&m[1])||"", par:(m&&m[2])||"", tf:(m&&m[3])||"", precio:(m&&m[4])||"", filas };
+  const filas = [], puesto = {};
+  CTX_NOMBRES.forEach(function(par){
+    const clave = par[0], nombre = par[1], v = dicho[clave];
+    if(v==null) return;
+    puesto[clave] = 1;
+    if(clave==="AlinTF"){
+      /* «2/5 (ref D, no se cuenta) W🟢D🟢4H🔴…» → dos filas, como en su recuadro */
+      const corte = v.search(/W\s*(🟢|🔴|🟡|⚪)/);
+      if(corte > 0){
+        filas.push({ k:nombre, v:v.slice(0,corte).trim() });
+        filas.push({ k:"Alineación TF", v:v.slice(corte).trim() });
+        return;
+      }
+    }
+    filas.push({ k:nombre, v:v });
+  });
+  /* y lo que el latido trae DE MÁS (filtros, liquidez, los PDH/PDL) detrás, con su nombre */
+  Object.keys(dicho).forEach(k=>{ if(!puesto[k]) filas.push({ k:k, v:dicho[k] }); });
+  sueltas.forEach(s=>filas.push({ k:"", v:s }));
+  if(!filas.length) return null;
+  return { par:(m&&ctxClave(m[2]))||"", tf:ctxTf(m&&m[3]), precio:(m&&m[4])||"",
+           titulo:"CRT Elite"+((m&&m[1])?(" v"+m[1]):"")+" · Lectura",
+           filas:filas, ts:(+ts||Date.now()), via:"indicador" };
 }
+/* 🚦 EL PORTERO, de 20 s — que es justo la vuelta del Puente. Esto lo llama renderHoy (para
+   que el panel esté fresco al entrar) y renderHoy se vuelve a llamar cuando llegan los
+   datos: sin freno serían preguntas a la nube en bucle. */
+async function hoyCargarCtx(){
+  if(Date.now() - HOY_CTX_PIDE < 20000) return;
+  HOY_CTX_PIDE = Date.now();
+  const pares = (Array.isArray(PARES)&&PARES.length) ? PARES : ["EUR/USD","GBP/USD"];
+  const claves = [...new Set(pares.map(ctxClave).filter(Boolean))];
+  /* 1) EL GRÁFICO: la tabla literal que el Puente empuja cada 20 s */
+  const delGrafico = {};
+  try{
+    const r = await fetch(nubeUrl()+"/chart/state", {cache:"no-store"});
+    if(r.ok){
+      const d = await r.json();
+      if(d && Array.isArray(d.pares))
+        d.pares.forEach(p=>{ const x = ctxDelGrafico(p, d.ts); if(x) delGrafico[x.par] = x; });
+    }
+  }catch(_){}
+  /* 2) EL INDICADOR, solo para el par que el gráfico NO haya traído (su PC apagada, o esa
+     pestaña caída). Uno por uno: /tvctx sin `sym` devuelve solo el más fresco, y enseñarle
+     un par callando el otro sería enseñarle medio panorama. */
+  const faltan = claves.filter(k=>!delGrafico[k]);
+  const delLatido = {};
+  if(faltan.length){
+    const res = await Promise.all(faltan.map(async (k)=>{
+      try{
+        const r = await fetch(nubeUrl()+"/tvctx?sym="+encodeURIComponent(k), {cache:"no-store"});
+        if(!r.ok) return null;
+        const d = await r.json();
+        if(!(d && d.ok && d.ctx)) return null;
+        const x = ctxLeer(d.ctx, d.ts);
+        return x ? {k:k, x:x} : null;
+      }catch(_){ return null; }
+    }));
+    res.forEach(o=>{ if(o){ o.x.par = o.x.par || o.k; delLatido[o.k] = o.x; } });
+  }
+  const nuevo = {};
+  claves.forEach(k=>{ const x = delGrafico[k] || delLatido[k]; if(x) nuevo[k] = x; });
+  /* si el gráfico trae un par que él no tiene configurado en Apex, se enseña igual: lo tiene
+     abierto en TradingView, así que es suyo ([[apex-no-elegir-por-rey]]) */
+  Object.keys(delGrafico).forEach(k=>{ if(!nuevo[k]) nuevo[k] = delGrafico[k]; });
+  if(!Object.keys(nuevo).length) return;
+  const antes = JSON.stringify(Object.keys(HOY_CTX_P).sort().map(k=>[k,HOY_CTX_P[k].ts]));
+  HOY_CTX_P = nuevo;
+  /* el más fresco manda mientras él no elija otro */
+  if(!HOY_CTX_SEL || !HOY_CTX_P[HOY_CTX_SEL])
+    HOY_CTX_SEL = Object.keys(HOY_CTX_P).sort((a,b)=>(HOY_CTX_P[b].ts||0)-(HOY_CTX_P[a].ts||0))[0] || "";
+  HOY_CTX = HOY_CTX_P[HOY_CTX_SEL] || null;
+  const ahora = JSON.stringify(Object.keys(HOY_CTX_P).sort().map(k=>[k,HOY_CTX_P[k].ts]));
+  if(TAB==="hoy" && ahora!==antes) renderHoy();
+}
+
 /* el tono sale de lo que YA dice el dato, no de una lista mía de palabras */
 function ctxTono(v){
   const s = String(v||"");
@@ -9104,11 +9213,16 @@ function ctxTono(v){
   if(/⚠️|🟡/.test(s)) return "wa";
   return "";
 }
-function ctxHace(ts){
+/* ⏱️ Y «viejo» no es lo mismo según de dónde venga: el gráfico se refresca cada 20 s (a los
+   3 min, algo pasa), y el latido del indicador llega cada 15 (hasta 20 min es normal).
+   Un mismo plazo para los dos daría un rojo falso o taparía uno de verdad
+   ([[apex-la-ventana-fija-miente]]). */
+function ctxHace(ts, limiteMin){
+  const lim = (+limiteMin>0) ? +limiteMin : 20;
   const s = Math.max(0, Math.round((Date.now()-(+ts||0))/1000));
-  if(s < 90) return { txt:"hace "+s+" s", viejo:false };
-  const mi = Math.round(s/60);
-  if(mi < 60) return { txt:"hace "+mi+" min", viejo: mi>=20 };
+  const mi = s/60;
+  if(s < 90) return { txt:"hace "+s+" s", viejo: mi>=lim };
+  if(s < 3600) return { txt:"hace "+Math.round(mi)+" min", viejo: Math.round(mi)>=lim };
   return { txt:"hace "+Math.round(mi/60)+" h", viejo:true };
 }
 /* El panel entero. Si no hay nada que enseñar, se dice; no se finge un panorama. */
@@ -9118,20 +9232,22 @@ function ctxPanelHTML(){
     return '<div class="card"><div class="card-h"><span class="ic">📈</span><h2>El panel de tu gráfico</h2></div>'
          + '<p class="desc">Todavía no ha llegado. Lo manda tu Puente desde TradingView; si está parado, aquí no hay nada que enseñarte.</p></div>';
   const sel = HOY_CTX_P[HOY_CTX_SEL] ? HOY_CTX_SEL : claves[0];
-  const d = HOY_CTX_P[sel];
-  const p = ctxLeer(d && d.ctx);
-  if(!p) return "";
-  const edad = ctxHace(d.ts);
+  const p = HOY_CTX_P[sel];
+  if(!p || !p.filas || !p.filas.length) return "";
+  const vivo = (p.via === "grafico");
+  const edad = ctxHace(p.ts, vivo ? 3 : 20);
   const tabs = claves.length>1
     ? '<div class="pan-tabs">' + claves.slice().sort().map(k=>{
-        const e = ctxHace(HOY_CTX_P[k].ts);
+        const o = HOY_CTX_P[k];
+        const e = ctxHace(o.ts, o.via==="grafico" ? 3 : 20);
         return '<button class="pan-tab'+(k===sel?" on":"")+'" data-par="'+esc(k)+'">'+esc(k)+'<span>'+esc(e.txt)+'</span></button>';
       }).join("") + '</div>'
     : "";
+  /* el recuadro: dos columnas, nombre y valor, como en su pantalla de TradingView */
   const filas = p.filas.map(f=>{
     const tono = ctxTono(f.v);
-    if(!f.k) return '<div class="pan-f ancha"><span class="pan-v '+tono+'">'+esc(f.v)+'</span></div>';
-    return '<div class="pan-f"><span class="pan-k">'+esc(f.k)+'</span><span class="pan-v '+tono+'">'+esc(f.v)+'</span></div>';
+    if(!f.k) return '<div class="pan-v ancha '+tono+'">'+esc(f.v)+'</div>';
+    return '<div class="pan-k">'+esc(f.k)+'</div><div class="pan-v '+tono+'">'+esc(f.v)+'</div>';
   }).join("");
   return '<div class="card pan">'
     + '<div class="card-h"><span class="ic">📈</span><h2>El panel de tu gráfico</h2>'
@@ -9139,7 +9255,16 @@ function ctxPanelHTML(){
     + tabs
     + '<div class="pan-cab"><div class="pan-par">'+esc(p.par||sel)+'<span>'+esc(p.tf||"")+'</span></div>'
     + '<div class="pan-precio">'+esc(p.precio||"—")+'</div></div>'
-    + '<div class="pan-rejilla">'+filas+'</div>'
+    + '<div class="pan-tabla">'
+    + (p.titulo ? '<div class="pan-tit">'+esc(p.titulo)+'</div>' : '')
+    + filas
+    + '</div>'
+    /* 🪪 y SIEMPRE de dónde sale: una tabla de hace 2 s y un resumen de hace 15 min no se
+       miran igual, y él tiene que saber cuál está leyendo */
+    + '<p class="pan-pie">'+(vivo
+        ? '📡 Es tu recuadro del gráfico, tal cual — se pone al día cada 20 s mientras tu PC esté encendida.'
+        : '📴 Tu PC está apagada: esto es el latido del indicador, que llega cada 15 min y resume. El recuadro vivo vuelve al encenderla.')
+      + '</p>'
     + (edad.viejo ? '<p class="desc">⚠️ Este panel es de '+esc(edad.txt)+'. El gráfico ya no tiene por qué estar así: míralo antes de decidir nada.</p>' : '')
     + '</div>';
 }
@@ -24484,12 +24609,13 @@ setTimeout(()=>{ if(!oyeEscuchar()) setTimeout(()=>{ if(!oyeEscuchar()) setTimeo
   setTimeout(hoyCargarNoticias, 2000);  /* 📰 noticias del día dentro de la vista HOY */
   setTimeout(planCargarMem, 2400);     /* 🧭 cuenta la memoria de Roberto para las señales del plan */
   setTimeout(hoyCargarCtx, 2600);      /* 📡 último contexto del indicador para la vista 🎯 HOY */
-  /* 📈 v7.293 — y se sigue refrescando mientras Rey está EN Hoy. Antes esto se pedía UNA
+  /* 📈 v7.294 — y se sigue refrescando mientras Rey está EN Hoy. Antes esto se pedía UNA
      sola vez al arrancar: con Apex abierta, el panel se quedaba congelado en el momento de
      abrirla, que es lo contrario de lo que pidió («al mismo tiempo que suceden las cosas»).
-     Solo pregunta con la pantalla encendida y estando en Hoy: ni batería ni datos por
-     detrás ([[apex-nada-obligatorio-nada-gasta-solo]]). */
-  setInterval(()=>{ try{ if(TAB==="hoy" && !document.hidden) hoyCargarCtx(); }catch(_){} }, 60000);
+     30 s, que es la vuelta del Puente (20 s) con holgura: pedirlo más a menudo no traería
+     nada nuevo. Solo pregunta con la pantalla encendida y estando en Hoy: ni batería ni
+     datos por detrás ([[apex-nada-obligatorio-nada-gasta-solo]]). */
+  setInterval(()=>{ try{ if(TAB==="hoy" && !document.hidden) hoyCargarCtx(); }catch(_){} }, 30000);
   setTimeout(respChequear, 6000);      /* ☁️ recordatorio de respaldo a Drive cada X días */
   irA("hoy");        /* 🎯 lo primero al abrir: TODO tu día en una pantalla */
   tickRelojes(); setInterval(tickRelojes,10000);

@@ -246,12 +246,13 @@ button{cursor:pointer;border:none;background:none}
 html[data-tema="claro"] .card-h .cnt{background:rgba(16,16,20,.05)}
 .card p.desc{font-size:14px;color:var(--txt2);margin:6px 0 12px}
 
-/* ===== 📈 EL PANEL DEL GRÁFICO (v7.293) =====
-   Rey pidió ver el panel de TradingView dentro de Apex, al abrir Hoy. El dato ya le
-   llegaba; lo que había era un volcado de texto crudo. Esto lo pinta como lo que es:
-   una cabecera con el par y el precio, y una rejilla de lecturas con su tono. */
+/* ===== 📈 EL PANEL DEL GRÁFICO (v7.294) =====
+   Rey, con la foto: «es la forma exacta de cómo está en el gráfico, el mismo recuadro todo,
+   no en letras corridas». Así que esto NO es una rejilla de tarjetas (eso era la v7.293):
+   es la MISMA tabla de dos columnas que dibuja el indicador —nombre a la izquierda sobre
+   fondo más oscuro, valor centrado a la derecha con su color— y en su mismo orden. */
 .card.pan{padding-bottom:8px}
-.card-h .cnt.vieja{color:var(--red);border-color:rgb(var(--acc-rgb)/.0);
+.card-h .cnt.vieja{color:var(--red);border-color:rgba(255,59,92,.35);
   background:rgba(255,59,92,.12)}
 .pan-tabs{display:flex;gap:6px;margin:-2px 0 11px;flex-wrap:wrap}
 .pan-tab{display:flex;flex-direction:column;align-items:flex-start;gap:1px;
@@ -267,16 +268,19 @@ html[data-tema="claro"] .card-h .cnt{background:rgba(16,16,20,.05)}
   text-transform:uppercase}
 .pan-precio{font-size:21px;font-weight:800;letter-spacing:-.03em;color:var(--acc);
   font-variant-numeric:tabular-nums}
-.pan-rejilla{display:grid;grid-template-columns:repeat(auto-fit,minmax(152px,1fr));
-  gap:1px;background:var(--line);border:1px solid var(--line);border-radius:12px;
-  overflow:hidden}
-.pan-f{display:flex;flex-direction:column;gap:3px;padding:9px 11px;background:var(--card)}
-.pan-f.ancha{grid-column:1/-1}
-.pan-k{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;
-  color:var(--txt3)}
-.pan-v{font-size:13px;font-weight:600;line-height:1.35;color:var(--txt);
-  overflow-wrap:anywhere}
+.pan-tabla{display:grid;grid-template-columns:minmax(88px,34%) 1fr;gap:1px;
+  background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.pan-tit{grid-column:1/-1;padding:8px 10px;background:var(--card3);color:var(--txt2);
+  font-size:10.5px;font-weight:800;letter-spacing:.11em;text-transform:uppercase;
+  text-align:center}
+.pan-k{display:flex;align-items:center;padding:8px 10px;background:var(--card3);
+  color:var(--txt2);font-size:11.5px;font-weight:700;line-height:1.25}
+.pan-v{display:flex;align-items:center;justify-content:center;text-align:center;
+  padding:8px 10px;background:var(--card2);color:var(--txt);
+  font-size:12.5px;font-weight:600;line-height:1.3;overflow-wrap:anywhere}
+.pan-v.ancha{grid-column:1/-1}
 .pan-v.up{color:var(--green)} .pan-v.dn{color:var(--red)} .pan-v.wa{color:var(--acc-2)}
+.pan-pie{font-size:11.5px;color:var(--txt3);line-height:1.4;margin:9px 2px 2px}
 
 /* barra progreso */
 .bar{height:7px;background:var(--card3);border-radius:99px;overflow:hidden;margin:10px 0 14px}

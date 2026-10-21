@@ -1,89 +1,98 @@
-APEX v7.293 — TRADING DESK
+APEX v7.294 — TRADING DESK
 =========================
 
-🔇 LA SEGUNDA LECTURA SE ACABÓ — Y AHORA SE PUEDE CALLAR
+📈 TU RECUADRO DEL GRÁFICO, DENTRO DE APEX — Y AHORA SÍ, EL MISMO
 
-Esto lo llevabas arrastrando semanas y ayer te lo arreglé a medias. Te pido disculpas por
-eso: arreglé el guardia de la app y dejé intacto su gemelo nativo, que tenía el MISMO
-defecto. Por eso seguía repitiendo.
+Me lo dijiste claro con la foto: «es la forma exacta de cómo está en el gráfico, el mismo
+recuadro todo, no en letras corridas, y que funcione igual que el gráfico y al mismo tiempo
+de actualización».
 
-LO QUE PASABA, medido:
+Lo que te di ayer no era eso. Eran tarjetitas con los datos sueltos: la información estaba,
+la FORMA no. Y había algo peor, que es lo que de verdad fallaba.
 
-Son DOS caminos leyendo lo mismo. La app lee la respuesta del chat con su motor. Y el aviso
-«💬 Te respondí» llega al teléfono y, cuando NO tienes a Roberto en pantalla, el vigía lo
-lee otra vez con OTRO motor distinto.
+LO QUE DESCUBRÍ AL MEDIRLO
 
-El guardia que tenía que impedirlo no podía cazarlo por dos razones a la vez:
+Tu Puente ya manda la tabla ENTERA. Las 16 filas, con sus nombres, sus emojis y sus
+colores, tal como las dibuja tu indicador. Cada 20 segundos. Lleva MESES viajando a la nube
+y nadie la leía.
 
-· comparaba los primeros 140 caracteres tal cual, y el vigía antepone «💬 Te respondí. »,
-  que desplaza todo el texto: nunca coincidían;
-· duraba 4 segundos, y una respuesta larga tarda entre 30 y 90 en leerse — cuando llegaba
-  la segunda, el guardia ya había caducado.
+Apex se conformaba con otra cosa: el latido del indicador, que llega cada 15 minutos y es
+un RESUMEN escrito para que Roberto razone cuando tu PC está apagada. Por eso te llegaba
+en letras corridas y abreviado — porque no era tu panel, era el resumen.
 
-Y por eso la segunda «se callaba antes de terminar»: el cuerpo del aviso va recortado.
+Lo comprobé mientras lo escribía: tu tabla estaba en la nube con 2 segundos de antigüedad.
 
-Y no podías callarla porque «callar» vaciaba la cola pero NO paraba ningún motor. El de la
-app lo paraba su propio botón; el del vigía NO LO PARABA NADIE. Era literalmente imposible.
+LO QUE VES AHORA
 
-AHORA:
+Tu recuadro. El mismo. Dos columnas, el nombre a la izquierda sobre fondo oscuro y el valor
+centrado a la derecha con su color, en tu orden:
 
-· El guardia mira el NÚCLEO de lo que se dice y por contención, así que reconoce tu
-  respuesta aunque lleve un título delante o venga recortada.
-· Recuerda mientras dure lo que se está diciendo, no 4 segundos.
-· Callar PARA LOS DOS MOTORES. Cualquier botón de callar, el del chat o el de un aviso.
-· Y tu 🔊 Escuchar sigue repitiendo las veces que quieras: el guardia solo frena el eco del
-  OTRO camino, nunca al mismo.
+    CRT ELITE v3.14 · Lectura
+    Killzone             ❌ Fuera
+    Sesgo del día        🔴 BAJISTA (🔄 estructural H4+15M · sin extremo diario)
+    Estado día           🔄 Giro ESTRUCTURAL bajista
+    CRT H4               ▶️ Continuación a favor
+    CRT D (rango)        — sin barrido
+    Nivel invalidación   ⚠️ Vigente — pero es del sesgo del DÍA, no del titular
+    Zona P/D             🟢 DISCOUNT (compra) 26%
+    Setup                — sin setup 🔓
+    Secuencia F3         1.Swp▫️ 2.MSS✅ 3.Zna▫️
+    Confluencia TF       2/5 alineadas con D
+    Alineación TF        W🟢 D🟢◄ 4H🔴 1H🟢 15🔴 5🔴
+    Estructura           🔴 bajista (Strong High)
+    SMT                  — sin divergencia
+    Día en vivo          🔴 Bajando
+    Vela activa          5AM ⭐ pivote
+
+Con tus dos pares en pestañas, el precio arriba, y se pone al día cada 30 segundos mientras
+estés en la sección de Hoy.
+
+Y SI APAGAS LA PC
+
+No te quedas sin panel. Vuelve el latido del indicador, pero PUESTO EN ESE MISMO RECUADRO:
+las mismas filas, los mismos nombres, el mismo orden. Tú no tienes que aprender dos formas.
+
+El panel te dice siempre de cuál está bebiendo, porque no es lo mismo:
+
+    📡 Es tu recuadro del gráfico, tal cual — se pone al día cada 20 s.
+    📴 Tu PC está apagada: esto es el latido del indicador, que llega cada 15 min y resume.
+
+Y si pasa demasiado tiempo sin noticias, te lo dice en rojo. El plazo es distinto para cada
+fuente a propósito: 3 minutos sin empuje del gráfico es que algo pasa, pero 5 minutos del
+latido es completamente normal.
 
 
-🗣️ Y ROBERTO VUELVE A DARTE SU VALORACIÓN EN EL VISTAZO
+🗣️ Y TU «YO DIGO», DENTRO DE LA NOTIFICACIÓN
 
-Me dijiste que ya no decía «yo digo». Fui a mirarlo y SÍ lo dice: tus últimas alarmas traen
-su veredicto («🔴 NO ENTRES. El precio está en zona de venta…»).
+Lo pediste así: «por lo menos no sale escrito en las notificaciones».
 
-Lo que fallaba es dónde se leía. Una línea pedía la señal cruda del indicador primero, y
-como esa siempre existe, el campo con su veredicto no se leía NUNCA. El dato estaba
-delante y se cogía el otro — el mismo fallo del break-even de ayer.
+Lo intenté en octubre y lo tuve que quitar porque te sonaba DOS veces. Hoy encontré por qué,
+y no era lo que yo creía: tus alarmas fuertes cogen su sitio en la bandeja por el NOMBRE del
+aviso, y el segundo mensaje llevaba un nombre nuevo. O sea que yo le estaba dando dos
+nombres al mismo hecho, y tu teléfono hacía lo correcto: tratarlos como dos cosas.
 
-En tu vistazo, antes:   🔔 ✅ GBPUSD 5m | CIERRE confirmado a favo…
-Ahora:                  🔔 GBPUSD 5m · 🔴 NO ENTRES. El precio está…
+Ahora la alarma se bautiza antes de salir y la valoración vuelve con ESE mismo nombre,
+marcada como «relleno». Tu teléfono la reconoce y:
 
+· completa la tarjeta que ya tienes delante, en su sitio;
+· NO suena, NO vibra y NO te la vuelve a leer en voz alta;
+· no vuelve a insistir;
+· y no se apunta dos veces en «Avisos recibidos» — una sola línea, con la valoración dentro.
 
-📈 EL PANEL DE TU GRÁFICO, DENTRO DE APEX
+Dos cosas que decidí y te las digo:
 
-Me preguntaste si podías ver el panel del gráfico en Apex sin abrir TradingView. Fui a
-mirar qué te llegaba ya, y resulta que te llegaba ENTERO: tu Puente lo deja en la nube con
-sesgo, estado, killzone, zona, setup, fase 3, CRT de 4H y diario, estructura, invalidación,
-alineación de temporalidades, SMT, liquidez, vela de 4H y tus PDH/PDL.
+· si YA te quitaste el aviso de la bandeja, no te lo devuelvo. Que te reaparezca algo que ya
+  cerraste sería peor que no tener la valoración ahí — y no se pierde: la tienes entera en
+  Apex y en el chat del día.
+· si tu teléfono estaba apagado y nunca llegaste a ver la alarma, entonces eso NO es un
+  relleno: es tu alarma, y sale entera y con su sonido. Un aviso mudo que no has visto es un
+  aviso perdido.
 
-Lo que fallaba no era el dato. Apex lo volcaba en crudo, como un renglón de texto metido en
-una caja, casi al final de Hoy, de un solo par, y lo pedía UNA vez al arrancar.
+La señal sigue saliendo PRIMERO, sin esperar a que Roberto piense. Eso no se toca: una señal
+de entrada que llega tarde no sirve de nada.
 
-Ahora, al abrir Hoy, lo segundo que ves después de tus números:
-
-   📈 EL PANEL DE TU GRÁFICO                    hace 4 min
-   [ GBPUSD ]  [ EURUSD ]
-   GBPUSD  5M                                     1.33754
-   ─────────────────────────────────────────────────────
-   SESGO        🟢 ALCISTA (ruptura real)
-   ESTADO       ⚠️ Ojo: precio vs sesgo
-   KZ           ✅ activa
-   ZONA         🔴 PREMIUM (venta) 68%
-   SETUP        C 🟢 COMPRA 3/11
-   ESTRUCTURA   🔴 bajista (Strong High)
-   INVAL        ✅ vigente en 1.33026
-   ALINTF       4/5  W🟢D🟢4H🟢1H🟢15🟢5🔴
-   LIQ          BSL 1.3386 a 10.6 · SSL 1.33643 a 11.1
-   PDH 1.34095 PDL 1.33026
-
-· Tus DOS pares, cada uno con su antigüedad, y cambias con un toque.
-· Se refresca solo mientras estás en Hoy. Solo ahí, y solo con la pantalla encendida: no
-  te gasta batería ni datos por detrás.
-· Te dice SIEMPRE de cuándo es. Y si pasa de 20 minutos te avisa en rojo de que el gráfico
-  ya no tiene por qué estar así.
-
-⚠️ Una cosa con honestidad: esto va al ritmo de tu Puente, que empuja cada pocos minutos.
-No es tick a tick. Si el Puente está parado, aquí te lo digo en vez de enseñarte un panel
-viejo como si fuera de ahora.
+⚠️ Esto necesita las dos cosas a la vez: el worker 5.290 (tienes que subirlo tú) y esta APK.
+Hasta que no subas el worker, la notificación sigue saliendo como hasta ahora.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
