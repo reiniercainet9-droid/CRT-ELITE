@@ -9163,18 +9163,23 @@ async function hoyCargarCtx(){
   const claves = [...new Set(pares.map(ctxClave).filter(Boolean))];
   /* 1) EL GRÁFICO: la tabla literal que el Puente empuja cada 20 s */
   const delGrafico = {};
+  let graficoVivo = false;
   try{
     const r = await fetch(nubeUrl()+"/chart/state", {cache:"no-store"});
     if(r.ok){
       const d = await r.json();
       if(d && Array.isArray(d.pares))
         d.pares.forEach(p=>{ const x = ctxDelGrafico(p, d.ts); if(x) delGrafico[x.par] = x; });
+      /* `viva` lo decide la nube con su propio plazo (6 min, que tolera el modo ahorro del
+         Puente). Si no está viva, la tabla que acaba de llegar es una FOTO VIEJA: sigue
+         sirviendo —mejor eso que nada— pero el latido del indicador puede ser más fresco. */
+      graficoVivo = !!(d && d.viva);
     }
   }catch(_){}
-  /* 2) EL INDICADOR, solo para el par que el gráfico NO haya traído (su PC apagada, o esa
-     pestaña caída). Uno por uno: /tvctx sin `sym` devuelve solo el más fresco, y enseñarle
-     un par callando el otro sería enseñarle medio panorama. */
-  const faltan = claves.filter(k=>!delGrafico[k]);
+  /* 2) EL INDICADOR, para el par que el gráfico NO haya traído y para TODOS si el gráfico
+     está parado (su PC apagada). Uno por uno: /tvctx sin `sym` devuelve solo el más fresco,
+     y enseñarle un par callando el otro sería enseñarle medio panorama. */
+  const faltan = claves.filter(k=>!delGrafico[k] || !graficoVivo);
   const delLatido = {};
   if(faltan.length){
     const res = await Promise.all(faltan.map(async (k)=>{
@@ -9189,8 +9194,15 @@ async function hoyCargarCtx(){
     }));
     res.forEach(o=>{ if(o){ o.x.par = o.x.par || o.k; delLatido[o.k] = o.x; } });
   }
+  /* 🥇 y entre los dos manda EL MÁS FRESCO, no el que yo prefiera. Con la PC encendida eso
+     es siempre el gráfico (20 s contra 15 min); con la PC apagada un rato, el latido. Así no
+     se le enseña una foto de hace una hora teniendo una de hace cinco minutos. */
   const nuevo = {};
-  claves.forEach(k=>{ const x = delGrafico[k] || delLatido[k]; if(x) nuevo[k] = x; });
+  claves.forEach(k=>{
+    const g = delGrafico[k], l = delLatido[k];
+    const x = (l && (!g || (l.ts||0) > (g.ts||0))) ? l : (g || l);
+    if(x) nuevo[k] = x;
+  });
   /* si el gráfico trae un par que él no tiene configurado en Apex, se enseña igual: lo tiene
      abierto en TradingView, así que es suyo ([[apex-no-elegir-por-rey]]) */
   Object.keys(delGrafico).forEach(k=>{ if(!nuevo[k]) nuevo[k] = delGrafico[k]; });
