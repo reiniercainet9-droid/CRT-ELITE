@@ -9059,6 +9059,12 @@ let HOY_CTX_P = {};          /* { EURUSD:{par,tf,precio,titulo,filas,ts,via}, �
 let HOY_CTX_SEL = "";        /* el par que está mirando */
 const ctxClave = (p)=>String(p||"").toUpperCase().replace(/[^A-Z0-9]/g,"");
 let HOY_CTX_PIDE = 0;
+/* 👁️ v7.295 (21-10) — LO QUE TIENE PUESTO EN MT5, aquí mismo.
+   Rey: «no se detectó mi entrada en EUR/USD, no pudo parciales ni me dijo el lotaje».
+   Lo manda su Puente (v4.82) y la nube lo sirve en /pc/mt5vivo, esté el Ejecutor encendido
+   o apagado — que es justo lo que fallaba: el único que lo miraba vivía dentro del robot,
+   y el robot lleva apagado desde el 02-10 ([[apex-rey-es-el-principal]]). */
+let HOY_MT5 = null, HOY_MT5_PIDE = 0;
 /* la temporalidad como la escribe él, no como la numera TradingView («240» → «4H») */
 function ctxTf(res){
   const s = String(res==null?"":res).trim().toUpperCase();
@@ -9237,6 +9243,75 @@ function ctxHace(ts, limiteMin){
   if(s < 3600) return { txt:"hace "+Math.round(mi)+" min", viejo: Math.round(mi)>=lim };
   return { txt:"hace "+Math.round(mi/60)+" h", viejo:true };
 }
+async function hoyCargarMT5(){
+  if(Date.now() - HOY_MT5_PIDE < 20000) return;
+  HOY_MT5_PIDE = Date.now();
+  try{
+    const r = await fetch(nubeUrl()+"/pc/mt5vivo", {cache:"no-store"});
+    if(!r.ok){ return; }
+    const d = await r.json();
+    if(!(d && d.ok)) return;
+    const antes = JSON.stringify(HOY_MT5 ? [HOY_MT5.ts, (HOY_MT5.posiciones||[]).length, (HOY_MT5.pendientes||[]).length] : null);
+    HOY_MT5 = d;
+    const ahora = JSON.stringify([d.ts, (d.posiciones||[]).length, (d.pendientes||[]).length]);
+    if(TAB==="hoy" && ahora!==antes) renderHoy();
+  }catch(_){}
+}
+
+/* Lo que tiene ABIERTO y ESPERANDO en su broker. Aquí solo van HECHOS y van atribuidos:
+   lo suyo es suyo y lo del robot es del robot ([[apex-la-caja-del-robot-no-es-de-rey]]). */
+function mt5VivoHTML(){
+  const d = HOY_MT5;
+  if(!d || !d.ok) return "";
+  const pos = (d.posiciones||[]).filter(x=>x && x.deRey);
+  const pen = (d.pendientes||[]).filter(x=>x && x.deRey);
+  if(!pos.length && !pen.length) return "";
+  const mon = d.moneda || "$";
+  const hace = ctxHace(d.ts, 10);
+  const sig = (x)=> (x>=0?"+":"")+x;
+  let h = '<div class="card"><div class="card-h"><span class="ic">💼</span><h2>Lo tuyo en MT5</h2>'
+        + '<span class="cnt">'+(pos.length?pos.length+" abierta"+(pos.length>1?"s":""):"")
+        + (pos.length&&pen.length?" · ":"")
+        + (pen.length?pen.length+" esperando":"")+'</span></div>';
+  pos.forEach(x=>{
+    const cl = (x.rAhora==null) ? "" : (x.rAhora>0?" up":(x.rAhora<0?" dn":""));
+    h += '<div class="hoy-row"><div class="hoy-row-t">▶️ '+esc(x.dir||"")+' '+esc(x.sym||"")
+       + ' · '+esc(String(x.lote))+' lotes</div>'
+       + '<div class="hoy-row-d">Entrada '+esc(String(x.entrada))
+       + (x.sl!=null?' · SL '+esc(String(x.sl)):"")
+       + (x.tp!=null?' · TP '+esc(String(x.tp)):"")
+       + (x.rr!=null?' · R:R 1:'+esc(String(x.rr)):"")
+       + (x.riesgoDinero!=null?' · arriesgas '+esc(String(x.riesgoDinero))+' '+esc(mon):"")
+       + '</div>'
+       + '<div class="hoy-row-d"><b class="'+cl.trim()+'">'
+       + (x.rAhora!=null?sig(x.rAhora)+"R":"—")+'</b>'
+       + (x.pl!=null?' · '+sig(x.pl)+' '+esc(mon):"")
+       + (x.abiertaHaceMin!=null?' · abierta hace '+(x.abiertaHaceMin>=60?Math.round(x.abiertaHaceMin/60)+" h":x.abiertaHaceMin+" min"):"")
+       + '</div></div>';
+  });
+  pen.forEach(x=>{
+    h += '<div class="hoy-row"><div class="hoy-row-t">'+(x.sospechosa?"⚠️":"⏳")+' '
+       + esc(x.tipo||"")+' '+esc(x.sym||"")+' · '+esc(String(x.lote))+' lotes</div>'
+       + '<div class="hoy-row-d">En '+esc(String(x.entrada))
+       + (x.sl!=null?' · SL '+esc(String(x.sl)):"")
+       + (x.tp!=null?' · TP '+esc(String(x.tp)):"")
+       + (x.rr!=null?' · R:R 1:'+esc(String(x.rr)):"")
+       + (x.riesgoDinero!=null?' · arriesgas '+esc(String(x.riesgoDinero))+' '+esc(mon):"")
+       + '</div>'
+       + (x.sospechosa
+          ? '<div class="note" style="text-align:left">⚠️ '+esc(x.sospecha||"")+'</div>'
+          : '<div class="hoy-row-d">'+(x.distPips!=null?'Le faltan <b>'+esc(String(x.distPips))+'</b> pips · el precio está '
+              + (x.precioPorEncima?"POR ENCIMA":"POR DEBAJO")+' de tu entrada':"")
+            + (x.edadMin!=null?' · puesta hace '+(x.edadMin>=60?Math.round(x.edadMin/60)+" h":x.edadMin+" min"):"")
+            + '</div>')
+       + '</div>';
+  });
+  h += '<div class="pan-pie">'+(d.viva?"📡 Recién leído de tu MT5, "+esc(hace.txt)
+        : "📴 Tu PC no me está mirando MT5 ahora mismo — esto es lo último que vi, "+esc(hace.txt))
+     + '. No toco nada: son tuyas y viven en tu broker.</div></div>';
+  return h;
+}
+
 /* El panel entero. Si no hay nada que enseñar, se dice; no se finge un panorama. */
 function ctxPanelHTML(){
   const claves = Object.keys(HOY_CTX_P);
@@ -9341,6 +9416,12 @@ function renderHoy(){
   try{ h+=ctxPanelHTML(); }catch(_){}
   /* y se pide fresco al entrar: el portero de 20 s evita el bucle */
   try{ hoyCargarCtx(); }catch(_){}
+
+  /* ── 1c. LO SUYO EN MT5 ── v7.295: su posición viva y sus órdenes esperando, con el
+     LOTE y el riesgo en dinero. Va debajo del panel porque primero se mira el panorama y
+     después lo que uno tiene puesto. Si no tiene nada, no ocupa sitio. */
+  try{ h+=mt5VivoHTML(); }catch(_){}
+  try{ hoyCargarMT5(); }catch(_){}
 
   /* ── 2. NOTICIAS DE HOY (aquí mismo: sin salir de esta pantalla sabes si puedes operar) ── */
   h+=hoyBloqueNoticias();
@@ -24621,6 +24702,7 @@ setTimeout(()=>{ if(!oyeEscuchar()) setTimeout(()=>{ if(!oyeEscuchar()) setTimeo
   setTimeout(hoyCargarNoticias, 2000);  /* 📰 noticias del día dentro de la vista HOY */
   setTimeout(planCargarMem, 2400);     /* 🧭 cuenta la memoria de Roberto para las señales del plan */
   setTimeout(hoyCargarCtx, 2600);      /* 📡 último contexto del indicador para la vista 🎯 HOY */
+  setTimeout(hoyCargarMT5, 3200);      /* 💼 y lo que tiene abierto y esperando en MT5 */
   /* 📈 v7.294 — y se sigue refrescando mientras Rey está EN Hoy. Antes esto se pedía UNA
      sola vez al arrancar: con Apex abierta, el panel se quedaba congelado en el momento de
      abrirla, que es lo contrario de lo que pidió («al mismo tiempo que suceden las cosas»).
@@ -24628,6 +24710,7 @@ setTimeout(()=>{ if(!oyeEscuchar()) setTimeout(()=>{ if(!oyeEscuchar()) setTimeo
      nada nuevo. Solo pregunta con la pantalla encendida y estando en Hoy: ni batería ni
      datos por detrás ([[apex-nada-obligatorio-nada-gasta-solo]]). */
   setInterval(()=>{ try{ if(TAB==="hoy" && !document.hidden) hoyCargarCtx(); }catch(_){} }, 30000);
+  setInterval(()=>{ try{ if(TAB==="hoy" && !document.hidden) hoyCargarMT5(); }catch(_){} }, 30000);
   setTimeout(respChequear, 6000);      /* ☁️ recordatorio de respaldo a Drive cada X días */
   irA("hoy");        /* 🎯 lo primero al abrir: TODO tu día en una pantalla */
   tickRelojes(); setInterval(tickRelojes,10000);

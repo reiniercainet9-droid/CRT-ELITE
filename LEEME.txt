@@ -1,98 +1,65 @@
-APEX v7.294 — TRADING DESK
+APEX v7.295 — TRADING DESK
 =========================
 
-📈 TU RECUADRO DEL GRÁFICO, DENTRO DE APEX — Y AHORA SÍ, EL MISMO
+👁️ LO TUYO EN MT5, DENTRO DE APEX — CON EL ROBOT APAGADO
 
-Me lo dijiste claro con la foto: «es la forma exacta de cómo está en el gráfico, el mismo
-recuadro todo, no en letras corridas, y que funcione igual que el gráfico y al mismo tiempo
-de actualización».
+Me dijiste hoy: «no se detectó mi entrada en EUR/USD, no pudo parciales ni me dijo el
+lotaje tampoco. Y ahora mismo estoy poniendo una orden programada».
 
-Lo que te di ayer no era eso. Eran tarjetitas con los datos sueltos: la información estaba,
-la FORMA no. Y había algo peor, que es lo que de verdad fallaba.
+POR QUÉ PASÓ (medido, no supuesto)
 
-LO QUE DESCUBRÍ AL MEDIRLO
+Lo único que miraba tus posiciones y tus órdenes pendientes era una función que vive DENTRO
+del Ejecutor. Y el Ejecutor, cuando lo apagas en Apex, no se queda dormido: se CIERRA
+entero, para dejarte la PC ligera. Lo apagaste el 02-10. Diecinueve días sin que nadie
+mirara lo tuyo.
 
-Tu Puente ya manda la tabla ENTERA. Las 16 filas, con sus nombres, sus emojis y sus
-colores, tal como las dibuja tu indicador. Cada 20 segundos. Lleva MESES viajando a la nube
-y nadie la leía.
+Tu otro ojo era la herramienta de posición dibujada en el gráfico. Ayer te dije que
+olvidarla ahí fue lo que te registró un break-even como stop. La quitaste — hiciste bien — y
+te quedaste sin ninguno de los dos.
 
-Apex se conformaba con otra cosa: el latido del indicador, que llega cada 15 minutos y es
-un RESUMEN escrito para que Roberto razone cuando tu PC está apagada. Por eso te llegaba
-en letras corridas y abreviado — porque no era tu panel, era el resumen.
+Eso va al revés de tu propia ley: tú eres el principal y el robot es tu asistente. Mirarte a
+TI no puede depender de que el robot esté encendido.
 
-Lo comprobé mientras lo escribía: tu tabla estaba en la nube con 2 segundos de antigüedad.
+LO QUE CAMBIA
 
-LO QUE VES AHORA
+El ojo se mudó al Puente, que está siempre encendido y ya hablaba con tu MT5 cada 5 minutos
+para leerte el balance. Ahora también te mira a ti, y lo que ve aparece en HOY, debajo del
+recuadro del gráfico:
 
-Tu recuadro. El mismo. Dos columnas, el nombre a la izquierda sobre fondo oscuro y el valor
-centrado a la derecha con su color, en tu orden:
+    👁️ LO TUYO EN MT5
+    🟢 COMPRA EURUSD · 0.24 lotes
+       Entrada 1.12246 · SL 1.12125 · TP 1.12493 · R:R 1:2.04
+       Arriesgas 29.04 USD (0.5 % de tu cuenta) · vas +0.8R · +23.10 USD
+    ⏳ BUY LIMIT GBPUSD · 0.24 lotes — a 1.760 pips por debajo
+       ⚠️ esta orden está en GBPUSD, que cotiza a 1.33999 — esos son precios de EURUSD
 
-    CRT ELITE v3.14 · Lectura
-    Killzone             ❌ Fuera
-    Sesgo del día        🔴 BAJISTA (🔄 estructural H4+15M · sin extremo diario)
-    Estado día           🔄 Giro ESTRUCTURAL bajista
-    CRT H4               ▶️ Continuación a favor
-    CRT D (rango)        — sin barrido
-    Nivel invalidación   ⚠️ Vigente — pero es del sesgo del DÍA, no del titular
-    Zona P/D             🟢 DISCOUNT (compra) 26%
-    Setup                — sin setup 🔓
-    Secuencia F3         1.Swp▫️ 2.MSS✅ 3.Zna▫️
-    Confluencia TF       2/5 alineadas con D
-    Alineación TF        W🟢 D🟢◄ 4H🔴 1H🟢 15🔴 5🔴
-    Estructura           🔴 bajista (Strong High)
-    SMT                  — sin divergencia
-    Día en vivo          🔴 Bajando
-    Vela activa          5AM ⭐ pivote
+Y con eso te llegan los avisos que faltaban:
+  ✍️ Entrada detectada — ahora CON EL LOTAJE y el riesgo en dólares.
+  ⏳ Orden puesta — cuando dejas una programada, con lo que arriesga y lo que le falta.
+  🛡️ Vas +1R — tu regla de break-even.
+  ✂️ Tu nivel de parcial — con TU %, el R:R de ESA operación y de cuántos lotes.
+  🔚 Se cerró — en cuanto desaparece de MT5.
 
-Con tus dos pares en pestañas, el precio arriba, y se pone al día cada 30 segundos mientras
-estés en la sección de Hoy.
+Con el robot APAGADO. Sin dibujar nada en el gráfico. Sin tocarte nada: ni la posición, ni
+la orden, ni el stop. Son tuyas y viven en tu broker — yo miro y te cuento.
 
-Y SI APAGAS LA PC
+El riesgo en dinero no es una fórmula mía: lo calcula tu propio MT5 con el contrato y la
+divisa de TU broker. Y el ritmo se adapta: con algo vivo mira cada minuto; sin nada, cada
+cinco. Un parcial no espera cinco minutos, pero tu PC tampoco tiene por qué trabajar de
+balde.
 
-No te quedas sin panel. Vuelve el latido del indicador, pero PUESTO EN ESE MISMO RECUADRO:
-las mismas filas, los mismos nombres, el mismo orden. Tú no tienes que aprender dos formas.
+⚠️ Y SI PONES UNA ORDEN EN EL PAR EQUIVOCADO, TE AVISO
 
-El panel te dice siempre de cuál está bebiendo, porque no es lo mismo:
+Salió midiendo esto, con tu orden de hoy delante: pusiste un BUY LIMIT a 1.12246 —precios de
+EUR/USD— sobre GBPUSD, que cotiza a 1.33999. MT5 la acepta, porque un buy limit solo tiene
+que ir por debajo del precio, y se habría quedado esperando para siempre mientras tú creías
+tener tu entrada puesta. Ahora eso sale con aviso fuerte y te dice a qué par pertenecen de
+verdad esos precios.
 
-    📡 Es tu recuadro del gráfico, tal cual — se pone al día cada 20 s.
-    📴 Tu PC está apagada: esto es el latido del indicador, que llega cada 15 min y resume.
+LO QUE HACE FALTA PARA VERLO
 
-Y si pasa demasiado tiempo sin noticias, te lo dice en rojo. El plazo es distinto para cada
-fuente a propósito: 3 minutos sin empuje del gráfico es que algo pasa, pero 5 minutos del
-latido es completamente normal.
-
-
-🗣️ Y TU «YO DIGO», DENTRO DE LA NOTIFICACIÓN
-
-Lo pediste así: «por lo menos no sale escrito en las notificaciones».
-
-Lo intenté en octubre y lo tuve que quitar porque te sonaba DOS veces. Hoy encontré por qué,
-y no era lo que yo creía: tus alarmas fuertes cogen su sitio en la bandeja por el NOMBRE del
-aviso, y el segundo mensaje llevaba un nombre nuevo. O sea que yo le estaba dando dos
-nombres al mismo hecho, y tu teléfono hacía lo correcto: tratarlos como dos cosas.
-
-Ahora la alarma se bautiza antes de salir y la valoración vuelve con ESE mismo nombre,
-marcada como «relleno». Tu teléfono la reconoce y:
-
-· completa la tarjeta que ya tienes delante, en su sitio;
-· NO suena, NO vibra y NO te la vuelve a leer en voz alta;
-· no vuelve a insistir;
-· y no se apunta dos veces en «Avisos recibidos» — una sola línea, con la valoración dentro.
-
-Dos cosas que decidí y te las digo:
-
-· si YA te quitaste el aviso de la bandeja, no te lo devuelvo. Que te reaparezca algo que ya
-  cerraste sería peor que no tener la valoración ahí — y no se pierde: la tienes entera en
-  Apex y en el chat del día.
-· si tu teléfono estaba apagado y nunca llegaste a ver la alarma, entonces eso NO es un
-  relleno: es tu alarma, y sale entera y con su sonido. Un aviso mudo que no has visto es un
-  aviso perdido.
-
-La señal sigue saliendo PRIMERO, sin esperar a que Roberto piense. Eso no se toca: una señal
-de entrada que llega tarde no sirve de nada.
-
-⚠️ Esto necesita las dos cosas a la vez: el worker 5.290 (tienes que subirlo tú) y esta APK.
-Hasta que no subas el worker, la notificación sigue saliendo como hasta ahora.
+Esta web (o la APK) Y el worker 5.291 subido. Si el worker no está, Apex no tiene de dónde
+leerlo: no se rompe nada, simplemente no aparece el recuadro.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
