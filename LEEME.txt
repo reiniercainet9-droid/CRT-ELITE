@@ -1,103 +1,90 @@
-APEX v7.296 — TRADING DESK
+APEX v7.297 — TRADING DESK
 =========================
 
-📉 UN PANEL ATRASADO TIENE QUE GRITARLO
+🚧 EL ANÁLISIS QUE SE DESBOCÓ
 
-Me dijiste esta tarde, con las dos pestañas delante: «un par dice fresco a 29 segundos y el
-otro dice a 15 minutos; a mí no me sirve panel desactualizado y atrasado, porque si no es
-dato viejo que no sirve». Y detrás: «también hay uno en temporalidad de Diario y el otro par
-en 5 minutos, no entendí eso de las diferencias de temporalidades».
-
-Tenías razón en las dos cosas, y las dos eran fallo mío.
+Me dijiste esta noche: «le dije que me hiciera un análisis y se quedó trabado, y el recuadro
+del análisis no tiene nada dentro, o sea no sé qué clase de análisis me hizo».
 
 
-LO PRIMERO: EL PANEL NO LLEGABA TARDE, LLEGABA VACÍO
+QUÉ PASÓ DE VERDAD (medido en tu propia bitácora del chat)
 
-Lo medí en tu propia nube mientras estaba pasando:
+   18:23:05   61s   ✅ ok (83.412 caracteres)   <- OCHENTA Y TRES MIL
+   18:27:03   59s   🤝 pidió manos
+   18:39:25    ?    ⏳ pensando   <- sin final: MURIÓ
+   18:44:09    ?    ⏳ pensando   <- sin final: MURIÓ
 
-   OANDA:EURUSD  TF 240  precio 1.12325  filas 0    edad 8s   <- puntual y SIN NADA
-   OANDA:GBPUSD  TF 1D   precio 1.3394   filas 16   edad 8s
+Una respuesta mía normal ronda los 1.000-3.000 caracteres.
 
-El dato llegaba cada 8 segundos, puntual. Lo que llegaba vacío era el recuadro. Y Apex, al
-recibir 0 filas, no se inventa nada: se queda con el último panel bueno y te pone su edad
-honrada. De ahí el «hace 15 min».
+El análisis EMPEZÓ BIEN. Te escribí un análisis semanal del GBP/USD correcto: zona Premium
+70%, la liquidez de arriba y la de abajo con sus precios, el mapa de la semana, y unas notas
+del mentor recordándote tu fuga del timing prematuro.
 
-La causa: CRT Elite estaba cargado y marcado como visible en tu pestaña de EUR/USD, y
-dibujaba CERO. Cero celdas, cero etiquetas, cero líneas, cero cajas. El LuxAlgo de al lado,
-en esa MISMA pestaña, dibujaba 500 etiquetas y 500 cajas. El indicador se había quedado
-zombi: vivo, sin errores, sin producir nada.
+Del EUR/USD no te dije nada, y en eso tenía razón: a esa hora no me estaba llegando. Fue el
+bache de la pestaña congelada que arreglamos antes — se curó solo a las 18:30, siete minutos
+después de tu análisis.
 
-Lo descarté midiendo, no suponiendo:
-  · no era la temporalidad — lo pasé a Diario y seguía en cero, y te lo devolví a 4h
-  · no era un error de compilación
-  · no era visibilidad por intervalos
-  · no estaba oculto, y su estado era idéntico al del LuxAlgo que sí dibujaba
-
-Una recarga de esa pestaña lo resucitó al instante: 16 filas, 40 etiquetas, 26 niveles.
+Y entonces me descarrilé. Escribiendo la tabla de 🏦 Por Cuenta se me escapó un marcador
+interno de los que enlazan mis recuerdos (`[[analiza]]`), perdí el hilo y escribí 77.443
+caracteres EN UNA SOLA LÍNEA sobre las tarjetas gráficas Blackwell de NVIDIA. Nada que ver
+contigo.
 
 
-LO SEGUNDO: POR QUÉ CADA PAR ESTABA EN UNA TEMPORALIDAD
+LO GRAVE NO FUE ESO, FUE LO QUE VINO DESPUÉS
 
-Dos motivos, y uno es mío:
+Ese mensaje de 83.000 caracteres se quedó guardado en el chat. Y un chat se manda ENTERO en
+cada mensaje nuevo: así que esa basura volvía a viajar cada vez que escribías.
 
-  · El panel es un ESPEJO de cada pestaña. Te enseña la temporalidad en la que está cada
-    una; no las iguala ni elige por ti.
+   · los dos intentos siguientes MURIERON (el trabajo deja de latir y se acabó)
+   · y tu día pasó de 0,19 $ a 0,34 $ — 6 llamadas, 0,15 $, repitiendo basura
 
-  · Y mi Puente le cambia la temporalidad a tu gráfico a 5 minutos para sacar la foto de una
-    operación, y la devuelve después. Por eso llegaste a ver tu EUR/USD en 5M sin haberlo
-    tocado tú.
+Encima mi detector de muerte REINTENTA solo... volviendo a mandar el mismo mensaje. Es como
+arrancar un coche inundado: cuantas más veces, peor.
 
-
-LO GRAVE NO FUE EL ZOMBI: FUE QUE NADIE LO VIO
-
-Todos los vigilantes del Puente miran el PRECIO. El de congelada mira que el precio se
-mueva; el de sesión mira que no te hayan echado de TradingView desde otro sitio. El precio
-iba perfecto. Una pestaña que tiquea pero no dibuja no la veía NADIE — y así estuvo horas
-mandándote un panel vacío que Apex tapaba con el último bueno.
+Y el recuadro vacío que viste era esa tabla: salió con la cabecera y sin una sola fila.
 
 
-LO QUE CAMBIA
+LO QUE CAMBIA — TRES CIERRES, NO UNO
 
-1) EL PUENTE VIGILA EL PANEL IGUAL QUE VIGILA EL PRECIO
+1) EN LA NUBE (worker 5.292): UNA RESPUESTA DESBOCADA SE CORTA
 
-   Lo que delata al muerto no es el reloj: es el compañero. Si otro par SÍ trae filas, el
-   que no las trae no está cargando — está roto.
+   El tope es 14.000 caracteres — tu análisis semanal bueno cabía cuatro veces. Se corta por
+   el último salto de línea, para no partirte una frase, y te lo digo en el propio mensaje:
 
-     · a los 3 minutos así, recarga esa pestaña y le vuelve a poner los ajustes de dibujado
-     · como mucho una recarga cada 10 minutos, para no machacar lo que ya va ahogado
-     · y si tras DOS recargas sigue sin dibujar, TE LO DICE: te avisa de que no decidas con
-       ese par y de dónde mirar
+       ⚠️ Me desboqué y me he cortado solo. Esta respuesta iba por 83.412 caracteres
+       cuando lo normal son 1.000-3.000... Me quedo con lo de arriba, que sí vale.
 
-   Si NINGÚN par dibuja no acusa a nadie: eso es el arranque de TradingView, y de eso ya se
-   ocupan otros dos detectores que llevan tiempo puestos.
+   Va dentro de bgEscribir, que es el ÚNICO sitio por el que pasa todo lo que el chat
+   guarda: no hay puerta de atrás.
 
-2) APEX GRITA EL DATO VIEJO EN VEZ DE SUSURRARLO
+2) EN LA APP: LOS CHATS QUE YA ESTÁN ENVENENADOS SE CURAN SOLOS
 
-   Antes la marca de «viejo» sólo se le ponía al par SELECCIONADO. La pestañita del otro par
-   te decía «hace 15 min» en el mismo gris flojo que «hace 20 s», así que la única señal era
-   que te fijaras en el número y lo restaras.
+   No tienes que borrar nada. Un mensaje gordo guardado ya no se reenvía entero ni se pinta
+   entero. El original se guarda intacto, como siempre — lo que se recorta es lo que viaja y
+   lo que se dibuja.
 
-   Ahora la edad se mide de DOS formas y basta con que falle una:
-     · por reloj, con su plazo de siempre
-     · y por comparación con el par más fresco del panel: si le saca más de 2 minutos, es
-       viejo aunque el reloj todavía no lo cante
+   Y el reintento automático, que hacía su propia llamada por un camino distinto y se
+   saltaba todo esto, ahora también recorta antes de insistir.
 
-   Y se marca en todas partes: la pestaña del par se pone roja con su ⚠️, la chapa de la
-   cabecera también, y debajo sale un cartel que dice lo único que importa:
+3) EN LA APP: UN TRABAJO MUERTO YA NO TE DEJA MIRANDO LOS PUNTITOS
 
-       ⛔ NO OPERES CON ESTO. Este recuadro es de hace 15 min — y tu otro par viene al día,
-       así que no es que vaya lento: esta pestaña dejó de contar hace 15 min.
+   Cuando te fuiste a otra app, Android congeló los relojes de Apex: ni el sondeo ni el
+   seguro corrían. Al volver, el detector de muerte empezaba a contar DE CERO otros 3
+   minutos, aunque el trabajo llevara media hora muerto. Por eso lo viste en «pensando…»
+   sin que nadie te dijera nada.
 
-
-LO QUE TIENES QUE HACER TÚ
-
-Nada. Esto va dentro de la app y dentro del Puente, que ya está corriendo en v4.85.
+   Ahora, si al abrir Apex el trabajo ya venía viejo, el plazo baja a 25 segundos.
 
 
-EL PUENTE VA EN v4.85
+QUÉ TIENES QUE HACER TÚ
 
-Se reinició solo al cambiarlo. Si alguna vez quieres comprobarlo, su ventana lo dice al
-arrancar: «Puente Apex v4.85 arrancando…».
+SUBIR EL WORKER 5.292. Está en esta misma carpeta. Sustituye al 5.291 que subiste hoy.
+Mientras no lo subas, las dos mitades de la app ya te protegen (no se reenvía ni se pinta
+una respuesta desbocada), pero la nube seguiría GUARDANDO el mensaje gordo.
+
+Y un consejo para esta noche: ese chat concreto ya está curado por la app, pero si quieres
+el análisis semanal limpio de verdad, pídemelo en un chat NUEVO. Ahora sí tengo los dos
+pares en vivo.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

@@ -16773,8 +16773,24 @@ function sinMarcadoresDeMemoria(t){
   }catch(_){ return t; }
 }
 
+/* 🚧 21-10 — y tampoco se PINTA entero. Los 77.443 caracteres de hoy venían en UNA línea:
+   un solo <p> de ese tamaño deja el teléfono pensando y la tarjeta sale en blanco, que es
+   justo el «recuadro vacío» que vio Rey. Ver iaSinDesbocados(). */
+function iaRecortarParaPintar(t){
+  try{
+    const s = String(t==null?"":t);
+    const tope = (typeof IA_TOPE_MSG==="number") ? IA_TOPE_MSG : 14000;
+    if(s.length <= tope) return s;
+    let corte = s.lastIndexOf("\n", tope);
+    if(corte < tope*0.5) corte = tope;
+    return s.slice(0, corte).trimEnd()
+      + "\n\n---\n\n⚠️ **Aquí me desboqué.** Seguí escribiendo "
+      + (s.length - corte).toLocaleString("es") + " caracteres que no venían a cuento, y no "
+      + "te los enseño. Lo de arriba sí vale. Si se corta a media idea, pídemelo en un chat **nuevo**.";
+  }catch(_){ return t; }
+}
 function fmtIA(s){
-  const lines = sinMarcadoresDeMemoria(s).replace(/\r\n?/g,"\n").split("\n");
+  const lines = sinMarcadoresDeMemoria(iaRecortarParaPintar(s)).replace(/\r\n?/g,"\n").split("\n");
   const inline = (t)=> esc(t)
     .replace(/`([^`]+)`/g,'<code>$1</code>')
     .replace(/\*\*(.+?)\*\*/g,'<b>$1</b>')
@@ -23251,7 +23267,45 @@ async function iaCerebroDeEstaPregunta(msgs){
   }catch(_){ return null; }
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════════════════
+   🚧 21-10 — UN MENSAJE DESBOCADO NO PUEDE VIAJAR EN CADA TURNO
+   ───────────────────────────────────────────────────────────────────────────────────────
+   Rey, 21-10: «le dije que me hiciera un análisis y se quedó trabado, y el recuadro del
+   análisis no tiene nada dentro».
+   MEDIDO en su bitácora del chat: una respuesta de **83.412 caracteres**. Empezaba bien —su
+   análisis semanal del GBP/USD, correcto— y al escribir la tabla de 🏦 Por Cuenta soltó un
+   marcador interno (`[[analiza]]`) y perdió el hilo: **77.443 caracteres en UNA SOLA LÍNEA**
+   sobre las GPU Blackwell de NVIDIA.
+   El daño no fue ese mensaje: fue que **se reenvía en cada turno de ese chat**. Los dos
+   intentos siguientes MURIERON (dejaron de latir) y el día le pasó de 0,19 $ a 0,34 $.
+   ⚠️ Y lo peor: el detector de muerte REINTENTA solo. Reintentar un chat envenenado es
+   quemar dinero en algo que no puede salir bien nunca ([[apex-un-contador-que-solo-sube-apaga-la-funcion]]).
+   El tope de verdad vive en el worker (5.292), que es quien escribe. Esto es la otra mitad:
+   cura los chats que YA están envenenados, sin que Rey tenga que borrar nada.
+   El original se guarda intacto, como siempre ([[apex-la-prueba-se-guarda-cuando-pasa]]):
+   lo que se recorta es lo que SE MANDA y lo que SE PINTA. */
+const IA_TOPE_MSG = 14000;
+function iaSinDesbocados(msgs){
+  try{
+    if(!Array.isArray(msgs)) return msgs;
+    let tocados = 0;
+    const out = msgs.map(m=>{
+      if(!m || typeof m.content !== "string" || m.content.length <= IA_TOPE_MSG) return m;
+      tocados++;
+      let corte = m.content.lastIndexOf("\n", IA_TOPE_MSG);
+      if(corte < IA_TOPE_MSG*0.5) corte = IA_TOPE_MSG;
+      return Object.assign({}, m, { content: m.content.slice(0, corte).trimEnd()
+        + "\n\n[…aquí me desboqué y escribí " + (m.content.length - corte).toLocaleString("es")
+        + " caracteres que no venían a cuento. Se han quitado para que no te cuesten dinero "
+        + "en cada mensaje.]" });
+    });
+    if(tocados) try{ console.warn("[apex] recorté "+tocados+" mensaje(s) desbocado(s) antes de mandarlos"); }catch(_){}
+    return out;
+  }catch(_){ return msgs; }
+}
+
 async function iaBgStart(msgs, c, motor){
+  msgs = iaSinDesbocados(msgs);
   /* 🎫 v7.201 — con el modo moto APAGADO, Rey elige. Con el modo moto encendido, ni se le
      pregunta: va conduciendo o entrenando y no puede tocar nada. */
   let motorFijo = null;
@@ -23472,14 +23526,20 @@ async function iaAutoReintento(jobId, parcial, motivo){
     iaGuardarConvs(); pintarIAChat();
   };
   if(!pend || !Array.isArray(pend.msgs) || !pend.msgs.length || n>=2){ rendirse(); return; }
+  /* 🚧 21-10 — ESTE CAMINO NO PASA POR iaBgStart, así que el recorte hay que hacerlo AQUÍ.
+     Era justo el que mataba a Rey el 21-10: el trabajo moría por un mensaje desbocado de
+     83.412 caracteres y el reintento volvía a mandar EL MISMO mensaje — dos muertes más y
+     0,15 $ quemados en repetir basura. Reintentar sin quitar la causa no es reintentar
+     ([[apex-un-contador-que-solo-sube-apaga-la-funcion]]). */
+  const limpios = iaSinDesbocados(pend.msgs);
   iaPendBorrar(jobId);
   toast("Se me cortó el pensamiento — lo reintento yo solo 🔁");
   try{
     const r=await fetch(iaBase()+"/chat/bg",{method:"POST",headers:{"content-type":"application/json"},
-      body:JSON.stringify({system:iaSystemFull(), messages:pend.msgs, clientTools:IA_TOOLS, motor:pend.motor||iaMotor()})});
+      body:JSON.stringify({system:iaSystemFull(), messages:limpios, clientTools:IA_TOOLS, motor:pend.motor||iaMotor()})});
     const d=await r.json().catch(()=>({}));
     if(d && d.jobId){
-      iaPendGuardar({jobId:d.jobId, convId:pend.convId, msgs:pend.msgs, motor:pend.motor, retries:n+1, ts:Date.now()});
+      iaPendGuardar({jobId:d.jobId, convId:pend.convId, msgs:limpios, motor:pend.motor, retries:n+1, ts:Date.now()});
       IA.busy=true; iaVigilarBusy(); pintarIAChat();
       iaPollJob(d.jobId);
       return;
@@ -23487,8 +23547,17 @@ async function iaAutoReintento(jobId, parcial, motivo){
   }catch(_){}
   rendirse();
 }
-function iaPollJob(jobId){
+/* ⏱️ 21-10 — `viejo` = este trabajo ya se sabe que lleva MUCHO sin contestar.
+   Rey, 21-10: lo dejó pensando y se fue a otra app. Android congela los relojes de la
+   página, así que ni el sondeo ni el seguro corren con Apex al fondo; al volver, el
+   detector de muerte empezaba a contar DE CERO otros 3 minutos aunque el trabajo llevara
+   media hora muerto. Rey veía «pensando…» y nadie le decía nada
+   ([[apex-lo-que-corre-solo-falla-callado]], [[apex-nada-te-deja-mirando-una-rueda]]).
+   Con `viejo` el plazo baja a 25 s: lo justo para descartar un pulso que venga con retraso
+   de propagación, sin hacerle esperar otra vez lo que ya esperó. */
+function iaPollJob(jobId, viejo){
   if(_iaPolling[jobId]) return;
+  const PLAZO_PULSO = viejo ? 25000 : 180000;
   let tries=0, parcial="", ultimoPulso="", pulsoDesde=Date.now();
   const tick=async()=>{
     tries++;
@@ -23505,7 +23574,7 @@ function iaPollJob(jobId){
       if(pulso!==ultimoPulso){ ultimoPulso=pulso; pulsoDesde=Date.now(); }
       /* 📦 v6.24: umbral 75 s → 180 s — en 4G (otro colo) el estado puede tardar ~2 min en
          propagarse y el detector mataba trabajos VIVOS o ya terminados (falla del 28-08). */
-      else if(Date.now()-pulsoDesde>180000){
+      else if(Date.now()-pulsoDesde>PLAZO_PULSO){
         clearTimeout(_iaPolling[jobId]); delete _iaPolling[jobId];
         iaAutoReintento(jobId, parcial, "");
         return;
@@ -23669,8 +23738,10 @@ function iaResumePend(){
   let hayActiva=false;
   ps.forEach(p=>{
     if(Date.now()-p.ts > 2*3600000){ iaPendBorrar(p.jobId); return; }
-    if(p.convId===IA.actId && (Date.now()-p.ts) < IA_ESPERA_MAX) hayActiva=true;
-    iaPollJob(p.jobId);
+    const viejo = (Date.now()-p.ts) >= IA_ESPERA_MAX;
+    if(p.convId===IA.actId && !viejo) hayActiva=true;
+    /* 21-10: si ya es viejo, el sondeo no vuelve a darle 3 minutos de cortesía — ver iaPollJob */
+    iaPollJob(p.jobId, viejo);
   });
   IA.busy = hayActiva;          // si no hay ninguno reciente, la caja queda LIBRE
   pintarIAChat();
