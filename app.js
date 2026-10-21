@@ -9322,12 +9322,41 @@ function ctxPanelHTML(){
   const p = HOY_CTX_P[sel];
   if(!p || !p.filas || !p.filas.length) return "";
   const vivo = (p.via === "grafico");
-  const edad = ctxHace(p.ts, vivo ? 3 : 20);
+  /* ⏱️ 21-10 — UN PAR ATRASADO AL LADO DE OTRO AL DÍA ES UN DATO MUERTO.
+     ═══════════════════════════════════════════════════════════════════════════════════════
+     Rey, 21-10, con las dos pestañas delante: «un par dice fresco a 29 segundos y el otro
+     dice a 15 minutos; a mí no me sirve panel desactualizado y atrasado, porque si no es
+     dato viejo que no sirve».
+     Tenía razón y el fallo era mío por partida doble:
+       · la marca de «viejo» solo se le ponía al par SELECCIONADO. La pestañita del otro par
+         decía «hace 15 min» en el mismo gris flojo que la de «hace 20 s», así que la única
+         señal de que ese dato estaba muerto era que él se fijara en el número y lo restara.
+       · y el plazo era ABSOLUTO (3 o 20 min). Pero lo que de verdad delata a un panel muerto
+         no es el reloj: es que SU COMPAÑERO venga al día. Si uno llega a 20 s, el que lleva
+         15 min no está «tardando», está ROTO — y eso se ve comparando, no contando.
+     Así que ahora se mide de las dos formas y basta con que falle una:
+       · por reloj, con su plazo de siempre;
+       · y por COMPARACIÓN con el par más fresco del panel: si le saca más de 2 minutos, es
+         viejo aunque el reloj todavía no lo cante.
+     ⚠️ Y se marca en TODAS partes: en la pestaña del par, en la chapa de la cabecera y con
+     un aviso escrito debajo. Lo que no sirve tiene que gritarlo, no susurrarlo
+     ([[apex-nube-solo-lo-que-importa]], [[apex-un-dato-mejor-ciega-la-vista-vieja]]). */
+  const _tsMax = claves.reduce((a,k)=>Math.max(a, +(HOY_CTX_P[k]||{}).ts || 0), 0);
+  const ctxEdadDe = (o)=>{
+    const e = ctxHace(o.ts, o.via==="grafico" ? 3 : 20);
+    /* 2 min de margen: el empuje va cada 20 s, así que dos minutos de diferencia entre un
+       par y otro ya no es el ritmo normal, es que ese par dejó de contar algo. */
+    const atras = _tsMax - (+o.ts||0);
+    if(atras > 2*60000) return { txt:e.txt, viejo:true, atrasMin:Math.round(atras/60000) };
+    return { txt:e.txt, viejo:e.viejo, atrasMin:0 };
+  };
+  const edad = ctxEdadDe(p);
   const tabs = claves.length>1
     ? '<div class="pan-tabs">' + claves.slice().sort().map(k=>{
         const o = HOY_CTX_P[k];
-        const e = ctxHace(o.ts, o.via==="grafico" ? 3 : 20);
-        return '<button class="pan-tab'+(k===sel?" on":"")+'" data-par="'+esc(k)+'">'+esc(k)+'<span>'+esc(e.txt)+'</span></button>';
+        const e = ctxEdadDe(o);
+        return '<button class="pan-tab'+(k===sel?" on":"")+(e.viejo?" vieja":"")+'" data-par="'+esc(k)+'">'
+             + esc(k)+'<span>'+(e.viejo?"⚠️ ":"")+esc(e.txt)+'</span></button>';
       }).join("") + '</div>'
     : "";
   /* el recuadro: dos columnas, nombre y valor, como en su pantalla de TradingView */
@@ -9352,7 +9381,13 @@ function ctxPanelHTML(){
         ? '📡 Es tu recuadro del gráfico, tal cual — se pone al día cada 20 s mientras tu PC esté encendida.'
         : '📴 Tu PC está apagada: esto es el latido del indicador, que llega cada 15 min y resume. El recuadro vivo vuelve al encenderla.')
       + '</p>'
-    + (edad.viejo ? '<p class="desc">⚠️ Este panel es de '+esc(edad.txt)+'. El gráfico ya no tiene por qué estar así: míralo antes de decidir nada.</p>' : '')
+    + (edad.viejo
+        ? '<div class="pan-muerto">⛔ <b>NO OPERES CON ESTO.</b> Este recuadro es de '+esc(edad.txt)
+          + (edad.atrasMin
+              ? ' — y tu otro par viene al día, así que no es que vaya lento: <b>esta pestaña dejó de contar</b> hace '+esc(String(edad.atrasMin))+' min.'
+              : '. El gráfico ya no tiene por qué estar así.')
+          + ' Míralo en TradingView antes de decidir nada.</div>'
+        : '')
     + '</div>';
 }
 function renderHoy(){

@@ -1,65 +1,103 @@
-APEX v7.295 — TRADING DESK
+APEX v7.296 — TRADING DESK
 =========================
 
-👁️ LO TUYO EN MT5, DENTRO DE APEX — CON EL ROBOT APAGADO
+📉 UN PANEL ATRASADO TIENE QUE GRITARLO
 
-Me dijiste hoy: «no se detectó mi entrada en EUR/USD, no pudo parciales ni me dijo el
-lotaje tampoco. Y ahora mismo estoy poniendo una orden programada».
+Me dijiste esta tarde, con las dos pestañas delante: «un par dice fresco a 29 segundos y el
+otro dice a 15 minutos; a mí no me sirve panel desactualizado y atrasado, porque si no es
+dato viejo que no sirve». Y detrás: «también hay uno en temporalidad de Diario y el otro par
+en 5 minutos, no entendí eso de las diferencias de temporalidades».
 
-POR QUÉ PASÓ (medido, no supuesto)
+Tenías razón en las dos cosas, y las dos eran fallo mío.
 
-Lo único que miraba tus posiciones y tus órdenes pendientes era una función que vive DENTRO
-del Ejecutor. Y el Ejecutor, cuando lo apagas en Apex, no se queda dormido: se CIERRA
-entero, para dejarte la PC ligera. Lo apagaste el 02-10. Diecinueve días sin que nadie
-mirara lo tuyo.
 
-Tu otro ojo era la herramienta de posición dibujada en el gráfico. Ayer te dije que
-olvidarla ahí fue lo que te registró un break-even como stop. La quitaste — hiciste bien — y
-te quedaste sin ninguno de los dos.
+LO PRIMERO: EL PANEL NO LLEGABA TARDE, LLEGABA VACÍO
 
-Eso va al revés de tu propia ley: tú eres el principal y el robot es tu asistente. Mirarte a
-TI no puede depender de que el robot esté encendido.
+Lo medí en tu propia nube mientras estaba pasando:
+
+   OANDA:EURUSD  TF 240  precio 1.12325  filas 0    edad 8s   <- puntual y SIN NADA
+   OANDA:GBPUSD  TF 1D   precio 1.3394   filas 16   edad 8s
+
+El dato llegaba cada 8 segundos, puntual. Lo que llegaba vacío era el recuadro. Y Apex, al
+recibir 0 filas, no se inventa nada: se queda con el último panel bueno y te pone su edad
+honrada. De ahí el «hace 15 min».
+
+La causa: CRT Elite estaba cargado y marcado como visible en tu pestaña de EUR/USD, y
+dibujaba CERO. Cero celdas, cero etiquetas, cero líneas, cero cajas. El LuxAlgo de al lado,
+en esa MISMA pestaña, dibujaba 500 etiquetas y 500 cajas. El indicador se había quedado
+zombi: vivo, sin errores, sin producir nada.
+
+Lo descarté midiendo, no suponiendo:
+  · no era la temporalidad — lo pasé a Diario y seguía en cero, y te lo devolví a 4h
+  · no era un error de compilación
+  · no era visibilidad por intervalos
+  · no estaba oculto, y su estado era idéntico al del LuxAlgo que sí dibujaba
+
+Una recarga de esa pestaña lo resucitó al instante: 16 filas, 40 etiquetas, 26 niveles.
+
+
+LO SEGUNDO: POR QUÉ CADA PAR ESTABA EN UNA TEMPORALIDAD
+
+Dos motivos, y uno es mío:
+
+  · El panel es un ESPEJO de cada pestaña. Te enseña la temporalidad en la que está cada
+    una; no las iguala ni elige por ti.
+
+  · Y mi Puente le cambia la temporalidad a tu gráfico a 5 minutos para sacar la foto de una
+    operación, y la devuelve después. Por eso llegaste a ver tu EUR/USD en 5M sin haberlo
+    tocado tú.
+
+
+LO GRAVE NO FUE EL ZOMBI: FUE QUE NADIE LO VIO
+
+Todos los vigilantes del Puente miran el PRECIO. El de congelada mira que el precio se
+mueva; el de sesión mira que no te hayan echado de TradingView desde otro sitio. El precio
+iba perfecto. Una pestaña que tiquea pero no dibuja no la veía NADIE — y así estuvo horas
+mandándote un panel vacío que Apex tapaba con el último bueno.
+
 
 LO QUE CAMBIA
 
-El ojo se mudó al Puente, que está siempre encendido y ya hablaba con tu MT5 cada 5 minutos
-para leerte el balance. Ahora también te mira a ti, y lo que ve aparece en HOY, debajo del
-recuadro del gráfico:
+1) EL PUENTE VIGILA EL PANEL IGUAL QUE VIGILA EL PRECIO
 
-    👁️ LO TUYO EN MT5
-    🟢 COMPRA EURUSD · 0.24 lotes
-       Entrada 1.12246 · SL 1.12125 · TP 1.12493 · R:R 1:2.04
-       Arriesgas 29.04 USD (0.5 % de tu cuenta) · vas +0.8R · +23.10 USD
-    ⏳ BUY LIMIT GBPUSD · 0.24 lotes — a 1.760 pips por debajo
-       ⚠️ esta orden está en GBPUSD, que cotiza a 1.33999 — esos son precios de EURUSD
+   Lo que delata al muerto no es el reloj: es el compañero. Si otro par SÍ trae filas, el
+   que no las trae no está cargando — está roto.
 
-Y con eso te llegan los avisos que faltaban:
-  ✍️ Entrada detectada — ahora CON EL LOTAJE y el riesgo en dólares.
-  ⏳ Orden puesta — cuando dejas una programada, con lo que arriesga y lo que le falta.
-  🛡️ Vas +1R — tu regla de break-even.
-  ✂️ Tu nivel de parcial — con TU %, el R:R de ESA operación y de cuántos lotes.
-  🔚 Se cerró — en cuanto desaparece de MT5.
+     · a los 3 minutos así, recarga esa pestaña y le vuelve a poner los ajustes de dibujado
+     · como mucho una recarga cada 10 minutos, para no machacar lo que ya va ahogado
+     · y si tras DOS recargas sigue sin dibujar, TE LO DICE: te avisa de que no decidas con
+       ese par y de dónde mirar
 
-Con el robot APAGADO. Sin dibujar nada en el gráfico. Sin tocarte nada: ni la posición, ni
-la orden, ni el stop. Son tuyas y viven en tu broker — yo miro y te cuento.
+   Si NINGÚN par dibuja no acusa a nadie: eso es el arranque de TradingView, y de eso ya se
+   ocupan otros dos detectores que llevan tiempo puestos.
 
-El riesgo en dinero no es una fórmula mía: lo calcula tu propio MT5 con el contrato y la
-divisa de TU broker. Y el ritmo se adapta: con algo vivo mira cada minuto; sin nada, cada
-cinco. Un parcial no espera cinco minutos, pero tu PC tampoco tiene por qué trabajar de
-balde.
+2) APEX GRITA EL DATO VIEJO EN VEZ DE SUSURRARLO
 
-⚠️ Y SI PONES UNA ORDEN EN EL PAR EQUIVOCADO, TE AVISO
+   Antes la marca de «viejo» sólo se le ponía al par SELECCIONADO. La pestañita del otro par
+   te decía «hace 15 min» en el mismo gris flojo que «hace 20 s», así que la única señal era
+   que te fijaras en el número y lo restaras.
 
-Salió midiendo esto, con tu orden de hoy delante: pusiste un BUY LIMIT a 1.12246 —precios de
-EUR/USD— sobre GBPUSD, que cotiza a 1.33999. MT5 la acepta, porque un buy limit solo tiene
-que ir por debajo del precio, y se habría quedado esperando para siempre mientras tú creías
-tener tu entrada puesta. Ahora eso sale con aviso fuerte y te dice a qué par pertenecen de
-verdad esos precios.
+   Ahora la edad se mide de DOS formas y basta con que falle una:
+     · por reloj, con su plazo de siempre
+     · y por comparación con el par más fresco del panel: si le saca más de 2 minutos, es
+       viejo aunque el reloj todavía no lo cante
 
-LO QUE HACE FALTA PARA VERLO
+   Y se marca en todas partes: la pestaña del par se pone roja con su ⚠️, la chapa de la
+   cabecera también, y debajo sale un cartel que dice lo único que importa:
 
-Esta web (o la APK) Y el worker 5.291 subido. Si el worker no está, Apex no tiene de dónde
-leerlo: no se rompe nada, simplemente no aparece el recuadro.
+       ⛔ NO OPERES CON ESTO. Este recuadro es de hace 15 min — y tu otro par viene al día,
+       así que no es que vaya lento: esta pestaña dejó de contar hace 15 min.
+
+
+LO QUE TIENES QUE HACER TÚ
+
+Nada. Esto va dentro de la app y dentro del Puente, que ya está corriendo en v4.85.
+
+
+EL PUENTE VA EN v4.85
+
+Se reinició solo al cambiarlo. Si alguna vez quieres comprobarlo, su ventana lo dice al
+arrancar: «Puente Apex v4.85 arrancando…».
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
