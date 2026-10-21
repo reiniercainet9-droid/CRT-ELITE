@@ -1,50 +1,89 @@
-APEX v7.292 — TRADING DESK
+APEX v7.293 — TRADING DESK
 =========================
 
-🛡️ UN BREAK-EVEN YA NO TE CUENTA COMO UN STOP
+🔇 LA SEGUNDA LECTURA SE ACABÓ — Y AHORA SE PUEDE CALLAR
 
-Me enseñaste dos cosas que parecían distintas y eran la misma.
+Esto lo llevabas arrastrando semanas y ayer te lo arreglé a medias. Te pido disculpas por
+eso: arreglé el guardia de la app y dejé intacto su gemelo nativo, que tenía el MISMO
+defecto. Por eso seguía repitiendo.
 
-Tu operación de hoy (GBPUSD, 08:19) estaba BIEN registrada: res "BE", break-even. Lo que
-pasa es que cerrar en tu propia entrada te cuesta el spread, y volvió en −0,01R. Y hasta
-hoy Apex decidía qué había sido cada operación mirando solo el SIGNO del R, sin leer nunca
-lo que la operación dice que fue.
+LO QUE PASABA, medido:
 
-De ahí salían tus dos capturas:
+Son DOS caminos leyendo lo mismo. La app lee la respuesta del chat con su motor. Y el aviso
+«💬 Te respondí» llega al teléfono y, cuando NO tienes a Roberto en pantalla, el vigía lo
+lee otra vez con OTRO motor distinto.
 
-· «STOPS HOY 1/2» — un break-even de −0,01R te comía medio día. Y a los 2 stops Apex te
-  cierra la plataforma hasta mañana, así que no era cosmético: te quedaba un solo stop de
-  margen cuando te quedaban dos.
+El guardia que tenía que impedirlo no podía cazarlo por dos razones a la vez:
 
-· El break-even que faltaba — «por dónde salió cada una» clasifica por el texto del motivo.
-  La del 14-10 lo trae escrito; la de hoy venía con el motivo vacío, y el deductor solo
-  sabía mirar el R: no es −1, no es tu objetivo → «sin dato». Por eso las métricas SÍ
-  cambiaron (la de hoy está contada en las 11) pero el break-even no aparecía.
+· comparaba los primeros 140 caracteres tal cual, y el vigía antepone «💬 Te respondí. »,
+  que desplaza todo el texto: nunca coincidían;
+· duraba 4 segundos, y una respuesta larga tarda entre 30 y 90 en leerse — cuando llegaba
+  la segunda, el guardia ya había caducado.
 
-Y había un tercer tramo, el que hacía que la tabla siguiera diciendo 1: quien le pasa tus
-operaciones al panel se dejaba por el camino justo ese campo. Daba igual que el Diario lo
-guardara bien; al panel llegaba sin él. Ya viaja entero, desde el Diario y desde el robot.
+Y por eso la segunda «se callaba antes de terminar»: el cuerpo del aviso va recortado.
 
-AHORA la regla vive en un solo sitio y la leen los quince: lo que la operación DICE que fue
-manda sobre el signo del R. No se deduce nada, se lee lo que ya estaba escrito.
+Y no podías callarla porque «callar» vaciaba la cola pero NO paraba ningún motor. El de la
+app lo paraba su propio botón; el del vigía NO LO PARABA NADIE. Era literalmente imposible.
 
-Dónde se nota:
-· STOPS HOY y el freno de las 2 SL
-· tu acierto, tu profit factor, tu esperanza y tu racha perdedora
-· «por dónde salió cada una»: tus break-even son 2, no 1
-· tu racha de días limpios y tus meses limpios (fondeo)
-· el aviso anti-tilt, que ya no se dispara con un break-even
-· el dossier del Guardián: Roberto deja de verte un stop que no existe
-· y el recuadro SEMANA de Hoy: una semana con un solo break-even te decía «0 de 1 · 0%»,
-  que se lee como «vas fallando» sin haber perdido un céntimo. El acierto se mide ahora
-  sobre las DECIDIDAS, y si no hay ninguna dice «sin ganar ni perder».
+AHORA:
 
-Lo que NO cambia, a propósito: una pérdida sigue siendo una pérdida. Tu −0,19R del 06-10
-cerrada a mano cuenta igual, y un «moví el stop a BE y luego saltó» cuenta como stop, no
-como break-even. No se te regala nada.
+· El guardia mira el NÚCLEO de lo que se dice y por contención, así que reconoce tu
+  respuesta aunque lleve un título delante o venga recortada.
+· Recuerda mientras dure lo que se está diciendo, no 4 segundos.
+· Callar PARA LOS DOS MOTORES. Cualquier botón de callar, el del chat o el de un aviso.
+· Y tu 🔊 Escuchar sigue repitiendo las veces que quieras: el guardia solo frena el eco del
+  OTRO camino, nunca al mismo.
 
-⚠️ Si algún día un break-even llegara SIN su etiqueta, volvería a contar por el signo. Eso
-ya es un umbral, y los umbrales los pones tú: dímelo y lo hacemos ajustable.
+
+🗣️ Y ROBERTO VUELVE A DARTE SU VALORACIÓN EN EL VISTAZO
+
+Me dijiste que ya no decía «yo digo». Fui a mirarlo y SÍ lo dice: tus últimas alarmas traen
+su veredicto («🔴 NO ENTRES. El precio está en zona de venta…»).
+
+Lo que fallaba es dónde se leía. Una línea pedía la señal cruda del indicador primero, y
+como esa siempre existe, el campo con su veredicto no se leía NUNCA. El dato estaba
+delante y se cogía el otro — el mismo fallo del break-even de ayer.
+
+En tu vistazo, antes:   🔔 ✅ GBPUSD 5m | CIERRE confirmado a favo…
+Ahora:                  🔔 GBPUSD 5m · 🔴 NO ENTRES. El precio está…
+
+
+📈 EL PANEL DE TU GRÁFICO, DENTRO DE APEX
+
+Me preguntaste si podías ver el panel del gráfico en Apex sin abrir TradingView. Fui a
+mirar qué te llegaba ya, y resulta que te llegaba ENTERO: tu Puente lo deja en la nube con
+sesgo, estado, killzone, zona, setup, fase 3, CRT de 4H y diario, estructura, invalidación,
+alineación de temporalidades, SMT, liquidez, vela de 4H y tus PDH/PDL.
+
+Lo que fallaba no era el dato. Apex lo volcaba en crudo, como un renglón de texto metido en
+una caja, casi al final de Hoy, de un solo par, y lo pedía UNA vez al arrancar.
+
+Ahora, al abrir Hoy, lo segundo que ves después de tus números:
+
+   📈 EL PANEL DE TU GRÁFICO                    hace 4 min
+   [ GBPUSD ]  [ EURUSD ]
+   GBPUSD  5M                                     1.33754
+   ─────────────────────────────────────────────────────
+   SESGO        🟢 ALCISTA (ruptura real)
+   ESTADO       ⚠️ Ojo: precio vs sesgo
+   KZ           ✅ activa
+   ZONA         🔴 PREMIUM (venta) 68%
+   SETUP        C 🟢 COMPRA 3/11
+   ESTRUCTURA   🔴 bajista (Strong High)
+   INVAL        ✅ vigente en 1.33026
+   ALINTF       4/5  W🟢D🟢4H🟢1H🟢15🟢5🔴
+   LIQ          BSL 1.3386 a 10.6 · SSL 1.33643 a 11.1
+   PDH 1.34095 PDL 1.33026
+
+· Tus DOS pares, cada uno con su antigüedad, y cambias con un toque.
+· Se refresca solo mientras estás en Hoy. Solo ahí, y solo con la pantalla encendida: no
+  te gasta batería ni datos por detrás.
+· Te dice SIEMPRE de cuándo es. Y si pasa de 20 minutos te avisa en rojo de que el gráfico
+  ya no tiene por qué estar así.
+
+⚠️ Una cosa con honestidad: esto va al ritmo de tu Puente, que empuja cada pocos minutos.
+No es tick a tick. Si el Puente está parado, aquí te lo digo en vez de enseñarte un panel
+viejo como si fuera de ahora.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

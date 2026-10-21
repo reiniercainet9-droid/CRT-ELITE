@@ -9036,13 +9036,112 @@ function viewHoy(){
 }
 /* Último contexto del gráfico: primero el que dejó el Puente/indicador (📡 latido), si lo hay */
 let HOY_CTX=null;
+/* 📈 v7.293 (21-10) — EL PANEL DEL GRÁFICO, DENTRO DE APEX
+   ═══════════════════════════════════════════════════════════════════════════════════
+   Rey: «¿puedo tener el mismo panel del gráfico en Apex, al mismo tiempo que suceden las
+   cosas, para que al abrir Hoy ya vea todo el panorama sin abrir TradingView?».
+   MEDIDO: el panel ENTERO ya le llega. El Puente lo deja en /tvctx y trae sesgo, estado,
+   killzone, zona, setup, fase 3, CRT de H4 y D, estructura, invalidación, alineación de
+   temporalidades, SMT, liquidez, vela 4H y los PDH/PDL. Lo que fallaba no era el dato: la
+   app lo volcaba CRUDO en un bloque de texto, y casi al final de Hoy.
+   ⚠️ /tvctx sin `sym` devuelve SOLO el par más fresco, así que se pide uno por uno: con dos
+   pares vivos, enseñarle uno y callar el otro sería enseñarle medio panorama. */
+let HOY_CTX_P = {};          /* { EURUSD:{ctx,ts,sym}, GBPUSD:{…} } */
+let HOY_CTX_SEL = "";        /* el par que está mirando */
+const ctxClave = (p)=>String(p||"").toUpperCase().replace(/[^A-Z0-9]/g,"");
+let HOY_CTX_PIDE = 0;
 async function hoyCargarCtx(){
+  /* 🚦 v7.293 — un portero de 20 s. Ahora esto lo llama también renderHoy() (para que el
+     panel esté fresco al entrar) y renderHoy se vuelve a llamar cuando llegan los datos:
+     sin este freno se harían preguntas a la nube en bucle. */
+  if(Date.now() - HOY_CTX_PIDE < 20000) return;
+  HOY_CTX_PIDE = Date.now();
   try{
-    const r=await fetch(nubeUrl()+"/tvctx",{cache:"no-store"});
-    if(!r.ok) return;
-    const d=await r.json();
-    if(d && d.ok && d.ctx){ HOY_CTX=d; if(TAB==="hoy") renderHoy(); }
+    const pares = (Array.isArray(PARES)&&PARES.length) ? PARES : ["EUR/USD","GBP/USD"];
+    const claves = [...new Set(pares.map(ctxClave).filter(Boolean))];
+    const res = await Promise.all(claves.map(async (k)=>{
+      try{
+        const r = await fetch(nubeUrl()+"/tvctx?sym="+encodeURIComponent(k), {cache:"no-store"});
+        if(!r.ok) return null;
+        const d = await r.json();
+        return (d && d.ok && d.ctx) ? {k, d} : null;
+      }catch(_){ return null; }
+    }));
+    let hubo=false;
+    res.forEach(x=>{ if(x){ HOY_CTX_P[x.k]=x.d; hubo=true; } });
+    if(hubo){
+      /* el más fresco manda mientras él no elija otro */
+      if(!HOY_CTX_SEL || !HOY_CTX_P[HOY_CTX_SEL])
+        HOY_CTX_SEL = Object.keys(HOY_CTX_P).sort((a,b)=>(HOY_CTX_P[b].ts||0)-(HOY_CTX_P[a].ts||0))[0] || "";
+      HOY_CTX = HOY_CTX_P[HOY_CTX_SEL] || null;
+      if(TAB==="hoy") renderHoy();
+    }
   }catch(_){}
+}
+
+/* 🔎 El renglón del indicador, leído como lo que es: una cabecera y una lista de datos.
+   Formato real: «📊 CONTEXTO v3.14 GBPUSD 5 @ 1.33754 | Sesgo: … | Estado: … | …»
+   Lo que no trae dos puntos (los PDH/PDL) va entero en su línea: partirlo a ojo sería
+   inventarle una etiqueta ([[apex-roberto-no-inventa]]). */
+function ctxLeer(raw){
+  const t = String(raw||"").replace(/\s+/g," ").trim();
+  if(!t) return null;
+  const trozos = t.split("|").map(s=>s.trim()).filter(Boolean);
+  const cab = trozos.shift() || "";
+  const m = cab.match(/CONTEXTO\s+v?([\d.]+)?\s*([A-Z]{3,12})\s+(\S+)\s*@\s*([\d.]+)/i);
+  const filas = trozos.map(s=>{
+    const i = s.indexOf(":");
+    if(i < 1 || i > 22) return { k:"", v:s };
+    return { k:s.slice(0,i).trim(), v:s.slice(i+1).trim() };
+  });
+  return { ver:(m&&m[1])||"", par:(m&&m[2])||"", tf:(m&&m[3])||"", precio:(m&&m[4])||"", filas };
+}
+/* el tono sale de lo que YA dice el dato, no de una lista mía de palabras */
+function ctxTono(v){
+  const s = String(v||"");
+  if(/🔴|❌|⛔/.test(s) && !/🟢/.test(s)) return "dn";
+  if(/🟢|✅/.test(s) && !/🔴/.test(s)) return "up";
+  if(/⚠️|🟡/.test(s)) return "wa";
+  return "";
+}
+function ctxHace(ts){
+  const s = Math.max(0, Math.round((Date.now()-(+ts||0))/1000));
+  if(s < 90) return { txt:"hace "+s+" s", viejo:false };
+  const mi = Math.round(s/60);
+  if(mi < 60) return { txt:"hace "+mi+" min", viejo: mi>=20 };
+  return { txt:"hace "+Math.round(mi/60)+" h", viejo:true };
+}
+/* El panel entero. Si no hay nada que enseñar, se dice; no se finge un panorama. */
+function ctxPanelHTML(){
+  const claves = Object.keys(HOY_CTX_P);
+  if(!claves.length)
+    return '<div class="card"><div class="card-h"><span class="ic">📈</span><h2>El panel de tu gráfico</h2></div>'
+         + '<p class="desc">Todavía no ha llegado. Lo manda tu Puente desde TradingView; si está parado, aquí no hay nada que enseñarte.</p></div>';
+  const sel = HOY_CTX_P[HOY_CTX_SEL] ? HOY_CTX_SEL : claves[0];
+  const d = HOY_CTX_P[sel];
+  const p = ctxLeer(d && d.ctx);
+  if(!p) return "";
+  const edad = ctxHace(d.ts);
+  const tabs = claves.length>1
+    ? '<div class="pan-tabs">' + claves.slice().sort().map(k=>{
+        const e = ctxHace(HOY_CTX_P[k].ts);
+        return '<button class="pan-tab'+(k===sel?" on":"")+'" data-par="'+esc(k)+'">'+esc(k)+'<span>'+esc(e.txt)+'</span></button>';
+      }).join("") + '</div>'
+    : "";
+  const filas = p.filas.map(f=>{
+    const tono = ctxTono(f.v);
+    if(!f.k) return '<div class="pan-f ancha"><span class="pan-v '+tono+'">'+esc(f.v)+'</span></div>';
+    return '<div class="pan-f"><span class="pan-k">'+esc(f.k)+'</span><span class="pan-v '+tono+'">'+esc(f.v)+'</span></div>';
+  }).join("");
+  return '<div class="card pan">'
+    + '<div class="card-h"><span class="ic">📈</span><h2>El panel de tu gráfico</h2>'
+    + '<span class="cnt'+(edad.viejo?" vieja":"")+'">'+esc(edad.txt)+'</span></div>'
+    + tabs
+    + '<div class="pan-cab"><div class="pan-par">'+esc(p.par||sel)+'<span>'+esc(p.tf||"")+'</span></div>'
+    + '<div class="pan-precio">'+esc(p.precio||"—")+'</div></div>'
+    + '<div class="pan-rejilla">'+filas+'</div>'
+    + (edad.viejo ? '<p class="desc">⚠️ Este panel es de '+esc(edad.txt)+'. El gráfico ya no tiene por qué estar así: míralo antes de decidir nada.</p>' : '')
+    + '</div>';
 }
 function renderHoy(){
   const body=$("#hoyBody"); if(!body) return;
@@ -9097,6 +9196,14 @@ function renderHoy(){
       <span class="dato-v${_sl>=2?" dn":""}">${_sl}<span style="font-size:15px;opacity:.5">/2</span></span>
       <span class="dato-s">${_sl>=2?"para hasta mañana":"margen para "+(2-_sl)}</span></div>
   </div>`;
+
+  /* ── 1b. EL PANEL DEL GRÁFICO ──
+     v7.293 — Rey: «cuando abra Apex en la sección de Hoy ya puedo observar todo el panorama
+     del panel sin necesidad de abrir TradingView». Va AQUÍ, lo segundo que ve, porque es lo
+     que viene a mirar antes de decidir si opera. Antes vivía al final, y en texto crudo. */
+  try{ h+=ctxPanelHTML(); }catch(_){}
+  /* y se pide fresco al entrar: el portero de 20 s evita el bucle */
+  try{ hoyCargarCtx(); }catch(_){}
 
   /* ── 2. NOTICIAS DE HOY (aquí mismo: sin salir de esta pantalla sabes si puedes operar) ── */
   h+=hoyBloqueNoticias();
@@ -9155,13 +9262,14 @@ function renderHoy(){
     ${pend.length?`<button class="btn" id="hoyPend">Repasarlos con Roberto →</button>`:""}
   </div>`;
 
-  /* ── 6. SETUP / CONTEXTO DEL GRÁFICO ── */
+  /* ── 6. GO/NO-GO ──
+     v7.293 — aquí se volcaba el contexto del gráfico EN CRUDO, dentro de un <pre>, y era
+     todo lo que Rey tenía del panel. Ese mismo dato se pinta ahora como panel de verdad
+     arriba del todo (ctxPanelHTML), que es donde él lo pidió. Aquí queda el botón, que es
+     lo que esta tarjeta hacía en realidad. */
   h+=`<div class="card">
-    <div class="card-h"><span class="ic">📈</span><h2>Contexto del gráfico</h2></div>
-    ${HOY_CTX && HOY_CTX.ctx
-      ? `<pre class="hoy-ctx">${esc(String(HOY_CTX.ctx).slice(0,1200))}</pre>
-         <p class="desc">Último dato que mandó tu indicador${HOY_CTX.ts?(" · "+new Intl.DateTimeFormat("es",{timeZone:"America/Sao_Paulo",hour:"2-digit",minute:"2-digit",hour12:true}).format(new Date(HOY_CTX.ts))+" hora de Brasil"):""}.</p>`
-      : `<p class="desc">Sin contexto todavía. Llega solo cada ~15 min desde tu indicador (latido 📡) si tienes las alarmas activas.</p>`}
+    <div class="card-h"><span class="ic">✅</span><h2>Pedir GO/NO-GO</h2></div>
+    <p class="desc">Roberto mira tu panel, tus reglas y tus números de hoy, y te dice si entras o no.</p>
     <button class="btn" id="hoyGo">✅ Pedir GO/NO-GO a Roberto</button>
   </div>`;
 
@@ -9193,6 +9301,13 @@ function renderHoy(){
   on("hoyNews",()=>irA("noticias"));
   on("hoyPend",()=>{ if(typeof revisarPendientes==="function") revisarPendientes(); });
   on("hoyGo",()=>{ if(typeof goNoGo==="function") goNoGo(); });
+  /* 📈 v7.293 — cambiar de par en el panel del gráfico */
+  try{
+    document.querySelectorAll("#hoyBody .pan-tab").forEach(b=>{
+      b.onclick=()=>{ HOY_CTX_SEL = b.getAttribute("data-par")||HOY_CTX_SEL;
+                      HOY_CTX = HOY_CTX_P[HOY_CTX_SEL] || HOY_CTX; renderHoy(); };
+    });
+  }catch(_){}
   on("hoyParte",()=>{ if(typeof parteMatutino==="function") parteMatutino(); });
   on("hoyInf",()=>informeMensual());
   on("hoyResp",()=>compartirRespaldo());
@@ -22380,7 +22495,22 @@ async function robVistazoRefrescar(){
       const r = await traerConTiempo(nubeUrl()+"/tv/last", {}, 6000);
       const log = await r.json();
       const u = Array.isArray(log) ? log.find(x=>x && !x.silenciada && !x.filtrada) || log[0] : null;
-      if(u) _VISTAZO_SENAL = String(u.senal || u.body || "").replace(/\s+/g," ").trim();
+      /* 🗣️ 21-10 — EL VISTAZO ENSEÑA SU VEREDICTO, NO LA SEÑAL CRUDA.
+         Rey: «ya Roberto no dice yo digo, yo opino; su valoración no la da tampoco».
+         MEDIDO en su nube: la da. Sus últimas 6 alarmas traen `coach` con «🔴 NO ENTRES…».
+         Lo que fallaba es ESTA línea: pedía `u.senal || u.body`, y como `senal` SIEMPRE
+         existe, `body` —que es donde vive el «🗣️ Yo digo»— no se leía nunca. El dato
+         estaba delante y se cogía el otro campo, igual que con el break-even del 20-10
+         ([[apex-un-be-no-es-un-stop]], [[apex-declarar-no-es-dar]]).
+         En 40 caracteres, lo que le sirve es QUÉ par y QUÉ dice Roberto, no el texto del
+         indicador, que ya le llegó en el aviso. */
+      if(u){
+        const _sen = String(u.senal || u.body || "").replace(/\s+/g," ").trim();
+        const _ver = String(u.coach || "").replace(/\s+/g," ").trim();
+        /* el par y la temporalidad viven delante de la primera barra */
+        const _par = _sen.split("|")[0].replace(/^[^A-Za-z0-9]+/, "").trim();
+        _VISTAZO_SENAL = _ver ? ((_par ? _par + " · " : "") + _ver) : _sen;
+      }
     }
   }catch(_){}
 }
@@ -24354,6 +24484,12 @@ setTimeout(()=>{ if(!oyeEscuchar()) setTimeout(()=>{ if(!oyeEscuchar()) setTimeo
   setTimeout(hoyCargarNoticias, 2000);  /* 📰 noticias del día dentro de la vista HOY */
   setTimeout(planCargarMem, 2400);     /* 🧭 cuenta la memoria de Roberto para las señales del plan */
   setTimeout(hoyCargarCtx, 2600);      /* 📡 último contexto del indicador para la vista 🎯 HOY */
+  /* 📈 v7.293 — y se sigue refrescando mientras Rey está EN Hoy. Antes esto se pedía UNA
+     sola vez al arrancar: con Apex abierta, el panel se quedaba congelado en el momento de
+     abrirla, que es lo contrario de lo que pidió («al mismo tiempo que suceden las cosas»).
+     Solo pregunta con la pantalla encendida y estando en Hoy: ni batería ni datos por
+     detrás ([[apex-nada-obligatorio-nada-gasta-solo]]). */
+  setInterval(()=>{ try{ if(TAB==="hoy" && !document.hidden) hoyCargarCtx(); }catch(_){} }, 60000);
   setTimeout(respChequear, 6000);      /* ☁️ recordatorio de respaldo a Drive cada X días */
   irA("hoy");        /* 🎯 lo primero al abrir: TODO tu día en una pantalla */
   tickRelojes(); setInterval(tickRelojes,10000);

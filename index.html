@@ -246,6 +246,38 @@ button{cursor:pointer;border:none;background:none}
 html[data-tema="claro"] .card-h .cnt{background:rgba(16,16,20,.05)}
 .card p.desc{font-size:14px;color:var(--txt2);margin:6px 0 12px}
 
+/* ===== 📈 EL PANEL DEL GRÁFICO (v7.293) =====
+   Rey pidió ver el panel de TradingView dentro de Apex, al abrir Hoy. El dato ya le
+   llegaba; lo que había era un volcado de texto crudo. Esto lo pinta como lo que es:
+   una cabecera con el par y el precio, y una rejilla de lecturas con su tono. */
+.card.pan{padding-bottom:8px}
+.card-h .cnt.vieja{color:var(--red);border-color:rgb(var(--acc-rgb)/.0);
+  background:rgba(255,59,92,.12)}
+.pan-tabs{display:flex;gap:6px;margin:-2px 0 11px;flex-wrap:wrap}
+.pan-tab{display:flex;flex-direction:column;align-items:flex-start;gap:1px;
+  padding:6px 11px;border-radius:11px;border:1px solid var(--line);background:var(--card2);
+  font-size:12.5px;font-weight:700;letter-spacing:.02em;color:var(--txt3)}
+.pan-tab span{font-size:9.5px;font-weight:600;letter-spacing:.03em;opacity:.75}
+.pan-tab.on{color:var(--on-acc);background:var(--acc);border-color:var(--acc)}
+.pan-cab{display:flex;align-items:baseline;justify-content:space-between;gap:10px;
+  padding:0 0 10px;margin-bottom:10px;border-bottom:1px solid var(--line)}
+.pan-par{font-size:17px;font-weight:800;letter-spacing:-.02em;color:var(--txt);
+  display:flex;align-items:baseline;gap:7px}
+.pan-par span{font-size:10.5px;font-weight:700;letter-spacing:.09em;color:var(--txt3);
+  text-transform:uppercase}
+.pan-precio{font-size:21px;font-weight:800;letter-spacing:-.03em;color:var(--acc);
+  font-variant-numeric:tabular-nums}
+.pan-rejilla{display:grid;grid-template-columns:repeat(auto-fit,minmax(152px,1fr));
+  gap:1px;background:var(--line);border:1px solid var(--line);border-radius:12px;
+  overflow:hidden}
+.pan-f{display:flex;flex-direction:column;gap:3px;padding:9px 11px;background:var(--card)}
+.pan-f.ancha{grid-column:1/-1}
+.pan-k{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;
+  color:var(--txt3)}
+.pan-v{font-size:13px;font-weight:600;line-height:1.35;color:var(--txt);
+  overflow-wrap:anywhere}
+.pan-v.up{color:var(--green)} .pan-v.dn{color:var(--red)} .pan-v.wa{color:var(--acc-2)}
+
 /* barra progreso */
 .bar{height:7px;background:var(--card3);border-radius:99px;overflow:hidden;margin:10px 0 14px}
 .bar i{display:block;height:100%;background:var(--gold);border-radius:99px;transition:width .3s ease;width:0}
