@@ -1,90 +1,51 @@
-APEX v7.297 — TRADING DESK
+APEX v7.298 — TRADING DESK
 =========================
 
-🚧 EL ANÁLISIS QUE SE DESBOCÓ
+🎚️ TU GESTIÓN AHORA CUELGA DE LA FASE DE CADA CUENTA
 
-Me dijiste esta noche: «le dije que me hiciera un análisis y se quedó trabado, y el recuadro
-del análisis no tiene nada dentro, o sea no sé qué clase de análisis me hizo».
+Lo pediste así: «necesito saber en teoría qué RR, qué %, cómo gestionar en examen y en
+fondeada sin tantas complicaciones». Y antes: «es algo que me ha costado mucho tiempo y
+dinero».
 
+Hasta hoy, pasar una cuenta de examen a fondeada era cambiar SEIS números a mano —riesgo,
+presupuesto del día, R:R, break-even, parciales y tope de entradas— el día más peligroso de
+todos: el día que apruebas. Ahora no.
 
-QUÉ PASÓ DE VERDAD (medido en tu propia bitácora del chat)
+QUÉ VAS A VER EN 🏦 CUENTAS
+· Cada tarjeta lleva su ficha de gestión: «🏁 Tu gestión en examen» o «💰 Tu gestión ya
+  fondeado», con el R:R, el riesgo EN DÓLARES (no en %), el presupuesto del día, las entradas
+  al día, el grado que tomas, el break-even y los parciales.
+· Cada número dice de dónde sale: «tuyo» si lo escribiste, o «sugerido para esta fase» si
+  sale del laboratorio del 24-10. Nada se te aplica solo.
+· Marca la cuenta como «Fondeada» y el riesgo baja (0,75% → 0,40%) y el break-even se apaga
+  SOLOS. No tienes que acordarte de nada.
+· Y abajo, la regla de mano: «entro, pongo stop y objetivo a 2R, muevo a break-even en 1R, y
+  no vuelvo a tocar la pantalla».
 
-   18:23:05   61s   ✅ ok (83.412 caracteres)   <- OCHENTA Y TRES MIL
-   18:27:03   59s   🤝 pidió manos
-   18:39:25    ?    ⏳ pensando   <- sin final: MURIÓ
-   18:44:09    ?    ⏳ pensando   <- sin final: MURIÓ
+⏱️ EL RELOJ DE LA FASE
+Tu pregunta era «¿hay rentabilidad en el tiempo?». Ahora la tarjeta te la contesta: «a tu
+ritmo llegas en N días, el DD-MM. Tu presupuesto era M días: te sobran X» — o «te pasas de X,
+a este ritmo no es rentable en el tiempo». Y cuando no llegas, te señala lo que SÍ mueve ese
+número: no cortar las ganadoras y no quedarte solo con grado A+. Nunca «sube el riesgo».
+Si todavía no hay ritmo fiable (menos de 3 días con operaciones registradas) no te da
+veredicto: un veredicto sobre dos operaciones es peor que ninguno.
 
-Una respuesta mía normal ronda los 1.000-3.000 caracteres.
+🤖 ROBERTO TAMBIÉN LO SABE
+No está solo en la pantalla: Roberto recibe el plan de cada cuenta y distingue lo tuyo de lo
+sugerido, así que si le preguntas «¿cuánto arriesgo en esta?» te contesta con el plan de ESA
+cuenta en ESA fase, no con una regla general.
 
-El análisis EMPEZÓ BIEN. Te escribí un análisis semanal del GBP/USD correcto: zona Premium
-70%, la liquidez de arriba y la de abajo con sus precios, el mapa de la semana, y unas notas
-del mentor recordándote tu fuga del timing prematuro.
+✏️ Y LO PUEDES CAMBIAR TODO
+En ✏️ Editar → «Gestión de esta cuenta» tienes los seis campos. Lo que dejes en blanco sigue
+la fase; lo que escribas manda. Son tus reglas.
 
-Del EUR/USD no te dije nada, y en eso tenía razón: a esa hora no me estaba llegando. Fue el
-bache de la pestaña congelada que arreglamos antes — se curó solo a las 18:30, siete minutos
-después de tu análisis.
-
-Y entonces me descarrilé. Escribiendo la tabla de 🏦 Por Cuenta se me escapó un marcador
-interno de los que enlazan mis recuerdos (`[[analiza]]`), perdí el hilo y escribí 77.443
-caracteres EN UNA SOLA LÍNEA sobre las tarjetas gráficas Blackwell de NVIDIA. Nada que ver
-contigo.
-
-
-LO GRAVE NO FUE ESO, FUE LO QUE VINO DESPUÉS
-
-Ese mensaje de 83.000 caracteres se quedó guardado en el chat. Y un chat se manda ENTERO en
-cada mensaje nuevo: así que esa basura volvía a viajar cada vez que escribías.
-
-   · los dos intentos siguientes MURIERON (el trabajo deja de latir y se acabó)
-   · y tu día pasó de 0,19 $ a 0,34 $ — 6 llamadas, 0,15 $, repitiendo basura
-
-Encima mi detector de muerte REINTENTA solo... volviendo a mandar el mismo mensaje. Es como
-arrancar un coche inundado: cuantas más veces, peor.
-
-Y el recuadro vacío que viste era esa tabla: salió con la cabecera y sin una sola fila.
-
-
-LO QUE CAMBIA — TRES CIERRES, NO UNO
-
-1) EN LA NUBE (worker 5.292): UNA RESPUESTA DESBOCADA SE CORTA
-
-   El tope es 14.000 caracteres — tu análisis semanal bueno cabía cuatro veces. Se corta por
-   el último salto de línea, para no partirte una frase, y te lo digo en el propio mensaje:
-
-       ⚠️ Me desboqué y me he cortado solo. Esta respuesta iba por 83.412 caracteres
-       cuando lo normal son 1.000-3.000... Me quedo con lo de arriba, que sí vale.
-
-   Va dentro de bgEscribir, que es el ÚNICO sitio por el que pasa todo lo que el chat
-   guarda: no hay puerta de atrás.
-
-2) EN LA APP: LOS CHATS QUE YA ESTÁN ENVENENADOS SE CURAN SOLOS
-
-   No tienes que borrar nada. Un mensaje gordo guardado ya no se reenvía entero ni se pinta
-   entero. El original se guarda intacto, como siempre — lo que se recorta es lo que viaja y
-   lo que se dibuja.
-
-   Y el reintento automático, que hacía su propia llamada por un camino distinto y se
-   saltaba todo esto, ahora también recorta antes de insistir.
-
-3) EN LA APP: UN TRABAJO MUERTO YA NO TE DEJA MIRANDO LOS PUNTITOS
-
-   Cuando te fuiste a otra app, Android congeló los relojes de Apex: ni el sondeo ni el
-   seguro corrían. Al volver, el detector de muerte empezaba a contar DE CERO otros 3
-   minutos, aunque el trabajo llevara media hora muerto. Por eso lo viste en «pensando…»
-   sin que nadie te dijera nada.
-
-   Ahora, si al abrir Apex el trabajo ya venía viejo, el plazo baja a 25 segundos.
-
-
-QUÉ TIENES QUE HACER TÚ
-
-SUBIR EL WORKER 5.292. Está en esta misma carpeta. Sustituye al 5.291 que subiste hoy.
-Mientras no lo subas, las dos mitades de la app ya te protegen (no se reenvía ni se pinta
-una respuesta desbocada), pero la nube seguiría GUARDANDO el mensaje gordo.
-
-Y un consejo para esta noche: ese chat concreto ya está curado por la app, pero si quieres
-el análisis semanal limpio de verdad, pídemelo en un chat NUEVO. Ahora sí tengo los dos
-pares en vivo.
+DE DÓNDE SALEN LAS SUGERENCIAS (laboratorio del 24-10, en analisis/)
+· R:R 2,0 y nunca 1,5: a igual riesgo el 1,5 rinde 17% menos y además es más lento.
+· Parciales NO: tus 5 ganadoras con parcial cerraron a 1,16R y la única sin parcial llegó a
+  2,10R, con el objetivo en 2,00R.
+· Grado A+ y B: solo A+ son 3 señales en 7 semanas, o sea 195 días por examen.
+· Break-even SÍ en examen y NO en fondeada: quitarlo da +10,1% en EUR y +55% en GBP, pero en
+  un examen no maximizas beneficio, esquivas una pared con una cuota pagada.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

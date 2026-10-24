@@ -14595,6 +14595,109 @@ function planCuenta(c, st){
            ddTotPct, limTotUSD, perdidaTot, quedaTot, gastadoTotPct };
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════════════════
+   🎚️ LA GESTIÓN DE CADA FASE — v7.298 (24-10-2026)
+   ═══════════════════════════════════════════════════════════════════════════════════════
+   Rey, 24-10, después de medir el laboratorio del modo examen: «necesito saber en teoría qué
+   RR, qué %, cómo gestionar en examen y en fondeada sin tantas complicaciones». Y antes:
+   «la gestión de riesgo de las cuentas, examen y fondeada, es muy importante… es algo que me
+   ha costado mucho tiempo y dinero».
+
+   EL PROBLEMA QUE ESTO RESUELVE, Y NO ES DE PANTALLA:
+   Hasta hoy, pasar una cuenta de examen a fondeada era cambiar SEIS números a mano —riesgo,
+   presupuesto del día, R:R, break-even, parciales y tope de entradas— el día más peligroso de
+   todos: el día que aprueba. Eso es justo lo que su propia ley prohíbe: nada que Rey tenga
+   que recordar ([[apex-nada-que-rey-tenga-que-recordar]]).
+   Ahora la gestión CUELGA DE LA FASE de la cuenta. Marca «Fondeada» y el plan cambia solo.
+
+   LO MEDIDO EL 24-10 (de donde salen las sugerencias — `analisis/gestion-examen-y-fondeada-2026-10-24.md`)
+     · R:R 2,0, nunca 1,5: a igual riesgo el 1,5 rinde un 17% menos y además es más LENTO.
+     · Parciales NO: sus 5 ganadoras con parcial cerraron a 1,16R; la única sin parcial llegó
+       a 2,10R con el objetivo en 2,00R ([[apex-sus-ganadoras-llegan-a-la-mitad]]).
+     · Break-even SÍ en examen y NO en fondeada. Parece contradictorio y no lo es: quitarlo
+       da +10,1% en EUR y +55% en GBP, pero en un examen no se maximiza beneficio, se esquiva
+       una pared con una cuota pagada — el BE cambia dinero por varianza, y con un suelo en
+       −10% la enemiga es la varianza. Ya fondeado no hay pared que esquivar, hay un sueldo
+       que cobrar, y ahí el BE solo roba.
+     · Grado A+ **y B**: solo A+ son 3 señales en 7 semanas = 195 días por examen
+       ([[apex-el-grado-a-mas-es-un-grifo-cerrado]]).
+     · El presupuesto del día tiene que dar para DOS entradas, o se cierra con la primera y se
+       paga el riesgo completo por media mejora.
+
+   ⚠️ NADA DE ESTO SE LE APLICA SOLO. Son SUGERENCIAS medidas; lo que manda es lo que él
+   escriba en la ficha, y la tarjeta dice siempre de dónde sale cada número
+   ([[apex-reglas-en-manos-de-rey]], [[apex-no-elegir-por-rey]], [[apex-roberto-no-inventa]]).
+   ═══════════════════════════════════════════════════════════════════════════════════════ */
+const GESTION_FASE = {
+  examen:   { rr:"2.0", riesgoPct:"0.75", be:"Sí", parcial:"No", opsDia:"3", riesgoDiaPct:"1.5", grado:"A+ y B" },
+  fondeada: { rr:"2.0", riesgoPct:"0.40", be:"No", parcial:"No", opsDia:"2", riesgoDiaPct:"1.0", grado:"A+ y B" },
+  otra:     { rr:"2.0", riesgoPct:"0.50", be:"Sí", parcial:"No", opsDia:"2", riesgoDiaPct:"1.0", grado:"A+ y B" },
+};
+/* Qué familia de gestión le toca a cada fase. «Real» va con fondeada: dinero que ya es suyo
+   y no hay objetivo que correr. Propia y Demo van aparte, sin prisa y sin sueldo. */
+function familiaFase(fase){
+  const f = String(fase || "");
+  if(f.indexOf("Examen") === 0) return "examen";
+  if(f === "Fondeada" || f === "Real") return "fondeada";
+  return "otra";
+}
+/* El plan EFECTIVO: lo suyo si lo escribió, y si no la sugerencia de la fase — diciendo
+   siempre cuál de las dos es, porque un número sin procedencia es el que le hizo desconfiar. */
+function gestionDeFase(c){
+  const fam = familiaFase(c.fase);
+  const sug = GESTION_FASE[fam];
+  const campo = (clave, mio) => {
+    const v = (mio !== undefined && mio !== null && String(mio).trim() !== "") ? String(mio).trim() : null;
+    return { v: v !== null ? v : sug[clave], mio: v !== null, sug: sug[clave] };
+  };
+  return {
+    fam, familia: fam === "examen" ? "examen" : fam === "fondeada" ? "fondeada" : "sin prisa",
+    rr:           campo("rr", c.gRR),
+    riesgoPct:    campo("riesgoPct", c.riesgoPct),
+    be:           campo("be", c.gBE),
+    parcial:      campo("parcial", c.gParcial),
+    opsDia:       campo("opsDia", c.gOpsDia),
+    riesgoDiaPct: campo("riesgoDiaPct", c.gRiesgoDiaPct),
+    grado:        campo("grado", c.gGrado),
+  };
+}
+
+/* 🎚️ la ficha de gestión, dentro de la tarjeta de la cuenta.
+   Una línea por decisión, con el dinero al lado: lo que él mira antes de entrar no es un
+   porcentaje, es cuántos dólares arriesga ([[apex-las-cuentas-del-ejecutor]]). */
+function gestionHTML(c, st){
+  st = st || statsCuenta(c);
+  const g = gestionDeFase(c);
+  if(g.fam === "otra" && !(+st.cap > 0)) return "";
+  const cap = +st.cap || 0;
+  const usd = (p) => cap > 0 ? "$" + r0(cap * (parseFloat(p) || 0) / 100) : "—";
+  /* la etiqueta de procedencia: suyo, o sugerido y por qué */
+  const de = (x) => x.mio
+    ? `<small>tuyo</small>`
+    : `<small>sugerido para ${g.familia} (medido 24-10)</small>`;
+  const fila = (etiq, x, extra) => `<div class="row"><div class="l">${etiq}${de(x)}</div>
+    <div class="r">${esc(x.v)}${extra ? " <small>" + extra + "</small>" : ""}</div></div>`;
+
+  const titulo = g.fam === "examen"
+    ? "🏁 Tu gestión en examen"
+    : g.fam === "fondeada" ? "💰 Tu gestión ya fondeado" : "🎚️ Tu gestión en esta cuenta";
+  const idea = g.fam === "examen"
+    ? "En examen el objetivo es <b>llegar</b>: reventar cuesta la cuota."
+    : g.fam === "fondeada" ? "Ya fondeado el objetivo es <b>no irse</b>: reventar cuesta la fuente de ingresos."
+    : "Sin objetivo que correr: aquí se practica, no se corre.";
+
+  return `<div class="note" style="text-align:left;margin:10px 0 2px"><b>${titulo}</b><br>${idea}</div>
+    ${fila("Objetivo R:R", g.rr, "nunca 1,5: rinde 17% menos y es más lento")}
+    ${fila("Riesgo por entrada", g.riesgoPct, usd(g.riesgoPct.v) + " por operación")}
+    ${fila("Presupuesto del día", g.riesgoDiaPct, usd(g.riesgoDiaPct.v) + " · que quepan 2 entradas")}
+    ${fila("Entradas al día", g.opsDia, "y 1 por sesión")}
+    ${fila("Grado que tomo", g.grado, "solo A+ son 3 señales en 7 semanas")}
+    ${fila("Stop a break-even en 1R", g.be, g.fam === "examen" ? "sí: cambia dinero por tranquilidad" : "no: ya no hay pared que esquivar")}
+    ${fila("Parciales", g.parcial, "las 5 con parcial cerraron a 1,16R; la única sin parcial llegó a 2,10R")}
+    <div class="note" style="text-align:left;margin:4px 0 2px">🖐️ <b>La regla de mano:</b> entro, pongo stop y
+      objetivo a ${esc(g.rr.v)}R${g.be.v === "Sí" ? ", muevo a break-even en 1R" : ""}, y no vuelvo a tocar la pantalla.</div>`;
+}
+
 /* 🎯 el plan, en la ficha. Dos bloques: a dónde va, y qué le puede quemar la cuenta. */
 function planHTML(c, st){
   const p = planCuenta(c, st);
@@ -14664,6 +14767,33 @@ function planHTML(c, st){
     const apuradoTot = p.quedaTot <= p.limTotUSD * 0.3;
     lim.push(`<div class="row"><div class="l">Pérdida TOTAL<small>tu límite es ${r1(p.ddTotPct)}% = $${r0(p.limTotUSD)}${p.gastadoTotPct>0?" · llevas gastado el "+r0(p.gastadoTotPct)+"%":""}</small></div>
       <div class="r ${apuradoTot?"red":""}">${p.perdidaTot>0?"−$"+r0(p.perdidaTot)+" · ":""}te quedan $${r0(p.quedaTot)}</div></div>`);
+  }
+  /* ⏱️ v7.298 (24-10) — EL RELOJ DEL EXAMEN: «¿hay rentabilidad en el tiempo?»
+     ═══════════════════════════════════════════════════════════════════════════════════════
+     Rey: «si en un solo examen me demoro más de un mes ya no hay rentabilidad en el tiempo
+     para capitalizarme; si llegan a ser 5 cuentas tardaría un año».
+     El ritmo y la fecha de llegada ya se calculaban desde el 12-10, pero el número se quedaba
+     ahí, sin veredicto: él tenía que comparar a mano la fecha con su presupuesto de días. Y
+     eso es justo lo que no puede depender de que se acuerde. Su presupuesto YA está en la
+     ficha («Días para el objetivo», `diasObjetivo`): esto solo lo pone al lado y dice si
+     llega o no ([[apex-nada-que-rey-tenga-que-recordar]], [[apex-roberto-no-inventa]]).
+     Si no hay ritmo fiable todavía (menos de 3 días registrados) NO se da veredicto: un
+     veredicto sobre dos operaciones es peor que ninguno. */
+  if(p.target > 0 && !p.logrado && p.diasQueFaltan !== null){
+    const sobra = p.diasObj - p.diasQueFaltan;
+    const llega = sobra >= 0;
+    const semanas = (p.diasQueFaltan / 5).toFixed(1);
+    L.push(`<div class="note" style="text-align:left;margin:10px 0 2px"><b>⏱️ El reloj de esta fase</b></div>
+      <div class="diag ${llega ? "ok" : "warn"}" style="padding:11px 13px;margin:4px 0 2px">
+        <div class="dd" style="color:${llega ? "var(--green)" : "var(--orange)"}">
+          ${llega ? "🟢" : "🟠"} A tu ritmo de ahora llegas en <b>${p.diasQueFaltan} día(s)</b> operativos
+          (${semanas} semanas)${p.fechaLlegada ? ", el <b>" + fechaCorta(p.fechaLlegada) + "</b>" : ""}.
+          Tu presupuesto era <b>${p.diasObj} día(s)</b>:
+          ${llega ? "te sobran <b>" + sobra + "</b>." : "te pasas de <b>" + Math.abs(sobra) + "</b> — a este ritmo no es rentable en el tiempo."}
+        </div></div>`);
+    if(!llega) L.push(`<div class="note" style="text-align:left;margin:2px 0 2px">Para llegar en ${p.diasObj} días
+      necesitarías <b>$${r0(p.porDia)}/día</b> y vas a <b>$${r0(p.ritmoReal)}/día</b>. Lo que más mueve ese número
+      no es subir el riesgo: es <b>no cortar las ganadoras</b> (quitar parciales) y <b>no quedarte solo con grado A+</b>.</div>`);
   }
   if(lim.length) L.push(`<div class="note" style="text-align:left;margin:10px 0 2px"><b>🛡️ Lo que te puede quemar la cuenta</b></div>` + lim.join(""));
   else L.push(`<div class="note" style="text-align:left;margin:8px 0 2px">🛡️ <b>Faltan tus límites de pérdida</b> (diaria y total). Tócalos en ✏️ Editar: son los que te avisan antes de quemar la cuenta.</div>`);
@@ -14755,6 +14885,7 @@ function tarjetaCuenta(c){
     ${barra}
     ${estado}
     ${planHTML(c,st)}
+    ${gestionHTML(c,st)}
     ${reglas.length?`<div class="note" style="text-align:left;margin:10px 0 4px">📋 ${reglas.join(" · ")}</div>`:""}
     ${ligados}
     ${comp.length?`<div class="note" style="text-align:left">💰 ${comp.join(" · ")}</div>`:""}
@@ -14855,6 +14986,28 @@ function cuentaModal(id){
       <div><div class="fl">Próximo payout</div><input class="inp" id="ac_payout" placeholder="Ej: 15 sep" value="${val("proxPayout")}"></div>
       <div><div class="fl">Meta de escalado</div><input class="inp" id="ac_meta" placeholder="Ej: llegar a 200K" value="${val("metaEscalado")}"></div>
     </div>
+    <!-- 🎚️ v7.298 (24-10) — LA GESTIÓN DE ESTA CUENTA, Y COLGADA DE SU FASE.
+         Rey: «necesito saber en teoría qué RR, qué %, cómo gestionar en examen y en fondeada».
+         Lo que se deja en blanco NO queda vacío: la tarjeta usa la sugerencia MEDIDA para la
+         fase de la cuenta y lo dice. Así marcar «Fondeada» cambia el plan solo, sin que él
+         tenga que acordarse de seis números el día que aprueba
+         ([[apex-nada-que-rey-tenga-que-recordar]], [[apex-reglas-en-manos-de-rey]]). -->
+    <div class="fl" style="color:var(--gold)">Gestión de esta cuenta</div>
+    <div class="note" style="text-align:left;margin:-2px 0 8px">Lo que dejes en blanco lo rellena
+      la <b>sugerencia medida</b> para la fase de esta cuenta (laboratorio del 24-10), y la tarjeta
+      te dirá de dónde sale cada número. Nada se te aplica solo.</div>
+    <div class="g2">
+      <div><div class="fl">Objetivo R:R</div><input class="inp" id="ac_grr" inputmode="decimal" placeholder="(sugerido)" value="${val("gRR")}"></div>
+      <div><div class="fl">Presupuesto del día (%)</div><input class="inp" id="ac_griesgodia" inputmode="decimal" placeholder="(sugerido)" value="${val("gRiesgoDiaPct")}"></div>
+    </div>
+    <div class="g2">
+      <div><div class="fl">Entradas al día</div><input class="inp" id="ac_gopsdia" inputmode="numeric" placeholder="(sugerido)" value="${val("gOpsDia")}"></div>
+      <div><div class="fl">Grado que tomas</div><select class="inp" id="ac_ggrado">${opt(["(sugerido)","A+ y B","Solo A+"], c.gGrado||"(sugerido)")}</select></div>
+    </div>
+    <div class="g2">
+      <div><div class="fl">Stop a break-even en 1R</div><select class="inp" id="ac_gbe">${opt(["(sugerido)","Sí","No"], c.gBE||"(sugerido)")}</select></div>
+      <div><div class="fl">Parciales</div><select class="inp" id="ac_gparcial">${opt(["(sugerido)","Sí","No"], c.gParcial||"(sugerido)")}</select></div>
+    </div>
     <div class="fl" style="color:var(--gold)">Notas y gestión</div>
     <div class="fld"><div class="fl">Perfil de la cuenta</div>
       <select class="inp" id="ac_perfil">${opt(["Normal","Conservadora","Agresiva"], c.perfil||"Normal")}</select></div>
@@ -14884,6 +15037,7 @@ function cuentaAbiertaEnMT5(numero){
 
 function guardarCuentaForm(id){
   const g=(i)=>{ const e=$("#"+i); return e?e.value.trim():""; };
+  const sug=(v)=> v==="(sugerido)" ? "" : v;   /* 🎚️ v7.298 */
   const alias=g("ac_alias"), firma=g("ac_firma");
   if(!alias && !firma){ toast("Ponle al menos un alias o la firma"); return; }
   const datos={
@@ -14893,7 +15047,12 @@ function guardarCuentaForm(id){
     targetPct:g("ac_target"), diasMin:g("ac_diasmin"), diasObjetivo:g("ac_diasobj"), precio:g("ac_precio"), splitPct:g("ac_split"),
     balance:g("ac_balance"), retiros:g("ac_retiros"), reinvertido:g("ac_reinv"),
     proxPayout:g("ac_payout"), metaEscalado:g("ac_meta"),
-    perfil:g("ac_perfil"), nota:g("ac_nota")
+    perfil:g("ac_perfil"), nota:g("ac_nota"),
+    /* 🎚️ v7.298 — «(sugerido)» NO es un valor: se guarda vacío para que la tarjeta siga la
+       fase. Si se guardara el texto, la cuenta quedaría clavada a la sugerencia de HOY y al
+       pasar a fondeada no cambiaría nada — que es exactamente el fallo que esto viene a tapar. */
+    gRR:g("ac_grr"), gRiesgoDiaPct:g("ac_griesgodia"), gOpsDia:g("ac_gopsdia"),
+    gGrado:sug(g("ac_ggrado")), gBE:sug(g("ac_gbe")), gParcial:sug(g("ac_gparcial"))
   };
   if(id){
     const c=CUENTAS.find(x=>x.id===id);
@@ -14966,6 +15125,20 @@ function iaCuentas(){
     if(c.retiros) s+=` Retirado $${r0(+c.retiros)}.`;
     if(c.metaEscalado) s+=` Meta: ${c.metaEscalado}.`;
     if(c.perfil) s+=` Perfil ${c.perfil}.`;
+    /* 🎚️ v7.298 (24-10) — LA GESTIÓN DE LA FASE TAMBIÉN LA TIENE QUE SABER ROBERTO.
+       Si está en la pantalla y no en su cabeza, Rey le pregunta «¿cuánto arriesgo en esta?» y
+       él contesta con una regla general en vez de con el plan de ESTA cuenta en ESTA fase.
+       Declarar no es dar ([[apex-declarar-no-es-dar]], [[apex-mano-y-vision-en-todo-lo-nuevo]]). */
+    try{
+      const G=gestionDeFase(c);
+      const marca=(x)=> x.mio ? "" : "(sugerido)";
+      s+=`
+   GESTIÓN de esta fase: R:R ${G.rr.v}${marca(G.rr)} · riesgo ${G.riesgoPct.v}%${marca(G.riesgoPct)}`
+       + ` (${st.cap>0?"$"+r0(st.cap*(parseFloat(G.riesgoPct.v)||0)/100):"—"} por entrada)`
+       + ` · presupuesto del día ${G.riesgoDiaPct.v}%${marca(G.riesgoDiaPct)} · ${G.opsDia.v}${marca(G.opsDia)} entradas/día`
+       + ` · grado ${G.grado.v}${marca(G.grado)} · break-even en 1R: ${G.be.v}${marca(G.be)} · parciales: ${G.parcial.v}${marca(G.parcial)}.`
+       + ` Lo marcado (sugerido) sale del laboratorio del 24-10, NO lo ha puesto él: si te pregunta, dilo así.`;
+    }catch(_){}
     if(c.nota) s+=` Nota: ${c.nota}.`;
     s+="\n";
   });
