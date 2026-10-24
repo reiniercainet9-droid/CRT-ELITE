@@ -14672,11 +14672,20 @@ function gestionHTML(c, st){
   const cap = +st.cap || 0;
   const usd = (p) => cap > 0 ? "$" + r0(cap * (parseFloat(p) || 0) / 100) : "—";
   /* la etiqueta de procedencia: suyo, o sugerido y por qué */
-  const de = (x) => x.mio
-    ? `<small>tuyo</small>`
-    : `<small>sugerido para ${g.familia} (medido 24-10)</small>`;
-  const fila = (etiq, x, extra) => `<div class="row"><div class="l">${etiq}${de(x)}</div>
-    <div class="r">${esc(x.v)}${extra ? " <small>" + extra + "</small>" : ""}</div></div>`;
+  const de2 = (x) => x.mio ? "tuyo" : "sugerido para " + g.familia + " (medido 24-10)";
+  /* 📱 24-10, visto EN SU TELÉFONO antes de darlo por entregado: la explicación iba pegada al
+     valor, en la columna de la DERECHA, y en una pantalla de 412 px se salía — «rinde 17%
+     menos y es más…», «solo A+ son 3 señales en 7 seman…»— y de paso aplastaba la etiqueta
+     de la izquierda, que se partía en tres líneas («Grado / que / tomo»).
+     La derecha es para EL NÚMERO y nada más; lo que explica va en la izquierda, debajo de la
+     etiqueta, que es la columna que ya sabe envolver. Es el mismo patrón que usa el resto de
+     la ficha ([[apex-la-captura-era-ancha-no-alta]], [[apex-pulsar-no-basta]]). */
+  const fila = (etiq, x, extra) => `<div class="row"><div class="l">${etiq}<small>${de2(x)}${extra ? " · " + extra : ""}</small></div>
+    <div class="r">${esc(x.v)}</div></div>`;
+  /* el riesgo se mira en DÓLARES, no en porcentaje: el dinero va al lado del número, que es
+     lo único que él mira justo antes de entrar ([[apex-las-cuentas-del-ejecutor]]). */
+  const filaUSD = (etiq, x, dinero, extra) => `<div class="row"><div class="l">${etiq}<small>${de2(x)}${extra ? " · " + extra : ""}</small></div>
+    <div class="r">${esc(x.v)}%<br><small>${dinero}</small></div></div>`;
 
   const titulo = g.fam === "examen"
     ? "🏁 Tu gestión en examen"
@@ -14688,8 +14697,8 @@ function gestionHTML(c, st){
 
   return `<div class="note" style="text-align:left;margin:10px 0 2px"><b>${titulo}</b><br>${idea}</div>
     ${fila("Objetivo R:R", g.rr, "nunca 1,5: rinde 17% menos y es más lento")}
-    ${fila("Riesgo por entrada", g.riesgoPct, usd(g.riesgoPct.v) + " por operación")}
-    ${fila("Presupuesto del día", g.riesgoDiaPct, usd(g.riesgoDiaPct.v) + " · que quepan 2 entradas")}
+    ${filaUSD("Riesgo por entrada", g.riesgoPct, usd(g.riesgoPct.v), "lo que arriesgas en cada una")}
+    ${filaUSD("Presupuesto del día", g.riesgoDiaPct, usd(g.riesgoDiaPct.v), "que quepan 2 entradas")}
     ${fila("Entradas al día", g.opsDia, "y 1 por sesión")}
     ${fila("Grado que tomo", g.grado, "solo A+ son 3 señales en 7 semanas")}
     ${fila("Stop a break-even en 1R", g.be, g.fam === "examen" ? "sí: cambia dinero por tranquilidad" : "no: ya no hay pared que esquivar")}

@@ -1,51 +1,17 @@
-APEX v7.298 — TRADING DESK
+APEX v7.299 — TRADING DESK
 =========================
 
-🎚️ TU GESTIÓN AHORA CUELGA DE LA FASE DE CADA CUENTA
+📱 ARREGLO DE LA FICHA DE GESTIÓN EN EL TELÉFONO
 
-Lo pediste así: «necesito saber en teoría qué RR, qué %, cómo gestionar en examen y en
-fondeada sin tantas complicaciones». Y antes: «es algo que me ha costado mucho tiempo y
-dinero».
+La 7.298 traía la gestión por fase y funcionaba, pero al verla INSTALADA en tu moto g54 se
+salía de la pantalla: la explicación iba pegada al número, en la columna de la derecha, y en
+412 px se cortaba («rinde 17% menos y es más…», «solo A+ son 3 señales en 7 seman…»). De paso
+aplastaba la etiqueta de la izquierda y la partía en tres líneas («Grado / que / tomo»).
 
-Hasta hoy, pasar una cuenta de examen a fondeada era cambiar SEIS números a mano —riesgo,
-presupuesto del día, R:R, break-even, parciales y tope de entradas— el día más peligroso de
-todos: el día que apruebas. Ahora no.
+Ahora la derecha lleva SOLO el número —y el riesgo, además, en dólares debajo— y todo lo que
+explica vive en la izquierda, debajo de la etiqueta, que es la columna que sabe envolver.
 
-QUÉ VAS A VER EN 🏦 CUENTAS
-· Cada tarjeta lleva su ficha de gestión: «🏁 Tu gestión en examen» o «💰 Tu gestión ya
-  fondeado», con el R:R, el riesgo EN DÓLARES (no en %), el presupuesto del día, las entradas
-  al día, el grado que tomas, el break-even y los parciales.
-· Cada número dice de dónde sale: «tuyo» si lo escribiste, o «sugerido para esta fase» si
-  sale del laboratorio del 24-10. Nada se te aplica solo.
-· Marca la cuenta como «Fondeada» y el riesgo baja (0,75% → 0,40%) y el break-even se apaga
-  SOLOS. No tienes que acordarte de nada.
-· Y abajo, la regla de mano: «entro, pongo stop y objetivo a 2R, muevo a break-even en 1R, y
-  no vuelvo a tocar la pantalla».
-
-⏱️ EL RELOJ DE LA FASE
-Tu pregunta era «¿hay rentabilidad en el tiempo?». Ahora la tarjeta te la contesta: «a tu
-ritmo llegas en N días, el DD-MM. Tu presupuesto era M días: te sobran X» — o «te pasas de X,
-a este ritmo no es rentable en el tiempo». Y cuando no llegas, te señala lo que SÍ mueve ese
-número: no cortar las ganadoras y no quedarte solo con grado A+. Nunca «sube el riesgo».
-Si todavía no hay ritmo fiable (menos de 3 días con operaciones registradas) no te da
-veredicto: un veredicto sobre dos operaciones es peor que ninguno.
-
-🤖 ROBERTO TAMBIÉN LO SABE
-No está solo en la pantalla: Roberto recibe el plan de cada cuenta y distingue lo tuyo de lo
-sugerido, así que si le preguntas «¿cuánto arriesgo en esta?» te contesta con el plan de ESA
-cuenta en ESA fase, no con una regla general.
-
-✏️ Y LO PUEDES CAMBIAR TODO
-En ✏️ Editar → «Gestión de esta cuenta» tienes los seis campos. Lo que dejes en blanco sigue
-la fase; lo que escribas manda. Son tus reglas.
-
-DE DÓNDE SALEN LAS SUGERENCIAS (laboratorio del 24-10, en analisis/)
-· R:R 2,0 y nunca 1,5: a igual riesgo el 1,5 rinde 17% menos y además es más lento.
-· Parciales NO: tus 5 ganadoras con parcial cerraron a 1,16R y la única sin parcial llegó a
-  2,10R, con el objetivo en 2,00R.
-· Grado A+ y B: solo A+ son 3 señales en 7 semanas, o sea 195 días por examen.
-· Break-even SÍ en examen y NO en fondeada: quitarlo da +10,1% en EUR y +55% en GBP, pero en
-  un examen no maximizas beneficio, esquivas una pared con una cuota pagada.
+Es el mismo contenido de la 7.298, bien puesto. Nada más cambia.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
