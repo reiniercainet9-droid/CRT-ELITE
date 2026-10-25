@@ -1,17 +1,34 @@
-APEX v7.299 — TRADING DESK
+APEX v7.300 — TRADING DESK
 =========================
 
-📱 ARREGLO DE LA FICHA DE GESTIÓN EN EL TELÉFONO
+APEX 7.300 — el análisis ya no te deja un hueco en blanco
 
-La 7.298 traía la gestión por fase y funcionaba, pero al verla INSTALADA en tu moto g54 se
-salía de la pantalla: la explicación iba pegada al número, en la columna de la derecha, y en
-412 px se cortaba («rinde 17% menos y es más…», «solo A+ son 3 señales en 7 seman…»). De paso
-aplastaba la etiqueta de la izquierda y la partía en tres líneas («Grado / que / tomo»).
+QUÉ PASABA
+Le pediste el análisis semanal y no lo veías. Roberto SÍ lo empezó, pero al escribir la
+tabla de "🏦 POR CUENTA" se quedó repitiendo espacios en blanco: 136.551 caracteres, de
+los cuales 136.297 eran espacios. Texto útil: 304. En tu pantalla eso es un hueco enorme.
+El plan semanal sí se guardó — por eso era lo único que veías.
 
-Ahora la derecha lleva SOLO el número —y el riesgo, además, en dólares debajo— y todo lo que
-explica vive en la izquierda, debajo de la etiqueta, que es la columna que sabe envolver.
+Y después se quedó mudo: para cerrar ese turno había que reenviar 182.002 caracteres, así
+que los tres intentos siguientes murieron. No estaba roto: estaba atascado.
 
-Es el mismo contenido de la 7.298, bien puesto. Nada más cambia.
+Ya había pasado el 21-10 con 83.412 caracteres (45.098 de ellos guiones de la misma tabla).
+
+QUÉ CAMBIA EN ESTA VERSIÓN
+· El análisis semanal y el diario YA NO PUEDEN USAR TABLAS. Una línea por cuenta, con
+  viñetas. Las dos veces que se atascó fue rellenando columnas; y una tabla ancha tampoco
+  se lee en tu pantalla.
+
+LO QUE YA ESTÁ ARREGLADO EN LA NUBE (worker 5.293, que ya subiste)
+· El guardia que corta una respuesta desbocada ahora mira LAS DOS puertas. Antes solo
+  miraba una, y la del 25-10 entró por la otra: la de cuando Roberto usa una mano.
+· Y caza el atasco por repetición (400 veces el mismo carácter), no solo por longitud.
+· La bitácora /chat/salud mide también esos casos: antes el desboque era invisible ahí.
+
+TU TELÉFONO, LIMPIO
+· 8 mensajes atascados quitados de tus 27 conversaciones (de 980.717 a 221.515 caracteres).
+· La cola de pendientes vaciada: Roberto vuelve a responder.
+· Tus 27 conversaciones y 296 mensajes, intactos. Respaldo de todo en la PC.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
