@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Rey Motoboy</string>
+    <string name="title_activity_main">Rey Motoboy</string>
+    <string name="package_name">com.rey.motoboy</string>
+    <string name="custom_url_scheme">com.rey.motoboy</string>
+</resources>

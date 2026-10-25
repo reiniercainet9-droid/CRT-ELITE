@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Icono pequeño de la barra de notificaciones: la bici, en blanco (Android lo tiñe). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="512"
+    android:viewportHeight="512">
+    <group android:translateY="-50">
+        <path
+            android:pathData="M92,356a58,58 0 1,0 116,0a58,58 0 1,0 -116,0 M304,356a58,58 0 1,0 116,0a58,58 0 1,0 -116,0 M196,356l78,-104h84l46,66h34 M274,252l-30,-52h56"
+            android:strokeColor="#FFFFFFFF"
+            android:strokeWidth="30"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round"
+            android:fillColor="#00000000" />
+    </group>
+</vector>

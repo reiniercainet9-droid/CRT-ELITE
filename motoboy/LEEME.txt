@@ -1,0 +1,38 @@
+REY MOTOBOY v2.0 — LA APP ANDROID (APK)
+=======================================
+
+📱 YA NO DEPENDE DE NETLIFY
+La app entera (página, lector de QR, iconos) va DENTRO de la APK. Abre sin internet, en la
+moto, en un sótano o sin datos. Netlify puede seguir ahí, pero la app ya no lo necesita.
+
+⬇️ DÓNDE ESTÁ LA APK
+GitHub la compila sola cada vez que cambia algo en esta carpeta:
+  github.com/reiniercainet9-droid/CRT-ELITE → Releases → «Rey Motoboy — APK»
+Ábrelo desde el teléfono, baja Rey-Motoboy-v2.0.apk e instálala (Android pedirá permitir
+«instalar apps desconocidas» la primera vez).
+
+🔁 PASAR TUS DATOS DE LA WEB A LA APK (una sola vez)
+La web y la APK son dos almacenes distintos: la APK nace vacía.
+  1. En la web de Netlify: ⚙️ Ajustes → Exportar respaldo  (se baja un .json)
+  2. En la APK:            ⚙️ Ajustes → Importar respaldo  → elige ese .json
+Pasan TODAS las entregas, gastos, km, categorías, metas y períodos.
+
+✨ LO NUEVO
+· Reportes PDF que funcionan en la APK: se abre la impresión de Android → «Guardar como PDF».
+· Respaldo: se guarda en Descargas/Motoboy y se abre el menú para mandarlo a WhatsApp/Drive.
+· Aviso en Inicio si hace más de 7 días que no haces respaldo, y la fecha del último en Ajustes.
+· Recordatorio diario (notificación) a la hora que elijas para anotar entregas, gastos y km.
+· Botón ATRÁS de Android: cierra la ficha abierta → vuelve a Inicio → recién ahí sale.
+· Si dejas la app abierta y pasa la medianoche, al volver «Hoy» es el día nuevo.
+· El escáner de QR de la NFC-e va dentro de la app (antes se bajaba de internet al abrir).
+· Tu icono de la bici en el escritorio, en la pantalla de entrada y en las notificaciones.
+
+🔒 ACTUALIZAR SIN PERDER NADA
+Todas las APK se firman con la MISMA llave (android/app/motoboy.keystore), así que cada versión
+nueva se instala ENCIMA de la anterior y tus datos se quedan. NO desinstales para actualizar:
+desinstalar borra lo registrado (por eso, respaldo antes de cualquier cosa rara).
+
+🧪 PRUEBAS
+`npm test` abre la app en un Chromium de verdad en modo web y en modo APK simulado y comprueba
+registrar, recargar, reportes, respaldo, recordatorio y botón atrás. GitHub las pasa antes de
+compilar: si fallan, no sale APK.

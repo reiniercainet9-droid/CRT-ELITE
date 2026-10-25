@@ -1,0 +1,1818 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0d0d0f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Motoboy">
+<title>Registro de Motoboy</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+:root{
+  --bg:#0d0d0f; --bg2:#141417; --card:#1a1a1e; --card2:#212127;
+  --line:#2c2c34; --line2:#3a3a44;
+  --ink:#f4f2ee; --mut:#9a9aa6; --dim:#6a6a76;
+  --orange:#ff7a1a; --orange2:#ffb066; --deep:#c85a10;
+  --green:#38c172; --green2:#6ee7a0; --red:#e2504a; --red2:#ff7a72;
+  --r:16px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  background:radial-gradient(120% 60% at 50% -10%, #1c1712 0%, var(--bg) 55%) fixed;
+  color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  padding:0 0 96px; min-height:100vh;-webkit-font-smoothing:antialiased;
+}
+h1,h2,h3{margin:0;letter-spacing:-.02em}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input,select{font-family:inherit}
+
+header{
+  position:sticky;top:0;z-index:40;
+  background:linear-gradient(180deg,rgba(13,13,15,.96),rgba(13,13,15,.82));
+  backdrop-filter:blur(14px);border-bottom:1px solid var(--line);
+  padding:calc(env(safe-area-inset-top) + 14px) 18px 12px;display:flex;align-items:center;gap:12px;
+}
+.logo{width:42px;height:42px;flex:0 0 42px;border-radius:12px;
+  background:linear-gradient(150deg,#26201a,#15130f);border:1px solid #3a2c1c;display:grid;place-items:center}
+.logo svg{width:30px;height:30px}
+.brand{line-height:1.05}
+.brand .t{font-size:19px;font-weight:800;font-style:italic;text-transform:uppercase}
+.brand .t span{color:var(--orange)}
+.brand .s{font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:.28em;margin-top:3px}
+.hspace{flex:1}
+.pill{font-size:11px;border:1px solid #4a3418;background:#1e150c;padding:5px 10px;border-radius:999px;font-weight:800;font-variant-numeric:tabular-nums}
+.pill.pos{color:var(--green2);border-color:#2c5c3c;background:#0e1a12}
+.pill.neg{color:var(--red2);border-color:#5c2c2c;background:#1a0e0e}
+
+main{max-width:600px;margin:0 auto;padding:16px 14px 0}
+.view{display:none;animation:fade .25s ease}
+.view.on{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:14px}
+.card h3{font-size:12px;text-transform:uppercase;letter-spacing:.14em;color:var(--mut);margin-bottom:12px;font-weight:700}
+.card h3 .accent{color:var(--orange)}
+
+.hero{background:linear-gradient(155deg,#241b12 0%, #171410 60%, #14110d 100%);border:1px solid #3a2c1c;position:relative;overflow:hidden}
+.hero::after{content:"";position:absolute;right:-40px;top:-40px;width:180px;height:180px;background:radial-gradient(circle,rgba(255,122,26,.22),transparent 70%)}
+.hero .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.16em;color:var(--orange2);font-weight:700}
+.hero .big{font-size:44px;font-weight:800;letter-spacing:-.03em;margin:4px 0 2px;font-variant-numeric:tabular-nums}
+.hero .big small{font-size:20px;color:var(--mut);font-weight:600;margin-right:4px}
+.hero .big.pos{color:var(--green2)} .hero .big.neg{color:var(--red2)}
+.hero .brk{display:flex;gap:16px;margin-top:8px;font-size:12px}
+.hero .brk .g{color:var(--green2)} .hero .brk .r{color:var(--red2)}
+.hero .brk b{font-variant-numeric:tabular-nums}
+.hero .sub{font-size:12px;color:var(--mut);margin-top:6px}
+.hero .sub b{color:var(--ink)}
+.herorow{display:flex;align-items:stretch;gap:12px}
+.heroside{flex:1;min-width:0}
+.herodiv{width:1px;background:linear-gradient(180deg,transparent,#4a3c2c,transparent);flex:0 0 1px}
+.heroside.km{text-align:right}
+.lbl.km{color:#7fb0ff}
+.big.kmbigv{color:#8fc0ff}
+.big.kmbigv small{font-size:18px}
+.kmbrk{display:flex;flex-direction:column;gap:2px;font-size:11px;color:var(--mut);margin-top:8px}
+.heroside.km .kmbrk b{color:var(--ink)}
+.heroside.km .sub{font-size:11px}
+
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.stat{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:12px}
+.stat .k{font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--dim);font-weight:700}
+.stat .v{font-size:19px;font-weight:800;margin-top:4px;font-variant-numeric:tabular-nums}
+.stat .v small{font-size:12px;color:var(--mut)}
+.stat .v.pos{color:var(--green2)} .stat .v.neg{color:var(--red2)}
+.stat .x{font-size:11px;color:var(--dim);margin-top:2px}
+
+label.f{display:block;margin-bottom:11px}
+label.f .cap{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--mut);font-weight:700;margin-bottom:6px;display:block}
+.inp{width:100%;background:var(--bg2);border:1px solid var(--line2);color:var(--ink);padding:13px 12px;border-radius:11px;font-size:16px;outline:none;transition:border .15s}
+.inp:focus{border-color:var(--orange)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px;border-radius:12px;font-size:15px;font-weight:700;transition:transform .1s,filter .15s}
+.btn:active{transform:scale(.98)}
+.btn-primary{background:linear-gradient(180deg,var(--orange),var(--deep));color:#1a0f04;box-shadow:0 6px 18px -8px var(--orange)}
+.btn-red{background:linear-gradient(180deg,var(--red),#a83530);color:#fff}
+.btn-ghost{background:var(--card2);border:1px solid var(--line2);color:var(--ink)}
+.btn-sm{padding:10px 12px;font-size:13px;border-radius:10px}
+.btn-line{background:transparent;border:1px solid var(--line2);color:var(--mut)}
+.btnrow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.seg{display:flex;background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:4px;gap:4px;margin-bottom:14px}
+.seg button{flex:1;padding:9px 4px;border-radius:9px;font-size:12px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.04em}
+.seg button.on{background:var(--orange);color:#1a0f04}
+.daypick{display:none;align-items:center;gap:8px;margin-bottom:14px;margin-top:-4px}
+.daypick.on{display:flex}
+.dparrow{width:44px;height:44px;flex:0 0 44px;border-radius:11px;background:var(--card2);border:1px solid var(--line2);color:var(--orange2);font-size:24px;font-weight:700;display:grid;place-items:center}
+.dpinput{flex:1;background:var(--bg2);border:1px solid var(--line2);color:var(--ink);padding:12px;border-radius:11px;font-size:15px;text-align:center;outline:none}
+.dpinput:focus{border-color:var(--orange)}
+.navmid{flex:1;display:flex;flex-direction:column;gap:3px}
+.navlbl{font-size:11px;color:var(--orange2);font-weight:700;text-align:center;font-variant-numeric:tabular-nums}
+.kmcard .kmhero{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+.kmbig{font-size:30px;font-weight:800;color:var(--orange2);font-variant-numeric:tabular-nums;line-height:1}
+.kmbig small{font-size:13px;color:var(--mut);font-weight:600}
+.kmrs{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--mut);text-align:right}
+.kmrs b{font-variant-numeric:tabular-nums}
+.kmrs .kmrsi b{color:var(--ink)}
+.kmgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.kmstat{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:11px}
+.kmstat .k{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--dim);font-weight:700}
+.kmstat .v{font-size:18px;font-weight:800;margin-top:3px;font-variant-numeric:tabular-nums;color:var(--orange2)}
+.kmstat .v small{font-size:11px;color:var(--mut);font-weight:600}
+/* Botón lateral km */
+.sidetabs{position:fixed;right:0;top:32%;z-index:44;display:flex;flex-direction:column;gap:10px;align-items:flex-end}
+.sidetab{position:relative;color:#fff;border-radius:12px 0 0 12px;padding:11px 7px 11px 9px;
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  transform:translateX(calc(100% - 30px));transition:transform .25s cubic-bezier(.2,.9,.2,1)}
+.sidetab.open,.sidetab:active{transform:translateX(0)}
+.sidetab svg{width:22px;height:22px;stroke:#fff;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.sidetab .lbl{font-size:9px;font-weight:800;letter-spacing:.05em;writing-mode:vertical-rl;text-orientation:mixed}
+.sidetab.income{background:linear-gradient(180deg,var(--orange),var(--deep));box-shadow:-4px 4px 16px -6px var(--orange)}
+.sidetab.income svg{stroke:#1a0f04}.sidetab.income .lbl{color:#1a0f04}
+.sidetab.expense{background:linear-gradient(180deg,var(--red),#a83530);box-shadow:-4px 4px 16px -6px var(--red)}
+.sidetab.km{background:linear-gradient(180deg,#2a6cff,#1a4fd0);box-shadow:-4px 4px 16px -6px rgba(42,108,255,.7)}
+.kmcalc-out{font-size:12px;color:var(--orange2);font-weight:700;text-align:center;margin-top:8px;min-height:16px}
+.kmsum{background:linear-gradient(150deg,#0e1626,#0d1220);border:1px solid #2a4a7a;border-radius:12px;padding:14px;margin-bottom:12px;text-align:center}
+.kmsumbig{font-size:30px;font-weight:800;color:#8fc0ff;font-variant-numeric:tabular-nums;line-height:1}
+.kmsumbig small{font-size:13px;color:var(--mut);font-weight:600}
+.kmsumrs{display:flex;justify-content:center;gap:16px;margin-top:8px;font-size:12px;color:var(--mut)}
+.kmsumrs b{color:var(--ink);font-variant-numeric:tabular-nums}
+
+.entry{display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid var(--line)}
+.entry:last-child{border-bottom:none}
+.entry .av{width:40px;height:40px;flex:0 0 40px;border-radius:11px;background:var(--card2);border:1px solid var(--line2);display:grid;place-items:center;font-weight:800;font-size:16px;color:var(--orange2)}
+.entry .av.exp{border-color:#4a2020;background:#1a1012}
+.entry .mid{flex:1;min-width:0}
+.entry .cli{font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.entry .met{font-size:11px;color:var(--dim);margin-top:2px}
+.entry .met b{color:var(--mut);font-weight:600}
+.entry .val{font-weight:800;font-size:16px;font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+.entry .val.g{color:var(--green2)} .entry .val.r{color:var(--red2)}
+.entry .acts{display:flex;gap:6px;margin-left:2px}
+.entry .ab{width:34px;height:34px;flex:0 0 34px;border-radius:9px;display:grid;place-items:center;font-size:15px}
+.entry .ab.edit{background:#16130c;border:1px solid #4a3418;color:var(--orange2)}
+.entry .ab.del{background:#211416;border:1px solid #4a2020;color:var(--red)}
+.daygroup .dh{display:flex;justify-content:space-between;align-items:baseline;margin:16px 0 2px;padding-top:6px;flex-wrap:wrap;gap:4px}
+.daygroup .dh .d{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--mut)}
+.daygroup .dh .dt{font-size:11.5px;font-weight:700;font-variant-numeric:tabular-nums}
+.daygroup .dh .dt .g{color:var(--green2)} .daygroup .dh .dt .r{color:var(--red2)}
+
+.empty{text-align:center;padding:40px 20px;color:var(--dim)}
+.empty .ic{font-size:34px;margin-bottom:8px;opacity:.6}
+.empty p{margin:4px 0;font-size:14px}
+.tiny{font-size:11px;color:var(--dim);line-height:1.5}
+.mini-note{font-size:11px;color:var(--dim);margin-top:10px;line-height:1.5}
+.divider{height:1px;background:var(--line);margin:14px 0}
+
+.chartwrap{overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px}
+.chart{position:relative;height:180px;min-width:100%;padding:16px 2px 0}
+.chartbars{display:flex;align-items:flex-end;gap:10px;height:100%;justify-content:flex-end}
+.bar{flex:1;min-width:30px;display:flex;flex-direction:column;align-items:center;gap:5px;height:100%;justify-content:flex-end}
+.bar .stack{width:100%;display:flex;flex-direction:column;justify-content:flex-end;height:100%;gap:2px}
+.bar .cg{width:100%;border-radius:6px 6px 0 0;background:linear-gradient(180deg,var(--green),#2a9d5a);min-height:2px;transition:height .5s}
+.bar .cr{width:100%;border-radius:0 0 5px 5px;background:linear-gradient(180deg,#c0453f,#8a2f2a);min-height:0;transition:height .5s}
+.bar .lb{font-size:9.5px;color:var(--dim);text-align:center;font-weight:600;white-space:nowrap}
+.bar .nz{font-size:9px;font-weight:700;color:var(--orange2);margin-bottom:1px;font-variant-numeric:tabular-nums;height:11px}
+.leg{display:flex;gap:14px;justify-content:center;margin-top:10px;font-size:11px;color:var(--mut)}
+.leg span{display:flex;align-items:center;gap:5px}
+.leg i{width:11px;height:11px;border-radius:3px;display:inline-block}
+
+.goal{margin-bottom:16px}
+.goal:last-child{margin-bottom:0}
+.goal .gt{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:7px}
+.goal .gt .name{font-size:13px;font-weight:700}
+.goal .gt .fig{font-size:12px;color:var(--mut);font-variant-numeric:tabular-nums}
+.goal .gt .fig b{color:var(--green2)}
+.track{height:11px;background:var(--bg2);border:1px solid var(--line);border-radius:999px;overflow:hidden}
+.track .fill{height:100%;border-radius:999px;background:linear-gradient(90deg,var(--green),var(--green2));transition:width .6s ease}
+.goal .pct{font-size:10px;color:var(--dim);margin-top:4px;text-align:right;font-weight:700}
+
+.proj{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px}
+.proj .pc{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:13px}
+.proj .pc .k{font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--dim);font-weight:700}
+.proj .pc .v{font-size:22px;font-weight:800;margin-top:4px;font-variant-numeric:tabular-nums;color:var(--green2)}
+.proj .pc.wide{grid-column:1/-1}
+
+.rank{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--line)}
+.rank:last-child{border:none}
+.rank .pos{width:28px;height:28px;flex:0 0 28px;border-radius:8px;display:grid;place-items:center;font-weight:800;font-size:13px;background:var(--card2);border:1px solid var(--line2);color:var(--mut)}
+.rank.top .pos{background:linear-gradient(180deg,var(--orange),var(--deep));color:#1a0f04;border:none}
+.rank .rd{flex:1;font-weight:600;font-size:14px}
+.rank .rd small{color:var(--dim);font-weight:500}
+.rank .rv{font-weight:800;font-variant-numeric:tabular-nums}
+
+nav{position:fixed;bottom:0;left:0;right:0;z-index:50;background:linear-gradient(180deg,rgba(20,20,23,.7),rgba(13,13,15,.98));backdrop-filter:blur(16px);border-top:1px solid var(--line);display:flex;padding:8px 6px calc(env(safe-area-inset-bottom) + 8px);max-width:600px;margin:0 auto}
+nav button{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 2px;color:var(--dim);font-size:10px;font-weight:700}
+nav button svg{width:23px;height:23px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+nav button.on{color:var(--orange)}
+
+
+.sheet-bg{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.6);backdrop-filter:blur(3px);display:none;align-items:flex-end;justify-content:center}
+.sheet-bg.on{display:flex}
+.sheet{width:100%;max-width:600px;background:var(--bg2);border:1px solid var(--line);border-radius:22px 22px 0 0;padding:8px 16px calc(env(safe-area-inset-bottom) + 18px);max-height:92vh;overflow-y:auto;animation:up .3s cubic-bezier(.2,.9,.2,1)}
+@keyframes up{from{transform:translateY(100%)}to{transform:none}}
+.grab{width:38px;height:4px;background:var(--line2);border-radius:99px;margin:6px auto 14px}
+.sheet-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.sheet-h h2{font-size:18px;font-weight:800}
+.sheet-h .cl{width:34px;height:34px;border-radius:10px;background:var(--card2);border:1px solid var(--line2);color:var(--mut);font-size:18px}
+
+.scanbtn{display:flex;align-items:center;gap:10px;width:100%;padding:13px;border-radius:12px;background:linear-gradient(180deg,#221a11,#191410);border:1px dashed #5a3f1c;color:var(--orange2);font-weight:700;font-size:14px;margin-bottom:14px}
+.scanbtn svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8}
+#reader{border-radius:12px;overflow:hidden;margin-bottom:12px;display:none;border:1px solid var(--line2)}
+.scanhint{font-size:11px;color:var(--dim);text-align:center;margin-bottom:10px;display:none}
+
+.catgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:11px}
+.catbtn{padding:12px 10px;border-radius:11px;background:var(--bg2);border:1px solid var(--line2);color:var(--mut);font-weight:700;font-size:13px;display:flex;align-items:center;gap:8px;justify-content:center}
+.catbtn.on{border-color:var(--red);background:#1a0e0e;color:var(--red2)}
+.catbtn .em{font-size:16px}
+.catgrid.inc{grid-template-columns:1fr 1fr 1fr;gap:7px}
+.catgrid.inc .catbtn{flex-direction:column;gap:3px;padding:11px 4px;font-size:11.5px;text-align:center;line-height:1.15;position:relative}
+.catgrid.inc .catbtn.on{border-color:var(--green);background:#0e1a12;color:var(--green2)}
+.catgrid.inc .catbtn .em{font-size:18px}
+.catgrid.inc .catbtn .rmv{position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;background:#3a1a1a;border:1px solid #5c2c2c;color:var(--red2);font-size:12px;line-height:1;display:grid;place-items:center;font-weight:700}
+.addsrc{width:100%;padding:10px;border-radius:11px;background:transparent;border:1px dashed var(--line2);color:var(--mut);font-weight:700;font-size:12.5px;margin-bottom:13px}
+.srccard{display:flex;align-items:center;gap:11px;padding:11px 0;border-bottom:1px solid var(--line)}
+.srccard:last-child{border:none}
+.srccard .si{width:36px;height:36px;flex:0 0 36px;border-radius:10px;background:var(--card2);border:1px solid var(--line2);display:grid;place-items:center;font-size:17px}
+.srccard .sn{flex:1;font-weight:700;font-size:14px}
+.srccard .sn small{display:block;color:var(--dim);font-weight:500;font-size:11px;margin-top:1px}
+.srccard .sv{font-weight:800;font-variant-numeric:tabular-nums;color:var(--green2);text-align:right}
+.srccard .sv small{display:block;color:var(--dim);font-weight:600;font-size:10.5px}
+.caplbl{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--mut);font-weight:700;margin-bottom:6px;display:block}
+.wprev{background:#1e150c;border:1px solid #4a3418;color:var(--orange2);padding:11px 12px;border-radius:11px;font-size:12.5px;font-weight:700;text-align:center;margin-top:4px}
+.catgrid.pay{grid-template-columns:1fr 1fr;gap:8px}
+.catgrid.pay .catbtn.on{border-color:var(--orange);background:#1e150c;color:var(--orange2)}
+textarea.inp{resize:vertical;min-height:46px;line-height:1.4}
+.ruteHint{font-size:12px;color:var(--orange2);font-weight:700;margin:-4px 0 11px;min-height:16px}
+.badge-pay{display:inline-block;font-size:9.5px;font-weight:700;padding:1px 6px;border-radius:5px;margin-left:5px;vertical-align:middle}
+.badge-pay.frete{background:#1e150c;color:var(--orange2);border:1px solid #4a3418}
+.badge-route{display:inline-block;font-size:9.5px;font-weight:700;padding:1px 6px;border-radius:5px;background:#0e1a12;color:var(--green2);border:1px solid #2c5c3c;margin-left:5px}
+
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom) + 150px);z-index:90;background:var(--card2);border:1px solid var(--line2);color:var(--ink);padding:12px 18px;border-radius:12px;font-size:14px;font-weight:600;box-shadow:0 10px 30px rgba(0,0,0,.5);opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;max-width:88%}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(-6px)}
+.toast.ok{border-color:#2c5c3c} .toast.bad{border-color:#5c2c2c}
+.bkaviso{display:block;width:100%;text-align:left;background:#1e150c;border:1px solid #4a3418;color:var(--orange2);padding:11px 14px;border-radius:12px;font-size:12.5px;font-weight:700;margin-bottom:14px}
+html:not(.apk) .solo-apk{display:none!important}
+html.apk .solo-web{display:none!important}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <svg viewBox="0 0 512 512"><g fill="none" stroke="#ff7a1a" stroke-width="26" stroke-linejoin="round" stroke-linecap="round">
+      <circle cx="150" cy="356" r="58"/><circle cx="362" cy="356" r="58"/>
+      <path d="M196 356l78-104h84l46 66h34"/><path d="M274 252l-30-52h56" stroke="#ffb066" stroke-width="22"/>
+    </g></svg>
+  </div>
+  <div class="brand">
+    <div class="t">REY <span>MOTOBOY</span></div>
+    <div class="s">Registro de Entregas</div>
+  </div>
+  <div class="hspace"></div>
+  <div class="pill pos" id="todayPill">Hoy R$0</div>
+</header>
+
+<main>
+  <section class="view on" id="v-inicio">
+    <button class="bkaviso" id="bkAviso" style="display:none"></button>
+    <div class="card hero">
+      <div class="herorow">
+        <div class="heroside">
+          <div class="lbl">Neto de hoy</div>
+          <div class="big pos"><small>R$</small><span id="heroNet">0</span></div>
+          <div class="brk">
+            <span class="g">▲ Ganado <b id="heroGross">R$0</b></span>
+            <span class="r">▼ Gastos <b id="heroExp">R$0</b></span>
+          </div>
+          <div class="sub"><b id="heroCount">0</b> entregas · prom <b id="heroAvg">R$0</b></div>
+        </div>
+        <div class="herodiv"></div>
+        <div class="heroside km">
+          <div class="lbl km">Km <span id="heroKmPer">del día</span></div>
+          <div class="big kmbigv"><span id="heroKm">0</span> <small>km</small></div>
+          <div class="brk kmbrk">
+            <span>🟢 neto <b id="heroKmNet">R$—</b>/km</span>
+            <span>🟠 bruto <b id="heroKmGross">R$—</b>/km</span>
+          </div>
+          <div class="sub" id="heroKmStart">inicia en —</div>
+        </div>
+      </div>
+    </div>
+    <div class="grid3">
+      <div class="stat"><div class="k">Km hoy</div><div class="v" id="stKmTodayWrap" style="color:var(--orange2)"><span id="stKmToday">0</span> <small>km</small></div><div class="x" id="stKmTodayX">recorridos</div></div>
+      <div class="stat"><div class="k">Km semana</div><div class="v" style="color:var(--orange2)"><span id="stKmWeek">0</span> <small>km</small></div><div class="x">acumulado</div></div>
+      <div class="stat"><div class="k">Km mes</div><div class="v" style="color:var(--orange2)"><span id="stKmMonth">0</span> <small>km</small></div><div class="x">acumulado</div></div>
+    </div>
+    <div class="grid3">
+      <div class="stat"><div class="k">Semana</div><div class="v pos"><small>R$</small><span id="stWeek">0</span></div><div class="x" id="stWeekN">neto</div></div>
+      <div class="stat"><div class="k">Mes</div><div class="v pos"><small>R$</small><span id="stMonth">0</span></div><div class="x" id="stMonthN">neto</div></div>
+      <div class="stat"><div class="k">Total</div><div class="v pos"><small>R$</small><span id="stAll">0</span></div><div class="x" id="stAllN">neto</div></div>
+    </div>
+
+    <div class="card">
+      <h3>Metas <span class="accent">· sobre el neto</span></h3>
+      <div class="goal">
+        <div class="gt"><span class="name">Diaria</span><span class="fig"><b id="gDayCur">R$0</b> / <span id="gDayTgt">R$0</span></span></div>
+        <div class="track"><div class="fill" id="gDayFill" style="width:0%"></div></div><div class="pct" id="gDayPct">0%</div>
+      </div>
+      <div class="goal">
+        <div class="gt"><span class="name">Semanal</span><span class="fig"><b id="gWeekCur">R$0</b> / <span id="gWeekTgt">R$0</span></span></div>
+        <div class="track"><div class="fill" id="gWeekFill" style="width:0%"></div></div><div class="pct" id="gWeekPct">0%</div>
+      </div>
+      <div class="goal">
+        <div class="gt"><span class="name">Mensual</span><span class="fig"><b id="gMonthCur">R$0</b> / <span id="gMonthTgt">R$0</span></span></div>
+        <div class="track"><div class="fill" id="gMonthFill" style="width:0%"></div></div><div class="pct" id="gMonthPct">0%</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Entregas por hora <span class="accent">· hoy</span></h3>
+      <div class="chartwrap"><div class="chart"><div class="chartbars" id="hourChart"></div></div></div>
+      <div class="mini-note" id="hourNote">Registra entregas para ver tu ritmo por franja horaria.</div>
+    </div>
+  </section>
+
+  <section class="view" id="v-entregas">
+    <div class="seg" id="entSeg">
+      <button class="on" data-f="day">Día</button>
+      <button data-f="week">Semana</button>
+      <button data-f="month">Mes</button>
+      <button data-f="year">Año</button>
+      <button data-f="all">Todo</button>
+    </div>
+    <div class="daypick" id="navBar">
+      <button class="dparrow" id="navPrev">‹</button>
+      <div class="navmid">
+        <input class="dpinput" id="navDate" type="date">
+        <div class="navlbl" id="navLbl"></div>
+      </div>
+      <button class="dparrow" id="navNext">›</button>
+    </div>
+    <button class="btn btn-line btn-sm" id="navToday" style="display:none;margin:-6px 0 14px">↺ Volver al actual</button>
+    <div class="seg" id="kindSeg" style="margin-top:-4px">
+      <button class="on" data-k="all">Todo</button>
+      <button data-k="income">Entregas</button>
+      <button data-k="expense">Gastos</button>
+      <button data-k="km">Km</button>
+    </div>
+    <select class="inp" id="srcFilter" style="margin-bottom:14px;margin-top:-2px"></select>
+    <div class="card">
+      <h3>Movimientos <span class="accent" id="entTotalHint"></span></h3>
+      <button class="btn btn-ghost btn-sm" id="periodPdfBtn" style="display:none;margin-bottom:12px">📄 PDF de este período</button>
+      <div id="entList"></div>
+    </div>
+  </section>
+
+  <section class="view" id="v-graficas">
+    <div class="seg" id="chSeg">
+      <button class="on" data-c="days">Días</button>
+      <button data-c="weeks">Semanas</button>
+      <button data-c="months">Meses</button>
+    </div>
+    <div class="card">
+      <h3 id="chTitle">Últimos 7 días</h3>
+      <div class="chartwrap"><div class="chart" id="mainChart"></div></div>
+      <div class="leg"><span><i style="background:#38c172"></i>Ganado</span><span><i style="background:#c0453f"></i>Gastos</span><span><i style="background:#ffb066"></i>Neto</span></div>
+    </div>
+    <div class="grid3">
+      <div class="stat"><div class="k">Ganado</div><div class="v pos"><small>R$</small><span id="chGross">0</span></div></div>
+      <div class="stat"><div class="k">Gastos</div><div class="v neg"><small>R$</small><span id="chExp">0</span></div></div>
+      <div class="stat"><div class="k">Neto</div><div class="v" id="chNetV"><small>R$</small><span id="chNet">0</span></div></div>
+    </div>
+
+    <div class="card">
+      <h3>Ganancias por categoría <span class="accent" id="srcPeriodLbl">· período</span></h3>
+      <div class="chartwrap"><div class="chart" id="srcChart"></div></div>
+      <div id="srcList" style="margin-top:6px"></div>
+    </div>
+
+    <div class="card">
+      <h3>Kilómetros <span class="accent" id="kmChartLbl">· por período</span></h3>
+      <div class="chartwrap"><div class="chart" id="kmChart"></div></div>
+      <div class="grid3" style="margin-top:6px">
+        <div class="kmstat"><div class="k">Total km</div><div class="v"><span id="kmChTotal">0</span></div></div>
+        <div class="kmstat"><div class="k">Promedio</div><div class="v"><span id="kmChAvg">0</span> <small>km/día</small></div></div>
+        <div class="kmstat"><div class="k">R$/km neto</div><div class="v" id="kmChRs">R$0</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Ranking <span class="accent">· mejores días netos del mes</span></h3>
+      <div id="rankList"></div>
+    </div>
+  </section>
+
+  <section class="view" id="v-tools">
+    <div class="card">
+      <h3>Proyección <span class="accent">· sobre el neto</span></h3>
+      <label class="f"><span class="cap">Neto diario (R$)</span><input class="inp" id="projInput" type="number" inputmode="decimal" placeholder="Ej: 150"></label>
+      <div class="btnrow">
+        <button class="btn btn-ghost btn-sm" id="projReal">Usar mi promedio real</button>
+        <button class="btn btn-primary btn-sm" id="projCalc">Calcular</button>
+      </div>
+      <div class="proj" id="projOut" style="margin-top:14px">
+        <div class="pc"><div class="k">Semanal</div><div class="v" id="pW">R$0</div></div>
+        <div class="pc"><div class="k">Mensual</div><div class="v" id="pM">R$0</div></div>
+        <div class="pc wide"><div class="k">Anual</div><div class="v" id="pY">R$0</div></div>
+      </div>
+      <label class="f" style="margin-top:14px"><span class="cap">Días trabajados por semana</span>
+        <select class="inp" id="projDays"><option value="5">5 días</option><option value="6" selected>6 días</option><option value="7">7 días</option></select></label>
+    </div>
+
+    <div class="card">
+      <h3>Período semanal <span class="accent">· cierre de la empresa</span></h3>
+      <div class="seg" id="wModeSeg">
+        <button class="on" data-wm="auto">Automático</button>
+        <button data-wm="manual">Manual</button>
+      </div>
+      <div id="wAuto">
+        <label class="f"><span class="cap">La semana empieza el…</span>
+          <select class="inp" id="wStartSel">
+            <option value="0">Domingo</option><option value="1">Lunes</option>
+            <option value="2">Martes</option><option value="3">Miércoles</option>
+            <option value="4">Jueves</option><option value="5">Viernes</option>
+            <option value="6">Sábado</option>
+          </select></label>
+        <p class="mini-note" style="margin-top:0">Si tu empresa cierra los jueves, elige <b>Viernes</b>: el período irá de viernes a jueves.</p>
+      </div>
+      <div id="wManual" style="display:none">
+        <div class="row2">
+          <label class="f"><span class="cap">Desde</span><input class="inp" id="wFrom" type="date"></label>
+          <label class="f"><span class="cap">Hasta</span><input class="inp" id="wTo" type="date"></label>
+        </div>
+        <p class="mini-note" style="margin-top:0">Período fijo. Útil para un cierre especial. Recuerda cambiarlo cada período.</p>
+      </div>
+      <div class="wprev" id="wPreview">Período actual: —</div>
+      <button class="btn btn-primary" id="saveWeek" style="margin-top:12px">Guardar período</button>
+    </div>
+
+    <div class="card">
+      <h3>Período mensual <span class="accent">· inicio de tu mes</span></h3>
+      <div class="seg" id="mModeSeg">
+        <button class="on" data-mm="auto">Automático</button>
+        <button data-mm="manual">Manual</button>
+      </div>
+      <div id="mAuto">
+        <label class="f"><span class="cap">El mes empieza el día…</span>
+          <select class="inp" id="mStartSel"></select></label>
+        <p class="mini-note" style="margin-top:0">Si empezaste a registrar el 10, elige <b>10</b>: el mes irá del 10 al 9 del mes siguiente.</p>
+      </div>
+      <div id="mManual" style="display:none">
+        <div class="row2">
+          <label class="f"><span class="cap">Desde</span><input class="inp" id="mFrom" type="date"></label>
+          <label class="f"><span class="cap">Hasta</span><input class="inp" id="mTo" type="date"></label>
+        </div>
+      </div>
+      <div class="wprev" id="mPreview">Período actual: —</div>
+      <button class="btn btn-primary" id="saveMonth" style="margin-top:12px">Guardar período mensual</button>
+    </div>
+
+    <div class="card">
+      <h3>Período anual <span class="accent">· inicio de tu año</span></h3>
+      <label class="f"><span class="cap">El año empieza en…</span>
+        <select class="inp" id="yStartSel">
+          <option value="1">Enero</option><option value="2">Febrero</option><option value="3">Marzo</option>
+          <option value="4">Abril</option><option value="5">Mayo</option><option value="6">Junio</option>
+          <option value="7">Julio</option><option value="8">Agosto</option><option value="9">Septiembre</option>
+          <option value="10">Octubre</option><option value="11">Noviembre</option><option value="12">Diciembre</option>
+        </select></label>
+      <div class="wprev" id="yPreview">Período actual: —</div>
+      <button class="btn btn-primary" id="saveYear" style="margin-top:12px">Guardar período anual</button>
+    </div>
+
+    <div class="card">
+      <h3>Ganancia por kilómetro <span class="accent">· R$/km</span></h3>
+      <div class="row2">
+        <label class="f"><span class="cap">Kilómetros recorridos</span><input class="inp" id="kmInput" type="number" inputmode="decimal" placeholder="Ej: 45"></label>
+        <label class="f"><span class="cap">Período</span>
+          <select class="inp" id="kmPeriod">
+            <option value="day">Hoy</option><option value="week">Semana</option><option value="month" selected>Mes</option><option value="manual">Dinero manual</option>
+          </select></label>
+      </div>
+      <label class="f" id="kmMoneyWrap" style="display:none"><span class="cap">Dinero ganado (R$)</span><input class="inp" id="kmMoney" type="number" inputmode="decimal" placeholder="Ej: 300"></label>
+      <button class="btn btn-primary btn-sm" id="kmCalc">Calcular R$/km</button>
+      <div class="proj" id="kmOut" style="margin-top:14px">
+        <div class="pc"><div class="k">R$/km sobre NETO</div><div class="v" id="kmNet">R$0</div></div>
+        <div class="pc"><div class="k">R$/km sobre bruto</div><div class="v" id="kmGross" style="color:var(--orange2)">R$0</div></div>
+        <div class="pc wide"><div class="k" id="kmDetK">Detalle</div><div class="v" id="kmDet" style="font-size:15px;color:var(--mut)">—</div></div>
+      </div>
+      <p class="mini-note">Ganado, gastos y neto salen de tus registros del período; tú solo pones los km. Con "Dinero manual" calculas con un monto a mano.</p>
+    </div>
+
+    <div class="card">
+      <h3>Definir metas <span class="accent">· neto en R$</span></h3>
+      <label class="f"><span class="cap">Meta diaria</span><input class="inp" id="setGoalDay" type="number" inputmode="decimal" placeholder="Ej: 150"></label>
+      <div class="row2">
+        <label class="f"><span class="cap">Meta semanal</span><input class="inp" id="setGoalWeek" type="number" inputmode="decimal" placeholder="Ej: 900"></label>
+        <label class="f"><span class="cap">Meta mensual</span><input class="inp" id="setGoalMonth" type="number" inputmode="decimal" placeholder="Ej: 3800"></label>
+      </div>
+      <button class="btn btn-primary" id="saveGoals">Guardar metas</button>
+    </div>
+
+    <div class="card">
+      <h3>Reportes PDF <span class="accent">· con neto</span></h3>
+      <div class="grid3" style="gap:8px">
+        <button class="btn btn-ghost btn-sm" data-rep="day">Diario</button>
+        <button class="btn btn-ghost btn-sm" data-rep="week">Semanal</button>
+        <button class="btn btn-ghost btn-sm" data-rep="month">Mensual</button>
+      </div>
+      <div class="divider"></div>
+      <span class="caplbl">Rango personalizado</span>
+      <div class="row2">
+        <label class="f"><span class="cap">Desde</span><input class="inp" id="rangeFrom" type="date"></label>
+        <label class="f"><span class="cap">Hasta</span><input class="inp" id="rangeTo" type="date"></label>
+      </div>
+      <button class="btn btn-primary btn-sm" id="rangePdf" style="margin-bottom:4px">📄 PDF del rango elegido</button>
+      <div class="divider"></div>
+      <span class="caplbl">Reporte de kilómetros</span>
+      <div class="grid3" style="gap:8px">
+        <button class="btn btn-ghost btn-sm" data-kmrep="week">Semanal</button>
+        <button class="btn btn-ghost btn-sm" data-kmrep="month">Mensual</button>
+        <button class="btn btn-ghost btn-sm" data-kmrep="year">Anual</button>
+      </div>
+      <p class="mini-note">Los reportes incluyen entregas, gastos por categoría y el neto del período. El de kilómetros incluye el detalle diario, total y R$/km.</p>
+    </div>
+
+    <div class="card solo-apk">
+      <h3>Recordatorio diario <span class="accent">· notificación</span></h3>
+      <div class="seg" id="recSeg">
+        <button data-rec="off" class="on">Apagado</button>
+        <button data-rec="on">Encendido</button>
+      </div>
+      <label class="f"><span class="cap">Hora del aviso</span><input class="inp" id="recHora" type="time" value="21:00"></label>
+      <button class="btn btn-primary" id="recGuardar">Guardar recordatorio</button>
+      <p class="mini-note">Cada día a esa hora te avisa para anotar entregas, gastos y el km final. Así no se te queda ningún día sin registrar.</p>
+    </div>
+
+    <div class="card">
+      <h3>Respaldo de datos</h3>
+      <div class="btnrow">
+        <button class="btn btn-ghost btn-sm" id="btnExport">Exportar respaldo</button>
+        <button class="btn btn-ghost btn-sm" id="btnImport">Importar respaldo</button>
+      </div>
+      <input type="file" id="importFile" accept="application/json,.json,text/plain" hidden>
+      <div class="wprev" id="bkEstado" style="margin-bottom:10px">Último respaldo: nunca</div>
+      <p class="mini-note">Respaldo <b>.json</b> con entregas, gastos, km y metas. Guárdalo antes de cambiar de teléfono. Todo se guarda solo en este dispositivo.<span class="solo-apk"> En la app se guarda en <b>Descargas/Motoboy</b> y puedes mandarlo a WhatsApp o Drive.</span></p>
+      <p class="mini-note solo-web"><b>¿Pasas a la app Android?</b> Exporta aquí el respaldo y luego, en la app, toca <b>Importar respaldo</b>: tus registros pasan tal cual.</p>
+      <div class="divider"></div>
+      <button class="btn btn-line btn-sm" id="btnWipe" style="width:100%">Borrar todos los datos</button>
+    </div>
+    <p class="mini-note" id="verLbl" style="text-align:center;margin:4px 0 18px">Rey Motoboy</p>
+  </section>
+</main>
+
+<div class="sidetabs">
+  <button class="sidetab income" id="fabInc" aria-label="Nueva entrega">
+    <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+    <span class="lbl">GANA</span>
+  </button>
+  <button class="sidetab expense" id="fabExp" aria-label="Nuevo gasto">
+    <svg viewBox="0 0 24 24"><path d="M5 12h14"/></svg>
+    <span class="lbl">GASTO</span>
+  </button>
+  <button class="sidetab km" id="kmTab" aria-label="Registrar kilómetros">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 12l4-2M12 7v1M17 12h-1M12 17v-1M7 12h1"/></svg>
+    <span class="lbl">KM</span>
+  </button>
+</div>
+
+<nav>
+  <button class="on" data-v="inicio"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg>Inicio</button>
+  <button data-v="entregas"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Movim.</button>
+  <button data-v="graficas"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Gráficas</button>
+  <button data-v="tools"><svg viewBox="0 0 24 24"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z"/><path d="M19.4 15a1.6 1.6 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.6 1.6 0 00-1.8-.3 1.6 1.6 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.6 1.6 0 00-1-1.5 1.6 1.6 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.6 1.6 0 00.3-1.8 1.6 1.6 0 00-1.5-1H3a2 2 0 110-4h.1a1.6 1.6 0 001.5-1 1.6 1.6 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.6 1.6 0 001.8.3H9a1.6 1.6 0 001-1.5V3a2 2 0 114 0v.1a1.6 1.6 0 001 1.5 1.6 1.6 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.6 1.6 0 00-.3 1.8V9a1.6 1.6 0 001.5 1H21a2 2 0 110 4h-.1a1.6 1.6 0 00-1.5 1z"/></svg>Ajustes</button>
+</nav>
+
+<div class="sheet-bg" id="sheetInc">
+  <div class="sheet">
+    <div class="grab"></div>
+    <div class="sheet-h"><h2 id="incTitle">Nueva entrega</h2><button class="cl" data-close>✕</button></div>
+    <button class="scanbtn" id="scanBtn"><svg viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2M7 12h10"/></svg>Escanear QR de la nota fiscal (NFC-e)</button>
+    <div id="reader"></div>
+    <div class="scanhint" id="scanHint">Apunta al código QR de la NFC-e</div>
+    <span class="caplbl">Categoría de ganancia *</span>
+    <div class="catgrid inc" id="srcGrid"></div>
+    <button class="addsrc" id="addSrcBtn">+ Crear nueva categoría</button>
+    <span class="caplbl">Tipo de pago *</span>
+    <div class="catgrid pay" id="payGrid">
+      <button class="catbtn on" data-pay="empresa"><span class="em">🏢</span>Pago Empresa</button>
+      <button class="catbtn" data-pay="frete"><span class="em">🤝</span>Frete cliente</button>
+    </div>
+    <label class="f"><span class="cap">Cliente *</span><input class="inp" id="fCliente" placeholder="Nombre o local"></label>
+    <label class="f"><span class="cap" id="pedCap">N° de pedido(s) *</span>
+      <textarea class="inp" id="fPedido" rows="2" placeholder="Ej: 1042  ·  o varios: 1042, 1043, 1044"></textarea></label>
+    <div class="ruteHint" id="ruteHint"></div>
+    <div class="row2">
+      <label class="f"><span class="cap" id="valCap">Valor total (R$) *</span><input class="inp" id="fValor" type="number" inputmode="decimal" placeholder="0,00"></label>
+      <label class="f"><span class="cap">Fecha *</span><input class="inp" id="fFecha" type="date"></label>
+    </div>
+    <label class="f"><span class="cap">Hora *</span><input class="inp" id="fHora" type="time"></label>
+    <button class="btn btn-primary" id="incSave" style="margin-top:4px">Guardar entrega</button>
+    <p class="mini-note">Campos con * obligatorios. Para una <b>ruta</b>, escribe varios n° de pedido (separados por coma o uno por línea) y pon el <b>valor total</b>; se cuentan como varias entregas con ese monto.</p>
+  </div>
+</div>
+
+<div class="sheet-bg" id="sheetExp">
+  <div class="sheet">
+    <div class="grab"></div>
+    <div class="sheet-h"><h2 id="expTitle">Nuevo gasto</h2><button class="cl" data-close>✕</button></div>
+    <span class="caplbl">Categoría *</span>
+    <div class="catgrid" id="catGrid">
+      <button class="catbtn on" data-cat="Gasolina"><span class="em">⛽</span>Gasolina</button>
+      <button class="catbtn" data-cat="Cambio de aceite"><span class="em">🛢️</span>Cambio de aceite</button>
+      <button class="catbtn" data-cat="Arreglos/Mecánica"><span class="em">🔧</span>Arreglos</button>
+      <button class="catbtn" data-cat="Comida/Otros"><span class="em">🍔</span>Comida/Otros</button>
+    </div>
+    <div class="row2">
+      <label class="f"><span class="cap">Valor (R$) *</span><input class="inp" id="eValor" type="number" inputmode="decimal" placeholder="0,00"></label>
+      <label class="f"><span class="cap">Fecha *</span><input class="inp" id="eFecha" type="date"></label>
+    </div>
+    <label class="f"><span class="cap">Nota (opcional)</span><input class="inp" id="eNota" placeholder="Ej: tanque lleno, 10L..."></label>
+    <button class="btn btn-red" id="expSave" style="margin-top:4px">Guardar gasto</button>
+    <p class="mini-note">Los gastos se restan de tus ganancias para calcular el neto.</p>
+  </div>
+</div>
+
+<div class="sheet-bg" id="sheetKm">
+  <div class="sheet">
+    <div class="grab"></div>
+    <div class="sheet-h"><h2 id="kmTitle">Registrar kilómetros</h2><button class="cl" data-close>✕</button></div>
+    <div class="row2">
+      <label class="f"><span class="cap">KM inicial *</span><input class="inp" id="kmIni" type="number" inputmode="decimal" placeholder="Ej: 12000"></label>
+      <label class="f"><span class="cap">KM final *</span><input class="inp" id="kmFin" type="number" inputmode="decimal" placeholder="Ej: 12045"></label>
+    </div>
+    <label class="f"><span class="cap">Fecha *</span><input class="inp" id="kmFecha" type="date"></label>
+    <div class="ruteHint" id="kmHint" style="color:#5a9dff"></div>
+    <div class="kmcalc-out" id="kmCalcOut"></div>
+    <button class="btn btn-primary" id="kmSave" style="margin-top:4px">Guardar kilometraje</button>
+    <p class="mini-note">Pon el odómetro al empezar y al terminar; la app calcula los km recorridos. Un registro por día (si ya existe, lo actualiza).</p>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="vendor/html5-qrcode.min.js"></script>
+<script>
+/* ===== APP ANDROID (APK) =====
+   La MISMA página corre en el navegador y dentro de la APK. Todo lo de Android va detrás
+   de ES_APK: fuera de la APK la página hace exactamente lo de siempre. */
+const VERSION='2.0';
+const ES_APK=!!(window.Capacitor&&Capacitor.isNativePlatform&&Capacitor.isNativePlatform());
+if(ES_APK)document.documentElement.classList.add('apk');
+function plug(n){try{return ES_APK&&Capacitor.Plugins&&Capacitor.Plugins[n]||null}catch(e){return null}}
+/* Lo que NO es un registro (respaldo, recordatorio) va aparte: así no viaja dentro del
+   respaldo ni se pisa al importar uno. */
+const KM_META='motoboy_meta';
+let META=(()=>{try{return JSON.parse(localStorage.getItem(KM_META))||{}}catch(e){return{}}})();
+function saveMeta(){try{localStorage.setItem(KM_META,JSON.stringify(META))}catch(e){}}
+
+/* ===== STORAGE (misma clave motoboy_v1: no se pierde nada) ===== */
+const K='motoboy_v1';
+const DEF_SRC=[
+  {name:'Empresa',emo:'🏢'},
+  {name:'iFood',emo:'🍔'},
+  {name:'Shopee',emo:'🛍️'},
+  {name:'Uber',emo:'🚗'},
+  {name:'99',emo:'🚕'}
+];
+let DB=load();
+function seed(){return{entries:[],expenses:[],sources:DEF_SRC.slice(),km:[],goals:{day:0,week:0,month:0},projDays:6,weekStart:1,weekMode:'auto',weekFrom:'',weekTo:'',monthStart:1,monthMode:'auto',monthFrom:'',monthTo:'',yearStartMonth:1}}
+function load(){
+  try{
+    const r=JSON.parse(localStorage.getItem(K));
+    if(r&&r.entries){
+      if(!Array.isArray(r.expenses))r.expenses=[];
+      if(!Array.isArray(r.sources)||!r.sources.length)r.sources=DEF_SRC.slice();
+      if(!Array.isArray(r.km))r.km=[];
+      // Migración: entregas viejas sin categoría -> Empresa
+      r.entries.forEach(e=>{if(!e.src)e.src='Empresa'});
+      if(!r.goals)r.goals={day:0,week:0,month:0};
+      if(!r.projDays)r.projDays=6;
+      // Config de semana (nuevo): por defecto lunes / automático
+      if(r.weekStart==null)r.weekStart=1;
+      if(!r.weekMode)r.weekMode='auto';
+      if(r.weekFrom==null)r.weekFrom='';
+      if(r.weekTo==null)r.weekTo='';
+      // Config de mes y año (nuevo): por defecto día 1 / enero / automático
+      if(r.monthStart==null)r.monthStart=1;
+      if(!r.monthMode)r.monthMode='auto';
+      if(r.monthFrom==null)r.monthFrom='';
+      if(r.monthTo==null)r.monthTo='';
+      if(r.yearStartMonth==null)r.yearStartMonth=1;
+      return r;
+    }
+    return seed();
+  }catch(e){return seed()}
+}
+function save(){localStorage.setItem(K,JSON.stringify(DB))}
+save(); // persiste la migración (sources / src en entregas) desde el primer arranque
+function srcEmo(n){const s=(DB.sources||[]).find(x=>x.name===n);return s?s.emo:'📦'}
+
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const pad=n=>String(n).padStart(2,'0');
+function money(n){n=Math.round((+n||0)*100)/100;const neg=n<0;n=Math.abs(n);const s=n.toLocaleString('pt-BR',{minimumFractionDigits:n%1?2:0,maximumFractionDigits:2});return(neg?'-':'')+s}
+function rs(n){n=+n||0;const neg=n<0;return(neg?'-R$':'R$')+money(Math.abs(n))}
+function todayISO(d=new Date()){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())}
+function nowHM(d=new Date()){return pad(d.getHours())+':'+pad(d.getMinutes())}
+function parseD(iso){const[y,m,d]=iso.split('-').map(Number);return new Date(y,m-1,d)}
+function weekStart(d){
+  // Período manual activo: devuelve la fecha "desde" fijada por el usuario
+  if(DB.weekMode==='manual'&&DB.weekFrom)return parseD(DB.weekFrom);
+  const start=(DB.weekStart==null?1:DB.weekStart); // 0=dom,1=lun...5=vie,6=sáb
+  const x=new Date(d);
+  const g=(x.getDay()-start+7)%7;
+  x.setDate(x.getDate()-g);x.setHours(0,0,0,0);return x;
+}
+function weekStartBy(d){
+  const start=(DB.weekStart==null?1:DB.weekStart);
+  const x=new Date(d);const g=(x.getDay()-start+7)%7;
+  x.setDate(x.getDate()-g);x.setHours(0,0,0,0);return x;
+}
+function weekEnd(ws){
+  if(DB.weekMode==='manual'&&DB.weekTo){const e=parseD(DB.weekTo);e.setHours(23,59,59,999);return e}
+  const e=new Date(ws);e.setDate(e.getDate()+6);e.setHours(23,59,59,999);return e;
+}
+function weekLabel(){
+  const ws=weekStart(new Date()),we=weekEnd(ws);
+  return ws.getDate()+' '+MON[ws.getMonth()]+' — '+we.getDate()+' '+MON[we.getMonth()];
+}
+function sumV(arr){return arr.reduce((s,e)=>s+(+e.valor||0),0)}
+function countE(arr){return arr.reduce((s,e)=>s+(+e.count||1),0)}
+function sumKm(arr){return arr.reduce((s,e)=>s+(+e.kms||0),0)}
+function kmInPeriod(type,anc){const{s,e}=periodRange(type,anc);return DB.km.filter(x=>{const d=parseD(x.fecha);return d>=s&&d<=e})}
+function kmR(range){const fn=pick(range);return DB.km.filter(x=>fn(x.fecha))}
+function kmToday(){return sumKm(DB.km.filter(x=>x.fecha===todayISO()))}
+const DOW=['dom','lun','mar','mié','jue','vie','sáb'];
+const MON=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+const MONL=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const CAT_EMO={'Gasolina':'⛽','Cambio de aceite':'🛢️','Arreglos/Mecánica':'🔧','Comida/Otros':'🍔'};
+
+function inDay(f){return f===todayISO()}
+function inWeek(f){const ws=weekStart(new Date());const we=weekEnd(ws);const d=parseD(f);return d>=ws&&d<=we}
+function monthStartDate(ref){
+  // Devuelve el inicio del período mensual que contiene 'ref'
+  if(DB.monthMode==='manual'&&DB.monthFrom)return parseD(DB.monthFrom);
+  const sd=Math.min(28,Math.max(1,DB.monthStart==null?1:DB.monthStart));
+  const r=new Date(ref);r.setHours(0,0,0,0);
+  let y=r.getFullYear(),m=r.getMonth();
+  if(r.getDate()<sd){m--;if(m<0){m=11;y--}}
+  return new Date(y,m,sd);
+}
+function monthEndDate(ms){
+  if(DB.monthMode==='manual'&&DB.monthTo){const e=parseD(DB.monthTo);e.setHours(23,59,59,999);return e}
+  const e=new Date(ms);e.setMonth(e.getMonth()+1);e.setDate(e.getDate()-1);e.setHours(23,59,59,999);return e;
+}
+function inMonth(f){const ms=monthStartDate(new Date());const me=monthEndDate(ms);const d=parseD(f);return d>=ms&&d<=me}
+function monthLabel(){
+  const ms=monthStartDate(new Date()),me=monthEndDate(ms);
+  return ms.getDate()+' '+MON[ms.getMonth()]+' — '+me.getDate()+' '+MON[me.getMonth()];
+}
+function monthStartBy(ref){
+  const sd=Math.min(28,Math.max(1,DB.monthStart==null?1:DB.monthStart));
+  const r=new Date(ref);r.setHours(0,0,0,0);
+  let y=r.getFullYear(),m=r.getMonth();
+  if(r.getDate()<sd){m--;if(m<0){m=11;y--}}
+  return new Date(y,m,sd);
+}
+/* Año configurable */
+function yearStartDate(ref){
+  const sm=Math.min(12,Math.max(1,DB.yearStartMonth==null?1:DB.yearStartMonth))-1;
+  const r=new Date(ref);let y=r.getFullYear();
+  if(r.getMonth()<sm)y--;
+  return new Date(y,sm,1);
+}
+function yearEndDate(ys){const e=new Date(ys);e.setFullYear(e.getFullYear()+1);e.setDate(e.getDate()-1);e.setHours(23,59,59,999);return e}
+function inYear(f){const ys=yearStartDate(new Date());const ye=yearEndDate(ys);const d=parseD(f);return d>=ys&&d<=ye}
+let pickedDay=todayISO();
+function pick(range){
+  if(range==='pick'){const t=pickedDay;return f=>f===t}
+  return range==='day'?inDay:range==='week'?inWeek:range==='month'?inMonth:range==='year'?inYear:()=>true;
+}
+function eF(range){const fn=pick(range);return DB.entries.filter(e=>fn(e.fecha))}
+function xF(range){const fn=pick(range);return DB.expenses.filter(e=>fn(e.fecha))}
+function grossR(r){return sumV(eF(r))}
+function expR(r){return sumV(xF(r))}
+function netR(r){return grossR(r)-expR(r)}
+
+/* ===== Rango de un período dado un tipo y una fecha ancla ===== */
+function periodRange(type,anchor){
+  const a=parseD(anchor);
+  if(type==='day'){const s=new Date(a);s.setHours(0,0,0,0);const e=new Date(a);e.setHours(23,59,59,999);return{s,e}}
+  if(type==='week'){const s=weekStartBy(a);const e=new Date(s);e.setDate(e.getDate()+6);e.setHours(23,59,59,999);return{s,e}}
+  if(type==='month'){const s=monthStartBy(a);const e=new Date(s);e.setMonth(e.getMonth()+1);e.setDate(e.getDate()-1);e.setHours(23,59,59,999);return{s,e}}
+  if(type==='year'){const s=yearStartDate(a);const e=yearEndDate(s);return{s,e}}
+  return{s:new Date(1970,0,1),e:new Date(3000,0,1)};
+}
+function rangeLabel(type,anchor){
+  const{s,e}=periodRange(type,anchor);
+  if(type==='day')return DOW[s.getDay()]+' '+s.getDate()+' '+MON[s.getMonth()]+' '+s.getFullYear();
+  if(type==='year')return MON[s.getMonth()]+' '+s.getFullYear()+' — '+MON[e.getMonth()]+' '+e.getFullYear();
+  return s.getDate()+' '+MON[s.getMonth()]+' — '+e.getDate()+' '+MON[e.getMonth()]+(type==='month'?' '+e.getFullYear():'');
+}
+function shiftAnchor(type,anchor,delta){
+  const a=parseD(anchor);
+  if(type==='day')a.setDate(a.getDate()+delta);
+  else if(type==='week')a.setDate(a.getDate()+7*delta);
+  else if(type==='month')a.setMonth(a.getMonth()+delta);
+  else if(type==='year')a.setFullYear(a.getFullYear()+delta);
+  return todayISO(a);
+}
+function entriesInPeriod(type,anchor){
+  const{s,e}=periodRange(type,anchor);
+  return DB.entries.filter(x=>{const d=parseD(x.fecha);return d>=s&&d<=e});
+}
+function expensesInPeriod(type,anchor){
+  const{s,e}=periodRange(type,anchor);
+  return DB.expenses.filter(x=>{const d=parseD(x.fecha);return d>=s&&d<=e});
+}
+
+let tT;
+function toast(msg,type=''){const t=$('#toast');t.textContent=msg;t.className='toast on '+type;clearTimeout(tT);tT=setTimeout(()=>t.className='toast',2200)}
+function esc(s){return String(s||'').replace(/[<>&]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]))}
+function signClass(n){return n<0?'neg':'pos'}
+
+$$('nav button').forEach(b=>b.onclick=()=>{
+  const v=b.dataset.v;
+  $$('nav button').forEach(x=>x.classList.toggle('on',x===b));
+  $$('.view').forEach(x=>x.classList.toggle('on',x.id==='v-'+v));
+  window.scrollTo(0,0);
+  if(v==='graficas')renderChart();
+  if(v==='entregas'){updateNavBar();renderEntries()}
+});
+
+let editId=null,editKind=null;
+let incSrc='Empresa';
+let incPay='empresa';
+function renderSrcGrid(){
+  const g=$('#srcGrid');g.innerHTML='';
+  DB.sources.forEach(s=>{
+    const isDef=DEF_SRC.some(d=>d.name===s.name);
+    g.insertAdjacentHTML('beforeend',
+      `<button class="catbtn ${s.name===incSrc?'on':''}" data-src="${esc(s.name)}">
+        ${!isDef?`<span class="rmv" data-rmsrc="${esc(s.name)}">×</span>`:''}
+        <span class="em">${s.emo}</span>${esc(s.name)}</button>`);
+  });
+  $$('#srcGrid [data-src]').forEach(b=>b.onclick=e=>{
+    if(e.target.dataset.rmsrc)return;
+    setSrc(b.dataset.src);
+  });
+  $$('#srcGrid [data-rmsrc]').forEach(b=>b.onclick=e=>{
+    e.stopPropagation();
+    const n=b.dataset.rmsrc;
+    const used=DB.entries.filter(x=>x.src===n).length;
+    const msg=used?`"${n}" tiene ${used} entrega(s). Si la borras, esas entregas pasan a "Empresa". ¿Continuar?`:`¿Borrar la categoría "${n}"?`;
+    if(confirm(msg)){
+      DB.entries.forEach(x=>{if(x.src===n)x.src='Empresa'});
+      DB.sources=DB.sources.filter(s=>s.name!==n);
+      if(incSrc===n)incSrc='Empresa';
+      save();renderSrcGrid();refreshAll();toast('Categoría borrada');
+    }
+  });
+}
+function setSrc(n){incSrc=n;$$('#srcGrid .catbtn').forEach(b=>b.classList.toggle('on',b.dataset.src===n))}
+$('#addSrcBtn').onclick=()=>{
+  const n=(prompt('Nombre de la nueva categoría (ej: Rappi, Mercado Livre):')||'').trim();
+  if(!n)return;
+  if(DB.sources.some(s=>s.name.toLowerCase()===n.toLowerCase())){toast('Esa categoría ya existe','bad');return}
+  const emo=(prompt('Un emoji para identificarla (opcional):')||'📦').trim()||'📦';
+  DB.sources.push({name:n,emo});save();incSrc=n;renderSrcGrid();fillSrcFilter();toast('Categoría creada ✓','ok');
+};
+function setPay(p){incPay=p;$$('#payGrid .catbtn').forEach(b=>b.classList.toggle('on',b.dataset.pay===p))}
+$$('#payGrid .catbtn').forEach(b=>b.onclick=()=>setPay(b.dataset.pay));
+$('#fPedido').addEventListener('input',updateRuteHint);
+function parsePedidos(txt){
+  return (txt||'').split(/[\n,;]+/).map(s=>s.trim()).filter(Boolean);
+}
+function updateRuteHint(){
+  const n=parsePedidos($('#fPedido').value).length;
+  const h=$('#ruteHint');
+  if(n>1){h.textContent='🗺️ Ruta de '+n+' entregas · el valor será el total';$('#valCap').textContent='Valor total de la ruta (R$) *';}
+  else{h.textContent='';$('#valCap').textContent='Valor total (R$) *';}
+}
+function openInc(edit){
+  editId=null;editKind=null;
+  $('#incTitle').textContent='Nueva entrega';$('#incSave').textContent='Guardar entrega';$('#scanBtn').style.display='';
+  $('#fFecha').value=todayISO();$('#fHora').value=nowHM();
+  $('#fCliente').value='';$('#fPedido').value='';$('#fValor').value='';
+  incSrc='Empresa';incPay='empresa';setPay('empresa');
+  if(edit){
+    editId=edit.id;editKind='income';
+    $('#incTitle').textContent='Editar entrega';$('#incSave').textContent='Guardar cambios';$('#scanBtn').style.display='none';
+    $('#fCliente').value=edit.cliente;$('#fPedido').value=edit.pedido;$('#fValor').value=edit.valor;$('#fFecha').value=edit.fecha;$('#fHora').value=edit.hora;
+    incSrc=edit.src||'Empresa';incPay=edit.pay||'empresa';setPay(incPay);
+  }
+  renderSrcGrid();updateRuteHint();
+  $('#sheetInc').classList.add('on');
+}
+let expCat='Gasolina';
+function openExp(edit){
+  editId=null;editKind=null;
+  $('#expTitle').textContent='Nuevo gasto';$('#expSave').textContent='Guardar gasto';
+  $('#eValor').value='';$('#eFecha').value=todayISO();$('#eNota').value='';setCat('Gasolina');
+  if(edit){
+    editId=edit.id;editKind='expense';
+    $('#expTitle').textContent='Editar gasto';$('#expSave').textContent='Guardar cambios';
+    $('#eValor').value=edit.valor;$('#eFecha').value=edit.fecha;$('#eNota').value=edit.nota||'';setCat(edit.cat);
+  }
+  $('#sheetExp').classList.add('on');
+}
+function setCat(c){expCat=c;$$('#catGrid .catbtn').forEach(b=>b.classList.toggle('on',b.dataset.cat===c))}
+$$('#catGrid .catbtn').forEach(b=>b.onclick=()=>setCat(b.dataset.cat));
+function closeSheets(){$('#sheetInc').classList.remove('on');$('#sheetExp').classList.remove('on');$('#sheetKm').classList.remove('on');stopScan()}
+$$('[data-close]').forEach(b=>b.onclick=closeSheets);
+$('#sheetInc').onclick=e=>{if(e.target===$('#sheetInc'))closeSheets()};
+$('#sheetExp').onclick=e=>{if(e.target===$('#sheetExp'))closeSheets()};
+$('#sheetKm').onclick=e=>{if(e.target===$('#sheetKm'))closeSheets()};
+function sideTabTap(tab,openFn){
+  if(!tab.classList.contains('open')){tab.classList.add('open');setTimeout(()=>tab.classList.remove('open'),2600)}
+  openFn();
+}
+$('#fabInc').onclick=()=>sideTabTap($('#fabInc'),()=>openInc());
+$('#fabExp').onclick=()=>sideTabTap($('#fabExp'),()=>openExp());
+
+/* ===== KILOMETRAJE ===== */
+let kmEditId=null;
+$('#kmTab').onclick=()=>sideTabTap($('#kmTab'),()=>openKm());
+function lastKmBefore(fecha){
+  // el registro de km más reciente ANTES de 'fecha' (para encadenar el inicial)
+  const prev=DB.km.filter(k=>k.fecha<fecha).sort((a,b)=>b.fecha.localeCompare(a.fecha))[0];
+  return prev?prev.fin:null;
+}
+function openKm(edit){
+  kmEditId=null;
+  $('#kmTitle').textContent='Registrar kilómetros';$('#kmSave').textContent='Guardar kilometraje';
+  const t=todayISO();
+  $('#kmFecha').value=t;$('#kmIni').value='';$('#kmFin').value='';$('#kmCalcOut').textContent='';
+  const ex=edit||DB.km.find(k=>k.fecha===t);
+  if(ex){
+    kmEditId=ex.id;$('#kmTitle').textContent='Editar kilometraje';$('#kmSave').textContent='Guardar cambios';
+    $('#kmFecha').value=ex.fecha;$('#kmIni').value=ex.ini;$('#kmFin').value=ex.fin;updateKmCalc();
+  }else{
+    // Encadenar: el inicial = final del último día registrado
+    const prevFin=lastKmBefore(t);
+    if(prevFin!=null){$('#kmIni').value=prevFin;}
+  }
+  updateKmHint();
+  $('#sheetKm').classList.add('on');
+}
+function updateKmHint(){
+  const prevFin=lastKmBefore($('#kmFecha').value||todayISO());
+  const h=$('#kmHint');if(!h)return;
+  if(kmEditId)h.textContent='Editando el registro de este día.';
+  else if(prevFin!=null)h.textContent='🔗 Inicial precargado con el final de tu último día ('+prevFin+'). Puedes corregirlo si hace falta.';
+  else h.textContent='Primer registro: pon el km del odómetro al empezar.';
+}
+function updateKmCalc(){
+  const i=parseFloat($('#kmIni').value),f=parseFloat($('#kmFin').value);
+  const o=$('#kmCalcOut');
+  if(i>=0&&f>=0){const d=f-i;o.textContent=d>=0?('🛣️ '+d+' km recorridos'):'⚠️ el final debe ser mayor que el inicial';o.style.color=d>=0?'var(--orange2)':'var(--red2)';}
+  else o.textContent='';
+}
+$('#kmIni').addEventListener('input',updateKmCalc);
+$('#kmFin').addEventListener('input',updateKmCalc);
+$('#kmFecha').addEventListener('change',()=>{
+  // al cambiar fecha, si no es edición, re-encadenar inicial
+  const f=$('#kmFecha').value;const ex=DB.km.find(k=>k.fecha===f);
+  if(ex){kmEditId=ex.id;$('#kmIni').value=ex.ini;$('#kmFin').value=ex.fin;$('#kmTitle').textContent='Editar kilometraje';$('#kmSave').textContent='Guardar cambios';}
+  else{kmEditId=null;$('#kmTitle').textContent='Registrar kilómetros';$('#kmSave').textContent='Guardar kilometraje';const pf=lastKmBefore(f);$('#kmIni').value=pf!=null?pf:'';$('#kmFin').value='';}
+  updateKmHint();updateKmCalc();
+});
+$('#kmSave').onclick=()=>{
+  const ini=parseFloat($('#kmIni').value),fin=parseFloat($('#kmFin').value),fecha=$('#kmFecha').value;
+  if(!(ini>=0)){toast('Pon el km inicial','bad');return}
+  if(!(fin>=0)){toast('Pon el km final','bad');return}
+  if(fin<ini){toast('El km final debe ser mayor','bad');return}
+  if(!fecha){toast('Falta la fecha','bad');return}
+  const kms=fin-ini;
+  // un registro por día: si existe (mismo día), lo actualiza
+  const existing=DB.km.find(k=>k.id===kmEditId)||DB.km.find(k=>k.fecha===fecha);
+  if(existing){existing.ini=ini;existing.fin=fin;existing.kms=kms;existing.fecha=fecha;toast('Kilometraje actualizado ✓','ok');}
+  else{DB.km.push({id:'k'+Date.now()+''+Math.floor(Math.random()*999),fecha,ini,fin,kms});toast(kms+' km guardados ✓','ok');}
+  save();closeSheets();refreshAll();
+};
+
+$('#incSave').onclick=()=>{
+  const cliente=$('#fCliente').value.trim();
+  const peds=parsePedidos($('#fPedido').value);
+  const pedido=peds.join(', ');
+  const count=Math.max(1,peds.length);
+  const valor=parseFloat($('#fValor').value),fecha=$('#fFecha').value,hora=$('#fHora').value;
+  if(!cliente){toast('Falta el cliente','bad');return}
+  if(!peds.length){toast('Falta el n° de pedido','bad');return}
+  if(!(valor>0)){toast('El valor debe ser mayor a 0','bad');return}
+  if(!fecha||!hora){toast('Falta fecha u hora','bad');return}
+  if(editId&&editKind==='income'){
+    const it=DB.entries.find(e=>e.id===editId);
+    if(it){it.cliente=cliente;it.pedido=pedido;it.valor=valor;it.fecha=fecha;it.hora=hora;it.src=incSrc;it.pay=incPay;it.count=count}
+    toast('Entrega actualizada ✓','ok');
+  }else{
+    DB.entries.push({id:Date.now()+''+Math.floor(Math.random()*999),cliente,pedido,valor,fecha,hora,src:incSrc,pay:incPay,count});
+    toast(count>1?('Ruta de '+count+' entregas guardada ✓'):'Entrega guardada ✓','ok');
+  }
+  save();closeSheets();refreshAll();
+};
+$('#expSave').onclick=()=>{
+  const valor=parseFloat($('#eValor').value),fecha=$('#eFecha').value,nota=$('#eNota').value.trim();
+  if(!(valor>0)){toast('El valor debe ser mayor a 0','bad');return}
+  if(!fecha){toast('Falta la fecha','bad');return}
+  if(editId&&editKind==='expense'){
+    const it=DB.expenses.find(e=>e.id===editId);
+    if(it){it.valor=valor;it.fecha=fecha;it.nota=nota;it.cat=expCat}
+    toast('Gasto actualizado ✓','ok');
+  }else{
+    DB.expenses.push({id:'x'+Date.now()+''+Math.floor(Math.random()*999),cat:expCat,valor,fecha,nota,hora:nowHM()});
+    toast('Gasto guardado ✓','ok');
+  }
+  save();closeSheets();refreshAll();
+};
+
+let qr=null;
+$('#scanBtn').onclick=()=>{qr?stopScan():startScan()};
+function startScan(){
+  $('#reader').style.display='block';$('#scanHint').style.display='block';$('#scanBtn').style.opacity=.6;
+  qr=new Html5Qrcode('reader');
+  qr.start({facingMode:'environment'},{fps:10,qrbox:{width:220,height:220}},onScan,()=>{}).catch(()=>{toast('No pude abrir la cámara','bad');stopScan()});
+}
+function stopScan(){if(qr){qr.stop().then(()=>qr.clear()).catch(()=>{});qr=null}$('#reader').style.display='none';$('#scanHint').style.display='none';$('#scanBtn').style.opacity=1}
+function onScan(text){
+  try{
+    let ped='';const chave=(text.match(/\d{44}/)||[])[0];
+    if(chave)ped=chave.slice(25,34).replace(/^0+/,'')||chave.slice(-6);
+    if(!ped)ped=text.replace(/\D/g,'').slice(-6)||'NFCe';
+    const cur=$('#fPedido').value.trim();
+    // Si ya hay pedidos, agrega el nuevo en línea aparte (para rutas)
+    $('#fPedido').value=cur?(cur+'\n'+ped):ped;
+    if(!$('#fCliente').value)$('#fCliente').value='NFC-e';
+    updateRuteHint();
+    const n=parsePedidos($('#fPedido').value).length;
+    toast(n>1?('QR '+n+' añadido · escanea otro o pon el total'):'QR leído · pon el valor','ok');
+  }catch(e){toast('QR leído','ok')}
+  stopScan();
+}
+
+function refreshAll(){renderHome();renderEntries();renderChart();updatePill()}
+function updatePill(){const n=netR('day');const p=$('#todayPill');p.textContent='Hoy '+rs(n);p.className='pill '+signClass(n)}
+function renderHome(){
+  const g=grossR('day'),x=expR('day'),n=g-x,cnt=countE(eF('day'));
+  const big=$('#heroNet');big.textContent=money(n);big.parentElement.className='big '+signClass(n);
+  $('#heroGross').textContent=rs(g);$('#heroExp').textContent=rs(x);
+  $('#heroCount').textContent=cnt;$('#heroAvg').textContent=rs(cnt?g/cnt:0);
+  setStat('stWeek',netR('week'));setStat('stMonth',netR('month'));setStat('stAll',sumV(DB.entries)-sumV(DB.expenses));
+  $('#stWeekN').textContent=weekLabel()+' · '+countE(eF('week'))+' ent';
+  $('#stMonthN').textContent=monthLabel()+' · '+countE(eF('month'))+' ent';
+  $('#stAllN').textContent=countE(DB.entries)+' entregas';
+  renderGoals(netR('day'),netR('week'),netR('month'));
+  renderHourChart(eF('day'));
+  renderKmHome(g,n);
+}
+function renderKmHome(gToday,nToday){
+  const kmT=kmToday();
+  // Número grande = acumulado de la SEMANA (se reinicia cada semana, sigue el período)
+  const kmWeekAcc=sumKm(kmR('week'));
+  $('#heroKm').textContent=kmWeekAcc;
+  $('#heroKmPer').textContent='de la semana';
+  // R$/km de HOY (sobre lo de hoy)
+  $('#heroKmNet').textContent=kmT>0?('R$'+money(nToday/kmT)):'R$—';
+  $('#heroKmGross').textContent=kmT>0?('R$'+money(gToday/kmT)):'R$—';
+  // Próximo inicio = final del último registro (el km con que arrancas el siguiente día)
+  const lastReg=DB.km.slice().sort((a,b)=>b.fecha.localeCompare(a.fecha))[0];
+  const nextStart=lastReg?lastReg.fin:null;
+  $('#heroKmStart').textContent=nextStart!=null?('próx. inicio '+nextStart+' · hoy '+kmT+' km'):('hoy '+kmT+' km');
+  // grid3 de km
+  $('#stKmToday').textContent=kmT;
+  $('#stKmWeek').textContent=kmWeekAcc;
+  $('#stKmMonth').textContent=sumKm(kmR('month'));
+}
+function setStat(id,n){const el=$('#'+id);el.textContent=money(n);el.parentElement.className='v '+signClass(n)}
+function setGoal(pfx,cur,tgt){
+  $('#'+pfx+'Cur').textContent=rs(cur);$('#'+pfx+'Tgt').textContent=rs(tgt);
+  const p=tgt>0?Math.max(0,Math.min(100,cur/tgt*100)):0;
+  $('#'+pfx+'Fill').style.width=p+'%';
+  $('#'+pfx+'Pct').textContent=tgt>0?(Math.round(p)+'%'+(p>=100?' · ¡logrado!':'')):'sin meta';
+}
+function renderGoals(d,w,m){setGoal('gDay',d,DB.goals.day);setGoal('gWeek',w,DB.goals.week);setGoal('gMonth',m,DB.goals.month)}
+function renderHourChart(list){
+  const wrap=$('#hourChart');wrap.innerHTML='';
+  if(!list.length){$('#hourNote').style.display='block';wrap.innerHTML='<div style="color:var(--dim);font-size:13px;margin:auto">Sin entregas hoy</div>';return}
+  $('#hourNote').style.display='none';
+  const b={};list.forEach(e=>{const h=parseInt((e.hora||'0').split(':')[0]);b[h]=(b[h]||0)+1});
+  const hrs=Object.keys(b).map(Number);const lo=Math.min(...hrs),hi=Math.max(...hrs);const max=Math.max(...Object.values(b));
+  for(let h=lo;h<=hi;h++){const c=b[h]||0;
+    wrap.insertAdjacentHTML('beforeend',`<div class="bar"><div class="nz">${c||''}</div><div class="stack"><div class="cg" style="height:${c?Math.max(6,c/max*100):2}%;border-radius:6px"></div></div><div class="lb">${pad(h)}h</div></div>`);}
+}
+
+let entFilter='day',kindFilter='all';
+let anchor=todayISO();  // fecha de referencia del período que se está viendo
+function isNavPeriod(){return['day','week','month','year'].includes(entFilter)}
+function updateNavBar(){
+  const nav=isNavPeriod();
+  $('#navBar').classList.toggle('on',nav);
+  $('#periodPdfBtn').style.display=nav?'':'none';
+  if(nav){
+    $('#navDate').value=anchor;
+    $('#navLbl').textContent=rangeLabel(entFilter,anchor);
+    // ¿estamos en el período actual? -> ocultar "volver"
+    const curAnchor=todayISO();
+    const{s,e}=periodRange(entFilter,anchor);
+    const now=new Date();
+    const atCurrent=now>=s&&now<=e;
+    $('#navToday').style.display=atCurrent?'none':'';
+    const label=entFilter==='day'?'PDF de este día':entFilter==='week'?'PDF de esta semana':entFilter==='month'?'PDF de este mes':'PDF de este año';
+    $('#periodPdfBtn').textContent='📄 '+label;
+  }else{
+    $('#navToday').style.display='none';
+  }
+}
+$$('#entSeg button').forEach(b=>b.onclick=()=>{
+  $$('#entSeg button').forEach(x=>x.classList.toggle('on',x===b));
+  entFilter=b.dataset.f;
+  anchor=todayISO(); // al cambiar de tipo, volver al período actual
+  updateNavBar();
+  renderEntries();
+});
+$('#navDate').onchange=()=>{anchor=$('#navDate').value||todayISO();updateNavBar();renderEntries()};
+$('#navPrev').onclick=()=>{anchor=shiftAnchor(entFilter,anchor,-1);updateNavBar();renderEntries()};
+$('#navNext').onclick=()=>{anchor=shiftAnchor(entFilter,anchor,1);updateNavBar();renderEntries()};
+$('#navToday').onclick=()=>{anchor=todayISO();updateNavBar();renderEntries()};
+$('#periodPdfBtn').onclick=()=>{
+  if(kindFilter==='km')makeKmReportPeriod(entFilter,anchor);
+  else makeReport('period',entFilter,anchor);
+};
+$$('#kindSeg button').forEach(b=>b.onclick=()=>{
+  $$('#kindSeg button').forEach(x=>x.classList.toggle('on',x===b));
+  kindFilter=b.dataset.k;
+  const isKm=kindFilter==='km';
+  $('#srcFilter').style.display=isKm?'none':'';
+  if(isNavPeriod()){
+    $('#periodPdfBtn').style.display='';
+    $('#periodPdfBtn').textContent=isKm?'📄 PDF de km del período':('📄 '+({day:'PDF de este día',week:'PDF de esta semana',month:'PDF de este mes',year:'PDF de este año'}[entFilter]));
+  }
+  renderEntries();
+});
+let srcFilter='all';
+function fillSrcFilter(){
+  const sel=$('#srcFilter');const cur=sel.value||'all';
+  sel.innerHTML='<option value="all">Todas las categorías</option>'+
+    DB.sources.map(s=>`<option value="${esc(s.name)}">${s.emo} ${esc(s.name)}</option>`).join('');
+  sel.value=DB.sources.some(s=>s.name===cur)||cur==='all'?cur:'all';
+}
+$('#srcFilter').onchange=()=>{srcFilter=$('#srcFilter').value;renderEntries()};
+function renderKmList(){
+  let regs;
+  if(isNavPeriod())regs=kmInPeriod(entFilter,anchor);
+  else regs=DB.km.slice();
+  regs=regs.slice().sort((a,b)=>b.fecha.localeCompare(a.fecha));
+  const tot=sumKm(regs);
+  // dinero del período para R$/km
+  let g,x;
+  if(isNavPeriod()){g=sumV(entriesInPeriod(entFilter,anchor));x=sumV(expensesInPeriod(entFilter,anchor));}
+  else{g=sumV(DB.entries);x=sumV(DB.expenses);}
+  const net=g-x;
+  $('#entTotalHint').textContent=regs.length?('· '+tot+' km'):'';
+  const box=$('#entList');box.innerHTML='';
+  if(!regs.length){
+    const dtxt=isNavPeriod()?('este '+({day:'día',week:'semana',month:'mes',year:'año'}[entFilter])):'el histórico';
+    box.innerHTML='<div class="empty"><div class="ic">🛣️</div><p>Sin registros de km en '+dtxt+'.</p><p class="tiny">Usa la pestaña KM (azul) al costado para registrar.</p></div>';return}
+  // resumen arriba
+  box.insertAdjacentHTML('beforeend',
+    `<div class="kmsum">
+      <div class="kmsumbig">${tot} <small>km recorridos</small></div>
+      <div class="kmsumrs"><span>🟢 neto <b>${tot>0?'R$'+money(net/tot):'R$—'}</b>/km</span><span>🟠 bruto <b>${tot>0?'R$'+money(g/tot):'R$—'}</b>/km</span></div>
+    </div>`);
+  regs.forEach(k=>{
+    const d=parseD(k.fecha);
+    box.insertAdjacentHTML('beforeend',
+      `<div class="entry"><div class="av" style="color:#8fc0ff;border-color:#2a4a7a;background:#0e1626">🛣️</div>
+        <div class="mid"><div class="cli">${k.kms} km <span style="font-size:11px;color:var(--dim);font-weight:600">${DOW[d.getDay()]} ${d.getDate()} ${MON[d.getMonth()]}</span></div>
+          <div class="met">inicio <b>${k.ini}</b> → final <b>${k.fin}</b></div></div>
+        <div class="acts"><button class="ab edit" data-editkm="${k.id}">✎</button><button class="ab del" data-delkm="${k.id}">🗑</button></div></div>`);
+  });
+  $$('#entList [data-editkm]').forEach(b=>b.onclick=()=>{const k=DB.km.find(x=>x.id===b.dataset.editkm);if(k)openKm(k)});
+  $$('#entList [data-delkm]').forEach(b=>b.onclick=()=>{if(confirm('¿Borrar este registro de km?')){DB.km=DB.km.filter(x=>x.id!==b.dataset.delkm);save();toast('Registro de km borrado');refreshAll();renderKmList()}});
+}
+function renderEntries(){
+  // Vista especial de KILÓMETROS
+  if(kindFilter==='km'){renderKmList();return;}
+  let inc,exp;
+  if(isNavPeriod()){
+    inc=entriesInPeriod(entFilter,anchor).map(e=>({...e,_k:'income'}));
+    exp=expensesInPeriod(entFilter,anchor).map(e=>({...e,_k:'expense'}));
+  }else{ // 'all'
+    inc=DB.entries.map(e=>({...e,_k:'income'}));
+    exp=DB.expenses.map(e=>({...e,_k:'expense'}));
+  }
+  if(srcFilter!=='all')inc=inc.filter(e=>(e.src||'Empresa')===srcFilter);
+  let all=[...inc,...exp];
+  if(kindFilter==='income')all=inc;
+  if(kindFilter==='expense')all=exp;
+  if(srcFilter!=='all'&&kindFilter==='all')all=inc;
+  all.sort((a,b)=>(b.fecha+(b.hora||'')).localeCompare(a.fecha+(a.hora||'')));
+  const g=sumV(inc),x=sumV(exp);
+  $('#entTotalHint').textContent=all.length?('· neto '+rs(g-x)):'';
+  const box=$('#entList');box.innerHTML='';
+  if(!all.length){
+    const dtxt=isNavPeriod()?('este '+({day:'día',week:'semana',month:'mes',year:'año'}[entFilter])):'este período';
+    box.innerHTML='<div class="empty"><div class="ic">🛵</div><p>Sin movimientos en '+dtxt+'.</p><p class="tiny">Usa + (naranja) para entregas o − (rojo) para gastos.</p></div>';return}
+  const groups={};all.forEach(e=>{(groups[e.fecha]=groups[e.fecha]||[]).push(e)});
+  Object.keys(groups).sort((a,b)=>b.localeCompare(a)).forEach(f=>{
+    const d=parseD(f),items=groups[f];
+    const dg=sumV(items.filter(i=>i._k==='income')),dx=sumV(items.filter(i=>i._k==='expense'));
+    const head=`<div class="dh"><span class="d">${DOW[d.getDay()]} ${d.getDate()} ${MON[d.getMonth()]}</span><span class="dt"><span class="g">${rs(dg)}</span> · <span class="r">-${rs(dx).replace('-','')}</span> · ${rs(dg-dx)}</span></div>`;
+    let rows='';
+    items.forEach(e=>{
+      if(e._k==='income'){
+        const sn=e.src||'Empresa';
+        const cn=+e.count||1;
+        const payB=(e.pay==='frete')?'<span class="badge-pay frete">🤝 frete</span>':'';
+        const routeB=cn>1?`<span class="badge-route">🗺️ ruta ${cn}</span>`:'';
+        const pedShort=cn>1?(cn+' pedidos'):('#'+esc(e.pedido));
+        rows+=`<div class="entry"><div class="av">${srcEmo(sn)}</div>
+          <div class="mid"><div class="cli">${esc(e.cliente)}${payB}${routeB}</div><div class="met"><b>${esc(sn)}</b> · ${pedShort} · ${e.hora}</div></div>
+          <div class="val g">${rs(e.valor)}</div>
+          <div class="acts"><button class="ab edit" data-edit-i="${e.id}">✎</button><button class="ab del" data-del-i="${e.id}">🗑</button></div></div>`;
+      }else{
+        rows+=`<div class="entry"><div class="av exp">${CAT_EMO[e.cat]||'💸'}</div>
+          <div class="mid"><div class="cli">${esc(e.cat)}</div><div class="met">${e.nota?esc(e.nota)+' · ':''}<b>gasto</b></div></div>
+          <div class="val r">-${rs(e.valor).replace('-','')}</div>
+          <div class="acts"><button class="ab edit" data-edit-x="${e.id}">✎</button><button class="ab del" data-del-x="${e.id}">🗑</button></div></div>`;
+      }
+    });
+    box.insertAdjacentHTML('beforeend',`<div class="daygroup">${head}${rows}</div>`);
+  });
+  $$('#entList [data-edit-i]').forEach(b=>b.onclick=()=>{const it=DB.entries.find(e=>e.id===b.dataset.editI);if(it)openInc(it)});
+  $$('#entList [data-edit-x]').forEach(b=>b.onclick=()=>{const it=DB.expenses.find(e=>e.id===b.dataset.editX);if(it)openExp(it)});
+  $$('#entList [data-del-i]').forEach(b=>b.onclick=()=>{if(confirm('¿Borrar esta entrega?')){DB.entries=DB.entries.filter(e=>e.id!==b.dataset.delI);save();toast('Entrega borrada');refreshAll()}});
+  $$('#entList [data-del-x]').forEach(b=>b.onclick=()=>{if(confirm('¿Borrar este gasto?')){DB.expenses=DB.expenses.filter(e=>e.id!==b.dataset.delX);save();toast('Gasto borrado');refreshAll()}});
+}
+
+let chMode='days';
+$$('#chSeg button').forEach(b=>b.onclick=()=>{$$('#chSeg button').forEach(x=>x.classList.toggle('on',x===b));chMode=b.dataset.c;renderChart()});
+function renderChart(){
+  let data=[];const now=new Date();
+  const gsum=p=>sumV(DB.entries.filter(p)),xsum=p=>sumV(DB.expenses.filter(p));
+  if(chMode==='days'){
+    $('#chTitle').textContent='Últimos 7 días';
+    for(let i=6;i>=0;i--){const d=new Date(now);d.setDate(d.getDate()-i);const f=todayISO(d);
+      data.push({label:DOW[d.getDay()]+' '+d.getDate(),g:gsum(e=>e.fecha===f),x:xsum(e=>e.fecha===f)});}
+  }else if(chMode==='weeks'){
+    $('#chTitle').textContent='Últimas 6 semanas';
+    for(let i=5;i>=0;i--){const ws=weekStartBy(new Date(now));ws.setDate(ws.getDate()-i*7);const we=new Date(ws);we.setDate(we.getDate()+6);we.setHours(23,59,59,999);
+      const inR=e=>{const d=parseD(e.fecha);return d>=ws&&d<=we};
+      data.push({label:ws.getDate()+'/'+(ws.getMonth()+1),g:gsum(inR),x:xsum(inR)});}
+  }else{
+    $('#chTitle').textContent='Últimos 6 meses';
+    for(let i=5;i>=0;i--){const d=new Date(now.getFullYear(),now.getMonth()-i,1);
+      const inR=e=>{const x=parseD(e.fecha);return x.getMonth()===d.getMonth()&&x.getFullYear()===d.getFullYear()};
+      data.push({label:MON[d.getMonth()],g:gsum(inR),x:xsum(inR)});}
+  }
+  const box=$('#mainChart');
+  const maxV=Math.max(1,...data.map(d=>Math.max(d.g,d.x)));
+  let bars='<div class="chartbars">';
+  data.forEach(d=>{
+    const net=d.g-d.x;
+    const gh=d.g?Math.max(4,d.g/maxV*100):0,xh=d.x?Math.max(4,d.x/maxV*100):0;
+    const nlbl=Math.abs(net)>=1000?(net/1000).toFixed(1)+'k':Math.round(net);
+    bars+=`<div class="bar"><div class="nz" style="color:${net<0?'var(--red2)':'var(--orange2)'}">${(d.g||d.x)?nlbl:''}</div>
+      <div class="stack">${d.g?`<div class="cg" style="height:${gh}%"></div>`:''}${d.x?`<div class="cr" style="height:${xh}%"></div>`:''}${(!d.g&&!d.x)?'<div class="cg" style="height:2%;background:#26262c"></div>':''}</div>
+      <div class="lb">${d.label}</div></div>`;
+  });
+  bars+='</div>';box.innerHTML=bars;
+  const G=data.reduce((s,d)=>s+d.g,0),X=data.reduce((s,d)=>s+d.x,0);
+  $('#chGross').textContent=money(G);$('#chExp').textContent=money(X);
+  $('#chNet').textContent=money(G-X);$('#chNetV').className='v '+signClass(G-X);
+  renderSrcBreakdown();
+  renderKmChart();
+  renderRank();
+}
+function renderKmChart(){
+  let data=[];const now=new Date();
+  const ksum=pred=>sumKm(DB.km.filter(pred));
+  if(chMode==='days'){
+    $('#kmChartLbl').textContent='· últimos 7 días';
+    for(let i=6;i>=0;i--){const d=new Date(now);d.setDate(d.getDate()-i);const f=todayISO(d);
+      data.push({label:DOW[d.getDay()]+' '+d.getDate(),v:ksum(e=>e.fecha===f)});}
+  }else if(chMode==='weeks'){
+    $('#kmChartLbl').textContent='· últimas 6 semanas';
+    for(let i=5;i>=0;i--){const ws=weekStartBy(new Date(now));ws.setDate(ws.getDate()-i*7);const we=new Date(ws);we.setDate(we.getDate()+6);we.setHours(23,59,59,999);
+      const inR=e=>{const d=parseD(e.fecha);return d>=ws&&d<=we};
+      data.push({label:ws.getDate()+'/'+(ws.getMonth()+1),v:ksum(inR)});}
+  }else{
+    $('#kmChartLbl').textContent='· últimos 6 meses';
+    for(let i=5;i>=0;i--){const d=new Date(now.getFullYear(),now.getMonth()-i,1);
+      const inR=e=>{const x=parseD(e.fecha);return x.getMonth()===d.getMonth()&&x.getFullYear()===d.getFullYear()};
+      data.push({label:MON[d.getMonth()],v:ksum(inR)});}
+  }
+  const box=$('#kmChart');
+  const maxV=Math.max(1,...data.map(d=>d.v));
+  let bars='<div class="chartbars">';
+  data.forEach(d=>{
+    const h=d.v?Math.max(5,d.v/maxV*100):2;
+    const t=d.v>=1000?(d.v/1000).toFixed(1)+'k':Math.round(d.v);
+    bars+=`<div class="bar"><div class="nz" style="color:#5a9dff">${d.v?t:''}</div>
+      <div class="stack"><div class="cg" style="height:${h}%;border-radius:6px;background:linear-gradient(180deg,#3a8dff,#1a4fd0)"></div></div>
+      <div class="lb">${d.label}</div></div>`;
+  });
+  bars+='</div>';box.innerHTML=bars;
+  const tot=data.reduce((s,d)=>s+d.v,0);
+  const activeDays=data.filter(d=>d.v>0).length;
+  $('#kmChTotal').textContent=tot;
+  $('#kmChAvg').textContent=activeDays?Math.round(tot/activeDays):0;
+  // R$/km neto del mismo período visible
+  let net=0;
+  if(chMode==='days'){const from=new Date(now);from.setDate(from.getDate()-6);from.setHours(0,0,0,0);
+    net=sumV(DB.entries.filter(e=>parseD(e.fecha)>=from))-sumV(DB.expenses.filter(e=>parseD(e.fecha)>=from));}
+  else if(chMode==='weeks'){const ws=weekStartBy(new Date(now));ws.setDate(ws.getDate()-35);
+    net=sumV(DB.entries.filter(e=>parseD(e.fecha)>=ws))-sumV(DB.expenses.filter(e=>parseD(e.fecha)>=ws));}
+  else{const from=new Date(now.getFullYear(),now.getMonth()-5,1);
+    net=sumV(DB.entries.filter(e=>parseD(e.fecha)>=from))-sumV(DB.expenses.filter(e=>parseD(e.fecha)>=from));}
+  $('#kmChRs').textContent=tot>0?('R$'+money(net/tot)):'R$—';
+}
+
+function renderSrcBreakdown(){
+  // El período sigue al selector de Gráficas: días=últimos 7d, semanas=últimas 6sem, meses=últimos 6m
+  const now=new Date();let inR,lbl;
+  if(chMode==='days'){const from=new Date(now);from.setDate(from.getDate()-6);from.setHours(0,0,0,0);
+    inR=e=>parseD(e.fecha)>=from;lbl='· últimos 7 días';}
+  else if(chMode==='weeks'){const ws=weekStartBy(new Date(now));ws.setDate(ws.getDate()-35);
+    inR=e=>parseD(e.fecha)>=ws;lbl='· últimas 6 semanas';}
+  else{const from=new Date(now.getFullYear(),now.getMonth()-5,1);
+    inR=e=>parseD(e.fecha)>=from;lbl='· últimos 6 meses';}
+  $('#srcPeriodLbl').textContent=lbl;
+
+  const rows=DB.entries.filter(inR);
+  const tot={},cnt={};
+  DB.sources.forEach(s=>{tot[s.name]=0;cnt[s.name]=0});
+  rows.forEach(e=>{const s=e.src||'Empresa';if(!(s in tot)){tot[s]=0;cnt[s]=0}tot[s]+=(+e.valor||0);cnt[s]+=(+e.count||1)});
+  const arr=Object.keys(tot).map(n=>({n,v:tot[n],c:cnt[n]})).sort((a,b)=>b.v-a.v);
+  const GT=arr.reduce((s,a)=>s+a.v,0);
+
+  // Gráfica de barras comparando categorías
+  const box=$('#srcChart');
+  const active=arr.filter(a=>a.v>0);
+  if(!active.length){
+    box.innerHTML='<div style="display:grid;place-items:center;height:100%;color:var(--dim);font-size:13px">Sin ganancias en el período</div>';
+    $('#srcList').innerHTML='';return;
+  }
+  const maxV=Math.max(...active.map(a=>a.v));
+  let bars='<div class="chartbars">';
+  active.forEach(a=>{
+    const h=Math.max(5,a.v/maxV*100);
+    const t=a.v>=1000?(a.v/1000).toFixed(1)+'k':Math.round(a.v);
+    bars+=`<div class="bar"><div class="nz">${t}</div>
+      <div class="stack"><div class="cg" style="height:${h}%;border-radius:6px"></div></div>
+      <div class="lb">${srcEmo(a.n)} ${esc(a.n)}</div></div>`;
+  });
+  bars+='</div>';box.innerHTML=bars;
+
+  // Tarjetas con el total de cada una
+  const list=$('#srcList');list.innerHTML='';
+  arr.forEach(a=>{
+    const pctv=GT>0?Math.round(a.v/GT*100):0;
+    list.insertAdjacentHTML('beforeend',
+      `<div class="srccard"><div class="si">${srcEmo(a.n)}</div>
+        <div class="sn">${esc(a.n)}<small>${a.c} entrega${a.c===1?'':'s'} · ${pctv}% del total</small></div>
+        <div class="sv">${rs(a.v)}<small>${a.c?rs(a.v/a.c)+' c/u':'—'}</small></div></div>`);
+  });
+  list.insertAdjacentHTML('beforeend',
+    `<div class="srccard" style="border-top:1px solid var(--line2);margin-top:4px;padding-top:12px">
+      <div class="si" style="background:#1e150c;border-color:#4a3418">Σ</div>
+      <div class="sn">Total ganado<small>suma de todas las categorías</small></div>
+      <div class="sv" style="color:var(--orange2)">${rs(GT)}</div></div>`);
+
+  // Desglose por tipo de pago
+  let payEmp=0,payFre=0;
+  rows.forEach(e=>{if(e.pay==='frete')payFre+=(+e.valor||0);else payEmp+=(+e.valor||0)});
+  list.insertAdjacentHTML('beforeend',
+    `<div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--line)">
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--mut);font-weight:700;margin-bottom:8px">Por tipo de pago</div>
+      <div class="srccard"><div class="si">🏢</div><div class="sn">Pago Empresa</div><div class="sv">${rs(payEmp)}</div></div>
+      <div class="srccard"><div class="si">🤝</div><div class="sn">Frete cliente<small>pagado por el cliente</small></div><div class="sv">${rs(payFre)}</div></div>
+    </div>`);
+}
+
+function renderRank(){
+  const byDay={};
+  eF('month').forEach(e=>{(byDay[e.fecha]=byDay[e.fecha]||{g:0,x:0}).g+=(+e.valor||0)});
+  xF('month').forEach(e=>{(byDay[e.fecha]=byDay[e.fecha]||{g:0,x:0}).x+=(+e.valor||0)});
+  const arr=Object.entries(byDay).map(([f,o])=>({f,net:o.g-o.x})).sort((a,b)=>b.net-a.net).slice(0,5);
+  const box=$('#rankList');box.innerHTML='';
+  if(!arr.length){box.innerHTML='<div class="empty"><p>Aún sin datos este mes.</p></div>';return}
+  arr.forEach((r,i)=>{const d=parseD(r.f);const n=countE(eF('month').filter(e=>e.fecha===r.f));
+    box.insertAdjacentHTML('beforeend',`<div class="rank ${i===0?'top':''}"><div class="pos">${i+1}</div>
+      <div class="rd">${DOW[d.getDay()]} ${d.getDate()} ${MON[d.getMonth()]} <small>· ${n} entregas</small></div>
+      <div class="rv" style="color:${r.net<0?'var(--red2)':'var(--green2)'}">${rs(r.net)}</div></div>`);});
+}
+
+function realAvgNet(){
+  const byDay={};
+  DB.entries.forEach(e=>{byDay[e.fecha]=(byDay[e.fecha]||0)+(+e.valor||0)});
+  DB.expenses.forEach(e=>{byDay[e.fecha]=(byDay[e.fecha]||0)-(+e.valor||0)});
+  const vals=Object.values(byDay);return vals.length?vals.reduce((a,b)=>a+b,0)/vals.length:0;
+}
+$('#projReal').onclick=()=>{if(!DB.entries.length){toast('Sin datos aún','bad');return}$('#projInput').value=Math.round(realAvgNet()*100)/100;calcProj();toast('Promedio neto real cargado ✓','ok')};
+$('#projCalc').onclick=calcProj;
+$('#projDays').onchange=()=>{DB.projDays=+$('#projDays').value;save();calcProj()};
+function calcProj(){
+  const d=parseFloat($('#projInput').value)||0;const wd=+$('#projDays').value;
+  $('#pW').textContent=rs(d*wd);$('#pM').textContent=rs(d*wd*4.345);$('#pY').textContent=rs(d*wd*52);
+  [$('#pW'),$('#pM'),$('#pY')].forEach(el=>el.style.color=d<0?'var(--red2)':'var(--green2)');
+  const ks=$('#projOut').querySelectorAll('.pc .k');
+  ks[0].textContent='Semanal (×'+wd+')';ks[1].textContent='Mensual (×'+Math.round(wd*4.345)+')';ks[2].textContent='Anual (×'+wd*52+')';
+}
+
+/* ===== PERÍODO SEMANAL ===== */
+let wMode=DB.weekMode||'auto';
+$$('#wModeSeg button').forEach(b=>b.onclick=()=>{
+  $$('#wModeSeg button').forEach(x=>x.classList.toggle('on',x===b));
+  wMode=b.dataset.wm;
+  $('#wAuto').style.display=wMode==='auto'?'':'none';
+  $('#wManual').style.display=wMode==='manual'?'':'none';
+  updateWeekPreview();
+});
+$('#wStartSel').onchange=updateWeekPreview;
+$('#wFrom').onchange=updateWeekPreview;
+$('#wTo').onchange=updateWeekPreview;
+function updateWeekPreview(){
+  let txt='—';
+  if(wMode==='manual'){
+    const f=$('#wFrom').value,t=$('#wTo').value;
+    if(f&&t){const a=parseD(f),b2=parseD(t);
+      txt=DOW[a.getDay()]+' '+a.getDate()+' '+MON[a.getMonth()]+' — '+DOW[b2.getDay()]+' '+b2.getDate()+' '+MON[b2.getMonth()];}
+    else txt='Elige ambas fechas';
+  }else{
+    const st=+$('#wStartSel').value;
+    const x=new Date();const g=(x.getDay()-st+7)%7;x.setDate(x.getDate()-g);
+    const e=new Date(x);e.setDate(e.getDate()+6);
+    txt=DOW[x.getDay()]+' '+x.getDate()+' '+MON[x.getMonth()]+' — '+DOW[e.getDay()]+' '+e.getDate()+' '+MON[e.getMonth()];
+  }
+  $('#wPreview').textContent='Período actual: '+txt;
+}
+$('#saveWeek').onclick=()=>{
+  if(wMode==='manual'){
+    const f=$('#wFrom').value,t=$('#wTo').value;
+    if(!f||!t){toast('Elige ambas fechas','bad');return}
+    if(f>t){toast('"Desde" no puede ser mayor que "Hasta"','bad');return}
+    DB.weekMode='manual';DB.weekFrom=f;DB.weekTo=t;
+  }else{
+    DB.weekMode='auto';DB.weekStart=+$('#wStartSel').value;
+  }
+  save();refreshAll();updateWeekPreview();toast('Período guardado ✓','ok');
+};
+function fillWeekInputs(){
+  wMode=DB.weekMode||'auto';
+  $$('#wModeSeg button').forEach(b=>b.classList.toggle('on',b.dataset.wm===wMode));
+  $('#wAuto').style.display=wMode==='auto'?'':'none';
+  $('#wManual').style.display=wMode==='manual'?'':'none';
+  $('#wStartSel').value=DB.weekStart==null?1:DB.weekStart;
+  $('#wFrom').value=DB.weekFrom||'';$('#wTo').value=DB.weekTo||'';
+  updateWeekPreview();
+}
+
+/* ===== PERÍODO MENSUAL ===== */
+let mMode=DB.monthMode||'auto';
+// llenar días 1..28
+(function(){const sel=$('#mStartSel');let o='';for(let i=1;i<=28;i++)o+=`<option value="${i}">${i}</option>`;sel.innerHTML=o})();
+$$('#mModeSeg button').forEach(b=>b.onclick=()=>{
+  $$('#mModeSeg button').forEach(x=>x.classList.toggle('on',x===b));
+  mMode=b.dataset.mm;
+  $('#mAuto').style.display=mMode==='auto'?'':'none';
+  $('#mManual').style.display=mMode==='manual'?'':'none';
+  updateMonthPreview();
+});
+$('#mStartSel').onchange=updateMonthPreview;
+$('#mFrom').onchange=updateMonthPreview;$('#mTo').onchange=updateMonthPreview;
+function updateMonthPreview(){
+  let txt='—';
+  if(mMode==='manual'){
+    const f=$('#mFrom').value,t=$('#mTo').value;
+    if(f&&t){const a=parseD(f),b=parseD(t);txt=a.getDate()+' '+MON[a.getMonth()]+' — '+b.getDate()+' '+MON[b.getMonth()]}
+    else txt='Elige ambas fechas';
+  }else{
+    const sd=+$('#mStartSel').value;const saved=DB.monthStart;DB.monthStart=sd;const oldMode=DB.monthMode;DB.monthMode='auto';
+    const ms=monthStartDate(new Date()),me=monthEndDate(ms);
+    DB.monthStart=saved;DB.monthMode=oldMode;
+    txt=ms.getDate()+' '+MON[ms.getMonth()]+' — '+me.getDate()+' '+MON[me.getMonth()];
+  }
+  $('#mPreview').textContent='Período actual: '+txt;
+}
+$('#saveMonth').onclick=()=>{
+  if(mMode==='manual'){
+    const f=$('#mFrom').value,t=$('#mTo').value;
+    if(!f||!t){toast('Elige ambas fechas','bad');return}
+    if(f>t){toast('"Desde" no puede ser mayor que "Hasta"','bad');return}
+    DB.monthMode='manual';DB.monthFrom=f;DB.monthTo=t;
+  }else{DB.monthMode='auto';DB.monthStart=+$('#mStartSel').value}
+  save();refreshAll();updateMonthPreview();toast('Período mensual guardado ✓','ok');
+};
+function fillMonthInputs(){
+  mMode=DB.monthMode||'auto';
+  $$('#mModeSeg button').forEach(b=>b.classList.toggle('on',b.dataset.mm===mMode));
+  $('#mAuto').style.display=mMode==='auto'?'':'none';
+  $('#mManual').style.display=mMode==='manual'?'':'none';
+  $('#mStartSel').value=Math.min(28,Math.max(1,DB.monthStart||1));
+  $('#mFrom').value=DB.monthFrom||'';$('#mTo').value=DB.monthTo||'';
+  updateMonthPreview();
+}
+
+/* ===== PERÍODO ANUAL ===== */
+$('#yStartSel').onchange=updateYearPreview;
+function updateYearPreview(){
+  const sm=+$('#yStartSel').value;const saved=DB.yearStartMonth;DB.yearStartMonth=sm;
+  const ys=yearStartDate(new Date()),ye=yearEndDate(ys);DB.yearStartMonth=saved;
+  $('#yPreview').textContent='Período actual: '+MON[ys.getMonth()]+' '+ys.getFullYear()+' — '+MON[ye.getMonth()]+' '+ye.getFullYear();
+}
+$('#saveYear').onclick=()=>{DB.yearStartMonth=+$('#yStartSel').value;save();refreshAll();updateYearPreview();toast('Período anual guardado ✓','ok')};
+function fillYearInputs(){$('#yStartSel').value=DB.yearStartMonth||1;updateYearPreview()}
+
+/* ===== CALCULADORA R$/km ===== */
+$('#kmPeriod').onchange=()=>{$('#kmMoneyWrap').style.display=$('#kmPeriod').value==='manual'?'':'none'};
+$('#kmCalc').onclick=()=>{
+  const km=parseFloat($('#kmInput').value);
+  if(!(km>0)){toast('Pon los kilómetros','bad');return}
+  const per=$('#kmPeriod').value;
+  let g,x,net;
+  if(per==='manual'){
+    g=parseFloat($('#kmMoney').value)||0;x=0;net=g;
+    if(!(g>0)){toast('Pon el dinero ganado','bad');return}
+  }else{g=grossR(per);x=expR(per);net=g-x}
+  $('#kmNet').textContent='R$'+money(net/km);$('#kmNet').style.color=net<0?'var(--red2)':'var(--green2)';
+  $('#kmGross').textContent='R$'+money(g/km);
+  const perTxt=per==='day'?'hoy':per==='week'?'esta semana':per==='month'?'este mes':'manual';
+  $('#kmDetK').textContent='Detalle · '+perTxt;
+  $('#kmDet').textContent=km+' km · ganado '+rs(g)+(per!=='manual'?' · gastos '+rs(x)+' · neto '+rs(net):'');
+  toast('Calculado ✓','ok');
+};
+
+$('#saveGoals').onclick=()=>{
+  DB.goals={day:parseFloat($('#setGoalDay').value)||0,week:parseFloat($('#setGoalWeek').value)||0,month:parseFloat($('#setGoalMonth').value)||0};
+  save();toast('Metas guardadas ✓','ok');fillGoalInputs();renderHome();
+};
+function fillGoalInputs(){$('#setGoalDay').value=DB.goals.day||'';$('#setGoalWeek').value=DB.goals.week||'';$('#setGoalMonth').value=DB.goals.month||''}
+
+$$('[data-rep]').forEach(b=>b.onclick=()=>makeReport(b.dataset.rep));
+$('#rangePdf').onclick=()=>makeReport('range',$('#rangeFrom').value,$('#rangeTo').value);
+$$('[data-kmrep]').forEach(b=>b.onclick=()=>makeKmReport(b.dataset.kmrep));
+function makeKmReportPeriod(type,anc){return makeKmReport(type,anc)}
+function makeKmReport(type,anc){
+  const now=new Date();const{s,e}=periodRange(type,anc||todayISO());
+  const titles={day:'Kilómetros · Día',week:'Kilómetros · Semanal',month:'Kilómetros · Mensual',year:'Kilómetros · Anual'};
+  const title=titles[type]||'Kilómetros';
+  let periodo;
+  if(type==='year')periodo=MONL[s.getMonth()]+' '+s.getFullYear()+' — '+MONL[e.getMonth()]+' '+e.getFullYear();
+  else if(type==='day')periodo=DOW[s.getDay()].toUpperCase()+' '+s.getDate()+' '+MONL[s.getMonth()]+' '+s.getFullYear();
+  else periodo=s.getDate()+' '+MON[s.getMonth()]+' — '+e.getDate()+' '+MON[e.getMonth()]+' '+e.getFullYear();
+  const kms=DB.km.filter(k=>{const d=parseD(k.fecha);return d>=s&&d<=e}).slice().sort((a,b)=>a.fecha.localeCompare(b.fecha));
+  const totKm=sumKm(kms);
+  // dinero del período
+  const gP=sumV(DB.entries.filter(x=>{const d=parseD(x.fecha);return d>=s&&d<=e}));
+  const xP=sumV(DB.expenses.filter(x=>{const d=parseD(x.fecha);return d>=s&&d<=e}));
+  const netP=gP-xP;
+  const rows=kms.length?kms.map(k=>`<tr><td>${k.fecha.split('-').reverse().join('/')}</td><td style="text-align:right">${k.ini}</td><td style="text-align:right">${k.fin}</td><td style="text-align:right"><b>${k.kms} km</b></td></tr>`).join(''):'<tr><td colspan="4" style="text-align:center;color:#888;padding:16px">Sin registros de km</td></tr>';
+  const rsNet=totKm>0?'R$'+money(netP/totKm):'—';
+  const rsGross=totKm>0?'R$'+money(gP/totKm):'—';
+  const avg=kms.length?Math.round(totKm/kms.length):0;
+  const html=`<!doctype html><html><head><meta charset="utf-8"><title>${title}</title><style>
+   *{font-family:-apple-system,Segoe UI,Roboto,sans-serif}body{margin:0;padding:26px;color:#161616}
+   .hd{display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid #2a6cff;padding-bottom:14px;margin-bottom:16px}
+   .hd h1{margin:0;font-size:22px}.hd .b{color:#ff7a1a;font-style:italic;font-weight:800;font-size:16px}
+   .sub{color:#666;font-size:13px;margin-bottom:18px}
+   .kpis{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+   .kpi{flex:1;min-width:90px;border:1px solid #e3e3e3;border-radius:10px;padding:11px 13px}
+   .kpi .k{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#888}
+   .kpi .v{font-size:20px;font-weight:800;margin-top:3px;color:#1a4fd0}
+   table{width:100%;border-collapse:collapse;font-size:12.5px}
+   th{text-align:left;background:#eef3ff;color:#1a4fd0;padding:8px 9px;border-bottom:2px solid #2a6cff;font-size:10.5px;text-transform:uppercase}
+   td{padding:8px 9px;border-bottom:1px solid #eee}
+   tfoot td{font-weight:800;border-top:2px solid #161616}
+   .ft{margin-top:22px;color:#aaa;font-size:11px;text-align:center}
+  </style></head><body>
+   <div class="hd"><div><h1>${title}</h1></div><div class="b">REY MOTOBOY</div></div>
+   <div class="sub">Período: ${periodo} · Generado ${now.getDate()}/${pad(now.getMonth()+1)}/${now.getFullYear()} ${nowHM(now)}</div>
+   <div class="kpis">
+     <div class="kpi"><div class="k">Total km</div><div class="v">${totKm} km</div></div>
+     <div class="kpi"><div class="k">Promedio</div><div class="v">${avg} km/día</div></div>
+     <div class="kpi"><div class="k">R$/km neto</div><div class="v">${rsNet}</div></div>
+     <div class="kpi"><div class="k">R$/km bruto</div><div class="v">${rsGross}</div></div>
+   </div>
+   <table><thead><tr><th>Fecha</th><th style="text-align:right">KM inicial</th><th style="text-align:right">KM final</th><th style="text-align:right">Recorrido</th></tr></thead>
+   <tbody>${rows}</tbody>
+   <tfoot><tr><td colspan="3">TOTAL</td><td style="text-align:right">${totKm} km</td></tr></tfoot></table>
+   <div class="ft">Registro de Motoboy · REY Mobilidade &amp; Logística · Timbó, SC</div>
+  </body></html>`;
+  abrirReporte(html,title);
+}
+function makeReport(kind,from,to){
+  const now=new Date();let title,periodo,incRaw,expRaw;
+  if(kind==='period'){
+    // from=tipo (day/week/month/year), to=ancla
+    const type=from,anc=to;
+    const{s,e}=periodRange(type,anc);
+    const titles={day:'Reporte del Día',week:'Reporte Semanal',month:'Reporte Mensual',year:'Reporte Anual'};
+    title=titles[type]||'Reporte';
+    if(type==='day')periodo=DOW[s.getDay()].toUpperCase()+' '+s.getDate()+' '+MONL[s.getMonth()]+' '+s.getFullYear();
+    else if(type==='year')periodo=MONL[s.getMonth()]+' '+s.getFullYear()+' — '+MONL[e.getMonth()]+' '+e.getFullYear();
+    else periodo=s.getDate()+' '+MON[s.getMonth()]+' — '+e.getDate()+' '+MON[e.getMonth()]+' '+e.getFullYear();
+    incRaw=DB.entries.filter(x=>{const d=parseD(x.fecha);return d>=s&&d<=e});
+    expRaw=DB.expenses.filter(x=>{const d=parseD(x.fecha);return d>=s&&d<=e});
+  }else if(kind==='range'){
+    if(!from||!to){toast('Elige ambas fechas','bad');return}
+    if(from>to){const t=from;from=to;to=t;}
+    title='Reporte por Rango';
+    const df=parseD(from),dt=parseD(to);
+    periodo=df.getDate()+' '+MON[df.getMonth()]+' — '+dt.getDate()+' '+MON[dt.getMonth()]+' '+dt.getFullYear();
+    const inR=f=>f>=from&&f<=to;
+    incRaw=DB.entries.filter(e=>inR(e.fecha));expRaw=DB.expenses.filter(e=>inR(e.fecha));
+  }else if(kind==='pick'){
+    const d=parseD(pickedDay);
+    title='Reporte del Día';periodo=DOW[d.getDay()].toUpperCase()+' '+d.getDate()+' '+MONL[d.getMonth()]+' '+d.getFullYear();
+    incRaw=DB.entries.filter(e=>e.fecha===pickedDay);expRaw=DB.expenses.filter(e=>e.fecha===pickedDay);
+  }else{
+    if(kind==='day'){title='Reporte Diario';periodo=now.getDate()+' '+MONL[now.getMonth()]+' '+now.getFullYear();}
+    else if(kind==='week'){const ws=weekStart(now);const we=weekEnd(ws);title='Reporte Semanal';periodo=DOW[ws.getDay()]+' '+ws.getDate()+' '+MON[ws.getMonth()]+' — '+DOW[we.getDay()]+' '+we.getDate()+' '+MON[we.getMonth()]+' '+we.getFullYear();}
+    else{const ms=monthStartDate(now);const me=monthEndDate(ms);title='Reporte Mensual';periodo=ms.getDate()+' '+MON[ms.getMonth()]+' — '+me.getDate()+' '+MON[me.getMonth()]+' '+me.getFullYear();}
+    incRaw=eF(kind);expRaw=xF(kind);
+  }
+  const inc=incRaw.slice().sort((a,b)=>(a.fecha+a.hora).localeCompare(b.fecha+b.hora));
+  const exp=expRaw.slice().sort((a,b)=>a.fecha.localeCompare(b.fecha));
+  const G=sumV(inc),X=sumV(exp),N=G-X;
+  const rowsI=inc.length?inc.map(e=>{const cn=+e.count||1;const pedTxt=cn>1?('Ruta: '+esc(e.pedido)):('#'+esc(e.pedido));const payTxt=e.pay==='frete'?'Frete cliente':'Empresa';return `<tr><td>${e.fecha.split('-').reverse().join('/')}</td><td>${e.hora}</td><td>${esc(e.src||'Empresa')}</td><td>${payTxt}</td><td>${esc(e.cliente)}</td><td>${pedTxt}</td><td style="text-align:right">${rs(e.valor)}</td></tr>`}).join(''):'<tr><td colspan="7" style="text-align:center;color:#888;padding:16px">Sin entregas</td></tr>';
+  const bySrc={};inc.forEach(e=>{const s=e.src||'Empresa';bySrc[s]=(bySrc[s]||0)+(+e.valor||0)});
+  const srcSummary=Object.entries(bySrc).sort((a,b)=>b[1]-a[1]).map(([s,v])=>`<span style="display:inline-block;margin:2px 8px 2px 0;padding:3px 9px;background:#eef8f1;border-radius:6px;font-size:12px;color:#1a8a4a">${s}: ${rs(v)}</span>`).join('');
+  let pEmp=0,pFre=0;inc.forEach(e=>{if(e.pay==='frete')pFre+=(+e.valor||0);else pEmp+=(+e.valor||0)});
+  const paySummary=`<span style="display:inline-block;margin:2px 8px 2px 0;padding:3px 9px;background:#fff3e6;border-radius:6px;font-size:12px;color:#a35510">🏢 Empresa: ${rs(pEmp)}</span><span style="display:inline-block;margin:2px 8px 2px 0;padding:3px 9px;background:#fff3e6;border-radius:6px;font-size:12px;color:#a35510">🤝 Frete cliente: ${rs(pFre)}</span>`;
+  const byCat={};exp.forEach(e=>{byCat[e.cat]=(byCat[e.cat]||0)+(+e.valor||0)});
+  const rowsX=exp.length?exp.map(e=>`<tr><td>${e.fecha.split('-').reverse().join('/')}</td><td>${esc(e.cat)}</td><td>${esc(e.nota||'')}</td><td style="text-align:right;color:#c0453f">-${rs(e.valor).replace('-','')}</td></tr>`).join(''):'<tr><td colspan="4" style="text-align:center;color:#888;padding:16px">Sin gastos</td></tr>';
+  const catSummary=Object.entries(byCat).map(([c,v])=>`<span style="display:inline-block;margin:2px 8px 2px 0;padding:3px 9px;background:#fbeeee;border-radius:6px;font-size:12px;color:#a33">${c}: ${rs(v)}</span>`).join('');
+  const netColor=N<0?'#c0453f':'#1a8a4a';
+  const html=`<!doctype html><html><head><meta charset="utf-8"><title>${title}</title><style>
+   *{font-family:-apple-system,Segoe UI,Roboto,sans-serif}body{margin:0;padding:26px;color:#161616}
+   .hd{display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid #ff7a1a;padding-bottom:14px;margin-bottom:16px}
+   .hd h1{margin:0;font-size:22px}.hd .b{color:#ff7a1a;font-style:italic;font-weight:800;font-size:16px}
+   .sub{color:#666;font-size:13px;margin-bottom:18px}
+   .kpis{display:flex;gap:10px;margin-bottom:16px}
+   .kpi{flex:1;border:1px solid #e3e3e3;border-radius:10px;padding:11px 13px}
+   .kpi .k{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#888}
+   .kpi .v{font-size:20px;font-weight:800;margin-top:3px}
+   h2{font-size:14px;margin:20px 0 8px;color:#a35510;text-transform:uppercase;letter-spacing:.05em}
+   table{width:100%;border-collapse:collapse;font-size:12.5px}
+   th{text-align:left;background:#faf4ee;color:#a35510;padding:8px 9px;border-bottom:2px solid #ff7a1a;font-size:10.5px;text-transform:uppercase}
+   td{padding:8px 9px;border-bottom:1px solid #eee}
+   .ft{margin-top:22px;color:#aaa;font-size:11px;text-align:center}
+  </style></head><body>
+   <div class="hd"><div><h1>${title}</h1></div><div class="b">REY MOTOBOY</div></div>
+   <div class="sub">Período: ${periodo} · Generado ${now.getDate()}/${pad(now.getMonth()+1)}/${now.getFullYear()} ${nowHM(now)}</div>
+   <div class="kpis">
+     <div class="kpi"><div class="k">Ganado</div><div class="v" style="color:#1a8a4a">${rs(G)}</div></div>
+     <div class="kpi"><div class="k">Gastos</div><div class="v" style="color:#c0453f">-${rs(X).replace('-','')}</div></div>
+     <div class="kpi"><div class="k">Neto</div><div class="v" style="color:${netColor}">${rs(N)}</div></div>
+   </div>
+   ${srcSummary?`<div style="margin-bottom:4px"><b style="font-size:11px;color:#1a8a4a;text-transform:uppercase">Por categoría:</b><br>${srcSummary}</div>`:''}
+   ${inc.length?`<div style="margin-bottom:4px"><b style="font-size:11px;color:#a35510;text-transform:uppercase">Por tipo de pago:</b><br>${paySummary}</div>`:''}
+   ${catSummary?`<div style="margin-bottom:6px"><b style="font-size:11px;color:#a33;text-transform:uppercase">Gastos:</b><br>${catSummary}</div>`:''}
+   <h2>Entregas (${countE(inc)})</h2>
+   <table><thead><tr><th>Fecha</th><th>Hora</th><th>Categoría</th><th>Pago</th><th>Cliente</th><th>Pedido(s)</th><th style="text-align:right">Valor</th></tr></thead><tbody>${rowsI}</tbody></table>
+   <h2>Gastos (${exp.length})</h2>
+   <table><thead><tr><th>Fecha</th><th>Categoría</th><th>Nota</th><th style="text-align:right">Valor</th></tr></thead><tbody>${rowsX}</tbody></table>
+   <div class="ft">Registro de Motoboy · REY Mobilidade &amp; Logística · Timbó, SC</div>
+  </body></html>`;
+  abrirReporte(html,title);
+}
+
+$('#btnExport').onclick=async()=>{
+  const nombre='motoboy_respaldo_'+todayISO()+'.json',texto=JSON.stringify(DB,null,2);
+  const M=plug('Moto');
+  if(M){
+    try{const r=await M.guardar({nombre,contenido:texto,mime:'application/json',compartir:true});
+      marcarRespaldo();toast(r&&r.descargas?('Guardado en '+r.descargas+' ✓'):'Respaldo listo ✓','ok');
+    }catch(e){toast('No se pudo guardar el respaldo','bad')}
+    return;
+  }
+  const blob=new Blob([texto],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=nombre;a.click();
+  marcarRespaldo();toast('Respaldo exportado ✓','ok');
+};
+$('#btnImport').onclick=()=>$('#importFile').click();
+$('#importFile').onchange=e=>{
+  const f=e.target.files[0];if(!f)return;const r=new FileReader();
+  r.onload=()=>{try{const j=JSON.parse(r.result);if(!j.entries)throw 0;
+    DB=Object.assign(seed(),j);if(!Array.isArray(DB.expenses))DB.expenses=[];
+    if(!Array.isArray(DB.km))DB.km=[];
+    if(!Array.isArray(DB.sources)||!DB.sources.length)DB.sources=DEF_SRC.slice();
+    DB.entries.forEach(e=>{if(!e.src)e.src='Empresa'});
+    if(DB.weekStart==null)DB.weekStart=1;
+    if(!DB.weekMode)DB.weekMode='auto';
+    if(DB.monthStart==null)DB.monthStart=1;
+    if(!DB.monthMode)DB.monthMode='auto';
+    if(DB.yearStartMonth==null)DB.yearStartMonth=1;
+    save();fillGoalInputs();fillSrcFilter();fillWeekInputs();fillMonthInputs();fillYearInputs();$('#projDays').value=DB.projDays||6;refreshAll();toast('Respaldo importado ✓','ok');
+  }catch(err){toast('Archivo inválido','bad')}};
+  r.readAsText(f);e.target.value='';
+};
+$('#btnWipe').onclick=()=>{
+  if(confirm('¿Borrar TODAS las entregas, gastos y metas? No se puede deshacer.')){
+    if(confirm('Confirmar: se borrará todo definitivamente.')){DB=seed();save();fillGoalInputs();refreshAll();toast('Todos los datos borrados')}
+  }
+};
+
+fillGoalInputs();
+fillSrcFilter();
+fillWeekInputs();
+fillMonthInputs();
+fillYearInputs();
+$('#projDays').value=DB.projDays||6;
+calcProj();
+refreshAll();
+
+/* ===== REPORTES: navegador → ventana + imprimir · APK → impresión de Android ===== */
+function abrirReporte(html,titulo){
+  const M=plug('Moto');
+  if(M){
+    toast('Abriendo el reporte… elige «Guardar como PDF»','ok');
+    M.imprimir({html,titulo:'Motoboy - '+String(titulo||'Reporte')}).catch(()=>toast('No se pudo abrir el reporte','bad'));
+    return;
+  }
+  const w=window.open('','_blank');
+  if(!w){toast('Permite ventanas emergentes para el PDF','bad');return}
+  w.document.write(html);w.document.close();
+  setTimeout(()=>{try{w.focus();w.print()}catch(e){}},400);
+}
+
+/* ===== RESPALDO: cuándo fue el último y aviso si hace mucho ===== */
+function marcarRespaldo(){META.lastBackup=Date.now();saveMeta();renderRespaldo()}
+function diasDesde(t){return Math.floor((Date.now()-t)/86400000)}
+function renderRespaldo(){
+  const hay=DB.entries.length+DB.expenses.length+DB.km.length;
+  const lb=META.lastBackup;
+  const est=$('#bkEstado');
+  if(est)est.textContent=lb?('Último respaldo: '+(diasDesde(lb)===0?'hoy':('hace '+diasDesde(lb)+' día(s)'))):'Último respaldo: nunca';
+  const av=$('#bkAviso');if(!av)return;
+  const viejo=!lb||diasDesde(lb)>=7;
+  if(hay>=5&&viejo){
+    av.textContent='💾 '+(lb?('Hace '+diasDesde(lb)+' días'):'Nunca')+' que no haces respaldo de tus '+hay+' registros. Toca aquí para hacerlo.';
+    av.style.display='';
+  }else av.style.display='none';
+}
+$('#bkAviso').onclick=()=>{$('nav button[data-v="tools"]').click();setTimeout(()=>{$('#btnExport').scrollIntoView({behavior:'smooth',block:'center'})},60)};
+const _importOnload=$('#importFile').onchange;
+$('#importFile').onchange=e=>{_importOnload(e);setTimeout(renderRespaldo,300)};
+renderRespaldo();
+$('#verLbl').textContent='Rey Motoboy v'+VERSION+(ES_APK?' · app Android':' · web');
+
+/* ===== RECORDATORIO DIARIO (solo APK) ===== */
+const REC_ID=7001;
+function pintarRec(){
+  const on=!!(META.rec&&META.rec.on);
+  $$('#recSeg button').forEach(b=>b.classList.toggle('on',(b.dataset.rec==='on')===on));
+  $('#recHora').value=(META.rec&&META.rec.hora)||'21:00';
+}
+$$('#recSeg button').forEach(b=>b.onclick=()=>{$$('#recSeg button').forEach(x=>x.classList.toggle('on',x===b))});
+async function programarRec(avisar){
+  const LN=plug('LocalNotifications');if(!LN)return;
+  try{await LN.cancel({notifications:[{id:REC_ID}]})}catch(e){}
+  if(!(META.rec&&META.rec.on))return;
+  try{
+    let p=await LN.checkPermissions();
+    if(p.display!=='granted')p=await LN.requestPermissions();
+    if(p.display!=='granted'){if(avisar)toast('Permite las notificaciones de Motoboy en Android','bad');return}
+    const[h,m]=(META.rec.hora||'21:00').split(':').map(Number);
+    await LN.schedule({notifications:[{id:REC_ID,title:'🛵 Rey Motoboy',
+      body:'¿Ya anotaste las entregas, los gastos y el km final de hoy?',
+      schedule:{on:{hour:h,minute:m},allowWhileIdle:true}}]});
+    if(avisar)toast('Te aviso cada día a las '+META.rec.hora+' ✓','ok');
+  }catch(e){if(avisar)toast('No se pudo programar el aviso','bad')}
+}
+$('#recGuardar').onclick=async()=>{
+  const on=!!$('#recSeg button[data-rec="on"].on');
+  META.rec={on,hora:$('#recHora').value||'21:00'};saveMeta();
+  if(on)await programarRec(true);
+  else{await programarRec(false);toast('Recordatorio apagado','ok')}
+};
+if(ES_APK){pintarRec();programarRec(false)}
+
+/* ===== BOTÓN ATRÁS DE ANDROID =====
+   Antes: atrás cerraba la app aunque tuvieras una ficha a medio llenar.
+   Ahora: 1º cierra la ficha abierta · 2º vuelve a Inicio · 3º en Inicio, sale. */
+(function(){
+  const A=plug('App');if(!A)return;
+  A.addListener('backButton',()=>{
+    if($$('.sheet-bg.on').length){closeSheets();return}
+    const ini=$('nav button[data-v="inicio"]');
+    if(!ini.classList.contains('on')){ini.click();return}
+    A.exitApp();
+  });
+  // Al volver a la app otro día, que "Hoy" sea hoy (no el día en que se abrió)
+  let dia=todayISO();
+  A.addListener('resume',()=>{if(todayISO()!==dia){dia=todayISO();refreshAll()}renderRespaldo()});
+})();
+</script>
+<script>
+if(!ES_APK&&'serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').catch(()=>{})})}
+if(!ES_APK&&navigator.storage&&navigator.storage.persist){navigator.storage.persist().catch(()=>{})}
+</script>
+</body>
+</html>

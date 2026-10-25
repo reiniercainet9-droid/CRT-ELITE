@@ -1,0 +1,82 @@
+# Compila la APK de Rey Motoboy en los servidores de GitHub cada vez que cambia algo en motoboy/.
+# La APK queda en Releases → «Rey Motoboy — APK» (se descarga directo desde el teléfono).
+name: Motoboy APK
+
+on:
+  push:
+    paths:
+      - "motoboy/**"
+      - ".github/workflows/motoboy-apk.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: motoboy-apk-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: motoboy
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: motoboy/package-lock.json
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Probar la app (web y APK simulada)
+        run: |
+          npm install --no-save playwright@1
+          npx playwright install --with-deps chromium
+          npm test
+
+      - name: Copiar la web dentro del proyecto Android
+        run: npx cap sync android
+
+      - name: Compilar la APK
+        working-directory: motoboy/android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleRelease --no-daemon --stacktrace
+
+      - name: Nombrar la APK
+        id: apk
+        run: |
+          VER=$(grep -oP 'versionName "\K[^"]+' android/app/build.gradle)
+          OUT="Rey-Motoboy-v${VER}.apk"
+          cp android/app/build/outputs/apk/release/app-release.apk "$OUT"
+          echo "ver=$VER" >> "$GITHUB_OUTPUT"
+          echo "file=motoboy/$OUT" >> "$GITHUB_OUTPUT"
+          ls -la "$OUT"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Rey-Motoboy-v${{ steps.apk.outputs.ver }}
+          path: ${{ steps.apk.outputs.file }}
+
+      - name: Publicar en Releases
+        working-directory: .
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete motoboy-apk --cleanup-tag -y || true
+          gh release create motoboy-apk "${{ steps.apk.outputs.file }}" \
+            --target "$GITHUB_SHA" --prerelease --latest=false \
+            --title "Rey Motoboy — APK v${{ steps.apk.outputs.ver }}" \
+            --notes "APK de Rey Motoboy v${{ steps.apk.outputs.ver }} (rama ${GITHUB_REF_NAME}, commit ${GITHUB_SHA::7}). Descárgala desde el teléfono e instálala; las siguientes versiones se instalan encima sin perder datos."

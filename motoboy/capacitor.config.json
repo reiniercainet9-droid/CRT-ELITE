@@ -1,0 +1,15 @@
+{
+  "appId": "com.rey.motoboy",
+  "appName": "Rey Motoboy",
+  "webDir": "www",
+  "android": {
+    "backgroundColor": "#0d0d0f",
+    "adjustMarginsForEdgeToEdge": "force"
+  },
+  "plugins": {
+    "LocalNotifications": {
+      "smallIcon": "ic_stat_moto",
+      "iconColor": "#FF7A1A"
+    }
+  }
+}
