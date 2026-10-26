@@ -1,29 +1,31 @@
-APEX v7.302 — TRADING DESK
+APEX v7.303 — TRADING DESK
 =========================
 
-APEX 7.301 — pedir el análisis ya no te deja la rueda girando
+APEX 7.303 — tres cosas que quedaban anotadas
 
-QUÉ PASABA (hoy, 25-10, medido en tu teléfono)
-Pediste el análisis semanal. Salió PERFECTO en 22 segundos: 6.538 caracteres, sin una sola
-tabla. Pero detrás arrancaba sola la LIMPIEZA DOMINICAL, que iba pegada al mismo guion.
+1) TU CHAT FIJADO, DE VUELTA
+El "🗓️ Análisis semanal" del 21-10 con tus 32 mensajes volvió a tu teléfono, con su 📌
+puesto. Lo devolví LIMPIO: tenía SIETE mensajes atascados dentro (636.114 caracteres, casi
+todo basura). Ahora pesa 36.913 y están tus 32 mensajes enteros.
 
-Esa limpieza va mano a mano —ver_chats, organizar_chat, borrar_chat— y cada vuelta reenvía
-los 43.787 caracteres del dossier del gráfico. Seis llamadas en seis minutos y la rueda sin
-parar. Tú pediste un análisis y lo que veías era a Roberto ordenando carpetas.
+2) UN PLAN ES DE UN PAR
+Tenías un tercer "par" en tu plan semanal llamado "EUR/USD y GBP/USD", del 27 de
+septiembre, con bias VENTAS. Roberto metió los dos pares en una sola llamada aquel día y
+ahí se quedó un mes, asomándose en cada aviso y pudiendo citarse como si fuera de esta
+semana.
+ · La mano ahora RECHAZA un "par" que no sea un par y le dice que llame una vez por cada uno.
+ · Y un plan de más de 3 semanas deja de citarse. NO SE BORRA NADA: el dato sigue guardado,
+   simplemente deja de usarse.
 
-Y era peor porque tienes CUATRO chats llamados "Análisis semanal": Roberto gastaba vueltas
-preguntándose cuál era cuál.
+3) MIRÉ SI EL ANÁLISIS DIARIO TAMBIÉN SE DESBOCABA
+No. Hubo OCHO desboques y los ocho fueron del análisis SEMANAL — seis de ellos en el mismo
+chat del 21-10, uno detrás de otro mientras tú reintentabas. En total 761.729 caracteres de
+basura. El diario nunca se desbocó. Ya está tapado en los dos desde la 7.300.
 
-QUÉ CAMBIA
-· El análisis semanal TERMINA cuando guarda tu plan y fija el chat. Y para ahí.
-· Ordenar los chats es ahora SU PROPIO BOTÓN: "🧹 Ordenar mis chats", en Análisis y mercado.
-  Lo pulsas cuando quieras. Va acotado (4 manos como mucho) y te dice qué queda si se pasa.
-· Y NO borra él: te sugiere cuáles, y la tarjeta la tocas tú, una por una.
-· Los chats de análisis llevan la FECHA en el título ("Análisis semanal 25 oct"), así no
-  hay cuatro con el mismo nombre ni nada que adivinar.
-
-SIGUE EN PIE DE LA 7.300
-· Ni el análisis semanal ni el diario pueden usar tablas: fue donde se desbocó dos veces.
+EN LA NUBE (worker 5.295, para subir)
+ · El gasto de Claude deja de ser invisible: si alguna vez cae ahí, ese dinero ya SÍ
+   aparece en tu informe, marcado con "-claude" para que se vea de un vistazo que no fue
+   de OpenRouter.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

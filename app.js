@@ -787,14 +787,46 @@ let PATRON = load(K.patron, null) || PATRON_DEF;
    ⚠️ EL FORMATO VIEJO SE SIGUE LEYENDO. Su plan del 06-09 está guardado como un objeto suelto
    con `.bias` y `.par`; `planSemLista()` lo envuelve al vuelo. Nada que migrar a mano y nada
    que se pierda — eso es ley suya. */
+/* 🗓️ v7.303 — UN PLAN DE HACE UN MES NO ES UN PLAN VIGENTE.
+   El 26-10 se encontró en su plan un TERCER «par» llamado literalmente «EUR/USD y GBP/USD»,
+   del 27-09, con bias VENTAS: Roberto había metido los dos pares en una sola llamada y
+   aquello se quedó ahí. Un mes después seguía asomándose en cada aviso («sigue guardado
+   también el de…») y podía citarse como si fuera de esta semana.
+   NO SE BORRA NADA SUYO: el dato sigue guardado. Lo que se hace es dejar de USARLO pasadas
+   3 semanas, que es tiempo de sobra para cualquier plan semanal de verdad
+   ([[apex-un-bloque-cacheado-no-puede-moverse]], [[apex-la-puerta-se-queda-con-la-forma-vieja]]). */
+const PLAN_SEM_CADUCA_DIAS = 21;
+function planSemCaducado(x){
+  try{
+    const f = x && (x.fecha || x.ts);
+    if(!f) return false;                            /* sin fecha no se descarta: no se adivina */
+    const t = (typeof f === "number") ? f : Date.parse(String(f) + (/T/.test(String(f)) ? "" : "T12:00:00"));
+    if(!isFinite(t)) return false;
+    /* ⏰ EL «HOY» ES EL DE LA APP, NO EL DEL RELOJ DEL SISTEMA.
+       Lo cazó `test-el-plan-guarda-los-dos-pares` el 26-10: ese banco finge que hoy es el
+       14-09 para ser determinista, y con `Date.now()` sus dos planes salían caducados y la
+       lista volvía vacía. Pero el fallo no era del banco: TODA la app fecha con `hoyISO()`,
+       así que medir la vejez con otro reloj es medir con una vara distinta
+       ([[apex-dos-numeraciones-dias]], [[apex-la-ventana-fija-miente]]). */
+    let ahora = Date.now();
+    try{
+      if(typeof hoyISO === "function"){
+        const h = Date.parse(hoyISO() + "T12:00:00");
+        if(isFinite(h)) ahora = h;
+      }
+    }catch(_){}
+    return (ahora - t) > PLAN_SEM_CADUCA_DIAS * 86400000;
+  }catch(_){ return false; }
+}
 function planSemLista(){
   try{
     const p = PLANSEM;
     if(!p) return [];
     if(p.pares && typeof p.pares === "object"){
-      return Object.keys(p.pares).map(k => Object.assign({ par:k }, p.pares[k])).filter(x => x && x.bias);
+      return Object.keys(p.pares).map(k => Object.assign({ par:k }, p.pares[k]))
+        .filter(x => x && x.bias && !planSemCaducado(x));
     }
-    return p.bias ? [p] : [];                       /* formato viejo: un solo par */
+    return (p.bias && !planSemCaducado(p)) ? [p] : [];   /* formato viejo: un solo par */
   }catch(_){ return []; }
 }
 
@@ -22229,6 +22261,16 @@ async function ejecutarTool(name, i){
         +". Lo vigilo durante la sesión."};
     }
     if(name==="guardar_plan_semanal"){
+      /* 🔒 v7.303 — UN PLAN ES DE UN PAR, Y AQUÍ SE COMPRUEBA.
+         El 27-09 Roberto metió los DOS pares en una sola llamada: `par:"EUR/USD y GBP/USD"`.
+         Quedó guardado como si fuera un tercer par, y un mes después seguía ahí —con bias
+         VENTAS del 27-09— asomándose en cada aviso («sigue guardado también el de EUR/USD,
+         EUR/USD y GBP/USD») y pudiendo citarse como vigente.
+         Si se le pide guardar dos pares a la vez, lo correcto es DOS llamadas. Esto se lo
+         dice en vez de guardarle un par que no existe ([[apex-roberto-no-inventa]]). */
+      const _par = String(i.par||"").trim();
+      if(/\sy\s|,|\/.*\//.test(_par.replace(/^[A-Z]{3}\/[A-Z]{3}$/i,"")) && !/^[A-Z]{3}\/?[A-Z]{3}$/i.test(_par))
+        return {ok:false,msg:"«"+_par+"» no es UN par: un plan es de un par. Llama a guardar_plan_semanal una vez por cada uno (una para EUR/USD y otra para GBP/USD)."};
       /* 🗓️ v7.136 — se guarda POR PAR y sin pisar el otro (antes el segundo borraba al primero) */
       const lista = planSemGuardar({ bias:i.bias||"", par:i.par||"", zonaP:i.zona_principal||"", zonaS:i.zona_secundaria||"", invalid:i.nivel_invalidacion||"", mejorDia:i.mejor_dia||"", evitar:i.dias_evitar||"", notas:i.notas||"", fecha:hoyISO() });
       /* 🌙 v6.39: el plan viaja a la nube para que el dossier nocturno lo conozca.
