@@ -1,34 +1,29 @@
-APEX v7.300 — TRADING DESK
+APEX v7.302 — TRADING DESK
 =========================
 
-APEX 7.300 — el análisis ya no te deja un hueco en blanco
+APEX 7.301 — pedir el análisis ya no te deja la rueda girando
 
-QUÉ PASABA
-Le pediste el análisis semanal y no lo veías. Roberto SÍ lo empezó, pero al escribir la
-tabla de "🏦 POR CUENTA" se quedó repitiendo espacios en blanco: 136.551 caracteres, de
-los cuales 136.297 eran espacios. Texto útil: 304. En tu pantalla eso es un hueco enorme.
-El plan semanal sí se guardó — por eso era lo único que veías.
+QUÉ PASABA (hoy, 25-10, medido en tu teléfono)
+Pediste el análisis semanal. Salió PERFECTO en 22 segundos: 6.538 caracteres, sin una sola
+tabla. Pero detrás arrancaba sola la LIMPIEZA DOMINICAL, que iba pegada al mismo guion.
 
-Y después se quedó mudo: para cerrar ese turno había que reenviar 182.002 caracteres, así
-que los tres intentos siguientes murieron. No estaba roto: estaba atascado.
+Esa limpieza va mano a mano —ver_chats, organizar_chat, borrar_chat— y cada vuelta reenvía
+los 43.787 caracteres del dossier del gráfico. Seis llamadas en seis minutos y la rueda sin
+parar. Tú pediste un análisis y lo que veías era a Roberto ordenando carpetas.
 
-Ya había pasado el 21-10 con 83.412 caracteres (45.098 de ellos guiones de la misma tabla).
+Y era peor porque tienes CUATRO chats llamados "Análisis semanal": Roberto gastaba vueltas
+preguntándose cuál era cuál.
 
-QUÉ CAMBIA EN ESTA VERSIÓN
-· El análisis semanal y el diario YA NO PUEDEN USAR TABLAS. Una línea por cuenta, con
-  viñetas. Las dos veces que se atascó fue rellenando columnas; y una tabla ancha tampoco
-  se lee en tu pantalla.
+QUÉ CAMBIA
+· El análisis semanal TERMINA cuando guarda tu plan y fija el chat. Y para ahí.
+· Ordenar los chats es ahora SU PROPIO BOTÓN: "🧹 Ordenar mis chats", en Análisis y mercado.
+  Lo pulsas cuando quieras. Va acotado (4 manos como mucho) y te dice qué queda si se pasa.
+· Y NO borra él: te sugiere cuáles, y la tarjeta la tocas tú, una por una.
+· Los chats de análisis llevan la FECHA en el título ("Análisis semanal 25 oct"), así no
+  hay cuatro con el mismo nombre ni nada que adivinar.
 
-LO QUE YA ESTÁ ARREGLADO EN LA NUBE (worker 5.293, que ya subiste)
-· El guardia que corta una respuesta desbocada ahora mira LAS DOS puertas. Antes solo
-  miraba una, y la del 25-10 entró por la otra: la de cuando Roberto usa una mano.
-· Y caza el atasco por repetición (400 veces el mismo carácter), no solo por longitud.
-· La bitácora /chat/salud mide también esos casos: antes el desboque era invisible ahí.
-
-TU TELÉFONO, LIMPIO
-· 8 mensajes atascados quitados de tus 27 conversaciones (de 980.717 a 221.515 caracteres).
-· La cola de pendientes vaciada: Roberto vuelve a responder.
-· Tus 27 conversaciones y 296 mensajes, intactos. Respaldo de todo en la PC.
+SIGUE EN PIE DE LA 7.300
+· Ni el análisis semanal ni el diario pueden usar tablas: fue donde se desbocó dos veces.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

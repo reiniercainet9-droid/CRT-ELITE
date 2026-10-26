@@ -6572,6 +6572,7 @@ const ACCIONES_ROBERTO = {
        vivo; el cierre de trades tiene sus destinos propios (cierredia / cierresemana). */
     diario:  ()=>analisisDiario(),
     semanal: ()=>analisisSemanal(),
+    ordenar: ()=>ordenarChats(),
     /* ⚠️ v7.277 — donde cae el aviso del vigía del plan. Va en ESTA lista y no en un if
        aparte: un destino que solo vive en una de las dos cadenas nace medio muerto, y ya
        pasó con ocho chips ([[apex-el-camino-que-rey-usa]]). */
@@ -15389,8 +15390,28 @@ const ANALISIS_SEMANAL_PROM =
 "⛔ NUNCA USES TABLAS, ni en 🏦 POR CUENTA ni en ningún sitio: nada de «|» ni de «---». UNA LÍNEA POR CUENTA, con viñeta y el nombre en negrita. Rey lo lee en un teléfono y una tabla no le cabe en la pantalla. Y no repitas NUNCA un carácter muchas veces seguidas para alinear nada.\n"+
 "Reglas: el semanal MANDA sobre el diario. Sin sweep = sin setup. No dibujes en el gráfico todavía (eso llega pronto); dame el análisis y el plan en texto, directo y claro.\n"+
 "AL TERMINAR: usa la mano guardar_plan_semanal para GUARDAR el plan (bias, zona principal, zona secundaria, nivel de invalidación y mejor día), así lo recuerdas TODA la semana y podrás detectar si se invalida.\n"+
-"🧹 LIMPIEZA DOMINICAL (v6.42, regla de Rey): tras guardar el plan, llama a **ver_chats** (la lista COMPLETA con fechas: el mapa solo trae una parte) y deja Apex ordenada Y limpia: (1) FIJA este chat del análisis nuevo (organizar_chat fijar:true), (2) DESFIJA el análisis semanal de la semana pasada (organizar_chat con chat:'…' y fijar:false) y (3) SUGIÉRELE a Rey borrar los chats viejos que ya no aportan, uno a uno con borrar_chat (su tarjeta decide) — nunca los ⭐ ni los de hoy. Cierra diciéndole cómo quedó la estructura.\n"+
+/* 🧹 25-10 — LA LIMPIEZA DOMINICAL YA NO VA PEGADA AL ANÁLISIS.
+   Rey, el 25-10: «ahí está parado». Medido en su teléfono: el análisis salió PERFECTO en
+   22 s (6.538 caracteres, sin tablas)… y detrás arrancaba la limpieza, que va MANO A MANO
+   —ver_chats, organizar_chat, borrar_chat— y cada vuelta reenvía los 43.787 caracteres del
+   dossier del gráfico. Seis llamadas en seis minutos y la rueda sin parar: él pide un
+   análisis y lo que ve es a Roberto ordenando carpetas.
+   Son dos trabajos distintos y ahora son dos botones distintos: el análisis termina cuando
+   guarda el plan, y «🧹 Ordenar mis chats» se pide cuando él quiere
+   ([[apex-nada-te-deja-mirando-una-rueda]], [[apex-nada-obligatorio-nada-gasta-solo]]). */
+"📌 AL TERMINAR DEL TODO: fija este chat con organizar_chat (fijar:true) y PARA. Nada más. No ordenes, no mires otros chats y no borres nada: para eso Rey tiene su botón «🧹 Ordenar mis chats», y lo pulsa cuando quiere.\n"+
 "😈 Y ANTES del cierre (v6.43): '❓ LA PREGUNTA QUE NO ME HICISTE' — el mayor peligro de tu propio plan semanal: qué lo invalidaría, qué escenario estás subestimando. Una pregunta afilada, no un sermón.";
+
+/* 🧹 v7.301 — EL BOTÓN DE ORDENAR, APARTE. Lo que antes se colaba detrás del análisis.
+   Va por partes y DICIENDO lo que hace, para que no se convierta otra vez en una rueda. */
+const LIMPIEZA_PROM =
+"Eres ROBERTO. Rey te ha pedido ORDENAR SUS CHATS de Apex. Esto es lo ÚNICO que haces ahora: nada de análisis ni de mercado.\n"+
+"1) Llama a **ver_chats** UNA sola vez: es la lista COMPLETA con fechas (el mapa del contexto solo trae una parte).\n"+
+"2) Enséñale el resumen en pocas líneas: cuántos hay, cuáles están fijados 📌 y cuáles con estrella ⭐.\n"+
+"3) FIJA el análisis semanal más reciente y DESFIJA los análisis semanales viejos (organizar_chat, que es automática). Si hay varios con el mismo título, distínguelos por la FECHA en el parámetro chat, no le preguntes a Rey lo que la lista ya dice.\n"+
+"4) SUGIÉRELE cuáles borrar y por qué, en UNA lista — nunca los ⭐, nunca los fijados, nunca los de hoy. **NO los borres tú**: `borrar_chat` necesita que él toque su tarjeta, una por una.\n"+
+"⛔ NO USES TABLAS: una línea por chat, con viñetas. Rey lo lee en un teléfono.\n"+
+"⏱️ Y NO TE ALARGUES: como mucho **4 manos** en total. Si hiciera falta más, dile lo que queda y que te lo vuelva a pedir — antes esto encadenaba llamada tras llamada y Rey solo veía la rueda girar.";
 const ANALISIS_DIARIO_PROM =
 "Eres mi MENTOR y ANALISTA ELITE. Hazme el ANÁLISIS DEL DÍA del/los par(es) que veo en el gráfico en vivo. FUENTE OBLIGATORIA: el bloque [👁️ GRÁFICO EN VIVO] (mi indicador CRT Elite ya calculó D/H4/1H/15/5, zona premium/discount, alineación TF, CRT H4, SMT, Secuencia F3, killzone y nivel de invalidación) + etiquetas/niveles. NO inventes datos que no estén. Si la PC no está conectada, dímelo y pídeme encender el Puente.\n"+
 "⚡ SÉ CONCISO Y DIRECTO: completo pero BREVE, máximo ~600 palabras POR PAR. Usa bullets y frases cortas, cero relleno (el chat se corta si te alargas demasiado).\n"+
@@ -15409,8 +15430,17 @@ const ANALISIS_DIARIO_PROM =
 "COMPARA con el [🗓️ PLAN SEMANAL VIGENTE] que ya tienes: EMPIEZA diciéndome si sigue VÁLIDO o si CAMBIÓ/SE INVALIDÓ (porque el precio en vivo rompió su nivel de invalidación o una noticia fuerte cambió el panorama). Si cambió, dímelo claro y ADÁPTALO con guardar_plan_semanal antes de darme el plan del día.\n"+
 "📆 AL TERMINAR, GUÁRDAME EL PLAN DE HOY con la mano guardar_plan_dia, UNA VEZ POR PAR, y SIEMPRE con el nivel que lo invalidaría y su lado ('sobre 1.1290' o 'bajo 1.3250'). Esto NO es burocracia: es lo único que permite avisarme a media sesión si mi plan del día ha muerto — Rey lo pidió así el 17-10 («si se anula un análisis semanal o diário él debe saberlo y detectarlo y cantármelo rápido sin pedírselo»). Sin ese nivel, el plan de hoy no se puede vigilar y hay que decírselo.\n"+
 "😈 CIERRA SIEMPRE con '❓ LA PREGUNTA QUE NO ME HICISTE' (v6.43): el ataque más fuerte al plan de HOY — qué lo invalidaría, qué estoy ignorando, dónde me confiaría de más. Una pregunta afilada con dato, no un sermón.";
-function analisisSemanal(){ iaTemaChat("🗓️ Análisis semanal"); iaEnviar("🗓️ Hazme mi análisis SEMANAL con el gráfico en vivo.", ANALISIS_SEMANAL_PROM); }
-function analisisDiario(){ iaTemaChat("📆 Análisis del día"); iaEnviar("📆 Hazme mi análisis DEL DÍA con el gráfico en vivo.", ANALISIS_DIARIO_PROM); }
+/* 🗓️ 25-10 — EL TÍTULO LLEVA LA FECHA. Rey tenía CUATRO chats llamados igual, y Roberto
+   gastaba manos preguntándose cuál era cuál («Hay 4 chats que coinciden con…»). Con la
+   fecha dentro, ni él ni Rey tienen que adivinar ([[apex-agrupar-sin-resumen-desagrupa]]). */
+/* ⚠️ `fechaCorta(iso)` ya existe arriba (línea ~5841) y da «25 oct». Se usa ESA, no una
+   nueva: dos funciones con el mismo nombre se pisan y la segunda gana en silencio. */
+function hoyTitulo(){ const d=new Date(); return fechaCorta(d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")); }
+function analisisSemanal(){ iaTemaChat("🗓️ Análisis semanal "+hoyTitulo()); iaEnviar("🗓️ Hazme mi análisis SEMANAL con el gráfico en vivo.", ANALISIS_SEMANAL_PROM); }
+/* 🧹 v7.301 — ORDENAR LOS CHATS, A PETICIÓN. Antes se colaba detrás del análisis semanal
+   y lo convertía en una rueda de seis llamadas. Ahora lo pide él cuando quiere. */
+function ordenarChats(){ iaTemaChat("🧹 Ordenar mis chats"); iaEnviar("🧹 Ordéname los chats de Apex.", LIMPIEZA_PROM); }
+function analisisDiario(){ iaTemaChat("📆 Análisis del día "+hoyTitulo()); iaEnviar("📆 Hazme mi análisis DEL DÍA con el gráfico en vivo.", ANALISIS_DIARIO_PROM); }
 /* 🧠 CHECK EMOCIONAL antes de operar — Roberto le toma el pulso mental y da luz verde/roja. */
 const CHECK_EMO_PROM = "Rey va a hacer su CHECK EMOCIONAL antes de operar. Hazle 2-3 preguntas MUY breves para tomarle el pulso mental AHORA: ¿cómo llega (tranquilo / acelerado / cansado / frustrado)?, ¿viene de una pérdida o siente ganas de revancha?, ¿tiene claro su plan y su límite de hoy? Espera su respuesta y, cruzándola con lo que ves en el contexto (sus fugas psicológicas, su estado de riesgo, freno/recuperación), dale LUZ VERDE (mente lista, adelante con disciplina) o LUZ ROJA (mejor NO operar hoy, con el motivo claro). Sé breve, humano y honesto; si detectas tilt, revancha o cansancio, prioriza PROTEGERLO por encima de operar.";
 function checkEmocional(){ if(typeof abrirIA==="function") abrirIA(); iaTemaChat("🧠 Check emocional"); setTimeout(()=>iaEnviar("🧠 Hazme el check emocional antes de operar.", CHECK_EMO_PROM),250); }
@@ -16059,6 +16089,7 @@ const IA_CHIP_CATS = [
     { act:"diario",   t:"📆 Análisis del día" },
     { act:"semanal",  t:"🗓️ Análisis semanal" },
     { act:"comparar", t:"⚖️ Comparar pares" },
+    { act:"ordenar",  t:"🧹 Ordenar mis chats" },
     { act:"aciertos", t:"🎯 Cómo lees el mercado" },
     { q:"alarmas",    t:"🔔 Mis alarmas" },
     { q:"gatillar",   t:"🎯 Cómo gatillar" },
@@ -22622,6 +22653,16 @@ async function ejecutarTool(name, i){
       const r=iaConvPorRef(i.chat); if(r.err) return {ok:false,msg:r.err};
       const c=r.c; if(!c) return {ok:false,msg:"No encontré ese chat"};
       if(c.id===IA.actId) return {ok:false,msg:"Ese es el chat donde estamos hablando ahora — no lo puedo borrar desde dentro. Dile a Rey que cambie de conversación primero si de verdad quiere borrarlo."};
+      /* 🔒 v7.302 — UN CHAT MARCADO NO SE BORRA, Y EL CANDADO VA AQUÍ.
+         El 25-10, limpiando, Roberto borró el ÚNICO chat fijado 📌 que tenía Rey: su
+         «🗓️ Análisis semanal» del 21-10, con 32 mensajes. El guion le decía «no propongas
+         borrar los ⭐ ni los de hoy» — y lo cumplió al pie de la letra: FIJADO no estaba en
+         esa lista. Un renglón que se le pide al modelo no es un candado: es una sugerencia
+         que se cumple casi siempre, y «casi» no vale cuando lo que se pierde no vuelve
+         ([[apex-reglas-en-manos-de-rey]], [[apex-no-elegir-por-rey]]).
+         Si Rey quiere borrarlo, lo desmarca él —un toque— o usa su propia papelera 🗑️. */
+      if(c.fijado) return {ok:false,msg:"Ese chat está FIJADO 📌 («"+iaTit(c)+"»), así que no lo borro. Si Rey quiere, que le quite el 📌 y te lo vuelva a pedir."};
+      if(c.estrella) return {ok:false,msg:"Ese chat está marcado como importante ⭐ («"+iaTit(c)+"»), así que no lo borro. Si Rey quiere, que le quite la ⭐ y te lo vuelva a pedir."};
       const tit=iaTit(c);
       IA.convs=IA.convs.filter(x=>x.id!==c.id);
       iaGuardarConvs(); try{ renderConvList(); }catch(_){} try{ syncPendientes(); }catch(_){}
@@ -22809,7 +22850,35 @@ async function iaToolSi(p, card){
   if(bar) bar.innerHTML="<span class='ia-tool-done'>⏳ Ejecutando…</span>";
   let res; try{ res=await ejecutarTool(p.tu.name, p.tu.input); }catch(e){ res={ok:false,msg:"Error: "+e}; }
   if(res&&res.ok) logRoberto(res.msg);
-  if(bar) bar.innerHTML="<span class='ia-tool-done'>"+((res&&res.ok)?"✓ Hecho":"⚠️ No se aplicó")+"</span>";
+  /* ═══════════════════════════════════════════════════════════════════════════════════
+     🗑️ v7.302 — LO QUE PASÓ TIENE QUE VERSE, SOBRE TODO SI BORRA
+     ───────────────────────────────────────────────────────────────────────────────────
+     Rey, 25-10 de noche: «Estuve 20 minutos aceptando borrar y nada, por gusto, no borró
+     nada de nada, los chats viejos siguen igual».
+     MEDIDO en su teléfono: SÍ borraba — sus conversaciones bajaron de 27 a 13. Lo que
+     pasaba es que no se lo enseñaba NADIE: `borrar_chat` devuelve «🗑️ Borré el chat «X»
+     del 21/10 · quedan N conversaciones», y ese texto se iba a `logRoberto` (registro
+     interno) y al modelo como resultado de la mano — jamás a su pantalla. Lo único que
+     veía era un «✓ Hecho» diminuto dentro de la tarjeta. Y la lista de chats vive en un
+     cajón que él no tenía abierto.
+     Así que seguía aceptando tarjeta tras tarjeta a ciegas: 20 minutos, y pudo borrar
+     más de lo que quería porque nunca vio el resultado del anterior — el único freno era
+     su paciencia.
+     `organizar_chat` SÍ sacaba su aviso (toast) desde siempre. La mano que de verdad
+     destruye era justo la muda ([[apex-pulsar-no-basta]], [[apex-el-rechazo-no-es-mudo]]).
+     ═══════════════════════════════════════════════════════════════════════════════════ */
+  if(bar){
+    const _m = (res && res.msg) ? String(res.msg) : "";
+    if(res && res.ok && _m){
+      /* el texto DE VERDAD en la tarjeta que acaba de tocar, no un «Hecho» mudo */
+      bar.innerHTML = "<span class='ia-tool-done'>✓ " + esc(_m.length>160 ? _m.slice(0,157)+"…" : _m) + "</span>";
+    } else {
+      bar.innerHTML = "<span class='ia-tool-done'>" + ((res&&res.ok)?"✓ Hecho":"⚠️ No se aplicó" + (_m?(": "+esc(_m.slice(0,120))):"")) + "</span>";
+    }
+  }
+  /* y además un aviso flotante, porque la tarjeta puede quedarse fuera de la pantalla
+     cuando el chat ya ha seguido scrolleando */
+  try{ if(res && res.msg) toast(res.msg.length>120 ? res.msg.slice(0,117)+"…" : res.msg, res.ok?"ok":"bad"); }catch(_){}
   p.estado="hecha"; const i=IA_TOOL_PEND.indexOf(p); if(i>=0) IA_TOOL_PEND.splice(i,1);
   iaTarjetaCuerpoFuera((res&&res.ok) ? "Hecho, Rey." : "No se pudo aplicar, Rey.");
   p.resolve({confirmed:true, res});
