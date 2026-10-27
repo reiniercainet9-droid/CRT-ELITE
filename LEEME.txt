@@ -1,31 +1,64 @@
-APEX v7.303 — TRADING DESK
+APEX v7.304 — TRADING DESK
 =========================
 
-APEX 7.303 — tres cosas que quedaban anotadas
+Apex 7.304 — el análisis semanal deja de inventarse el nivel de invalidación
 
-1) TU CHAT FIJADO, DE VUELTA
-El "🗓️ Análisis semanal" del 21-10 con tus 32 mensajes volvió a tu teléfono, con su 📌
-puesto. Lo devolví LIMPIO: tenía SIETE mensajes atascados dentro (636.114 caracteres, casi
-todo basura). Ahora pesa 36.913 y están tus 32 mensajes enteros.
+Esto sale de revisar tu semanal del 27 de octubre, el primero con AUD/USD en el gráfico.
+Los tres pares salieron, los tres planes se guardaron y no hubo ni una tabla. Pero había
+cuatro cosas mal, y las cuatro eran de cómo yo le pedía el trabajo, no suyas.
 
-2) UN PLAN ES DE UN PAR
-Tenías un tercer "par" en tu plan semanal llamado "EUR/USD y GBP/USD", del 27 de
-septiembre, con bias VENTAS. Roberto metió los dos pares en una sola llamada aquel día y
-ahí se quedó un mes, asomándose en cada aviso y pudiendo citarse como si fuera de esta
-semana.
- · La mano ahora RECHAZA un "par" que no sea un par y le dice que llame una vez por cada uno.
- · Y un plan de más de 3 semanas deja de citarse. NO SE BORRA NADA: el dato sigue guardado,
-   simplemente deja de usarse.
+⚠️ EL NIVEL DE INVALIDACIÓN AHORA SE COPIA DE TU INDICADOR
+En AUD/USD te dijo «invalida bajo 0.70234» cuando tu indicador publicaba 0.70125. En
+GBP/USD te dijo 1.33386 contra el 1.33878 del gráfico: 49 pips. Y con el precio en
+0.70247, su invalidación de AUD te quedaba a 1,3 pips — cualquier spread se la come.
+Importa porque ese número es el que se guarda, y es con el que te aviso de que tu plan
+murió: estaba vigilando el nivel equivocado toda la semana.
+El guion le pedía «el nivel que invalida» y le listaba la liquidez, pero nunca le decía
+que tu bloque vivo ya trae «Inval: vigente en X». Ahora se lo dice: ese número se copia
+tal cual, con sus decimales; la liquidez son objetivos, no invalidaciones; uno solo por
+par y el mismo en el mapa, en el plan y en lo que se guarda. Y si tu indicador no te lo
+da, te lo dice en vez de rellenarlo.
 
-3) MIRÉ SI EL ANÁLISIS DIARIO TAMBIÉN SE DESBOCABA
-No. Hubo OCHO desboques y los ocho fueron del análisis SEMANAL — seis de ellos en el mismo
-chat del 21-10, uno detrás de otro mientras tú reintentabas. En total 761.729 caracteres de
-basura. El diario nunca se desbocó. Ya está tapado en los dos desde la 7.300.
+🔢 EL RANKING YA NO PUEDE CONTRADECIR SU PROPIO ANÁLISIS
+El ranking decía «AUD/USD, también en Discount» y doce líneas después su ficha de AUD
+decía PREMIUM 70% (tu indicador: PREMIUM 63%). Escribía el ranking de memoria, antes de
+mirar par por par. Ahora, en el ranking tiene que CITAR la zona y su %, la alineación y
+el CRT H4 de cada par copiados del bloque. Si para rankear hay que escribir el dato, hay
+que mirarlo.
 
-EN LA NUBE (worker 5.295, para subir)
- · El gasto de Claude deja de ser invisible: si alguna vez cae ahí, ese dinero ya SÍ
-   aparece en tu informe, marcado con "-claude" para que se vea de un vistazo que no fue
-   de OpenRouter.
+🔇 Y LO QUE VA EN CONTRA SE DICE
+En AUD te recomendó COMPRAS y se calló que tu indicador marcaba SMT bajista con aviso de
+DXY, justo en contra. Ahora está obligado a nombrarlo con su dato y decirte qué le haría
+cambiar de idea. Nada se suaviza para que encaje con el plan.
+
+🔁 EL ANÁLISIS SE ESCRIBE UNA VEZ, NO TRES
+Lo tuviste tres veces seguidas en el teléfono: 29.417 caracteres cuando el análisis son
+unos 9.700. No fue un desboque — cada copia cabía de sobra. Fue el orden: el guion decía
+«al terminar guarda el plan» y «al terminar del todo fija el chat», así que escribía todo,
+llamaba a las manos y al volver lo reescribía entero. Tres veces escrito, tres veces
+pagado. Ahora el orden es: decide → guarda los planes y fija el chat → y entonces escribe,
+una sola vez. Y tiene prohibido reescribirlo al volver de una mano.
+
+🧠 LA MEMORIA DE TU PC NO ES EL DISCO
+Te dijo «poca memoria libre (14%)… libera espacio en el disco». Tu disco tiene 104 GB
+libres de 232: el consejo no servía de nada. El dato de la RAM era bueno. Ahora el parte
+de tu PC le dice que es la RAM y NO el disco, le pone el dato del disco al lado, y le
+prohíbe mandarte liberar disco o cerrar programas. También le dice que la memoria justa
+es crónica en tu PC y conocida, no una avería nueva, y que solo la nombre si te está
+costando algo en ese momento. Si el disco SÍ se llena de verdad, el aviso del disco sigue
+saliendo igual.
+
+🧹 LO QUE MANDAS BORRAR QUEDA APUNTADO
+Te abrió el análisis con un susto: «tus chats pasaron de 24 a 4, si no los borraste tú
+deberíamos verificar si hay una anomalía». Los borraste tú el 25 de octubre. Dedujo bien;
+lo que no tenía era la prueba de que fue a propósito. Ahora Apex apunta cada limpieza que
+mandas (cuántos había y cuántos quedaron) y se la pasa en su mapa de chats, así que una
+bajada explicada ya no vuelve como avería. Y si la bajada NO cuadra con lo apuntado, sigue
+pudiendo decírtelo — lo que no puede es asustarte por lo que tú mismo pediste.
+
+Cuatro bancos nuevos vigilan esto: el del nivel de invalidación, el de no escribirlo tres
+veces, el de la RAM contra el disco y el de las limpiezas apuntadas. Los dos últimos no
+leen el código: lo ejecutan y miran el texto que de verdad le llega.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

@@ -53,8 +53,27 @@ const K = {
   repasohecho:"crtelite_repasohecho_v1",
   plan:"crtelite_plan_v1",
   vered:"crtelite_vered_v1",
+  /* 🧹 v7.304 (27-10) — LO QUE REY MANDÓ BORRAR, APUNTADO.
+     En el semanal del 27-10 Roberto le dio esta alarma: «me llama la atención que tus chats
+     hayan pasado de 24 a solo 4. Si no los borraste tú, deberíamos verificar si hay alguna
+     anomalía o si se perdió información». Los borró él, el 25-10, con su botón «🧹 Ordenar
+     mis chats». Roberto comparó bien y dedujo bien: lo que no tenía era la prueba de que
+     aquello fue DELIBERADO, porque en ningún sitio quedaba apuntado.
+     Es exactamente la ley del 23-09: nada que parezca una avería se queda sin apuntar
+     ([[apex-la-bitacora-de-lo-deliberado]]). Y va aquí, en la app y en local, no en la nube:
+     si la nube está caída la explicación sigue estando donde Roberto la lee. */
+  limpiezas:"crtelite_limpiezas_v1",
   ejec:"crtelite_ejectrades_v1"
 };
+/* 🧹 Apunta una limpieza de Rey y deja dicho cuántos chats quedaron. Se guardan las 12
+   últimas: lo justo para explicar una bajada, sin engordar cada mensaje de Roberto. */
+function limpiezaApuntar(que, de, a){
+  try{
+    const L = load(K.limpiezas, []) || [];
+    L.unshift({ ts: Date.now(), que: String(que||"").slice(0,80), de: de, a: a });
+    save(K.limpiezas, L.slice(0,12));
+  }catch(_){}
+}
 const load = (k,d)=>{ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):d; }catch(e){ return d; } };
 const save = (k,v)=>{ try{ localStorage.setItem(k,JSON.stringify(v)); nubeMarcar();
   /* 📒 v7.220 — EL DIARIO SE ESPEJA A LA NUBE DESDE AQUÍ, NO DESDE DIECISIETE SITIOS.
@@ -100,7 +119,7 @@ function planesSync(cual){
 const NUBE_KEYS = ["crtelite_negocio_v1","crtelite_trades_v2",/* 📅 v7.272 — su fecha de inicio: si viviera solo en el teléfono, al cambiar de aparato
      se recalcularía y le entrarían las operaciones de junio ([[apex-nada-en-un-solo-aparato]]) */"crtelite_desde_v1","crtelite_cuentas_v3","crtelite_reminders_v3","crtelite_chk_v2","crtelite_conf_v2","crtelite_reglas_v2","crtelite_balance_v2","crtelite_ctx_v3","crtelite_estrategias_v3","crtelite_estrdefs_v1","crtelite_pares_v3","crtelite_calpares_v3","crtelite_notif_v3","crtelite_vigila_v3","crtelite_fabpos_v3","crtelite_iavoz_v3","crtelite_shots_v1","crtelite_shots_borradas","crtelite_ventanas_v1","crtelite_plansem_v1",
   /* 📆 v7.277 — si el plan del día viviera solo en el teléfono, al cambiar de aparato
-     Roberto perdería el análisis de hoy ([[apex-nada-en-un-solo-aparato]]) */"crtelite_plandia_v1","crtelite_plansemlog_v1","crtelite_mt5cambios_v1","crtelite_trborrados_v1","crtelite_patron_v1","crtelite_iaconvs_v3","crtelite_iaact_v3","crtelite_ejectrades_v1","crtelite_llamamodo",
+     Roberto perdería el análisis de hoy ([[apex-nada-en-un-solo-aparato]]) */"crtelite_plandia_v1","crtelite_plansemlog_v1","crtelite_mt5cambios_v1","crtelite_trborrados_v1","crtelite_patron_v1","crtelite_iaconvs_v3",/* 🧹 v7.304 — el apunte de las limpiezas VIAJA con los chats que explica. Si se quedara en un aparato, al cambiar de teléfono le volverían los chats sin su explicación y Roberto le diría otra vez «te faltan chats, puede ser una anomalía» — que es el fallo del 27-10 ([[apex-nada-en-un-solo-aparato]]). Son 12 apuntes como mucho: no pesa. */"crtelite_limpiezas_v1","crtelite_iaact_v3","crtelite_ejectrades_v1","crtelite_llamamodo",
   /* 🧭 v6.96 — LO QUE FALTABA, y lo descubrió Rey: "en la APK no me deja pasar a la fase 3
      cuando en la web ya estoy en ella". Su PLAN no viajaba, así que su progreso vivía en
      un solo aparato… y si perdía el teléfono, en ninguno. Con él van los VEREDICTOS de
@@ -189,6 +208,7 @@ const NUBE_NOMBRES = {
   "crtelite_color":"el color que elegiste para Apex (oro, naranja o esmeralda)",
   "crtelite_cuerpo":"si el cuerpo pequeño de Roberto está puesto en Apex o retirado",
   "crtelite_iaconvs_v3":"vuestros chats",
+  "crtelite_limpiezas_v1":"las limpiezas de chats que mandaste",
   "crtelite_iaact_v3":"el chat abierto",
   "crtelite_ejectrades_v1":"las operaciones del Ejecutor",
   "crtelite_templo_ficha":"tu ficha del templo (peso, estatura, objetivo)",
@@ -1853,11 +1873,29 @@ function iaChats(){
        sobre lo que no ha mirado ([[apex-roberto-no-inventa]]). */
     const viejos=sueltos.slice(6).sort((a,b)=>a.ts-b.ts).slice(0,6);
     let kb=0; try{ kb=Math.round((localStorage.getItem(K.iaconvs)||"").length/1024); }catch(_){}
+    /* 🧹 v7.304 (27-10) — Y LO QUE REY MANDÓ BORRAR, para que una bajada no parezca avería.
+       El 27-10 Roberto le abrió el semanal avisándole de una «anomalía»: que sus chats habían
+       pasado de 24 a 4. Era él quien los había borrado dos días antes. Dedujo bien con lo que
+       tenía; lo que le faltaba era esto ([[apex-la-bitacora-de-lo-deliberado]]). */
+    let limp="";
+    try{
+      const LL = load(K.limpiezas, []) || [];
+      if(LL.length){
+        limp = "\n🧹 LIMPIEZAS QUE REY MANDÓ (apuntadas por Apex): "
+          + LL.slice(0,4).map(x=>new Date(x.ts).toLocaleDateString("es",{day:"2-digit",month:"2-digit"})+" "+x.que+(x.de!=null&&x.a!=null?(" (de "+x.de+" a "+x.a+")"):"")).join(" · ")
+          + ". ⚠️ ASÍ QUE SI VES MENOS CHATS QUE ANTES Y CUADRA CON ESTO, ES ESO: no es una anomalía, no se perdió nada y NO se lo plantees como un problema. Solo habla de chats que faltan si la bajada NO está explicada aquí.";
+      } else {
+        /* Sin apuntes todavía: Apex empezó a apuntarlos el 27-10, y antes de esa fecha Rey
+           borró chats varias veces sin que quedara constancia. Así que lo honesto no es
+           callar la falta de dato, es decir que no se sabe ([[apex-roberto-no-inventa]]). */
+        limp = "\n🧹 LIMPIEZAS: Apex empezó a apuntarlas el 27-10 y todavía no hay ninguna apuntada. ⚠️ ESO NO SIGNIFICA QUE NADIE HAYA BORRADO: Rey ha limpiado sus chats varias veces antes de esa fecha, y no quedó constancia. Así que si te parece que hay menos chats que antes, NO lo llames anomalía ni le digas que se pudo perder información: no tienes forma de saberlo. Como mucho, pregúntaselo de pasada en una línea.";
+      }
+    }catch(_){}
     return "[🗂️ MAPA DE CHATS de Apex ("+cs.length+" conversaciones, ~"+kb+" KB). El chat donde estamos AHORA es «"+iaTit(iaConvAct()||{})+"». AQUÍ VES: todos los fijados, todos los importantes, los 6 más recientes y los 6 más viejos. NO ves los del medio. ⚠️ ASI QUE NO ADIVINES TITULOS: si necesitas uno que no sale aqui, o vas a BORRAR algo, o ves dos con el mismo nombre, llama primero a ver_chats y tendras la lista COMPLETA con la fecha de cada uno. El 18-10 sin esto le dijiste a Rey que borrabas «🧭 Mi plan» —un titulo que no existia— y chocaste tres veces con siete chats llamados igual. Tus manos alcanzan CUALQUIERA, salga o no en esta lista: organizar_chat con el parámetro chat (fijar/desfijar 📌, estrella ⭐, revisar 🔍, renombrar con titulo) es automática; borrar_chat pide la tarjeta de Rey. Dos chats con el mismo título los distingues TÚ en el parámetro chat con la fecha ('Análisis semanal 23-08') o 'el más viejo' / 'el más reciente' — jamás le preguntes a Rey lo que este mapa ya te dice.\n"+
       "📌 Fijados ("+fij.length+"): "+(fij.map(li).join(" · ")||"ninguno")+"\n"+
       "⭐ Importantes ("+imp.length+"): "+(imp.map(li).join(" · ")||"ninguno")+"\n"+
       "🕘 Últimos: "+(resto.map(li).join(" · ")||"—")+"\n"+
-      "🧹 Los más viejos (candidatos a borrar el domingo): "+(viejos.map(li).join(" · ")||"—")+"\n"+
+      "🧹 Los más viejos (candidatos a borrar el domingo): "+(viejos.map(li).join(" · ")||"—")+limp+"\n"+
       "REGLA DE LIMPIEZA (Rey, 30-08): Apex debe vivir ORDENADA Y LIMPIA, sin chats basura acumulados. 👁️ PASO CERO, SIEMPRE: antes de borrar o proponer borrar NADA, llama a ver_chats. Sin eso trabajas con media lista y acabas nombrando chats que no existen. Si ves fijado algo ya vencido (p.ej. el análisis de la semana pasada cuando ya existe el nuevo), DESFÍJALO tú y avísale. Cada DOMINGO, dentro del análisis semanal, revisa este mapa y SUGIÉRELE cuáles borrar porque ya no aportan (borrar_chat, siempre con su tarjeta — jamás borres por tu cuenta). No propongas borrar los ⭐ ni chats de hoy.]";
   }catch(_){ return ""; }
 }
@@ -15409,6 +15447,16 @@ const ANALISIS_SEMANAL_PROM =
 "Eres mi MENTOR y ANALISTA ELITE. Hazme el ANÁLISIS SEMANAL del/los par(es) que veo en el gráfico en vivo. FUENTE OBLIGATORIA: el bloque [👁️ GRÁFICO EN VIVO] que ya tienes (mi indicador CRT Elite YA calculó las temporalidades W/D/4H/1H y marcó niveles y etiquetas). NO inventes: si un dato no está en el bloque, dilo. Método SMC/CRT/liquidez. Si la PC no está conectada (no hay lectura viva), dímelo y pídeme encender el Puente.\n"+
 "⚡ SÉ CONCISO Y DIRECTO: completo pero BREVE, máximo ~600 palabras POR PAR. Usa bullets y frases cortas, cero relleno (el chat se corta si te alargas demasiado).\n"+
 "MULTI-PAR OBLIGATORIO (v6.04 — Rey lo exige): en el bloque vivo vienen TODOS los pares que Rey tiene abiertos en el Puente. DEBES cubrirlos TODOS Y CADA UNO, sin excepción: (1) EMPIEZA con un RANKING — en cuál está la mejor oportunidad de la semana y por qué; (2) luego el análisis de CADA par, uno por uno — NINGUNO se omite en silencio: si un par no tiene datos frescos o no tiene oportunidad, dilo EXPLÍCITAMENTE en su propia sección ('GBPUSD: sin setup esta semana porque…') — eso también es información que Rey necesita. Solo si Rey te nombra un par concreto analizas únicamente ese.\n"+
+/* 🙈 27-10 — EL RANKING SE ESCRIBÍA DE MEMORIA Y CONTRADECÍA SU PROPIO ANÁLISIS.
+   En el semanal del 27-10, el ranking decía «el AUD/USD le sigue de cerca, también en
+   Discount» y doce líneas más abajo su propia ficha de AUDUSD decía «PREMIUM (70%)» —con el
+   indicador marcando PREMIUM 63%—. Es el bache del 25-09 otra vez: dos planes opuestos en un
+   mismo análisis ([[apex-indicador-dos-planes]]). Pasa porque el ranking va PRIMERO y se
+   escribe antes de haber mirado par por par.
+   No se arregla pidiéndole que «tenga cuidado»: se arregla obligándole a CITAR el dato en el
+   propio ranking. Si para rankear tiene que escribir la zona y el % de cada par, tiene que
+   leerlos, y entonces ya no puede contradecirse después. */
+"🔢 EL RANKING SE MIRA ANTES DE ESCRIBIRLO: en la línea de cada par del ranking CITA sus datos del bloque — zona y su % («PREMIUM 63%»), alineación TF («5/5») y CRT H4 — copiados del bloque vivo, no de memoria. Luego, en la ficha de ese par, esos mismos números tienen que ser los MISMOS. Si el ranking y la ficha de un par no cuadran, el análisis no vale: Rey no puede saber a cuál de los dos hacerle caso.\n"+
 "ESCRÍBEME en este formato exacto:\n"+
 "🗓️ CONTEXTO GRANDE: zona del rango (Deep Discount/Discount/Equilibrio/Premium/Deep Premium) y estructura (alcista/bajista/rango) según el sesgo y la alineación TF del indicador.\n"+
 "📊 LIQUIDEZ PENDIENTE: niveles clave con precio (usa W H/W L, D H/D L, 4H, EQH/EQL, BSL/SSL del bloque), arriba y abajo del precio actual.\n"+
@@ -15416,12 +15464,47 @@ const ANALISIS_SEMANAL_PROM =
 "🗺️ MAPA DE LA SEMANA: niveles de mayor a menor con el precio actual en el medio; hacia cuál irá primero y qué lo desviaría.\n"+
 "📰 NOTICIAS: usa el calendario real ya inyectado (días/horas NY de alto/medio impacto de mis monedas) + regla de no operar 15 min antes/después.\n"+
 "🔵 BIAS SEMANAL: COMPRAS / VENTAS / RANGO-ESPERAR.\n"+
-"🎯 PLAN DE LA SEMANA: qué busco, zona principal y secundaria (precio), nivel que INVALIDA el bias, mejor día para operar, días a evitar.\n"+
+"🎯 PLAN DE LA SEMANA: qué busco, zona principal y secundaria (precio), el NIVEL QUE INVALIDA el bias (ver la regla de abajo: se copia del bloque), mejor día para operar, días a evitar.\n"+
 "📝 NOTAS DEL MENTOR: 3-4 líneas con el consejo clave de esta semana.\n"+
 "🏦 POR CUENTA (OBLIGATORIO): con mis cuentas registradas, dime cómo actuar en CADA UNA por separado esta semana (riesgo, operar o no según su DD) y marca en CUÁL debo operar — PROTEGE la fondeada crítica.\n"+
 "⛔ NUNCA USES TABLAS, ni en 🏦 POR CUENTA ni en ningún sitio: nada de «|» ni de «---». UNA LÍNEA POR CUENTA, con viñeta y el nombre en negrita. Rey lo lee en un teléfono y una tabla no le cabe en la pantalla. Y no repitas NUNCA un carácter muchas veces seguidas para alinear nada.\n"+
+/* ⚠️ Y AQUÍ EMPIEZAN LAS REGLAS, que NO son secciones para escribir.
+   En el primer arreglo de hoy metí estas dos reglas DENTRO de la lista del formato, entre
+   «🗓️ CONTEXTO GRANDE» y «📊 LIQUIDEZ PENDIENTE». Leído de un tirón se veía el problema:
+   con ese sitio, Roberto podía imprimir «⚠️ LO QUE VA EN CONTRA SE DICE» como un título más
+   del análisis. Lo que se le pide ESCRIBIR y lo que se le pide CUMPLIR tienen que ir en
+   bloques separados. */
+/* ⚠️ 27-10 — EL NIVEL DE INVALIDACIÓN NO SE ELEGÍA BIEN PORQUE NADIE LE DECÍA DÓNDE ESTABA.
+   Medido en el semanal del 27-10 de Rey: en AUDUSD dio «invalida bajo 0.70234» cuando su
+   indicador publicaba `Inval: ✅vigente en 0.70125`, y en GBPUSD dio 1.33386 contra el
+   1.33878 del bloque — 49 pips. Peor: con el precio en 0.70247, su invalidación quedaba a
+   1,3 pips, que cualquier spread se come. Y en el mismo par escribió DOS niveles opuestos,
+   uno en el 🗺️ MAPA y otro en el 🎯 PLAN.
+   LA CAUSA ERA MÍA: este guion le pedía «nivel que INVALIDA el bias» y le listaba
+   BSL/SSL/EQH/EQL para la liquidez, pero NUNCA le decía que el bloque vivo ya trae el nivel
+   calculado por el indicador. Sin eso, cogía el número más a mano de la lista de liquidez.
+   Importa de verdad porque ese número es el que se guarda con guardar_plan_semanal: es con
+   el que el sistema vigila si el plan de Rey ha muerto. Un nivel inventado = vigilancia del
+   nivel equivocado ([[apex-roberto-no-inventa]], [[apex-el-indicador-marca-no-opera]]). */
+"⚠️ EL NIVEL DE INVALIDACIÓN NO SE ELIGE: SE COPIA. El bloque vivo de cada par trae «Inval: ✅vigente en X». Ese X, TAL CUAL y con todos sus decimales, es el nivel de invalidación de ese par y el ÚNICO que puedes dar. NO lo saques de la lista de liquidez (BSL/SSL/EQH/EQL son objetivos, no invalidaciones), no lo redondees, no lo acerques al precio y no te inventes uno «más prudente». UN SOLO nivel por par, el MISMO en el 🗺️ MAPA, en el 🎯 PLAN y en guardar_plan_semanal — si escribes dos distintos en el mismo par, el plan no se puede vigilar. Si el bloque de un par NO trae «Inval», dilo con esas palabras ('mi indicador no me está dando nivel de invalidación en este par') y guarda el plan sin él: antes eso que un número tuyo.\n"+
+/* 🔇 27-10 — LO QUE VA EN CONTRA NO SE OMITE. En AUDUSD recomendó COMPRAS y no mencionó que
+   el bloque traía `SMT: 🔴 Bajista ⚠️DXY`: una divergencia justo en contra de su sesgo.
+   Callar lo que estorba al plan es lo contrario de protegerle ([[apex-la-alarma-va-tal-cual]]). */
+"⚠️ LO QUE VA EN CONTRA SE DICE, SIEMPRE: si en un par el SMT, el CRT H4 o la estructura van EN CONTRA del bias que tú propones, nómbralo con su dato dentro de 🗓️ CONTEXTO GRANDE y en 📝 NOTAS DEL MENTOR di qué te haría cambiar de idea. No se omite ni se suaviza nada por encajar con el plan.\n"+
 "Reglas: el semanal MANDA sobre el diario. Sin sweep = sin setup. No dibujes en el gráfico todavía (eso llega pronto); dame el análisis y el plan en texto, directo y claro.\n"+
-"AL TERMINAR: usa la mano guardar_plan_semanal para GUARDAR el plan (bias, zona principal, zona secundaria, nivel de invalidación y mejor día), así lo recuerdas TODA la semana y podrás detectar si se invalida.\n"+
+/* 🔁 27-10 — EL ANÁLISIS SE ESCRIBÍA TRES VECES, Y LA CULPA ERA DEL ORDEN QUE YO LE DABA.
+   Medido en el semanal del 27-10: 29.417 caracteres cuando el análisis son ~9.700. Los
+   mensajes 1, 5 y 7 del chat eran el MISMO análisis casi idéntico. No fue un desboque —cada
+   copia cabía de sobra en el tope, así que el guardia del 25-10 no tenía por qué saltar.
+   Fue el orden: este guion decía «AL TERMINAR usa guardar_plan_semanal» y «AL TERMINAR DEL
+   TODO fija el chat». Así que escribía el análisis entero, llamaba a las manos (3 planes +
+   fijar el chat), y al volver de cada ronda de manos VOLVÍA A ESCRIBIRLO ENTERO. Rey lo veía
+   tres veces seguidas en su teléfono y lo pagaba tres veces.
+   Se arregla al revés: primero DECIDE, luego GUARDA, y al final ESCRIBE una sola vez. Las
+   manos ya no son el final de nada, son el principio ([[apex-lo-importante-va-primero]],
+   [[apex-el-gasto-es-guardar-su-historial]]). */
+"🧭 EL ORDEN DE TRABAJO, Y ES ASÍ POR ALGO: (1) LEE el bloque vivo y DECIDE para cada par su bias, zonas y nivel de invalidación; (2) LLAMA YA a las manos, todas juntas y antes de escribir el análisis — guardar_plan_semanal UNA VEZ POR PAR (bias, zona principal, zona secundaria, nivel de invalidación y mejor día) y organizar_chat (fijar:true) para fijar este chat; (3) y SOLO ENTONCES escribe el análisis, UNA SOLA VEZ, completo, y PARA.\n"+
+"⛔ Y NO LO REPITAS: si vuelves de una mano y ya habías escrito el análisis (o parte), NO lo reescribas ni lo resumas otra vez. Contesta con UNA línea corta ('plan guardado, sigo') o con nada. Repetir el análisis entero se lo cobra tres veces y en su teléfono le hace scroll por el mismo texto.\n"+
 /* 🧹 25-10 — LA LIMPIEZA DOMINICAL YA NO VA PEGADA AL ANÁLISIS.
    Rey, el 25-10: «ahí está parado». Medido en su teléfono: el análisis salió PERFECTO en
    22 s (6.538 caracteres, sin tablas)… y detrás arrancaba la limpieza, que va MANO A MANO
@@ -15431,7 +15514,7 @@ const ANALISIS_SEMANAL_PROM =
    Son dos trabajos distintos y ahora son dos botones distintos: el análisis termina cuando
    guarda el plan, y «🧹 Ordenar mis chats» se pide cuando él quiere
    ([[apex-nada-te-deja-mirando-una-rueda]], [[apex-nada-obligatorio-nada-gasta-solo]]). */
-"📌 AL TERMINAR DEL TODO: fija este chat con organizar_chat (fijar:true) y PARA. Nada más. No ordenes, no mires otros chats y no borres nada: para eso Rey tiene su botón «🧹 Ordenar mis chats», y lo pulsa cuando quiere.\n"+
+"📌 Y AL TERMINAR, PARA. Nada más (el chat ya lo fijaste en el paso 2). No ordenes, no mires otros chats y no borres nada: para eso Rey tiene su botón «🧹 Ordenar mis chats», y lo pulsa cuando quiere.\n"+
 "😈 Y ANTES del cierre (v6.43): '❓ LA PREGUNTA QUE NO ME HICISTE' — el mayor peligro de tu propio plan semanal: qué lo invalidaría, qué escenario estás subestimando. Una pregunta afilada, no un sermón.";
 
 /* 🧹 v7.301 — EL BOTÓN DE ORDENAR, APARTE. Lo que antes se colaba detrás del análisis.
@@ -15792,7 +15875,19 @@ function pcTxt(p){
   if(p.puente) L.push("· Puente "+p.puente);
   /* y lo que hay que MIRAR, no solo lo que hay: su PC es un Celeron con 8 GB */
   const ojo = [];
-  if(p.ramLibrePct!=null && p.ramLibrePct < 15) ojo.push("le queda MUY POCA memoria ("+p.ramLibrePct+"%): con eso el Puente pierde el latido y te quedas sin ver su gráfico");
+  /* 🧠 27-10 — MEMORIA NO ES DISCO, Y ESTO NO ES UNA AVERÍA NUEVA.
+     En el semanal del 27-10 Roberto le dijo: «poca memoria libre (14%)… te sugiero que
+     revises los procesos activos o LIBERES ESPACIO EN EL DISCO». El disco tenía 104 GB
+     libres de 232: el consejo no servía para nada y le mandaba una tarea imposible de
+     cumplir. El dato estaba bien; lo que faltaba era decirle QUÉ es y qué hacer con él.
+     Su PC es un Celeron con 8 GB y Edge se come ~1 GB: la memoria justa es CRÓNICA, está
+     medida y no tiene arreglo barato. Así que no es algo que Rey tenga que recordar ni
+     arreglar a mano ([[apex-nada-que-rey-tenga-que-recordar]], [[apex-no-elegir-por-rey]]),
+     y tampoco se le cierran programas por su cuenta ([[apex-pc-reglas]]). Solo se nombra
+     cuando le está costando algo AHORA. */
+  if(p.ramLibrePct!=null && p.ramLibrePct < 15) ojo.push("le queda MUY POCA MEMORIA RAM ("+p.ramLibrePct+"%)"
+    + ((p.disco && p.disco.librePct!=null && p.disco.librePct>=10) ? (" — OJO: es la RAM, NO el disco (el disco está al "+p.disco.librePct+"% libre y no es el problema): NO le mandes liberar disco") : "")
+    + ". Con eso el Puente pierde vueltas y algún par le llega viejo. Es CRÓNICO en su PC (8 GB) y ya lo sabemos: no es una avería nueva, no le mandes cerrar programas y no se lo repitas cada vez. Nómbralo solo si le está costando algo AHORA MISMO, y entonces di qué le cuesta, no qué debería cerrar");
   if(p.disco && p.disco.librePct!=null && p.disco.librePct < 10) ojo.push("el disco está casi lleno ("+p.disco.librePct+"%)");
   if(p.bateriaPct!=null && p.bateriaCargando===false && p.bateriaPct < 20) ojo.push("la batería está al "+p.bateriaPct+"% y NO está enchufada: si se apaga, se cae el Puente y el Ejecutor");
   if(p.encendidaHaceMin!=null && p.encendidaHaceMin > 4320) ojo.push("lleva más de 3 días encendida sin reiniciar");
@@ -22706,8 +22801,11 @@ async function ejecutarTool(name, i){
       if(c.fijado) return {ok:false,msg:"Ese chat está FIJADO 📌 («"+iaTit(c)+"»), así que no lo borro. Si Rey quiere, que le quite el 📌 y te lo vuelva a pedir."};
       if(c.estrella) return {ok:false,msg:"Ese chat está marcado como importante ⭐ («"+iaTit(c)+"»), así que no lo borro. Si Rey quiere, que le quite la ⭐ y te lo vuelva a pedir."};
       const tit=iaTit(c);
+      const _antes=IA.convs.filter(x=>x.msgs&&x.msgs.length).length;
       IA.convs=IA.convs.filter(x=>x.id!==c.id);
       iaGuardarConvs(); try{ renderConvList(); }catch(_){} try{ syncPendientes(); }catch(_){}
+      /* 🧹 v7.304 — apuntado, para no darle después una alarma por lo que él mismo mandó */
+      try{ limpiezaApuntar("Rey mandó borrar chats", _antes, IA.convs.filter(x=>x.msgs&&x.msgs.length).length); }catch(_){}
       /* 📅 v7.283 — CON SU FECHA. Rey: «sigue repitiendo las cosas del chat dos veces». No se
          repetía: tenía SIETE chats con el mismo título y cada borrado cantaba igual, así que
          parecía el mismo mensaje dos veces. Con la fecha se ve que son distintos. */
