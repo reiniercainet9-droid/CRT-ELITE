@@ -10260,16 +10260,33 @@ function viewRiesgo(){
   });
   v.appendChild(rs);
 
+  /* 🧮 v7.305 (28-10) — EL RIESGO LO ELIGE ÉL, Y ES EL QUE ROBERTO CANTA.
+     ════════════════════════════════════════════════════════════════════════
+     Rey, 28-10: «Roberto me da los lotes a 0,50% fijo y en mi sistema no hay nada fijo;
+     programé una operación al 1% y sigue cantándole al 0,50». Y tenía toda la razón:
+     el % que tecleaba AQUÍ se guardaba en K.bal y K.bal NO SALE DEL TELÉFONO — lo único que
+     Roberto ve es el «riesgo X%/trade» de cada cuenta. Así que elegía un número en una
+     pantalla y le contestaban con otro, sin que nada dijera por qué.
+     Ahora la calculadora se hace SOBRE UNA CUENTA SUYA: el % que ponga aquí se guarda en
+     ESA cuenta y sube con ella, que es el camino que Roberto sí lee. Un solo número, no
+     dos ([[apex-reglas-en-manos-de-rey]], [[apex-nada-atado-a-un-par-ni-a-un-broker]]).
+     ⚠️ Y si elige «sin cuenta» se lo DICE: una cuenta rápida que Roberto no ve es
+     legítima, pero callarlo sería repetir el mismo fallo al revés. */
+  const ctaCalc = cuentaDelCalculo();
+  const ctaOpts = '<option value="">— sin cuenta (cuenta rápida) —</option>' +
+    CUENTAS.map(c=>'<option value="'+esc(c.id)+'"'+((ctaCalc&&ctaCalc.id===c.id)?" selected":"")+'>'+esc(c.alias||c.firma||"Cuenta")+'</option>').join("");
   const calc=el("div","card");
   calc.innerHTML=`<div class="card-h"><span class="ic">🧮</span><h2>Calculadora de lotaje</h2></div>
     <p class="desc">Elige el par y mete balance, % de riesgo y pips de SL. El valor del pip se calcula por par; en pares con USD de base (JPY, CAD...) mete el precio actual y afina exacto.</p>
     <div class="row"><div class="l" style="min-width:88px">Par</div><select class="inp" id="cPar" style="max-width:56%">${PARES_CALC.map(p=>`<option ${p===(BAL.par||"EUR/USD")?"selected":""}>${p}</option>`).join("")}</select></div>
+    <div class="row"><div class="l" style="min-width:88px">Cuenta<small>de quién es este riesgo</small></div><select class="inp" id="cCta" style="max-width:56%">${ctaOpts}</select></div>
     <div class="row"><div class="l" style="min-width:88px">Balance $</div><input class="inp" id="cBal" type="number" inputmode="decimal" value="${BAL.bal}"></div>
     <div class="row"><div class="l" style="min-width:88px">% riesgo</div><input class="inp" id="cPct" type="number" inputmode="decimal" step="0.05" value="${BAL.pct}"></div>
     <div class="row"><div class="l" style="min-width:88px">Pips SL</div><input class="inp" id="cPips" type="number" inputmode="decimal" value="${BAL.pips}"></div>
     <div class="row" id="cPriceRow" style="display:none"><div class="l" style="min-width:88px">Precio actual<small>para USD-base / JPY</small></div><input class="inp" id="cPrice" type="number" inputmode="decimal" placeholder="ej. 150.20"></div>
     <div class="row"><div class="l" style="min-width:88px">Valor pip $<small>por lote · editable</small></div><input class="inp" id="cPv" inputmode="decimal" style="max-width:44%"></div>
     <div class="verd go" id="calcOut" style="margin-top:12px"></div>
+    <div class="note" id="cQuienLoVe" style="margin-top:8px"></div>
     <div class="note">EUR/USD y GBP/USD = $10/pip por lote exacto. Si tu bróker difiere o operas un cruce, edita el "Valor pip $" a mano y el lotaje se recalcula.</div>`;
   v.appendChild(calc);
 
@@ -10443,6 +10460,64 @@ function objPintar(){
   caja.innerHTML=filas.join("");
 }
 
+/* 💾 v7.305 — UN SOLO CAMINO para guardar el riesgo que ÉL elige.
+   Lo usan las DOS pantallas donde lo pone (💰 Riesgo y ⚡ Gatillo): si cada una guardara
+   por su lado, la de más abajo pisaría a la otra y él no sabría cuál mandó.
+   ⏱️ con freno: cada guardado sube las cuentas a la nube, y hacerlo en cada tecla sería
+   un diluvio de peticiones. */
+let _tRiesgoCta2=null;
+function guardarRiesgoEnSuCuenta(p){
+  try{
+    const cta = cuentaDelCalculo();
+    if(!cta || !(p>0) || String(cta.riesgoPct)===String(p)) return;
+    clearTimeout(_tRiesgoCta2);
+    _tRiesgoCta2=setTimeout(()=>{
+      try{
+        const c2=CUENTAS.find(x=>x.id===cta.id); if(!c2) return;
+        if(String(c2.riesgoPct)===String(p)) return;
+        const antes=c2.riesgoPct;
+        c2.riesgoPct=String(p);
+        guardarCuentas();
+        if(typeof robertoVigila==="function")
+          robertoVigila("Cambió su RIESGO por operación en la cuenta \""+(c2.alias||c2.firma||"?")+"\": "+(antes!=null&&antes!==""?antes+"%":"sin poner")+" → "+p+"%. Es SU elección: desde ahora el lotaje de esa cuenta se calcula con "+p+"%.");
+        if(typeof toast==="function") toast("Riesgo "+p+"% guardado en "+(c2.alias||c2.firma||"la cuenta")+" ✓");
+      }catch(_){}
+    },900);
+  }catch(_){}
+}
+
+/* 🏦 v7.305 — ¿DE QUÉ CUENTA es el riesgo que estoy calculando?
+   La que ÉL eligió. Y si todavía no eligió ninguna, la que tiene el MT5 CONECTADO
+   — que es con la que está operando ahora mismo —, no la primera de la lista ni una fija.
+   Elegir por él una cualquiera sería otro número inventado ([[apex-no-elegir-por-rey]]). */
+function cuentaDelCalculo(){
+  try{
+    if(typeof CUENTAS==="undefined" || !CUENTAS.length) return null;
+    if(BAL && BAL.ctaId){ const c=CUENTAS.find(x=>x.id===BAL.ctaId); if(c) return c; }
+    const viva=CUENTAS.find(c=>{ try{ return statsCuenta(c).fuente==="mt5"; }catch(_){ return false; } });
+    return viva||null;
+  }catch(_){ return null; }
+}
+
+/* al cambiar de cuenta, el balance y el % se traen DE ESA CUENTA: son sus datos,
+   no hay que volver a teclearlos. */
+function onCtaCalc(){
+  const sel=$("#cCta"); if(!sel) return;
+  if(!BAL || typeof BAL!=="object") BAL={};
+  BAL.ctaId = sel.value||"";
+  const c = BAL.ctaId ? CUENTAS.find(x=>x.id===BAL.ctaId) : null;
+  if(c){
+    try{
+      const st=statsCuenta(c);
+      const bi=$("#cBal");
+      if(bi && st && isFinite(+st.balance) && +st.balance>0) bi.value=r0(st.balance);
+    }catch(_){}
+    const pi=$("#cPct");
+    if(pi && c.riesgoPct!=null && c.riesgoPct!=="" && isFinite(+c.riesgoPct)) pi.value=c.riesgoPct;
+  }
+  calcLotaje();
+}
+
 function calcLotaje(){
   const par=$("#cPar")?.value||"EUR/USD";
   const b=parseFloat($("#cBal")?.value)||0;
@@ -10454,12 +10529,28 @@ function calcLotaje(){
   let pv=parseFloat(pvIn?.value);
   // Usa el valor automático salvo que el usuario lo haya editado a mano
   if(!pvIn || pvIn.dataset.manual!=="1" || !isFinite(pv) || pv<=0){ pv=auto; if(pvIn) pvIn.value=r2(auto); }
-  BAL={bal:b,pct:p,pips:s,par}; save(K.bal,BAL);
+  /* ⚠️ el ctaId NO se pierde al reescribir BAL: es lo que ata este % a una cuenta suya */
+  const ctaId = $("#cCta") ? ($("#cCta").value||"") : ((BAL&&BAL.ctaId)||"");
+  BAL={bal:b,pct:p,pips:s,par,ctaId}; save(K.bal,BAL);
   const out=$("#calcOut"); if(!out) return;
   const dinero=b*(p/100);
   const lotes= (s>0 && pv>0) ? dinero/(s*pv) : 0;
   out.innerHTML=`<div class="t">Riesgo: $${r2(dinero)} · ${r2(lotes)} lotes</div>
     <div class="s">${(lotes*100000).toFixed(0)} unidades · $${r2(pv)}/pip por lote · ${esc(par)}</div>`;
+
+  /* 🧮 v7.305 — Y AQUÍ ES DONDE DEJA DE SER UNA CALCULADORA SUELTA:
+     el % que acaba de elegir se guarda EN SU CUENTA, que es el único sitio desde el que
+     Roberto lo lee. Si no se guardara, volvería a pasar lo del 28-10: él eligiendo 1% y
+     Roberto cantando otro número. */
+  const cta = ctaId ? CUENTAS.find(x=>x.id===ctaId) : null;
+  const nota = $("#cQuienLoVe");
+  /* un solo camino de guardado, compartido con ⚡ Gatillo: si cada pantalla guardara
+     por su lado, la última en tocarse pisaría a la otra */
+  if(cta) guardarRiesgoEnSuCuenta(p);
+  if(nota){
+    if(cta) nota.innerHTML = "✅ Roberto canta el lotaje con <b>"+r2(p)+"%</b> sobre <b>"+esc(cta.alias||cta.firma||"esta cuenta")+"</b>. Lo que cambies aquí es lo que él usa.";
+    else nota.innerHTML = "⚠️ Sin cuenta elegida esto es una <b>cuenta rápida</b>: Roberto no ve este %. Elige arriba la cuenta con la que vas a operar y cantará el lotaje con él.";
+  }
 }
 /* Muestra/oculta el precio y refresca el valor pip al cambiar de par */
 function onParCalc(){
@@ -10601,7 +10692,12 @@ function calcGatillo(){
     if(isFinite(ent)){ ev.className="verd go"; ev.innerHTML=`<div class="t">Entrada: ${ent.toFixed(dg)}</div><div class="s">50% del POI · ${GAT.dir}</div>`; }
     else{ ev.className="verd"; ev.innerHTML=`<div class="t">Entrada 50%</div><div class="s">Mete los dos extremos del POI</div>`; }
   }
+  /* ⚡ v7.305 — EL GATILLO ES LA OTRA PANTALLA DONDE ÉL ELIGE EL %.
+     Si el % que pone aquí no fuera a la misma cuenta que el de 💰 Riesgo, volverían a
+     existir dos números para lo mismo — que es el fallo que esto viene a cerrar. Se guarda
+     en la MISMA cuenta y por el MISMO camino ([[apex-reglas-en-manos-de-rey]]). */
   if(bal>0) BAL.bal=bal; if(pctv>0) BAL.pct=pctv; save(K.bal,BAL);
+  if(pctv>0) guardarRiesgoEnSuCuenta(pctv);
 
   const out=$("#gOut"), note=$("#gRRnote"); if(!out) return;
   if(!isFinite(ent)||!isFinite(sl)){ out.innerHTML=""; if(note) note.textContent=""; return; }
@@ -14320,7 +14416,14 @@ function guardianRiesgo(){
   let s="[🛡️ GUARDIÁN DE RIESGO (hoy "+hoy+") — datos EN VIVO de sus cuentas. Úsalo para FRENARLO ANTES de que rompa una regla, con firmeza:\n";
   cuentas.forEach(c=>{
     const st=statsCuenta(c);
-    const riesgoPct=+c.riesgoPct||0.5;
+    /* 🧮 v7.305 — SI ÉL NO PUSO EL RIESGO, NO SE LO INVENTO Y SE LO DIGO.
+       De los siete sitios que rellenan un 0,5 cuando falta el dato, ÉSTE es el único que se
+       lo DICE a Roberto ("Riesgo/trade 0.5%"); los otros seis solo estiman por dentro. Un
+       número que él nunca eligió, dicho como suyo, es el fallo del 28-10
+       ([[apex-roberto-no-inventa]], [[apex-reglas-en-manos-de-rey]]). El cálculo sigue igual
+       — para estimar hace falta un número — pero el rótulo dice la verdad. */
+    const riesgoPuesto=(isFinite(parseFloat(c.riesgoPct)) && parseFloat(c.riesgoPct)>0) ? parseFloat(c.riesgoPct) : null;
+    const riesgoPct=riesgoPuesto!=null?riesgoPuesto:0.5;
     const hoyT=TRADES.filter(t=>t.cuenta===c.id && t.fecha===hoy && !t.abierta && t.modo==="real");
     const rHoy=hoyT.reduce((a,t)=>a+(parseFloat(t.r)||0),0);
     const slHoy=hoyT.filter(t=>esPerdida(t)).length;   /* 🛡️ 20-10 */
@@ -14333,7 +14436,7 @@ function guardianRiesgo(){
     const esDemo=/Demo/i.test(c.fase||"");
     s+="── "+(c.alias||c.firma||"Cuenta")+" ("+(c.firma||"?")+" · "+(c.fase||"?")+") ──\n";
     if(esDemo) s+="  (DEMO = PRÁCTICA: exígele la MISMA disciplina y reglas para entrenar el plan, pero SIN el miedo del dinero real; enfoque de práctica, no de supervivencia de capital.)\n";
-    s+="  Riesgo/trade "+riesgoPct+"% · Trades hoy "+hoyT.length+"/2 · SL hoy "+slHoy+"\n";
+    s+="  Riesgo/trade "+(riesgoPuesto!=null?(riesgoPuesto+"% (lo eligió ÉL — con ÉSTE le cantas el lotaje de esta cuenta)"):"SIN PONER en esta cuenta — los % de abajo van estimados con 0,5% SÓLO para poder calcular: NO se lo cantes como si fuera suyo, pídele que lo ponga")+" · Trades hoy "+hoyT.length+"/2 · SL hoy "+slHoy+"\n";
     s+="  HOY: "+(diaPct>=0?"+":"")+r1(diaPct)+"%"+(ddDaily>0?(" · límite -"+ddDaily+"% · margen "+r1(margenDia)+"% "+sem(usadoDia,ddDaily)):"")+"\n";
     s+="  TOTAL: "+(st.progresoPct>=0?"+":"")+r1(st.progresoPct)+"%"+(ddMax>0?(" · DD máx -"+ddMax+"% ("+(c.ddTipo||"?")+") · margen "+r1(margenTot)+"% "+sem(usadoTot,ddMax)):"")+"\n";
     const av=[];
@@ -15156,10 +15259,10 @@ function guardarCuentaForm(id){
 /* Resumen de cuentas para Roberto (acceso total) */
 function iaCuentas(){
   if(!CUENTAS.length) return "\n[CUENTAS DE FONDEO de Rey: en este momento hay 0 cuentas guardadas en Apex. IMPORTANTE: NO digas 'no me llegó el bloque de cuentas' — el bloque SÍ te llegó, y dice que no hay ninguna registrada. Si Rey te habla de sus cuentas, dile con naturalidad que aún NO las ves registradas en Apex y ofrécete a registrarlas TÚ con tu mano crear_cuenta (pídele firma, capital, fase y el % o monto de pérdida actual de cada una, y créalas con tu tarjeta de confirmación). Nunca le pidas que 'busque el dato él'.]\n";
-  let s="\n[CUENTAS de Rey (pueden ser de FONDEO/examen, CAPITAL PROPIO/real, o DEMO de práctica) — tienes acceso total; trátalas por SEPARADO, cada una con las reglas de SU firma y su clasificación. Ayúdalo a gestionarlas, protegerlas y escalar.\n  🏦 DESDE EL 11-10 EL BALANCE DE LA CUENTA QUE TIENE ABIERTA EN MT5 ENTRA SOLO, cada 5 min, por el Puente. Donde diga «REAL, leído de su MT5» ese número es el de verdad y no hay nada que actualizar: NO le pidas nunca que lo apunte ni que lo revise al cerrar una operación — se quejó expresamente de ese trabajo a mano. Donde diga «estimado de sus R» sí es un cálculo, y ahí se habla con cuidado]:\n";
+  let s="\n[CUENTAS de Rey (pueden ser de FONDEO/examen, CAPITAL PROPIO/real, o DEMO de práctica) — tienes acceso total; trátalas por SEPARADO, cada una con las reglas de SU firma y su clasificación. Ayúdalo a gestionarlas, protegerlas y escalar.\n  🧮 EL RIESGO %/TRADE DE CADA CUENTA LO ELIGE ÉL Y LO CAMBIA CUANDO QUIERE (desde 💰 Riesgo o desde la ficha de la cuenta). ES EL NÚMERO CON EL QUE TIENES QUE CANTARLE EL LOTAJE de esa cuenta: lote = (balance × %/100) ÷ (pips de stop × valor del pip). JAMÁS uses un % de memoria ni el de otra cuenta, y si te pide un lote sin decir el %, usa el de la cuenta conectada y DI cuál usaste; si no hay cuenta clara, pregúntaselo.\n  🏦 DESDE EL 11-10 EL BALANCE DE LA CUENTA QUE TIENE ABIERTA EN MT5 ENTRA SOLO, cada 5 min, por el Puente. Donde diga «REAL, leído de su MT5» ese número es el de verdad y no hay nada que actualizar: NO le pidas nunca que lo apunte ni que lo revise al cerrar una operación — se quejó expresamente de ese trabajo a mano. Donde diga «estimado de sus R» sí es un cálculo, y ahí se habla con cuidado]:\n";
   CUENTAS.forEach(c=>{
     const st=statsCuenta(c);
-    s+=`· ${c.alias||c.firma||"Cuenta"} (${c.firma||"?"}, ${c.fase}): capital $${r0(st.cap)}, balance ${st.fuente==="mt5"?"":"~"}${r0(st.balance)}${st.fuente==="mt5"?" (REAL, leído de su MT5 hace "+(+st.real.haceMin||0)+" min — se actualiza solo, NO le pidas que lo actualice a mano)":st.fuente==="mt5viejo"?" (ese número lo leí YO de su MT5, NO lo escribió él — es la última lectura que pude hacer, de hace "+(st.balanceTs?Math.round((Date.now()-st.balanceTs)/60000):0)+" min, así que puede estar vieja si su MT5 lleva rato cerrado. NO le pidas que lo actualice a mano)":st.fuente==="manual"?" (lo escribió él)":" (estimado de sus R)"} (P&L ${st.pl>=0?"+":""}$${r0(st.pl)}, ${r1(st.progresoPct)}% de ${c.targetPct||"?"}% objetivo). DD máx ${c.ddMaxPct||"?"}%${c.ddTipo?" "+c.ddTipo:""}, daily ${c.ddDailyPct||"?"}%, riesgo ${c.riesgoPct||"?"}%/trade.`;
+    s+=`· ${c.alias||c.firma||"Cuenta"} (${c.firma||"?"}, ${c.fase}): capital $${r0(st.cap)}, balance ${st.fuente==="mt5"?"":"~"}${r0(st.balance)}${st.fuente==="mt5"?" (REAL, leído de su MT5 hace "+(+st.real.haceMin||0)+" min — se actualiza solo, NO le pidas que lo actualice a mano)":st.fuente==="mt5viejo"?" (ese número lo leí YO de su MT5, NO lo escribió él — es la última lectura que pude hacer, de hace "+(st.balanceTs?Math.round((Date.now()-st.balanceTs)/60000):0)+" min, así que puede estar vieja si su MT5 lleva rato cerrado. NO le pidas que lo actualice a mano)":st.fuente==="manual"?" (lo escribió él)":" (estimado de sus R)"} (P&L ${st.pl>=0?"+":""}$${r0(st.pl)}, ${r1(st.progresoPct)}% de ${c.targetPct||"?"}% objetivo). DD máx ${c.ddMaxPct||"?"}%${c.ddTipo?" "+c.ddTipo:""}, daily ${c.ddDailyPct||"?"}%, riesgo ${c.riesgoPct||"?"}%/trade${st.fuente==="mt5"?" ◀ ⚠️ ESTA es la cuenta que tiene CONECTADA AHORA en su MT5: si habla de operar ÉL sin decir cuál, es ÉSTA, y el lotaje se calcula con ESTE % y ESTE balance":""}.`;
     const ddMax=+c.ddMaxPct||0;
     if(st.progresoPct<0 && ddMax>0){ const margen=Math.max(0,ddMax-Math.abs(st.progresoPct)); s+=` [VA EN NEGATIVO ${r1(st.progresoPct)}%, le quedan ${r1(margen)}% hasta romper el DD${margen<=ddMax*0.3?" — PELIGRO, protégela":""}]`; }
     else if(st.target>0 && st.progresoPct>=st.target){ s+=` [OBJETIVO CUMPLIDO, cuida de no romper reglas]`; }
@@ -21697,7 +21800,7 @@ const IA_TOOLS = [
       cuenta:{type:"string",description:"Cuenta en la que opera (alias/firma)"},
       nota:{type:"string"}
     }, required:["par","dir","entrada"] } },
-  { name:"cerrar_entrada", description:"Cierra una ENTRADA abierta del Diario y le pone su resultado (pasa a contar en estadísticas). OJO: el gráfico NO sabe cómo cerró de verdad; pídele a Rey el PRECIO al que cerró (o 'TP'/'SL'/'BE'/'salí antes en X'). Si te da el precio de cierre, pásalo en precio_cierre y el sistema calcula el R EXACTO con su entrada y SL. Si Rey te da el R directo, usa r. Identifícala por el par (o la más reciente abierta).",
+  { name:"cerrar_entrada", description:"⚠️ CIERRA EL REGISTRO DEL 📒 DIARIO, NO LA OPERACIÓN EN EL MERCADO. Esta mano NO toca MT5, NO cierra posiciones y NO mueve dinero: solo apunta en su libro cómo acabó una entrada que YA cerró (pasa a contar en estadísticas). Si Rey te dice «cierra la operación» refiriéndose al MERCADO, NO uses esta mano y NO le digas que la cerraste: no puedes — díselo y que la cierre él en MT5 o con el botón ✖ de su panel 🤖. OJO: el gráfico NO sabe cómo cerró de verdad; pídele a Rey el PRECIO al que cerró (o 'TP'/'SL'/'BE'/'salí antes en X'). Si te da el precio de cierre, pásalo en precio_cierre y el sistema calcula el R EXACTO con su entrada y SL. Si Rey te da el R directo, usa r. Identifícala por el par (o la más reciente abierta).",
     input_schema:{ type:"object", properties:{
       par:{type:"string",description:"Par de la entrada a cerrar (si se omite, la más reciente abierta)"},
       precio_cierre:{type:"number",description:"Precio al que Rey cerró (el sistema calcula el R con su entrada/SL). Si tocó TP, usa el precio del TP; si tocó SL, el del SL; si salió antes, el precio real de salida."},
@@ -21875,7 +21978,7 @@ const IA_TOOLS = [
   { name:"ejecutor_config", description:"Cambia UNA o varias reglas del 🤖 Ejecutor de Rey. Pasa SOLO los campos a cambiar — el resto queda intacto (la nube fusiona). Úsalo cuando Rey te pida un ajuste ('bájale el riesgo a 0.25', 'solo señales A+', 'quita GBPUSD') o propón tú una mejora justificada. La config vigente la tienes en tu memoria (⚙️ CONFIG VIGENTE). SIEMPRE con la tarjeta de Rey.",
     input_schema:{ type:"object", properties:{
       pares:{type:"array",items:{type:"string"},description:"Lista COMPLETA de pares que operará, ej. ['EURUSD','GBPUSD'] (reemplaza la actual)"},
-      riesgoPct:{type:"number",description:"Riesgo % por operación (0-5, hoy 0.5)"},
+      riesgoPct:{type:"number",description:"Riesgo % por operación (0-5). ⚠️ NO tiene valor por defecto: el vigente está en ⚙️ CONFIG VIGENTE — nunca supongas uno"},
       maxOpsDia:{type:"number",description:"Máx. operaciones al día (1-20)"},
       maxOpsSesion:{type:"number",description:"Máx. entradas por SESIÓN (1-10). El gatillo es POR SESIÓN, no por par: Londres y Nueva York cuentan aparte. Lo corrigió Rey el 07-09 porque perdía señales de NY"},
       corteSesionNY:{type:"number",description:"Hora de NUEVA YORK que separa la sesión de Londres de la de NY (0-23; hoy 6 = las 06:00 NY, el hueco en que su PC duerme)"},
@@ -22015,7 +22118,7 @@ function describeTool(name, i){
   if(name==="set_pares") return "🎯 Cambiar tus pares a: "+((i.pares||[]).join(", "));
   if(name==="registrar_trade") return "📒 Registrar trade ["+(i.modo==="backtest"?"🎬 BACKTEST":i.modo==="real"?"💵 REAL":"libro actual")+"] — "+(i.par||"?")+" "+(i.dir||"")+" · "+(i.res||(parseFloat(i.r)>0?"Ganado":parseFloat(i.r)<0?"Perdido":"BE"))+" "+(i.r)+"R\nSetup "+(i.setup||"?")+" · ventana "+(i.ventana||"?")+" · entrada '"+(i.momento||"?")+"'"+(i.plan==="No"?" · PLAN ROTO":"")+(i.nota?("\nNota: "+i.nota):"");
   if(name==="registrar_entrada") return "✍️ Registrar ENTRADA (abierta) ["+(i.modo==="backtest"?"🎬 BACKTEST":i.modo==="real"?"💵 REAL":"libro actual")+"] — "+(i.par||"?")+" "+(i.dir||"")+"\nEntrada "+(i.entrada!=null?i.entrada:"?")+" · SL "+(i.sl!=null?i.sl:"?")+" · TP "+(i.tp!=null?i.tp:"?")+(i.rr?(" · RR 1:"+i.rr):"")+(i.riesgoPct?(" · riesgo "+i.riesgoPct+"%"):"")+"\nSetup "+(i.setup||"?")+" · "+(i.ventana||"?")+" · '"+(i.momento||"En confirmación")+"'"+(i.zona?(" · "+i.zona):"")+(i.poi?(" · "+i.poi):"")+(i.gtf?(" · gatillo "+i.gtf):"")+(i.nota?("\nNota: "+i.nota):"");
-  if(name==="cerrar_entrada"){ const rr=(i.r!=null&&i.r!=="")?(i.r+"R"):(i.precio_cierre!=null?("cierre en "+i.precio_cierre+" → calculo el R"):"?"); return "🏁 Cerrar entrada "+(i.par||"(la más reciente)")+" → "+rr+(i.res?(" · "+i.res):"")+(i.nota?("\nNota: "+i.nota):""); }
+  if(name==="cerrar_entrada"){ const rr=(i.r!=null&&i.r!=="")?(i.r+"R"):(i.precio_cierre!=null?("cierre en "+i.precio_cierre+" → calculo el R"):"?"); return "🏁 Cerrar el REGISTRO del 📒 Diario "+(i.par||"(la más reciente)")+" → "+rr+"\n(la posición en MT5 NO se toca: esto solo apunta cómo acabó)"+(i.res?(" · "+i.res):"")+(i.nota?("\nNota: "+i.nota):""); }
   if(name==="capturar_grafico") return "📸 Capturar el gráfico de "+(i.par||"(par actual)");
   if(name==="limpiar_capturas") return "🧹 Limpiar capturas sueltas"+(i.par?(" de "+i.par):"")+(i.fecha?(" del "+i.fecha):" (todas las sueltas)");
   if(name==="limpiar_diario_ejecutor") return "🗑️ Limpiar archivo del Ejecutor"+(i.mes?(" — mes "+i.mes):(i.antes_de?(" — todo lo anterior al "+i.antes_de):""));
@@ -22305,7 +22408,7 @@ async function ejecutarTool(name, i){
       t.shotClose=t.id+"_close"; nubeShotReq(t.par, t.shotClose); // 📸 captura de cierre
       save(K.trades,TRADES); if(typeof refrescarDiarioCtx==="function") refrescarDiarioCtx(); notifChequearCuentasDD();
       try{ antiTiltCheck(t); }catch(_){}   /* 🚨 v6.36 */
-      return {ok:true,msg:"Entrada cerrada: "+t.par+" "+t.res+" "+r1(t.r)+"R"+(t.precioCierre!=null?(" (cierre "+t.precioCierre+")"):"")+" · 📸 pedí captura del cierre"};
+      return {ok:true,msg:"REGISTRO del Diario cerrado (la posición en MT5 NO se ha tocado): "+t.par+" "+t.res+" "+r1(t.r)+"R"+(t.precioCierre!=null?(" (cierre "+t.precioCierre+")"):"")+" · 📸 pedí captura del cierre"};
     }
     if(name==="borrar_trade" || name==="editar_trade"){
       const q=String(i.par||"").toLowerCase();
@@ -23314,7 +23417,7 @@ async function robertoVigila(evento){
   try{
     const sys="Eres ROBERTO, mentor de trading de Rey (CRT/SMC/ICT) y su GUARDIÁN. "+reglasClaveTxt()+
       "\nVigilas cada acción que Rey hace en su app Apex. Si la acción está MAL, es riesgosa, rompe una de sus reglas, contradice su plan o es claramente mejorable (p.ej. entrar en el toque en vez de esperar confirmación, operar fuera de ventana o con noticia cerca, un setup C, un aviso a mala hora, un par que no encaja), responde SOLO una corrección/sugerencia BREVE y accionable (máx 2 frases, empieza con un emoji, tono directo y cercano de mentor-hermano). Si la acción está BIEN, responde EXACTAMENTE 'OK' y nada más."+
-      "\n⚙️ v6.20 LA CONFIG VIVA MANDA (Rey, 28-08): cuando la acción es GUARDAR una configuración (reglas del Ejecutor, ventanas, ajustes), los números que Rey acaba de guardar SON su regla vigente desde ese momento — tu cerebro o memoria pueden tener números VIEJOS (2 ops/día, ±30 min de noticias: YA NO son la regla; hoy el cupo y los minutos de noticias son LOS DE LA CONFIG). PROHIBIDO regañarlo por diferir de una regla vieja. Solo avisa si el cambio es un PELIGRO OBJETIVO (riesgo por operación >1%, lote máximo desproporcionado, pérdida diaria >2%, horario absurdo) y di el porqué en palabras simples.";
+      "\n⚙️ v6.20 LA CONFIG VIVA MANDA (Rey, 28-08): cuando la acción es GUARDAR una configuración (reglas del Ejecutor, ventanas, ajustes), los números que Rey acaba de guardar SON su regla vigente desde ese momento — tu cerebro o memoria pueden tener números VIEJOS (2 ops/día, ±30 min de noticias: YA NO son la regla; hoy el cupo y los minutos de noticias son LOS DE LA CONFIG). PROHIBIDO regañarlo por diferir de una regla vieja. Solo avisa si el cambio es un PELIGRO OBJETIVO — y PELIGRO significa QUE NO QUEPA, no que el número sea más alto que el de ayer: un riesgo que no entra en lo que le queda de DD o de tope diario, un lote desproporcionado para ese balance, o un horario absurdo. ⚠️ SUBIR el riesgo por operación NO es un peligro en sí y NO se lo discutes (Rey, 28-10: «en mi sistema no hay nada fijo, todo debe configurarse»): si cabe, lo aplicas y callas; si no cabe, le dices cuántas pérdidas seguidas aguanta con él y cuál es el que sí entra, y él decide. Di el porqué en palabras simples.";
     const evTxt = iaReloj()+"\n"+iaContexto()+"\n\nACCIÓN de Rey ahora mismo:\n"+evento;
     const r=await fetch(IA.url.replace(/\/+$/,"")+"/vigila",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({system:sys, evento:evTxt})});
     const d=await r.json().catch(()=>({}));
@@ -25042,8 +25145,15 @@ function init(){
 
   ["cBal","cPct","cPips","cPrice"].forEach(i=>{ const e=$("#"+i); if(e) e.addEventListener("input",calcLotaje); });
   const cpar=$("#cPar"); if(cpar) cpar.addEventListener("change",onParCalc);
+  const ccta=$("#cCta"); if(ccta) ccta.addEventListener("change",onCtaCalc);
   const cpv=$("#cPv"); if(cpv) cpv.addEventListener("input",()=>{ cpv.dataset.manual="1"; calcLotaje(); });
   onParCalc();
+  /* 🧮 v7.305 — AL ABRIR, LA PANTALLA ENSEÑA LO QUE LA CUENTA TIENE, Y NO GUARDA NADA.
+     Si no se recargara de la cuenta, al abrir 💰 Riesgo se vería el % viejo de K.bal y
+     calcLotaje() lo escribiría SOLO en su cuenta, sin que él tocara un dedo: cambiarle un
+     dato suyo por mi cuenta ([[apex-no-elegir-por-rey]], [[apex-reglas-en-manos-de-rey]]).
+     Así lo que ve es la verdad, y solo se guarda cuando lo cambia ÉL. */
+  if(ccta && ccta.value) onCtaCalc();
 
   refreshChecklist(); refreshConf(); refreshReglas(); renderDiario();
   const ba=$("#btnAyuda"); if(ba) ba.onclick=()=>abrirAyuda(TAB);
@@ -25147,15 +25257,36 @@ function init(){
       robEvento(ev.data.title||"Roberto", ev.data.body||"", { urge:!!ev.data.strong, ir:ev.data.ir||"", kind:ev.data.kind||"" });
     }
   }); } }catch(_){}
-  try{ const dst=consumirParam("ir"); if(dst) setTimeout(()=>irDestino(dst), 600); }catch(_){}
+  const _dstAviso = (()=>{ try{ return consumirParam("ir")||""; }catch(_){ return ""; } })();
+  if(_dstAviso) setTimeout(()=>irDestino(_dstAviso), 600);
   /* 🎯 v7.154 — y si el aviso traía gráfico, se abre SU APP de TradingView en esa fase.
      Va DESPUÉS del hilo del día y con un respiro: primero Apex con la lectura de Roberto,
-     y encima el gráfico. Si se abriera antes, Apex se quedaría detrás sin haber pintado. */
-  try{ const g=consumirParam("graf"); if(g) setTimeout(()=>abrirGrafDeAviso(g), 2200); }catch(_){}
+     y encima el gráfico. Si se abriera antes, Apex se quedaría detrás sin haber pintado.
+     ════════════════════════════════════════════════════════════════════════════
+     🎯 v7.305 (28-10) — UN AVISO LLEVA A UN SITIO, NO A DOS.
+     Rey: «hoy detectó la entrada y al tocar la notificación, en vez de llevarme al Diario a
+     registrarla, me llevó al gráfico; igual con la salida. Las notificaciones del gráfico
+     son las del gráfico, y las de Apex y el chat, las de ellos: cada cosa donde debe».
+     MEDIDO en el código: el aviso de entrada SÍ manda `ir: "tab:diario"` — el worker lo pone
+     bien en los cuatro sitios. Pero el VÍGIA NATIVO, que es quien pinta sus avisos cuando la
+     APK está viva (el sw.js del navegador no pinta nada entonces), metía en el toque los DOS
+     destinos: `ir` Y `graf`. Apex iba al Diario a los 0,6 s y 2,2 s después le abría
+     TradingView ENCIMA. No es que fuera al sitio equivocado: iba al bueno y luego se lo
+     tapaba. El sw.js nunca tuvo el fallo porque ahí el `ir` hace `return`.
+     Se arregla en los DOS lados (aquí y en VigiaService.java): el gráfico solo se abre si el
+     aviso NO dijo a dónde ir. Una alarma del indicador no trae `ir` — esa sigue yendo al
+     gráfico, como él quiere ([[apex-el-rechazo-no-es-mudo]], [[apex-lo-importante-va-primero]]). */
+  try{
+    const g=consumirParam("graf");
+    if(g && !_dstAviso) setTimeout(()=>abrirGrafDeAviso(g), 2200);
+  }catch(_){}
   try{ if(navigator.serviceWorker){ navigator.serviceWorker.addEventListener("message", ev=>{
     if(!ev.data) return;
     if(ev.data.type==="apex-ir" && ev.data.ir) irDestino(ev.data.ir);
-    if(ev.data.type==="apex-ir" && ev.data.graf) setTimeout(()=>abrirGrafDeAviso(ev.data.graf), 2200);
+    /* 🎯 v7.305 — mismo criterio que arriba: si el aviso dijo a dónde ir, el gráfico NO
+       se abre encima. Aquí el sw.js ya manda uno u otro, pero si algún día mandara los dos
+       esto no volvería a taparle el Diario. */
+    if(ev.data.type==="apex-ir" && ev.data.graf && !ev.data.ir) setTimeout(()=>abrirGrafDeAviso(ev.data.graf), 2200);
     /* 🔇 v7.249 — Rey deslizó el aviso o pulsó «Callar»: se calla. `iaVozParar()` calla por
        los DOS caminos (el del navegador y el nativo del plugin), que es justo lo que hacía
        falta: callar uno dejaba el otro hablando ([[apex-dos-motores-de-voz-no-se-oyen]]). */

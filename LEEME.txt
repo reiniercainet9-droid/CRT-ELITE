@@ -1,64 +1,26 @@
-APEX v7.304 — TRADING DESK
+APEX v7.305 — TRADING DESK
 =========================
 
-Apex 7.304 — el análisis semanal deja de inventarse el nivel de invalidación
+🧮 EL RIESGO LO ELIGES TÚ, Y ES EL QUE ROBERTO CANTA
+Tu riesgo vivía en tres sitios que no se hablaban: la calculadora 💰 (donde pusiste el 1 %), la ficha de cada cuenta (0,5 %) y el 🤖 Ejecutor (0,5 %). El de la calculadora NO SALÍA DEL TELÉFONO, así que elegías un número en una pantalla y te contestaban con otro.
+· La calculadora de lotaje ahora se hace SOBRE UNA CUENTA TUYA: eliges arriba cuál, y el % que pongas se guarda EN ESA CUENTA — que es el único camino por el que Roberto y el Puente lo leen.
+· Debajo del resultado te dice con todas las letras con qué % y con qué cuenta va a cantar el lotaje. Y si eliges «sin cuenta», te avisa de que eso es una cuenta rápida que Roberto no ve.
+· ⚡ Gatillo guarda por el mismo camino: un solo número, no dos.
+· Roberto ya sabe CUÁL cuenta tienes conectada en MT5, con su % y su balance, para que «tu cuenta» no sea ambiguo con cuatro.
+· Fuera el «hoy 0.5» que le dictaba el número, y fuera el peligro clavado en «más de 1 %»: ahora el peligro es que el riesgo NO QUEPA hasta tu pared, no que sea más alto que ayer. Con 1,5 % ya no te da la lata si entra.
+· Si a una cuenta le falta el riesgo, el guardián lo DICE en vez de rellenarlo con un 0,5 inventado.
 
-Esto sale de revisar tu semanal del 27 de octubre, el primero con AUD/USD en el gráfico.
-Los tres pares salieron, los tres planes se guardaron y no hubo ni una tabla. Pero había
-cuatro cosas mal, y las cuatro eran de cómo yo le pedía el trabajo, no suyas.
+🎯 CADA AVISO LLEVA A UN SITIO, NO A DOS
+Tocabas el aviso de «entrada detectada» y, en vez de dejarte en el 📒 Diario para registrarla, se te abría el gráfico encima. No iba al sitio equivocado: iba al bueno y 2,2 segundos después TradingView lo tapaba. El vigía mandaba los dos destinos a la vez.
+· Ahora el gráfico solo se abre si el aviso NO dijo a dónde ir.
+· Las alarmas del indicador siguen abriendo el gráfico directo, como pediste.
 
-⚠️ EL NIVEL DE INVALIDACIÓN AHORA SE COPIA DE TU INDICADOR
-En AUD/USD te dijo «invalida bajo 0.70234» cuando tu indicador publicaba 0.70125. En
-GBP/USD te dijo 1.33386 contra el 1.33878 del gráfico: 49 pips. Y con el precio en
-0.70247, su invalidación de AUD te quedaba a 1,3 pips — cualquier spread se la come.
-Importa porque ese número es el que se guarda, y es con el que te aviso de que tu plan
-murió: estaba vigilando el nivel equivocado toda la semana.
-El guion le pedía «el nivel que invalida» y le listaba la liquidez, pero nunca le decía
-que tu bloque vivo ya trae «Inval: vigente en X». Ahora se lo dice: ese número se copia
-tal cual, con sus decimales; la liquidez son objetivos, no invalidaciones; uno solo por
-par y el mismo en el mapa, en el plan y en lo que se guarda. Y si tu indicador no te lo
-da, te lo dice en vez de rellenarlo.
+✋ CERRAR EL DIARIO NO ES CERRAR LA OPERACIÓN
+Le decías «cierra la operación», Roberto cerraba el REGISTRO de tu Diario y te decía «cerrada» — con la posición viva en el mercado. No tiene ninguna mano que cierre en MT5, y con el Ejecutor apagado nadie puede cerrarla desde fuera.
+· La tarjeta ahora dice «cerrar el REGISTRO del Diario», y avisa de que la posición en MT5 no se toca.
+· Roberto tiene orden de decirte que NO puede cerrarla y darte las vías que sí funcionan.
 
-🔢 EL RANKING YA NO PUEDE CONTRADECIR SU PROPIO ANÁLISIS
-El ranking decía «AUD/USD, también en Discount» y doce líneas después su ficha de AUD
-decía PREMIUM 70% (tu indicador: PREMIUM 63%). Escribía el ranking de memoria, antes de
-mirar par por par. Ahora, en el ranking tiene que CITAR la zona y su %, la alineación y
-el CRT H4 de cada par copiados del bloque. Si para rankear hay que escribir el dato, hay
-que mirarlo.
-
-🔇 Y LO QUE VA EN CONTRA SE DICE
-En AUD te recomendó COMPRAS y se calló que tu indicador marcaba SMT bajista con aviso de
-DXY, justo en contra. Ahora está obligado a nombrarlo con su dato y decirte qué le haría
-cambiar de idea. Nada se suaviza para que encaje con el plan.
-
-🔁 EL ANÁLISIS SE ESCRIBE UNA VEZ, NO TRES
-Lo tuviste tres veces seguidas en el teléfono: 29.417 caracteres cuando el análisis son
-unos 9.700. No fue un desboque — cada copia cabía de sobra. Fue el orden: el guion decía
-«al terminar guarda el plan» y «al terminar del todo fija el chat», así que escribía todo,
-llamaba a las manos y al volver lo reescribía entero. Tres veces escrito, tres veces
-pagado. Ahora el orden es: decide → guarda los planes y fija el chat → y entonces escribe,
-una sola vez. Y tiene prohibido reescribirlo al volver de una mano.
-
-🧠 LA MEMORIA DE TU PC NO ES EL DISCO
-Te dijo «poca memoria libre (14%)… libera espacio en el disco». Tu disco tiene 104 GB
-libres de 232: el consejo no servía de nada. El dato de la RAM era bueno. Ahora el parte
-de tu PC le dice que es la RAM y NO el disco, le pone el dato del disco al lado, y le
-prohíbe mandarte liberar disco o cerrar programas. También le dice que la memoria justa
-es crónica en tu PC y conocida, no una avería nueva, y que solo la nombre si te está
-costando algo en ese momento. Si el disco SÍ se llena de verdad, el aviso del disco sigue
-saliendo igual.
-
-🧹 LO QUE MANDAS BORRAR QUEDA APUNTADO
-Te abrió el análisis con un susto: «tus chats pasaron de 24 a 4, si no los borraste tú
-deberíamos verificar si hay una anomalía». Los borraste tú el 25 de octubre. Dedujo bien;
-lo que no tenía era la prueba de que fue a propósito. Ahora Apex apunta cada limpieza que
-mandas (cuántos había y cuántos quedaron) y se la pasa en su mapa de chats, así que una
-bajada explicada ya no vuelve como avería. Y si la bajada NO cuadra con lo apuntado, sigue
-pudiendo decírtelo — lo que no puede es asustarte por lo que tú mismo pediste.
-
-Cuatro bancos nuevos vigilan esto: el del nivel de invalidación, el de no escribirlo tres
-veces, el de la RAM contra el disco y el de las limpiezas apuntadas. Los dos últimos no
-leen el código: lo ejecutan y miran el texto que de verdad le llega.
+🛡️ Dos bancos nuevos para que ninguna de estas tres cosas vuelva.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
