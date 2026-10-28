@@ -2067,9 +2067,15 @@ function gemeloDigest(){
   const cron=(a,b)=>(((a.fecha||"")+(a.hora||""))<((b.fecha||"")+(b.hora||""))?-1:1);
   const cerr=(Array.isArray(TRADES)?TRADES:[]).filter(t=>!t.abierta && !isNaN(parseFloat(t.r))).sort(cron);
   if(cerr.length<5) return "(Menos de 5 trades cerrados con resultado — el gemelo necesita historia. A registrar se ha dicho.)";
-  const cta=(Array.isArray(CUENTAS)?CUENTAS:[])[0]||{};
+  /* 🧮 v7.305 — LA CUENTA CON LA QUE OPERA, NO LA PRIMERA DE LA LISTA.
+     Cogía CUENTAS[0] y rellenaba un 0,5 si le faltaba: si la primera no es con la que
+     opera, el gemelo entero salía con el capital y el riesgo de OTRA cuenta
+     ([[apex-la-pared-tiene-que-ser-de-esta-cuenta]]). */
+  const cta=(typeof cuentaDelCalculo==="function" ? cuentaDelCalculo() : null)
+         || (Array.isArray(CUENTAS)?CUENTAS:[])[0] || {};
   const cap=parseFloat(cta.capital)||10000;
-  const riesgo=(parseFloat(cta.riesgoPct)||0.5)/100;
+  const _rv=(typeof riesgoVigente==="function") ? riesgoVigente() : null;
+  const riesgo=((parseFloat(cta.riesgoPct)>0 ? parseFloat(cta.riesgoPct) : (_rv&&_rv.pct>0?_rv.pct:0.5))/100);
   let out="";
   for(const [modo,etq] of [["real","💵 REAL"],["backtest","🎬 BACKTEST"]]){
     const lst=cerr.filter(t=>t.modo===modo);
@@ -6502,7 +6508,7 @@ const IA_CHIP_QS = {
   alarmas:"Recuérdame qué alarmas de mi indicador CRT Elite debo tener activas en cada par y por qué, y qué debo hacer cada vez que actualizo el indicador.",
   fondeo:"Voy a comprar 5 cuentas de fondeo para hacer los exámenes. Dame un plan concreto para pasarlos sin romper mis reglas.",
   firmas:"Compárame las principales empresas de fondeo (reglas, drawdown, precio aprox, payouts, reputación) con pros y contras, y dime cuáles me convienen y por qué, sin olvidar la diversificación. Avísame de lo que deba confirmar por ser un dato que cambia.",
-  compuesto:"Explícame cómo usar el interés compuesto para escalar mis cuentas de fondeo con riesgo 0.5%. Hazme los números paso a paso con un ejemplo realista.",
+  compuesto:"Explícame cómo usar el interés compuesto para escalar mis cuentas de fondeo CON EL RIESGO QUE TENGO PUESTO en la cuenta con la que opero (lo tienes en [CUENTAS DE FONDEO] como «riesgo X%/trade»; si no te llegó, pregúntamelo y no supongas ninguno). Hazme los números paso a paso con mi capital real.",
   mejoras:"Haz una REVISIÓN COMPLETA DEL SISTEMA con todos los datos que tienes: mis operaciones del Diario, las del Ejecutor (y sus señales vetadas o descartadas), tu memoria y lo que sabes del indicador CRT Elite. Dime con honestidad: (1) qué está funcionando BIEN y no hay que tocar; (2) qué está fallando o rindiendo poco; (3) tu lista de MEJORAS concretas, priorizada — de mi estrategia, del indicador, de las reglas del Ejecutor o de cualquier parte de Apex. Si alguna mejora necesita cambio de código (indicador o app), dímelo claro y separado para que yo lo pida."
 };
 const IR_DESTINOS = [
@@ -10013,11 +10019,16 @@ function negVsTrading(roiPeriodoNegocio, periodoId){
     if(!ops || !ops.length) return { hay:false, porQue:"todavía no tienes operaciones cerradas en tu Diario" };
     const m = (typeof metricas==="function") ? metricas(ops) : null;
     if(!m || m.esperanza===null || m.esperanza===undefined) return { hay:false, porQue:"no puedo medir tu esperanza con lo que hay registrado" };
-    /* cuánto arriesga por operación, de sus propias reglas del Ejecutor */
+    /* 🧮 v7.305 (28-10) — EL RIESGO CON EL QUE OPERA ÉL, NO EL DEL ROBOT.
+       Esto compara su NEGOCIO contra su TRADING, y tiraba del riesgo del 🤖 Ejecutor
+       (0,5 %) aunque él opere al 1 %: le decía que su trading rinde la MITAD, y con ese
+       número se decide si un negocio merece la pena. Ahora manda el de la cuenta con la que
+       opera, y el del Ejecutor queda de respaldo por si aún no eligió cuenta. */
     let riesgoPct = null;
-    try{ const e = load(K.ejeccfg, null); if(e && e.cfg && e.cfg.riesgoPct!=null) riesgoPct = Number(e.cfg.riesgoPct); }catch(_){}
+    try{ const rv = (typeof riesgoVigente==="function") ? riesgoVigente() : null; if(rv && rv.pct>0) riesgoPct = rv.pct; }catch(_){}
+    if(riesgoPct===null){ try{ const e = load(K.ejeccfg, null); if(e && e.cfg && e.cfg.riesgoPct!=null) riesgoPct = Number(e.cfg.riesgoPct); }catch(_){} }
     if(riesgoPct===null || !isFinite(riesgoPct) || riesgoPct<=0)
-      return { hay:false, porQue:"no sé cuánto arriesgas por operación (está en tu sección 🤖 Ejecutor)" };
+      return { hay:false, porQue:"no sé cuánto arriesgas por operación (elígelo en 💰 Riesgo, sobre la cuenta con la que operas)" };
     /* operaciones por periodo, medidas de SUS fechas, no supuestas */
     const ts = ops.map(o=>o.ts||o.fecha||0).filter(Boolean).sort((a,b)=>a-b);
     if(ts.length < 2) return { hay:false, porQue:"necesito al menos dos operaciones con fecha para saber tu ritmo" };
@@ -10403,7 +10414,7 @@ function objTarjeta(){
       campo("objObjetivo","Objetivo (%)","8",d.objetivoPct,"45%")+
     '</div>'+
     '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
-      campo("objRiesgo","Riesgo por operación (%)","0.5",d.riesgoPct,"45%")+
+      campo("objRiesgo","Riesgo por operación (%)",(()=>{ try{ const rv=riesgoVigente(); return rv&&rv.pct>0?String(rv.pct):"—"; }catch(_){ return "—"; } })(),d.riesgoPct,"45%")+
       campo("objTrades","Operaciones por día","3",d.tradesDia,"45%")+
     '</div>'+
     '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
@@ -12308,14 +12319,27 @@ function metricas(list){
   const peor  = Math.min(...rs);
 
   // Drawdown sobre curva de R acumulada
+  /* 📆 v7.305 (28-10) — LA CURVA SE MIDE EN EL ORDEN EN QUE PASÓ, NO EN EL QUE SE GUARDÓ.
+     Encontrado mirando sus 13 operaciones reales: la del 6 de octubre está guardada DESPUÉS
+     de la del 16 (la registró más tarde). El drawdown, el factor de recuperación y las
+     rachas se calculaban recorriendo la lista TAL CUAL, así que medían una historia que no
+     ocurrió: dos pérdidas seguidas pueden salir separadas, y una racha real desaparecer.
+     Las sumas y las medias no cambian (no dependen del orden); el orden sí importa aquí. Rey, 28-10: «las
+     cosas deben adaptarse a lo que está registrado en el diario, no a nada fijo» — y el
+     orden de los hechos es parte de lo registrado. */
+  const _ts = (t) => t && t.tsOut ? +t.tsOut : (t && t.fecha ? new Date(t.fecha+"T12:00:00").getTime() : 0);
+  const enOrden = [...list].sort((a,b)=>_ts(a)-_ts(b));
   let acc=0,peak=0,dd=0,curve=[0];
-  list.forEach(t=>{ acc+=t.r; curve.push(acc); if(acc>peak)peak=acc; const d=peak-acc; if(d>dd)dd=d; });
+  enOrden.forEach(t=>{ acc+=t.r; curve.push(acc); if(acc>peak)peak=acc; const d=peak-acc; if(d>dd)dd=d; });
   // Recovery factor = beneficio neto / drawdown máximo
   const recovery = dd>0 ? rNeto/dd : (rNeto>0?Infinity:0);
 
   // Rachas (incluye la actual)
   let maxW=0,maxL=0,cw=0,cl=0,rachaActual=0,tipoRacha="";
-  list.forEach(t=>{
+  /* 📆 v7.305 — también por FECHA: una racha es «una detrás de otra en el tiempo»,
+     no «una detrás de otra en el fichero». Y «tu racha actual» solo significa algo si la
+     última que se mira es la última que operó. */
+  enOrden.forEach(t=>{
     if(esGanada(t)){ cw++; cl=0; if(cw>maxW)maxW=cw; rachaActual=cw; tipoRacha="W"; }   /* 🛡️ 20-10 */
     else if(esPerdida(t)){ cl++; cw=0; if(cl>maxL)maxL=cl; rachaActual=cl; tipoRacha="L"; }
     else { cw=0; cl=0; rachaActual=0; tipoRacha="BE"; }
@@ -12762,8 +12786,38 @@ function renderAnalisis(){
     `Análisis de ${CTX.modo==="real"?"operaciones reales":"backtesting"} · ${esc(CTX.estrategia)} · ${m.n} trades. Cambia el contexto arriba para comparar Real vs Backtest o entre estrategias.`));
 }
 
+/* 🧮 v7.305 (28-10) — EL VEREDICTO HABLABA DE DINERO CON UN RIESGO QUE NO ERA EL SUYO.
+   ══════════════════════════════════════════════════════════════════════════
+   Rey, 28-10, con la foto de su pantalla «🤖 Roberto: mi progreso»: «mira las cosas que
+   dice, lo que lleva mis métricas está fijo con el riesgo de 0.5». Y estaba:
+       «Con riesgo 0.5% eso son unos $16.11 por trade sobre 5730»
+   El 0,005 iba ESCRITO EN LA FÓRMULA y el «0.5%» en el texto. Él opera al 1 %, así que su
+   propio veredicto le decía que gana LA MITAD de lo que gana ($16,11 en vez de $32,22).
+   Un número así no es un adorno: con él se decide si una estrategia merece la pena.
+   Ahora sale de la cuenta con la que opera — su % y su balance — y se DICE de cuál, para
+   que vea de un vistazo si es el que él eligió ([[apex-reglas-en-manos-de-rey]],
+   [[apex-roberto-no-inventa]], [[apex-las-cuentas-del-ejecutor]]). */
+function riesgoVigente(){
+  try{
+    const c = (typeof cuentaDelCalculo==="function") ? cuentaDelCalculo() : null;
+    let pct = null, bal = null, de = "";
+    if(c){
+      if(c.riesgoPct!=null && isFinite(+c.riesgoPct) && +c.riesgoPct>0) pct = +c.riesgoPct;
+      try{ const st=statsCuenta(c); if(st && isFinite(+st.balance) && +st.balance>0) bal = +st.balance; }catch(_){}
+      de = c.alias || c.firma || "";
+    }
+    /* si la cuenta no lo tiene, lo último que ÉL tecleó en 💰 Riesgo — que desde la v7.305
+       es el MISMO número, pero así esto sigue en pie aunque aún no haya elegido cuenta */
+    if(pct==null && BAL && isFinite(+BAL.pct) && +BAL.pct>0) pct = +BAL.pct;
+    if(bal==null && BAL && isFinite(+BAL.bal) && +BAL.bal>0) bal = +BAL.bal;
+    if(pct==null || bal==null) return null;        /* ⚠️ no se inventa: se dirá que falta */
+    return { pct, bal, de, cta: c || null };
+  }catch(_){ return null; }
+}
+
 /* ---- Motor de diagnósticos en lenguaje claro ---- */
 function diagnosticos(m,list){
+  const RV = riesgoVigente();
   const out=[];
   if(m.n<20){
     out.push({tipo:"info",t:`Muestra pequeña: ${m.n} trade${m.n!==1?"s":""}`,
@@ -12771,7 +12825,7 @@ function diagnosticos(m,list){
   }
   if(m.exp>0.15){
     out.push({tipo:"ok",t:`La estrategia tiene ventaja: +${r2(m.exp)}R por trade`,
-      d:`De media ganas ${r2(m.exp)}R cada vez que operas. Con riesgo 0.5% eso son unos $${r2(m.exp*BAL.bal*0.005)} por trade sobre ${BAL.bal}. Mantén el proceso: lo que funciona es no tocarlo.`});
+      d:`De media ganas ${r2(m.exp)}R por operación, medido sobre tus ${m.n} trades (los ${m.n-m.decisivos} break-even cuentan y tiran la media hacia abajo). ` + (RV ? `Con TU riesgo del ${RV.pct}%${RV.de?` de «${esc(RV.de)}»`:``} eso son unos $${r2(m.exp*RV.bal*RV.pct/100)} por trade sobre ${r0(RV.bal)}. ` : `No te pongo el dinero porque no sé con qué % operas: elígelo en 💰 Riesgo y te lo calculo. `) + `Mantén el proceso: lo que funciona es no tocarlo.`});
   }else if(m.exp>0){
     out.push({tipo:"warn",t:`Ventaja apenas positiva: +${r2(m.exp)}R por trade`,
       d:`Estás en verde pero el margen es fino. Mira abajo qué corte tiene expectancy negativa — normalmente eliminando una sola categoría el número sube bastante.`});
@@ -12781,13 +12835,13 @@ function diagnosticos(m,list){
   }
   if(m.decisivos>=10){
     if(m.wr>=m.wrNec+0.08) out.push({tipo:"ok",t:`Win rate cómodo para tu RR`,
-      d:`Tu RR real es 1:${r1(m.rrReal)}, que solo exige ${pct(m.wrNec*100)} de acierto para empatar. Estás en ${pct(m.wr*100)}. Ese colchón es tu ventaja.`});
+      d:`Tu RR real es 1:${r1(m.rrReal)}, que solo exige ${pct(m.wrNec*100)} de acierto para empatar. Estás en ${pct(m.wr*100)} — ${m.decisivos>0?Math.round(m.wr*m.decisivos):0} de ${m.decisivos} decisivas (los break-even no entran en este %). Ese colchón es tu ventaja.`});
     else if(m.wr<m.wrNec) out.push({tipo:"bad",t:`Win rate por debajo del mínimo`,
       d:`Con RR 1:${r1(m.rrReal)} necesitas acertar el ${pct(m.wrNec*100)} para no perder, y vas por ${pct(m.wr*100)}. O subes el RR (dejando correr más) o eres más selectivo con las entradas.`});
   }
   if(m.pf>0 && m.pf<1.5 && m.decisivos>=10){
     out.push({tipo:"warn",t:`Profit factor ${fmtPF(m.pf)} — por debajo de tu meta de 1.5`,
-      d:`Ganas $${r2(m.gan)}R contra $${r2(m.per)}R perdidos. Tu propio plan (sección 1) marca 1.5 como referencia sana.`});
+      d:`Ganas ${r2(m.gan)}R contra ${r2(m.per)}R perdidos, medido de tus ${m.decisivos} operaciones decisivas. El 1.5 es la referencia que figura en tu plan (sección 1): si la cambias ahí, cámbiala también en tu cabeza — no es una ley del mercado.`});
   }
   if(m.roto>0){
     const rotos=list.filter(t=>t.plan==="No");
@@ -12795,8 +12849,16 @@ function diagnosticos(m,list){
     const ml=lim.length?metricas(lim):null;
     const dif= ml ? ml.exp-mr.exp : null;
     out.push({tipo:"bad",t:`${m.roto} trade${m.roto!==1?"s":""} con el plan roto`,
+      /* ⚠️ v7.305 — UN TRADE NO ES UNA EXPECTANCY. La tarjeta de arriba le dice que con
+         menos de 20 trades todo es ruido, y aquí se le sacaba una media de UNO solo
+         («rompiéndolo, −1.00R» era su único trade con el plan roto). La dirección es verdad
+         — romper el plan le costó dinero — pero el NÚMERO no se sostiene, y es su propia
+         ley de los 30 casos ([[apex-roberto-no-inventa]], [[apex-auditar-es-ejecutar]]).
+         Se dice CUÁNTOS lo sostienen y, con pocos, se llama indicio en vez de media. */
       d: dif!=null
-        ? `Siguiendo el plan tu expectancy es ${ml.exp>0?"+":""}${r2(ml.exp)}R; rompiéndolo, ${r2(mr.exp)}R. La diferencia es ${r2(Math.abs(dif))}R por trade. Ahí está tu dinero, no en el gráfico.`
+        ? (rotos.length < 5
+            ? `Siguiendo el plan llevas ${ml.exp>0?"+":""}${r2(ml.exp)}R de media en ${lim.length} operaciones. Rompiéndolo, ${r2(mr.exp)}R — pero eso sale de ${rotos.length} operación${rotos.length!==1?"es":""}, así que es un INDICIO, no una media fiable. Aun así, la única vez que te lo saltaste pagaste: no hace falta repetirlo para saberlo.`
+            : `Siguiendo el plan tu expectancy es ${ml.exp>0?"+":""}${r2(ml.exp)}R en ${lim.length} operaciones; rompiéndolo, ${r2(mr.exp)}R en ${rotos.length}. La diferencia es ${r2(Math.abs(dif))}R por trade. Ahí está tu dinero, no en el gráfico.`)
         : `Un trade ganador con regla rota sigue siendo un mal trade: refuerza el hábito que vacía la cuenta.`});
   }
   if(m.maxL>=3){
@@ -12805,7 +12867,9 @@ function diagnosticos(m,list){
   }
   if(m.dd>=6){
     out.push({tipo:"warn",t:`Drawdown máximo de ${r1(m.dd)}R`,
-      d:`Con riesgo 0.5% eso equivale a ${r1(m.dd*0.5)}% de la cuenta. Tu límite semanal es −3% / −5%: mantente atento a cuándo se disparan.`});
+      d:(RV ? `Con TU riesgo del ${RV.pct}% eso equivale a ${r1(m.dd*RV.pct)}% de la cuenta. ` : `En % de cuenta depende del riesgo que uses, y no sé cuál es: elígelo en 💰 Riesgo. `) + ((RV && RV.cta && (+RV.cta.ddMaxPct>0 || +RV.cta.ddDailyPct>0))
+            ? `Los topes de «${esc(RV.cta.alias||RV.cta.firma||"tu cuenta")}» son${+RV.cta.ddDailyPct>0?` −${RV.cta.ddDailyPct}% al día`:``}${(+RV.cta.ddDailyPct>0&&+RV.cta.ddMaxPct>0)?` y`:``}${+RV.cta.ddMaxPct>0?` −${RV.cta.ddMaxPct}% en total`:``}: míralo contra esos, que son los que te sacan de la cuenta.`
+            : `No tengo los topes de tu cuenta para compararlo: ponlos en 🏦 Cuentas (DD diario y DD máximo) y te digo si cabe o no.`)});
   }
   // El peor corte
   const cortes=[["setup",t=>t.setup],["ventana",t=>t.ventana],["día",t=>t.dia],["zona",t=>t.zona],["emoción",t=>t.emo]];
