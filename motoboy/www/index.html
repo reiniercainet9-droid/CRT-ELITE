@@ -257,6 +257,16 @@ textarea.inp{resize:vertical;min-height:46px;line-height:1.4}
 .toast.ok{border-color:#2c5c3c} .toast.bad{border-color:#5c2c2c}
 .bkaviso{display:block;width:100%;text-align:left;background:#1e150c;border:1px solid #4a3418;color:var(--orange2);padding:11px 14px;border-radius:12px;font-size:12.5px;font-weight:700;margin-bottom:14px}
 html:not(.apk) .solo-apk{display:none!important}
+.avlist{margin-top:12px}
+.avrow{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.avrow:last-child{border:none}
+.sw{flex:1;display:flex;align-items:center;gap:10px;font-size:13.5px;font-weight:700;min-width:0}
+.sw input{width:20px;height:20px;accent-color:var(--orange);flex:0 0 20px}
+.sw small{display:block;font-size:11px;color:var(--dim);font-weight:500;margin-top:1px}
+.avh{width:118px!important;flex:0 0 118px;margin:0!important;padding:8px!important;text-align:center}
+.avdias{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+.avdias button{padding:9px 0;border-radius:9px;border:1px solid var(--line2);background:var(--card2);color:var(--mut);font-size:11.5px;font-weight:800;text-transform:uppercase}
+.avdias button.on{border-color:var(--orange);background:#1e150c;color:var(--orange2)}
 html.apk .solo-web{display:none!important}
 </style>
 </head>
@@ -279,6 +289,9 @@ html.apk .solo-web{display:none!important}
 
 <main>
   <section class="view on" id="v-inicio">
+    <button class="bkaviso" id="avisoPermiso" style="display:none">🔔 Las notificaciones están apagadas: no puedo recordarte el km final. Toca aquí para activarlas.</button>
+    <button class="bkaviso" id="avisoKm" style="display:none"></button>
+    <button class="bkaviso" id="avisoAceite" style="display:none"></button>
     <button class="bkaviso" id="bkAviso" style="display:none"></button>
     <div class="card hero">
       <div class="herorow">
@@ -538,15 +551,24 @@ html.apk .solo-web{display:none!important}
       <p class="mini-note">Los reportes incluyen entregas, gastos por categoría y el neto del período. El de kilómetros incluye el detalle diario, total y R$/km.</p>
     </div>
 
-    <div class="card solo-apk">
-      <h3>Recordatorio diario <span class="accent">· notificación</span></h3>
-      <div class="seg" id="recSeg">
-        <button data-rec="off" class="on">Apagado</button>
-        <button data-rec="on">Encendido</button>
+    <div class="card solo-apk" id="avCard">
+      <h3>Notificaciones <span class="accent">· avisos</span></h3>
+      <div class="wprev" id="avEstado">Comprobando…</div>
+      <button class="btn btn-primary btn-sm" id="avPermiso" style="display:none;width:100%;margin-top:10px">🔔 Activar notificaciones</button>
+      <div class="avlist">
+        <div class="avrow"><label class="sw"><input type="checkbox" id="avIni"><span>🏍️ Km inicial al salir</span></label><input class="inp avh" id="avHIni" type="time"></div>
+        <div class="avrow"><label class="sw"><input type="checkbox" id="avFin"><span>🌙 Cierre del día<small>km final y entregas que falten</small></span></label><input class="inp avh" id="avHFin" type="time"></div>
+        <div class="avrow"><label class="sw"><input type="checkbox" id="avSemana"><span>📊 Cierre de la semana<small>el día que cierra tu empresa</small></span></label></div>
+        <div class="avrow"><label class="sw"><input type="checkbox" id="avRespaldo"><span>💾 Respaldo pendiente<small>si pasan 7 días sin copia</small></span></label></div>
+        <div class="avrow"><label class="sw"><input type="checkbox" id="avAceite"><span>🛢️ Cambio de aceite<small id="avAceiteEst">cada cuántos km</small></span></label><input class="inp avh" id="avAceiteKm" type="number" inputmode="numeric" placeholder="1000"></div>
       </div>
-      <label class="f"><span class="cap">Hora del aviso</span><input class="inp" id="recHora" type="time" value="21:00"></label>
-      <button class="btn btn-primary" id="recGuardar">Guardar recordatorio</button>
-      <p class="mini-note">Cada día a esa hora te avisa para anotar entregas, gastos y el km final. Así no se te queda ningún día sin registrar.</p>
+      <span class="caplbl" style="margin-top:12px">Días que trabajas</span>
+      <div class="avdias" id="avDias"></div>
+      <div class="btnrow" style="margin-top:14px">
+        <button class="btn btn-ghost btn-sm" id="avProbar">🔔 Probar ahora</button>
+        <button class="btn btn-primary btn-sm" id="avGuardar">Guardar avisos</button>
+      </div>
+      <div class="mini-note" id="avProx" style="margin-top:12px"></div>
     </div>
 
     <div class="card">
@@ -644,13 +666,13 @@ html.apk .solo-web{display:none!important}
     <div class="sheet-h"><h2 id="kmTitle">Registrar kilómetros</h2><button class="cl" data-close>✕</button></div>
     <div class="row2">
       <label class="f"><span class="cap">KM inicial *</span><input class="inp" id="kmIni" type="number" inputmode="decimal" placeholder="Ej: 12000"></label>
-      <label class="f"><span class="cap">KM final *</span><input class="inp" id="kmFin" type="number" inputmode="decimal" placeholder="Ej: 12045"></label>
+      <label class="f"><span class="cap">KM final</span><input class="inp" id="kmFin" type="number" inputmode="decimal" placeholder="Ej: 12045"></label>
     </div>
     <label class="f"><span class="cap">Fecha *</span><input class="inp" id="kmFecha" type="date"></label>
     <div class="ruteHint" id="kmHint" style="color:#5a9dff"></div>
     <div class="kmcalc-out" id="kmCalcOut"></div>
     <button class="btn btn-primary" id="kmSave" style="margin-top:4px">Guardar kilometraje</button>
-    <p class="mini-note">Pon el odómetro al empezar y al terminar; la app calcula los km recorridos. Un registro por día (si ya existe, lo actualiza).</p>
+    <p class="mini-note">Al <b>salir</b> guarda solo el km inicial; al <b>terminar</b> abre esta ficha otra vez y pon el final (si se te olvida, te aviso). La app calcula los km recorridos. Un registro por día.</p>
   </div>
 </div>
 
@@ -661,7 +683,7 @@ html.apk .solo-web{display:none!important}
 /* ===== APP ANDROID (APK) =====
    La MISMA página corre en el navegador y dentro de la APK. Todo lo de Android va detrás
    de ES_APK: fuera de la APK la página hace exactamente lo de siempre. */
-const VERSION='2.0';
+const VERSION='2.1';
 const ES_APK=!!(window.Capacitor&&Capacitor.isNativePlatform&&Capacitor.isNativePlatform());
 if(ES_APK)document.documentElement.classList.add('apk');
 function plug(n){try{return ES_APK&&Capacitor.Plugins&&Capacitor.Plugins[n]||null}catch(e){return null}}
@@ -743,6 +765,7 @@ function weekLabel(){
 }
 function sumV(arr){return arr.reduce((s,e)=>s+(+e.valor||0),0)}
 function countE(arr){return arr.reduce((s,e)=>s+(+e.count||1),0)}
+function kmFinal(k){return k.fin!=null?k.fin:k.ini}
 function sumKm(arr){return arr.reduce((s,e)=>s+(+e.kms||0),0)}
 function kmInPeriod(type,anc){const{s,e}=periodRange(type,anc);return DB.km.filter(x=>{const d=parseD(x.fecha);return d>=s&&d<=e})}
 function kmR(range){const fn=pick(range);return DB.km.filter(x=>fn(x.fecha))}
@@ -941,7 +964,7 @@ $('#kmTab').onclick=()=>sideTabTap($('#kmTab'),()=>openKm());
 function lastKmBefore(fecha){
   // el registro de km más reciente ANTES de 'fecha' (para encadenar el inicial)
   const prev=DB.km.filter(k=>k.fecha<fecha).sort((a,b)=>b.fecha.localeCompare(a.fecha))[0];
-  return prev?prev.fin:null;
+  return prev?kmFinal(prev):null;
 }
 function openKm(edit){
   kmEditId=null;
@@ -951,7 +974,7 @@ function openKm(edit){
   const ex=edit||DB.km.find(k=>k.fecha===t);
   if(ex){
     kmEditId=ex.id;$('#kmTitle').textContent='Editar kilometraje';$('#kmSave').textContent='Guardar cambios';
-    $('#kmFecha').value=ex.fecha;$('#kmIni').value=ex.ini;$('#kmFin').value=ex.fin;updateKmCalc();
+    $('#kmFecha').value=ex.fecha;$('#kmIni').value=ex.ini;$('#kmFin').value=ex.fin==null?'':ex.fin;updateKmCalc();
   }else{
     // Encadenar: el inicial = final del último día registrado
     const prevFin=lastKmBefore(t);
@@ -963,7 +986,9 @@ function openKm(edit){
 function updateKmHint(){
   const prevFin=lastKmBefore($('#kmFecha').value||todayISO());
   const h=$('#kmHint');if(!h)return;
-  if(kmEditId)h.textContent='Editando el registro de este día.';
+  const abierto=kmEditId&&DB.km.find(k=>k.id===kmEditId&&k.fin==null);
+  if(abierto)h.textContent='⏳ Día en curso: pon el km final al terminar.';
+  else if(kmEditId)h.textContent='Editando el registro de este día.';
   else if(prevFin!=null)h.textContent='🔗 Inicial precargado con el final de tu último día ('+prevFin+'). Puedes corregirlo si hace falta.';
   else h.textContent='Primer registro: pon el km del odómetro al empezar.';
 }
@@ -971,6 +996,7 @@ function updateKmCalc(){
   const i=parseFloat($('#kmIni').value),f=parseFloat($('#kmFin').value);
   const o=$('#kmCalcOut');
   if(i>=0&&f>=0){const d=f-i;o.textContent=d>=0?('🛣️ '+d+' km recorridos'):'⚠️ el final debe ser mayor que el inicial';o.style.color=d>=0?'var(--orange2)':'var(--red2)';}
+  else if(i>=0&&$('#kmFin').value===''&&!kmEditId){o.textContent='🟢 Puedes guardar solo el inicial ahora y poner el final al terminar.';o.style.color='#8fc0ff';}
   else o.textContent='';
 }
 $('#kmIni').addEventListener('input',updateKmCalc);
@@ -978,22 +1004,26 @@ $('#kmFin').addEventListener('input',updateKmCalc);
 $('#kmFecha').addEventListener('change',()=>{
   // al cambiar fecha, si no es edición, re-encadenar inicial
   const f=$('#kmFecha').value;const ex=DB.km.find(k=>k.fecha===f);
-  if(ex){kmEditId=ex.id;$('#kmIni').value=ex.ini;$('#kmFin').value=ex.fin;$('#kmTitle').textContent='Editar kilometraje';$('#kmSave').textContent='Guardar cambios';}
+  if(ex){kmEditId=ex.id;$('#kmIni').value=ex.ini;$('#kmFin').value=ex.fin==null?'':ex.fin;$('#kmTitle').textContent='Editar kilometraje';$('#kmSave').textContent='Guardar cambios';}
   else{kmEditId=null;$('#kmTitle').textContent='Registrar kilómetros';$('#kmSave').textContent='Guardar kilometraje';const pf=lastKmBefore(f);$('#kmIni').value=pf!=null?pf:'';$('#kmFin').value='';}
   updateKmHint();updateKmCalc();
 });
 $('#kmSave').onclick=()=>{
   const ini=parseFloat($('#kmIni').value),fin=parseFloat($('#kmFin').value),fecha=$('#kmFecha').value;
   if(!(ini>=0)){toast('Pon el km inicial','bad');return}
-  if(!(fin>=0)){toast('Pon el km final','bad');return}
-  if(fin<ini){toast('El km final debe ser mayor','bad');return}
+  // El final puede ir vacío: el día queda "en curso" y la app avisa para cerrarlo
+  const sinFin=$('#kmFin').value.trim()==='';
+  if(!sinFin&&!(fin>=0)){toast('El km final no es válido','bad');return}
+  if(!sinFin&&fin<ini){toast('El km final debe ser mayor','bad');return}
   if(!fecha){toast('Falta la fecha','bad');return}
-  const kms=fin-ini;
+  const finV=sinFin?null:fin,kms=sinFin?0:fin-ini;
   // un registro por día: si existe (mismo día), lo actualiza
   const existing=DB.km.find(k=>k.id===kmEditId)||DB.km.find(k=>k.fecha===fecha);
-  if(existing){existing.ini=ini;existing.fin=fin;existing.kms=kms;existing.fecha=fecha;toast('Kilometraje actualizado ✓','ok');}
-  else{DB.km.push({id:'k'+Date.now()+''+Math.floor(Math.random()*999),fecha,ini,fin,kms});toast(kms+' km guardados ✓','ok');}
+  if(existing){existing.ini=ini;existing.fin=finV;existing.kms=kms;existing.fecha=fecha;}
+  else DB.km.push({id:'k'+Date.now()+''+Math.floor(Math.random()*999),fecha,ini,fin:finV,kms});
+  toast(sinFin?('Inicial '+ini+' guardado · te aviso para el final ✓'):(existing?'Kilometraje actualizado ✓':(kms+' km guardados ✓')),'ok');
   save();closeSheets();refreshAll();
+  if(!sinFin)revisarAceite(true);
 };
 
 $('#incSave').onclick=()=>{
@@ -1081,8 +1111,9 @@ function renderKmHome(gToday,nToday){
   $('#heroKmGross').textContent=kmT>0?('R$'+money(gToday/kmT)):'R$—';
   // Próximo inicio = final del último registro (el km con que arrancas el siguiente día)
   const lastReg=DB.km.slice().sort((a,b)=>b.fecha.localeCompare(a.fecha))[0];
-  const nextStart=lastReg?lastReg.fin:null;
-  $('#heroKmStart').textContent=nextStart!=null?('próx. inicio '+nextStart+' · hoy '+kmT+' km'):('hoy '+kmT+' km');
+  const nextStart=lastReg?kmFinal(lastReg):null;
+  const hoyAb=DB.km.find(k=>k.fecha===todayISO()&&k.fin==null);
+  $('#heroKmStart').textContent=hoyAb?('⏳ en curso desde '+hoyAb.ini+' · falta el final'):(nextStart!=null?('próx. inicio '+nextStart+' · hoy '+kmT+' km'):('hoy '+kmT+' km'));
   // grid3 de km
   $('#stKmToday').textContent=kmT;
   $('#stKmWeek').textContent=kmWeekAcc;
@@ -1188,8 +1219,8 @@ function renderKmList(){
     const d=parseD(k.fecha);
     box.insertAdjacentHTML('beforeend',
       `<div class="entry"><div class="av" style="color:#8fc0ff;border-color:#2a4a7a;background:#0e1626">🛣️</div>
-        <div class="mid"><div class="cli">${k.kms} km <span style="font-size:11px;color:var(--dim);font-weight:600">${DOW[d.getDay()]} ${d.getDate()} ${MON[d.getMonth()]}</span></div>
-          <div class="met">inicio <b>${k.ini}</b> → final <b>${k.fin}</b></div></div>
+        <div class="mid"><div class="cli">${k.fin==null?'⏳ en curso':k.kms+' km'} <span style="font-size:11px;color:var(--dim);font-weight:600">${DOW[d.getDay()]} ${d.getDate()} ${MON[d.getMonth()]}</span></div>
+          <div class="met">inicio <b>${k.ini}</b> → final <b>${k.fin==null?'falta':k.fin}</b></div></div>
         <div class="acts"><button class="ab edit" data-editkm="${k.id}">✎</button><button class="ab del" data-delkm="${k.id}">🗑</button></div></div>`);
   });
   $$('#entList [data-editkm]').forEach(b=>b.onclick=()=>{const k=DB.km.find(x=>x.id===b.dataset.editkm);if(k)openKm(k)});
@@ -1572,7 +1603,7 @@ function makeKmReport(type,anc){
   const gP=sumV(DB.entries.filter(x=>{const d=parseD(x.fecha);return d>=s&&d<=e}));
   const xP=sumV(DB.expenses.filter(x=>{const d=parseD(x.fecha);return d>=s&&d<=e}));
   const netP=gP-xP;
-  const rows=kms.length?kms.map(k=>`<tr><td>${k.fecha.split('-').reverse().join('/')}</td><td style="text-align:right">${k.ini}</td><td style="text-align:right">${k.fin}</td><td style="text-align:right"><b>${k.kms} km</b></td></tr>`).join(''):'<tr><td colspan="4" style="text-align:center;color:#888;padding:16px">Sin registros de km</td></tr>';
+  const rows=kms.length?kms.map(k=>`<tr><td>${k.fecha.split('-').reverse().join('/')}</td><td style="text-align:right">${k.ini}</td><td style="text-align:right">${k.fin==null?'—':k.fin}</td><td style="text-align:right"><b>${k.fin==null?'en curso':k.kms+' km'}</b></td></tr>`).join(''):'<tr><td colspan="4" style="text-align:center;color:#888;padding:16px">Sin registros de km</td></tr>';
   const rsNet=totKm>0?'R$'+money(netP/totKm):'—';
   const rsGross=totKm>0?'R$'+money(gP/totKm):'—';
   const avg=kms.length?Math.round(totKm/kms.length):0;
@@ -1763,36 +1794,187 @@ $('#importFile').onchange=e=>{_importOnload(e);setTimeout(renderRespaldo,300)};
 renderRespaldo();
 $('#verLbl').textContent='Rey Motoboy v'+VERSION+(ES_APK?' · app Android':' · web');
 
-/* ===== RECORDATORIO DIARIO (solo APK) ===== */
-const REC_ID=7001;
-function pintarRec(){
-  const on=!!(META.rec&&META.rec.on);
-  $$('#recSeg button').forEach(b=>b.classList.toggle('on',(b.dataset.rec==='on')===on));
-  $('#recHora').value=(META.rec&&META.rec.hora)||'21:00';
+/* ===== NOTIFICACIONES (solo APK) =====
+   Todo se recalcula cada vez que guardas algo o abres la app: así los avisos dicen lo que de
+   verdad falta («te falta el km FINAL, empezaste en 12.000») y se callan si ya está hecho.
+   Se programan los próximos 14 días: aunque no abras la app, siguen llegando. */
+const AV_DEF={on:true,ini:true,hIni:'08:00',fin:true,hFin:'21:00',semana:true,respaldo:true,aceite:true,aceiteKm:1000,dias:[0,1,2,3,4,5,6]};
+function AV(){META.av=Object.assign({},AV_DEF,META.av||{});return META.av}
+if(META.rec&&!META.av){META.av=Object.assign({},AV_DEF,{hFin:META.rec.hora||'21:00'});delete META.rec;saveMeta()}
+const DIAS_AV=14,CANAL='avisos';
+function horaEn(dia,hhmm){const[h,m]=String(hhmm||'00:00').split(':').map(Number);const x=new Date(dia);x.setHours(h||0,m||0,0,0);return x}
+function kmAbiertoAntes(iso){return DB.km.filter(k=>k.fin==null&&k.fecha<iso).sort((a,b)=>b.fecha.localeCompare(a.fecha))[0]}
+function fechaCorta(iso){const d=parseD(iso);return DOW[d.getDay()]+' '+d.getDate()+' '+MON[d.getMonth()]}
+function cierraSemana(iso){try{return todayISO(weekEnd(weekStart(parseD(iso))))===iso}catch(e){return false}}
+/* Lo que falta para cerrar el día `iso`. En días futuros no se sabe: mensaje general. */
+function mensajeCierre(iso,esHoy){
+  const a=AV(),semana=a.semana&&cierraSemana(iso);
+  const colaSemana=semana?' Hoy cierra tu semana: saca el reporte en Ajustes.':'';
+  if(!esHoy)return{title:'🌙 Cierra tu día',body:'Pon el km FINAL del odómetro y revisa que estén todas tus entregas.'+colaSemana};
+  const falta=[];const k=DB.km.find(x=>x.fecha===iso);
+  if(!k)falta.push('el km del día');else if(k.fin==null)falta.push('el km FINAL (saliste con '+k.ini+')');
+  if(!DB.entries.some(e=>e.fecha===iso))falta.push('tus entregas');
+  if(falta.length)return{title:'🌙 Cierra tu día',body:'Te falta anotar '+falta.join(' y ')+'.'+colaSemana,extra:{abrir:k&&k.fin==null||!k?'km':''}};
+  if(semana)return{title:'📊 Hoy cierra tu semana',body:'Neto de la semana: '+rs(netR('week'))+'. Saca el reporte en Ajustes.'};
+  return null;
 }
-$$('#recSeg button').forEach(b=>b.onclick=()=>{$$('#recSeg button').forEach(x=>x.classList.toggle('on',x===b))});
-async function programarRec(avisar){
+function estadoAceite(){
+  const ult=DB.expenses.filter(x=>x.cat==='Cambio de aceite').sort((a,b)=>b.fecha.localeCompare(a.fecha))[0];
+  if(!ult)return null;
+  const kd=DB.km.find(k=>k.fecha===ult.fecha);
+  const base=kd?kd.ini:lastKmBefore(ult.fecha);
+  if(base==null)return null;
+  const actual=Math.max(base,...DB.km.filter(k=>k.fecha>=ult.fecha).map(kmFinal));
+  const cada=+AV().aceiteKm||1000,hechos=actual-base;
+  return{ult,base,actual,hechos,cada,falta:cada-hechos};
+}
+async function revisarAceite(notificar){
+  const a=AV(),e=estadoAceite();renderAvisosInicio();
+  if(!a.aceite||!e||e.falta>0)return;
+  const clave=e.ult.id+':'+e.cada;
+  if(META.aceiteAvisado===clave)return;
+  META.aceiteAvisado=clave;saveMeta();
+  toast('🛢️ Toca cambio de aceite: '+e.hechos+' km desde el último','bad');
+  const LN=plug('LocalNotifications');
+  if(notificar&&LN)try{await LN.schedule({notifications:[{id:400,channelId:CANAL,title:'🛢️ Toca cambio de aceite',
+    body:'Llevas '+e.hechos+' km desde el último cambio ('+fechaCorta(e.ult.fecha)+'). Cuando lo hagas, anótalo como gasto.',
+    schedule:{at:new Date(Date.now()+1500),allowWhileIdle:true}}]})}catch(err){}
+}
+let _avProx=[];
+async function permisoAvisos(pedir){
+  const LN=plug('LocalNotifications');if(!LN)return'no';
+  try{let p=await LN.checkPermissions();if(p.display!=='granted'&&pedir)p=await LN.requestPermissions();return p.display}catch(e){return'no'}
+}
+let _planT=null;
+function planificarAvisos(){if(!ES_APK)return;clearTimeout(_planT);_planT=setTimeout(_planificar,250)}
+async function _planificar(){
   const LN=plug('LocalNotifications');if(!LN)return;
-  try{await LN.cancel({notifications:[{id:REC_ID}]})}catch(e){}
-  if(!(META.rec&&META.rec.on))return;
-  try{
-    let p=await LN.checkPermissions();
-    if(p.display!=='granted')p=await LN.requestPermissions();
-    if(p.display!=='granted'){if(avisar)toast('Permite las notificaciones de Motoboy en Android','bad');return}
-    const[h,m]=(META.rec.hora||'21:00').split(':').map(Number);
-    await LN.schedule({notifications:[{id:REC_ID,title:'🛵 Rey Motoboy',
-      body:'¿Ya anotaste las entregas, los gastos y el km final de hoy?',
-      schedule:{on:{hour:h,minute:m},allowWhileIdle:true}}]});
-    if(avisar)toast('Te aviso cada día a las '+META.rec.hora+' ✓','ok');
-  }catch(e){if(avisar)toast('No se pudo programar el aviso','bad')}
+  const a=AV();
+  try{const pe=await LN.getPending();const nuestros=((pe&&pe.notifications)||[]).filter(n=>+n.id<400||+n.id===7001).map(n=>({id:+n.id}));
+    if(nuestros.length)await LN.cancel({notifications:nuestros})}catch(e){}
+  try{await LN.cancel({notifications:[{id:7001}]})}catch(e){} // el recordatorio viejo de la v2.0
+  _avProx=[];
+  const perm=await permisoAvisos(false);
+  renderAvisosInicio(perm);
+  if(!a.on||perm!=='granted'){pintarAvProx(perm);return}
+  const lista=[],ahora=Date.now(),hoy=todayISO();
+  for(let d=0;d<DIAS_AV;d++){
+    const dia=new Date();dia.setDate(dia.getDate()+d);const iso=todayISO(dia);
+    if(!a.dias.includes(dia.getDay()))continue;
+    if(a.ini){
+      const t=horaEn(dia,a.hIni);
+      if(t>ahora&&!(d===0&&DB.km.some(k=>k.fecha===iso))){
+        const ab=d===0?kmAbiertoAntes(iso):null;
+        lista.push({id:100+d,title:'🏍️ Antes de salir',extra:{abrir:'km'},at:t,
+          body:ab?('El '+fechaCorta(ab.fecha)+' quedó sin km final. Ponlo y anota el inicial de hoy.'):'Anota el km inicial del odómetro. Al terminar te recuerdo el final.'});
+      }
+    }
+    if(a.fin){
+      const t=horaEn(dia,a.hFin);
+      if(t>ahora){const m=mensajeCierre(iso,d===0);if(m)lista.push(Object.assign({id:200+d,at:t},m))}
+    }
+  }
+  // Insistir con el km FINAL: si hoy sigue abierto, otro aviso una hora después
+  const abHoy=DB.km.find(k=>k.fecha===hoy&&k.fin==null);
+  if(a.fin&&abHoy){
+    let t=horaEn(new Date(),a.hFin).getTime()+3600000;
+    if(t<=ahora)t=ahora+3600000;
+    lista.push({id:250,title:'⏳ Aún falta el km final',body:'Saliste con '+abHoy.ini+' km. Mira el odómetro y ponlo antes de dormir.',extra:{abrir:'km'},at:new Date(t)});
+  }
+  // Respaldo: si hay registros y hace 7 días o más, al mediodía siguiente
+  const nReg=DB.entries.length+DB.expenses.length+DB.km.length;
+  if(a.respaldo&&nReg>=5&&(!META.lastBackup||diasDesde(META.lastBackup)>=7)){
+    let t=horaEn(new Date(),'12:00');if(t<=ahora)t.setDate(t.getDate()+1);
+    lista.push({id:300,title:'💾 Haz tu respaldo',at:t,extra:{abrir:'respaldo'},
+      body:(META.lastBackup?('Hace '+diasDesde(META.lastBackup)+' días'):'Nunca')+' que no guardas una copia de tus '+nReg+' registros. Si pierdes el teléfono, se pierden.'});
+  }
+  const notifs=lista.map(n=>({id:n.id,title:n.title,body:n.body,channelId:CANAL,extra:n.extra||{},
+    schedule:{at:n.at instanceof Date?n.at:new Date(n.at),allowWhileIdle:true}}));
+  try{if(notifs.length)await LN.schedule({notifications:notifs})}catch(e){}
+  _avProx=lista.sort((x,y)=>x.at-y.at);
+  pintarAvProx(perm);
 }
-$('#recGuardar').onclick=async()=>{
-  const on=!!$('#recSeg button[data-rec="on"].on');
-  META.rec={on,hora:$('#recHora').value||'21:00'};saveMeta();
-  if(on)await programarRec(true);
-  else{await programarRec(false);toast('Recordatorio apagado','ok')}
+function renderAvisosInicio(perm){
+  const a=AV();
+  if(perm!==undefined){const ap=$('#avisoPermiso');ap.style.display=(ES_APK&&a.on&&perm!=='granted')?'':'none'}
+  const hoy=todayISO(),ab=kmAbiertoAntes(hoy),abHoy=DB.km.find(k=>k.fecha===hoy&&k.fin==null);
+  const ak=$('#avisoKm');
+  if(ab){ak.textContent='⏳ El '+fechaCorta(ab.fecha)+' quedó sin km final (saliste con '+ab.ini+'). Toca para ponerlo.';ak.dataset.id=ab.id;ak.style.display=''}
+  else if(abHoy&&new Date()>=horaEn(new Date(),a.hFin)){ak.textContent='⏳ Te falta el km final de hoy (saliste con '+abHoy.ini+'). Toca para ponerlo.';ak.dataset.id=abHoy.id;ak.style.display=''}
+  else ak.style.display='none';
+  const e=estadoAceite(),ac=$('#avisoAceite');
+  if(a.aceite&&e&&e.falta<=100){ac.textContent=e.falta<=0?('🛢️ Toca cambio de aceite: llevas '+e.hechos+' km desde el último ('+fechaCorta(e.ult.fecha)+').'):('🛢️ Cambio de aceite en '+e.falta+' km.');ac.style.display=''}
+  else ac.style.display='none';
+  const ae=$('#avAceiteEst');
+  if(ae)ae.textContent=e?('llevas '+e.hechos+' km desde el último ('+fechaCorta(e.ult.fecha)+')'):'anota el cambio como gasto para llevar la cuenta';
+}
+function pintarAvProx(perm){
+  const est=$('#avEstado'),btn=$('#avPermiso'),a=AV();
+  if(perm==='granted'){est.textContent=a.on?'✅ Notificaciones activadas':'Notificaciones apagadas en la app';btn.style.display='none'}
+  else{est.textContent='⚠️ Android tiene bloqueadas las notificaciones de Motoboy';btn.style.display=''}
+  const px=$('#avProx');
+  if(perm!=='granted'||!_avProx.length){px.textContent=perm==='granted'?'No hay avisos pendientes.':'';return}
+  const fmt=t=>{const d=new Date(t),iso=todayISO(d);const man=new Date();man.setDate(man.getDate()+1);
+    return(iso===todayISO()?'hoy':iso===todayISO(man)?'mañana':fechaCorta(iso))+' '+nowHM(d)};
+  px.innerHTML='<b>Próximos avisos:</b><br>'+_avProx.slice(0,3).map(n=>fmt(n.at)+' — '+esc(n.title)).join('<br>');
+}
+function pintarAvForm(){
+  const a=AV();
+  $('#avIni').checked=a.ini;$('#avHIni').value=a.hIni;$('#avFin').checked=a.fin;$('#avHFin').value=a.hFin;
+  $('#avSemana').checked=a.semana;$('#avRespaldo').checked=a.respaldo;$('#avAceite').checked=a.aceite;$('#avAceiteKm').value=a.aceiteKm;
+  $('#avDias').innerHTML=DOW.map((n,i)=>`<button data-dia="${i}" class="${a.dias.includes(i)?'on':''}">${n}</button>`).join('');
+  $$('#avDias button').forEach(b=>b.onclick=()=>b.classList.toggle('on'));
+}
+async function activarPermiso(){
+  let p=await permisoAvisos(true);
+  if(p!=='granted'){const M=plug('Moto');if(M&&M.abrirAjustesNotif){toast('Activa «Notificaciones» para Motoboy','bad');M.abrirAjustesNotif().catch(()=>{})}}
+  planificarAvisos();
+}
+$('#avPermiso').onclick=activarPermiso;
+$('#avisoPermiso').onclick=activarPermiso;
+$('#avisoKm').onclick=()=>{const k=DB.km.find(x=>x.id===$('#avisoKm').dataset.id);openKm(k||undefined)};
+$('#avisoAceite').onclick=()=>{$('nav button[data-v="tools"]').click();setTimeout(()=>$('#avCard').scrollIntoView({behavior:'smooth',block:'center'}),60)};
+$('#avGuardar').onclick=async()=>{
+  const dias=$$('#avDias button.on').map(b=>+b.dataset.dia);
+  if(!dias.length){toast('Elige al menos un día','bad');return}
+  META.av=Object.assign(AV(),{on:true,ini:$('#avIni').checked,hIni:$('#avHIni').value||'08:00',fin:$('#avFin').checked,hFin:$('#avHFin').value||'21:00',
+    semana:$('#avSemana').checked,respaldo:$('#avRespaldo').checked,aceite:$('#avAceite').checked,aceiteKm:Math.max(100,parseInt($('#avAceiteKm').value)||1000),dias});
+  saveMeta();
+  if(await permisoAvisos(true)!=='granted'){activarPermiso();return}
+  await _planificar();toast('Avisos guardados ✓','ok');revisarAceite(true);
 };
-if(ES_APK){pintarRec();programarRec(false)}
+$('#avProbar').onclick=async()=>{
+  const LN=plug('LocalNotifications');if(!LN)return;
+  if(await permisoAvisos(true)!=='granted'){activarPermiso();return}
+  try{await LN.schedule({notifications:[{id:900,channelId:CANAL,title:'🛵 Prueba de Motoboy',body:'Así te van a llegar los avisos. ¡Todo bien!',
+    schedule:{at:new Date(Date.now()+3000),allowWhileIdle:true}}]});toast('En 3 segundos te llega una notificación','ok')}
+  catch(e){toast('No se pudo enviar la prueba','bad')}
+};
+/* Meta diaria: celebrarla en el momento en que la cruzas con una entrega */
+const _incSaveBase=$('#incSave').onclick;
+$('#incSave').onclick=()=>{
+  const antes=netR('day');_incSaveBase();const n=netR('day'),m=+DB.goals.day||0;
+  if(m>0&&antes<m&&n>=m)setTimeout(()=>toast('🎯 ¡Meta diaria cumplida! Neto de hoy '+rs(n),'ok'),2300);
+};
+// Cada vez que se guarda algo, se recalculan los avisos
+const _saveBase=save;
+save=function(){_saveBase();planificarAvisos();renderAvisosInicio()};
+renderAvisosInicio();
+if(ES_APK){
+  (async()=>{
+    const LN=plug('LocalNotifications');
+    try{await LN.createChannel({id:CANAL,name:'Avisos de Motoboy',description:'Km, cierre del día, respaldo y aceite',importance:4,visibility:1,vibration:true})}catch(e){}
+    try{LN.addListener('localNotificationActionPerformed',ev=>{
+      const ab=ev&&ev.notification&&ev.notification.extra&&ev.notification.extra.abrir;
+      if(ab==='km')setTimeout(()=>openKm(),300);
+      if(ab==='respaldo')setTimeout(()=>$('#bkAviso').click(),300);
+    })}catch(e){}
+    pintarAvForm();
+    // Primera vez: pedir el permiso directamente (Android 13+ lo exige)
+    if(!META.avPedido){META.avPedido=1;saveMeta();await permisoAvisos(true)}
+    await _planificar();
+  })();
+}
 
 /* ===== BOTÓN ATRÁS DE ANDROID =====
    Antes: atrás cerraba la app aunque tuvieras una ficha a medio llenar.
@@ -1807,7 +1989,7 @@ if(ES_APK){pintarRec();programarRec(false)}
   });
   // Al volver a la app otro día, que "Hoy" sea hoy (no el día en que se abrió)
   let dia=todayISO();
-  A.addListener('resume',()=>{if(todayISO()!==dia){dia=todayISO();refreshAll()}renderRespaldo()});
+  A.addListener('resume',()=>{if(todayISO()!==dia){dia=todayISO();refreshAll()}renderRespaldo();planificarAvisos()});
 })();
 </script>
 <script>

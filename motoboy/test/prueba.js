@@ -11,9 +11,11 @@ let ok = 0, mal = 0;
 function chk(cond, msg) { if (cond) { ok++; console.log('  ✅ ' + msg); } else { mal++; console.log('  ❌ ' + msg); } }
 
 const CAP_FALSO = `
-window.__llamadas=[];window.__oyentes={};
+window.__llamadas=[];window.__oyentes={};window.__permiso=localStorage.getItem('motoboy_meta')?'granted':'prompt';
 const anota=(p,m)=>(a)=>{window.__llamadas.push({p,m,a});
-  if(m==='checkPermissions'||m==='requestPermissions')return Promise.resolve({display:'granted'});
+  if(m==='checkPermissions')return Promise.resolve({display:window.__permiso||'prompt'});
+  if(m==='requestPermissions'){if(!window.__permiso||window.__permiso==='prompt')window.__permiso='granted';return Promise.resolve({display:window.__permiso});}
+  if(m==='getPending')return Promise.resolve({notifications:[]});
   if(m==='guardar')return Promise.resolve({descargas:'Descargas/Motoboy/'+a.nombre,compartido:true});
   return Promise.resolve({});};
 const plugin=(p)=>new Proxy({}, {get:(_,m)=>{
@@ -45,6 +47,7 @@ window.Capacitor={isNativePlatform:()=>true,getPlatform:()=>'android',
     await pg.waitForTimeout(400);
 
     chk(errores.length === 0, 'sin errores de JavaScript ' + (errores.join(' | ') || ''));
+    if (modo === 'APK') chk(await pg.evaluate(() => window.__llamadas.some(x => x.m === 'requestPermissions')), 'avisos: pide el permiso de notificaciones al abrir por primera vez');
     chk(fuera.length === 0, 'no pide nada a internet ' + (fuera.join(' ') || ''));
     chk(await pg.evaluate(() => typeof Html5Qrcode === 'function'), 'el lector de QR va dentro de la app');
 
@@ -63,7 +66,7 @@ window.Capacitor={isNativePlatform:()=>true,getPlatform:()=>'android',
     chk((await pg.textContent('#heroNet')).trim() === '20', 'los datos sobreviven al cerrar y abrir');
 
     if (modo === 'WEB') {
-      chk(!(await pg.isVisible('text=Recordatorio diario')), 'en la web no sale el recordatorio (es de la APK)');
+      chk(!(await pg.isVisible('#avCard')), 'en la web no sale la tarjeta de notificaciones (es de la APK)');
       const [pop] = await Promise.all([pg.waitForEvent('popup'), (async () => {
         await pg.click('nav button[data-v="tools"]'); await pg.click('[data-rep="day"]'); })()]);
       chk(!!pop, 'web: el reporte PDF abre su ventana como antes');
@@ -73,7 +76,7 @@ window.Capacitor={isNativePlatform:()=>true,getPlatform:()=>'android',
     } else {
       chk(await pg.evaluate(() => document.documentElement.classList.contains('apk')), 'detecta que está en la APK');
       await pg.click('nav button[data-v="tools"]');
-      chk(await pg.isVisible('text=Recordatorio diario'), 'APK: tarjeta de recordatorio visible');
+      chk(await pg.isVisible('#avCard'), 'APK: tarjeta de notificaciones visible');
       await pg.click('[data-rep="week"]'); await pg.waitForTimeout(100);
       let ll = await pg.evaluate(() => window.__llamadas);
       const imp = ll.find(x => x.p === 'Moto' && x.m === 'imprimir');
@@ -86,12 +89,55 @@ window.Capacitor={isNativePlatform:()=>true,getPlatform:()=>'android',
       const g = ll.find(x => x.m === 'guardar');
       chk(g && JSON.parse(g.a.contenido).entries.length === 1 && g.a.nombre.endsWith('.json'), 'APK: el respaldo se guarda entero en Descargas');
       chk((await pg.textContent('#bkEstado')).includes('hoy'), 'APK: apunta que el respaldo fue hoy');
-      // recordatorio
-      await pg.click('#recSeg button[data-rec="on"]'); await pg.fill('#recHora', '20:30'); await pg.click('#recGuardar');
-      await pg.waitForTimeout(100);
+      // ── NOTIFICACIONES ──
+      const programadas = async () => { await pg.waitForTimeout(450); const l = await pg.evaluate(() => window.__llamadas);
+        const sc = l.filter(x => x.m === 'schedule'); return sc.length ? sc[sc.length - 1].a.notifications : []; };
+      chk(ll.some(x => x.m === 'createChannel'), 'avisos: crea su canal de notificaciones');
+      chk(await pg.isVisible('#avCard') && (await pg.textContent('#avEstado')).includes('activadas'), 'avisos: tarjeta en Ajustes con estado «activadas»');
+      chk(await pg.evaluate(() => AV().on && AV().fin && AV().ini), 'avisos: vienen ENCENDIDOS sin tocar nada');
+      // km en dos pasos: solo el inicial → día en curso
+      await pg.evaluate(() => { DB.km = []; _saveBase(); });
+      await pg.click('#kmTab'); await pg.fill('#kmIni', '2000'); await pg.fill('#kmFin', ''); await pg.click('#kmSave');
+      chk(await pg.evaluate(() => DB.km.length === 1 && DB.km[0].fin === null), 'km: se puede guardar solo el inicial (día en curso)');
+      chk((await pg.textContent('#heroKmStart')).includes('en curso'), 'km: Inicio muestra «en curso · falta el final»');
+      let ns = await programadas();
+      const hoyCierre = ns.find(n => n.id === 200);
+      const ahoraH = await pg.evaluate(() => new Date().getHours() * 60 + new Date().getMinutes());
+      if (ahoraH < 21 * 60) chk(hoyCierre && /km FINAL \(saliste con 2000\)/.test(hoyCierre.body), 'aviso de hoy: «te falta el km FINAL (saliste con 2000)»');
+      chk(ns.some(n => n.id === 250 && /2000/.test(n.body)), 'aviso extra que insiste con el km final');
+      chk(ns.filter(n => n.id >= 200 && n.id < 214).length >= 13, 'cierre del día programado para los próximos 14 días');
+      chk(ns.filter(n => n.id >= 101 && n.id < 114).length === 13, 'km inicial programado para los próximos días');
+      chk(ns.every(n => n.channelId === 'avisos' && n.schedule.allowWhileIdle), 'todos por su canal y aunque el teléfono duerma');
+      // poner el final cancela la insistencia
+      await pg.click('#kmTab'); chk((await pg.inputValue('#kmIni')) === '2000', 'al reabrir la ficha está el día en curso');
+      await pg.fill('#kmFin', '2060'); await pg.click('#kmSave');
+      ns = await programadas();
+      chk(!ns.some(n => n.id === 250) && !(ns.find(n => n.id === 200) || { body: '' }).body.includes('km FINAL'), 'con el final puesto, ya no avisa del km final');
+      // día anterior sin final → banner en Inicio
+      await pg.evaluate(() => { const a = new Date(); a.setDate(a.getDate() - 1); DB.km.push({ id: 'kx', fecha: todayISO(a), ini: 1900, fin: null, kms: 0 }); save(); });
+      await pg.click('nav button[data-v="inicio"]'); await pg.waitForTimeout(100);
+      chk(await pg.isVisible('#avisoKm') && (await pg.textContent('#avisoKm')).includes('1900'), 'Inicio avisa del día que quedó sin km final');
+      await pg.evaluate(() => { DB.km = DB.km.filter(k => k.id !== 'kx'); save(); });
+      // días de trabajo: quitar el domingo
+      await pg.click('nav button[data-v="tools"]');
+      await pg.click('#avDias button[data-dia="0"]'); await pg.fill('#avHFin', '20:30'); await pg.click('#avGuardar');
+      ns = await programadas();
+      chk(ns.filter(n => n.id >= 200 && n.id < 214).every(n => { const d = new Date(n.schedule.at); return d.getDay() !== 0 && d.getHours() === 20 && d.getMinutes() === 30; }), 'respeta los días de trabajo y la hora elegida (sin domingos, 20:30)');
+      // aceite
+      await pg.evaluate(() => { const h = todayISO(); DB.expenses.push({ id: 'ac1', cat: 'Cambio de aceite', valor: 40, fecha: h }); DB.km.find(k => k.fecha === h).ini = 1000; save(); });
+      await pg.click('#kmTab'); await pg.fill('#kmFin', '2100'); await pg.click('#kmSave'); await pg.waitForTimeout(300);
       ll = await pg.evaluate(() => window.__llamadas);
-      const sc = ll.filter(x => x.m === 'schedule').pop();
-      chk(sc && sc.a.notifications[0].schedule.on.hour === 20 && sc.a.notifications[0].schedule.on.minute === 30, 'APK: recordatorio programado a las 20:30');
+      chk(ll.some(x => x.m === 'schedule' && x.a.notifications[0].id === 400 && /1100 km/.test(x.a.notifications[0].body)), 'aceite: notifica al pasar los 1000 km desde el último cambio');
+      // prueba
+      await pg.click('nav button[data-v="tools"]'); await pg.click('#avProbar'); await pg.waitForTimeout(150);
+      ll = await pg.evaluate(() => window.__llamadas);
+      chk(ll.some(x => x.m === 'schedule' && x.a.notifications[0].id === 900), 'botón «Probar ahora» manda una notificación');
+      chk((await pg.textContent('#avProx')).includes('Próximos avisos'), 'Ajustes muestra los próximos avisos');
+      // permiso negado → aviso en Inicio
+      await pg.evaluate(() => { window.__permiso = 'denied'; save(); });
+      await pg.waitForTimeout(450); await pg.click('nav button[data-v="inicio"]');
+      chk(await pg.isVisible('#avisoPermiso'), 'si Android bloquea las notificaciones, Inicio lo dice');
+      await pg.evaluate(() => { window.__permiso = 'granted'; });
       // botón atrás
       const atras = () => pg.evaluate(() => window.__oyentes['App:backButton']());
       await pg.click('#fabExp'); await atras();

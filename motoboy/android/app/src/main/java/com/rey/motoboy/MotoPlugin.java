@@ -10,6 +10,7 @@ import android.print.PrintAttributes;
 import android.print.PrintDocumentAdapter;
 import android.print.PrintManager;
 import android.provider.MediaStore;
+import android.provider.Settings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import androidx.core.content.FileProvider;
@@ -32,6 +33,8 @@ import java.nio.charset.StandardCharsets;
  *  · guardar()   → el respaldo .json. El navegador lo bajaba con un enlace "download"; la
  *                  APK no tiene barra de descargas. Se guarda en Descargas/Motoboy y, si se
  *                  pide, se abre el menú de compartir (WhatsApp, Drive, correo…).
+ *  · abrirAjustesNotif() → si Android ya no deja volver a pedir el permiso de notificaciones
+ *                  (se negó dos veces), abre directamente la pantalla para activarlas.
  */
 @CapacitorPlugin(name = "Moto")
 public class MotoPlugin extends Plugin {
@@ -121,6 +124,24 @@ public class MotoPlugin extends Plugin {
             call.resolve(r);
         } catch (Exception e) {
             call.reject("No se pudo guardar: " + e.getMessage());
+        }
+    }
+
+    @PluginMethod
+    public void abrirAjustesNotif(PluginCall call) {
+        try {
+            Intent i;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                i = new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS);
+                i.putExtra(Settings.EXTRA_APP_PACKAGE, getContext().getPackageName());
+            } else {
+                i = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + getContext().getPackageName()));
+            }
+            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            getContext().startActivity(i);
+            call.resolve();
+        } catch (Exception e) {
+            call.reject("No se pudieron abrir los ajustes: " + e.getMessage());
         }
     }
 }

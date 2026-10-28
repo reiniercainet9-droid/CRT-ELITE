@@ -41,4 +41,7 @@
     <!-- Cámara: escanear el QR de la NFC-e -->
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-feature android:name="android.hardware.camera" android:required="false" />
+    <!-- Avisos a su hora exacta (km final, cierre del día) aunque el teléfono esté en reposo -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
 </manifest>

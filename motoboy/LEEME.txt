@@ -1,3 +1,38 @@
+REY MOTOBOY v2.1 — 🔔 LOS AVISOS, AHORA DE VERDAD
+================================================
+
+Tenías razón: la v2.0 casi no te avisaba de nada. El único recordatorio venía APAGADO y
+escondido en Ajustes, y la app de Netlify no tenía ninguna notificación. Ahora:
+
+🔔 VIENEN ENCENDIDOS. Al abrir la app por primera vez te pide el permiso de Android. Si lo
+   niegas, Inicio te lo dice y un toque te lleva a activarlo.
+
+🏍️ KM EN DOS PASOS. Al salir guardas SOLO el km inicial (el final ya no es obligatorio). El día
+   queda «⏳ en curso». Al terminar abres KM otra vez y pones el final.
+
+🌙 CIERRE DEL DÍA (21:00, la cambias). Te dice exactamente lo que falta:
+   «Te falta anotar el km FINAL (saliste con 12000) y tus entregas.»
+   Si ya está todo, no te molesta.
+⏳ INSISTE: si una hora después sigue sin km final, te vuelve a avisar.
+🏍️ ANTES DE SALIR (08:00): anota el km inicial. Si ayer quedó sin final, te lo recuerda.
+📊 CIERRE DE SEMANA: el día que cierra tu empresa, con el neto de la semana.
+💾 RESPALDO: si pasan 7 días sin copia, al mediodía.
+🛢️ CAMBIO DE ACEITE: anota el cambio como gasto «Cambio de aceite» y la app cuenta los km con
+   el odómetro. Al pasar de 1000 km (lo cambias) te avisa. En Inicio aparece desde 100 km antes.
+🎯 META DIARIA: cuando una entrega te hace cruzar la meta, te lo celebra.
+
+📅 DÍAS QUE TRABAJAS: quita los días libres y esos días no te llega nada.
+🔔 PROBAR AHORA: en Ajustes → Notificaciones; en 3 segundos te llega una de prueba.
+   Debajo ves los próximos avisos programados.
+
+Se programan los próximos 14 días y a la hora exacta aunque el teléfono esté en reposo, así
+que siguen llegando aunque no abras la app. Al tocar el de km, se abre directo la ficha de KM.
+
+⬆️ SE INSTALA ENCIMA de la v2.0: no desinstales, tus datos se quedan.
+
+COMPROBADO: 49 de 49.
+
+
 REY MOTOBOY v2.0 — LA APP ANDROID (APK)
 =======================================
 
