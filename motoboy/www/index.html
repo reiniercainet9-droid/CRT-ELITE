@@ -421,6 +421,29 @@ html.apk .solo-web{display:none!important}
   </section>
 
   <section class="view" id="v-tools">
+    <div class="card" id="avCard">
+      <h3>Notificaciones <span class="accent">· avisos</span></h3>
+      <div class="wprev solo-web" style="color:var(--red2);border-color:#5c2c2c;background:#1a0e0e">⚠️ Estás en la versión WEB (navegador). Los avisos solo funcionan en la app Android «Rey Motoboy» instalada con la APK.</div>
+      <div class="solo-apk">
+      <div class="wprev" id="avEstado">Comprobando…</div>
+      <button class="btn btn-primary btn-sm" id="avPermiso" style="display:none;width:100%;margin-top:10px">🔔 Activar notificaciones</button>
+      <div class="avlist">
+        <div class="avrow"><label class="sw"><input type="checkbox" id="avIni"><span>🏍️ Km inicial al salir</span></label><input class="inp avh" id="avHIni" type="time"></div>
+        <div class="avrow"><label class="sw"><input type="checkbox" id="avFin"><span>🌙 Cierre del día<small>km final y entregas que falten</small></span></label><input class="inp avh" id="avHFin" type="time"></div>
+        <div class="avrow"><label class="sw"><input type="checkbox" id="avSemana"><span>📊 Cierre de la semana<small>el día que cierra tu empresa</small></span></label></div>
+        <div class="avrow"><label class="sw"><input type="checkbox" id="avRespaldo"><span>💾 Respaldo pendiente<small>si pasan 7 días sin copia</small></span></label></div>
+        <div class="avrow"><label class="sw"><input type="checkbox" id="avAceite"><span>🛢️ Cambio de aceite<small id="avAceiteEst">cada cuántos km</small></span></label><input class="inp avh" id="avAceiteKm" type="number" inputmode="numeric" placeholder="1000"></div>
+      </div>
+      <span class="caplbl" style="margin-top:12px">Días que trabajas</span>
+      <div class="avdias" id="avDias"></div>
+      <div class="btnrow" style="margin-top:14px">
+        <button class="btn btn-ghost btn-sm" id="avProbar">🔔 Probar ahora</button>
+        <button class="btn btn-primary btn-sm" id="avGuardar">Guardar avisos</button>
+      </div>
+      <div class="mini-note" id="avProx" style="margin-top:12px"></div>
+      </div>
+    </div>
+
     <div class="card">
       <h3>Proyección <span class="accent">· sobre el neto</span></h3>
       <label class="f"><span class="cap">Neto diario (R$)</span><input class="inp" id="projInput" type="number" inputmode="decimal" placeholder="Ej: 150"></label>
@@ -551,26 +574,6 @@ html.apk .solo-web{display:none!important}
       <p class="mini-note">Los reportes incluyen entregas, gastos por categoría y el neto del período. El de kilómetros incluye el detalle diario, total y R$/km.</p>
     </div>
 
-    <div class="card solo-apk" id="avCard">
-      <h3>Notificaciones <span class="accent">· avisos</span></h3>
-      <div class="wprev" id="avEstado">Comprobando…</div>
-      <button class="btn btn-primary btn-sm" id="avPermiso" style="display:none;width:100%;margin-top:10px">🔔 Activar notificaciones</button>
-      <div class="avlist">
-        <div class="avrow"><label class="sw"><input type="checkbox" id="avIni"><span>🏍️ Km inicial al salir</span></label><input class="inp avh" id="avHIni" type="time"></div>
-        <div class="avrow"><label class="sw"><input type="checkbox" id="avFin"><span>🌙 Cierre del día<small>km final y entregas que falten</small></span></label><input class="inp avh" id="avHFin" type="time"></div>
-        <div class="avrow"><label class="sw"><input type="checkbox" id="avSemana"><span>📊 Cierre de la semana<small>el día que cierra tu empresa</small></span></label></div>
-        <div class="avrow"><label class="sw"><input type="checkbox" id="avRespaldo"><span>💾 Respaldo pendiente<small>si pasan 7 días sin copia</small></span></label></div>
-        <div class="avrow"><label class="sw"><input type="checkbox" id="avAceite"><span>🛢️ Cambio de aceite<small id="avAceiteEst">cada cuántos km</small></span></label><input class="inp avh" id="avAceiteKm" type="number" inputmode="numeric" placeholder="1000"></div>
-      </div>
-      <span class="caplbl" style="margin-top:12px">Días que trabajas</span>
-      <div class="avdias" id="avDias"></div>
-      <div class="btnrow" style="margin-top:14px">
-        <button class="btn btn-ghost btn-sm" id="avProbar">🔔 Probar ahora</button>
-        <button class="btn btn-primary btn-sm" id="avGuardar">Guardar avisos</button>
-      </div>
-      <div class="mini-note" id="avProx" style="margin-top:12px"></div>
-    </div>
-
     <div class="card">
       <h3>Respaldo de datos</h3>
       <div class="btnrow">
@@ -683,8 +686,8 @@ html.apk .solo-web{display:none!important}
 /* ===== APP ANDROID (APK) =====
    La MISMA página corre en el navegador y dentro de la APK. Todo lo de Android va detrás
    de ES_APK: fuera de la APK la página hace exactamente lo de siempre. */
-const VERSION='2.1';
-const ES_APK=!!(window.Capacitor&&Capacitor.isNativePlatform&&Capacitor.isNativePlatform());
+const VERSION='2.2';
+const ES_APK=!!(window.Capacitor&&((Capacitor.isNativePlatform&&Capacitor.isNativePlatform())||(Capacitor.getPlatform&&Capacitor.getPlatform()==='android')))||!!window.androidBridge;
 if(ES_APK)document.documentElement.classList.add('apk');
 function plug(n){try{return ES_APK&&Capacitor.Plugins&&Capacitor.Plugins[n]||null}catch(e){return null}}
 /* Lo que NO es un registro (respaldo, recordatorio) va aparte: así no viaja dentro del

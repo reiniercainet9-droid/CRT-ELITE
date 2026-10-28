@@ -66,17 +66,17 @@ window.Capacitor={isNativePlatform:()=>true,getPlatform:()=>'android',
     chk((await pg.textContent('#heroNet')).trim() === '20', 'los datos sobreviven al cerrar y abrir');
 
     if (modo === 'WEB') {
-      chk(!(await pg.isVisible('#avCard')), 'en la web no sale la tarjeta de notificaciones (es de la APK)');
       const [pop] = await Promise.all([pg.waitForEvent('popup'), (async () => {
         await pg.click('nav button[data-v="tools"]'); await pg.click('[data-rep="day"]'); })()]);
       chk(!!pop, 'web: el reporte PDF abre su ventana como antes');
+      chk(await pg.isVisible('#avCard .solo-web') && !(await pg.isVisible('#avEstado')), 'web: la tarjeta de avisos dice que es la versión web');
       const [dl] = await Promise.all([pg.waitForEvent('download'), pg.click('#btnExport')]);
       chk(/motoboy_respaldo_\d{4}-\d\d-\d\d\.json/.test(dl.suggestedFilename()), 'web: el respaldo se descarga');
       chk((await pg.textContent('#bkEstado')).includes('hoy'), 'apunta que el respaldo fue hoy');
     } else {
       chk(await pg.evaluate(() => document.documentElement.classList.contains('apk')), 'detecta que está en la APK');
       await pg.click('nav button[data-v="tools"]');
-      chk(await pg.isVisible('#avCard'), 'APK: tarjeta de notificaciones visible');
+      chk(await pg.isVisible('#avProbar') && !(await pg.isVisible('#avCard .solo-web')), 'APK: tarjeta de avisos con «Probar ahora» visible');
       await pg.click('[data-rep="week"]'); await pg.waitForTimeout(100);
       let ll = await pg.evaluate(() => window.__llamadas);
       const imp = ll.find(x => x.p === 'Moto' && x.m === 'imprimir');
