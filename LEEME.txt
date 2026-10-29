@@ -1,26 +1,24 @@
-APEX v7.305 — TRADING DESK
+APEX v7.306 — TRADING DESK
 =========================
 
-🧮 EL RIESGO LO ELIGES TÚ, Y ES EL QUE ROBERTO CANTA
-Tu riesgo vivía en tres sitios que no se hablaban: la calculadora 💰 (donde pusiste el 1 %), la ficha de cada cuenta (0,5 %) y el 🤖 Ejecutor (0,5 %). El de la calculadora NO SALÍA DEL TELÉFONO, así que elegías un número en una pantalla y te contestaban con otro.
-· La calculadora de lotaje ahora se hace SOBRE UNA CUENTA TUYA: eliges arriba cuál, y el % que pongas se guarda EN ESA CUENTA — que es el único camino por el que Roberto y el Puente lo leen.
-· Debajo del resultado te dice con todas las letras con qué % y con qué cuenta va a cantar el lotaje. Y si eliges «sin cuenta», te avisa de que eso es una cuenta rápida que Roberto no ve.
-· ⚡ Gatillo guarda por el mismo camino: un solo número, no dos.
-· Roberto ya sabe CUÁL cuenta tienes conectada en MT5, con su % y su balance, para que «tu cuenta» no sea ambiguo con cuatro.
-· Fuera el «hoy 0.5» que le dictaba el número, y fuera el peligro clavado en «más de 1 %»: ahora el peligro es que el riesgo NO QUEPA hasta tu pared, no que sea más alto que ayer. Con 1,5 % ya no te da la lata si entra.
-· Si a una cuenta le falta el riesgo, el guardián lo DICE en vez de rellenarlo con un 0,5 inventado.
+🎫 DOS ENTRADAS EN EL MISMO PAR SON DOS ENTRADAS
+Tuviste dos posiciones en EUR/USD a 5,1 pips una de otra y el sistema solo detectó la primera: tuviste que dictarme la segunda a mano. El guardia que evita avisos duplicados comparaba solo por par y precio, con una holgura de 30 pips — con tu stop de 7, cualquier segunda entrada del día caía dentro y desaparecía.
+· Ahora manda el TICKET de MT5, que es único, y la holgura de precio baja a 3 pips.
+· Se guarda una lista de lo cantado, no un solo apunte que se pisa.
+· Lo que no cambia: la misma entrada vista por la caja del gráfico y por MT5 sigue sonando UNA vez.
 
-🎯 CADA AVISO LLEVA A UN SITIO, NO A DOS
-Tocabas el aviso de «entrada detectada» y, en vez de dejarte en el 📒 Diario para registrarla, se te abría el gráfico encima. No iba al sitio equivocado: iba al bueno y 2,2 segundos después TradingView lo tapaba. El vigía mandaba los dos destinos a la vez.
-· Ahora el gráfico solo se abre si el aviso NO dijo a dónde ir.
-· Las alarmas del indicador siguen abriendo el gráfico directo, como pediste.
+🎯 CADA AVISO A SU SITIO — DE VERDAD ESTA VEZ
+Lo de ayer fue una curita: quitaba el gráfico solo si el aviso ya traía destino. Pero nueve de tus avisos llevan par y NINGÚN destino (✂️ el parcial, 🛡️ el +1R, 🎯 la zona a un paso, 🧊 la zona que se enfría…), así que seguían cayendo al gráfico por descarte.
+· El gráfico ahora se abre SOLO si es una alarma del indicador. Nunca «porque no sé a dónde llevarte».
+· Los ocho avisos que no tenían destino ya lo tienen: 📒 Diario, 🎯 Hoy o 🤖 Ejecutor, según lo que te digan.
 
-✋ CERRAR EL DIARIO NO ES CERRAR LA OPERACIÓN
-Le decías «cierra la operación», Roberto cerraba el REGISTRO de tu Diario y te decía «cerrada» — con la posición viva en el mercado. No tiene ninguna mano que cierre en MT5, y con el Ejecutor apagado nadie puede cerrarla desde fuera.
-· La tarjeta ahora dice «cerrar el REGISTRO del Diario», y avisa de que la posición en MT5 no se toca.
-· Roberto tiene orden de decirte que NO puede cerrarla y darte las vías que sí funcionan.
+💬 Y LA RESPUESTA DE ROBERTO ABRE SU CHAT
+Tocabas «💬 Te respondí» y Apex se abría donde se hubiera quedado: nunca el chat. El vigía no reenviaba la conversación y MainActivity se rendía sin hacer nada. En la web sí funcionaba — el agujero estaba justo en el único camino que usas.
 
-🛡️ Dos bancos nuevos para que ninguna de estas tres cosas vuelva.
+✋ Y CERRAR VUELVE A SIGNIFICAR LO QUE TÚ QUIERES
+Ayer me pasé: te puse a Roberto a decir «no puedo cerrar operaciones» cuando tú solo querías cerrar el REGISTRO del Diario. Ahora cuando le digas «ciérrala» o «ciérrala en BE» lo hace y te lo dice en una línea. Solo si le pides cerrarla en MT5 te dirá que eso lo haces tú.
+
+🛡️ El banco de avisos pasa de 9 a 14 comprobaciones.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
