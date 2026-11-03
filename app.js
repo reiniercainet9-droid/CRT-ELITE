@@ -9058,7 +9058,31 @@ function hoyHoraEvento(iso){
   const hh=parseInt(String(iso).slice(11,13),10), mm=parseInt(String(iso).slice(14,16),10);
   const dec=hh+mm/60;
   const h12=(h)=>{ const p=h>=12?"PM":"AM"; let x=h%12; if(!x)x=12; return x+":"+String(mm).padStart(2,"0")+" "+p; };
-  return { dec, ny:h12(hh), br:h12((hh+1)%24) };   /* Brasil = NY + 1 h */
+  /* 🕑 v7.307 (03-11) — EL DESFASE SE CALCULA, NO SE ESCRIBE.
+     Aquí ponía `br: h12((hh+1)%24)` con el comentario «Brasil = NY + 1 h». Esa época se
+     acabó el 1 de noviembre: Estados Unidos salió de su horario de verano y Brasil no lo
+     tiene, así que son DOS horas. El calendario de noticias le estaba enseñando cada
+     noticia una hora antes de lo que es.
+     ⚠️ No se arregla poniendo un 2: en marzo fallaría al revés. Y su propio cerebro ya lo
+     tenía bien explicado («en invierno súmale 2h, en verano 1h») — lo que fallaba era el
+     código que se saltó la regla. */
+  const br24 = (hh + Math.round(desfaseNYaBR() / 60)) % 24;
+  return { dec, ny:h12(hh), br:h12((br24 + 24) % 24) };
+}
+
+/* 🕑 v7.307 — CUÁNTO VA BRASIL POR DELANTE DE NUEVA YORK, AHORA MISMO (en minutos).
+   Dos horas en el invierno de allí, una en su verano. Se mide de las dos zonas en el mismo
+   instante, que es la única fuente que no se equivoca. */
+function desfaseNYaBR(){
+  try{
+    const ahora=new Date();
+    const min=(tz)=>{ const p=new Intl.DateTimeFormat("en-GB",{timeZone:tz,hour:"2-digit",minute:"2-digit",hour12:false}).formatToParts(ahora);
+      const o={}; p.forEach(x=>{o[x.type]=x.value;});
+      return (parseInt(o.hour,10)%24)*60+parseInt(o.minute,10); };
+    let d=min("America/Sao_Paulo")-min("America/New_York");
+    if(d<-720) d+=1440; if(d>720) d-=1440;
+    return d;
+  }catch(_){ return 120; }
 }
 /* decimal (8.5) -> "8:30 AM"; sirve para pintar las franjas bloqueadas */
 function hoyDec12(dec){

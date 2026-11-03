@@ -1,24 +1,28 @@
-APEX v7.306 — TRADING DESK
+APEX v7.307 — TRADING DESK
 =========================
 
-🎫 DOS ENTRADAS EN EL MISMO PAR SON DOS ENTRADAS
-Tuviste dos posiciones en EUR/USD a 5,1 pips una de otra y el sistema solo detectó la primera: tuviste que dictarme la segunda a mano. El guardia que evita avisos duplicados comparaba solo por par y precio, con una holgura de 30 pips — con tu stop de 7, cualquier segunda entrada del día caía dentro y desaparecía.
-· Ahora manda el TICKET de MT5, que es único, y la holgura de precio baja a 3 pips.
-· Se guarda una lista de lo cantado, no un solo apunte que se pisa.
-· Lo que no cambia: la misma entrada vista por la caja del gráfico y por MT5 sigue sonando UNA vez.
+🕑 LA HORA SE CALCULA, YA NO SE ESCRIBE A MANO
+Estados Unidos salió de su horario de verano el 1 de noviembre y Brasil no lo cambia nunca: el desfase pasó de 1 hora a 2. Tu sistema lo tenía escrito a mano en tres sitios y llevaba desde ese domingo contándote una hora que no era.
+· El sello de los avisos de killzone decía «11:30 NY (12:30 en Timbó)» cuando en Timbó eran las 13:30. Arreglado.
+· La columna «hora de Brasil» del calendario de noticias te enseñaba cada noticia una hora antes. Arreglado.
+· El dossier del amanecer te citaba las ventanas en hora de verano (Londres 3:00, Pre-NY 8:30, NY 10:30). Ahora salen calculadas.
+· No se arregló poniendo un 2: en marzo volvería a fallar al revés. Se mide el desfase real entre las dos zonas cada vez.
 
-🎯 CADA AVISO A SU SITIO — DE VERDAD ESTA VEZ
-Lo de ayer fue una curita: quitaba el gráfico solo si el aviso ya traía destino. Pero nueve de tus avisos llevan par y NINGÚN destino (✂️ el parcial, 🛡️ el +1R, 🎯 la zona a un paso, 🧊 la zona que se enfría…), así que seguían cayendo al gráfico por descarte.
-· El gráfico ahora se abre SOLO si es una alarma del indicador. Nunca «porque no sé a dónde llevarte».
-· Los ocho avisos que no tenían destino ya lo tienen: 📒 Diario, 🎯 Hoy o 🤖 Ejecutor, según lo que te digan.
+🔇 TRES AVISOS DEL PLAN ROTO, Y SE CALLA
+El aviso de «tu plan se anuló» se repetía una y otra vez porque su firma lleva dentro el NÚMERO de noticias: cada noticia nueva disparaba otro. Ahora son tres por plan y por par — por par, para que el primer aviso de un par no se coma el cupo de otro — y el tercero te dice que es el último.
 
-💬 Y LA RESPUESTA DE ROBERTO ABRE SU CHAT
-Tocabas «💬 Te respondí» y Apex se abría donde se hubiera quedado: nunca el chat. El vigía no reenviaba la conversación y MainActivity se rendía sin hacer nada. En la web sí funcionaba — el agujero estaba justo en el único camino que usas.
+💸 UN 429 NO ES FALTA DE DINERO
+«Me quedé sin cerebro» te mandaba a mirar tu saldo de OpenRouter pasara lo que pasara. El dato decía 429: tope de RITMO, no de crédito. Recargar no lo arregla.
+· Ahora reintenta dos veces escalonado, respeta el tiempo de espera que manda el propio servidor y reparte las ráfagas para que tres alarmas no choquen a la vez.
+· Y el aviso distingue: si es 429 te dice que no es el saldo; solo te manda a mirarlo si es un 402 de verdad.
 
-✋ Y CERRAR VUELVE A SIGNIFICAR LO QUE TÚ QUIERES
-Ayer me pasé: te puse a Roberto a decir «no puedo cerrar operaciones» cuando tú solo querías cerrar el REGISTRO del Diario. Ahora cuando le digas «ciérrala» o «ciérrala en BE» lo hace y te lo dice en una línea. Solo si le pides cerrarla en MT5 te dirá que eso lo haces tú.
+🙅 LO QUE APAGAS TÚ NO ES UNA AVERÍA
+La auditoría te avisaba de que «el Ejecutor NO está conectado» teniendo tú el interruptor en off. Ahora dice «apagado por tu interruptor» y no cuenta como fallo.
 
-🛡️ El banco de avisos pasa de 9 a 14 comprobaciones.
+🗣️ Y ROBERTO MIRA EL RELOJ ANTES DE SALUDAR
+Te dijo «buenos días» a las 18:45 teniendo tu hora exacta delante.
+
+🛡️ Banco nuevo con 9 comprobaciones para que nada de esto vuelva, y el del plan roto con 10.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
