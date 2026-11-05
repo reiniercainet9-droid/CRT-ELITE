@@ -1,28 +1,67 @@
-APEX v7.307 — TRADING DESK
+APEX v7.308 — TRADING DESK
 =========================
 
-🕑 LA HORA SE CALCULA, YA NO SE ESCRIBE A MANO
-Estados Unidos salió de su horario de verano el 1 de noviembre y Brasil no lo cambia nunca: el desfase pasó de 1 hora a 2. Tu sistema lo tenía escrito a mano en tres sitios y llevaba desde ese domingo contándote una hora que no era.
-· El sello de los avisos de killzone decía «11:30 NY (12:30 en Timbó)» cuando en Timbó eran las 13:30. Arreglado.
-· La columna «hora de Brasil» del calendario de noticias te enseñaba cada noticia una hora antes. Arreglado.
-· El dossier del amanecer te citaba las ventanas en hora de verano (Londres 3:00, Pre-NY 8:30, NY 10:30). Ahora salen calculadas.
-· No se arregló poniendo un 2: en marzo volvería a fallar al revés. Se mide el desfase real entre las dos zonas cada vez.
+🕛 LA VENTANA DE LAS ALARMAS ACABA A TUS 14:00, NO A LAS 13:00 DE NUEVA YORK
 
-🔇 TRES AVISOS DEL PLAN ROTO, Y SE CALLA
-El aviso de «tu plan se anuló» se repetía una y otra vez porque su firma lleva dentro el NÚMERO de noticias: cada noticia nueva disparaba otro. Ahora son tres por plan y por par — por par, para que el primer aviso de un par no se coma el cupo de otro — y el tercero te dice que es el último.
+Lo pediste hoy a las 12:50 NY / 14:50 de Timbó: "a esta hora todavía me está
+notificando las alarmas; ya hubo cambio de horario de NY, debemos poner el
+silencio para las 12m NY, no a la 1pm".
 
-💸 UN 429 NO ES FALTA DE DINERO
-«Me quedé sin cerebro» te mandaba a mirar tu saldo de OpenRouter pasara lo que pasara. El dato decía 429: tope de RITMO, no de crédito. Recargar no lo arregla.
-· Ahora reintenta dos veces escalonado, respeta el tiempo de espera que manda el propio servidor y reparte las ráfagas para que tres alarmas no choquen a la vez.
-· Y el aviso distingue: si es 429 te dice que no es el saldo; solo te manda a mirarlo si es un 402 de verdad.
+POR QUÉ SE ROMPIÓ SOLO
+El fin de esa ventana nunca fue un dato del mercado: es TU rutina. Cierras a
+las 14:00 y tu PC se suspende a las 14:05. Cuando se escribió "13:00 NY",
+Nueva York estaba en su horario de verano y 13:00 NY ERAN tus 14:00 — cuadraba.
+El 1 de noviembre EEUU salió del horario de verano, el desfase pasó a 2 horas,
+y la misma línea te estiró la ventana hasta las 15:00 de Timbó.
+Tu Ejecutor ya estaba en 12:00 NY. Era la alarma la que se había quedado sola.
 
-🙅 LO QUE APAGAS TÚ NO ES UNA AVERÍA
-La auditoría te avisaba de que «el Ejecutor NO está conectado» teniendo tú el interruptor en off. Ahora dice «apagado por tu interruptor» y no cuenta como fallo.
+LO QUE CAMBIA EN ESTA APP
+· Lo que te dice en pantalla sobre el horario de las alarmas ya no lleva las
+  horas escritas a mano: te las dice en TU reloj y añade a qué hora de Nueva
+  York equivale hoy.
+· Roberto se quita el traje cuando cierras TÚ el día (tus 14:00), no a las
+  15:00. Antes su jornada acababa a las "13:00 NY" y con el cambio de horario
+  eso era una hora después que la tuya.
+· La franja "cierre" de su día (y por tanto sus frases y sus gestos) también
+  acaba con tu ventana, calculada.
+· La ley del horario en el cerebro de Roberto explica ahora los DOS relojes:
+  el principio va con el mercado (1 h antes de Londres, hora de NY) y el final
+  con tu día; y le prohíbe darte una hora de Brasil sin convertirla con el
+  desfase real.
+· El aviso del Templo sobre operar en ayunas también se movió: tu killzone va
+  con Nueva York, así que su umbral se calcula en vez de estar en las 11.
+· La casilla "hasta" del Ejecutor nace en 12:00 (tu ajuste en vivo no se toca).
 
-🗣️ Y ROBERTO MIRA EL RELOJ ANTES DE SALUDAR
-Te dijo «buenos días» a las 18:45 teniendo tu hora exacta delante.
+TUS TAREAS DE LA PC, RECALIBRADAS (ya hechas, no hay que instalar nada)
+· La siesta de Londres pasa de las 06:15 a las 07:15. Tu killzone de Londres
+  es 02:00-05:00 de Nueva York, o sea ahora tus 04:00-07:00: la siesta estaba
+  cayendo 45 minutos DENTRO de la killzone, y el seguro no la frenaba porque
+  tenía Londres escrito como 02:00-04:00 NY mientras el worker y tu indicador
+  dicen 02:00-05:00. Ahora dicen lo mismo.
+· Los despertares pasan de 02:00 a 03:00 y de 08:25 a 09:25: madrugaban una
+  hora de más desde el cambio.
+· Suspender a las 14:05 se queda como está: ahora cuadra con el nuevo cierre.
 
-🛡️ Banco nuevo con 9 comprobaciones para que nada de esto vuelva, y el del plan roto con 10.
+DOS COSAS QUE ENCONTRÉ DE PASO
+1. El cruce de tus dos vidas no corría desde la v5.148. Lo que pediste con
+   estas palabras —"que sepa que hice trading con 4 horas de sueño"— estaba
+   escrito FUERA de la función del repaso, en el aire. Su propio try/catch se
+   comía el error, así que no fallaba: simplemente no se ejecutaba nunca, y tus
+   repasos de la noche y del amanecer llevaban ese hueco vacío. Va en el
+   worker 5.300.
+2. El banco del horario llevaba 220 versiones midiendo un archivo de hace
+   semanas (lo tenía escrito a mano) y tres de sus cinco pruebas exigían cosas
+   retiradas a propósito. Y el banco del traje tenía el desfase clavado, el del
+   verano de NY: pedía que Roberto siguiera de traje una hora después de que
+   cerraras el día. Los dos arreglados.
+
+Y UN BANCO NUEVO: "la hora de Rey no es la hora de Nueva York". Comprueba que
+el worker, la app y la burbuja calculan LA MISMA ventana, que el worker y el
+seguro de la PC tienen las MISMAS killzones, y que tu siesta no cae dentro de
+la de Londres. Se pone rojo si alguien vuelve a mezclar los dos relojes.
+
+PARA SUBIR: worker-elitepro-v5.300.js (está en tu carpeta 📤 PARA SUBIR HOY,
+con su LEEME).
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

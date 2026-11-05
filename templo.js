@@ -535,7 +535,8 @@
      mal y se decide peor — también delante del gráfico. Se sube un escalón solo si cumplió
      el anterior, exactamente igual que la escalera del entrenamiento.
      ⚠️ Y EL AYUNO TIENE UNA REGLA SUYA: la ventana de comer NO puede dejarle operando en
-     ayunas prolongado si eso le sienta mal. Su killzone es a las 8:30-10:30 de Brasil, y ahí
+     ayunas prolongado si eso le sienta mal. Su killzone Pre-NY es 7:30-9:30 HORA DE NUEVA
+     YORK —en su reloj, 9:30-11:30 en el invierno de allí y 8:30-10:30 en su verano—, y ahí
      necesita cabeza. Por eso cada escalón dice cuándo abrir la ventana, y si choca con su
      operativa se le avisa. */
   /* ── 🧘 LA ESCALERA DE LA CALMA ───────────────────────────────────────────────
@@ -549,7 +550,8 @@
      MISMO PATRÓN QUE EL AYUNO Y QUE EL ENTRENAMIENTO: escalones, se sube por MÉRITO (no por
      tiempo), y cada escalón dice exactamente qué hacer, cuándo y con qué criterio se sube.
      ⚠️ LAS HORAS SON SUGERENCIAS, NO JAULAS. Están puestas sobre el día real de Rey (se
-     levanta a las 4:00, su ventana operativa va de las 2:00 a las 14:00 de Brasil) y se
+     levanta a las 4:00, y su ventana operativa acaba a las 14:00 de Brasil; empieza a las
+     01:00 de Nueva York, que son sus 3:00 en invierno de allí y sus 2:00 en verano) y se
      cambian una a una, que es su ley: nada fijo, todo configurable.
      ⚠️ Y NO SE EMPIEZA POR LA MEDITACIÓN LARGA. Se empieza por la respiración, que hace
      efecto en minutos y no pide fe: es lo que sostiene el hábito las dos primeras semanas. */
@@ -689,8 +691,15 @@
       if (!horaAbre || !ayunoHoras) return null;
       const h = parseInt(String(horaAbre).split(":")[0], 10);
       if (isNaN(h)) return null;
-      /* su ventana operativa: 8:30-12:30 de Brasil */
-      if (h >= 11) return "abres la ventana a las " + horaAbre + ", así que operarías toda tu killzone en ayunas. Si notas la cabeza espesa, adelántala.";
+      /* 🕑 v7.308 — ESTE 11 ERA LA HORA DE BRASIL, Y SU KILLZONE SE MUEVE CON NUEVA YORK.
+         El umbral se calibró con la killzone Pre-NY a las 8:30 suyas (verano de NY): abrir la
+         ventana de comer 2,5 h después, a las 11, significaba operarla entera en ayunas. Al
+         salir EEUU del horario de verano la killzone pasó a las 9:30 suyas, así que el umbral
+         tiene que moverse con ella o el aviso se da una hora antes de tiempo.
+         7:30 NY + el desfase de hoy + las 2,5 h de siempre. */
+      var dNY = 120; try { dNY = robDesfaseNYaBR(); } catch (_) {}
+      var umbral = Math.floor((7 * 60 + 30 + dNY + 150) / 60);   /* 12 en invierno de NY, 11 en su verano */
+      if (h >= umbral) return "abres la ventana a las " + horaAbre + ", así que operarías toda tu killzone en ayunas. Si notas la cabeza espesa, adelántala.";
       return null;
     } catch (_) { return null; }
   }

@@ -1434,7 +1434,7 @@ ROB_CSS += "\n" + Object.keys(POSES).map(function (k) { return '[data-pose="' + 
          SE PROBÓ SU CÓDIGO REAL UNA SEMANA ENTERA (scratchpad/ver-ropa.cjs) y salieron tres
          cosas feas que él ya había notado a ojo:
            · 4 de los 12 turnos estaban VACÍOS → días enteros sin un solo accesorio.
-           · el turno duraba de las 2:00 a las 13:00 NY → la misma gorra toda su jornada.
+           · el turno duraba de las 2:00 NY al cierre de su ventana → la misma gorra toda su jornada.
            · "casa" añade taza y el turno podía traer taza → salía "taza taza" (dos tazas).
          AHORA: doce combinaciones, TODAS con algo puesto; cuatro momentos al día en vez de
          tres (Londres · Nueva York · tarde · noche), y el salto de 7 con 12 turnos hace que
@@ -1539,10 +1539,18 @@ ROB_CSS += "\n" + Object.keys(POSES).map(function (k) { return '[data-pose="' + 
      ERA UN FALLO CLARO Y SE VE EN UNA LÍNEA: la madrugada llegaba hasta las 08:00 de Nueva
      York, así que las killzones de Londres (02:00 NY) y de Pre-NY (07:30 NY) —su jornada
      entera de la mañana— caían dentro de "madrugada" y le tocaba pijama.
-     Su ventana operativa de verdad es la del Ejecutor: 01:00–13:00 de Nueva York, y Londres
-     abre a las 02:00. A partir de ahí es horario de trabajo y va de traje. */
-  var TRABAJO_ABRE = 2;    /* 02:00 NY = apertura de Londres (03:00 de Rey) */
-  var TRABAJO_CIERRA = 13; /* 13:00 NY = cierre de su ventana (14:00 de Rey) */
+     Su ventana operativa de verdad es la del Ejecutor: de 01:00 de Nueva York hasta que él
+     cierra el día (sus 14:00), y Londres abre a las 02:00 NY. A partir de ahí es horario de
+     trabajo y va de traje. */
+  var TRABAJO_ABRE = 2;    /* 02:00 NY = apertura de Londres — dato del MERCADO, no se toca */
+  /* 🕑 v7.308 (05-11) — EL CIERRE ES SU HORA, NO UN NÚMERO DE NUEVA YORK.
+     Estaba en 13 porque cuando se escribió, con Nueva York en su verano, las 13:00 NY eran
+     sus 14:00. Tras el cambio de horario de EEUU (1-11-2026) las 13:00 NY son sus 15:00, así
+     que Roberto se habría quedado de traje una hora después de cerrar él el día. Ahora sale
+     de sus 14:00 y se convierte midiendo el desfase. */
+  var TRABAJO_CIERRA = (function () {
+    try { return Math.floor(robFinVentanaNY() / 60); } catch (_) { return 12; }
+  })();
   function momentoDelDia(t) {
     var h = t && typeof t.h === "number" ? t.h : 12;   /* la hora de NUEVA YORK */
     if (h >= TRABAJO_ABRE && h < TRABAJO_CIERRA) return 1;   /* de traje: es su jornada */

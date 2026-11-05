@@ -615,12 +615,14 @@ function robCaraDe(titulo, cuerpo, tipo){
      cerca      · 7:00–7:30  — media hora antes de su killzone
      killzone   · 7:30–9:30  — SU ventana, la buena
      nyactiva   · 9:30–11:30 — Nueva York abierta
-     cierre     · 11:30–13:00 — se acaba su ventana operativa (13:00 NY)
+     cierre     · 11:30 → el cierre de SU ventana (sus 14:00: 12:00 NY en invierno de allí,
+                  13:00 NY en su verano — se calcula, no se escribe)
      tarde      · 13:00–18:00 — MERCADO CERRADO PARA ÉL: aquí manda el crecimiento
      noche      · 18:00–24:00 — descanso, balance del día, abundancia
    Rey (04-09): "después que cierra el horario operativo, solo los mensajes programados y
    las alertas; prefiero consejos, mensajes de abundancia, riquezas, crecimiento personal".
-   Por eso de 13:00 NY en adelante NO se habla del mercado en su vida de fondo. */
+   Por eso, desde que cierra SU ventana (sus 14:00) en adelante, NO se habla del mercado en su
+   vida de fondo. La hora de NY que es eso se calcula; no se escribe. */
 /* ══════════════════════════════════════════════════════════════════════════════
    🕒 ¿ESTÁ EL MERCADO ABIERTO? — LA ÚNICA RESPUESTA, v7.37
    ═════════════════════════════════════════════════════════════════════════════
@@ -636,6 +638,37 @@ function robCaraDe(titulo, cuerpo, tipo){
    Esta función vive AQUÍ a propósito: situaciones.js es el fichero que cargan la página de
    Apex, el cuerpo flotante y el vigilante de los avisos. Es el único sitio del sistema
    donde una regla puede ser la misma en todas partes. */
+/* 🕑 v7.308 (05-11) — LA VENTANA DE REY, EN EL RELOJ QUE LE CORRESPONDE CADA EXTREMO.
+   Rey, hoy: «ya hubo cambio de horario de NY, debemos poner el silencio para las 12m NY, no
+   a la 1pm… ahora tengo dos horas de diferencia con NY».
+   LA REGLA QUE SALE DE AHÍ, y vale para todo el sistema: una hora que describe EL MERCADO se
+   escribe en hora de Nueva York y no se toca; una hora que describe SU DÍA se escribe en SU
+   hora y se convierte calculando. El fin de su ventana (cierra a las 14:00 y su PC se
+   suspende a las 14:05) estaba escrito como «13:00 NY»: cuadraba mientras Nueva York estaba
+   en su verano, y el 1-11-2026 pasó a ser las 15:00 suyas.
+   ⚠️ AUTOSUFICIENTE A PROPÓSITO: la burbuja NO carga app.js, así que esto no puede apoyarse
+   en el desfaseNYaBR() de allí ([[apex-la-hora-se-calcula-no-se-escribe]]). */
+function robDesfaseNYaBR() {
+  try {
+    var ahora = new Date();
+    var min = function (tz) {
+      var p = new Intl.DateTimeFormat("en-GB", { timeZone: tz, hour: "2-digit", minute: "2-digit", hour12: false }).formatToParts(ahora);
+      var o = {}; p.forEach(function (x) { o[x.type] = x.value; });
+      return (parseInt(o.hour, 10) % 24) * 60 + parseInt(o.minute, 10);
+    };
+    var d = min("America/Sao_Paulo") - min("America/New_York");
+    if (d < -720) d += 1440;
+    if (d > 720) d -= 1440;
+    return d;
+  } catch (_) { return 120; }   /* el de invierno: nunca un número inventado */
+}
+/* Las 14:00 de Rey, en minutos de NUEVA YORK: 720 (12:00) en invierno de allí, 780 (13:00)
+   en su verano. Es el mismo ancla que el worker (cfg:alarmas, horaFin en su hora). */
+var ROB_FIN_VENTANA_REY = 14 * 60;
+function robFinVentanaNY() {
+  return (((ROB_FIN_VENTANA_REY - robDesfaseNYaBR()) % 1440) + 1440) % 1440;
+}
+
 function robMercadoAbierto(wd, dec) {
   try {
     if (wd == null || dec == null) {
@@ -667,7 +700,9 @@ function robFranja(opts) {
     if (h < 450) return "cerca";                /* 7:00–7:30 */
     if (h < 570) return "killzone";             /* 7:30–9:30 */
     if (h < 690) return "nyactiva";             /* 9:30–11:30 */
-    if (h < 780) return "cierre";               /* 11:30–13:00 */
+    /* 🕑 v7.308 — el fin de su ventana ya no es un número: son sus 14:00, pasadas a hora de
+       NY. Antes decía 780 (13:00 NY) y con el cambio de horario de EEUU eso eran sus 15:00. */
+    if (h < robFinVentanaNY()) return "cierre"; /* 11:30 → el cierre de su ventana */
     if (h < 1080) return "tarde";               /* 13:00–18:00 */
     return "noche";                             /* 18:00–24:00 */
   } catch (_) { return "espera"; }
