@@ -1,67 +1,52 @@
-APEX v7.308 — TRADING DESK
+APEX v7.309 — TRADING DESK
 =========================
 
-🕛 LA VENTANA DE LAS ALARMAS ACABA A TUS 14:00, NO A LAS 13:00 DE NUEVA YORK
+NOVEDADES 7.309 — TUS AVISOS DEL MERCADO SIGUEN A NUEVA YORK
 
-Lo pediste hoy a las 12:50 NY / 14:50 de Timbó: "a esta hora todavía me está
-notificando las alarmas; ya hubo cambio de horario de NY, debemos poner el
-silencio para las 12m NY, no a la 1pm".
+Lo que me dijiste (06-11, 8:03 de tu reloj, con la captura):
+"los horarios de los avisos están errados desde el cambio de hora... todos están mal
+notificando todavía en el horario de NY de antes del cambio".
 
-POR QUÉ SE ROMPIÓ SOLO
-El fin de esa ventana nunca fue un dato del mercado: es TU rutina. Cierras a
-las 14:00 y tu PC se suspende a las 14:05. Cuando se escribió "13:00 NY",
-Nueva York estaba en su horario de verano y 13:00 NY ERAN tus 14:00 — cuadraba.
-El 1 de noviembre EEUU salió del horario de verano, el desfase pasó a 2 horas,
-y la misma línea te estiró la ventana hasta las 15:00 de Timbó.
-Tu Ejecutor ya estaba en 12:00 NY. Era la alarma la que se había quedado sola.
+Tenías razón, y era el mismo fallo del 05-11 en otro sitio. El 05-11 arreglé la ventana
+de silencio de las ALARMAS del sistema. Pero TUS avisos de ⏰ Mis avisos guardan una hora
+de Brasil escrita a mano, y la mitad de ellos hablan del MERCADO, no de tu día:
 
-LO QUE CAMBIA EN ESTA APP
-· Lo que te dice en pantalla sobre el horario de las alarmas ya no lleva las
-  horas escritas a mano: te las dice en TU reloj y añade a qué hora de Nueva
-  York equivale hoy.
-· Roberto se quita el traje cuando cierras TÚ el día (tus 14:00), no a las
-  15:00. Antes su jornada acababa a las "13:00 NY" y con el cambio de horario
-  eso era una hora después que la tuya.
-· La franja "cierre" de su día (y por tanto sus frases y sus gestos) también
-  acaba con tu ventana, calculada.
-· La ley del horario en el cerebro de Roberto explica ahora los DOS relojes:
-  el principio va con el mercado (1 h antes de Londres, hora de NY) y el final
-  con tu día; y le prohíbe darte una hora de Brasil sin convertirla con el
-  desfase real.
-· El aviso del Templo sobre operar en ayunas también se movió: tu killzone va
-  con Nueva York, así que su umbral se calcula en vez de estar en las 11.
-· La casilla "hasta" del Ejecutor nace en 12:00 (tu ajuste en vivo no se toca).
+  "Correr prompt diario · Pre-NY Kill Zone en 30 min" a las 08:00
+  valía cuando Nueva York iba a 1 h (08:00 tuyas = 07:00 NY, y la killzone abre a las
+  07:30 NY). Ahora NY va a 2 h, la killzone se mudó a tus 09:30... y el aviso se quedó
+  en las 08:00. Te avisaba HORA Y MEDIA antes de lo que decía su propio texto.
 
-TUS TAREAS DE LA PC, RECALIBRADAS (ya hechas, no hay que instalar nada)
-· La siesta de Londres pasa de las 06:15 a las 07:15. Tu killzone de Londres
-  es 02:00-05:00 de Nueva York, o sea ahora tus 04:00-07:00: la siesta estaba
-  cayendo 45 minutos DENTRO de la killzone, y el seguro no la frenaba porque
-  tenía Londres escrito como 02:00-04:00 NY mientras el worker y tu indicador
-  dicen 02:00-05:00. Ahora dicen lo mismo.
-· Los despertares pasan de 02:00 a 03:00 y de 08:25 a 09:25: madrugaban una
-  hora de más desde el cambio.
-· Suspender a las 14:05 se queda como está: ahora cuadra con el nuevo cierre.
+LO QUE CAMBIA EN TU TELÉFONO
 
-DOS COSAS QUE ENCONTRÉ DE PASO
-1. El cruce de tus dos vidas no corría desde la v5.148. Lo que pediste con
-   estas palabras —"que sepa que hice trading con 4 horas de sueño"— estaba
-   escrito FUERA de la función del repaso, en el aire. Su propio try/catch se
-   comía el error, así que no fallaba: simplemente no se ejecutaba nunca, y tus
-   repasos de la noche y del amanecer llevaban ese hueco vacío. Va en el
-   worker 5.300.
-2. El banco del horario llevaba 220 versiones midiendo un archivo de hace
-   semanas (lo tenía escrito a mano) y tres de sus cinco pruebas exigían cosas
-   retiradas a propósito. Y el banco del traje tenía el desfase clavado, el del
-   verano de NY: pedía que Roberto siguiera de traje una hora después de que
-   cerraras el día. Los dos arreglados.
+Estos se mueven +1 h (son del mercado):
+   07:55 -> 08:55   Reset de disciplina
+   08:00 -> 09:00   Correr prompt diario (Pre-NY en 30 min)
+   08:15 -> 09:15   Chequeo de margen/colchón
+   08:20 -> 09:20   Go/No-Go Pre-NY  (lo tienes apagado; queda en su sitio por si lo enciendes)
+   12:15 -> 13:15   NY almuerzo en 15 min
+   12:30 -> 13:30   Sesión cerrada
+   13:00 -> 14:00   Viernes, cerrar posiciones
 
-Y UN BANCO NUEVO: "la hora de Rey no es la hora de Nueva York". Comprueba que
-el worker, la app y la burbuja calculan LA MISMA ventana, que el worker y el
-seguro de la PC tienen las MISMAS killzones, y que tu siesta no cae dentro de
-la de Londres. Se pone rojo si alguien vuelve a mezclar los dos relojes.
+Estos NO se tocan (son TUYOS, de tu día):
+   05:00 gimnasio · 05:30 respiración · 08:45 / 14:00 / 20:00 kegel ·
+   17:30 backtesting · 19:30 memoria de Roberto (domingo) · 21:00 análisis del día ·
+   10:00 auditoría 80/20 (sábado)
 
-PARA SUBIR: worker-elitepro-v5.300.js (está en tu carpeta 📤 PARA SUBIR HOY,
-con su LEEME).
+Y LO IMPORTANTE: NO VUELVE A PASAR
+
+Cada aviso del mercado lleva ahora pegado el minuto de NUEVA YORK al que apunta, y su
+hora en tu reloj se CALCULA midiendo el desfase cada vez que abres Apex. En marzo de
+2027, cuando EEUU vuelva al horario de verano, se recolocan solos y vuelven a sus horas
+de antes. No hay nada que acordarse de cambiar.
+
+En la tarjeta de cada uno verás ahora una etiqueta 🇺🇸 con su hora de Nueva York, para
+que de un vistazo sepas cuál sigue al mercado y cuál es tuyo.
+
+Si tú cambias a mano la hora de uno anclado, el ancla se va CON él: la hora nueva pasa a
+ser su momento de Nueva York, y en el próximo cambio de horario se recoloca sola otra vez.
+
+Banco nuevo que lo vigila: test-los-avisos-del-mercado-siguen-a-nueva-york (9/9), y prueba
+las DOS temporadas de Nueva York, no solo la de hoy.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

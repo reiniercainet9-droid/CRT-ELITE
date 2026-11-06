@@ -5786,14 +5786,14 @@ if(!Array.isArray(CAL_FILTRO) || !CAL_FILTRO.length) CAL_FILTRO = PARES.slice();
 /* ⏰ AVISOS / RUTINA — recordatorios por hora (Brasil), en segundo plano vía Web Push.
    dias: "LV"=lun-vie, "V"=viernes, "D"=todos. tipo: "normal" | "fuerte" (persistente+vibración fuerte). */
 const AVISOS_DEFAULT = [
-  { id:"r1", hora:"07:55", tit:"🧭 Reset de disciplina", dias:"LV", tipo:"normal", on:true, msg:"RESET DE DISCIPLINA antes de Pre-NY. El cupo de hoy es el de mi config del panel 🤖. Riesgo 0.5%. Solo setups A+ y B. Si 2 SL, cierro plataforma." },
-  { id:"r2", hora:"08:00", tit:"🧠 Correr prompt diario", dias:"LV", tipo:"fuerte", on:true, msg:"Correr prompt DIARIO en Claude. Pre-NY Kill Zone en 30 min. Revisar setup A+ o B en el indicador." },
-  { id:"r3", hora:"08:30", tit:"⚡ Pre-NY Kill Zone abierta", dias:"LV", tipo:"fuerte", on:true, msg:"Pre-NY Kill Zone abierta (08:30–10:30 Brasil). MEJOR ventana del día. Espera señal de entrada del indicador en M5/M3." },
-  { id:"r4", hora:"10:15", tit:"🔔 NY Open en 15 min", dias:"LV", tipo:"normal", on:true, msg:"NY Open en 15 min. Confirma zona de reacción." },
-  { id:"r5", hora:"10:30", tit:"🇺🇸 NY Apertura activa", dias:"LV", tipo:"normal", on:true, msg:"NY Apertura activa. Ventana válida hasta las 12:30 Brasil." },
-  { id:"r6", hora:"12:15", tit:"⚠️ NY almuerzo en 15 min", dias:"LV", tipo:"normal", on:true, msg:"NY almuerzo en 15 min. Cierra ventana de entradas." },
-  { id:"r7", hora:"12:30", tit:"🚫 Sesión cerrada", dias:"LV", tipo:"normal", on:true, msg:"Sesión cerrada. No más entradas. Solo gestión de posiciones." },
-  { id:"r8", hora:"13:00", tit:"📅 Viernes — cerrar posiciones", dias:"V", tipo:"fuerte", on:true, msg:"Viernes — cierra posiciones antes del fin de semana. No abras nuevas. Revisa la bitácora de la semana." }
+  { id:"r1", hora:"08:55", nyMin:415, tit:"🧭 Reset de disciplina", dias:"LV", tipo:"normal", on:true, msg:"RESET DE DISCIPLINA antes de Pre-NY. El cupo de hoy es el de mi config del panel 🤖. Riesgo 0.5%. Solo setups A+ y B. Si 2 SL, cierro plataforma." },
+  { id:"r2", hora:"09:00", nyMin:420, tit:"🧠 Correr prompt diario", dias:"LV", tipo:"fuerte", on:true, msg:"Correr prompt DIARIO en Claude. Pre-NY Kill Zone en 30 min. Revisar setup A+ o B en el indicador." },
+  { id:"r3", hora:"09:30", nyMin:450, tit:"⚡ Pre-NY Kill Zone abierta", dias:"LV", tipo:"fuerte", on:true, msg:"Pre-NY Kill Zone abierta (09:30–11:30 Brasil). MEJOR ventana del día. Espera señal de entrada del indicador en M5/M3." },
+  { id:"r4", hora:"11:15", nyMin:555, tit:"🔔 NY Open en 15 min", dias:"LV", tipo:"normal", on:true, msg:"NY Open en 15 min. Confirma zona de reacción." },
+  { id:"r5", hora:"11:30", nyMin:570, tit:"🇺🇸 NY Apertura activa", dias:"LV", tipo:"normal", on:true, msg:"NY Apertura activa. Ventana válida hasta las 13:30 Brasil." },
+  { id:"r6", hora:"13:15", nyMin:675, tit:"⚠️ NY almuerzo en 15 min", dias:"LV", tipo:"normal", on:true, msg:"NY almuerzo en 15 min. Cierra ventana de entradas." },
+  { id:"r7", hora:"13:30", nyMin:690, tit:"🚫 Sesión cerrada", dias:"LV", tipo:"normal", on:true, msg:"Sesión cerrada. No más entradas. Solo gestión de posiciones." },
+  { id:"r8", hora:"14:00", nyMin:720, tit:"📅 Viernes — cerrar posiciones", dias:"V", tipo:"fuerte", on:true, msg:"Viernes — cierra posiciones antes del fin de semana. No abras nuevas. Revisa la bitácora de la semana." }
 ];
 let REMINDERS = load(K.reminders, null);
 if(!Array.isArray(REMINDERS)) REMINDERS = AVISOS_DEFAULT.map(x=>({...x}));
@@ -5860,7 +5860,7 @@ async function avisosAlRelojDelTelefono(){
   }catch(_){}
 }
 /* al arrancar y al volver a Apex: que la nube tenga SIEMPRE la lista de Rey */
-function syncRemindersDeGuardia(){ try{ syncReminders(false); }catch(_){} try{ avisosAlRelojDelTelefono(); }catch(_){} }
+function syncRemindersDeGuardia(){ try{ robAvisosNYaSuHora(); }catch(_){} try{ syncReminders(false); }catch(_){} try{ avisosAlRelojDelTelefono(); }catch(_){} }
 /* Ajustes de notificaciones de Roberto */
 let NOTIF = load(K.notif, { on:false, killzone:true, cuentaDD:true });
 if(!NOTIF || typeof NOTIF!=="object") NOTIF = { on:false, killzone:true, cuentaDD:true };
@@ -5874,6 +5874,76 @@ function guardarNotif(){ save(K.notif, NOTIF); }
     if(!t.estrategia){ t.estrategia="CRT Elite"; cambió=true; }
   });
   if(cambió) save(K.trades,TRADES);
+})();
+
+/* 🇺🇸 v7.309 — SUS AVISOS DEL MERCADO SIGUEN A NUEVA YORK, NO A UN NÚMERO ESCRITO
+   ===========================================================================
+   Rey (06-11, con la captura de las 8:03): "los horarios de los avisos están
+   errados desde el cambio de hora... todos están mal notificando todavía en el
+   horario de NY de antes del cambio".
+   TENÍA RAZÓN. Sus avisos de rutina guardan una hora de BRASIL escrita a mano, y
+   esa hora describía un momento del MERCADO: "Pre-NY Kill Zone en 30 min" a las
+   08:00 valía cuando NY iba a 1 h. Al salir EEUU del horario de verano el desfase
+   pasó a 2 h, la killzone se movió a sus 09:30… y el aviso se quedó donde estaba.
+   Le avisaba 90 minutos antes de lo que decía.
+   LA REGLA (la misma de la ventana de alarmas): una hora que describe el MERCADO se
+   guarda en NUEVA YORK y se CALCULA en su reloj; una hora que describe SU día se
+   guarda en su reloj y no se toca. Por eso estos avisos llevan ahora `nyMin` (el
+   minuto de Nueva York al que apuntan) y su `hora` se recalcula midiendo el desfase
+   en cada arranque. En marzo de 2027, cuando EEUU vuelva al horario de verano, se
+   corrigen SOLOS: no hay nada que acordarse de cambiar.
+   Los suyos — gimnasio, kegel, respiración, memoria de Roberto, backtesting — NO
+   llevan ancla: esos son de su día y se quedan clavados donde él los puso. */
+const AVISOS_NY_MIG = "apex.avisos.ancladosNY.v1";
+/* id → [minuto de Nueva York, la hora que tenía escrita cuando NY iba a 1 h].
+   Solo se ancla el aviso que SIGUE en su hora vieja: si Rey ya lo movió a mano,
+   su decisión manda y aquí no se toca nada. */
+const AVISOS_DEL_MERCADO = {
+  r1:[415,"07:55"], r2:[420,"08:00"], r3:[450,"08:30"], r4:[555,"10:15"],
+  r5:[570,"10:30"], r6:[675,"12:15"], r7:[690,"12:30"], r8:[720,"13:00"],
+  rmsuyrxwo:[435,"08:15"], rmt8il8zd:[440,"08:20"],
+};
+function robHHMM(m){ const n=(((m%1440)+1440)%1440);
+  return String(Math.floor(n/60)).padStart(2,"0")+":"+String(n%60).padStart(2,"0"); }
+/* la hora de Nueva York de un aviso anclado, para enseñársela en la tarjeta */
+function avisoHoraNY(r){ try{ return robHHMM(r.nyMin); }catch(_){ return ""; } }
+/* el min de NY que corresponde a una hora suya (al editar a mano) */
+function avisoNYdeSuHora(hhmm){
+  const p=String(hhmm||"").split(":"); const m=(+p[0])*60+(+p[1]);
+  if(isNaN(m)) return null;
+  return (((m - desfaseNYaBR()) % 1440) + 1440) % 1440;
+}
+/* Pone cada aviso anclado en la hora de Rey que hoy le corresponde. Se llama en
+   cada arranque y cada vez que vuelve a Apex: el desfase se MIDE, nunca se escribe. */
+function robAvisosNYaSuHora(){
+  let d; try{ d = desfaseNYaBR(); }catch(_){ return false; }
+  let tocado = false, lista = [];
+  (Array.isArray(REMINDERS)?REMINDERS:[]).forEach(r=>{
+    if(!r || typeof r.nyMin !== "number") return;
+    const h = robHHMM(r.nyMin + d);
+    if(String(r.hora) !== h){ lista.push((r.tit||r.id)+": "+r.hora+" → "+h); r.hora = h; tocado = true; }
+  });
+  if(tocado){
+    guardarReminders();
+    try{ robertoVigila("El horario de Nueva York cambió y sus avisos del mercado se movieron solos ("
+      + "desfase medido: " + d/60 + " h): " + lista.join(" · ") + "."); }catch(_){}
+  }
+  return tocado;
+}
+/* Migración de una sola vez: ponerle el ancla a los avisos de mercado que ya tenía. */
+(function anclarAvisosDeMercado(){
+  try{
+    if(localStorage.getItem(AVISOS_NY_MIG)) return;
+    (Array.isArray(REMINDERS)?REMINDERS:[]).forEach(r=>{
+      const a = r && AVISOS_DEL_MERCADO[r.id];
+      if(!a) return;
+      if(typeof r.nyMin === "number") return;
+      if(String(r.hora) !== a[1]) return;   /* lo movió él: no se toca */
+      r.nyMin = a[0];
+    });
+    guardarReminders();
+    localStorage.setItem(AVISOS_NY_MIG, "1");
+  }catch(_){}
 })();
 
 function guardarCtx(){ save(K.ctx,CTX); }
@@ -8509,6 +8579,7 @@ function renderAvisos(){
       <div class="av-foot">
         <span class="av-tag">${esc(diasLabel(r.dias))}</span>
         <span class="av-tag ${r.tipo==="fuerte"?"fuerte":""}">${r.tipo==="fuerte"?"🔔 fuerte":"aviso"}</span>
+        ${typeof r.nyMin==="number"?`<span class="av-tag" title="Es del mercado: sigue a Nueva York y se recoloca solo con el cambio de horario">🇺🇸 ${esc(avisoHoraNY(r))} NY</span>`:""}
         ${r.ir?`<span class="av-tag ir">→ ${esc(irDestinoLabel(r.ir))}</span>`:""}
         <span class="av-actions"><button class="btn av-btn" data-edit="${r.id}">✏️ Editar</button><button class="btn av-btn del" data-del="${r.id}">🗑️</button></span>
       </div>
@@ -8570,7 +8641,12 @@ function guardarAvisoForm(id){
   if(!dias.length){ toast("Elige al menos un día"); return; }
   const ir=($("#avIr")&&$("#avIr").value)||"";
   const voz=(($("#avVoz")&&$("#avVoz").value)||"si")!=="no";   /* 🔊 v7.41 */
-  if(id){ const r=REMINDERS.find(x=>x.id===id); if(r){ Object.assign(r,{hora,tit,msg,dias,tipo,ir,voz}); } }
+  if(id){ const r=REMINDERS.find(x=>x.id===id); if(r){
+    /* 🇺🇸 v7.309 — si el aviso está anclado a Nueva York y Rey le cambia la hora,
+       el ancla se mueve CON él: la hora nueva pasa a ser su momento de NY, y en el
+       próximo cambio de horario se recoloca sola otra vez. */
+    if(typeof r.nyMin==="number" && String(r.hora)!==hora){ const ny=avisoNYdeSuHora(hora); if(ny!=null) r.nyMin=ny; }
+    Object.assign(r,{hora,tit,msg,dias,tipo,ir,voz}); } }
   else { REMINDERS.push({ id:"r"+Date.now().toString(36), hora, tit, msg, dias, tipo, ir, voz, on:true }); }
   guardarReminders(); syncReminders(); avisosAlRelojDelTelefono(); cerrarModal(); renderAvisos(); toast("Aviso guardado ✓");
   robertoVigila((id?"Editó":"Creó")+" un AVISO de rutina: "+hora+" · "+tit+" — “"+msg+"” ("+diasLabel(dias)+", "+tipo+").");
