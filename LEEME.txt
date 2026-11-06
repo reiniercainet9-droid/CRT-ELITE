@@ -1,62 +1,55 @@
-APEX v7.310 — TRADING DESK
+APEX v7.311 — TRADING DESK
 =========================
 
-NOVEDADES 7.310 — TUS 17 DESPERTADORES VUELVEN A EXISTIR, Y EL KEGEL SE APARTA SOLO
+NOVEDADES 7.311 — UN DÍA ES UN DÍA, Y TUS LIGERAS VAN A TUS DÍAS LIBRES
 
-1) EL PUNTO 5: CADA FUNCIÓN CON SU PROPIO CAJÓN
+Me dijiste "elige la mejor opción" entre moverle la hora a "Movilidad y respiración" o
+arreglar el día de verdad. Elegí el día. Y debajo había algo peor que un choque.
 
-Medido en TU teléfono con dumpsys alarm: Android tenía 2 despertadores de Apex armados.
-Debían ser 17. Y los 2 no eran ninguno de tus avisos.
+LO QUE ENCONTRÉ EN TUS DATOS VIVOS
 
-El registro de tu teléfono dio la causa en tres líneas:
+    tplan0   dias=[1,4]    <- lista, bien
+    textra0  dias="4"      <- un número suelto, en TEXTO
 
-    #1  avisos=17  -> tus r1, r2, kegel, gimnasio...   (se ponen los 17)
-    #2  avisos=0   -> guardia0                          (BORRA los 17)
-    #3  avisos=2   -> repaso0, repaso1                  (quedan solo estos)
+El Templo guardaba el día de las ligeras como texto. Y ese "4" nadie lo entendía igual:
 
-Tres funciones distintas llamaban a la misma puerta y guardaban su lista en LA MISMA
-clave. Como cada llamada cancela por la lista de la vez anterior, cada una borraba los
-despertadores de la anterior. Se repetía ocho veces cada vez que abrías Apex.
+    tu TELÉFONO entendía "4" como  ->  [1,2,3,4,5]   cinco días en vez de uno
+    la NUBE     entendía "4" como  ->  []            no sonaba NUNCA, en silencio
 
-QUÉ TE COSTABA: tus avisos sí te llegaban, pero SOLO por la nube -- el camino lento
-(el teléfono pregunta cada 15 s con mercado abierto y cada 60 s fuera, y necesita
-internet). El camino instantáneo, el que se escribió en la v7.31 justo porque te
-quejaste el 04-09 de que "notificaron 1 minuto después", llevaba tiempo muerto.
-Nadie lo vio porque el respaldo sí sonaba: tapaba al principal.
+El mismo dato, dos respuestas distintas, y las dos mal.
 
-AHORA cada función guarda y cancela en su propio cajón y no puede pisar al de al lado.
-Y tras un reinicio del teléfono se reponen los tres cajones, no uno.
+Y lo importante: NO SE NOTABA porque el despertador de tu teléfono llevaba meses
+borrándose solo (el cajón compartido que arreglamos antes). Al arreglar aquello, estas
+dos iban a empezar a sonar DE LUNES A VIERNES a las 05:00, encima de tus entrenamientos.
+El arreglo de la tarde habría creado un fallo nuevo esta noche.
 
-2) EL KEGEL SE APARTA SOLO DE LO QUE LE CAIGA ENCIMA
+QUÉ CAMBIA
 
-Me dijiste: "mueve las alarmas las del Kegel para que no choque con nada".
+1. Un día escrito como número se entiende igual en los dos sitios. "4", 4, "1,4", [1,4]
+   y "jue" significan ya lo mismo en tu teléfono y en la nube.
 
-El viernes, "Cerrar posiciones" (14:00) te caía encima de "Kegel sesión 2" (14:00).
-Dos notificaciones en el mismo minuto no son dos avisos: es una que tapa a la otra,
-y la que se pierde no avisa de que se perdió.
+2. Tus ligeras van a tus días libres DE VERDAD. Tus sesiones son lunes+jueves y
+   martes+viernes, así que tus libres son miércoles, sábado y domingo:
 
-Kegel 2 pasa de las 14:00 a las 14:30. Las otras dos no se tocan.
+       Movilidad y respiración   jueves  -> miércoles
+       Movilidad y respiración   viernes -> sábado
 
-Y NO es un arreglo de una vez: tus avisos del mercado se mueven una hora dos veces al
-año (7.309), así que una hora libre hoy puede estar ocupada en marzo. Por eso esto se
-comprueba en CADA arranque. Solo se mueve el Kegel, solo cuando choca de verdad (misma
-hora Y algún día en común), y te lo dice. Si tú pones un Kegel encima de otra cosa a
-propósito, se queda donde tú lo pusiste.
+3. Y se comprueba CADA vez, no solo al crearla. Ese era el fallo de fondo: el Templo sí
+   buscaba un día libre, pero una sola vez, y se lo preguntaba al horario del plan en vez
+   de a los avisos que tú tienes de verdad. Si el plan cambia de días después, la ligera
+   se quedaba donde estaba y nadie volvía a mirar.
 
-3) LO QUE ENCONTRÉ Y NO HE TOCADO
+4. Tu decisión manda. Si tú pones una ligera en un día, ahí se queda aunque choque.
 
-Te quedan DOS choques más, los dos a las 05:00, y son del Templo, no del mercado:
+WORKER 5.301 — SIN PRISA
 
-    jueves   05:00   Cuerpo entero A   x   Movilidad y respiración
-    viernes  05:00   Cuerpo entero B   x   Movilidad y respiración
+Tienes en PARA SUBIR HOY el worker 5.301. Es UNA línea: que la nube también entienda un
+día escrito como número. Con la 7.311 la app ya los guarda como lista, así que la nube
+actual no se come ninguno — es el cinturón, por si algún día llega otro dato así.
+Súbelo cuando quieras, no corre prisa.
 
-Y hay algo raro ahí además de la hora: el mensaje de "Movilidad y respiración" dice
-"Es de tus DÍAS LIBRES", pero está puesta en jueves y viernes, que son días de
-entrenamiento. Parece que el plan le está dando los días equivocados, no solo la hora.
-No lo toco sin que me digas: es tu plan del Templo.
-
-Bancos nuevos: test-cada-despertador-en-su-cajon (11/11, reproduce EJECUTÁNDOLA la
-secuencia exacta de tu teléfono) y test-los-avisos-del-mercado-siguen-a-nueva-york (9/9).
+Banco nuevo: test-un-dia-es-un-dia (6/6), que EJECUTA los dos parsers (el del teléfono y
+el de la nube) y el generador de ligeras con tus datos reales.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

@@ -6587,14 +6587,25 @@ async function cargarNoticiasUI(){
    parseDias acepta arrays, "LV"/"V"/"D"/"todos"/"finde" o "lun,mie" y devuelve el array. */
 const DIA_NOMS = ["","Lun","Mar","Mié","Jue","Vie","Sáb","Dom"];
 const DIA_MAP = { lun:1,mon:1,mar:2,tue:2,mie:3,wed:3,jue:4,thu:4,vie:5,fri:5,sab:6,sat:6,dom:7,sun:7 };
+/* 🔢 v7.311 — UN DÍA ESCRITO COMO NÚMERO ES UN DÍA, NO UN DÍa CUALQUIERA.
+   Rey (06-11) tenía «🚶 Movilidad y respiración» con `dias: "4"` — el Templo lo guarda así,
+   como un número suelto, mientras sus sesiones lo guardan como `[1,4]`. Y ese `"4"` nadie
+   lo entendía: aquí caía al «por defecto» y salía **[1,2,3,4,5]** (lunes a viernes, cinco
+   días en vez de uno), y en la nube el mismo `"4"` salía **[]** y no sonaba NUNCA.
+   El mismo dato, dos respuestas distintas y las dos mal. No se notaba porque el despertador
+   del teléfono llevaba meses borrándose solo (v7.310): al arreglar aquello, estos iban a
+   empezar a sonar de lunes a viernes a las 05:00, encima de sus entrenamientos.
+   Ahora un `"4"`, un `4`, un `"1,4"` y un `[1,4]` significan lo mismo en los dos sitios. */
 function parseDias(v){
-  if(Array.isArray(v)){ const out=v.map(x=> typeof x==="number" ? x : DIA_MAP[String(x).toLowerCase().slice(0,3)] ).filter(Boolean); return [...new Set(out)].sort((a,b)=>a-b); }
+  const num = (x)=>{ const k = parseInt(String(x).trim(), 10); return (k>=1 && k<=7) ? k : 0; };
+  if(Array.isArray(v)){ const out=v.map(x=> typeof x==="number" ? x : (DIA_MAP[String(x).toLowerCase().slice(0,3)] || num(x)) ).filter(Boolean); return [...new Set(out)].sort((a,b)=>a-b); }
+  if(typeof v === "number"){ const k = num(v); if(k) return [k]; }
   const s=String(v||"").toLowerCase().trim();
   if(s==="d"||s==="todos"||s==="diario") return [1,2,3,4,5,6,7];
   if(s==="lv"||s==="l-v") return [1,2,3,4,5];
   if(s==="v") return [5];
   if(s==="finde"||s==="fin de semana") return [6,7];
-  const parts=s.split(/[ ,;]+/).map(x=>DIA_MAP[x.slice(0,3)]).filter(Boolean);
+  const parts=s.split(/[ ,;]+/).map(x=>DIA_MAP[x.slice(0,3)] || num(x)).filter(Boolean);
   return parts.length ? [...new Set(parts)].sort((a,b)=>a-b) : [1,2,3,4,5];
 }
 function diasLabel(v){
@@ -8224,14 +8235,48 @@ function temploAvisosDelPlan(mandaElHorario){
        avisos), para que hereden el despertador exacto, la voz y ⏰ Mis avisos. Van marcadas
        como del plan para que se limpien y se regeneren igual, pero NO cuentan para subir de
        escalón: eso lo decide `sem.sesiones`, donde estas nunca entran. */
+    /* 🚶 v7.311 — UNA LIGERA DE «DÍAS LIBRES» NO PUEDE CAER EN UN DÍA DE ENTRENAMIENTO.
+       Rey (06-11): tenía «🚶 Movilidad y respiración» el JUEVES y el VIERNES, encima de
+       «🏋️ Cuerpo entero A» y «B» y a la misma hora (05:00). Su propio mensaje decía
+       «es de tus DÍAS LIBRES». Él me dejó elegir entre moverle la hora o arreglar el día:
+       moverle la hora habría tapado el síntoma y dejado el fallo dentro.
+       LA CAUSA: `temploExtraAnadir` SÍ busca un día libre… pero lo busca UNA SOLA VEZ, al
+       crearla, y se lo pregunta al HORARIO del plan, no a los avisos que Rey tiene de verdad.
+       Cuando el plan cambia de días después —sube de escalón, cambia el número de sesiones, o
+       él edita los días en ⏰ Mis avisos— la ligera se queda donde estaba y nadie vuelve a
+       mirar. Sus sesiones son [1,4] y [2,5]; sus libres, miércoles, sábado y domingo.
+       AHORA se comprueba en CADA regeneración y contra los días REALES de sus sesiones.
+       Y SU DECISIÓN MANDA: en cuanto Rey mueve una a un día, `diaAuto` deja de coincidir y
+       aquí no se vuelve a tocar nunca ([[apex-no-elegir-por-rey]]). */
+    const diasDelPlan = new Set();
+    (REMINDERS||[]).forEach(r=>{
+      if(!r || !r.temploPlan || !/^tplan\d+$/.test(String(r.id)) || r.on===false) return;
+      try{ parseDias(r.dias).forEach(d=>diasDelPlan.add(+d)); }catch(_){}
+    });
+    const diasDeLigeras = new Set();
+    const ligerasMovidas = [];
+    const nombreDia = (d)=>(TEMPLO_DIAS.find(z=>+z[0]===+d)||["","?"])[1];
     (Array.isArray(TEMPLO_PLAN.extras) ? TEMPLO_PLAN.extras : []).forEach((e,i)=>{
       const id = "textra"+i;
       const ya = suyo[id];
       const suHora = mandaElHorario ? null : ya;
+      /* los días, SIEMPRE como lista de números: el Templo los guardaba como un número
+         suelto ("4") y eso no lo entendía ni el teléfono ni la nube (ver parseDias). */
+      let dias = parseDias((suHora && suHora.dias) || e.dia || "6");
+      const eraNuestra = e.diaAuto == null || String(parseDias(e.diaAuto)) === String(parseDias(e.dia));
+      if(eraNuestra && dias.some(d=>diasDelPlan.has(d) || diasDeLigeras.has(d))){
+        const libre = [1,2,3,4,5,6,7].find(d=>!diasDelPlan.has(d) && !diasDeLigeras.has(d));
+        if(libre){
+          ligerasMovidas.push("🚶 "+e.n+": "+dias.map(nombreDia).join("/")+" → "+nombreDia(libre));
+          dias = [libre];
+        }
+      }
+      dias.forEach(d=>diasDeLigeras.add(d));
+      e.dia = dias.slice(); e.diaAuto = dias.slice();
       REMINDERS.push({
         id, temploPlan:true,
         hora: (suHora && suHora.hora) || e.hora || "18:00",
-        dias: (suHora && suHora.dias) || e.dia || "6",
+        dias: dias,
         tipo: (ya && ya.tipo) || "normal",
         on:   ya ? ya.on !== false : true,
         voz:  ya ? ya.voz !== false : true,
@@ -8239,8 +8284,18 @@ function temploAvisosDelPlan(mandaElHorario){
         msg:(e.d||"")+" Es de tus días libres: suma salud, y no cuenta para subir de escalón.",
         ir:"tab:templo",
       });
-      if(!mandaElHorario && ya){ e.hora = ya.hora || e.hora; e.dia = String(ya.dias || e.dia); }
+      /* ⚠️ v7.311 — el día ya quedó escrito arriba, como LISTA. Antes aquí se le volvía a
+         meter `String(ya.dias)`, que es lo que convertía un [4] en el texto "4" que nadie
+         entendía. Solo la hora puede venir de lo que él tocara. */
+      if(!mandaElHorario && ya){ e.hora = ya.hora || e.hora; }
     });
+    if(ligerasMovidas.length){
+      try{ robertoVigila("Sus ligeras caían en días de entrenamiento y las he puesto en sus días libres: " + ligerasMovidas.join(" · ") + "."); }catch(_){}
+      try{ avisar("🚶 He movido tus sesiones ligeras a tus días libres" + String.fromCharCode(10,10)
+        + ligerasMovidas.join(String.fromCharCode(10)) + String.fromCharCode(10,10)
+        + "Caían encima de un día de entrenamiento, y son justo las que NO deben. Son tuyas: "
+        + "cámbialas en 🏛️ Templo → ⏰ Cambiar días y horas y ahí se quedan."); }catch(_){}
+    }
     if(TEMPLO_PLAN) TEMPLO_PLAN.horario = horario;
     temploPlanGuardar();
     guardarReminders(); syncReminders(); avisosAlRelojDelTelefono();
