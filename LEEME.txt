@@ -1,4 +1,4 @@
-APEX v7.311 — TRADING DESK
+APEX v7.312 — TRADING DESK
 =========================
 
 NOVEDADES 7.311 — UN DÍA ES UN DÍA, Y TUS LIGERAS VAN A TUS DÍAS LIBRES
@@ -50,6 +50,15 @@ Súbelo cuando quieras, no corre prisa.
 
 Banco nuevo: test-un-dia-es-un-dia (6/6), que EJECUTA los dos parsers (el del teléfono y
 el de la nube) y el generador de ligeras con tus datos reales.
+
+AÑADIDO EN LA 7.312 — Y QUE CORRA SOLO
+
+Te instalé la 7.311 y fui a mirar tu teléfono: tus dos ligeras SEGUÍAN armadas en jueves
+y viernes. El número ya se entendía (el lunes pasó de 3 alarmas a 1), pero el arreglo del
+día vive dentro del generador del Templo, y eso solo se llamaba al abrir la pestaña
+"Templo". Un arreglo que espera a que tú pases por una pantalla no es un arreglo.
+
+Ahora el plan del Templo se revisa AL ARRANCAR, y antes de subir la lista a la nube.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

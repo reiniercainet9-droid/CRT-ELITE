@@ -25509,6 +25509,14 @@ function init(){
   /* 🚨 A3 (v7.33) — y que nadie se entere tarde de que el vigía está apagado */
   setTimeout(()=>{ try{ vigiaCentinela(); }catch(_){} }, 2500);
   document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible"){ try{ vigiaCentinela(); }catch(_){} } });
+  /* 🏛️ v7.312 — Y EL PLAN DEL TEMPLO SE REVISA AL ARRANCAR, NO SOLO SI ENTRA EN 🏛️ Templo.
+     06-11, medido en su teléfono después de instalarle la 7.311: sus dos ligeras seguían
+     armadas en JUEVES y VIERNES, encima de sus entrenamientos, porque el arreglo vive en
+     temploAvisosDelPlan() y eso solo corría al abrir la pestaña del Templo. Un arreglo que
+     espera a que Rey pase por una pantalla no es un arreglo: es un recordatorio suyo
+     ([[apex-nada-que-rey-tenga-que-recordar]]). Va ANTES de subir la lista, para que la nube
+     y el reloj de Android reciban ya los días buenos. */
+  try{ if(typeof TEMPLO_PLAN !== "undefined" && TEMPLO_PLAN) temploAvisosDelPlan(); }catch(_){}
   /* ⏰ v7.25 — y que la nube tenga SIEMPRE los avisos que Rey ve (el 17:30 que no sonó) */
   syncRemindersDeGuardia();
   document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible") syncRemindersDeGuardia(); });
