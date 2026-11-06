@@ -1,52 +1,62 @@
-APEX v7.309 — TRADING DESK
+APEX v7.310 — TRADING DESK
 =========================
 
-NOVEDADES 7.309 — TUS AVISOS DEL MERCADO SIGUEN A NUEVA YORK
+NOVEDADES 7.310 — TUS 17 DESPERTADORES VUELVEN A EXISTIR, Y EL KEGEL SE APARTA SOLO
 
-Lo que me dijiste (06-11, 8:03 de tu reloj, con la captura):
-"los horarios de los avisos están errados desde el cambio de hora... todos están mal
-notificando todavía en el horario de NY de antes del cambio".
+1) EL PUNTO 5: CADA FUNCIÓN CON SU PROPIO CAJÓN
 
-Tenías razón, y era el mismo fallo del 05-11 en otro sitio. El 05-11 arreglé la ventana
-de silencio de las ALARMAS del sistema. Pero TUS avisos de ⏰ Mis avisos guardan una hora
-de Brasil escrita a mano, y la mitad de ellos hablan del MERCADO, no de tu día:
+Medido en TU teléfono con dumpsys alarm: Android tenía 2 despertadores de Apex armados.
+Debían ser 17. Y los 2 no eran ninguno de tus avisos.
 
-  "Correr prompt diario · Pre-NY Kill Zone en 30 min" a las 08:00
-  valía cuando Nueva York iba a 1 h (08:00 tuyas = 07:00 NY, y la killzone abre a las
-  07:30 NY). Ahora NY va a 2 h, la killzone se mudó a tus 09:30... y el aviso se quedó
-  en las 08:00. Te avisaba HORA Y MEDIA antes de lo que decía su propio texto.
+El registro de tu teléfono dio la causa en tres líneas:
 
-LO QUE CAMBIA EN TU TELÉFONO
+    #1  avisos=17  -> tus r1, r2, kegel, gimnasio...   (se ponen los 17)
+    #2  avisos=0   -> guardia0                          (BORRA los 17)
+    #3  avisos=2   -> repaso0, repaso1                  (quedan solo estos)
 
-Estos se mueven +1 h (son del mercado):
-   07:55 -> 08:55   Reset de disciplina
-   08:00 -> 09:00   Correr prompt diario (Pre-NY en 30 min)
-   08:15 -> 09:15   Chequeo de margen/colchón
-   08:20 -> 09:20   Go/No-Go Pre-NY  (lo tienes apagado; queda en su sitio por si lo enciendes)
-   12:15 -> 13:15   NY almuerzo en 15 min
-   12:30 -> 13:30   Sesión cerrada
-   13:00 -> 14:00   Viernes, cerrar posiciones
+Tres funciones distintas llamaban a la misma puerta y guardaban su lista en LA MISMA
+clave. Como cada llamada cancela por la lista de la vez anterior, cada una borraba los
+despertadores de la anterior. Se repetía ocho veces cada vez que abrías Apex.
 
-Estos NO se tocan (son TUYOS, de tu día):
-   05:00 gimnasio · 05:30 respiración · 08:45 / 14:00 / 20:00 kegel ·
-   17:30 backtesting · 19:30 memoria de Roberto (domingo) · 21:00 análisis del día ·
-   10:00 auditoría 80/20 (sábado)
+QUÉ TE COSTABA: tus avisos sí te llegaban, pero SOLO por la nube -- el camino lento
+(el teléfono pregunta cada 15 s con mercado abierto y cada 60 s fuera, y necesita
+internet). El camino instantáneo, el que se escribió en la v7.31 justo porque te
+quejaste el 04-09 de que "notificaron 1 minuto después", llevaba tiempo muerto.
+Nadie lo vio porque el respaldo sí sonaba: tapaba al principal.
 
-Y LO IMPORTANTE: NO VUELVE A PASAR
+AHORA cada función guarda y cancela en su propio cajón y no puede pisar al de al lado.
+Y tras un reinicio del teléfono se reponen los tres cajones, no uno.
 
-Cada aviso del mercado lleva ahora pegado el minuto de NUEVA YORK al que apunta, y su
-hora en tu reloj se CALCULA midiendo el desfase cada vez que abres Apex. En marzo de
-2027, cuando EEUU vuelva al horario de verano, se recolocan solos y vuelven a sus horas
-de antes. No hay nada que acordarse de cambiar.
+2) EL KEGEL SE APARTA SOLO DE LO QUE LE CAIGA ENCIMA
 
-En la tarjeta de cada uno verás ahora una etiqueta 🇺🇸 con su hora de Nueva York, para
-que de un vistazo sepas cuál sigue al mercado y cuál es tuyo.
+Me dijiste: "mueve las alarmas las del Kegel para que no choque con nada".
 
-Si tú cambias a mano la hora de uno anclado, el ancla se va CON él: la hora nueva pasa a
-ser su momento de Nueva York, y en el próximo cambio de horario se recoloca sola otra vez.
+El viernes, "Cerrar posiciones" (14:00) te caía encima de "Kegel sesión 2" (14:00).
+Dos notificaciones en el mismo minuto no son dos avisos: es una que tapa a la otra,
+y la que se pierde no avisa de que se perdió.
 
-Banco nuevo que lo vigila: test-los-avisos-del-mercado-siguen-a-nueva-york (9/9), y prueba
-las DOS temporadas de Nueva York, no solo la de hoy.
+Kegel 2 pasa de las 14:00 a las 14:30. Las otras dos no se tocan.
+
+Y NO es un arreglo de una vez: tus avisos del mercado se mueven una hora dos veces al
+año (7.309), así que una hora libre hoy puede estar ocupada en marzo. Por eso esto se
+comprueba en CADA arranque. Solo se mueve el Kegel, solo cuando choca de verdad (misma
+hora Y algún día en común), y te lo dice. Si tú pones un Kegel encima de otra cosa a
+propósito, se queda donde tú lo pusiste.
+
+3) LO QUE ENCONTRÉ Y NO HE TOCADO
+
+Te quedan DOS choques más, los dos a las 05:00, y son del Templo, no del mercado:
+
+    jueves   05:00   Cuerpo entero A   x   Movilidad y respiración
+    viernes  05:00   Cuerpo entero B   x   Movilidad y respiración
+
+Y hay algo raro ahí además de la hora: el mensaje de "Movilidad y respiración" dice
+"Es de tus DÍAS LIBRES", pero está puesta en jueves y viernes, que son días de
+entrenamiento. Parece que el plan le está dando los días equivocados, no solo la hora.
+No lo toco sin que me digas: es tu plan del Templo.
+
+Bancos nuevos: test-cada-despertador-en-su-cajon (11/11, reproduce EJECUTÁNDOLA la
+secuencia exacta de tu teléfono) y test-los-avisos-del-mercado-siguen-a-nueva-york (9/9).
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

@@ -1506,7 +1506,7 @@ async function repasoAlReloj(){
       avisos.push({ id:"repaso0", tit:"🌅 Repaso de la mañana", msg:"Roberto tiene tu repaso: qué te toca hoy y qué arrastras sin hacer.", tipo:"normal", hora:hm, dias:"1,2,3,4,5,6,7" });
       avisos.push({ id:"repaso1", tit:"🌆 Repaso de la tarde",  msg:"Roberto tiene tu repaso: qué hiciste, qué no, y qué cerrar hoy.",     tipo:"normal", hora:ht, dias:"1,2,3,4,5,6,7" });
     }
-    await P.programarAvisos({ avisos: avisos, todos: ["repaso0","repaso1"] });
+    await P.programarAvisos({ grupo: "repaso", avisos: avisos, todos: ["repaso0","repaso1"] });
   }catch(_){}
 }
 
@@ -1753,7 +1753,7 @@ async function guardiaAlReloj(){
        del repaso de Roberto (mañana y tarde). La tarjeta de 🎯 Hoy se queda: no suena y es gratis. */
     void h;
     /* "todos" incluye guardia0 SIEMPRE: si hoy no hay nada que exigir, su despertador se va */
-    await P.programarAvisos({ avisos: avisos, todos: ["guardia0"] });
+    await P.programarAvisos({ grupo: "guardia", avisos: avisos, todos: ["guardia0"] });
   }catch(_){}
 }
 
@@ -5856,11 +5856,11 @@ async function avisosAlRelojDelTelefono(){
        mandan a cancelar SIEMPRE: si el plan existe se vuelven a poner tres líneas más abajo, y
        si no existe se van. Un plan borrado no puede seguir despertándole. */
     for (let i = 0; i < 8; i++) if (todos.indexOf("tplan"+i) < 0) todos.push("tplan"+i);
-    await P.programarAvisos({ avisos: activos, todos: todos });
+    await P.programarAvisos({ grupo: "avisos", avisos: activos, todos: todos });
   }catch(_){}
 }
 /* al arrancar y al volver a Apex: que la nube tenga SIEMPRE la lista de Rey */
-function syncRemindersDeGuardia(){ try{ robAvisosNYaSuHora(); }catch(_){} try{ syncReminders(false); }catch(_){} try{ avisosAlRelojDelTelefono(); }catch(_){} }
+function syncRemindersDeGuardia(){ try{ robAvisosNYaSuHora(); }catch(_){} try{ kegelApartarDeLosChoques(); }catch(_){} try{ syncReminders(false); }catch(_){} try{ avisosAlRelojDelTelefono(); }catch(_){} }
 /* Ajustes de notificaciones de Roberto */
 let NOTIF = load(K.notif, { on:false, killzone:true, cuentaDD:true });
 if(!NOTIF || typeof NOTIF!=="object") NOTIF = { on:false, killzone:true, cuentaDD:true };
@@ -5930,6 +5930,47 @@ function robAvisosNYaSuHora(){
   }
   return tocado;
 }
+/* ⚡ v7.310 — EL KEGEL SE APARTA SOLO DE LO QUE LE CAIGA ENCIMA
+   ===========================================================================
+   Rey (06-11): «mueve las alarmas las del Kegel para que no choque con nada».
+   El viernes, «📅 Cerrar posiciones» (14:00) le había caído encima de «⚡ Kegel
+   sesión 2» (14:00). Dos notificaciones en el mismo minuto no son dos avisos:
+   es una que tapa a la otra, y la que se pierde no avisa de que se perdió.
+   Y NO ES UN ARREGLO DE UNA VEZ: sus avisos del mercado se mueven una hora dos
+   veces al año (v7.309), así que una hora libre hoy puede estar ocupada en marzo.
+   Por eso esto se comprueba en cada arranque, no una sola vez.
+   SOLO SE MUEVE EL KEGEL, y solo cuando choca de verdad —misma hora Y algún día
+   en común—. Lo demás es suyo y no se toca ([[apex-no-elegir-por-rey]]), y si él
+   pone un Kegel encima de otra cosa a propósito, se queda donde él lo puso: esto
+   solo corre cuando el choque lo ha provocado OTRO aviso al moverse. */
+function kegelApartarDeLosChoques(){
+  try{
+    if(!KEGEL_ST || !Array.isArray(KEGEL_ST.horas) || !KEGEL_ST.horas.length) return false;
+    const otros = (Array.isArray(REMINDERS)?REMINDERS:[]).filter(r=>r && r.on!==false && !r.kegelPlan);
+    const comparten = (a,b)=>{ try{ const x=parseDias(a), y=parseDias(b); return x.some(d=>y.indexOf(d)>=0); }catch(_){ return true; } };
+    /* los días del Kegel son los de su propio aviso; si no lo encuentra, se asume todos */
+    const diasDe = (i)=>{ const a=(REMINDERS||[]).find(r=>r && r.kegelPlan && r.id==="kgel"+i); return a ? a.dias : [1,2,3,4,5,6,7]; };
+    const movidas = [];
+    KEGEL_ST.horas.forEach((h,i)=>{
+      const choca = otros.find(r=>String(r.hora)===String(h) && comparten(r.dias, diasDe(i)));
+      if(!choca) return;
+      const ocupadas = otros.map(r=>String(r.hora||"")).concat(KEGEL_ST.horas.filter((_,j)=>j!==i).map(String));
+      const nueva = kegelHoraLibre(h, ocupadas);
+      if(nueva === h) return;   /* no hay hueco cerca: mejor chocar que inventarse una rara */
+      movidas.push("Kegel " + (i+1) + ": " + h + " → " + nueva + " (le caía encima «" + (choca.tit||choca.id) + "»)");
+      KEGEL_ST.horas[i] = nueva;
+    });
+    if(!movidas.length) return false;
+    kegelGuardar();
+    try{ kegelAvisos(true); }catch(_){}
+    try{ robertoVigila("Un aviso suyo le cayó encima al Kegel y lo he apartado: " + movidas.join(" · ") + "."); }catch(_){}
+    try{ avisar("⏰ He movido el Kegel para que no se tape con otro aviso" + String.fromCharCode(10,10)
+      + movidas.join(String.fromCharCode(10)) + String.fromCharCode(10,10)
+      + "Son TUS horas: toca cualquiera en 🏛️ Templo para cambiarla."); }catch(_){}
+    return true;
+  }catch(_){ return false; }
+}
+
 /* Migración de una sola vez: ponerle el ancla a los avisos de mercado que ya tenía. */
 (function anclarAvisosDeMercado(){
   try{
