@@ -3572,7 +3572,7 @@ function ejecEvaluarRoberto(per){
   const lineas=ts.map(t=>ejecFmtTs(t.tsOut)+" · "+(t.dir==="buy"?"COMPRA":t.dir==="sell"?"VENTA":t.dir)+" "+(t.sym||"")+" lote "+t.lote+" → "+(t.motivo||"")+" $"+t.pl+(t.r!=null?" ("+t.r+"R)":"")+(t.grado?" · señal "+t.grado:"")).join("\n");
   if(typeof abrirIA==="function") abrirIA();
   iaTemaChat("🤖 Evaluación del Ejecutor");
-  setTimeout(()=>iaEnviar("🧮 Evalúa las operaciones "+nombrePer+" de mi Ejecutor.", "Evalúa las operaciones de MI EJECUTOR (mi bot de MT5 en demo, que ejecuta las señales A+ de mi indicador CRT Elite con mis reglas — NO las mías manuales). PERÍODO ELEGIDO POR REY: "+nombrePer+" — evalúa SOLO estas y di el período en tu primera línea.\nOJO: las horas de la lista están en HORA DE BRASIL (el reloj de Rey), NO en hora de Nueva York — si hablas de horarios/killzones, convierte tú (NY = Brasil − 1h en esta época).\nSus operaciones cerradas del período:\n"+lineas+"\n\nDame tu evaluación de mentor: números del período (ganadas/perdidas, R y $ acumulado), qué patrón ves (qué señal, par y horario rinden), si las reglas están funcionando, qué ajustarías de su configuración (riesgo, horario, grado mínimo, pares) y qué observar. Si el período tiene pocas operaciones, dilo con honestidad (muestra chica = conclusiones suaves). Si tienes mis datos manuales, compáranos."),300);
+  setTimeout(()=>iaEnviar("🧮 Evalúa las operaciones "+nombrePer+" de mi Ejecutor.", "Evalúa las operaciones de MI EJECUTOR (mi bot de MT5 en demo, que ejecuta las señales A+ de mi indicador CRT Elite con mis reglas — NO las mías manuales). PERÍODO ELEGIDO POR REY: "+nombrePer+" — evalúa SOLO estas y di el período en tu primera línea.\nOJO: las horas de la lista están en HORA DE BRASIL (el reloj de Rey), NO en hora de Nueva York — si hablas de horarios/killzones, convierte tú (NY = Brasil − "+(desfaseNYaBR()/60)+"h en esta época).\nSus operaciones cerradas del período:\n"+lineas+"\n\nDame tu evaluación de mentor: números del período (ganadas/perdidas, R y $ acumulado), qué patrón ves (qué señal, par y horario rinden), si las reglas están funcionando, qué ajustarías de su configuración (riesgo, horario, grado mínimo, pares) y qué observar. Si el período tiene pocas operaciones, dilo con honestidad (muestra chica = conclusiones suaves). Si tienes mis datos manuales, compáranos."),300);
 }
 /* ── 🕵️ v6.45 — AUDITORÍA DEL EJECUTOR (pedido de Rey, 31-08 madrugada: "que Roberto
    mida el comportamiento del Ejecutor y de sus acciones, hasta de su quietud — para saber
@@ -4083,7 +4083,7 @@ async function auditoriaEjecutor(){
     "\nSUS REGLAS: riesgo "+(cfg.riesgoPct!=null?cfg.riesgoPct:"?")+"% · máx "+(cfg.maxOpsDia!=null?cfg.maxOpsDia:"?")+" ops/día · grado mínimo "+(cfg.grado||"?")+" · horario "+(cfg.horaIni||"?")+"–"+(cfg.horaFin||"?")+" "+(String(cfg.tz||"").includes("York")?"NY":"Brasil")+" · veto "+(cfg.veto!==false?"🛑 activo":"apagado");
   setTimeout(()=>iaEnviar("🕵️ Hazle la auditoría a mi Ejecutor.",
     AUDITORIA_PROM+"\n\n"+estado+
-    "\nOJO: las horas de abajo están en HORA DE BRASIL (NY = Brasil − 1h en esta época).\n\nBITÁCORA COMPLETA (lo más nuevo arriba):\n"+bit+
+    "\nOJO: las horas de abajo están en HORA DE BRASIL (NY = Brasil − "+(desfaseNYaBR()/60)+"h en esta época).\n\nBITÁCORA COMPLETA (lo más nuevo arriba):\n"+bit+
     elIndicador+
     "\n\nEXPEDIENTE DE SEÑALES ENCOLADAS (todo lo que el sistema le mandó, últimos 2 días):\n"+(ql||"(ninguna señal 🔔 encolada en los últimos 2 días — si su quietud cuadra con el plan, es disciplina)")),300);
 }
@@ -15662,7 +15662,7 @@ const INDICADOR_DOSSIER =
    se adapte al mercado que Rey esté operando (hoy FX, mañana quizá otro). */
 const MERCADOS_DOSSIER =
 "CONOCIMIENTO DE MERCADOS — DÍAS Y HORARIOS (SIN LÍMITES): Rey opera AHORA Forex, pero esto NO es fijo (puede pasar a índices, oro, cripto…). Debes conocer a fondo CUÁNDO abre y cierra CADA mercado y adaptarte al que él opere. Antes de cualquier consejo de entrada o de decir 'ventana operativa', ten SIEMPRE presente el DÍA de la semana (te llega en el [Reloj EN VIVO]) y si ese mercado está ABIERTO. NUNCA le digas que puede operar ni que está en killzone si el mercado que opera está CERRADO.\n"+
-"- FOREX (su mercado actual: EUR/USD, GBP/USD, etc.): abre DOMINGO ~17:00 NY y cierra VIERNES ~17:00 NY. SÁBADO todo el día y DOMINGO hasta las 17:00 NY = CERRADO (fin de semana): nada que operar, ninguna killzone. Sesiones dentro de la semana (hora NY): Asia/Sídney-Tokio (noche), Londres (~2:00–5:00), solape Londres–NY y Nueva York (~7:00–12:00) = las de más volumen, las que él usa. Si es sábado o domingo y pregunta '¿opero?', la respuesta honesta es NO: dile que descanse o haga backtest.\n"+
+"- FOREX (su mercado actual: EUR/USD, GBP/USD, etc.): abre DOMINGO ~17:00 NY y cierra VIERNES ~17:00 NY. SÁBADO todo el día y DOMINGO hasta las 17:00 NY = CERRADO (fin de semana): nada que operar, ninguna killzone. Sesiones dentro de la semana (hora NY): Asia/Sídney-Tokio (20:00–00:00), Londres (~2:00–5:00), solape Londres–NY y Nueva York (~7:00–12:00). ⚠️ DESDE EL 10-11 LAS TRES SON KILLZONES SUYAS: Asia dejó de ser «ruido, no operar» y es su TERCERA ventana operativa — lo decidió él el 09-11 y se midió en el laboratorio (45 días, 3 pares: +57 entradas de grado A+/B, de 3,11 a 4,38 al día). En el reloj de Rey, Asia es 22:00–02:00, así que cae en su noche: si te pregunta por Asia, cuenta con que puede estar acostándose. Si es sábado o domingo y pregunta '¿opero?', la respuesta honesta es NO: dile que descanse o haga backtest.\n"+
 "- ORO (XAU/USD) y plata: horario tipo Forex/CME (dom 17:00 → vie 17:00 NY, con micro-pausa diaria ~17:00–18:00 NY). CERRADO el fin de semana.\n"+
 "- ÍNDICES US (US30/Dow, NAS100, SP500) y ACCIONES USA: sesión regular 9:30–16:00 NY, lun–vie; pre-market 4:00–9:30 y after-hours 16:00–20:00; los FUTUROS corren casi 24h de domingo noche a viernes, pero CERRADO el fin de semana y en festivos de EE.UU. (que a veces acortan sesión).\n"+
 "- CRIPTO (BTC, ETH…): 24/7, TODOS los días, también sábado y domingo — es el ÚNICO donde 'fin de semana' NO significa cerrado (aunque suele haber menos volumen). Si algún día Rey pasa a cripto, ahí sí puede operar el finde: adáptate.\n"+
@@ -16358,7 +16358,7 @@ function iaConocimiento(){
     "Gestión de parciales:\n"+par+"\n"+
     "  SL a Break Even en 1:1. Trailing con estructura (detrás de cada nuevo OB/FVG a favor), nunca ATR fijo.\n\n"+
     "Ventanas válidas (hora NY): "+ven+".\n"+
-    "PROHIBIDO operar: "+noOp+"; y sesión asiática. No opera 15 min antes ni después de una noticia roja (regla actualizada por Rey el 26-08: antes eran 30).\n\n"+
+    "PROHIBIDO operar: "+noOp+". No opera 15 min antes ni después de una noticia roja (regla actualizada por Rey el 26-08: antes eran 30).\n\n"+
     "Mapa de temporalidades (cada una tiene UN objetivo):\n"+tf+"\n"+
     "  CLAVE: el MSS que VALIDA el setup es el de 1H/15M, NUNCA el de 5M. En M5 hay microrrupturas de ruido. El M5/M3 es solo el gatillo.\n\n"+
     "Gatillo fino (Fase 4, en M5/M3, dentro de la zona ya validada): 1) el precio toca el FVG u OB de entrada; 2) se forma vela de rechazo (pinbar o engulfing que arma order block); 3) la vela siguiente cierra más allá del 50% de la de rechazo; 4) ENTRA al cierre de esa vela de confirmación. SL detrás de la estructura de M5. NUNCA entrar en el toque sin confirmación (ese es su error).\n\n"+
@@ -21015,7 +21015,8 @@ function robKillzoneAhora(){
     const p=new Intl.DateTimeFormat("en-GB",{timeZone:"America/New_York",hour:"2-digit",minute:"2-digit",hour12:false}).formatToParts(new Date());
     let H=0,M=0; p.forEach(x=>{ if(x.type==="hour")H=parseInt(x.value,10); if(x.type==="minute")M=parseInt(x.value,10); });
     const m=H*60+M;
-    const KZ=[{n:"Londres",i:2*60,f:5*60},{n:"Pre-NY",i:7*60+30,f:9*60+30},{n:"Nueva York",i:9*60+30,f:11*60+30}];
+    /* 🌏 10-11: Asia es la tercera killzone. 20:00-00:00 NY (= 22:00-02:00 de su reloj). */
+    const KZ=[{n:"Asia",i:20*60,f:24*60},{n:"Londres",i:2*60,f:5*60},{n:"Pre-NY",i:7*60+30,f:9*60+30},{n:"Nueva York",i:9*60+30,f:11*60+30}];
     for(const k of KZ) if(m>=k.i && m<k.f) return {dentro:true,nombre:k.n,faltan:null};
     let mejor=null;
     for(const k of KZ){ const d=(k.i-m+1440)%1440; if(mejor===null||d<mejor.faltan) mejor={nombre:k.n,faltan:d}; }

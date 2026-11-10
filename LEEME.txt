@@ -1,64 +1,26 @@
-APEX v7.312 — TRADING DESK
+APEX v7.313 — TRADING DESK
 =========================
 
-NOVEDADES 7.311 — UN DÍA ES UN DÍA, Y TUS LIGERAS VAN A TUS DÍAS LIBRES
+APEX v7.313 — ASIA ES LA TERCERA KILLZONE
 
-Me dijiste "elige la mejor opción" entre moverle la hora a "Movilidad y respiración" o
-arreglar el día de verdad. Elegí el día. Y debajo había algo peor que un choque.
+🌏 ASIA DEJA DE SER «RUIDO, NO OPERAR» Y PASA A SER TU TERCERA VENTANA
+   Lo decidiste el 09-11 y el 10-11 se midió en el laboratorio (45 días, 3 pares):
+   +57 entradas de grado A+/B, de 3,11 a 4,38 entradas al día.
+   Asia es 20:00–00:00 hora de Nueva York = 22:00–02:00 de tu reloj.
 
-LO QUE ENCONTRÉ EN TUS DATOS VIVOS
+   · La tabla de ventanas ya la da por VÁLIDA (antes decía «no operar»).
+   · Está en el desplegable de tu diario, para que puedas apuntar una operación de Asia.
+   · Tu material de estudio la saca de «Prohibido operar» y la pone en «Solo opero en estas».
+   · Roberto ya NO te la prohíbe: su dossier sale de esa misma tabla, y además llevaba
+     escrito a mano «PROHIBIDO operar… y sesión asiática». Eso se quitó.
+   · Roberto la canta EN VIVO: a las 23:00 tuyas te dirá «estás DENTRO de Asia», y a las
+     21:00 tuyas que «la próxima es Asia, en 1 h».
+   · Y sabe que Asia cae en tu noche, así que cuenta con que puedas estar acostándote.
 
-    tplan0   dias=[1,4]    <- lista, bien
-    textra0  dias="4"      <- un número suelto, en TEXTO
-
-El Templo guardaba el día de las ligeras como texto. Y ese "4" nadie lo entendía igual:
-
-    tu TELÉFONO entendía "4" como  ->  [1,2,3,4,5]   cinco días en vez de uno
-    la NUBE     entendía "4" como  ->  []            no sonaba NUNCA, en silencio
-
-El mismo dato, dos respuestas distintas, y las dos mal.
-
-Y lo importante: NO SE NOTABA porque el despertador de tu teléfono llevaba meses
-borrándose solo (el cajón compartido que arreglamos antes). Al arreglar aquello, estas
-dos iban a empezar a sonar DE LUNES A VIERNES a las 05:00, encima de tus entrenamientos.
-El arreglo de la tarde habría creado un fallo nuevo esta noche.
-
-QUÉ CAMBIA
-
-1. Un día escrito como número se entiende igual en los dos sitios. "4", 4, "1,4", [1,4]
-   y "jue" significan ya lo mismo en tu teléfono y en la nube.
-
-2. Tus ligeras van a tus días libres DE VERDAD. Tus sesiones son lunes+jueves y
-   martes+viernes, así que tus libres son miércoles, sábado y domingo:
-
-       Movilidad y respiración   jueves  -> miércoles
-       Movilidad y respiración   viernes -> sábado
-
-3. Y se comprueba CADA vez, no solo al crearla. Ese era el fallo de fondo: el Templo sí
-   buscaba un día libre, pero una sola vez, y se lo preguntaba al horario del plan en vez
-   de a los avisos que tú tienes de verdad. Si el plan cambia de días después, la ligera
-   se quedaba donde estaba y nadie volvía a mirar.
-
-4. Tu decisión manda. Si tú pones una ligera en un día, ahí se queda aunque choque.
-
-WORKER 5.301 — SIN PRISA
-
-Tienes en PARA SUBIR HOY el worker 5.301. Es UNA línea: que la nube también entienda un
-día escrito como número. Con la 7.311 la app ya los guarda como lista, así que la nube
-actual no se come ninguno — es el cinturón, por si algún día llega otro dato así.
-Súbelo cuando quieras, no corre prisa.
-
-Banco nuevo: test-un-dia-es-un-dia (6/6), que EJECUTA los dos parsers (el del teléfono y
-el de la nube) y el generador de ligeras con tus datos reales.
-
-AÑADIDO EN LA 7.312 — Y QUE CORRA SOLO
-
-Te instalé la 7.311 y fui a mirar tu teléfono: tus dos ligeras SEGUÍAN armadas en jueves
-y viernes. El número ya se entendía (el lunes pasó de 3 alarmas a 1), pero el arreglo del
-día vive dentro del generador del Templo, y eso solo se llamaba al abrir la pestaña
-"Templo". Un arreglo que espera a que tú pases por una pantalla no es un arreglo.
-
-Ahora el plan del Templo se revisa AL ARRANCAR, y antes de subir la lista a la nube.
+🔇 Y MENOS RUIDO (esto va en el indicador, no en la app)
+   El ✅ de cierre y el 🟥 H4-en-contra llevan ahora una hora de descanso, y el 🟢/🔴
+   duplicado está apagado. Medido: de 116 a 80 notificaciones al día CON Asia dentro,
+   sin perder ni una entrada.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

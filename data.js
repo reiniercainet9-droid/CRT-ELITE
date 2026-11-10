@@ -3,7 +3,7 @@
    Todo el contenido del plan operativo de Rey.
    ============================================================ */
 
-const APP_VERSION = "7.312";
+const APP_VERSION = "7.313";
 
 /* --- CHECKLIST OPERATIVO (4 bloques) --- */
 const CHECKLIST = [
@@ -73,11 +73,16 @@ const VENTANAS = [
   { n:"Pre-NY Kill Zone",sub:"mejor ventana", h:"7:30−9:30 AM",   s:7.5,  e:9.5,  cls:"hl",  v:"Pre-NY Kill Zone" },
   { n:"NY Apertura",     sub:"",              h:"9:30−12:30 PM",  s:9.5,  e:12.5, cls:"ok",  v:"NY Apertura" },
   { n:"NY Lunch",        sub:"trampas",       h:"12:30−1:30 PM",  s:12.5, e:13.5, cls:"bad", bad:true },
-  { n:"Asiática",        sub:"ruido",         h:"no operar",      s:null, e:null, cls:"bad", bad:true },
+  /* 🌏 10-11: ASIA DEJA DE SER RUIDO Y PASA A SER LA TERCERA KILLZONE. Decisión de Rey
+     del 09-11, medida el 10-11 en el laboratorio sobre 45 días y 3 pares: +57 entradas de
+     grado A+/B, de 3,11 a 4,38 al día. Esta fila manda en TODA la app y también en el
+     dossier de Roberto, que saca de aquí lo operable y lo prohibido (app.js, _iaConoc).
+     Es 20:00-00:00 hora de NUEVA YORK = 22:00-02:00 del reloj de Rey. */
+  { n:"Asiática",        sub:"3ª killzone",   h:"8:00 PM−12:00 AM", s:20, e:24, cls:"ok", v:"Asia" },
   { n:"Viernes tarde",   sub:"solo gestión",  h:"tras 12 PM",     s:null, e:null, cls:"bad", bad:true }
 ];
 
-const VENTANAS_DIARIO = ["Pre-NY Kill Zone","NY Apertura","Londres","Fuera de ventana"];
+const VENTANAS_DIARIO = ["Pre-NY Kill Zone","NY Apertura","Londres","Asia","Fuera de ventana"];   /* 🌏 10-11: Asia */
 
 /* 🚪 POR DÓNDE SALIÓ LA OPERACIÓN (v7.245, 09-10)
    ═══════════════════════════════════════════════════════════════════════════════════════
@@ -335,11 +340,11 @@ const PLAN = [
 <tr><td>Londres</td><td>2:00−5:00 AM</td><td>Válida</td></tr>
 <tr><td>Pre-NY Kill Zone</td><td>7:30−9:30 AM</td><td style="color:var(--gold);font-weight:700">MEJOR VENTANA</td></tr>
 <tr><td>NY Apertura</td><td>9:30−11:30 AM</td><td>Válida</td></tr>
+<tr><td>Asia</td><td>8:00 PM−12:00 AM</td><td>Válida desde el 10-11 (22:00−02:00 en tu reloj)</td></tr>
 </table></div>
 <h4>5.2 Prohibido operar</h4>
 <div class="tw"><table class="tbl">
 <tr><th>Periodo</th><th>Por qué</th></tr>
-<tr><td>Sesión asiática</td><td>Ruido y falsos sweeps</td></tr>
 <tr><td>NY Lunch (11:30−1:30 NY)</td><td>Trampas frecuentes</td></tr>
 <tr><td>Viernes tras 12 PM NY</td><td>Cierre institucional, solo gestión</td></tr>
 </table></div>
