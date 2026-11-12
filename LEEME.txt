@@ -1,26 +1,36 @@
-APEX v7.313 — TRADING DESK
+APEX v7.314 — TRADING DESK
 =========================
 
-APEX v7.313 — ASIA ES LA TERCERA KILLZONE
+Apex 7.314 — quitar un par ahora lo quita de verdad
 
-🌏 ASIA DEJA DE SER «RUIDO, NO OPERAR» Y PASA A SER TU TERCERA VENTANA
-   Lo decidiste el 09-11 y el 10-11 se midió en el laboratorio (45 días, 3 pares):
-   +57 entradas de grado A+/B, de 3,11 a 4,38 entradas al día.
-   Asia es 20:00–00:00 hora de Nueva York = 22:00–02:00 de tu reloj.
+QUÉ PASABA
+Cambiaste AUD/USD por USD/JPY. Dejaste la caja «Mis pares» en
+«EUR/USD, GBP/USD, USD/JPY», pulsaste Guardar pares… y la nube seguía
+diciendo cuatro. Sin ningún error, sin ningún cartel.
 
-   · La tabla de ventanas ya la da por VÁLIDA (antes decía «no operar»).
-   · Está en el desplegable de tu diario, para que puedas apuntar una operación de Asia.
-   · Tu material de estudio la saca de «Prohibido operar» y la pone en «Solo opero en estas».
-   · Roberto ya NO te la prohíbe: su dossier sale de esa misma tabla, y además llevaba
-     escrito a mano «PROHIBIDO operar… y sesión asiática». Eso se quitó.
-   · Roberto la canta EN VIVO: a las 23:00 tuyas te dirá «estás DENTRO de Asia», y a las
-     21:00 tuyas que «la próxima es Asia, en 1 h».
-   · Y sabe que Asia cae en tu noche, así que cuenta con que puedas estar acostándote.
+POR QUÉ
+Lo que viaja a la nube no era tu lista: era la UNIÓN de tu lista con el
+filtro del calendario de noticias. El botón cambiaba una y dejaba la otra
+intacta, así que el par borrado volvía a entrar por detrás.
+Ese botón solo sabía AÑADIR pares. Quitar uno era imposible.
 
-🔇 Y MENOS RUIDO (esto va en el indicador, no en la app)
-   El ✅ de cierre y el 🟥 H4-en-contra llevan ahora una hora de descanso, y el 🟢/🔴
-   duplicado está apagado. Medido: de 116 a 80 notificaciones al día CON Asia dentro,
-   sin perder ni una entrada.
+POR QUÉ IMPORTABA
+Esa lista es la que usa el Puente para abrir UNA PESTAÑA DE TRADINGVIEW POR
+PAR. Cuatro pares son cuatro gráficos abiertos en tu PC, y está medido que
+con tres ya baja del 97% al 69,5% de disponibilidad. Un par de más no es un
+detalle: es Roberto quedándose ciego más rato.
+
+QUÉ CAMBIA
+El botón «Guardar pares» ahora sincroniza también el filtro de noticias,
+exactamente igual que ya hacía Roberto cuando le pedías el cambio hablando.
+Los dos caminos hacen por fin lo mismo.
+
+Y UN BANCO NUEVO QUE LO VIGILA
+test-quitar-un-par-lo-quita-de-verdad.cjs — 10 comprobaciones. No lee el
+código: saca la función de verdad del app.js y la ejecuta, reproduce el
+fallo y comprueba que el arreglo lo mata.
+
+Regresión: 454 bancos.
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================

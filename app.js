@@ -17036,7 +17036,18 @@ function iaInit(){
     try{ syncRiesgo(); }catch(_){}
     try{ toast(ndd.checked ? "🔔 Avisos de cuentas en peligro: ENCENDIDOS" : "🔇 Avisos de cuentas en peligro: APAGADOS, también con Apex cerrada"); }catch(_){}
   };
-  const ps=$("#iaParesSave"); if(ps) ps.onclick=()=>{ const v=($("#iaPares").value||"").split(",").map(x=>x.trim()).filter(Boolean); if(!v.length){ toast("Escribe al menos un par"); return; } PARES=v; guardarPares(); pushConfigPares(); toast("Pares guardados ✓"); robertoVigila("Cambió sus pares seguidos a: "+v.join(", ")+"."); };
+  const ps=$("#iaParesSave"); if(ps) ps.onclick=()=>{ const v=($("#iaPares").value||"").split(",").map(x=>x.trim()).filter(Boolean); if(!v.length){ toast("Escribe al menos un par"); return; } /* 🧹 v7.314 (11-11) — ESTE BOTÓN SOLO SABÍA AÑADIR PARES, NUNCA QUITARLOS.
+     Rey cambió AUD/USD por USD/JPY, dejó la caja en «EUR/USD, GBP/USD, USD/JPY», pulsó
+     Guardar… y la nube siguió diciendo CUATRO. La causa: lo que viaja a la nube es
+     `paresParaPush()` = unión de CAL_FILTRO (el filtro del calendario) con PARES. Este
+     botón cambiaba PARES y dejaba CAL_FILTRO intacto, así que el par borrado volvía a
+     entrar por la unión. Quitar un par era IMPOSIBLE desde aquí, sin ningún error.
+     Y no era teórico: esa lista es la que el Puente usa para abrir UNA PESTAÑA DE EDGE POR
+     PAR — cuatro pares son cuatro gráficos en un Celeron de 8 GB, y está medido que con
+     tres ya cae del 97% al 69,5% ([[apex-el-tercer-par-le-cuesta-al-puente]]).
+     La herramienta de Roberto (`fijar_pares`) YA lo hacía bien desde siempre; era este
+     botón el que se había quedado atrás. Ahora hacen exactamente lo mismo. */
+    PARES=v; guardarPares(); CAL_FILTRO=v.slice(); save(K.calpares,CAL_FILTRO); pushConfigPares(); if(TAB==="noticias") renderNoticias(); toast("Pares guardados ✓"); robertoVigila("Cambió sus pares seguidos a: "+v.join(", ")+"."); };
   const nn=$("#iaNotifNews"); if(nn) nn.onclick=iaNoticiasHoy;
   const pt=$("#iaPushTest");
   if(pt){
