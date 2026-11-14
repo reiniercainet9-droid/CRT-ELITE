@@ -5778,6 +5778,39 @@ function guardarCuentas(){ save(K.cuentas, CUENTAS); if(typeof syncRiesgo==="fun
 let PARES = load(K.pares, ["EUR/USD","GBP/USD"]);
 if(!Array.isArray(PARES) || !PARES.length) PARES = ["EUR/USD","GBP/USD"];
 function guardarPares(){ save(K.pares, PARES); }
+/* 🔧 v7.315 (13-11) — LOS SELECTORES DE PAR SALEN DE SUS PARES, NO DE UNA LISTA ESCRITA.
+   ─────────────────────────────────────────────────────────────────────────────────────
+   Ley de Rey: «en mi sistema nada puede ser definitivo ni fijo». Y aquí estaba roto en
+   TRES sitios: el selector del gatillo (#gPar), el del diario (#sgPar) y el arranque de
+   la calculadora decían «EUR/USD» y «GBP/USD» ESCRITOS A MANO. Consecuencia real: desde
+   que metió USD/JPY, cada operación suya de ese par caía en «Otro» y tenía que escribir
+   el nombre a mano — y nadie lo cantó ([[apex-sus-pares-viven-en-tres-listas]]).
+   ⚠️ Y el arreglo NO es cambiar GBP/USD por USD/JPY: eso sería el mismo error otra vez.
+   Estas dos funciones leen PARES, así que siguen a sus pares para siempre, sean dos o seis. */
+function paresParaElegir(){
+  const l = (Array.isArray(PARES) && PARES.length) ? PARES.slice() : ["EUR/USD"];
+  return l.concat(["Otro"]);
+}
+function esParSuyo(x){ return (Array.isArray(PARES) ? PARES : []).indexOf(x) >= 0; }
+/* el par por defecto es el PRIMERO suyo, no uno escrito */
+function parPorDefecto(){ return (Array.isArray(PARES) && PARES.length) ? PARES[0] : "EUR/USD"; }
+/* 🔄 v7.315 (13-11) — Y CUANDO CAMBIA LA LISTA, LOS BOTONES CAMBIAN CON ELLA.
+   `initDiarioControles()` solo corría UNA VEZ al arrancar, así que si Rey quitaba un par
+   con la app abierta, los botones del diario seguían enseñando el par viejo hasta que la
+   reiniciara — y eso es un dato suyo mintiéndole en pantalla.
+   ⚠️ Y si estaba a medio apuntar una operación DEL par que acaba de quitar, su par NO se
+   pierde: se pasa a «Otro» con el nombre escrito dentro. Nada suyo se borra solo. */
+function refrescarSelectoresDePar(){
+  try{
+    if(typeof FORM==="object" && FORM && FORM.par && FORM.par!=="Otro" && !esParSuyo(FORM.par)){
+      const suyo = FORM.par;
+      FORM.par = "Otro";
+      const campo = $("#fParOtro");
+      if(campo){ campo.value = suyo; campo.style.display = "block"; }
+    }
+    if(typeof initDiarioControles==="function") initDiarioControles();
+  }catch(_){}
+}
 /* Filtro de la sección Noticias — independiente de los pares de las notificaciones.
    Arranca con los pares actuales, pero Rey puede escribir otros que esté operando. */
 let CAL_FILTRO = load(K.calpares, null);
@@ -6300,8 +6333,45 @@ function urlB64ToUint8Array(base64){
   return out;
 }
 function pushSoportado(){ return ("serviceWorker" in navigator) && ("PushManager" in window); }
-/* Pares que debe vigilar el worker = filtro del calendario + pares de notificaciones (sin repetir) */
-function paresParaPush(){ return [...new Set((CAL_FILTRO||[]).concat(PARES||[]))]; }
+/* 🧩 v7.315 (13-11) — SE ACABÓ LA UNIÓN: DOS COSAS DISTINTAS, DOS CAMPOS.
+   ─────────────────────────────────────────────────────────────────────────────────────
+   Esto devolvía `CAL_FILTRO ∪ PARES` en UN solo campo, y ese campo alimentaba DOS cosas
+   que no tienen nada que ver ([[apex-una-union-solo-sabe-crecer]]):
+     · el aviso de noticias y el plan semanal  → quiere el FILTRO DE NOTICIAS
+     · el Puente y el contexto del gráfico     → quiere sus PARES SEGUIDOS, y ahí un par
+       de más le cuesta una pestaña de TradingView y RAM de su PC
+   Por eso el 11-11 quitó un par, guardó, y seguía ahí: lo que viajaba era la unión, y una
+   unión solo sabe crecer. El fallo no era la unión: era que dos cosas compartían un cajón.
+   ⚠️ ORDEN DE ENTREGA: la app manda ya los dos campos; un worker viejo (≤5.305) se queda
+   solo con `pares` y usa esos también para las noticias. Eso NO pierde nada mientras el
+   filtro sea un subconjunto de sus pares; en cuanto él filtre un par que no sigue, hace
+   falta el worker 5.306 para que no se le caiga. */
+function paresSeguidos(){ return (Array.isArray(PARES) && PARES.length) ? PARES.slice() : []; }
+function paresDeNoticias(){ return (Array.isArray(CAL_FILTRO) && CAL_FILTRO.length) ? CAL_FILTRO.slice() : paresSeguidos(); }
+/* se queda por compatibilidad con lo que aún la llame: devuelve sus PARES, no la unión */
+function paresParaPush(){ return paresSeguidos(); }
+/* 🌱 v7.315 (13-11) — GUARDAR PARES YA NO LE BORRA EL FILTRO DE NOTICIAS.
+   ─────────────────────────────────────────────────────────────────────────────────────
+   Hasta hoy, guardar los pares hacía `CAL_FILTRO = PARES.slice()` a pelo: le PISABA el
+   filtro de noticias cada vez. Y entonces el filtro aparte no servía de nada, porque
+   cualquier cambio de pares lo volvía a igualar — justo lo que él pidió el 11-11 («quiero
+   poder filtrar noticias de un par que mire a mano»).
+   LA REGLA, que no decide por él en ninguna de las dos direcciones:
+     · si el filtro estaba VACÍO o era EXACTAMENTE la lista de pares vieja → nunca lo tocó,
+       así que se siembra con la nueva (el primer día no cambia nada para él)
+     · si lo tenía DISTINTO → lo puso él a mano: no se toca, y punto
+       ([[apex-no-elegir-por-rey]], nada suyo se cambia sin su palabra) */
+function sembrarFiltroNoticias(antes, ahora){
+  try{
+    const mismo = (a,b) => Array.isArray(a) && Array.isArray(b) && a.length===b.length
+      && a.slice().sort().join("|") === b.slice().sort().join("|");
+    const vacio = !Array.isArray(CAL_FILTRO) || !CAL_FILTRO.length;
+    if(vacio || mismo(CAL_FILTRO, antes)){
+      CAL_FILTRO = (ahora||[]).slice();
+      save(K.calpares, CAL_FILTRO);
+    }
+  }catch(_){}
+}
 /* Suscribe este teléfono al push y manda la suscripción + sus pares al worker */
 async function pushSubscribe(){
   if(!pushSoportado() || !IA.url) return false;
@@ -6312,7 +6382,7 @@ async function pushSubscribe(){
       sub=await reg.pushManager.subscribe({ userVisibleOnly:true, applicationServerKey:urlB64ToUint8Array(VAPID_PUBLIC) });
     }
     const r=await fetch(IA.url.replace(/\/+$/,"")+"/push/subscribe",{
-      method:"POST", headers:{"content-type":"application/json"}, body:JSON.stringify({subscription:sub, pares:paresParaPush()})
+      method:"POST", headers:{"content-type":"application/json"}, body:JSON.stringify({subscription:sub, pares:paresSeguidos(), paresNoticias:paresDeNoticias()})
     });
     return r.ok;
   }catch(e){ return false; }
@@ -6321,7 +6391,8 @@ async function pushSubscribe(){
 async function pushConfigPares(){
   if(!IA.url) return;
   try{ await fetch(IA.url.replace(/\/+$/,"")+"/push/config",{
-    method:"POST", headers:{"content-type":"application/json"}, body:JSON.stringify({pares:paresParaPush()})
+    method:"POST", headers:{"content-type":"application/json"},
+    body:JSON.stringify({pares:paresSeguidos(), paresNoticias:paresDeNoticias()})
   }); }catch(_){}
 }
 /* Prueba en vivo: pide al worker que empuje un aviso a este teléfono (para probar con la app cerrada) */
@@ -10507,7 +10578,7 @@ function viewRiesgo(){
   const calc=el("div","card");
   calc.innerHTML=`<div class="card-h"><span class="ic">🧮</span><h2>Calculadora de lotaje</h2></div>
     <p class="desc">Elige el par y mete balance, % de riesgo y pips de SL. El valor del pip se calcula por par; en pares con USD de base (JPY, CAD...) mete el precio actual y afina exacto.</p>
-    <div class="row"><div class="l" style="min-width:88px">Par</div><select class="inp" id="cPar" style="max-width:56%">${PARES_CALC.map(p=>`<option ${p===(BAL.par||"EUR/USD")?"selected":""}>${p}</option>`).join("")}</select></div>
+    <div class="row"><div class="l" style="min-width:88px">Par</div><select class="inp" id="cPar" style="max-width:56%">${[...new Set([...(Array.isArray(PARES)?PARES:[]), ...PARES_CALC])].map(p=>`<option ${p===(BAL.par||parPorDefecto())?"selected":""}>${p}</option>`).join("")}</select></div>
     <div class="row"><div class="l" style="min-width:88px">Cuenta<small>de quién es este riesgo</small></div><select class="inp" id="cCta" style="max-width:56%">${ctaOpts}</select></div>
     <div class="row"><div class="l" style="min-width:88px">Balance $</div><input class="inp" id="cBal" type="number" inputmode="decimal" value="${BAL.bal}"></div>
     <div class="row"><div class="l" style="min-width:88px">% riesgo</div><input class="inp" id="cPct" type="number" inputmode="decimal" step="0.05" value="${BAL.pct}"></div>
@@ -10831,7 +10902,7 @@ function viewGatillo(){
   calc.innerHTML=`<div class="card-h"><span class="ic">🎯</span><h2>Zona y cálculo</h2></div>
     <div class="fl">Dirección</div><div class="seg c2" id="gDir"></div>
     <div class="g2">
-      <div><div class="fl">Par</div><select class="inp" id="gPar"><option>EUR/USD</option><option>GBP/USD</option><option>Otro</option></select></div>
+      <div><div class="fl">Par</div><select class="inp" id="gPar">${paresParaElegir().map(p=>"<option>"+p+"</option>").join("")}</select></div>
       <div><div class="fl">POI</div><select class="inp" id="gPoi"><option>FVG</option><option>Order Block</option><option>Breaker</option></select></div>
     </div>
     <div class="fl">Límites del POI (FVG u OB del impulso)</div>
@@ -10909,7 +10980,7 @@ function refreshArm(kz){
   }
 }
 function calcGatillo(){
-  const par=$("#gPar")?.value||"EUR/USD";
+  const par=$("#gPar")?.value||parPorDefecto();
   const ps=pipSize(par), dg=ps===0.01?3:5;
   const hi=parseFloat($("#gHi")?.value), lo=parseFloat($("#gLo")?.value);
   const sl=parseFloat($("#gSl")?.value), tp=parseFloat($("#gTp")?.value);
@@ -10950,7 +11021,7 @@ function calcGatillo(){
   }
 }
 function cargarGatilloDiario(){
-  const par=$("#gPar")?.value||"EUR/USD";
+  const par=$("#gPar")?.value||parPorDefecto();
   const ps=pipSize(par), dg=ps===0.01?3:5;
   const hi=parseFloat($("#gHi")?.value), lo=parseFloat($("#gLo")?.value);
   const ent=(isFinite(hi)&&isFinite(lo))?(hi+lo)/2:NaN;
@@ -10958,7 +11029,7 @@ function cargarGatilloDiario(){
   const poi=$("#gPoi")?.value||"FVG";
 
   FORM.dir=GAT.dir;
-  FORM.par=["EUR/USD","GBP/USD"].includes(par)?par:"Otro";
+  FORM.par=esParSuyo(par)?par:"Otro";
   FORM.poi=poi;
   FORM.disp = poi==="FVG" ? "FVG 50%" : poi==="Order Block" ? "Order Block" : "Otro";
   FORM.zona = GAT.dir==="Compra" ? "Discount" : "Premium";
@@ -11360,7 +11431,11 @@ function initDiarioControles(){
       c.appendChild(b);
     });
   };
-  seg("#sgPar",[{t:"EUR/USD",v:"EUR/USD"},{t:"GBP/USD",v:"GBP/USD"},{t:"Otro",v:"Otro"}],"par");
+  /* 🔧 v7.315 — y las COLUMNAS salen del número de botones, no de una clase escrita:
+     con 2 pares son 3 botones y caben en fila; con 3 pares son 4 y van 2x2. */
+  { const ops = paresParaElegir(); const cc = $("#sgPar");
+    if(cc) cc.className = "seg c" + (ops.length % 2 === 0 ? 2 : 3);
+    seg("#sgPar", ops.map(p=>({t:p,v:p})), "par"); }
   seg("#sgDir",[{t:"Compra",v:"Compra",c:"g"},{t:"Venta",v:"Venta",c:"r"}],"dir");
   seg("#sgSetup",[{t:"A+",v:"A+"},{t:"B",v:"B"},{t:"C",v:"C"}],"setup");
   seg("#sgRes",[{t:"Win",v:"Win",c:"g"},{t:"Loss",v:"Loss",c:"r"},{t:"BE",v:"BE"}],"res");
@@ -11548,7 +11623,7 @@ function editarTrade(id){
   const t=TRADES.find(x=>x.id===id); if(!t) return;
   EDIT_ID=id;
   // rellenar
-  FORM.par = ["EUR/USD","GBP/USD"].includes(t.par) ? t.par : "Otro";
+  FORM.par = esParSuyo(t.par) ? t.par : "Otro";
   $("#sgPar").querySelectorAll("button").forEach(b=>{ b.className = b.textContent===FORM.par?"on":""; });
   $("#fParOtro").style.display = FORM.par==="Otro"?"block":"none";
   if(FORM.par==="Otro") $("#fParOtro").value=t.par;
@@ -17044,10 +17119,13 @@ function iaInit(){
      entrar por la unión. Quitar un par era IMPOSIBLE desde aquí, sin ningún error.
      Y no era teórico: esa lista es la que el Puente usa para abrir UNA PESTAÑA DE EDGE POR
      PAR — cuatro pares son cuatro gráficos en un Celeron de 8 GB, y está medido que con
-     tres ya cae del 97% al 69,5% ([[apex-el-tercer-par-le-cuesta-al-puente]]).
+     tres caía del 97% al 69,5% — ⚠️ 13-11: VUELTO A MEDIR y con tres pares estaba al
+     98,6% (3.076 vueltas de su puente.log); el 69,5% era del 27-10 y ya no vale. Lo que
+     sigue en pie es la RAM: cada par es otra pestaña de TradingView
+     ([[apex-el-tercer-par-le-cuesta-al-puente]]).
      La herramienta de Roberto (`fijar_pares`) YA lo hacía bien desde siempre; era este
      botón el que se había quedado atrás. Ahora hacen exactamente lo mismo. */
-    PARES=v; guardarPares(); CAL_FILTRO=v.slice(); save(K.calpares,CAL_FILTRO); pushConfigPares(); if(TAB==="noticias") renderNoticias(); toast("Pares guardados ✓"); robertoVigila("Cambió sus pares seguidos a: "+v.join(", ")+"."); };
+    const paresAntes=(Array.isArray(PARES)?PARES.slice():[]); PARES=v; guardarPares(); sembrarFiltroNoticias(paresAntes,v); pushConfigPares(); refrescarSelectoresDePar(); if(TAB==="noticias") renderNoticias(); toast("Pares guardados ✓"); robertoVigila("Cambió sus pares seguidos a: "+v.join(", ")+"."); };
   const nn=$("#iaNotifNews"); if(nn) nn.onclick=iaNoticiasHoy;
   const pt=$("#iaPushTest");
   if(pt){
@@ -22590,7 +22668,7 @@ async function ejecutarTool(name, i){
     if(name==="set_pares"){
       const v=(i.pares||[]).map(x=>String(x).trim()).filter(Boolean);
       if(!v.length) return {ok:false,msg:"Lista de pares vacía"};
-      PARES=v; guardarPares(); CAL_FILTRO=v.slice(); save(K.calpares,CAL_FILTRO); pushConfigPares(); if(TAB==="noticias") renderNoticias();
+      const paresAntes=(Array.isArray(PARES)?PARES.slice():[]); PARES=v; guardarPares(); sembrarFiltroNoticias(paresAntes,v); pushConfigPares(); refrescarSelectoresDePar(); if(TAB==="noticias") renderNoticias();
       return {ok:true,msg:"Pares actualizados: "+v.join(", ")};
     }
     /* 🖐️ v6.31 — MANOS DE SISTEMA (tras la tarjeta ✓ de Rey; la nube ya acepta estas llamadas de la app) */

@@ -1,36 +1,59 @@
-APEX v7.314 — TRADING DESK
+APEX v7.315 — TRADING DESK
 =========================
 
-Apex 7.314 — quitar un par ahora lo quita de verdad
+Apex 7.315 — nada fijo: tus pares mandan en todas partes
 
-QUÉ PASABA
-Cambiaste AUD/USD por USD/JPY. Dejaste la caja «Mis pares» en
-«EUR/USD, GBP/USD, USD/JPY», pulsaste Guardar pares… y la nube seguía
-diciendo cuatro. Sin ningún error, sin ningún cartel.
+LO QUE PEDISTE
+«En mi sistema nada puede ser definitivo ni fijo.» Y había tres sitios
+donde tus pares estaban ESCRITOS A MANO.
 
-POR QUÉ
-Lo que viaja a la nube no era tu lista: era la UNIÓN de tu lista con el
-filtro del calendario de noticias. El botón cambiaba una y dejaba la otra
-intacta, así que el par borrado volvía a entrar por detrás.
-Ese botón solo sabía AÑADIR pares. Quitar uno era imposible.
-
-POR QUÉ IMPORTABA
-Esa lista es la que usa el Puente para abrir UNA PESTAÑA DE TRADINGVIEW POR
-PAR. Cuatro pares son cuatro gráficos abiertos en tu PC, y está medido que
-con tres ya baja del 97% al 69,5% de disponibilidad. Un par de más no es un
-detalle: es Roberto quedándose ciego más rato.
+QUÉ TE PASABA, Y LLEVABA PASÁNDOTE
+Desde que metiste USD/JPY, cada vez que registrabas una operación de ese
+par el selector te la mandaba a «Otro» y tenías que escribir el nombre a
+mano. Lo mismo en el gatillo. Nadie lo cantó.
+La razón: el selector del diario y el del gatillo decían «EUR/USD» y
+«GBP/USD» escritos dentro del código, y cualquier otro par caía en «Otro».
 
 QUÉ CAMBIA
-El botón «Guardar pares» ahora sincroniza también el filtro de noticias,
-exactamente igual que ya hacía Roberto cuando le pedías el cambio hablando.
-Los dos caminos hacen por fin lo mismo.
+Los tres selectores —el del gatillo, el del diario y el de la calculadora—
+se construyen ahora DESDE TU LISTA DE PARES. Pongas los que pongas, sean
+dos o sean seis, los botones siguen a tu lista. Y si cambias los pares con
+la app abierta, los botones cambian con ella: ya no hace falta reiniciar.
+Y si estabas a medio apuntar una operación del par que acabas de quitar, tu
+par NO se pierde: pasa a «Otro» con el nombre escrito dentro.
 
-Y UN BANCO NUEVO QUE LO VIGILA
-test-quitar-un-par-lo-quita-de-verdad.cjs — 10 comprobaciones. No lee el
-código: saca la función de verdad del app.js y la ejecuta, reproduce el
-fallo y comprueba que el arreglo lo mata.
+Y LO SEGUNDO, QUE ERA LA RAÍZ DEL LÍO DEL 11-11
+«Mis pares» y «el filtro de noticias del calendario» eran DOS cosas
+distintas compartiendo UN solo cajón, y a la nube viajaba la unión de las
+dos. Por eso quitabas un par, guardabas, y volvía por detrás.
+Ahora son dos campos de verdad:
+  · tus PARES SEGUIDOS   → el Puente, el gráfico, el análisis
+  · el FILTRO DE NOTICIAS → el aviso de noticias y el plan semanal
+Si no tienes nada en el filtro, usa tus pares, así que el primer día no
+cambia nada para ti. Y guardar tus pares ya NO te pisa un filtro que hayas
+puesto a mano: si lo tocaste tú, no se toca.
 
-Regresión: 454 bancos.
+NECESITA EL WORKER 5.306
+La app ya manda los dos campos. Hasta que subas el worker 5.306, un worker
+viejo solo se queda con tus pares y usa esos también para las noticias —
+que es justo lo que hacía antes, así que no pierdes nada mientras tu filtro
+sea igual o más pequeño que tus pares.
+
+UNA CORRECCIÓN DE LA ENTREGA ANTERIOR
+La 7.314 decía que con tres pares el Puente baja «del 97% al 69,5%». Ese
+número era del 27-10 y se volvió a medir el 13-11 en tu propio registro:
+con tres pares estaba al 98,6% (3.076 vueltas). Entre medias se arreglaron
+el ciclo de 8 segundos y la penitencia, y la mejora ya estaba cobrada. Lo
+que sigue siendo cierto es la RAM: cada par es otra pestaña de TradingView,
+y quitar una liberó 330 MB.
+
+PROBADO
+Dos bancos nuevos, 29 comprobaciones, ejecutando las funciones de verdad de
+la app y del worker:
+  · test-dos-campos-pares-y-noticias (15) — incluye el fallo exacto del
+    11-11, y que un worker viejo no pueda borrarte el filtro
+  · test-los-selectores-de-par-no-estan-escritos (14) — falla si alguien
+    vuelve a escribir un par a mano en cualquiera de los tres selectores
 
 NOVEDADES v7.18  (🕵️ COMPROBÉ LA AUDITORÍA DE ROBERTO)
 ========================================================
